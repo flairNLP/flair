@@ -23,6 +23,7 @@ class DependencyParser(flair.nn.Model):
                  token_embeddings: TokenEmbeddings,
                  relations_dictionary: Dictionary,
                  tag_type: str = 'dependency',
+                 use_rnn: Union[bool, str] = True,
                  lstm_hidden_size: int = 400,
                  mlp_arc_units: int = 500,
                  mlp_rel_units: int = 100,
@@ -63,23 +64,44 @@ class DependencyParser(flair.nn.Model):
             self.word_dropout = WordDropout(dropout_rate=word_dropout)
 
         self.tag_type = tag_type
-        self.lstm_input_dim: int = self.token_embeddings.embedding_length
 
-        self.lstm = BiLSTM(input_size=self.lstm_input_dim,
-                           hidden_size=self.lstm_hidden_size,
-                           num_layers=self.lstm_layers,
-                           dropout=self.lstm_dropout)
+        self.use_rnn = True
 
-        self.mlp_arc_h = MLP(n_in=self.lstm_hidden_size * 2,
+        # if there is no RNN
+        if not use_rnn:
+
+            self.use_rnn = False
+            mlp_input_dim = self.token_embeddings.embedding_length
+
+        else:
+
+            self.lstm_input_dim: int = self.token_embeddings.embedding_length
+            mlp_input_dim = self.lstm_hidden_size * 2
+
+            if use_rnn == 'Variational':
+                self.lstm = BiLSTM(input_size=self.lstm_input_dim,
+                                   hidden_size=self.lstm_hidden_size,
+                                   num_layers=self.lstm_layers,
+                                   dropout=self.lstm_dropout)
+            else:
+                self.lstm = torch.nn.LSTM(self.lstm_input_dim,
+                                          self.lstm_hidden_size,
+                                          num_layers=self.lstm_layers,
+                                          dropout=lstm_dropout,
+                                          bidirectional=True,
+                                          batch_first=True,
+                                          )
+
+        self.mlp_arc_h = MLP(n_in=mlp_input_dim,
                              n_hidden=self.mlp_arc_units,
                              dropout=self.mlp_dropout)
-        self.mlp_arc_d = MLP(n_in=self.lstm_hidden_size * 2,
+        self.mlp_arc_d = MLP(n_in=mlp_input_dim,
                              n_hidden=self.mlp_arc_units,
                              dropout=self.mlp_dropout)
-        self.mlp_rel_h = MLP(n_in=self.lstm_hidden_size * 2,
+        self.mlp_rel_h = MLP(n_in=mlp_input_dim,
                              n_hidden=self.mlp_rel_units,
                              dropout=self.mlp_dropout)
-        self.mlp_rel_d = MLP(n_in=self.lstm_hidden_size * 2,
+        self.mlp_rel_d = MLP(n_in=mlp_input_dim,
                              n_hidden=self.mlp_rel_units,
                              dropout=self.mlp_dropout)
 
@@ -122,16 +144,17 @@ class DependencyParser(flair.nn.Model):
         if self.use_word_dropout:
             sentence_tensor = self.word_dropout(sentence_tensor)
 
-        x = pack_padded_sequence(sentence_tensor, lengths, True, False)
+        if self.use_rnn:
+            sentence_tensor = pack_padded_sequence(sentence_tensor, lengths, True, False)
 
-        x, _ = self.lstm(x)
-        x, _ = pad_packed_sequence(x, True, total_length=seq_len)
+            sentence_tensor, _ = self.lstm(sentence_tensor)
+            sentence_tensor, _ = pad_packed_sequence(sentence_tensor, True, total_length=seq_len)
 
         # apply MLPs for arc and relations to the BiLSTM output states
-        arc_h = self.mlp_arc_h(x)
-        arc_d = self.mlp_arc_d(x)
-        rel_h = self.mlp_rel_h(x)
-        rel_d = self.mlp_rel_d(x)
+        arc_h = self.mlp_arc_h(sentence_tensor)
+        arc_d = self.mlp_arc_d(sentence_tensor)
+        rel_h = self.mlp_rel_h(sentence_tensor)
+        rel_d = self.mlp_rel_d(sentence_tensor)
 
         # get scores from the biaffine attentions
         # [batch_size, seq_len, seq_len]
@@ -342,6 +365,7 @@ class DependencyParser(flair.nn.Model):
         model_state = {
             "state_dict": self.state_dict(),
             "token_embeddings": self.token_embeddings,
+            "use_rnn": self.use_rnn,
             "lstm_hidden_size": self.lstm_hidden_size,
             "relations_dictionary": self.relations_dictionary,
             "mlp_arc_units": self.mlp_arc_units,
@@ -357,6 +381,7 @@ class DependencyParser(flair.nn.Model):
 
         model = DependencyParser(token_embeddings=state["token_embeddings"],
                                  relations_dictionary=state["relations_dictionary"],
+                                 use_rnn=state["use_rnn"],
                                  lstm_hidden_size=state["lstm_hidden_size"],
                                  mlp_arc_units=state["mlp_arc_units"],
                                  mlp_rel_units=state["mlp_rel_units"],
