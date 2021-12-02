@@ -26,3 +26,7 @@ def cos_sim(a: torch.Tensor, b: torch.Tensor):
 class CosineDistance(torch.nn.Module):
     def forward(self, a, b):
         return -cos_sim(a, b)
+
+class LogitCosineDistance(torch.nn.Module):
+    def forward(self, a, b):
+        return torch.logit(0.5 - 0.5*cos_sim(a, b))
