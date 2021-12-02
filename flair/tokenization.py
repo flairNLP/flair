@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Callable, Optional
+from typing import List, Callable, Optional, Union, Any
 
 from more_itertools import stagger
 from segtok.segmenter import split_single, split_multi
@@ -40,13 +40,11 @@ class SpacyTokenizer(Tokenizer):
 
     def tokenize(self, text: str) -> List[Token]:
         from spacy.tokens.doc import Doc
-        from spacy.tokens.token import Token as SpacyToken
 
         doc: Doc = self.model.make_doc(text)
         previous_token = None
         tokens: List[Token] = []
         for word in doc:
-            word: SpacyToken = word
             if len(word.text.strip()) == 0:
                 continue
 
@@ -352,7 +350,6 @@ class SciSpacyTokenizer(Tokenizer):
         previous_token = None
         tokens: List[Token] = []
         for word in sentence:
-            word: SpacyToken = word
             token = Token(
                 text=word.text, start_position=word.idx, whitespace_after=True
             )
@@ -420,17 +417,16 @@ class SegtokSentenceSplitter(SentenceSplitter):
         self._tokenizer = tokenizer
 
     def split(self, text: str) -> List[Sentence]:
-        plain_sentences: List[str] = list(split_multi(text))
-
-        try:
-            sentence_offset: Optional[int] = text.index(plain_sentences[0])
-        except ValueError as error:
-            raise AssertionError(f"Can't find the sentence offset for sentence {repr(plain_sentences[0])} "
-                                 f"from the text's starting position") from error
+        plain_sentences: List[str] = split_multi(text)
+        sentence_offset = 0
 
         sentences: List[Sentence] = []
-        for sentence, next_sentence in stagger(plain_sentences, offsets=(0, 1), longest=True):
-
+        for sentence in plain_sentences:
+            try:
+                sentence_offset = text.index(sentence, sentence_offset)
+            except ValueError as error:
+                raise AssertionError(f"Can't find the sentence offset for sentence {repr(sentence)} "
+                                     f"starting from position {repr(sentence_offset)}") from error
             sentences.append(
                 Sentence(
                     text=sentence,
@@ -439,12 +435,7 @@ class SegtokSentenceSplitter(SentenceSplitter):
                 )
             )
 
-            offset: int = sentence_offset + len(sentence)
-            try:
-                sentence_offset = text.index(next_sentence, offset) if next_sentence is not None else None
-            except ValueError as error:
-                raise AssertionError(f"Can't find the sentence offset for sentence {repr(sentence)} "
-                                     f"starting from position {repr(offset)}") from error
+            sentence_offset += len(sentence)
 
         return sentences
 
@@ -469,7 +460,7 @@ class SpacySentenceSplitter(SentenceSplitter):
     :param tokenizer Custom tokenizer to use (default :class:`SpacyTokenizer`)
     """
 
-    def __init__(self, model: str, tokenizer: Tokenizer = None):
+    def __init__(self, model: Union[Any, str], tokenizer: Tokenizer = None):
         super(SpacySentenceSplitter, self).__init__()
 
         try:
@@ -483,11 +474,12 @@ class SpacySentenceSplitter(SentenceSplitter):
 
         if isinstance(model, Language):
             self.model: Language = model
-        elif isinstance(model, str):
-            self.model: Language = spacy.load(model)
+        else:
+            assert isinstance(model, str)
+            self.model = spacy.load(model)
 
         if tokenizer is None:
-            self._tokenizer = SpacyTokenizer("en_core_sci_sm")
+            self._tokenizer: Tokenizer = SpacyTokenizer("en_core_sci_sm")
         else:
             self._tokenizer = tokenizer
 
