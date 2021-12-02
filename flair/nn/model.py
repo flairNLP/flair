@@ -4,9 +4,11 @@ import warnings
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import Union, List, Tuple, Dict, Optional
+from typing import Union, List, Tuple, Dict, Optional, Any
 
 import torch.nn
+import typing
+from torch.nn.modules.loss import _Loss
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
@@ -23,6 +25,8 @@ class Model(torch.nn.Module):
     """Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.
     Every new type of model must implement these methods."""
 
+    model_card: Optional[Dict[str, Any]] = None
+
     @property
     @abstractmethod
     def label_type(self):
@@ -30,7 +34,7 @@ class Model(torch.nn.Module):
         raise NotImplementedError
 
     @abstractmethod
-    def forward_loss(self, data_points: Union[List[DataPoint], DataPoint]) -> torch.tensor:
+    def forward_loss(self, data_points: Union[List[DataPoint], DataPoint]) -> torch.Tensor:
         """Performs a forward pass and returns a loss tensor for backpropagation. Implement this to enable training."""
         raise NotImplementedError
 
@@ -85,7 +89,7 @@ class Model(torch.nn.Module):
         optimizer = scheduler = None
 
         # write out a "model card" if one is set
-        if hasattr(self, 'model_card'):
+        if self.model_card is not None:
 
             # special handling for optimizer: remember optimizer class and state dictionary
             if 'training_parameters' in self.model_card:
@@ -111,19 +115,20 @@ class Model(torch.nn.Module):
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
         # restore optimizer and scheduler to model card if set
-        if optimizer:
-            self.model_card['training_parameters']['optimizer'] = optimizer
-        if scheduler:
-            self.model_card['training_parameters']['scheduler'] = scheduler
+        if self.model_card is not None:
+            if optimizer:
+                self.model_card['training_parameters']['optimizer'] = optimizer
+            if scheduler:
+                self.model_card['training_parameters']['scheduler'] = scheduler
 
     @classmethod
-    def load(cls, model: Union[str, Path]):
+    def load(cls, model_path: Union[str, Path]):
         """
         Loads the model from the given file.
-        :param model: the model file
+        :param model_path: the model file
         :return: the loaded text classifier model
         """
-        model_file = cls._fetch_model(str(model))
+        model_file = cls._fetch_model(str(model_path))
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
@@ -176,7 +181,7 @@ class Classifier(Model):
 
     def evaluate(
             self,
-            data_points: Union[List[DataPoint], Dataset],
+            data_points: Union[List[Sentence], Dataset],
             gold_label_type: str,
             out_path: Union[str, Path] = None,
             embedding_storage_mode: str = "none",
@@ -197,7 +202,7 @@ class Classifier(Model):
         with torch.no_grad():
 
             # loss calculation
-            eval_loss = 0
+            eval_loss = 0.0
             average_over = 0
 
             # variables for printing
@@ -214,7 +219,6 @@ class Classifier(Model):
                 # remove any previously predicted labels
                 for datapoint in batch:
                     datapoint.remove_labels('predicted')
-
                 # predict for batch
                 loss_and_count = self.predict(batch,
                                               embedding_storage_mode=embedding_storage_mode,
@@ -222,7 +226,7 @@ class Classifier(Model):
                                               label_name='predicted',
                                               return_loss=True)
 
-                if isinstance(loss_and_count, Tuple):
+                if isinstance(loss_and_count, tuple):
                     average_over += loss_and_count[1]
                     eval_loss += loss_and_count[0]
                 else:
@@ -304,8 +308,7 @@ class Classifier(Model):
         target_names = []
         labels = []
 
-        counter = Counter()
-        counter.update(list(itertools.chain.from_iterable(all_true_values.values())))
+        counter = Counter(itertools.chain.from_iterable(all_true_values.values()))
         counter.update(list(itertools.chain.from_iterable(all_predicted_values.values())))
 
         for label_name, count in counter.most_common():
@@ -384,6 +387,30 @@ class Classifier(Model):
             lines.append(eval_line)
         return lines
 
+    def predict(
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
+    ):
+        """
+        Predicts the class labels for the given sentences. The labels are directly added to the sentences.
+        :param sentences: list of sentences
+        :param mini_batch_size: mini batch size to use
+        :param return_probabilities_for_all_classes : return probabilities for all classes instead of only best predicted
+        :param verbose: set to True to display a progress bar
+        :param return_loss: set to True to return loss
+        :param label_name: set this to change the name of the label type that is predicted
+        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
+        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+        'gpu' to store embeddings in GPU memory.
+        """
+        raise NotImplementedError
+
 
 class DefaultClassifier(Classifier):
     """Default base class for all Flair models that do classification, both single- and multi-label.
@@ -431,12 +458,12 @@ class DefaultClassifier(Classifier):
             for i, tag in enumerate(self.label_dictionary.get_items()):
                 if tag in loss_weights.keys():
                     weight_list[i] = loss_weights[tag]
-            self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
+            self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(weight_list).to(flair.device)
         else:
             self.loss_weights = None
 
         if self.multi_label:
-            self.loss_function = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
+            self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
@@ -454,7 +481,7 @@ class DefaultClassifier(Classifier):
         else:
             self._multi_label_threshold = {'default': x}
 
-    def forward_loss(self, sentences: Union[List[DataPoint], DataPoint]) -> torch.tensor:
+    def forward_loss(self, sentences: Union[List[DataPoint], DataPoint]) -> torch.Tensor:
         scores, labels = self.forward_pass(sentences)
         return self._calculate_loss(scores, labels)
 
@@ -504,22 +531,22 @@ class DefaultClassifier(Classifier):
 
             if isinstance(sentences, DataPoint):
                 sentences = [sentences]
+            sentences = typing.cast(List[Sentence], sentences)
 
             # filter empty sentences
-            if isinstance(sentences[0], DataPoint):
-                sentences = [sentence for sentence in sentences if len(sentence) > 0]
+            sentences = [sentence for sentence in sentences if len(sentence) > 0]
             if len(sentences) == 0:
                 return sentences
 
             # reverse sort all sequences by their length
-            rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
-
-            reordered_sentences: List[Union[DataPoint, str]] = [sentences[index] for index in rev_order_len_index]
+            reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
 
             dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
             # progress bar for verbosity
             if verbose:
-                dataloader = tqdm(dataloader)
+                progress_bar = tqdm(dataloader)
+                progress_bar.set_description(f"Batch inference")
+                dataloader = progress_bar
 
             overall_loss = 0
             batch_no = 0
@@ -528,8 +555,6 @@ class DefaultClassifier(Classifier):
 
                 batch_no += 1
 
-                if verbose:
-                    dataloader.set_description(f"Inferencing on batch {batch_no}")
 
                 # stop if all sentences are empty
                 if not batch:
