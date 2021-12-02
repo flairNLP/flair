@@ -1,4 +1,5 @@
 import logging
+import os
 from abc import abstractmethod
 from pathlib import Path
 from typing import List, Union, Callable
@@ -25,7 +26,7 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
             shuffle=False,
             sampler=None,
             batch_sampler=None,
-            num_workers=8,
+            num_workers=None,
             drop_last=False,
             timeout=0,
             worker_init_fn=None,
@@ -48,6 +49,9 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         elif isinstance(flair_dataset, FlairDataset) and flair_dataset.is_in_memory():
             num_workers = 0
 
+        if num_workers is None:
+            num_workers = min(self.estimate_max_workers(), 8)
+
         super(DataLoader, self).__init__(
             dataset,
             batch_size=batch_size,
@@ -60,6 +64,15 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
             timeout=timeout,
             worker_init_fn=worker_init_fn,
         )
+
+    @staticmethod
+    def estimate_max_workers():
+        if hasattr(os, 'sched_getaffinity'):
+            try:
+                return len(os.sched_getaffinity(0))
+            except Exception:
+                pass
+        return os.cpu_count() or 1
 
 
 class SentenceDataset(FlairDataset):

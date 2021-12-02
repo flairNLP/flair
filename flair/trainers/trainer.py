@@ -100,7 +100,7 @@ class ModelTrainer:
             shuffle: bool = True,
             param_selection_mode: bool = False,
             write_weights: bool = False,
-            num_workers: int = 6,
+            num_workers: Optional[int] = None,
             sampler=None,
             use_amp: bool = False,
             amp_opt_level: str = "O1",
