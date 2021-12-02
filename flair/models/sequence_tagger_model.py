@@ -18,7 +18,7 @@ from flair.file_utils import cached_path, unzip_file
 
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
-from .sequence_tagger_utils.utils import init_stop_tag_embedding, START_TAG, STOP_TAG
+from .sequence_tagger_utils.utils import START_TAG, STOP_TAG
 from ..datasets import DataLoader, SentenceDataset
 
 log = logging.getLogger("flair")
@@ -78,7 +78,6 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         # ----- Embedding specific parameters -----
         self.embeddings = embeddings
         embedding_dim: int = embeddings.embedding_length
-        self.stop_token_emb = init_stop_tag_embedding(embedding_dim)
         self.tag_dictionary = tag_dictionary
         self.tagset_size = len(tag_dictionary)
         self.tag_type = tag_type
@@ -265,7 +264,6 @@ class SequenceTagger(flair.nn.DefaultClassifier):
     def _create_tensor_list(self, sentences: Union[List[DataPoint], DataPoint]) -> tuple:
         tensor_list = list(map(lambda sent: sent.get_sequence_tensor(), sentences))
         lengths = torch.LongTensor([len(sentence) for sentence in sentences])
-
         return tensor_list, lengths
 
     @staticmethod
@@ -278,12 +276,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
     def _get_gold_labels(self, sentences: Union[List[DataPoint], DataPoint]):
         tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
-        # If we are using CRF, add a stop tag to each sentence - else simply get tag for each token
-        if self.use_crf:
-            labels = [[[token.get_tag(self.label_type).value] for token in sentence] + [["<STOP>"]] for sentence in tokens_per_sentence]
-        else:
-            labels = [[[token.get_tag(self.label_type).value] for token in sentence] for sentence in tokens_per_sentence]
-        # flatten list
+        labels = [[[token.get_tag(self.label_type).value] for token in sentence] for sentence in tokens_per_sentence]
         labels = [token for sentence in labels for token in sentence]
         return labels
 
