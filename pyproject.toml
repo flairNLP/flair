@@ -13,7 +13,9 @@ exclude = '''
 )
 '''
 [tool.pytest.ini_options]
-addopts = "-W error"
+addopts = "-W error --mypy"
 markers = [
     "integration",
 ]
+[tool.mypy]
+ignore_missing_imports = true

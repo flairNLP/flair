@@ -1,1 +1,5 @@
 pytest
+pytest-mypy
+types-Deprecated
+types-tabulate
+types-requests

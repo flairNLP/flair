@@ -420,7 +420,7 @@ class Token(DataPoint):
     def get_head(self):
         return self.sentence.get_token(self.head_id)
 
-    def set_embedding(self, name: str, vector: torch.tensor):
+    def set_embedding(self, name: str, vector: torch.Tensor):
         device = flair.device
         if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
@@ -440,13 +440,13 @@ class Token(DataPoint):
 
     def clear_embeddings(self, embedding_names: List[str] = None):
         if embedding_names is None:
-            self._embeddings: Dict = {}
+            self._embeddings = {}
         else:
             for name in embedding_names:
                 if name in self._embeddings.keys():
                     del self._embeddings[name]
 
-    def get_each_embedding(self, embedding_names: Optional[List[str]] = None) -> torch.tensor:
+    def get_each_embedding(self, embedding_names: Optional[List[str]] = None) -> torch.Tensor:
         embeddings = []
         for embed in sorted(self._embeddings.keys()):
             if embedding_names and embed not in embedding_names: continue
@@ -456,7 +456,7 @@ class Token(DataPoint):
             embeddings.append(embed)
         return embeddings
 
-    def get_embedding(self, names: Optional[List[str]] = None) -> torch.tensor:
+    def get_embedding(self, names: Optional[List[str]] = None) -> torch.Tensor:
         embeddings = self.get_each_embedding(names)
 
         if embeddings:
@@ -798,7 +798,7 @@ class Sentence(DataPoint):
     def embedding(self):
         return self.get_embedding()
 
-    def set_embedding(self, name: str, vector: torch.tensor):
+    def set_embedding(self, name: str, vector: torch.Tensor):
         device = flair.device
         if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
@@ -806,7 +806,7 @@ class Sentence(DataPoint):
             vector = vector.to(device)
         self._embeddings[name] = vector
 
-    def get_embedding(self, names: Optional[List[str]] = None) -> torch.tensor:
+    def get_embedding(self, names: Optional[List[str]] = None) -> torch.Tensor:
         embeddings = []
         for embed in sorted(self._embeddings.keys()):
             if names and embed not in names: continue
@@ -838,7 +838,7 @@ class Sentence(DataPoint):
 
         # clear sentence embeddings
         if embedding_names is None:
-            self._embeddings: Dict = {}
+            self._embeddings = {}
         else:
             for name in embedding_names:
                 if name in self._embeddings.keys():
@@ -1102,7 +1102,7 @@ class Image(DataPoint):
 
         return f"Image: {image_repr} {image_url}"
 
-    def get_embedding(self) -> torch.tensor:
+    def get_embedding(self) -> torch.Tensor:
         embeddings = [
             self._embeddings[embed] for embed in sorted(self._embeddings.keys())
         ]
@@ -1112,7 +1112,7 @@ class Image(DataPoint):
 
         return torch.tensor([], device=flair.device)
 
-    def set_embedding(self, name: str, vector: torch.tensor):
+    def set_embedding(self, name: str, vector: torch.Tensor):
         device = flair.device
         if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
