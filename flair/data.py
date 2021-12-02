@@ -810,8 +810,7 @@ class Sentence(DataPoint):
         return torch.Tensor()
 
 
-    def get_sequence_tensor(self) -> torch.Tensor:
-
+    def get_sequence_tensor(self) -> torch.tensor:
         if all(token.get_embedding().nelement() != 0 for token in self.tokens) \
         and all(token.get_embedding().shape for token in self.tokens): # Check if tokens and embeddings are set and dimension matches
             seq_len = len(self.tokens)

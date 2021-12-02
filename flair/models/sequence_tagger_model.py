@@ -344,7 +344,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                 predictions = self._standard_inference(features, batch)
 
             for sentence, labels in zip(batch, predictions):
-                for token, label in zip(sentence, labels):
+                for token, label in zip(sentence.tokens, labels):
                     token.add_tag_label(label_name, label)
 
         store_embeddings(sentences, storage_mode=embedding_storage_mode)

@@ -60,11 +60,11 @@ class ViterbiLoss(torch.nn.Module):
 
             if t == 0:
                 # Initially, get scores from <start> tag to all other tags
-                scores_upto_t[:batch_size_t] = features[:batch_size_t, t, self.start_tag, :]
+                scores_upto_t[:batch_size_t] = features[:batch_size_t, t, :, self.start_tag]
             else:
                 # We add scores at current timestep to scores accumulated up to previous timestep, and log-sum-exp
                 # Remember, the cur_tag of the previous timestep is the prev_tag of this timestep
-                scores_upto_t[:batch_size_t] = log_sum_exp(features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t].unsqueeze(2), dim=1)
+                scores_upto_t[:batch_size_t] = log_sum_exp(features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t].unsqueeze(1), dim=2)
 
         all_paths_scores = scores_upto_t[:, self.stop_tag].sum()
 
@@ -81,9 +81,9 @@ class ViterbiLoss(torch.nn.Module):
             targets_list = targets_list[cut:]
 
         for t in targets_per_sentence:
-            t += [self.tag_dictionary.get_idx_for_item("<unk>")] * (max(lengths.values) - len(t))
+            t += [self.tag_dictionary.get_idx_for_item(STOP_TAG)] * (max(lengths.values) - len(t))
 
-        tmaps = list(map(lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) * self.tagset_size + s[0]] + [s[i - 1] * self.tagset_size + s[i] for i in range(1, len(s))],
+        tmaps = list(map(lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)] + [s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)],
                          targets_per_sentence))
 
         return tmaps
