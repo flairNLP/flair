@@ -21,11 +21,13 @@ log = logging.getLogger("flair")
 
 def _iter_dataset(dataset: Dataset) -> typing.Iterable:
     from flair.datasets import DataLoader
-    return DataLoader(dataset, batch_size=None, num_workers=0)
+    return map(lambda x: x[0], DataLoader(dataset, batch_size=1, num_workers=0))
 
 
 def _len_dataset(dataset: Dataset) -> int:
-    return len(_iter_dataset(dataset))
+    from flair.datasets import DataLoader
+    loader = DataLoader(dataset, batch_size=1, num_workers=0)
+    return len(loader)
 
 
 class Dictionary:
