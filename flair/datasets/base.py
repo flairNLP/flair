@@ -51,6 +51,8 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
 
         if num_workers is None:
             num_workers = min(self.estimate_max_workers(), 8)
+        else:
+            num_workers = min(num_workers, self.estimate_max_workers())
 
         super(DataLoader, self).__init__(
             dataset,
