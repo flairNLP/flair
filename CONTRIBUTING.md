@@ -39,9 +39,3 @@ To run integration tests execute:
 pytest --runintegration tests/
 ```
 The integration tests will train small models.
-Afterwards, the trained model will be loaded for prediction.
-
-To also run slow tests, such as loading and using the embeddings provided by flair, you should execute:
-```bash
-pytest --runslow tests/
-```

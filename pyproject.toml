@@ -16,5 +16,4 @@ exclude = '''
 addopts = "-W error"
 markers = [
     "integration",
-    "slow",
 ]
