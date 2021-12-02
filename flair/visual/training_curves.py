@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Union, List
+from typing import Union, List, Dict
 
 import numpy as np
 import csv
@@ -28,20 +28,19 @@ class Plotter(object):
 
     @staticmethod
     def _extract_evaluation_data(file_name: Union[str, Path], score: str = "F1") -> dict:
-        if type(file_name) is str:
-            file_name = Path(file_name)
+        file_name = Path(file_name)
 
-        training_curves = {
+        training_curves : Dict[str, Dict[str, List[float]]] = {
             "train": {"loss": [], "score": []},
             "test": {"loss": [], "score": []},
             "dev": {"loss": [], "score": []},
         }
 
-        with open(file_name, "r") as tsvin:
-            tsvin = csv.reader(tsvin, delimiter="\t")
+        with open(file_name, "r") as f:
+            tsvin = csv.reader(f, delimiter="\t")
 
             # determine the column index of loss, f-score and accuracy for train, dev and test split
-            row = next(tsvin, None)
+            row = next(tsvin)
 
             score = score.upper()
 
@@ -83,10 +82,10 @@ class Plotter(object):
         if type(file_name) is str:
             file_name = Path(file_name)
 
-        weights = defaultdict(lambda: defaultdict(lambda: list()))
+        weights: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(lambda: list()))
 
-        with open(file_name, "r") as tsvin:
-            tsvin = csv.reader(tsvin, delimiter="\t")
+        with open(file_name, "r") as f:
+            tsvin = csv.reader(f, delimiter="\t")
 
             for row in tsvin:
                 name = row[WEIGHT_NAME]
@@ -105,9 +104,9 @@ class Plotter(object):
         lrs = []
         losses = []
 
-        with open(file_name, "r") as tsvin:
-            tsvin = csv.reader(tsvin, delimiter="\t")
-            row = next(tsvin, None)
+        with open(file_name, "r") as f:
+            tsvin = csv.reader(f, delimiter="\t")
+            row = next(tsvin)
             LEARNING_RATE = row.index("LEARNING_RATE")
             TRAIN_LOSS = row.index("TRAIN_LOSS")
 
@@ -121,8 +120,7 @@ class Plotter(object):
         return lrs, losses
 
     def plot_weights(self, file_name: Union[str, Path]):
-        if type(file_name) is str:
-            file_name = Path(file_name)
+        file_name = Path(file_name)
 
         weights = self._extract_weight_data(file_name)
 
@@ -170,8 +168,7 @@ class Plotter(object):
     def plot_training_curves(
         self, file_name: Union[str, Path], plot_values: List[str] = ["loss", "F1"]
     ):
-        if type(file_name) is str:
-            file_name = Path(file_name)
+        file_name = Path(file_name)
 
         fig = plt.figure(figsize=(15, 10))
 
@@ -212,8 +209,7 @@ class Plotter(object):
     def plot_learning_rate(
         self, file_name: Union[str, Path], skip_first: int = 10, skip_last: int = 5
     ):
-        if type(file_name) is str:
-            file_name = Path(file_name)
+        file_name = Path(file_name)
 
         lrs, losses = self._extract_learning_rate(file_name)
         lrs = lrs[skip_first:-skip_last] if skip_last > 0 else lrs[skip_first:]
