@@ -1,5 +1,3 @@
-import shutil
-
 import pytest
 
 import flair
@@ -63,8 +61,6 @@ def test_sequence_tagger_no_crf(results_base_path, tasks_base_path):
     result: Result = loaded_model.evaluate(corpus.test, gold_label_type='ner')
     assert result.classification_report["micro avg"]["f1-score"] == 1.
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -116,8 +112,6 @@ def test_sequence_tagger_with_crf(results_base_path, tasks_base_path):
     result: Result = loaded_model.evaluate(corpus.test, gold_label_type='ner')
     assert result.classification_report["micro avg"]["f1-score"] == 1.
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -169,8 +163,6 @@ def test_sequence_tagger_stacked(results_base_path, tasks_base_path):
     result: Result = loaded_model.evaluate(corpus.test, gold_label_type='ner')
     assert result.classification_report["micro avg"]["f1-score"] == 1.
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -223,8 +215,6 @@ def test_sequence_tagger_transformer_finetune(results_base_path, tasks_base_path
     result: Result = loaded_model.evaluate(corpus.test, gold_label_type='ner')
     assert result.classification_report["micro avg"]["f1-score"] == 1.
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -244,7 +234,7 @@ def test_text_classifier(results_base_path, tasks_base_path):
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path,
                   mini_batch_size=2,
-                  max_epochs=50,
+                  max_epochs=10,
                   shuffle=True)
 
     # check if model can predict
@@ -277,8 +267,6 @@ def test_text_classifier(results_base_path, tasks_base_path):
     result: Result = loaded_model.evaluate(corpus.test, gold_label_type='city')
     assert result.classification_report["micro avg"]["f1-score"] == 1.
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -301,6 +289,7 @@ def test_text_classifier_transformer_finetune(results_base_path, tasks_base_path
                       max_epochs=10,
                       shuffle=True,
                       learning_rate=0.5e-5,
+                      num_workers=2,
                       )
 
     # check if model can predict
@@ -333,8 +322,6 @@ def test_text_classifier_transformer_finetune(results_base_path, tasks_base_path
     result: Result = loaded_model.evaluate(corpus.test, gold_label_type='city')
     assert result.classification_report["micro avg"]["f1-score"] == 1.
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -389,6 +376,4 @@ def test_text_classifier_multi(results_base_path, tasks_base_path):
     result: Result = loaded_model.evaluate(corpus.test, gold_label_type='city')
     assert result.classification_report["micro avg"]["f1-score"] == 1.
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model

@@ -278,9 +278,8 @@ def test_filter_nested_entities():
     dataset = InternalBioNerDataset(
         documents={}, entities_per_document=entities_per_document
     )
-    with pytest.warns(UserWarning) as warn:
+    with pytest.warns(UserWarning):
         filter_nested_entities(dataset)
-        assert warn
 
     for key, entities in dataset.entities_per_document.items():
         assert key in target

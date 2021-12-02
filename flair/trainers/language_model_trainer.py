@@ -206,8 +206,6 @@ class LanguageModelTrainer:
         if type(base_path) is str:
             base_path = Path(base_path)
 
-        log_handler = add_file_handler(log, base_path / "training.log")
-
         number_of_splits: int = len(self.corpus.train)
 
         val_data = self._batchify(self.corpus.valid, mini_batch_size)
@@ -224,6 +222,8 @@ class LanguageModelTrainer:
         savefile = base_path / "best-lm.pt"
 
         try:
+            log_handler = add_file_handler(log, base_path / "training.log")
+
             best_val_loss = self.loss
             optimizer = self.optimizer(
                 self.model.parameters(), lr=learning_rate, **kwargs

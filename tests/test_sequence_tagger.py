@@ -1,5 +1,3 @@
-import shutil
-
 import pytest
 from torch.optim import SGD
 from torch.optim.adam import Adam
@@ -95,7 +93,6 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
     loaded_model.predict([sentence_empty])
 
     # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -137,8 +134,6 @@ def test_train_load_use_tagger_empty_tags(results_base_path, tasks_base_path):
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -205,8 +200,6 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -248,8 +241,6 @@ def test_train_load_use_tagger_flair_embeddings(results_base_path, tasks_base_pa
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -292,8 +283,6 @@ def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -302,7 +291,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
     corpus_1 = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
-    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path)
+    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path).downsample(0.1)
 
     corpus = MultiCorpus([corpus_1, corpus_2])
     tag_dictionary = corpus.make_label_dictionary("ner")
@@ -338,8 +327,6 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model
 
 
@@ -349,7 +336,7 @@ def test_train_resume_tagger(results_base_path, tasks_base_path):
     corpus_1 = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
-    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path)
+    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path).downsample(0.1)
 
     corpus = MultiCorpus([corpus_1, corpus_2])
     tag_dictionary = corpus.make_label_dictionary("ner")
@@ -374,7 +361,6 @@ def test_train_resume_tagger(results_base_path, tasks_base_path):
                    max_epochs=4)
 
     # clean up results directory
-    shutil.rmtree(results_base_path)
     del trainer
 
 
@@ -398,6 +384,4 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
 
     trainer.find_learning_rate(results_base_path, optimizer=SGD, iterations=5)
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del trainer, tagger, tag_dictionary, corpus

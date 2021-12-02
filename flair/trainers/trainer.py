@@ -229,11 +229,6 @@ class ModelTrainer:
             base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
 
-        if create_file_logs:
-            log_handler = add_file_handler(log, base_path / "training.log")
-        else:
-            log_handler = None
-
         log_line(log)
         log.info(f'Model: "{self.model}"')
         log_line(log)
@@ -373,6 +368,11 @@ class ModelTrainer:
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
+            if create_file_logs:
+                log_handler = add_file_handler(log, base_path / "training.log")
+            else:
+                log_handler = None
+
             previous_learning_rate = learning_rate
             momentum = 0
             for group in optimizer.param_groups:

@@ -12,9 +12,19 @@ def tasks_base_path(resources_path):
     return resources_path / "tasks"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def results_base_path(resources_path):
-    return resources_path / "results"
+    path = resources_path / "results"
+    try:
+        yield path
+    finally:
+        for p in reversed(list(path.rglob("*"))):
+            if p.is_file():
+                p.unlink()
+            else:
+                p.rmdir()
+        if path.is_dir():
+            path.rmdir()
 
 
 def pytest_addoption(parser):

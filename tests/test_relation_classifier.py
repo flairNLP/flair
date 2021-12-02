@@ -1,5 +1,3 @@
-import shutil
-
 from flair.data import Sentence
 from flair.embeddings import (
     TransformerWordEmbeddings
@@ -60,6 +58,4 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     # loaded_model.predict([sentence, sentence_empty])
     # loaded_model.predict([sentence_empty])
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del loaded_model

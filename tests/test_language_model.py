@@ -1,5 +1,4 @@
 import pytest
-import shutil
 
 from flair.data import Dictionary, Sentence
 from flair.embeddings import TokenEmbeddings, FlairEmbeddings
@@ -42,7 +41,6 @@ def test_train_language_model(results_base_path, resources_path):
     assert len(text) >= 100
 
     # clean up results directory
-    shutil.rmtree(results_base_path, ignore_errors=True)
     del trainer, language_model, corpus, char_lm_embeddings
 
 
@@ -86,8 +84,6 @@ def test_train_resume_language_model(
         results_base_path, sequence_length=10, mini_batch_size=10, max_epochs=2
     )
 
-    # clean up results directory
-    shutil.rmtree(results_base_path)
     del trainer
 
 

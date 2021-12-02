@@ -41,7 +41,7 @@ def test_init_tars_and_switch(tasks_base_path):
     assert (len(tars.get_current_label_dictionary()) == 2)
 
 
-def test_train_tars(tasks_base_path):
+def test_train_tars(tasks_base_path, results_base_path):
     # test corpus
     corpus = ClassificationCorpus(tasks_base_path / "imdb_underscore")
 
@@ -58,7 +58,7 @@ def test_train_tars(tasks_base_path):
     trainer = ModelTrainer(tars, corpus)
 
     # start the training
-    trainer.train(base_path='resources/taggers/trec',  # path to store the model artifacts
+    trainer.train(base_path=results_base_path,  # path to store the model artifacts
                   learning_rate=0.02,  # use very small learning rate
                   mini_batch_size=1,
                   # mini_batch_chunk_size=4,  # optionally set this if transformer is too much for your machine
