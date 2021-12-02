@@ -1,5 +1,6 @@
 import logging
 from collections import defaultdict
+from typing import Sized
 
 from torch.utils.data.sampler import Sampler
 import random, torch
@@ -28,7 +29,7 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
     def __init__(self):
         super(ImbalancedClassificationDatasetSampler, self).__init__(None)
 
-    def set_dataset(self, data_source: FlairDataset):
+    def set_dataset(self, data_source: Sized):
         """
         Initialize by passing a classification dataset with labels, i.e. either TextClassificationDataSet or
         :param data_source:

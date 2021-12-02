@@ -4,6 +4,8 @@ import re
 import shutil
 import sqlite3
 from pathlib import Path
+from typing import Union
+
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -67,8 +69,6 @@ class WordEmbeddingsStore:
                         Default value is ``'sqlite'``.
         :param verbose: If `True` print information on standard output
         """
-        # some non-used parameter to allow print
-        self._modules = dict()
         self.items = ""
 
         # get db filename from embedding name
@@ -76,7 +76,7 @@ class WordEmbeddingsStore:
         self.store_path: Path = WordEmbeddingsStore._get_store_path(embedding, backend)
         if verbose:
             logger.info(f"store filename: {str(self.store_path)}")
-
+        self.backend: Union[WordEmbeddings, WordEmbeddingsStoreBackend]
         if backend == 'sqlite':
             self.backend = SqliteWordEmbeddingsStoreBackend(embedding, verbose)
         elif backend == 'lmdb':
