@@ -23,6 +23,7 @@ class LearnedPrototypesTagger(Classifier):
                  learning_mode='joint',
                  expectation_maximization_data=None,
                  normal_distributed_initial_prototypes: bool = False,
+                 prototype_lr_factor : Optional[float] = None
                  ):
         """
         Prototypical model to tag tokens in a sentence using an embedding and
@@ -82,6 +83,13 @@ class LearnedPrototypesTagger(Classifier):
             raise KeyError(f'Distance function {distance_function} not found.')
 
         self.learning_mode = learning_mode
+
+        if prototype_lr_factor is not None:
+            self.prtototype_backward_hook = self.prototype_vectors.register_hook(
+                lambda grad: grad * prototype_lr_factor
+            )
+
+        self.prototype_lr_factor = prototype_lr_factor
 
         # all parameters will be pushed internally to the specified device
         self.to(flair.device)
@@ -355,3 +363,8 @@ class LearnedPrototypesTagger(Classifier):
     @property
     def label_type(self):
         return self.tag_type
+
+    def custom_gradient_adjustment(self):
+        if self.prototype_lr_factor is not None:
+            with torch.no_grad():
+                self.prototype_vectors.grad *= self.prototype_lr_factor
