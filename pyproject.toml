@@ -18,4 +18,5 @@ markers = [
     "integration",
 ]
 [tool.mypy]
+exclude = "flair/data_fetcher.py"
 ignore_missing_imports = true

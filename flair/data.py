@@ -14,13 +14,13 @@ from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
 import flair
-from flair.datasets import DataLoader
 from flair.file_utils import Tqdm
 
 log = logging.getLogger("flair")
 
 
-def _iter_dataset(dataset: Dataset) -> DataLoader:
+def _iter_dataset(dataset: Dataset) -> typing.Iterable:
+    from flair.datasets import DataLoader
     return DataLoader(dataset, batch_size=None, num_workers=0)
 
 
@@ -1288,17 +1288,12 @@ class Corpus:
         # find out empty sentence indices
         empty_sentence_indices = []
         non_empty_sentence_indices = []
-        index = 0
 
-        from flair.datasets import DataLoader
-
-        for batch in DataLoader(dataset):
-            for sentence in batch:
-                if len(sentence.to_plain_string()) > max_charlength:
-                    empty_sentence_indices.append(index)
-                else:
-                    non_empty_sentence_indices.append(index)
-                index += 1
+        for index, sentence in enumerate(_iter_dataset(dataset)):
+            if len(sentence.to_plain_string()) > max_charlength:
+                empty_sentence_indices.append(index)
+            else:
+                non_empty_sentence_indices.append(index)
 
         # create subset of non-empty sentence indices
         subset = Subset(dataset, non_empty_sentence_indices)
@@ -1311,17 +1306,12 @@ class Corpus:
         # find out empty sentence indices
         empty_sentence_indices = []
         non_empty_sentence_indices = []
-        index = 0
 
-        from flair.datasets import DataLoader
-
-        for batch in DataLoader(dataset):
-            for sentence in batch:
+        for index, sentence in enumerate(_iter_dataset(dataset)):
                 if len(sentence) == 0:
                     empty_sentence_indices.append(index)
                 else:
                     non_empty_sentence_indices.append(index)
-                index += 1
 
         # create subset of non-empty sentence indices
         subset = Subset(dataset, non_empty_sentence_indices)
@@ -1457,13 +1447,11 @@ class Corpus:
         """
         label_dictionary: Dictionary = Dictionary(add_unk=True)
 
-        from flair.datasets import DataLoader
         assert self.train
         datasets = [self.train]
 
         data: ConcatDataset = ConcatDataset(datasets)
 
-        loader = DataLoader(data, batch_size=1)
 
         log.info("Computing label dictionary. Progress:")
 
@@ -1472,31 +1460,28 @@ class Corpus:
 
         all_label_types: typing.Counter[str] = Counter()
         all_sentence_labels: List[str] = []
-        for batch in Tqdm.tqdm(iter(loader)):
+        for sentence in Tqdm.tqdm(_iter_dataset(data)):
+            # check for labels of words
+            if isinstance(sentence, Sentence):
+                for token in sentence.tokens:
+                    all_label_types.update(token.annotation_layers.keys())
+                    for label in token.get_labels(label_type):
+                        label_dictionary.add_item(label.value)
+                        token_labels_exist = True
 
-            for sentence in batch:
+            # if we are looking for sentence-level labels
+            if not token_labels_exist:
+                # check if sentence itself has labels
+                labels = sentence.get_labels(label_type)
+                all_label_types.update(sentence.annotation_layers.keys())
 
-                # check for labels of words
-                if isinstance(sentence, Sentence):
-                    for token in sentence.tokens:
-                        all_label_types.update(token.annotation_layers.keys())
-                        for label in token.get_labels(label_type):
-                            label_dictionary.add_item(label.value)
-                            token_labels_exist = True
+                for label in labels:
+                    if label.value not in all_sentence_labels: all_sentence_labels.append(
+                        label.value)
 
-                # if we are looking for sentence-level labels
-                if not token_labels_exist:
-                    # check if sentence itself has labels
-                    labels = sentence.get_labels(label_type)
-                    all_label_types.update(sentence.annotation_layers.keys())
-
-                    for label in labels:
-                        if label.value not in all_sentence_labels: all_sentence_labels.append(
-                            label.value)
-
-                    if not label_dictionary.multi_label:
-                        if len(labels) > 1:
-                            label_dictionary.multi_label = True
+                if not label_dictionary.multi_label:
+                    if len(labels) > 1:
+                        label_dictionary.multi_label = True
 
         # if this is not a token-level prediction problem, add sentence-level labels to dictionary
         if not token_labels_exist:
