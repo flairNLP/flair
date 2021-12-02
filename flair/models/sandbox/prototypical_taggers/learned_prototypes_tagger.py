@@ -10,7 +10,7 @@ from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import TokenEmbeddings
 from flair.nn import Classifier
 from flair.training_utils import store_embeddings
-from .distance import EuclideanDistance, HyperbolicDistance, CosineDistance
+from .distance import EuclideanDistance, HyperbolicDistance, CosineDistance, LogitCosineDistance
 
 
 class LearnedPrototypesTagger(Classifier):
@@ -74,6 +74,8 @@ class LearnedPrototypesTagger(Classifier):
             self.distance = HyperbolicDistance()
         elif distance_function.lower() == 'cosine':
             self.distance = CosineDistance()
+        elif distance_function.lower() == 'logit_cosine':
+            self.distance = LogitCosineDistance()
         elif distance_function.lower() == 'euclidean':
             self.distance = EuclideanDistance()
         else:
