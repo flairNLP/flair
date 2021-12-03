@@ -19,13 +19,7 @@ from torch.nn import TransformerEncoderLayer, TransformerEncoder
 log = logging.getLogger("flair")
 
 
-class ImageEmbeddings(Embeddings):
-    @property
-    @abstractmethod
-    def embedding_length(self) -> int:
-        """Returns the length of the embedding vector."""
-        pass
-
+class ImageEmbeddings(Embeddings[Image]):
     @property
     def embedding_type(self) -> str:
         return "image-level"
@@ -42,7 +36,7 @@ class IdentityImageEmbeddings(ImageEmbeddings):
         self.static_embeddings = True
         super().__init__()
 
-    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+    def _add_embeddings_internal(self, images: List[Image]):
         for image in images:
             image_data = self.PIL.Image.open(image.imageURL)
             image_data.load()
@@ -64,7 +58,7 @@ class PrecomputedImageEmbeddings(ImageEmbeddings):
         self.static_embeddings = True
         super().__init__()
 
-    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+    def _add_embeddings_internal(self, images: List[Image]):
         for image in images:
             if image.imageURL in self.url2tensor_dict:
                 image.set_embedding(self.name, self.url2tensor_dict[image.imageURL])
@@ -130,7 +124,7 @@ class NetworkImageEmbeddings(ImageEmbeddings):
         else:
             raise Exception(f"Image embeddings {name} not available.")
 
-    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+    def _add_embeddings_internal(self, images: List[Image]):
         image_tensor = torch.stack([self.transforms(image.data) for image in images])
         image_embeddings = self.features(image_tensor)
         image_embeddings = (
@@ -284,7 +278,7 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
 
         return x
 
-    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+    def _add_embeddings_internal(self, images: List[Image]):
         image_tensor = torch.stack([image.data for image in images])
         image_embeddings = self.forward(image_tensor)
         for image_id, image in enumerate(images):

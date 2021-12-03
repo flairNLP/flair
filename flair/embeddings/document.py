@@ -4,6 +4,7 @@ from typing import List, Union
 
 import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
+from torch.nn import RNNBase
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer
 
@@ -16,14 +17,8 @@ from flair.nn import LockedDropout, WordDropout
 log = logging.getLogger("flair")
 
 
-class DocumentEmbeddings(Embeddings):
+class DocumentEmbeddings(Embeddings[Sentence]):
     """Abstract base class for all document-level embeddings. Every new type of document embedding must implement these methods."""
-
-    @property
-    @abstractmethod
-    def embedding_length(self) -> int:
-        """Returns the length of the embedding vector."""
-        pass
 
     @property
     def embedding_type(self) -> str:
@@ -54,7 +49,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         super().__init__()
 
         if pooling not in ['cls', 'max', 'mean']:
-            raise ValueError(f"Pooling operation `{pooling}` is not defined for TransformerDocumentEmbeddings")
+            raise ValueError(
+                f"Pooling operation `{pooling}` is not defined for TransformerDocumentEmbeddings")
 
         # temporary fix to disable tokenizer parallelism warning
         # (see https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning)
@@ -66,13 +62,17 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         logging.set_verbosity_error()
 
         # load tokenizer and transformer model
-        self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+        self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
+            model, **kwargs)
         if self.tokenizer.model_max_length > 1000000000:
             self.tokenizer.model_max_length = 512
-            log.info("No model_max_length in Tokenizer's config.json - setting it to 512. "
-                     "Specify desired model_max_length by passing it as attribute to embedding instance.")
+            log.info(
+                "No model_max_length in Tokenizer's config.json - setting it to 512. "
+                "Specify desired model_max_length by passing it as attribute to embedding instance.")
         if not 'config' in kwargs:
-            config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
+            config = AutoConfig.from_pretrained(model,
+                                                output_hidden_states=True,
+                                                **kwargs)
             self.model = AutoModel.from_pretrained(model, config=config)
         else:
             self.model = AutoModel.from_pretrained(None, **kwargs)
@@ -90,7 +90,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         # embedding parameters
         if layers == 'all':
             # send mini-token through to check how many layers the model has
-            hidden_states = self.model(torch.tensor([1], device=flair.device).unsqueeze(0))[-1]
+            hidden_states = \
+            self.model(torch.tensor([1], device=flair.device).unsqueeze(0))[-1]
             self.layer_indexes = [int(x) for x in range(len(hidden_states))]
         else:
             self.layer_indexes = [int(x) for x in layers.split(",")]
@@ -101,7 +102,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         self.pooling = pooling
 
         # check whether CLS is at beginning or end
-        self.initial_cls_token: bool = self._has_initial_cls_token(tokenizer=self.tokenizer)
+        self.initial_cls_token: bool = self._has_initial_cls_token(
+            tokenizer=self.tokenizer)
 
     @staticmethod
     def _has_initial_cls_token(tokenizer: PreTrainedTokenizer) -> bool:
@@ -111,11 +113,13 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         if tokens[0] == tokenizer.cls_token_id: initial_cls_token = True
         return initial_cls_token
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[
+        Sentence]:
         """Add embeddings to all words in a list of sentences."""
 
         # gradients are enabled if fine-tuning is enabled
-        gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
+        gradient_context = torch.enable_grad() if (
+                    self.fine_tune and self.training) else torch.no_grad()
 
         with gradient_context:
 
@@ -125,17 +129,20 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             # subtokenize sentences
             for sentence in sentences:
                 # tokenize and truncate to max subtokens (TODO: check better truncation strategies)
-                subtokenized_sentence = self.tokenizer.encode(sentence.to_tokenized_string(),
-                                                              add_special_tokens=True,
-                                                              max_length=self.tokenizer.model_max_length,
-                                                              truncation=True,
-                                                              )
+                subtokenized_sentence = self.tokenizer.encode(
+                    sentence.to_tokenized_string(),
+                    add_special_tokens=True,
+                    max_length=self.tokenizer.model_max_length,
+                    truncation=True,
+                    )
 
                 subtokenized_sentences.append(
-                    torch.tensor(subtokenized_sentence, dtype=torch.long, device=flair.device))
+                    torch.tensor(subtokenized_sentence, dtype=torch.long,
+                                 device=flair.device))
 
             # find longest sentence in batch
-            longest_sequence_in_batch: int = len(max(subtokenized_sentences, key=len))
+            longest_sequence_in_batch: int = len(
+                max(subtokenized_sentences, key=len))
 
             # initialize batch tensors and mask
             input_ids = torch.zeros(
@@ -148,36 +155,44 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                 dtype=torch.long,
                 device=flair.device,
             )
-            for s_id, sentence in enumerate(subtokenized_sentences):
-                sequence_length = len(sentence)
-                input_ids[s_id][:sequence_length] = sentence
+            for s_id, sentence_embedding in enumerate(subtokenized_sentences):
+                sequence_length = len(sentence_embedding)
+                input_ids[s_id][:sequence_length] = sentence_embedding
                 mask[s_id][:sequence_length] = torch.ones(sequence_length)
 
             # put encoded batch through transformer model to get all hidden states of all encoder layers
-            hidden_states = self.model(input_ids, attention_mask=mask)[-1] if len(sentences) > 1 \
+            hidden_states = self.model(input_ids, attention_mask=mask)[
+                -1] if len(sentences) > 1 \
                 else self.model(input_ids)[-1]
 
             # iterate over all subtokenized sentences
-            for sentence_idx, (sentence, subtokens) in enumerate(zip(sentences, subtokenized_sentences)):
+            for sentence_idx, (sentence, subtokens) in enumerate(
+                    zip(sentences, subtokenized_sentences)):
 
                 if self.pooling == "cls":
-                    index_of_CLS_token = 0 if self.initial_cls_token else len(subtokens) - 1
+                    index_of_CLS_token = 0 if self.initial_cls_token else len(
+                        subtokens) - 1
 
-                    cls_embeddings_all_layers: List[torch.FloatTensor] = \
-                        [hidden_states[layer][sentence_idx][index_of_CLS_token] for layer in self.layer_indexes]
+                    cls_embeddings_all_layers: List[torch.Tensor] = \
+                        [hidden_states[layer][sentence_idx][index_of_CLS_token]
+                         for layer in self.layer_indexes]
 
                     embeddings_all_layers = cls_embeddings_all_layers
 
                 elif self.pooling == "mean":
-                    mean_embeddings_all_layers: List[torch.FloatTensor] = \
-                        [torch.mean(hidden_states[layer][sentence_idx][:len(subtokens), :], dim=0) for layer in
+                    mean_embeddings_all_layers: List[torch.Tensor] = \
+                        [torch.mean(
+                            hidden_states[layer][sentence_idx][:len(subtokens),
+                            :], dim=0) for layer in
                          self.layer_indexes]
 
                     embeddings_all_layers = mean_embeddings_all_layers
 
                 elif self.pooling == "max":
-                    max_embeddings_all_layers: List[torch.FloatTensor] = \
-                        [torch.max(hidden_states[layer][sentence_idx][:len(subtokens), :], dim=0)[0] for layer in
+                    max_embeddings_all_layers: List[torch.Tensor] = \
+                        [torch.max(
+                            hidden_states[layer][sentence_idx][:len(subtokens),
+                            :], dim=0)[0] for layer in
                          self.layer_indexes]
 
                     embeddings_all_layers = max_embeddings_all_layers
@@ -190,7 +205,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                     embeddings_all_layers = [sm_embeddings]
 
                 # set the extracted embedding for the token
-                sentence.set_embedding(self.name, torch.cat(embeddings_all_layers))
+                sentence.set_embedding(self.name,
+                                       torch.cat(embeddings_all_layers))
 
         return sentences
 
@@ -209,7 +225,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         config_state_dict = self.model.config.__dict__
         model_state_dict = self.model.state_dict()
 
-        if not hasattr(self, "base_model_name"): self.base_model_name = self.name.split('transformer-document-')[-1]
+        if not hasattr(self, "base_model_name"): self.base_model_name = \
+        self.name.split('transformer-document-')[-1]
 
         # serialize the transformer models and the constructor arguments (but nothing else)
         model_state = {
@@ -237,12 +254,15 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         if "config_state_dict" in d:
 
             # load transformer model
-            model_type = d["config_state_dict"]["model_type"] if "model_type" in d["config_state_dict"] else "bert"
+            model_type = d["config_state_dict"][
+                "model_type"] if "model_type" in d[
+                "config_state_dict"] else "bert"
             config_class = CONFIG_MAPPING[model_type]
             loaded_config = config_class.from_dict(d["config_state_dict"])
 
             # constructor arguments
-            layers = ','.join([str(idx) for idx in self.__dict__['layer_indexes']])
+            layers = ','.join(
+                [str(idx) for idx in self.__dict__['layer_indexes']])
 
             # re-initialize transformer word embeddings with constructor arguments
             embedding = TransformerDocumentEmbeddings(
@@ -253,7 +273,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
                 config=loaded_config,
                 state_dict=d["model_state_dict"],
-                pooling=self.__dict__['pooling'] if 'pooling' in self.__dict__ else 'cls',
+                pooling=self.__dict__[
+                    'pooling'] if 'pooling' in self.__dict__ else 'cls',
                 # for backward compatibility with previous models
             )
 
@@ -262,7 +283,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                 self.__dict__[key] = embedding.__dict__[key]
 
         else:
-            model_name = self.__dict__['name'].split('transformer-document-')[-1]
+            model_name = self.__dict__['name'].split('transformer-document-')[
+                -1]
             # reload tokenizer to get around serialization issues
             try:
                 tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -286,7 +308,8 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
-        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(
+            embeddings=embeddings)
         self.__embedding_length = self.embeddings.embedding_length
 
         # optional fine-tuning on top of embedding layer
@@ -295,20 +318,22 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
             self.embedding_flex = torch.nn.Linear(
                 self.embedding_length, self.embedding_length, bias=False
             )
-            self.embedding_flex.weight.data.copy_(torch.eye(self.embedding_length))
+            self.embedding_flex.weight.data.copy_(
+                torch.eye(self.embedding_length))
 
         if self.fine_tune_mode in ["nonlinear"]:
-            self.embedding_flex_nonlinear = torch.nn.ReLU(self.embedding_length)
+            self.embedding_flex_nonlinear = torch.nn.ReLU()
             self.embedding_flex_nonlinear_map = torch.nn.Linear(
                 self.embedding_length, self.embedding_length
             )
 
-        self.__embedding_length: int = self.embeddings.embedding_length
+        self.__embedding_length = self.embeddings.embedding_length
 
         self.to(flair.device)
 
         if pooling not in ['min', 'max', 'mean']:
-            raise ValueError(f"Pooling operation for {self.mode!r} is not defined")
+            raise ValueError(
+                f"Pooling operation for {self.mode!r} is not defined")
 
         self.pooling = pooling
         self.name: str = f"document_{self.pooling}"
@@ -328,18 +353,20 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         self.embeddings.embed(sentences)
 
         for sentence in sentences:
-            word_embeddings = []
-            for token in sentence.tokens:
-                word_embeddings.append(token.get_embedding().unsqueeze(0))
 
-            word_embeddings = torch.cat(word_embeddings, dim=0).to(flair.device)
+            word_embeddings = torch.cat([
+                token.get_embedding().unsqueeze(0)
+                for token in sentence.tokens
+            ], dim=0).to(flair.device)
 
             if self.fine_tune_mode in ["nonlinear", "linear"]:
                 word_embeddings = self.embedding_flex(word_embeddings)
 
             if self.fine_tune_mode in ["nonlinear"]:
-                word_embeddings = self.embedding_flex_nonlinear(word_embeddings)
-                word_embeddings = self.embedding_flex_nonlinear_map(word_embeddings)
+                word_embeddings = self.embedding_flex_nonlinear(
+                    word_embeddings)
+                word_embeddings = self.embedding_flex_nonlinear_map(
+                    word_embeddings)
 
             if self.pooling == "mean":
                 pooled_embedding = torch.mean(word_embeddings, 0)
@@ -370,7 +397,8 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
         super().__init__()
 
         import numpy as np
-        self.vectorizer = TfidfVectorizer(dtype=np.float32, **vectorizer_params)
+        self.vectorizer = TfidfVectorizer(dtype=np.float32,
+                                          **vectorizer_params)
         self.vectorizer.fit([s.to_original_text() for s in train_dataset])
 
         self.__embedding_length: int = len(self.vectorizer.vocabulary_)
@@ -391,7 +419,8 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
             sentences = [sentences]
 
         raw_sentences = [s.to_original_text() for s in sentences]
-        tfidf_vectors = torch.from_numpy(self.vectorizer.transform(raw_sentences).A)
+        tfidf_vectors = torch.from_numpy(
+            self.vectorizer.transform(raw_sentences).A)
 
         for sentence_id, sentence in enumerate(sentences):
             sentence.set_embedding(self.name, tfidf_vectors[sentence_id])
@@ -431,7 +460,8 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
-        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(
+            embeddings=embeddings)
 
         self.rnn_type = rnn_type
 
@@ -456,7 +486,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         # bidirectional RNN on top of embedding layer
         if rnn_type == "LSTM":
-            self.rnn = torch.nn.LSTM(
+            self.rnn: RNNBase = torch.nn.LSTM(
                 self.embeddings_dimension,
                 hidden_size,
                 num_layers=rnn_layers,
@@ -479,7 +509,8 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         self.locked_dropout = (
             LockedDropout(locked_dropout) if locked_dropout > 0.0 else None
         )
-        self.word_dropout = WordDropout(word_dropout) if word_dropout > 0.0 else None
+        self.word_dropout = WordDropout(
+            word_dropout) if word_dropout > 0.0 else None
 
         torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 
@@ -491,7 +522,8 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: Union[List[Sentence], Sentence]):
+    def _add_embeddings_internal(self,
+                                 sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
 
@@ -553,10 +585,11 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         # push through RNN
         packed = pack_padded_sequence(
-            sentence_tensor, lengths, enforce_sorted=False, batch_first=True
+            sentence_tensor, lengths, enforce_sorted=False, batch_first=True  # type: ignore
         )
         rnn_out, hidden = self.rnn(packed)
-        outputs, output_lengths = pad_packed_sequence(rnn_out, batch_first=True)
+        outputs, output_lengths = pad_packed_sequence(rnn_out,
+                                                      batch_first=True)
 
         # after-RNN dropout
         if self.dropout:
@@ -584,7 +617,8 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         # models that were serialized using torch versions older than 1.4.0 lack the _flat_weights_names attribute
         # check if this is the case and if so, set it
         for child_module in self.children():
-            if isinstance(child_module, torch.nn.RNNBase) and not hasattr(child_module, "_flat_weights_names"):
+            if isinstance(child_module, torch.nn.RNNBase) and not hasattr(
+                    child_module, "_flat_weights_names"):
                 _flat_weights_names = []
 
                 if child_module.__dict__["bidirectional"]:
@@ -684,21 +718,19 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
         return self._embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
-        if type(sentences) is Sentence:
-            sentences = [sentences]
 
         for embedding in self.embeddings:
             embedding.embed(sentences)
 
             # iterate over sentences
             for sentence in sentences:
-                sentence: Sentence = sentence
 
                 # if its a forward LM, take last state
                 if embedding.is_forward_lm:
                     sentence.set_embedding(
                         embedding.name,
-                        sentence[len(sentence) - 1]._embeddings[embedding.name],
+                        sentence[len(sentence) - 1]._embeddings[
+                            embedding.name],
                     )
                 else:
                     sentence.set_embedding(
@@ -727,7 +759,8 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
             from sentence_transformers import SentenceTransformer
         except ModuleNotFoundError:
             log.warning("-" * 100)
-            log.warning('ATTENTION! The library "sentence-transformers" is not installed!')
+            log.warning(
+                'ATTENTION! The library "sentence-transformers" is not installed!')
             log.warning(
                 'To use Sentence Transformers, please first install with "pip install sentence-transformers"'
             )
@@ -740,10 +773,13 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         self.convert_to_numpy = convert_to_numpy
         self.static_embeddings = True
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[
+        Sentence]:
 
-        sentence_batches = [sentences[i * self.batch_size:(i + 1) * self.batch_size]
-                            for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
+        sentence_batches = [
+            sentences[i * self.batch_size:(i + 1) * self.batch_size]
+            for i in
+            range((len(sentences) + self.batch_size - 1) // self.batch_size)]
 
         for batch in sentence_batches:
             self._add_embeddings_to_sentences(batch)
@@ -753,9 +789,11 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
     def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
 
         # convert to plain strings, embedded in a list for the encode function
-        sentences_plain_text = [sentence.to_plain_string() for sentence in sentences]
+        sentences_plain_text = [sentence.to_plain_string() for sentence in
+                                sentences]
 
-        embeddings = self.model.encode(sentences_plain_text, convert_to_numpy=self.convert_to_numpy)
+        embeddings = self.model.encode(sentences_plain_text,
+                                       convert_to_numpy=self.convert_to_numpy)
         for sentence, embedding in zip(sentences, embeddings):
             sentence.set_embedding(self.name, embedding)
 
@@ -791,7 +829,8 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
-        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(
+            embeddings=embeddings)
         self.length_of_all_token_embeddings: int = self.embeddings.embedding_length
 
         self.kernels = kernels
@@ -808,10 +847,12 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         )
 
         # CNN
-        self.__embedding_length: int = sum([kernel_num for kernel_num, kernel_size in self.kernels])
+        self.__embedding_length: int = sum(
+            [kernel_num for kernel_num, kernel_size in self.kernels])
         self.convs = torch.nn.ModuleList(
             [
-                torch.nn.Conv1d(self.embeddings_dimension, kernel_num, kernel_size) for kernel_num, kernel_size in
+                torch.nn.Conv1d(self.embeddings_dimension, kernel_num,
+                                kernel_size) for kernel_num, kernel_size in
                 self.kernels
             ]
         )
@@ -824,7 +865,8 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         self.locked_dropout = (
             LockedDropout(locked_dropout) if locked_dropout > 0.0 else None
         )
-        self.word_dropout = WordDropout(word_dropout) if word_dropout > 0.0 else None
+        self.word_dropout = WordDropout(
+            word_dropout) if word_dropout > 0.0 else None
 
         torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 
@@ -836,7 +878,8 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: Union[List[Sentence], Sentence]):
+    def _add_embeddings_internal(self,
+                                 sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
 
@@ -900,7 +943,8 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         x = sentence_tensor
         x = x.permute(0, 2, 1)
 
-        rep = [self.pool(torch.nn.functional.relu(conv(x))) for conv in self.convs]
+        rep = [self.pool(torch.nn.functional.relu(conv(x))) for conv in
+               self.convs]
         outputs = torch.cat(rep, 1)
 
         outputs = outputs.reshape(outputs.size(0), -1)

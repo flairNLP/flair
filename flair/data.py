@@ -303,6 +303,7 @@ class DataPoint:
 
     def __init__(self):
         self.annotation_layers = {}
+        self._embeddings: Dict[str, torch.Tensor] = {}
 
     @property
     @abstractmethod
@@ -313,9 +314,13 @@ class DataPoint:
     def to(self, device: str, pin_memory: bool = False):
         pass
 
-    @abstractmethod
     def clear_embeddings(self, embedding_names: List[str] = None):
-        pass
+        if embedding_names is None:
+            self._embeddings = {}
+        else:
+            for name in embedding_names:
+                if name in self._embeddings.keys():
+                    del self._embeddings[name]
 
     def add_label(self, typename: str, value: str, score: float = 1.):
 
@@ -360,6 +365,25 @@ class DataPoint:
         for key in self.annotation_layers.keys():
             all_labels.extend(self.annotation_layers[key])
         return all_labels
+
+    def get_embedding(self, names: Optional[List[str]] = None) -> torch.Tensor:
+        embeddings = self.get_each_embedding(names)
+
+        if embeddings:
+            return torch.cat(embeddings, dim=0)
+
+        return torch.tensor([], device=flair.device)
+
+    def get_each_embedding(self,
+                           embedding_names: Optional[List[str]] = None) -> List[torch.Tensor]:
+        embeddings = []
+        for embed in sorted(self._embeddings.keys()):
+            if embedding_names and embed not in embedding_names: continue
+            embed = self._embeddings[embed].to(flair.device)
+            if (flair.embedding_storage_mode == "cpu") and embed.device != flair.device:
+                embed = embed.to(flair.device)
+            embeddings.append(embed)
+        return embeddings
 
 
 class DataPair(DataPoint):
@@ -463,35 +487,6 @@ class Token(DataPoint):
                 else:
                     self._embeddings[name] = vector.to(device,
                                                        non_blocking=True)
-
-    def clear_embeddings(self, embedding_names: List[str] = None):
-        if embedding_names is None:
-            self._embeddings = {}
-        else:
-            for name in embedding_names:
-                if name in self._embeddings.keys():
-                    del self._embeddings[name]
-
-    def get_each_embedding(self,
-                           embedding_names: Optional[List[str]] = None) -> \
-    List[torch.Tensor]:
-        embeddings = []
-        for embed in sorted(self._embeddings.keys()):
-            if embedding_names and embed not in embedding_names: continue
-            embed = self._embeddings[embed].to(flair.device)
-            if (
-                    flair.embedding_storage_mode == "cpu") and embed.device != flair.device:
-                embed = embed.to(flair.device)
-            embeddings.append(embed)
-        return embeddings
-
-    def get_embedding(self, names: Optional[List[str]] = None) -> torch.Tensor:
-        embeddings = self.get_each_embedding(names)
-
-        if embeddings:
-            return torch.cat(embeddings, dim=0)
-
-        return torch.tensor([], device=flair.device)
 
     @property
     def start_position(self) -> Optional[int]:
@@ -713,6 +708,9 @@ class Sentence(DataPoint):
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
+        self._previous_sentence: Optional[Sentence] = None
+        self._next_sentence: Optional[Sentence] = None
+
     def get_token(self, token_id: int) -> Optional[Token]:
         for token in self.tokens:
             if token.idx == token_id:
@@ -888,13 +886,7 @@ class Sentence(DataPoint):
 
     def clear_embeddings(self, embedding_names: List[str] = None):
 
-        # clear sentence embeddings
-        if embedding_names is None:
-            self._embeddings = {}
-        else:
-            for name in embedding_names:
-                if name in self._embeddings.keys():
-                    del self._embeddings[name]
+        super().clear_embeddings(embedding_names)
 
         # clear token embeddings
         for token in self:
@@ -1187,13 +1179,6 @@ class Image(DataPoint):
                     self._embeddings[name] = vector.to(device,
                                                        non_blocking=True)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
-        if embedding_names is None:
-            self._embeddings = {}
-        else:
-            for name in embedding_names:
-                if name in self._embeddings.keys():
-                    del self._embeddings[name]
 
 
 class FlairDataset(Dataset):

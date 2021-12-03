@@ -18,5 +18,5 @@ markers = [
     "integration",
 ]
 [tool.mypy]
-exclude = "flair/data_fetcher.py"
+exclude = "flair/data_fetcher.py|flair/embeddings/legacy.py"
 ignore_missing_imports = true
