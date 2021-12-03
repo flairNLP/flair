@@ -1,5 +1,4 @@
 import logging
-from abc import abstractmethod
 from typing import List, Union
 
 import torch
@@ -211,7 +210,6 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         return sentences
 
     @property
-    @abstractmethod
     def embedding_length(self) -> int:
         """Returns the length of the embedding vector."""
         return (
@@ -798,7 +796,6 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
             sentence.set_embedding(self.name, embedding)
 
     @property
-    @abstractmethod
     def embedding_length(self) -> int:
         """Returns the length of the embedding vector."""
         return self.model.get_sentence_embedding_dimension()
