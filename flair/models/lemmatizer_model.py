@@ -97,7 +97,7 @@ class Lemmatizer(flair.nn.Classifier):
         hidden_input_size = 0
         if embeddings: hidden_input_size += embeddings.embedding_length
         if encode_characters: hidden_input_size += rnn_hidden_size
-        if bidirectional_encoding: hidden_input_size += rnn_hidden_size
+        if encode_characters and bidirectional_encoding: hidden_input_size += rnn_hidden_size
         self.emb_to_hidden = nn.Linear(hidden_input_size, rnn_hidden_size)
 
         # encoder RNN
