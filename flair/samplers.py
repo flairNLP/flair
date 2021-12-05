@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Sized
+from typing import  Dict
 
 from torch.utils.data.sampler import Sampler
 import random, torch
@@ -29,7 +29,7 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
     def __init__(self):
         super(ImbalancedClassificationDatasetSampler, self).__init__(None)
 
-    def set_dataset(self, data_source: Sized):
+    def set_dataset(self, data_source):
         """
         Initialize by passing a classification dataset with labels, i.e. either TextClassificationDataSet or
         :param data_source:
@@ -39,7 +39,7 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
         self.indices = list(range(len(data_source)))
 
         # first determine the distribution of classes in the dataset
-        label_count = defaultdict(int)
+        label_count: Dict[str, int] = defaultdict(int)
         for sentence in data_source:
             for label in sentence.labels:
                 label_count[label.value] += 1

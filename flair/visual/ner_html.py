@@ -33,6 +33,7 @@ def split_to_spans(s: Sentence):
         if last_idx != ent.start_pos:
             spans.append((orig[last_idx : ent.start_pos], None))
         spans.append((ent.text, ent.tag))
+        assert ent.end_pos is not None
         last_idx = ent.end_pos
     if last_idx < len(orig) - 1:
         spans.append((orig[last_idx : len(orig)], None))

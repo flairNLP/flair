@@ -9,10 +9,10 @@ class NodeToken:
     def __init__(self, token: Token, tag_type: str):
         self.token: Token = token
         self.tag_type: str = tag_type
-        self.children = []
+        self.children: List[NodeToken] = []
         
     def set_haed(self, parent):
-            parent.children.append(self)
+        parent.children.append(self)
 
     def __str__(self):
         return " {}({}) ".format(

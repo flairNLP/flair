@@ -381,9 +381,9 @@ class DataPoint:
     def get_each_embedding(self,
                            embedding_names: Optional[List[str]] = None) -> List[torch.Tensor]:
         embeddings = []
-        for embed in sorted(self._embeddings.keys()):
-            if embedding_names and embed not in embedding_names: continue
-            embed = self._embeddings[embed].to(flair.device)
+        for embed_name in sorted(self._embeddings.keys()):
+            if embedding_names and embed_name not in embedding_names: continue
+            embed = self._embeddings[embed_name].to(flair.device)
             if (flair.embedding_storage_mode == "cpu") and embed.device != flair.device:
                 embed = embed.to(flair.device)
             embeddings.append(embed)
@@ -859,17 +859,6 @@ class Sentence(DataPoint):
             vector = vector.to(device)
         self._embeddings[name] = vector
 
-    def get_embedding(self, names: Optional[List[str]] = None) -> torch.Tensor:
-        embeddings = []
-        for embed in sorted(self._embeddings.keys()):
-            if names and embed not in names: continue
-            embedding = self._embeddings[embed]
-            embeddings.append(embedding)
-
-        if embeddings:
-            return torch.cat(embeddings, dim=0)
-
-        return torch.Tensor()
 
     def to(self, device: str, pin_memory: bool = False):
 
@@ -1151,17 +1140,6 @@ class Image(DataPoint):
         image_url = self.imageURL if self.imageURL else ""
 
         return f"Image: {image_repr} {image_url}"
-
-    def get_embedding(self) -> torch.Tensor:
-        embeddings = [
-            self._embeddings[embed] for embed in
-            sorted(self._embeddings.keys())
-        ]
-
-        if embeddings:
-            return torch.cat(embeddings, dim=0)
-
-        return torch.tensor([], device=flair.device)
 
     def set_embedding(self, name: str, vector: torch.Tensor):
         device = flair.device

@@ -4,13 +4,13 @@ from collections import defaultdict
 from enum import Enum
 from math import inf
 from pathlib import Path
-from typing import Union, List
+from typing import Union, List, Dict
 
 from torch.optim import Optimizer
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import Dictionary, Sentence
+from flair.data import Dictionary, Sentence, _iter_dataset, DataPoint
 from functools import reduce
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from scipy.stats import pearsonr, spearmanr
@@ -23,13 +23,13 @@ class Result(object):
                  log_line: str,
                  detailed_results: str,
                  loss: float,
-                 classification_report: dict = None,
+                 classification_report: dict = {},
                  ):
         self.main_score: float = main_score
         self.log_header: str = log_header
         self.log_line: str = log_line
         self.detailed_results: str = detailed_results
-        self.classification_report: dict = classification_report
+        self.classification_report = classification_report
         self.loss: float = loss
 
     def __str__(self):
@@ -103,7 +103,7 @@ class WeightExtractor(object):
         if type(directory) is str:
             directory = Path(directory)
         self.weights_file = init_output_file(directory, "weights.txt")
-        self.weights_dict = defaultdict(lambda: defaultdict(lambda: list()))
+        self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(lambda: defaultdict(lambda: list()))
         self.number_of_weights = number_of_weights
 
     def extract_weights(self, state_dict, iteration):
@@ -326,8 +326,7 @@ def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
     :param file_name: the file name
     :return: the created file
     """
-    if type(base_path) is str:
-        base_path = Path(base_path)
+    base_path = Path(base_path)
     base_path.mkdir(parents=True, exist_ok=True)
 
     file = base_path / file_name
@@ -364,30 +363,37 @@ def add_file_handler(log, output_file):
     return fh
 
 
-def store_embeddings(sentences: Union[List[Sentence], Dataset], storage_mode: str):
+def store_embeddings(data_points: Union[List[DataPoint], Dataset], storage_mode: str):
     # if memory mode option 'none' delete everything
-    if storage_mode == "none":
-        for sentence in sentences:
-            sentence.clear_embeddings()
+    if isinstance(data_points, Dataset):
+        data_points = list(_iter_dataset(data_points))
 
+    if storage_mode == "none":
+        delete_keys = None
     # else delete only dynamic embeddings (otherwise autograd will keep everything in memory)
     else:
         # find out which ones are dynamic embeddings
         delete_keys = []
-        if type(sentences[0]) == Sentence:
-            for name, vector in sentences[0][0]._embeddings.items():
-                if sentences[0][0]._embeddings[name].requires_grad:
+        data_point = data_points[0]
+        if isinstance(data_point, Sentence):
+            first_token = data_point[0]
+            for name, vector in first_token._embeddings.items():
+                if vector.requires_grad:
                     delete_keys.append(name)
 
+        for name, vector in data_point._embeddings.items():
+            if vector.requires_grad:
+                delete_keys.append(name)
+
         # find out which ones are dynamic embeddings
-        for sentence in sentences:
-            sentence.clear_embeddings(delete_keys)
+    for data_point in data_points:
+        data_point.clear_embeddings(delete_keys)
 
     # memory management - option 1: send everything to CPU (pin to memory if we train on GPU)
     if storage_mode == "cpu":
-        pin_memory = False if str(flair.device) == "cpu" else True
-        for sentence in sentences:
-            sentence.to("cpu", pin_memory=pin_memory)
+        pin_memory = str(flair.device) != "cpu"
+        for data_point in data_points:
+            data_point.to("cpu", pin_memory=pin_memory)
 
     # record current embedding storage mode to allow optimization (for instance in FlairEmbeddings class)
     flair.embedding_storage_mode = storage_mode
