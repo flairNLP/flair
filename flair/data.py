@@ -19,12 +19,16 @@ from flair.file_utils import Tqdm
 log = logging.getLogger("flair")
 
 
-def _iter_dataset(dataset: Dataset) -> typing.Iterable:
+def _iter_dataset(dataset: Optional[Dataset]) -> typing.Iterable:
+    if dataset is None:
+        return []
     from flair.datasets import DataLoader
     return map(lambda x: x[0], DataLoader(dataset, batch_size=1, num_workers=0))
 
 
-def _len_dataset(dataset: Dataset) -> int:
+def _len_dataset(dataset: Optional[Dataset]) -> int:
+    if dataset is None:
+        return 0
     from flair.datasets import DataLoader
     loader = DataLoader(dataset, batch_size=1, num_workers=0)
     return len(loader)

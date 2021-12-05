@@ -2,7 +2,7 @@ import time, datetime
 import random
 import sys
 from pathlib import Path
-from typing import Union
+from typing import Union, Iterable, Type
 
 from torch import cuda
 from torch.optim import AdamW
@@ -35,11 +35,9 @@ class TextDataset(Dataset):
         document_delimiter: str = '\n',
         shuffle: bool = True,
     ):
-        if type(path) is str:
-            path = Path(path)
+        path = Path(path)
         assert path.exists()
 
-        self.files = None
         self.path = path
         self.dictionary = dictionary
         self.split_on_char = split_on_char
@@ -57,17 +55,17 @@ class TextDataset(Dataset):
     def __len__(self):
         return len(self.files)
 
-    def __getitem__(self, index=0) -> torch.tensor:
+    def __getitem__(self, index=0) -> torch.Tensor:
         """Tokenizes a text file on character basis."""
         if type(self.files[index]) is str:
             self.files[index] = Path(self.files[index])
         assert self.files[index].exists()
 
         with self.files[index].open("r", encoding="utf-8") as fin:
-            lines = (doc + self.document_delimiter for doc in fin.read().split(self.document_delimiter) if doc)
+            text_lines: Iterable[str] = (doc + self.document_delimiter for doc in fin.read().split(self.document_delimiter) if doc)
             if self.random_case_flip:
-                lines = map(self.random_casechange, lines)
-            lines = list(map(list if self.split_on_char else str.split, lines))
+                text_lines = map(self.random_casechange, text_lines)
+            lines = list(map(list if self.split_on_char else str.split, text_lines))  # type: ignore
 
         log.info(f"read text file with {len(lines)} lines")
 
@@ -81,7 +79,7 @@ class TextDataset(Dataset):
                     self.dictionary.add_item(char)
 
         ids = torch.tensor(
-            [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars], 
+            [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars],
             dtype=torch.long
         )
         if not self.forward:
@@ -114,8 +112,7 @@ class TextCorpus(object):
         self.random_case_flip = random_case_flip
         self.document_delimiter: str = document_delimiter
 
-        if type(path) == str:
-            path = Path(path)
+        path = Path(path)
 
         self.train = TextDataset(
             path / "train",
@@ -156,7 +153,7 @@ class LanguageModelTrainer:
         self,
         model: LanguageModel,
         corpus: TextCorpus,
-        optimizer: Optimizer = SGD,
+        optimizer: Type[Optimizer] = SGD,
         test_mode: bool = False,
         epoch: int = 0,
         split: int = 0,
@@ -164,7 +161,7 @@ class LanguageModelTrainer:
         optimizer_state: dict = None,
     ):
         self.model: LanguageModel = model
-        self.optimizer: Optimizer = optimizer
+        self.optimizer: Type[Optimizer] = optimizer
         self.corpus: TextCorpus = corpus
         self.test_mode: bool = test_mode
 
@@ -203,8 +200,7 @@ class LanguageModelTrainer:
                 )
 
         # cast string to Path
-        if type(base_path) is str:
-            base_path = Path(base_path)
+        base_path = Path(base_path)
 
         number_of_splits: int = len(self.corpus.train)
 
@@ -225,18 +221,19 @@ class LanguageModelTrainer:
             log_handler = add_file_handler(log, base_path / "training.log")
 
             best_val_loss = self.loss
+            kwargs["lr"] = learning_rate
             optimizer = self.optimizer(
-                self.model.parameters(), lr=learning_rate, **kwargs
+                self.model.parameters(), **kwargs
             )
             if self.optimizer_state is not None:
                 optimizer.load_state_dict(self.optimizer_state)
 
             if isinstance(optimizer, (AdamW, SGDW)):
-                scheduler: ReduceLRWDOnPlateau = ReduceLRWDOnPlateau(
+                scheduler: ReduceLROnPlateau = ReduceLRWDOnPlateau(
                     optimizer, verbose=True, factor=anneal_factor, patience=patience
                 )
             else:
-                scheduler: ReduceLROnPlateau = ReduceLROnPlateau(
+                scheduler = ReduceLROnPlateau(
                     optimizer, verbose=True, factor=anneal_factor, patience=patience
                 )
 
@@ -295,7 +292,7 @@ class LanguageModelTrainer:
                     # not really sure what this does
                     ntokens = len(self.corpus.dictionary)
 
-                    total_loss = 0
+                    total_loss = torch.zeros(1)
                     start_time = time.time()
 
                     for batch, i in enumerate(
@@ -354,7 +351,7 @@ class LanguageModelTrainer:
                                     math.exp(cur_loss),
                                 )
                             )
-                            total_loss = 0
+                            total_loss = torch.zeros(1)
                             start_time = time.time()
 
                     log.info(
@@ -383,7 +380,6 @@ class LanguageModelTrainer:
 
                     # Save the model if the validation loss is the best we've seen so far.
                     if val_loss < best_val_loss:
-                        self.model.best_score = best_val_loss
                         self.model.save(savefile)
                         best_val_loss = val_loss
 
@@ -483,7 +479,7 @@ class LanguageModelTrainer:
 
     @staticmethod
     def load_checkpoint(
-        checkpoint_file: Union[str, Path], corpus: TextCorpus, optimizer: Optimizer = SGD
+        checkpoint_file: Union[str, Path], corpus: TextCorpus, optimizer: Type[Optimizer] = SGD
     ):
         if type(checkpoint_file) is str:
             checkpoint_file = Path(checkpoint_file)

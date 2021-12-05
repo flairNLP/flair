@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Union, List
 
 from torch.optim import Optimizer
+from torch.utils.data import Dataset
 
 import flair
 from flair.data import Dictionary, Sentence
@@ -363,7 +364,7 @@ def add_file_handler(log, output_file):
     return fh
 
 
-def store_embeddings(sentences: List[Sentence], storage_mode: str):
+def store_embeddings(sentences: Union[List[Sentence], Dataset], storage_mode: str):
     # if memory mode option 'none' delete everything
     if storage_mode == "none":
         for sentence in sentences:

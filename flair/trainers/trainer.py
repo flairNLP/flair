@@ -8,7 +8,7 @@ import time
 import warnings
 from inspect import signature
 from pathlib import Path
-from typing import Union, Tuple, Optional
+from typing import Union, Tuple, Optional, Type, Dict, Any, cast
 
 import torch
 from torch.optim.sgd import SGD
@@ -23,7 +23,7 @@ except ImportError:
 
 import flair
 import flair.nn
-from flair.data import MultiCorpus, Corpus, Dictionary
+from flair.data import MultiCorpus, Corpus, Dictionary, _len_dataset
 from flair.datasets import DataLoader
 from flair.optim import ExpAnnealLR, LinearSchedulerWithWarmup
 from flair.training_utils import (
@@ -35,7 +35,7 @@ from flair.training_utils import (
     store_embeddings,
     AnnealOnPlateau,
 )
-from torch.optim.lr_scheduler import OneCycleLR
+from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
 from flair.models import SequenceTagger
 import random
 
@@ -87,7 +87,7 @@ class ModelTrainer:
             patience: int = 3,
             min_learning_rate: float = 0.0001,
             initial_extra_patience: int = 0,
-            optimizer: torch.optim.Optimizer = SGD,
+            optimizer: Union[torch.optim.Optimizer, Type[torch.optim.Optimizer]] = SGD,
             cycle_momentum: bool = False,
             warmup_fraction: float = 0.1,
             embeddings_storage_mode: str = "cpu",
@@ -117,8 +117,8 @@ class ModelTrainer:
             use_tensorboard: bool = False,
             tensorboard_log_dir=None,
             metrics_for_tensorboard=[],
-            optimizer_state_dict: Optional = None,
-            scheduler_state_dict: Optional = None,
+            optimizer_state_dict: Optional[Dict[str, Any]] = None,
+            scheduler_state_dict: Optional[Dict[str, Any]] = None,
             save_optimizer_state: bool = False,
             **kwargs,
     ) -> dict:
@@ -171,7 +171,7 @@ class ModelTrainer:
         """
 
         # create a model card for this model with Flair and PyTorch version
-        model_card = {'flair_version': flair.__version__, 'pytorch_version': torch.__version__}
+        model_card: Dict[str, Any] = {'flair_version': flair.__version__, 'pytorch_version': torch.__version__}
 
         # also record Transformers version if library is loaded
         try:
@@ -189,7 +189,7 @@ class ModelTrainer:
 
         # add model card to model
         self.model.model_card = model_card
-
+        assert self.corpus.train
         if use_tensorboard:
             try:
                 from torch.utils.tensorboard import SummaryWriter
@@ -224,9 +224,7 @@ class ModelTrainer:
 
         initial_learning_rate = learning_rate
 
-        # cast string to Path
-        if type(base_path) is str:
-            base_path = Path(base_path)
+        base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
 
         log_line(log)
@@ -263,8 +261,8 @@ class ModelTrainer:
         log_train_part = True if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0) else False
 
         if log_train_part:
-            train_part_size = len(self.corpus.dev) if eval_on_train_fraction == "dev" \
-                else int(len(self.corpus.train) * eval_on_train_fraction)
+            train_part_size = _len_dataset(self.corpus.dev) if eval_on_train_fraction == "dev" \
+                else int(_len_dataset(self.corpus.train) * eval_on_train_fraction)
 
             assert train_part_size > 0
             if not eval_on_train_shuffle:
@@ -277,8 +275,9 @@ class ModelTrainer:
         weight_extractor = WeightExtractor(base_path)
 
         # if optimizer class is passed, instantiate:
-        if inspect.isclass(optimizer):
-            optimizer: torch.optim.Optimizer = optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
+        if not isinstance(optimizer, torch.optim.Optimizer):
+            kwargs["lr"] = learning_rate
+            optimizer = optimizer(self.model.parameters(), **kwargs)
 
         if use_swa:
             import torchcontrib
@@ -289,6 +288,8 @@ class ModelTrainer:
                 self.model, optimizer, opt_level=amp_opt_level
             )
 
+        optimizer = cast(torch.optim.Optimizer, optimizer)
+
         # load existing optimizer state dictionary if it exists
         if optimizer_state_dict:
             optimizer.load_state_dict(optimizer_state_dict)
@@ -297,9 +298,9 @@ class ModelTrainer:
         anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
         best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.
 
-        dataset_size = len(self.corpus.train)
+        dataset_size = _len_dataset(self.corpus.train)
         if train_with_dev:
-            dataset_size += len(self.corpus.dev)
+            dataset_size += _len_dataset(self.corpus.dev)
 
         # if scheduler is passed as a class, instantiate
         if inspect.isclass(scheduler):
@@ -346,8 +347,8 @@ class ModelTrainer:
         if train_with_dev or train_with_test:
 
             parts = [self.corpus.train]
-            if train_with_dev: parts.append(self.corpus.dev)
-            if train_with_test: parts.append(self.corpus.test)
+            if train_with_dev and self.corpus.dev: parts.append(self.corpus.dev)
+            if train_with_test and self.corpus.test: parts.append(self.corpus.test)
 
             train_data = ConcatDataset(parts)
 
@@ -383,13 +384,13 @@ class ModelTrainer:
                 log_line(log)
 
                 # update epoch in model card
-                self.model.model_card['training_parameters']['epoch'] = epoch
+                model_card['training_parameters']['epoch'] = epoch
 
                 if anneal_with_prestarts:
                     last_epoch_model_state_dict = copy.deepcopy(self.model.state_dict())
 
                 if eval_on_train_shuffle:
-                    train_part_indices = list(range(self.corpus.train))
+                    train_part_indices = list(range(_len_dataset(self.corpus.train)))
                     random.shuffle(train_part_indices)
                     train_part_indices = train_part_indices[:train_part_size]
                     train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
@@ -448,7 +449,7 @@ class ModelTrainer:
                 modulo = max(1, int(total_number_of_batches / 10))
 
                 # process mini-batches
-                batch_time = 0
+                batch_time = 0.0
                 average_over = 0
                 for batch_no, batch in enumerate(batch_loader):
 
@@ -469,7 +470,7 @@ class ModelTrainer:
                         # forward pass
                         loss = self.model.forward_loss(batch_step)
 
-                        if isinstance(loss, Tuple):
+                        if isinstance(loss, tuple):
                             average_over += loss[1]
                             loss = loss[0]
 
@@ -510,7 +511,7 @@ class ModelTrainer:
                             f"{intermittent_loss:.8f} - samples/sec: {mini_batch_size * modulo / batch_time:.2f}"
                             f" - lr: {learning_rate:.6f}{momentum_info}"
                         )
-                        batch_time = 0
+                        batch_time = 0.0
                         iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode and write_weights:
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
@@ -567,6 +568,7 @@ class ModelTrainer:
                         )
 
                 if log_dev:
+                    assert self.corpus.dev
                     dev_eval_result = self.model.evaluate(
                         self.corpus.dev,
                         gold_label_type=self.model.label_type,
@@ -601,6 +603,7 @@ class ModelTrainer:
                             )
 
                 if log_test:
+                    assert self.corpus.test
                     test_eval_result = self.model.evaluate(
                         self.corpus.test,
                         gold_label_type=self.model.label_type,
@@ -673,7 +676,7 @@ class ModelTrainer:
                 # log bad epochs
                 log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
 
-                if create_loss_file:
+                if loss_txt is not None:
                     # output log file
                     with open(loss_txt, "a") as f:
 
@@ -725,7 +728,8 @@ class ModelTrainer:
                     self.model.save(base_path / model_name, checkpoint=save_optimizer_state)
 
             if use_swa:
-                optimizer.swap_swa_sgd()
+                import torchcontrib
+                cast(torchcontrib.optim.SWA, optimizer).swap_swa_sgd()
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
@@ -771,14 +775,14 @@ class ModelTrainer:
         }
 
     def resume(self,
-               model: Optional[Model],
+               model: Model,
                **trainer_args,
                ):
 
+        assert model.model_card is not None
         self.model = model
-
         # recover all arguments that were used to train this model
-        args_used_to_train_model = self.model.model_card['training_parameters']
+        args_used_to_train_model = model.model_card['training_parameters']
 
         # you can overwrite params with your own
         for param in trainer_args:
@@ -826,11 +830,10 @@ class ModelTrainer:
             base_path: Union[Path, str],
             eval_mini_batch_size: int,
             main_evaluation_metric: Tuple[str, str],
-            num_workers: int = 8,
+            num_workers: Optional[int] = 8,
             gold_label_dictionary_for_eval: Optional[Dictionary] = None
     ):
-        if type(base_path) is str:
-            base_path = Path(base_path)
+        base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
 
         log_line(log)
@@ -842,6 +845,7 @@ class ModelTrainer:
         else:
             log.info("Testing using last state of model ...")
 
+        assert self.corpus.test
         test_results = self.model.evaluate(
             self.corpus.test,
             gold_label_type=self.model.label_type,
@@ -853,13 +857,12 @@ class ModelTrainer:
             gold_label_dictionary=gold_label_dictionary_for_eval,
         )
 
-        test_results: Result = test_results
         log.info(test_results.log_line)
         log.info(test_results.detailed_results)
         log_line(log)
 
         # if we are training over multiple datasets, do evaluation for each
-        if type(self.corpus) is MultiCorpus:
+        if isinstance(self.corpus, MultiCorpus):
             for subcorpus in self.corpus.corpora:
                 log_line(log)
                 if subcorpus.test:
@@ -895,8 +898,7 @@ class ModelTrainer:
         best_loss = None
 
         # cast string to Path
-        if type(base_path) is str:
-            base_path = Path(base_path)
+        base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
         learning_rate_tsv = init_output_file(base_path, file_name)
 
@@ -926,7 +928,7 @@ class ModelTrainer:
 
                 # forward pass
                 loss = self.model.forward_loss(batch)
-                if isinstance(loss, Tuple):
+                if isinstance(loss, tuple):
                     loss = loss[0]
 
                 # update optimizer and scheduler
