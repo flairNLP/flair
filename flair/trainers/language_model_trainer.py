@@ -292,7 +292,7 @@ class LanguageModelTrainer:
                     # not really sure what this does
                     ntokens = len(self.corpus.dictionary)
 
-                    total_loss = torch.zeros(1)
+                    total_loss = torch.zeros(1, device=flair.device)
                     start_time = time.time()
 
                     for batch, i in enumerate(
