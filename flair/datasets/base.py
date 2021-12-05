@@ -88,7 +88,7 @@ class SentenceDataset(FlairDataset):
         :param sentences: Sentence or List of Sentence that make up SentenceDataset
         """
         # cast to list if necessary
-        if type(sentences) == Sentence:
+        if isinstance(sentences, Sentence):
             sentences = [sentences]
         self.sentences = sentences
 
@@ -121,7 +121,7 @@ class StringDataset(FlairDataset):
         If instead of providing a function, this parameter is just set to True, SegTokTokenizer will be used.
         """
         # cast to list if necessary
-        if type(texts) == Sentence:
+        if isinstance(texts, str):
             texts = [texts]
         self.texts = texts
         self.use_tokenizer = use_tokenizer
@@ -152,6 +152,7 @@ class MongoDataset(FlairDataset):
             max_chars_per_doc: int = -1,
             tokenizer: Tokenizer = SegtokTokenizer(),
             in_memory: bool = True,
+            tag_type: str = "class",
     ):
         """
         Reads Mongo collections. Each collection should contain one document/text per item.
@@ -209,6 +210,7 @@ class MongoDataset(FlairDataset):
 
         self.text = text_field
         self.categories = categories_field if categories_field is not None else []
+        self.tag_type = tag_type
 
         start = 0
 
@@ -235,7 +237,9 @@ class MongoDataset(FlairDataset):
             text = text[: self.max_chars_per_doc]
 
         if text and labels:
-            sentence = Sentence(text, labels=labels, use_tokenizer=tokenizer)
+            sentence = Sentence(text, use_tokenizer=tokenizer)
+            for label in labels:
+                sentence.add_label(self.tag_type, label)
 
             if self.max_tokens_per_doc > 0:
                 sentence.tokens = sentence.tokens[

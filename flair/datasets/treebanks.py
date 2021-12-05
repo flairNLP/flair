@@ -66,8 +66,7 @@ class UniversalDependenciesDataset(FlairDataset):
         :param path_to_conll_file: Path to the CoNLL-U formatted file
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
         """
-        if type(path_to_conll_file) is str:
-            path_to_conll_file = Path(path_to_conll_file)
+        path_to_conll_file = Path(path_to_conll_file)
         assert path_to_conll_file.exists()
 
         self.in_memory: bool = in_memory
@@ -228,15 +227,14 @@ class UniversalDependenciesDataset(FlairDataset):
 class UD_ENGLISH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -255,15 +253,14 @@ class UD_ENGLISH(UniversalDependenciesCorpus):
 class UD_GALICIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -281,15 +278,14 @@ class UD_GALICIAN(UniversalDependenciesCorpus):
 class UD_ANCIENT_GREEK(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -308,15 +304,14 @@ class UD_ANCIENT_GREEK(UniversalDependenciesCorpus):
 class UD_KAZAKH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -334,15 +329,14 @@ class UD_KAZAKH(UniversalDependenciesCorpus):
 class UD_OLD_CHURCH_SLAVONIC(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -361,15 +355,14 @@ class UD_OLD_CHURCH_SLAVONIC(UniversalDependenciesCorpus):
 class UD_ARMENIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -387,15 +380,14 @@ class UD_ARMENIAN(UniversalDependenciesCorpus):
 class UD_ESTONIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -414,15 +406,14 @@ class UD_ESTONIAN(UniversalDependenciesCorpus):
 class UD_GERMAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -439,15 +430,14 @@ class UD_GERMAN(UniversalDependenciesCorpus):
 class UD_GERMAN_HDT(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -485,15 +475,14 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
 class UD_DUTCH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -517,15 +506,14 @@ class UD_FAROESE(UniversalDependenciesCorpus):
     Faronese is a small Western Scandinavian language with 60.000-100.000, related to Icelandic and Old Norse"""
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -546,15 +534,14 @@ class UD_FAROESE(UniversalDependenciesCorpus):
 class UD_FRENCH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -570,15 +557,14 @@ class UD_FRENCH(UniversalDependenciesCorpus):
 class UD_ITALIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -596,15 +582,14 @@ class UD_ITALIAN(UniversalDependenciesCorpus):
 class UD_LATIN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -624,15 +609,14 @@ class UD_LATIN(UniversalDependenciesCorpus):
 class UD_SPANISH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -648,15 +632,14 @@ class UD_SPANISH(UniversalDependenciesCorpus):
 class UD_PORTUGUESE(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -676,15 +659,14 @@ class UD_PORTUGUESE(UniversalDependenciesCorpus):
 class UD_ROMANIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -700,15 +682,14 @@ class UD_ROMANIAN(UniversalDependenciesCorpus):
 class UD_CATALAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -728,15 +709,14 @@ class UD_CATALAN(UniversalDependenciesCorpus):
 class UD_POLISH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -753,15 +733,14 @@ class UD_POLISH(UniversalDependenciesCorpus):
 class UD_CZECH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -806,15 +785,14 @@ class UD_CZECH(UniversalDependenciesCorpus):
 class UD_SLOVAK(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -831,15 +809,14 @@ class UD_SLOVAK(UniversalDependenciesCorpus):
 class UD_SWEDISH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -860,15 +837,14 @@ class UD_SWEDISH(UniversalDependenciesCorpus):
 class UD_DANISH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -885,15 +861,14 @@ class UD_DANISH(UniversalDependenciesCorpus):
 class UD_NORWEGIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -914,15 +889,14 @@ class UD_NORWEGIAN(UniversalDependenciesCorpus):
 class UD_FINNISH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -939,15 +913,14 @@ class UD_FINNISH(UniversalDependenciesCorpus):
 class UD_SLOVENIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -964,15 +937,14 @@ class UD_SLOVENIAN(UniversalDependenciesCorpus):
 class UD_CROATIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -989,15 +961,14 @@ class UD_CROATIAN(UniversalDependenciesCorpus):
 class UD_SERBIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1014,15 +985,14 @@ class UD_SERBIAN(UniversalDependenciesCorpus):
 class UD_BULGARIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1039,15 +1009,14 @@ class UD_BULGARIAN(UniversalDependenciesCorpus):
 class UD_ARABIC(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1065,15 +1034,14 @@ class UD_ARABIC(UniversalDependenciesCorpus):
 class UD_HEBREW(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1089,8 +1057,10 @@ class UD_HEBREW(UniversalDependenciesCorpus):
 class UD_TURKISH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1116,8 +1086,10 @@ class UD_TURKISH(UniversalDependenciesCorpus):
 class UD_PERSIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1145,15 +1117,14 @@ class UD_PERSIAN(UniversalDependenciesCorpus):
 class UD_RUSSIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1174,15 +1145,14 @@ class UD_RUSSIAN(UniversalDependenciesCorpus):
 class UD_HINDI(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1201,15 +1171,14 @@ class UD_HINDI(UniversalDependenciesCorpus):
 class UD_INDONESIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1226,15 +1195,14 @@ class UD_INDONESIAN(UniversalDependenciesCorpus):
 class UD_JAPANESE(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1251,15 +1219,14 @@ class UD_JAPANESE(UniversalDependenciesCorpus):
 class UD_CHINESE(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1276,15 +1243,14 @@ class UD_CHINESE(UniversalDependenciesCorpus):
 class UD_KOREAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1305,15 +1271,14 @@ class UD_KOREAN(UniversalDependenciesCorpus):
 class UD_BASQUE(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1330,15 +1295,14 @@ class UD_BASQUE(UniversalDependenciesCorpus):
 class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1357,15 +1321,14 @@ class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
 class UD_GREEK(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1384,15 +1347,14 @@ class UD_GREEK(UniversalDependenciesCorpus):
 class UD_NAIJA(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1411,15 +1373,14 @@ class UD_NAIJA(UniversalDependenciesCorpus):
 class UD_LIVVI(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1433,15 +1394,14 @@ class UD_LIVVI(UniversalDependenciesCorpus):
 class UD_BURYAT(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1459,15 +1419,14 @@ class UD_BURYAT(UniversalDependenciesCorpus):
 class UD_NORTH_SAMI(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1485,15 +1444,14 @@ class UD_NORTH_SAMI(UniversalDependenciesCorpus):
 class UD_MARATHI(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1512,15 +1470,14 @@ class UD_MARATHI(UniversalDependenciesCorpus):
 class UD_MALTESE(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Maltese-MUDT/master"
         cached_path(
@@ -1539,15 +1496,14 @@ class UD_MALTESE(UniversalDependenciesCorpus):
 class UD_AFRIKAANS(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Afrikaans-AfriBooms/master"
         cached_path(
@@ -1566,15 +1522,14 @@ class UD_AFRIKAANS(UniversalDependenciesCorpus):
 class UD_GOTHIC(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1593,15 +1548,14 @@ class UD_GOTHIC(UniversalDependenciesCorpus):
 class UD_OLD_FRENCH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1620,15 +1574,14 @@ class UD_OLD_FRENCH(UniversalDependenciesCorpus):
 class UD_WOLOF(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Wolof-WTB/master"
         cached_path(
@@ -1645,17 +1598,16 @@ class UD_WOLOF(UniversalDependenciesCorpus):
 
 
 class UD_BELARUSIAN(UniversalDependenciesCorpus):
-      def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+          base_path = Path(flair.cache_root) / "datasets"
+        else:
+          base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1674,15 +1626,14 @@ class UD_BELARUSIAN(UniversalDependenciesCorpus):
 class UD_COPTIC(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1700,15 +1651,14 @@ class UD_COPTIC(UniversalDependenciesCorpus):
 class UD_IRISH(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1726,15 +1676,14 @@ class UD_IRISH(UniversalDependenciesCorpus):
 class UD_LATVIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1751,16 +1700,16 @@ class UD_LATVIAN(UniversalDependenciesCorpus):
         
 class UD_LITHUANIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
-
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+
         data_folder = base_path / dataset_name
 
         # download data if necessary

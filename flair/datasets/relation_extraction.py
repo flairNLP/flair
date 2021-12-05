@@ -6,10 +6,11 @@ import os
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Union, Sequence, Dict, Any, Tuple, Set
+from typing import List, Union, Sequence, Dict, Any, Tuple, Set, Iterable
 
 import conllu
 import gdown
+from conllu.models import Metadata, Token
 
 import flair
 from flair.data import Sentence
@@ -44,15 +45,14 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
         :param in_memory:
         :param augment_train:
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -214,15 +214,14 @@ class RE_ENGLISH_TACRED(CoNLLUCorpus):
         :param base_path:
         :param in_memory:
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         data_file = data_folder / "tacred-train.conllu"
@@ -308,27 +307,26 @@ class RE_ENGLISH_TACRED(CoNLLUCorpus):
             prev_tag = tag
 
             token_dicts.append(
-                {
+                Token({
                     "id": str(idx + 1),
                     "form": convert_ptb_token(token),
                     "ner": prefix + tag,
-                }
+                })
             )
 
-        return conllu.TokenList(tokens=token_dicts, metadata=metadata)
+        return conllu.TokenList(tokens=token_dicts, metadata=Metadata(metadata))
 
 
 class RE_ENGLISH_CONLL04(CoNLLUCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # TODO: change data source to original CoNLL04 -- this dataset has span formatting errors
@@ -355,7 +353,7 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
             in_memory=in_memory,
         )
 
-    def _parse_incr(self, source_file) -> Sequence[conllu.TokenList]:
+    def _parse_incr(self, source_file) -> Iterable[conllu.TokenList]:
         fields = ["id", "form", "ner", "relations", "relation_heads"]
         field_parsers = {
             "relations": lambda line, i: json.loads(line[i].replace("'", '"')),
@@ -363,7 +361,7 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
         }
         metadata_parsers = {"__fallback__": lambda k, v: tuple(k.split())}
 
-        lines = []
+        lines: List[str] = []
         for index, line in enumerate(source_file):
             if index > 0 and line.startswith("#"):
                 source_str = "".join(lines)
@@ -491,17 +489,16 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
         DrugProt corpus: Biocreative VII Track 1 from https://zenodo.org/record/5119892#.YSdSaVuxU5k/ on
         drug and chemical-protein interactions.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         self.sentence_splitter = sentence_splitter
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower() + "_" + type(self.sentence_splitter).__name__ + "_v3"
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         drugprot_url = (
@@ -618,7 +615,8 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
         sentence_id = 1
         for offset, sents in [(0, title_sentences), (abstract_offset, abstract_sentences)]:
             for sent in sents:
-
+                assert sent.start_pos is not None
+                assert sent.end_pos is not None
                 sent_char_start = sent.start_pos + offset
                 sent_char_end = sent.end_pos + offset
 
@@ -629,7 +627,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
 
                 entity_char_spans = [(entities[entity_id][1], entities[entity_id][2]) for entity_id in entities_in_sent]
 
-                token_offsets = [(sent.start_pos + token.start_pos + offset, sent.start_pos + token.end_pos + offset)
+                token_offsets = [(sent.start_pos + (token.start_pos or 0) + offset, sent.start_pos + (token.end_pos or 0) + offset)
                                  for token in sent.tokens]
                 entity_token_spans = self.char_spans_to_token_spans(entity_char_spans, token_offsets)
 
@@ -672,12 +670,12 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                     tag_2 = tag_2.replace("GENE-N", "GENE")
                     tag_2 = tag_2.replace("GENE-Y", "GENE")
 
-                    token_dicts.append({
+                    token_dicts.append(Token({
                         "id": str(i + 1),
                         "form": token.text,
                         "ner": tag_1,
                         "ner-2": tag_2
-                    })
+                    }))
 
                 relations_in_sent = []
                 for relation, ent1, ent2 in [r for r in relations if {r[1], r[2]} <= entities_in_sent]:
@@ -699,7 +697,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                     ),
                 }
 
-                tokenlists.append(conllu.TokenList(tokens=token_dicts, metadata=metadata))
+                tokenlists.append(conllu.TokenList(tokens=token_dicts, metadata=Metadata(metadata)))
 
                 sentence_id += 1
 

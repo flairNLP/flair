@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 from typing import Union, Dict, List, Optional
 
-from torch.utils.data import ConcatDataset
+from torch.utils.data import ConcatDataset, Dataset
 
 import flair
 from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
@@ -52,7 +52,7 @@ class MultiFileColumnCorpus(Corpus):
             :return: a Corpus with annotated train, dev and test data
         """
         # get train data
-        train = ConcatDataset([
+        train: Optional[Dataset] = ConcatDataset([
             ColumnDataset(
                 train_file,
                 column_format,
@@ -69,7 +69,7 @@ class MultiFileColumnCorpus(Corpus):
         ]) if train_files and train_files[0] else None
 
         # read in test file if exists
-        test = ConcatDataset([
+        test: Optional[Dataset] = ConcatDataset([
             ColumnDataset(
                 test_file,
                 column_format,
@@ -86,7 +86,7 @@ class MultiFileColumnCorpus(Corpus):
         ]) if test_files and test_files[0] else None
 
         # read in dev file if exists
-        dev = ConcatDataset([
+        dev: Optional[Dataset] = ConcatDataset([
             ColumnDataset(
                 dev_file,
                 column_format,
@@ -182,8 +182,7 @@ class ColumnDataset(FlairDataset):
         :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
         :return: a dataset with annotated data
         """
-        if type(path_to_column_file) is str:
-            path_to_column_file = Path(path_to_column_file)
+        path_to_column_file = Path(path_to_column_file)
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
         self.tag_to_bioes = tag_to_bioes
@@ -383,8 +382,10 @@ class MultiCoNer(MultiFileColumnCorpus):
         :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
         :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         folders = {
             "bn": "BN-Bangla",
@@ -412,9 +413,6 @@ class MultiCoNer(MultiFileColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # check if data there
@@ -473,8 +471,10 @@ class CONLL_03(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
@@ -482,9 +482,6 @@ class CONLL_03(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # check if data there
@@ -525,8 +522,10 @@ class CONLL_03_GERMAN(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "lemma", 2: "pos", 3: "np", 4: "ner"}
@@ -534,9 +533,6 @@ class CONLL_03_GERMAN(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # check if data there
@@ -576,8 +572,10 @@ class CONLL_03_DUTCH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -585,9 +583,6 @@ class CONLL_03_DUTCH(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -646,8 +641,10 @@ class CONLL_03_SPANISH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -655,9 +652,6 @@ class CONLL_03_SPANISH(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -692,8 +686,10 @@ class CONLL_2000(ColumnCorpus):
         :param tag_to_bioes: 'np' by default, should not be changed, but you can set 'pos' instead to predict POS tags
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "pos", 2: "np"}
@@ -701,9 +697,6 @@ class CONLL_2000(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -749,8 +742,10 @@ class WNUT_17(ColumnCorpus):
             in_memory: bool = True,
             **corpusargs,
     ):
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -758,9 +753,6 @@ class WNUT_17(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -783,8 +775,10 @@ class BIOSCOPE(ColumnCorpus):
             in_memory: bool = True,
             **corpusargs,
     ):
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "tag"}
@@ -792,9 +786,6 @@ class BIOSCOPE(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -827,8 +818,10 @@ class NER_ARABIC_ANER(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -885,8 +878,10 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -923,8 +918,10 @@ class NER_BASQUE(ColumnCorpus):
             in_memory: bool = True,
             **corpusargs,
     ):
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -932,9 +929,6 @@ class NER_BASQUE(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -983,8 +977,10 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: 'text', 1: 'ner'}
@@ -992,9 +988,6 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1025,8 +1018,10 @@ class NER_DANISH_DANE(ColumnCorpus):
             in_memory: bool = True,
             **corpusargs,
     ):
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {1: 'text', 3: 'pos', 9: 'ner'}
@@ -1034,9 +1029,6 @@ class NER_DANISH_DANE(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1098,10 +1090,10 @@ class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # data folder: default dataset folder is the cache root
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
         if not base_path:
-            base_path: Path = flair.cache_root / "datasets"
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1146,10 +1138,10 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # data folder: default dataset folder is the cache root
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
         if not base_path:
-            base_path: Path = flair.cache_root / "datasets"
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1189,8 +1181,10 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
             **corpusargs,
     ):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "pos", 3: "ner"}
@@ -1198,9 +1192,6 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1239,8 +1230,10 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1248,9 +1241,6 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1286,8 +1276,10 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         """
         The Datasets are represented in the Conll format.
@@ -1317,9 +1309,6 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1384,8 +1373,10 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: 'text', 1: 'ner'}
@@ -1428,8 +1419,10 @@ class NER_ENGLISH_PERSON(ColumnCorpus):
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1489,8 +1482,10 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "ner", 5: "text"}
@@ -1553,8 +1548,10 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1562,9 +1559,6 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1624,8 +1618,10 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1633,9 +1629,6 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1662,8 +1655,10 @@ class NER_FINNISH(ColumnCorpus):
             in_memory: bool = True,
             **corpusargs,
     ):
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1688,7 +1683,7 @@ class NER_FINNISH(ColumnCorpus):
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, skip_first_line=True, **corpusargs,
         )
 
-    def _remove_lines_without_annotations(self, data_file: Union[str, Path] = None):
+    def _remove_lines_without_annotations(self, data_file: Union[str, Path]):
         with open(data_file, 'r') as f:
             lines = f.readlines()
         with open(data_file, 'w') as f:
@@ -1705,8 +1700,10 @@ class NER_GERMAN_BIOFID(ColumnCorpus):
             in_memory: bool = True,
             **corpusargs,
     ):
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "lemma", 2: "pos", 3: "ner"}
@@ -1714,9 +1711,6 @@ class NER_GERMAN_BIOFID(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1748,8 +1742,10 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: 'text', 1: 'lemma', 2: 'pos', 3: 'np', 4: 'ner'}
@@ -1757,9 +1753,6 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1858,8 +1851,10 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1867,9 +1862,6 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1902,8 +1894,10 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
         :param tag_to_bioes: 'ner' by default, should not be changed.
         :param in_memory:If True, keeps dataset in memory giving speedups in training.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {1: "text", 2: "ner"}
@@ -1911,9 +1905,6 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # check if data there
@@ -1960,8 +1951,10 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1969,9 +1962,6 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download and parse data if necessary
@@ -2009,8 +1999,8 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
             tag_bool = False
             new_sentence = True
             for line in lines:
-                line = re.sub(r'\s{2,}', ' ', line).strip().split(' ')
-                for substr in line:
+                line_splits = re.sub(r'\s{2,}', ' ', line).strip().split(' ')
+                for substr in line_splits:
                     if substr == '.':
                         f.write("\n")
                         new_sentence = True
@@ -2039,7 +2029,7 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
                         else:
                             f.write(substr.strip(' ') + " " + 'O' + "\n")
 
-    def _create_datasets(self, data_file: Union[str, Path], data_folder: Union[str, Path]):
+    def _create_datasets(self, data_file: Union[str, Path], data_folder: Path):
         with open(data_file, 'r') as file:
             num_lines = len(file.readlines())
             file.seek(0)
@@ -2082,8 +2072,10 @@ class NER_HUNGARIAN(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2091,9 +2083,6 @@ class NER_HUNGARIAN(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # If the extracted corpus file is not yet present in dir
@@ -2141,8 +2130,10 @@ class NER_ICELANDIC(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2150,9 +2141,6 @@ class NER_ICELANDIC(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if not os.path.isfile(data_folder / 'icelandic_ner.txt'):
@@ -2207,8 +2195,10 @@ class NER_JAPANESE(ColumnCorpus):
         :param tag_to_bioes: NER by default.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: 'text', 1: 'ner'}
@@ -2216,9 +2206,6 @@ class NER_JAPANESE(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data from github if necessary (hironsan.txt, ja.wikipedia.conll)
@@ -2289,8 +2276,10 @@ class NER_MASAKHANE(MultiCorpus):
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # if only one language is given
         if type(languages) == str:
@@ -2302,9 +2291,6 @@ class NER_MASAKHANE(MultiCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         language_to_code = {"amharic": "amh",
@@ -2320,9 +2306,9 @@ class NER_MASAKHANE(MultiCorpus):
                             }
 
         # use all languages if explicitly set to "all"
-        if languages == ["all"]: languages = language_to_code.values()
+        if languages == ["all"]: languages = list(language_to_code.values())
 
-        corpora = []
+        corpora: List[Corpus] = []
         for language in languages:
 
             if language in language_to_code.keys():
@@ -2391,8 +2377,10 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         if type(languages) == str:
             languages = [languages]
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2400,9 +2388,6 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # For each language in languages, the file is downloaded if not existent
@@ -2410,7 +2395,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         # this list is handed to the multicorpus
 
         # list that contains the columncopora
-        corpora = []
+        corpora: List[Corpus] = []
 
         google_drive_path = 'https://drive.google.com/uc?id='
         # download data if necessary
@@ -2468,20 +2453,17 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         )
 
     def _silver_standard_to_simple_ner_annotation(self, data_file: Union[str, Path]):
-        f_read = open(data_file, 'r', encoding='utf-8')
-        f_write = open(data_file + '_new', 'w+', encoding='utf-8')
-        while True:
-            line = f_read.readline()
-            if line:
-                if line == '\n':
-                    f_write.write(line)
+        with open(data_file, 'r', encoding='utf-8') as f_read, open(str(data_file) + '_new', 'w+', encoding='utf-8') as f_write:
+            while True:
+                line = f_read.readline()
+                if line:
+                    if line == '\n':
+                        f_write.write(line)
+                    else:
+                        liste = line.split()
+                        f_write.write(liste[0] + ' ' + liste[-1] + '\n')
                 else:
-                    liste = line.split()
-                    f_write.write(liste[0] + ' ' + liste[-1] + '\n')
-            else:
-                break
-        f_read.close()
-        f_write.close()
+                    break
 
     def _google_drive_id_from_language_name(self, language):
         languages_ids = {
@@ -2822,8 +2804,10 @@ class NER_MULTI_XTREME(MultiCorpus):
         if type(languages) == str:
             languages = [languages]
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2831,9 +2815,6 @@ class NER_MULTI_XTREME(MultiCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # For each language in languages, the file is downloaded if not existent
@@ -2841,7 +2822,7 @@ class NER_MULTI_XTREME(MultiCorpus):
         # This list is handed to the multicorpus
 
         # list that contains the columncopora
-        corpora = []
+        corpora: List[Corpus] = []
 
         hu_path = "https://nlp.informatik.hu-berlin.de/resources/datasets/panx_dataset"
 
@@ -2913,8 +2894,10 @@ class NER_MULTI_WIKINER(MultiCorpus):
             in_memory: bool = False,
             **corpusargs,
     ):
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # if only one language is given
         if type(languages) == str:
@@ -2926,17 +2909,14 @@ class NER_MULTI_WIKINER(MultiCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
-        corpora = []
+        corpora: List[Corpus] = []
         for language in languages:
             language_folder = data_folder / language
 
             # download data if necessary
-            self._download_wikiner(language, language_folder)
+            self._download_wikiner(language, str(language_folder))
 
             # initialize comlumncorpus and add it to list
             log.info(f"Read data for language {language}")
@@ -2988,8 +2968,8 @@ class NER_MULTI_WIKINER(MultiCorpus):
                     "w",
                     encoding="utf-8"
             ) as out:
-                for line in f:
-                    line = line.decode("utf-8")
+                for lineb in f:
+                    line = lineb.decode("utf-8")
                     words = line.split(" ")
                     for word in words:
                         out.write("\t".join(word.split("|")) + "\n")
@@ -3012,8 +2992,10 @@ class NER_SWEDISH(ColumnCorpus):
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -3021,9 +3003,6 @@ class NER_SWEDISH(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3105,8 +3084,10 @@ class NER_TURKU(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -3114,9 +3095,6 @@ class NER_TURKU(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3152,8 +3130,10 @@ class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
             **corpusargs,
     ):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "keyword"}
@@ -3161,9 +3141,6 @@ class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         semeval2017_path = "https://raw.githubusercontent.com/midas-research/keyphrase-extraction-as-sequence-labeling-data/master/SemEval-2017"
@@ -3185,8 +3162,10 @@ class KEYPHRASE_INSPEC(ColumnCorpus):
             **corpusargs,
     ):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "keyword"}
@@ -3194,9 +3173,6 @@ class KEYPHRASE_INSPEC(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         inspec_path = "https://raw.githubusercontent.com/midas-research/keyphrase-extraction-as-sequence-labeling-data/master/Inspec"
@@ -3221,8 +3197,10 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
             **corpusargs,
     ):
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "keyword"}
@@ -3230,9 +3208,6 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         semeval2010_path = "https://raw.githubusercontent.com/midas-research/keyphrase-extraction-as-sequence-labeling-data/master/processed_semeval-2010"
@@ -3261,8 +3236,10 @@ class UP_CHINESE(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -3270,9 +3247,6 @@ class UP_CHINESE(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3312,8 +3286,10 @@ class UP_ENGLISH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {1: "text", 10: "frame"}
@@ -3321,9 +3297,6 @@ class UP_ENGLISH(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3364,8 +3337,10 @@ class UP_FRENCH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -3373,9 +3348,6 @@ class UP_FRENCH(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3415,8 +3387,10 @@ class UP_FINNISH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -3424,9 +3398,6 @@ class UP_FINNISH(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3466,8 +3437,10 @@ class UP_GERMAN(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -3475,9 +3448,6 @@ class UP_GERMAN(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3517,8 +3487,10 @@ class UP_ITALIAN(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -3526,9 +3498,6 @@ class UP_ITALIAN(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3568,8 +3537,10 @@ class UP_SPANISH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -3577,9 +3548,6 @@ class UP_SPANISH(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3619,8 +3587,10 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -3628,9 +3598,6 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary

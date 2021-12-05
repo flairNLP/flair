@@ -1,14 +1,14 @@
 import logging
 import os
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Optional
 
 import flair
 from flair.data import (
     Sentence,
     Corpus,
     FlairDataset,
-    DataPair,
+    DataPair, _iter_dataset,
 )
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file, unzip_file
@@ -21,7 +21,7 @@ class ParallelTextCorpus(Corpus):
             self,
             source_file: Union[str, Path],
             target_file: Union[str, Path],
-            name: str = None,
+            name: str,
             use_tokenizer: bool = True,
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
@@ -127,10 +127,8 @@ class ParallelTextDataset(FlairDataset):
             use_tokenizer=True,
             in_memory: bool = True,
     ):
-        if type(path_to_source) == str:
-            path_to_source: Path = Path(path_to_source)
-        if type(path_to_target) == str:
-            path_to_target: Path = Path(path_to_target)
+        path_to_source = Path(path_to_source)
+        path_to_target = Path(path_to_target)
 
         assert path_to_source.exists()
         assert path_to_target.exists()
@@ -253,7 +251,7 @@ class DataPairCorpus(Corpus):
 
         # create DataPairDataset for train, test and dev file, if they are given
 
-        train: FlairDataset = DataPairDataset(
+        train = DataPairDataset(
             train_file,
             columns=columns,
             use_tokenizer=use_tokenizer,
@@ -266,7 +264,7 @@ class DataPairCorpus(Corpus):
             encoding=encoding
         ) if train_file is not None else None
 
-        test: FlairDataset = DataPairDataset(
+        test = DataPairDataset(
             test_file,
             columns=columns,
             use_tokenizer=use_tokenizer,
@@ -279,7 +277,7 @@ class DataPairCorpus(Corpus):
             encoding=encoding
         ) if test_file is not None else None
 
-        dev: FlairDataset = DataPairDataset(
+        dev = DataPairDataset(
             dev_file,
             columns=columns,
             use_tokenizer=use_tokenizer,
@@ -332,8 +330,7 @@ class DataPairDataset(FlairDataset):
         :param label: If False, the dataset expects unlabeled data
         """
 
-        if type(path_to_data) == str:
-            path_to_data: Path = Path(path_to_data)
+        path_to_data = Path(path_to_data)
 
         # stop if file does not exist
         assert path_to_data.exists()
@@ -346,6 +343,7 @@ class DataPairDataset(FlairDataset):
 
         self.label = label
 
+        assert label_type is not None
         self.label_type = label_type
 
         self.total_data_count: int = 0
@@ -355,7 +353,7 @@ class DataPairDataset(FlairDataset):
         else:
             self.first_elements: List[str] = []
             self.second_elements: List[str] = []
-            self.labels: List[str] = []
+            self.labels: List[Optional[str]] = []
 
         with open(str(path_to_data), encoding=encoding) as source_file:
 
@@ -372,7 +370,7 @@ class DataPairDataset(FlairDataset):
                 second_element = source_line_list[columns[1]]
 
                 if self.label:
-                    pair_label = source_line_list[columns[2]]
+                    pair_label: Optional[str] = source_line_list[columns[2]]
                 else:
                     pair_label = None
 
@@ -449,14 +447,13 @@ class GLUE_RTE(DataPairCorpus):
         This file contains unlabeled test data to evaluate models on the Glue RTE task.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = "glue"
 
-        # if no base_path provided take cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         data_file = data_folder / "RTE/train.tsv"
@@ -510,13 +507,13 @@ class GLUE_RTE(DataPairCorpus):
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
-        if type(folder_path) == str:
-            folder_path = Path(folder_path)
+        folder_path = Path(folder_path)
         folder_path = folder_path / 'RTE.tsv'
 
         with open(folder_path, mode='w') as tsv_file:
             tsv_file.write("index\tprediction\n")
-            for index, datapoint in enumerate(self.eval_dataset):
+            datapoint: DataPair
+            for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
                 tsv_file.write(str(index) + '\t' + datapoint.get_labels('textual_entailment')[0].value + '\n')
 
 
@@ -539,14 +536,13 @@ class GLUE_MNLI(DataPairCorpus):
         and two unlabeled test sets: eval_dataset_matched, eval_dataset_mismatched.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = "glue"
 
-        # if no base_path provided take cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         data_file = data_folder / "MNLI/train.tsv"
@@ -629,14 +625,14 @@ class GLUE_MNLI(DataPairCorpus):
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
-        if type(folder_path) == str:
-            folder_path = Path(folder_path)
+        folder_path = Path(folder_path)
         glue_eval_tsv = "MNLI-m.tsv" if self.evaluate_on_matched else "MNLI-mm.tsv"
         folder_path = folder_path / glue_eval_tsv
 
         with open(folder_path, mode='w') as tsv_file:
             tsv_file.write("index\tprediction\n")
-            for index, datapoint in enumerate(self.eval_dataset):
+            datapoint: DataPair
+            for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
                 label = datapoint.get_labels('textual_entailment')[0].value
                 tsv_file.write(str(index) + '\t' + label + '\n')
 
@@ -658,14 +654,13 @@ class GLUE_MRPC(DataPairCorpus):
         train and test sets. Dev set is sampled each time when creating this corpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = "glue"
 
-        # if no base_path provided take cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         data_file = data_folder / "MRPC/train.tsv"
@@ -707,13 +702,13 @@ class GLUE_MRPC(DataPairCorpus):
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
-        if type(folder_path) == str:
-            folder_path = Path(folder_path)
+        folder_path = Path(folder_path)
         folder_path = folder_path / 'MRPC.tsv'
 
         with open(folder_path, mode='w') as tsv_file:
             tsv_file.write("index\tprediction\n")
-            for index, datapoint in enumerate(self.test):
+            datapoint: DataPair
+            for index, datapoint in enumerate(_iter_dataset(self.test)):
                 label = datapoint.get_labels('paraphrase')[0].value
                 tsv_file.write(str(index) + '\t' + label + '\n')
 
@@ -736,14 +731,13 @@ class GLUE_QNLI(DataPairCorpus):
         This file contains unlabeled test data to evaluate models on the Glue QNLI task.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = "glue"
 
-        # if no base_path provided take cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         data_file = data_folder / "QNLI/train.tsv"
@@ -798,13 +792,13 @@ class GLUE_QNLI(DataPairCorpus):
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
-        if type(folder_path) == str:
-            folder_path = Path(folder_path)
+        folder_path = Path(folder_path)
         folder_path = folder_path / 'QNLI.tsv'
 
         with open(folder_path, mode='w') as tsv_file:
             tsv_file.write("index\tprediction\n")
-            for index, datapoint in enumerate(self.eval_dataset):
+            datapoint: DataPair
+            for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
                 label = datapoint.get_labels('textual_entailment')[0].value
                 tsv_file.write(str(index) + '\t' + label + '\n')
 
@@ -827,14 +821,13 @@ class GLUE_QQP(DataPairCorpus):
         This file contains unlabeled test data to evaluate models on the Glue QQP task.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = "glue"
 
-        # if no base_path provided take cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         data_file = data_folder / "QQP/train.tsv"
@@ -889,13 +882,13 @@ class GLUE_QQP(DataPairCorpus):
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
-        if type(folder_path) == str:
-            folder_path = Path(folder_path)
+        folder_path = Path(folder_path)
         folder_path = folder_path / 'QQP.tsv'
 
         with open(folder_path, mode='w') as tsv_file:
             tsv_file.write("index\tprediction\n")
-            for index, datapoint in enumerate(self.eval_dataset):
+            datapoint: DataPair
+            for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
                 label = datapoint.get_labels('paraphrase')[0].value
                 tsv_file.write(str(index) + '\t' + label + '\n')
 
@@ -918,14 +911,13 @@ class GLUE_WNLI(DataPairCorpus):
         This file contains unlabeled test data to evaluate models on the Glue WNLI task.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = "glue"
 
-        # if no base_path provided take cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         data_file = data_folder / "WNLI/train.tsv"
@@ -980,13 +972,13 @@ class GLUE_WNLI(DataPairCorpus):
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
-        if type(folder_path) == str:
-            folder_path = Path(folder_path)
+        folder_path = Path(folder_path)
         folder_path = folder_path / 'WNLI.tsv'
 
         with open(folder_path, mode='w') as tsv_file:
             tsv_file.write("index\tprediction\n")
-            for index, datapoint in enumerate(self.eval_dataset):
+            datapoint: DataPair
+            for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
                 tsv_file.write(str(index) + '\t' + datapoint.get_labels('entailment')[0].value + '\n')
 
 
@@ -1006,14 +998,13 @@ class SUPERGLUE_RTE(DataPairCorpus):
         This file contains unlabeled test data to evaluate models on the SuperGlue RTE task.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = "superglue"
 
-        # if no base_path provided take cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         data_file = data_folder / "RTE/train.tsv"
@@ -1070,13 +1061,12 @@ class SUPERGLUE_RTE(DataPairCorpus):
 
     def jsonl_from_eval_dataset(self, folder_path: Union[str, Path]):
 
-        if type(folder_path) == str:
-            folder_path = Path(folder_path)
+        folder_path = Path(folder_path)
         folder_path = folder_path / 'RTE.jsonl'
 
         with open(folder_path, mode='w') as jsonl_file:
-
-            for index, datapoint in enumerate(self.eval_dataset):
+            datapoint: DataPair
+            for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
                 entry = {"idx": index, "label": datapoint.get_labels('textual_entailment')[0].value}
                 jsonl_file.write(str(entry) + '\n')
 
@@ -1087,22 +1077,15 @@ def rte_jsonl_to_tsv(file_path: Union[str, Path], label: bool = True, remove: bo
 
     tsv_file = os.path.splitext(file_path)[0] + '.tsv'
 
-    with open(file_path, 'r', encoding=encoding) as jsonl_file:
-        with open(tsv_file, 'w', encoding=encoding) as tsv_file:
+    with open(file_path, 'r', encoding=encoding) as jsonl_f, open(tsv_file, 'w', encoding=encoding) as tsv_f:
+        for line in jsonl_f:
+            obj = json.loads(line)
+            new_line = obj["premise"] + '\t' + obj["hypothesis"]
+            if label:
+                new_line += '\t' + obj["label"]
+            new_line += '\n'
 
-            line = jsonl_file.readline()
-
-            while line:
-
-                obj = json.loads(line)
-                new_line = obj["premise"] + '\t' + obj["hypothesis"]
-                if label:
-                    new_line += '\t' + obj["label"]
-                new_line += '\n'
-
-                tsv_file.write(new_line)
-
-                line = jsonl_file.readline()
+            tsv_f.write(new_line)
 
     # remove json file
     if remove:

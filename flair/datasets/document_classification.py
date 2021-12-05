@@ -11,7 +11,7 @@ from flair.data import (
     Corpus,
     Token,
     FlairDataset,
-    Tokenizer, DataPair
+    Tokenizer, DataPair, _iter_dataset
 )
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 from flair.datasets.base import find_train_dev_test_files
@@ -36,7 +36,7 @@ class ClassificationCorpus(Corpus):
             truncate_to_max_tokens: int = -1,
             truncate_to_max_chars: int = -1,
             filter_if_longer_than: int = -1,
-            tokenizer: Tokenizer = SegtokTokenizer(),
+            tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
             memory_mode: str = "partial",
             label_name_map: Dict[str, str] = None,
             skip_labels: List[str] = None,
@@ -84,7 +84,7 @@ class ClassificationCorpus(Corpus):
         )
 
         # use test_file to create test split if available
-        test: FlairDataset = ClassificationDataset(
+        test = ClassificationDataset(
             test_file,
             label_type=label_type,
             tokenizer=tokenizer,
@@ -99,7 +99,7 @@ class ClassificationCorpus(Corpus):
         ) if test_file is not None else None
 
         # use dev_file to create test split if available
-        dev: FlairDataset = ClassificationDataset(
+        dev = ClassificationDataset(
             dev_file,
             label_type=label_type,
             tokenizer=tokenizer,
@@ -132,7 +132,7 @@ class ClassificationDataset(FlairDataset):
             truncate_to_max_tokens=-1,
             truncate_to_max_chars=-1,
             filter_if_longer_than: int = -1,
-            tokenizer: Tokenizer = SegtokTokenizer(),
+            tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
             memory_mode: str = "partial",
             label_name_map: Dict[str, str] = None,
             skip_labels: List[str] = None,
@@ -159,8 +159,7 @@ class ClassificationDataset(FlairDataset):
         :param encoding: Default is 'utf-8' but some datasets are in 'latin-1
         :return: list of sentences
         """
-        if type(path_to_file) == str:
-            path_to_file: Path = Path(path_to_file)
+        path_to_file = Path(path_to_file)
 
         assert path_to_file.exists()
 
@@ -247,7 +246,7 @@ class ClassificationDataset(FlairDataset):
                 line = f.readline()
 
     def _parse_line_to_sentence(
-            self, line: str, label_prefix: str, tokenizer: Union[Callable[[str], List[Token]], Tokenizer]
+            self, line: str, label_prefix: str, tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer]
     ):
         words = line.split()
 
@@ -313,6 +312,7 @@ class ClassificationDataset(FlairDataset):
                     line, self.label_prefix, self.tokenizer
                 )
                 return sentence
+        assert False
 
 
 class CSVClassificationCorpus(Corpus):
@@ -374,7 +374,7 @@ class CSVClassificationCorpus(Corpus):
             **fmtparams,
         )
 
-        test: FlairDataset = CSVClassificationDataset(
+        test = CSVClassificationDataset(
             test_file,
             column_name_map,
             label_type=label_type,
@@ -388,7 +388,7 @@ class CSVClassificationCorpus(Corpus):
             **fmtparams,
         ) if test_file is not None else None
 
-        dev: FlairDataset = CSVClassificationDataset(
+        dev = CSVClassificationDataset(
             dev_file,
             column_name_map,
             label_type=label_type,
@@ -442,8 +442,7 @@ class CSVClassificationDataset(FlairDataset):
         :return: a Corpus with annotated train, dev and test data
         """
 
-        if type(path_to_file) == str:
-            path_to_file: Path = Path(path_to_file)
+        path_to_file = Path(path_to_file)
 
         assert path_to_file.exists()
 
@@ -755,15 +754,13 @@ class IMDB(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower() + '_v4'
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
 
         # download data if necessary
         imdb_acl_path = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
@@ -775,8 +772,10 @@ class IMDB(ClassificationCorpus):
         train_data_file = data_path / "train.txt"
         test_data_file = data_path / "test.txt"
 
-        if train_data_file.is_file()==False or (rebalance_corpus==False and test_data_file.is_file()==False):
-            [os.remove(file_path) for file_path in [train_data_file, test_data_file] if file_path.is_file()]
+        if not train_data_file.is_file() or (not rebalance_corpus and not test_data_file.is_file()):
+            for file_path in [train_data_file, test_data_file]:
+                if file_path.is_file():
+                    os.remove(file_path)
 
             cached_path(imdb_acl_path, Path("datasets") / dataset_name)
             import tarfile
@@ -845,15 +844,14 @@ class NEWSGROUPS(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1352,14 +1350,13 @@ class GLUE_COLA(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = "glue"
 
-        # if no base_path provided take cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1422,16 +1419,15 @@ class GLUE_COLA(ClassificationCorpus):
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
-        if type(folder_path) == str:
-            folder_path = Path(folder_path)
+        folder_path = Path(folder_path)
         folder_path = folder_path / 'CoLA.tsv'
 
         with open(folder_path, mode='w') as tsv_file:
             tsv_file.write("index\tprediction\n")
-            for index, datapoint in enumerate(self.eval_dataset):
+            for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
                 reverse_label_map = {'grammatical': 1, 'not_grammatical': 0}
                 predicted_label = reverse_label_map[datapoint.get_labels('acceptability')[0].value]
-                tsv_file.write(str(index) + '\t' + predicted_label + '\n')
+                tsv_file.write(str(index) + '\t' + str(predicted_label) + '\n')
 
 
 class GO_EMOTIONS(ClassificationCorpus):
@@ -1486,12 +1482,10 @@ class GO_EMOTIONS(ClassificationCorpus):
                           '26': 'SURPRISE',
                           '27': 'NEUTRAL'}
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # default dataset folder is the cache root
         if not base_path:
             base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1555,15 +1549,14 @@ class TREC_50(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1630,15 +1623,14 @@ class TREC_6(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1704,15 +1696,14 @@ class YAHOO_ANSWERS(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1751,7 +1742,7 @@ class YAHOO_ANSWERS(ClassificationCorpus):
                 reader = csv.reader(file)
                 writer = open(data_folder / (name+".txt"), "wt", encoding="utf-8")
                 for row in reader:
-                    writer.write("__label__"+label_map.get(row[0])+" "+row[1]+"\n")
+                    writer.write("__label__"+label_map[row[0]]+" "+row[1]+"\n")
 
                 file.close()
                 writer.close()
@@ -1783,15 +1774,14 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1863,15 +1853,14 @@ class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         original_filenames = ["background.tsv", "discussion.tsv", "introduction.tsv", "method.tsv", "result.tsv"]
@@ -1948,15 +1937,14 @@ class WASSA_ANGER(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1984,15 +1972,14 @@ class WASSA_FEAR(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2020,15 +2007,14 @@ class WASSA_JOY(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2056,15 +2042,14 @@ class WASSA_SADNESS(ClassificationCorpus):
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary

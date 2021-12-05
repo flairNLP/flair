@@ -715,6 +715,8 @@ class Sentence(DataPoint):
         self._previous_sentence: Optional[Sentence] = None
         self._next_sentence: Optional[Sentence] = None
 
+        self._position_in_dataset: Optional[typing.Tuple[Dataset, int]] = None
+
     def get_token(self, token_id: int) -> Optional[Token]:
         for token in self.tokens:
             if token.idx == token_id:
@@ -1070,10 +1072,10 @@ class Sentence(DataPoint):
         Get the next sentence in the document (works only if context is set through dataloader or elsewhere)
         :return: next Sentence in document if set, otherwise None
         """
-        if '_next_sentence' in self.__dict__.keys():
+        if self._next_sentence is not None:
             return self._next_sentence
 
-        if '_position_in_dataset' in self.__dict__.keys():
+        if self._position_in_dataset is not None:
             dataset = self._position_in_dataset[0]
             index = self._position_in_dataset[1] + 1
             if index < len(dataset):
@@ -1086,10 +1088,10 @@ class Sentence(DataPoint):
         Get the previous sentence in the document (works only if context is set through dataloader or elsewhere)
         :return: previous Sentence in document if set, otherwise None
         """
-        if '_previous_sentence' in self.__dict__.keys():
+        if self._previous_sentence is not None:
             return self._previous_sentence
 
-        if '_position_in_dataset' in self.__dict__.keys():
+        if self._position_in_dataset is not None:
             dataset = self._position_in_dataset[0]
             index = self._position_in_dataset[1] - 1
             if index >= 0:
@@ -1102,7 +1104,7 @@ class Sentence(DataPoint):
         Return True or False depending on whether context is set (for instance in dataloader or elsewhere)
         :return: True if context is set, else False
         """
-        return '_previous_sentence' in self.__dict__.keys() or '_position_in_dataset' in self.__dict__.keys()
+        return self._previous_sentence is not None or self._position_in_dataset is not None
 
     def get_labels(self, label_type: str = None):
 

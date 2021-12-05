@@ -1,13 +1,14 @@
 import csv
 import logging
 import os
+from collections import defaultdict
 from pathlib import Path
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Optional
 
 import requests
 
 import flair
-from flair.data import Dictionary, Sentence, MultiCorpus
+from flair.data import Dictionary, Sentence, MultiCorpus, _iter_dataset, Corpus
 from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unpack_file
 from flair.tokenization import SentenceSplitter, SegtokSentenceSplitter
@@ -52,20 +53,17 @@ class EntityLinkingCorpus(ColumnCorpus):
         ent_dictionary contains all wikinames that occure at least threshold times and gives each name an ID
         """
         self.threshold = threshold
-        self.entity_occurences = {}
+        self.entity_occurences: Dict[str, int] = defaultdict(int)
         self.total_number_of_entity_mentions = 0
 
-        for sentence in self.get_all_sentences():
+        for sentence in _iter_dataset(self.get_all_sentences()):
             if not sentence.is_document_boundary:  # exclude "-DOCSTART-"-sentences
 
                 spans = sentence.get_spans(label_type)
                 for span in spans:
                     annotation = span.tag
                     self.total_number_of_entity_mentions += 1
-                    if annotation in self.entity_occurences:
-                        self.entity_occurences[annotation] += 1
-                    else:
-                        self.entity_occurences[annotation] = 1
+                    self.entity_occurences[annotation] = 1
 
         self.number_of_entities = len(self.entity_occurences)
 
@@ -122,8 +120,10 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                              to highest 1.0. The lower the score, the less "important" is the entity because fewer annotators thought it was worth linking.
                              Default is 0.5 which means the majority of annotators must have annoteted the respective entity mention.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         self.agreement_threshold = agreement_threshold
 
@@ -131,8 +131,7 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
         dataset_name = self.__class__.__name__.lower() + "_" + type(sentence_splitter).__name__
 
         # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
+
         data_folder = base_path / dataset_name
 
         aquaint_el_path = "https://www.nzdl.org/wikification/data/wikifiedStories.zip"
@@ -216,7 +215,7 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
 
                             # sentence splitting and tokenization
                             sentences = sentence_splitter.split(string)
-                            sentence_offsets = [sentence.start_pos for sentence in sentences]
+                            sentence_offsets = [sentence.start_pos or 0 for sentence in sentences]
 
                             # iterate through all annotations and add to corresponding tokens
                             for mention_start, mention_length, wikiname in zip(indices, lengths, wikinames):
@@ -236,6 +235,8 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                                 # set annotation for tokens of entity mention
                                 first = True
                                 for token in sentences[sentence_index].tokens:
+                                    assert token.start_pos is not None
+                                    assert token.end_pos is not None
                                     if token.start_pos >= mention_start and token.end_pos <= mention_end:  # token belongs to entity mention
                                         if first:
                                             token.set_label(typename='nel', value='B-' + wikiname)
@@ -296,15 +297,14 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
         Wikipedia URLs to use. Since the text is in german the default language is German.
         """
         self.wiki_language = wiki_language
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         dev_raw_url = "https://raw.githubusercontent.com/stefan-it/clef-hipe/main/data/future/dev-v1.2/de/HIPE-data-v1.2-dev-de-normalized-manual-eos.tsv"
@@ -461,15 +461,14 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
         in_memory: If True, keeps dataset in memory giving speedups in training.
         check_existence: If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be igrnored.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         conll_yago_path = "https://nlp.informatik.hu-berlin.de/resources/datasets/conll_entity_linking/"
@@ -607,15 +606,14 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
         in_memory: If True, keeps dataset in memory giving speedups in training.
         ignore_disagreements: If True annotations with annotator disagreement will be ignored.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower() + "_" + type(sentence_splitter).__name__
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         iitb_el_docs_path = "https://www.cse.iitb.ac.in/~soumen/doc/CSAW/Annot/CSAW_crawledDocs.tar.gz"
@@ -639,7 +637,8 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
             # names of raw text documents
             doc_names = set()
             for elem in root:
-                doc_names.add(elem[0].text)
+                if elem[0].text is not None:
+                    doc_names.add(elem[0].text)
 
             # open output_file
             with open(parsed_dataset, 'w', encoding='utf-8') as write:
@@ -650,7 +649,7 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
 
                         # split sentences and tokenize
                         sentences = sentence_splitter.split(text)
-                        sentence_offsets = [sentence.start_pos for sentence in sentences]
+                        sentence_offsets = [sentence.start_pos or 0 for sentence in sentences]
 
                         # iterate through all annotations and add to corresponding tokens
                         for elem in root:
@@ -658,6 +657,8 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
                             if elem[0].text == doc_name and elem[2].text:  # annotation belongs to current document
 
                                 wikiname = elem[2].text.replace(' ', '_')
+                                assert elem[3].text is not None
+                                assert elem[4].text is not None
                                 mention_start = int(elem[3].text)
                                 mention_length = int(elem[4].text)
 
@@ -676,7 +677,10 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
                                 # set annotation for tokens of entity mention
                                 first = True
                                 for token in sentences[sentence_index].tokens:
+                                    assert token.start_pos is not None
+                                    assert token.end_pos is not None
                                     if token.start_pos >= mention_start and token.end_pos <= mention_end:  # token belongs to entity mention
+                                        assert elem[1].text is not None
                                         if first:
                                             token.set_label(typename=elem[1].text, value='B-' + wikiname)
                                             first = False
@@ -740,15 +744,14 @@ class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
             to point to a different folder but typically this should not be necessary.
         in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         tweeki_gold_el_path = "https://raw.githubusercontent.com/ucinlp/tweeki/main/data/Tweeki_gold/Tweeki_gold"
@@ -803,15 +806,14 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download and parse data if necessary
@@ -858,7 +860,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                     self.comments = csv.reader(tsvin3, delimiter="\t")
                     self.comment_annotations = csv.reader(tsvin4, delimiter="\t")
                     self.curr_annot = next(self.comment_annotations)
-                    self.curr_row = next(self.comments)
+                    self.curr_row: Optional[List[str]] = next(self.comments)
                     self.stop_iter = False
 
                     # Iterate over the comments.tsv file, until the end is reached
@@ -868,7 +870,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
 
                         # Keep track of the current comment thread and its corresponding key, on which the annotations are matched.
                         # Each comment thread is handled as one 'document'.
-                        self.curr_comm = self.curr_row[4]
+                        self.curr_comm: str = self.curr_row[4]
                         comm_key = self.curr_row[0]
 
                         # Python's csv package for some reason fails to correctly parse a handful of rows inside the comments.tsv file.
@@ -876,7 +878,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                         if comm_key in {"en5rf4c", "es3ia8j", "es3lrmw"}:
                             if comm_key == "en5rf4c":
                                 self.parsed_row = (r.split("\t") for r in self.curr_row[4].split("\n"))
-                                self.curr_comm = next(self.parsed_row)
+                                self.curr_comm = next(self.parsed_row)  # type: ignore
                             self._fill_curr_comment(fix_flag=True)
                         # In case we are dealing with properly parsed rows, proceed with a regular parsing procedure
                         else:
@@ -1008,7 +1010,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                     break
             except StopIteration:  # When the end of the comments.tsv file is reached
                 self.curr_row = next_row
-                self.stop_iter = True if not fix_flag else False
+                self.stop_iter = not fix_flag
                 break
 
 
@@ -1059,7 +1061,7 @@ def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], 
 
         return line
 
-    def split_span(word_fields: List[str], datasetname: str()):
+    def split_span(word_fields: List[str], datasetname: str):
         """
         Function that splits a word if necessary, i.e. if it is a multiple-word-span.
         Parameters
@@ -1120,7 +1122,7 @@ def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], 
     txt_out.close()
 
 
-def determine_tsv_file(filename: str, data_folder: str, cut_multisense: bool = True):
+def determine_tsv_file(filename: str, data_folder: Path, cut_multisense: bool = True):
     """
     Checks if the converted .tsv file already exists and if not, creates it. Returns name of the file.
     ----------
@@ -1166,8 +1168,8 @@ class WSD_UFSAC(MultiCorpus):
             columns={0: "text", 3: "wn30_key"},
             tag_to_bioes=None,
             banned_sentences: List[str] = None,
-            sample_missing_splits_in_multicorpus: bool = True,
-            sample_missing_splits_in_each_corpus: bool = True,
+            sample_missing_splits_in_multicorpus: Union[bool, str] = True,
+            sample_missing_splits_in_each_corpus: Union[bool, str] = True,
             use_raganato_ALL_as_test_data: bool = False,
             name: str = 'multicorpus'
     ):
@@ -1199,15 +1201,14 @@ class WSD_UFSAC(MultiCorpus):
             will be used as test data. Note that the sample_missing_splits parameters are set to 'only_dev' in this case if set to True.
         :param name: Name of your (costum) corpus
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         original_data_folder = data_folder / 'original_data'
 
@@ -1238,10 +1239,10 @@ class WSD_UFSAC(MultiCorpus):
         if not filenames:
             filenames = [name[:-4] for name in os.listdir(original_data_folder) if not 'raganato' in name]
 
-        if type(filenames) == str:
+        if isinstance(filenames, str):
             filenames = [filenames]
 
-        corpora = []
+        corpora: List[Corpus] = []
 
         print('Transforming data into column format and creating corpora...')
 
@@ -1315,14 +1316,13 @@ class WSD_RAGANATO_ALL(EntityLinkingCorpus):
         Initialize ragnato_ALL (concatenation of all SensEval and SemEval all-words tasks) provided in UFSAC https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = 'wsd_ufsac'
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         original_data_folder = data_folder / 'original_data'
 
@@ -1374,7 +1374,7 @@ class WSD_SEMCOR(EntityLinkingCorpus):
             tag_to_bioes=None,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
-            sample_missing_splits: bool = True,
+            sample_missing_splits: Union[bool, str] = True,
             cut_multisense: bool = True,
             use_raganato_ALL_as_test_data: bool = False,
     ):
@@ -1382,14 +1382,13 @@ class WSD_SEMCOR(EntityLinkingCorpus):
         Initialize SemCor provided in UFSAC https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = 'wsd_ufsac'
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         original_data_folder = data_folder / 'original_data'
 
@@ -1453,21 +1452,20 @@ class WSD_WORDNET_GLOSS_TAGGED(EntityLinkingCorpus):
             tag_to_bioes=None,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
-            sample_missing_splits: bool = True,
+            sample_missing_splits: Union[bool, str] = True,
             use_raganato_ALL_as_test_data: bool = False,
     ):
         """
         Initialize Princeton WordNet Gloss Corpus provided in UFSAC https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = 'wsd_ufsac'
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         original_data_folder = data_folder / 'original_data'
 
@@ -1531,7 +1529,7 @@ class WSD_MASC(EntityLinkingCorpus):
             tag_to_bioes=None,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
-            sample_missing_splits: bool = True,
+            sample_missing_splits: Union[bool, str] = True,
             cut_multisense: bool = True,
             use_raganato_ALL_as_test_data: bool = False,
     ):
@@ -1539,14 +1537,14 @@ class WSD_MASC(EntityLinkingCorpus):
         Initialize MASC (Manually Annotated Sub-Corpus) provided in UFSAC https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = 'wsd_ufsac'
 
         # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         original_data_folder = data_folder / 'original_data'
 
@@ -1610,7 +1608,7 @@ class WSD_OMSTI(EntityLinkingCorpus):
             tag_to_bioes=None,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
-            sample_missing_splits: bool = True,
+            sample_missing_splits: Union[bool, str] = True,
             cut_multisense: bool = True,
             use_raganato_ALL_as_test_data: bool = False,
     ):
@@ -1618,14 +1616,15 @@ class WSD_OMSTI(EntityLinkingCorpus):
         Initialize OMSTI (One Million Sense-Tagged Instances) provided in UFSAC https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = 'wsd_ufsac'
 
         # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
+
         data_folder = base_path / dataset_name
         original_data_folder = data_folder / 'original_data'
 
@@ -1689,21 +1688,22 @@ class WSD_TRAINOMATIC(EntityLinkingCorpus):
             tag_to_bioes=None,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
-            sample_missing_splits: bool = True,
+            sample_missing_splits: Union[bool, str] = True,
             use_raganato_ALL_as_test_data: bool = False,
     ):
         """
         Initialize Train-O-Matic provided in UFSAC https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         dataset_name = 'wsd_ufsac'
 
         # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
+
         data_folder = base_path / dataset_name
         original_data_folder = data_folder / 'original_data'
 

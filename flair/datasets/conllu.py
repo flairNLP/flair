@@ -132,8 +132,7 @@ class CoNLLUDataset(FlairDataset):
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
         :param token_annotation_fields: A subset of the fields parameter for token level annotations
         """
-        if type(path_to_conllu_file) is str:
-            path_to_conllu_file = Path(path_to_conllu_file)
+        path_to_conllu_file = Path(path_to_conllu_file)
         assert path_to_conllu_file.exists()
 
         self.path_to_conllu_file = path_to_conllu_file

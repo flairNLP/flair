@@ -13,7 +13,8 @@ from collections import defaultdict, deque
 from copy import copy
 from lxml import etree
 from lxml.etree import XMLSyntaxError
-from typing import Union, Callable, Dict, List, Tuple, Iterable, Optional
+from typing import Union, Callable, Dict, List, Tuple, Iterable, Optional, \
+    NamedTuple
 from operator import attrgetter
 from pathlib import Path
 from warnings import warn
@@ -110,6 +111,12 @@ class InternalBioNerDataset:
         self.documents = documents
         self.entities_per_document = entities_per_document
 
+class DpEntry(NamedTuple):
+    position_end: int
+    entity_count: int
+    entity_lengths_sum: int
+    last_entity: Optional[Entity]
+
 
 def merge_datasets(data_sets: Iterable[InternalBioNerDataset]):
     all_documents = {}
@@ -156,21 +163,21 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
         # Uses dynamic programming approach to calculate maximum independent set in interval graph
         # with sum of all entity lengths as secondary key
         dp_array = [
-            (0, 0, 0, None)
-        ]  # position_end, number of entities, sum of all entity lengths, last entity
+            DpEntry(position_end=0, entity_count=0, entity_lengths_sum=0, last_entity=None)
+        ]
         for entity in sorted(entities, key=lambda x: x.char_span.stop):
             i = len(dp_array) - 1
-            while dp_array[i][0] > entity.char_span.start:
+            while dp_array[i].position_end > entity.char_span.start:
                 i -= 1
-            if dp_array[i][1] + 1 > dp_array[-1][1] or (
-                dp_array[i][1] + 1 == dp_array[-1][1]
-                and dp_array[i][2] + len(entity.char_span) > dp_array[-1][2]
+            if dp_array[i].entity_count + 1 > dp_array[-1].entity_count or (
+                dp_array[i].entity_count + 1 == dp_array[-1].entity_count
+                and dp_array[i].entity_lengths_sum + len(entity.char_span) > dp_array[-1].entity_lengths_sum
             ):
                 dp_array += [
-                    (
+                    DpEntry(
                         entity.char_span.stop,
-                        dp_array[i][1] + 1,
-                        dp_array[i][2] + len(entity.char_span),
+                        dp_array[i].entity_count + 1,
+                        dp_array[i].entity_lengths_sum + len(entity.char_span),
                         entity,
                     )
                 ]
@@ -178,13 +185,13 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
                 dp_array += [dp_array[-1]]
 
         independent_set = []
-        p = dp_array[-1][0]
+        p = dp_array[-1].position_end
         for dp_entry in dp_array[::-1]:
-            if dp_entry[3] is None:
+            if dp_entry.last_entity is None:
                 break
-            if dp_entry[0] <= p:
-                independent_set += [dp_entry[3]]
-                p -= len(dp_entry[3].char_span)
+            if dp_entry.position_end <= p:
+                independent_set += [dp_entry.last_entity]
+                p -= len(dp_entry.last_entity.char_span)
 
         dataset.entities_per_document[document_id] = independent_set
 
@@ -214,7 +221,7 @@ def bioc_to_internal(bioc_file: Path):
 
     for document in Tqdm.tqdm(documents, desc="Converting to internal"):
         document_id = document.xpath("./id")[0].text
-        texts = []
+        texts: List[str] = []
         entities = []
 
         for passage in document.xpath("passage"):
@@ -404,6 +411,8 @@ class CoNLLWriter:
 
                     for flair_token in sentence.tokens:
                         token = flair_token.text.strip()
+                        assert sentence.start_pos is not None
+                        assert flair_token.start_pos is not None
                         offset = sentence.start_pos + flair_token.start_pos
 
                         if current_entity and offset >= current_entity.char_span.stop:
@@ -483,8 +492,10 @@ class HunerDataset(ColumnCorpus, ABC):
             segments the text into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -492,9 +503,6 @@ class HunerDataset(ColumnCorpus, ABC):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         self.sentence_splitter = self.get_corpus_sentence_splitter()
@@ -572,8 +580,10 @@ class BIO_INFER(ColumnCorpus):
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -581,9 +591,6 @@ class BIO_INFER(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         train_file = data_folder / "train.conll"
@@ -611,13 +618,13 @@ class BIO_INFER(ColumnCorpus):
 
     @classmethod
     def parse_dataset(cls, original_file: Path):
-        documents = {}
-        entities_per_document = {}
+        documents: Dict[str, str] = {}
+        entities_per_document: Dict[str, List[Entity]] = {}
 
         tree = etree.parse(str(original_file))
         sentence_elems = tree.xpath("//sentence")
-        for sentence_id, sentence in enumerate(sentence_elems):
-            sentence_id = str(sentence_id)
+        for s_id, sentence in enumerate(sentence_elems):
+            sentence_id = str(s_id)
             token_id_to_span = {}
             sentence_text = ""
             entities_per_document[sentence_id] = []
@@ -726,8 +733,10 @@ class JNLPBA(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -735,9 +744,6 @@ class JNLPBA(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         train_file = data_folder / "train.conll"
@@ -797,21 +803,21 @@ class HunerJNLPBA(object):
     def read_file(
         cls, input_iob_file: Path, sentence_tag: str
     ) -> InternalBioNerDataset:
-        documents = {}
-        entities_per_document = defaultdict(list)
+        documents: Dict[str, str] = {}
+        entities_per_document: Dict[str, List[Entity]] = defaultdict(list)
 
         with open(str(input_iob_file), "r", encoding="utf8") as file_reader:
-            document_id = None
-            document_text = None
+            document_id: Optional[str] = None
+            document_text: Optional[str] = None
 
-            entities = []
-            entity_type = None
+            entities: List[Entity] = []
+            entity_type: Optional[str] = None
             entity_start = 0
 
             for line in file_reader:
                 line = line.strip()
                 if line[:3] == "###":
-                    if not (document_id is None and document_text is None):
+                    if not (document_id is None or document_text is None):
                         documents[document_id] = document_text
                         entities_per_document[document_id] = entities
 
@@ -831,7 +837,7 @@ class HunerJNLPBA(object):
                     tag = parts[1].strip()
 
                     if tag.startswith("B-"):
-                        if entity_type is not None:
+                        if entity_type is not None and document_text is not None:
                             entities.append(
                                 Entity((entity_start, len(document_text)), entity_type)
                             )
@@ -839,27 +845,28 @@ class HunerJNLPBA(object):
                         entity_start = len(document_text) + 1 if document_text else 0
                         entity_type = tag[2:]
 
-                    elif tag == "O" and entity_type is not None:
+                    elif tag == "O" and entity_type is not None and document_text is not None:
                         entities.append(
                             Entity((entity_start, len(document_text)), entity_type)
                         )
                         entity_type = None
 
                     document_text = (
-                        document_text + " " + token if document_text else token
+                        (document_text + " " + token) if document_text is not None else token
                     )
 
                 else:
-                    document_text += sentence_tag
+                    if document_text is not None:
+                        document_text += sentence_tag
 
-                    # Edge case: last token starts a new entity
-                    if entity_type is not None:
-                        entities.append(
-                            Entity((entity_start, len(document_text)), entity_type)
-                        )
+                        # Edge case: last token starts a new entity
+                        if entity_type is not None:
+                            entities.append(
+                                Entity((entity_start, len(document_text)), entity_type)
+                            )
 
             # Last document in file
-            if not (document_id is None and document_text is None):
+            if not (document_id is None or document_text is None):
                 documents[document_id] = document_text
                 entities_per_document[document_id] = entities
 
@@ -953,8 +960,10 @@ class CELL_FINDER(ColumnCorpus):
         :param sentence_splitter: Custom implementation of :class:`SentenceSplitter` which segments
             the text into sentences and tokens.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -965,9 +974,6 @@ class CELL_FINDER(ColumnCorpus):
         if sentence_splitter is None:
             sentence_splitter = SciSpacySentenceSplitter()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
@@ -1097,8 +1103,10 @@ class MIRNA(ColumnCorpus):
         :param sentence_splitter: Callable that segments a document into sentences,
                                   defaults to scispacy
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -1106,9 +1114,6 @@ class MIRNA(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         sentence_separator = " "
@@ -1418,11 +1423,9 @@ class KaewphanCorpusHelper:
                 for line in reader.readlines():
                     line = line.strip()
                     if line:
-                        columns = line.split("\t")
-                        tag = columns[0]
-                        token = columns[3]
+                        tag, _, _, _, token = line.split("\t")[:5]
                         if tag.startswith("B-"):
-                            if entity_type is not None:
+                            if entity_type is not None and entity_start is not None:
                                 entities.append(
                                     Entity(
                                         (entity_start, len(document_text)), entity_type
@@ -1434,7 +1437,7 @@ class KaewphanCorpusHelper:
                             )
                             entity_type = tag[2:]
 
-                        elif tag == "O" and entity_type is not None:
+                        elif tag == "O" and entity_type is not None and entity_start is not None:
                             entities.append(
                                 Entity((entity_start, len(document_text)), entity_type,)
                             )
@@ -1445,7 +1448,7 @@ class KaewphanCorpusHelper:
                         )
                     else:
                         # Edge case: last token starts a new entity
-                        if entity_type is not None:
+                        if entity_type is not None and entity_start is not None:
                             entities.append(
                                 Entity((entity_start, len(document_text)), entity_type)
                             )
@@ -1476,8 +1479,10 @@ class CLL(ColumnCorpus):
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1485,9 +1490,6 @@ class CLL(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         train_file = data_folder / "train.conll"
@@ -1545,8 +1547,10 @@ class GELLUS(ColumnCorpus):
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1554,9 +1558,6 @@ class GELLUS(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         train_file = data_folder / "train.conll"
@@ -1634,8 +1635,10 @@ class LOCTEXT(ColumnCorpus):
         :param sentence_splitter: Custom implementation of :class:`SentenceSplitter`
             that segments a document into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -1643,9 +1646,6 @@ class LOCTEXT(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -1759,8 +1759,6 @@ class CHEMDNER(ColumnCorpus):
           https://jcheminf.biomedcentral.com/articles/10.1186/1758-2946-7-S1-S2
     """
 
-    default_dir = flair.cache_root / "datasets" / "CHEMDNER"
-
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -1774,8 +1772,10 @@ class CHEMDNER(ColumnCorpus):
             segements documents into sentences and tokens
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -1784,12 +1784,7 @@ class CHEMDNER(ColumnCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
-        if not base_path:
-            # download file is huge => make default_dir visible so that derivative
-            # corpora can all use the same download file
-            data_folder = self.default_dir
-        else:
-            data_folder = base_path / dataset_name
+        data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
             sentence_splitter = SciSpacySentenceSplitter()
@@ -1896,8 +1891,10 @@ class IEPA(ColumnCorpus):
                 segments sentences into tokens (default :class:`SciSpacyTokenizer`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -1905,9 +1902,6 @@ class IEPA(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
@@ -1978,7 +1972,7 @@ class LINNEAUS(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        tokenizer: Tokenizer = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
@@ -1987,8 +1981,10 @@ class LINNEAUS(ColumnCorpus):
                 sentence into tokens (default :class:`SciSpacyTokenizer`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -1996,9 +1992,6 @@ class LINNEAUS(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
@@ -2044,8 +2037,8 @@ class LINNEAUS(ColumnCorpus):
                 if not line:
                     continue
 
-                document_id, start, end, text = line.strip().split("\t")[1:5]
-                start, end = int(start), int(end)
+                document_id, _start, _end, text = line.strip().split("\t")[1:5]
+                start, end = int(_start), int(_end)
 
                 entities_per_document[document_id].append(
                     Entity((start, end), SPECIES_TAG)
@@ -2089,7 +2082,7 @@ class CDR(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -2098,8 +2091,10 @@ class CDR(ColumnCorpus):
             documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2107,9 +2102,6 @@ class CDR(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -2234,7 +2226,7 @@ class VARIOME(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
@@ -2243,8 +2235,10 @@ class VARIOME(ColumnCorpus):
                 documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2252,9 +2246,6 @@ class VARIOME(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -2411,8 +2402,10 @@ class NCBI_DISEASE(ColumnCorpus):
                 documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2420,9 +2413,6 @@ class NCBI_DISEASE(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -2491,9 +2481,9 @@ class NCBI_DISEASE(ColumnCorpus):
         entities_per_document = {}
 
         with open(str(input_file), "r", encoding="utf8") as file:
-            document_id = None
-            document_text = None
-            entities = []
+            document_id = ""
+            document_text = ""
+            entities: List[Entity] = []
 
             c = 1
             for line in file:
@@ -2503,7 +2493,7 @@ class NCBI_DISEASE(ColumnCorpus):
                         documents[document_id] = document_text
                         entities_per_document[document_id] = entities
 
-                    document_id, document_text, entities = None, None, []
+                    document_id, document_text, entities = "", "", []
                     c = 1
                     continue
                 if c == 1:
@@ -2568,7 +2558,7 @@ class ScaiCorpus(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
@@ -2577,8 +2567,10 @@ class ScaiCorpus(ColumnCorpus):
                 documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2586,9 +2578,6 @@ class ScaiCorpus(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -2612,13 +2601,13 @@ class ScaiCorpus(ColumnCorpus):
 
     @staticmethod
     def parse_input_file(input_file: Path):
-        documents = {}
-        entities_per_document = {}
+        documents: Dict[str, str] = {}
+        entities_per_document: Dict[str, List[Entity]] = {}
 
         with open(str(input_file), "r", encoding="iso-8859-1") as file:
             document_id = None
-            document_text = None
-            entities = []
+            document_text = ""
+            entities: List[Entity] = []
             entity_type = None
 
             for line in file:
@@ -2633,12 +2622,12 @@ class ScaiCorpus(ColumnCorpus):
                             Entity((entity_start, len(document_text)), entity_type)
                         )
 
-                    if not (document_id is None and document_text is None):
+                    if not (document_id is None or document_text is None):
                         documents[document_id] = document_text
                         entities_per_document[document_id] = entities
 
                     document_id = line.strip("#").strip()
-                    document_text = None
+                    document_text = ""
                     entities = []
                 else:
                     columns = line.strip().split("\t")
@@ -2661,7 +2650,7 @@ class ScaiCorpus(ColumnCorpus):
                         entity_type = None
 
                     document_text = (
-                        document_text + " " + token if document_text else token
+                        document_text + " " + token if document_text is not None else token
                     )
 
         return InternalBioNerDataset(
@@ -2802,8 +2791,10 @@ class OSIRIS(ColumnCorpus):
                 want the fixed version.
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2811,9 +2802,6 @@ class OSIRIS(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -2938,8 +2926,10 @@ class S800(ColumnCorpus):
                 into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2947,9 +2937,6 @@ class S800(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3043,8 +3030,10 @@ class GPRO(ColumnCorpus):
                 into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3052,9 +3041,6 @@ class GPRO(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3107,7 +3093,7 @@ class GPRO(ColumnCorpus):
     @staticmethod
     def parse_input_file(text_file: Path, ann_file: Path) -> InternalBioNerDataset:
         documents = {}
-        entities_per_document = {}
+        entities_per_document: Dict[str, List[Entity]] = {}
 
         document_title_length = {}
 
@@ -3195,8 +3181,10 @@ class DECA(ColumnCorpus):
                 documents into sentences and tokens (default BioSpacySentenceSpliiter)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3204,9 +3192,6 @@ class DECA(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3237,8 +3222,8 @@ class DECA(ColumnCorpus):
 
     @staticmethod
     def parse_corpus(text_dir: Path, gold_file: Path) -> InternalBioNerDataset:
-        documents = {}
-        entities_per_document = {}
+        documents: Dict[str, str] = {}
+        entities_per_document: Dict[str, List[Entity]] = {}
 
         text_files = [
             file for file in os.listdir(str(text_dir)) if not file.startswith(".")
@@ -3306,8 +3291,10 @@ class FSU(ColumnCorpus):
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3315,9 +3302,6 @@ class FSU(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         sentence_splitter = TagSentenceSplitter(
@@ -3399,7 +3383,7 @@ class FSU(ColumnCorpus):
                         akt_pos += len(words[i]) + 1
                     sentences += [tmp_sentence]
 
-                pre_entities = [[] for _ in sentences]
+                pre_entities: List[List[Tuple[int, int, str]]] = [[] for _ in sentences]
                 for protein in protein_tree:
                     for span in protein.get("span").split(","):
                         start = word_to_id[span.split("..")[0]]
@@ -3412,20 +3396,20 @@ class FSU(ColumnCorpus):
                             )
                         ]
 
-                sentences = [" ".join(sentence) for sentence in sentences]
-                document = sentence_separator.join(sentences)
+                sentence_texts = [" ".join(sentence) for sentence in sentences]
+                document = sentence_separator.join(sentence_texts)
 
                 entities = []
                 sent_offset = 0
-                for sentence, sent_entities in zip(sentences, pre_entities):
+                for sent, sent_entities in zip(sentence_texts, pre_entities):
                     entities += [
                         Entity(
-                            (entity[0] + sent_offset, entity[1] + sent_offset),
-                            entity[2],
+                            (start + sent_offset, end + sent_offset),
+                            ent_type,
                         )
-                        for entity in sent_entities
+                        for (start, end, ent_type) in sent_entities
                     ]
-                    sent_offset += len(sentence) + len(sentence_separator)
+                    sent_offset += len(sent) + len(sentence_separator)
 
                 documents[document_id] = document
                 entities_per_document[document_id] = entities
@@ -3491,8 +3475,10 @@ class CRAFT(ColumnCorpus):
                 into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3500,9 +3486,6 @@ class CRAFT(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3589,8 +3572,10 @@ class BIOSEMANTICS(ColumnCorpus):
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
             into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3598,9 +3583,6 @@ class BIOSEMANTICS(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3646,8 +3628,8 @@ class BIOSEMANTICS(ColumnCorpus):
             ]
         text_files = sorted(text_files)
 
-        documents = {}
-        entities_per_document = {}
+        documents: Dict[str, str] = {}
+        entities_per_document: Dict[str, List[Entity]] = {}
 
         for text_file in sorted(text_files):
             document_id = os.path.basename(text_file).split("_")[0]
@@ -3676,8 +3658,8 @@ class BIOSEMANTICS(ColumnCorpus):
                     # if len(mid) != 3:
                     #     continue
 
-                    entity_type, start, end = mid[0], mid[1], mid[2]
-                    start, end = int(start.split(";")[0]), int(end.split(";")[0])
+                    entity_type, _start, _end = mid[:3]
+                    start, end = int(_start.split(";")[0]), int(_end.split(";")[0])
 
                     if start == end:
                         continue
@@ -3725,7 +3707,7 @@ class BC2GM(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -3733,8 +3715,10 @@ class BC2GM(ColumnCorpus):
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
             into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3742,9 +3726,6 @@ class BC2GM(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3795,7 +3776,7 @@ class BC2GM(ColumnCorpus):
     @staticmethod
     def parse_dataset(text_file: Path, ann_file: Path) -> InternalBioNerDataset:
         documents = {}
-        entities_per_document = {}
+        entities_per_document: Dict[str, List[Entity]] = {}
 
         with open(str(text_file), "r", encoding="utf8") as text_file_reader:
             for line in text_file_reader:
@@ -3825,7 +3806,8 @@ class BC2GM(ColumnCorpus):
                     if non_whitespaces_chars == end_idx + 1:
                         new_end_idx = i + 1
                         break
-
+                assert new_start_idx is not None
+                assert new_end_idx is not None
                 mention_text = document_text[new_start_idx:new_end_idx]
                 if mention_text != columns[2] and mention_text.startswith("/"):
                     # There is still one illegal annotation in the file ..
@@ -3876,7 +3858,7 @@ class CEMP(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
@@ -3885,8 +3867,10 @@ class CEMP(ColumnCorpus):
                 documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3894,9 +3878,6 @@ class CEMP(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3951,7 +3932,7 @@ class CEMP(ColumnCorpus):
     @staticmethod
     def parse_input_file(text_file: Path, ann_file: Path) -> InternalBioNerDataset:
         documents = {}
-        entities_per_document = {}
+        entities_per_document: Dict[str, List[Entity]] = {}
         document_abstract_length = {}
 
         with open(str(text_file), "r", encoding="utf8") as text_reader:
@@ -4055,8 +4036,10 @@ class CHEBI(ColumnCorpus):
         :param annotator: The abstracts have been annotated by two annotators, which can be
                 selected by choosing annotator 1 or 2. If annotator is 0, the union of both annotations is used.
         """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -4064,9 +4047,6 @@ class CHEBI(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -4229,7 +4209,7 @@ class BioNLPCorpus(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
@@ -4238,8 +4218,10 @@ class BioNLPCorpus(ColumnCorpus):
                 into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -4247,9 +4229,6 @@ class BioNLPCorpus(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -4279,7 +4258,7 @@ class BioNLPCorpus(ColumnCorpus):
 
     @staticmethod
     @abstractmethod
-    def download_corpus(data_folder: Path) -> Tuple[Path, Path]:
+    def download_corpus(data_folder: Path) -> Tuple[Path, Path, Path]:
         pass
 
     @staticmethod
@@ -4429,8 +4408,10 @@ class ANAT_EM(ColumnCorpus):
            :param sentence_splitter: Implementation of :class:`Tokenizer` which segments
                 sentences into tokens (default :class:`SciSpacyTokenizer`)
            """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -4438,9 +4419,6 @@ class ANAT_EM(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
@@ -4510,14 +4488,18 @@ class ANAT_EM(ColumnCorpus):
             sent_offset = 0
             last_offset = 0
 
-            input_file = open(str(input_dir / input_file), "r", encoding="utf8")
-            for line in input_file.readlines():
-                line = line.strip()
-                if line:
-                    tag, start, end, word, _, _, _ = line.split("\t")
+            with open(input_dir / input_file, "r", encoding="utf8") as f:
+                for line in f.readlines():
+                    line = line.strip()
+                    if not line:
+                        document_text += sentence_separator
+                        sent_offset += len(sentence_separator)
+                        last_offset += len(sentence_separator)
+                        continue
+                    tag, _start, _end, word, _, _, _ = line.split("\t")
 
-                    start = int(start) + sent_offset
-                    end = int(end) + sent_offset
+                    start = int(_start) + sent_offset
+                    end = int(_end) + sent_offset
 
                     document_text += " " * (start - last_offset)
                     document_text += word
@@ -4531,7 +4513,7 @@ class ANAT_EM(ColumnCorpus):
                         entity_start = start
                         entity_type = tag[2:]
 
-                    elif tag == "O" and entity_type is not None:
+                    elif tag == "O" and entity_type is not None and entity_start is not None:
                         entities.append(
                             Entity((entity_start, last_offset), entity_type)
                         )
@@ -4541,10 +4523,6 @@ class ANAT_EM(ColumnCorpus):
 
                     assert word == document_text[start:end]
 
-                else:
-                    document_text += sentence_separator
-                    sent_offset += len(sentence_separator)
-                    last_offset += len(sentence_separator)
 
             documents[document_id] = document_text
             entities_per_document[document_id] = entities
@@ -4630,9 +4608,10 @@ class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
+        if base_path is None:
             base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4668,9 +4647,10 @@ class BIOBERT_GENE_BC2GM(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
+        if base_path is None:
             base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4705,9 +4685,10 @@ class BIOBERT_GENE_JNLPBA(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
+        if base_path is None:
             base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4742,9 +4723,10 @@ class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
+        if base_path is None:
             base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4779,9 +4761,10 @@ class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
+        if base_path is None:
             base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4815,9 +4798,10 @@ class BIOBERT_DISEASE_NCBI(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
+        if base_path is None:
             base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4852,9 +4836,10 @@ class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
+        if base_path is None:
             base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4889,9 +4874,10 @@ class BIOBERT_SPECIES_S800(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
+        if base_path is None:
             base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4932,8 +4918,10 @@ class CRAFT_V4(ColumnCorpus):
                 documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -4941,9 +4929,6 @@ class CRAFT_V4(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -5252,8 +5237,10 @@ class AZDZ(ColumnCorpus):
                 into tokens (default :class:`SciSpacyTokenizer`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -5261,9 +5248,6 @@ class AZDZ(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
@@ -5296,22 +5280,22 @@ class AZDZ(ColumnCorpus):
         entities_per_document = {}
 
         with open(str(input_file), "r", encoding="iso-8859-1") as azdz_reader:
-            prev_document_id = None
-            prev_sentence_id = None
+            prev_document_id: Optional[str] = None
+            prev_sentence_id: Optional[str] = None
 
-            document_text = None
-            entities = []
-            offset = None
+            document_text: Optional[str] = None
+            entities: List[Entity] = []
+            offset: Optional[int] = None
 
             for line in azdz_reader:
                 line = line.strip()
                 if not line or line.startswith("Doc Id"):
                     continue
 
-                columns = line.split("\t")
+                pmid, sentence_no, text, entity_start, entity_end = line.split("\t")
 
-                document_id = columns[1]  # PMID
-                sentence_id = document_id + "_" + columns[2]  # PMID + sentence no
+                document_id = pmid
+                sentence_id = document_id + "_" + sentence_no
 
                 if document_id != prev_document_id and document_text:
                     documents[document_id] = document_text
@@ -5322,16 +5306,19 @@ class AZDZ(ColumnCorpus):
                     offset = None
 
                 if sentence_id != prev_sentence_id:
-                    offset = offset + len(SENTENCE_TAG) if offset else 0
+                    offset = offset + len(SENTENCE_TAG) if offset is not None else 0
                     document_text = (
-                        document_text + SENTENCE_TAG + columns[3].strip()
-                        if document_text
-                        else columns[3]
+                        document_text + SENTENCE_TAG + text.strip()
+                        if document_text is not None
+                        else text
                     )
 
+                if offset is None:
+                    continue
+
                 try:
-                    start = offset + int(columns[4]) - 1
-                    end = offset + int(columns[5])
+                    start = offset + int(entity_start) - 1
+                    end = offset + int(entity_end)
                 except:
                     continue
 
@@ -5369,8 +5356,10 @@ class PDR(ColumnCorpus):
                 segments documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -5379,8 +5368,7 @@ class PDR(ColumnCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
+
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
