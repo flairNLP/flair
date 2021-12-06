@@ -15,8 +15,7 @@ jobs:
           python-version: 3.6
       - name: Install Flair dependencies
         run: |
-          pip install -r requirements.txt
-          python setup.py develop -q
+          pip install -e .
       - name: Install unittest dependencies
         run: pip install -r requirements-dev.txt
       - name: Run tests
