@@ -1,23 +1,16 @@
+import json
 import logging
 import os
-import numpy as np
-import json
 import urllib
-
-from tqdm import tqdm
 from pathlib import Path
 from typing import List
 
+import numpy as np
 import torch.utils.data.dataloader
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
-from flair.data import (
-    Sentence,
-    Corpus,
-    FlairDataset,
-    DataPair,
-    Image,
-)
+from flair.data import Corpus, DataPair, FlairDataset, Image, Sentence
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")

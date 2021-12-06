@@ -1,16 +1,18 @@
 import pytest
 import torch
 
-from flair.data import Sentence, Dictionary
+from flair.data import Dictionary, Sentence
 from flair.embeddings import (
-    WordEmbeddings,
-    TokenEmbeddings,
-    StackedEmbeddings,
-    DocumentPoolEmbeddings,
-    FlairEmbeddings,
-    DocumentRNNEmbeddings,
-    DocumentLMEmbeddings, TransformerWordEmbeddings, TransformerDocumentEmbeddings,
     DocumentCNNEmbeddings,
+    DocumentLMEmbeddings,
+    DocumentPoolEmbeddings,
+    DocumentRNNEmbeddings,
+    FlairEmbeddings,
+    StackedEmbeddings,
+    TokenEmbeddings,
+    TransformerDocumentEmbeddings,
+    TransformerWordEmbeddings,
+    WordEmbeddings,
 )
 from flair.models import LanguageModel
 

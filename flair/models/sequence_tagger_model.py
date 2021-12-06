@@ -1,7 +1,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import List, Union, Optional, Dict, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 from warnings import warn
 
 import numpy as np
@@ -14,9 +14,9 @@ from torch.nn.parameter import Parameter
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import Dictionary, Sentence, Label, SpanLabel
-from flair.datasets import FlairDatapointDataset, DataLoader
-from flair.embeddings import TokenEmbeddings, StackedEmbeddings
+from flair.data import Dictionary, Label, Sentence, SpanLabel
+from flair.datasets import DataLoader, FlairDatapointDataset
+from flair.embeddings import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import store_embeddings
 
@@ -962,7 +962,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 model_folder = model_name
 
             # Lazy import
-            from huggingface_hub import hf_hub_url, cached_download
+            from huggingface_hub import cached_download, hf_hub_url
 
             url = hf_hub_url(model_name, revision=revision, filename=hf_model_name)
 

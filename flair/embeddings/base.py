@@ -1,10 +1,10 @@
-from abc import abstractmethod
 import inspect
-from typing import Union, List, Dict, Generic, Sequence
-from torch.nn import ParameterList, Parameter
+import logging
+from abc import abstractmethod
+from typing import Dict, Generic, List, Sequence, Union
 
 import torch
-import logging
+from torch.nn import Parameter, ParameterList
 
 import flair
 from flair.data import DT

@@ -3,11 +3,8 @@ from torch.optim import SGD
 from torch.optim.adam import Adam
 
 import flair.datasets
-from flair.data import Sentence, MultiCorpus
-from flair.embeddings import (
-    WordEmbeddings,
-    FlairEmbeddings,
-)
+from flair.data import MultiCorpus, Sentence
+from flair.embeddings import FlairEmbeddings, WordEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 

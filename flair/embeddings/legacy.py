@@ -1,43 +1,45 @@
-from pathlib import Path
-from deprecated import deprecated
+import logging
 from abc import abstractmethod
-from typing import List, Union, Tuple, Dict
+from pathlib import Path
+from typing import Dict, List, Tuple, Union
 
 import torch
-import logging
-import flair
+from deprecated import deprecated
+from transformers import (
+    AlbertModel,
+    AlbertTokenizer,
+    AutoConfig,
+    AutoModel,
+    AutoTokenizer,
+    BertModel,
+    BertTokenizer,
+    CamembertModel,
+    CamembertTokenizer,
+    GPT2Model,
+    GPT2Tokenizer,
+    OpenAIGPTModel,
+    OpenAIGPTTokenizer,
+    PreTrainedModel,
+    PreTrainedTokenizer,
+    RobertaModel,
+    RobertaTokenizer,
+    T5Tokenizer,
+    TransfoXLModel,
+    TransfoXLTokenizer,
+    XLMModel,
+    XLMRobertaModel,
+    XLMRobertaTokenizer,
+    XLMTokenizer,
+    XLNetModel,
+    XLNetTokenizer,
+)
 
+import flair
 from flair.data import Sentence, Token
 from flair.embeddings.base import ScalarMix
 from flair.embeddings.document import DocumentEmbeddings
-from flair.embeddings.token import TokenEmbeddings, StackedEmbeddings
+from flair.embeddings.token import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path
-
-from transformers import (
-    AlbertTokenizer,
-    AlbertModel,
-    BertTokenizer,
-    BertModel,
-    CamembertTokenizer,
-    CamembertModel,
-    RobertaTokenizer,
-    RobertaModel,
-    TransfoXLTokenizer,
-    TransfoXLModel,
-    OpenAIGPTModel,
-    OpenAIGPTTokenizer,
-    GPT2Model,
-    GPT2Tokenizer,
-    XLNetTokenizer,
-    XLMTokenizer,
-    XLNetModel,
-    XLMModel,
-    XLMRobertaTokenizer,
-    XLMRobertaModel,
-    PreTrainedTokenizer,
-    PreTrainedModel,
-    AutoTokenizer, AutoConfig, AutoModel, T5Tokenizer)
-
 from flair.nn import LockedDropout, WordDropout
 
 log = logging.getLogger("flair")
@@ -1080,7 +1082,7 @@ class BertEmbeddings(TokenEmbeddings):
 
         if "distilbert" in bert_model_or_path:
             try:
-                from transformers import DistilBertTokenizer, DistilBertModel
+                from transformers import DistilBertModel, DistilBertTokenizer
             except ImportError:
                 log.warning("-" * 100)
                 log.warning(
@@ -1511,11 +1513,11 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
         super().__init__()
 
         try:
-            from allennlp.modules.token_embedders.bidirectional_language_model_token_embedder import (
-                BidirectionalLanguageModelTokenEmbedder,
-            )
             from allennlp.data.token_indexers.elmo_indexer import (
                 ELMoTokenCharactersIndexer,
+            )
+            from allennlp.modules.token_embedders.bidirectional_language_model_token_embedder import (
+                BidirectionalLanguageModelTokenEmbedder,
             )
         except ModuleNotFoundError:
             log.warning("-" * 100)

@@ -1,16 +1,15 @@
 from pathlib import Path
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional, Tuple, Union
 
 import sklearn
 import torch
 import torch.nn
 from torch.nn.modules.rnn import apply_permutation
-from torch.nn.utils.rnn import PackedSequence
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence, pad_packed_sequence
 from torch.utils.data import Dataset
 
 import flair.nn
-from flair.data import Dictionary, Sentence, Token, Label, DataPoint
+from flair.data import DataPoint, Dictionary, Label, Sentence, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import TokenEmbeddings
 from flair.nn.dropout import LockedDropout, WordDropout

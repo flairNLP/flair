@@ -1,8 +1,10 @@
-import pytest
 from typing import Tuple
+
+import pytest
+
 import flair.datasets
-from flair.data import Dictionary, Corpus
-from flair.embeddings import WordEmbeddings, DocumentRNNEmbeddings
+from flair.data import Corpus, Dictionary
+from flair.embeddings import DocumentRNNEmbeddings, WordEmbeddings
 from flair.models.text_regression_model import TextRegressor
 
 # from flair.trainers.trainer_regression import RegressorTrainer

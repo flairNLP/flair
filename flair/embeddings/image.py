@@ -1,20 +1,26 @@
+import logging
 from abc import abstractmethod
 from typing import List
 
 import torch
 import torch.nn.functional as F
-from torch.nn import Parameter
+from torch.nn import (
+    AdaptiveAvgPool2d,
+    AdaptiveMaxPool2d,
+    Conv2d,
+    Dropout2d,
+    Linear,
+    MaxPool2d,
+    Parameter,
+    ReLU,
+    Sequential,
+    TransformerEncoder,
+    TransformerEncoderLayer,
+)
 
 import flair
 from flair.data import Image
 from flair.embeddings.base import Embeddings
-
-import logging
-
-from torch.nn import Sequential, Linear, Conv2d, ReLU, MaxPool2d, Dropout2d
-from torch.nn import AdaptiveAvgPool2d, AdaptiveMaxPool2d
-from torch.nn import TransformerEncoderLayer, TransformerEncoder
-
 
 log = logging.getLogger("flair")
 

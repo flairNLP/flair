@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass, field
-from typing import List, Tuple, Dict, Union
+from typing import Dict, List, Tuple, Union
 
 from flair.data import Sentence, Span, SpanLabel, Token
 

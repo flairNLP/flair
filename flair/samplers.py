@@ -1,9 +1,10 @@
 import logging
+import random
 from collections import defaultdict
-from typing import  Dict
+from typing import Dict
 
+import torch
 from torch.utils.data.sampler import Sampler
-import random, torch
 
 from flair.data import FlairDataset
 

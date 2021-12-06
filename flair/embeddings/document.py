@@ -5,12 +5,18 @@ import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
 from torch.nn import RNNBase
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer
+from transformers import (
+    CONFIG_MAPPING,
+    AutoConfig,
+    AutoModel,
+    AutoTokenizer,
+    PreTrainedTokenizer,
+)
 
 import flair
 from flair.data import Sentence
 from flair.embeddings.base import Embeddings, ScalarMix
-from flair.embeddings.token import TokenEmbeddings, StackedEmbeddings, FlairEmbeddings
+from flair.embeddings.token import FlairEmbeddings, StackedEmbeddings, TokenEmbeddings
 from flair.nn import LockedDropout, WordDropout
 
 log = logging.getLogger("flair")

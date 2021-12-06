@@ -3,9 +3,9 @@ import json
 import logging
 import os
 import sys
+from dataclasses import dataclass, field
 
 import torch
-from dataclasses import dataclass, field
 from transformers import HfArgumentParser
 
 import flair

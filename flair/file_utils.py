@@ -1,22 +1,22 @@
 """
 Utilities for working with the local dataset cache. Copied from AllenNLP
 """
-import typing
-from pathlib import Path
-from typing import Tuple, Union, Optional, Sequence, cast
-import os
 import base64
+import functools
+import io
 import logging
+import mmap
+import os
+import re
 import shutil
 import tempfile
-import re
-import functools
+import typing
+import zipfile
+from pathlib import Path
+from typing import Optional, Sequence, Tuple, Union, cast
 from urllib.parse import urlparse
 
-import mmap
 import requests
-import zipfile
-import io
 
 # from allennlp.common.tqdm import Tqdm
 import flair

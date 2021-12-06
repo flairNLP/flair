@@ -1,29 +1,22 @@
-import flair
 import os
-import pytest
-
 from typing import List
 
-from flair.data import (
-    Sentence,
-    Label,
-    Token,
-    Dictionary,
-    Corpus,
-    Span
-)
+import pytest
+
+import flair
+from flair.data import Corpus, Dictionary, Label, Sentence, Span, Token
 from flair.tokenization import (
-    SpacyTokenizer,
-    SegtokTokenizer,
     JapaneseTokenizer,
-    TokenizerWrapper,
+    NewlineSentenceSplitter,
+    NoSentenceSplitter,
+    SciSpacySentenceSplitter,
     SciSpacyTokenizer,
     SegtokSentenceSplitter,
-    NoSentenceSplitter,
-    TagSentenceSplitter,
-    NewlineSentenceSplitter,
+    SegtokTokenizer,
     SpacySentenceSplitter,
-    SciSpacySentenceSplitter
+    SpacyTokenizer,
+    TagSentenceSplitter,
+    TokenizerWrapper,
 )
 
 

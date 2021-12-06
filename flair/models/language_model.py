@@ -1,11 +1,9 @@
-from pathlib import Path
-
-import torch.nn as nn
-import torch
 import math
-from typing import Union, Tuple, Optional
-from typing import List
+from pathlib import Path
+from typing import List, Optional, Tuple, Union
 
+import torch
+import torch.nn as nn
 from torch.optim import Optimizer
 
 import flair

@@ -1,23 +1,24 @@
 import csv
 import json
+import logging
 import os
-
 from pathlib import Path
-from typing import List, Dict, Union, Callable
+from typing import Callable, Dict, List, Union
 
 import flair
 from flair.data import (
-    Sentence,
     Corpus,
-    Token,
+    DataPair,
     FlairDataset,
-    Tokenizer, DataPair, _iter_dataset
+    Sentence,
+    Token,
+    Tokenizer,
+    _iter_dataset,
 )
-from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 from flair.datasets.base import find_train_dev_test_files
-from flair.file_utils import cached_path, unzip_file, unpack_file
+from flair.file_utils import cached_path, unpack_file, unzip_file
+from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 
-import logging
 log = logging.getLogger("flair")
 
 
@@ -699,6 +700,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         amazon__path = "http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall"
         cached_path(f"{amazon__path}/{part_name}", Path("datasets") / 'Amazon_Product_Reviews')
         import gzip
+
         # create dataset directory if necessary
         if not os.path.exists(data_folder):
             os.makedirs(data_folder)

@@ -2,17 +2,12 @@ import logging
 import os
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Union, Callable, Generic
+from typing import Callable, Generic, List, Union
 
 import torch.utils.data.dataloader
-from torch.utils.data.dataset import Subset, ConcatDataset
+from torch.utils.data.dataset import ConcatDataset, Subset
 
-from flair.data import (
-    Sentence,
-    Token,
-    Tokenizer,
-    FlairDataset, DT
-)
+from flair.data import DT, FlairDataset, Sentence, Token, Tokenizer
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 
 log = logging.getLogger("flair")

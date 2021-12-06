@@ -6,7 +6,7 @@ import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import DataPoint, Dictionary, SpanLabel, Sentence
+from flair.data import DataPoint, Dictionary, Sentence, SpanLabel
 
 log = logging.getLogger("flair")
 

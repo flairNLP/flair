@@ -1,10 +1,8 @@
 from flair.data import Sentence
-from flair.embeddings import (
-    TransformerWordEmbeddings
-)
+from flair.datasets.relation_extraction import CoNLLUCorpus
+from flair.embeddings import TransformerWordEmbeddings
 from flair.models import RelationExtractor
 from flair.trainers import ModelTrainer
-from flair.datasets.relation_extraction import CoNLLUCorpus
 
 
 # @pytest.mark.integration

@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 import flair
 import flair.embeddings
-from flair.data import Sentence, Label, DataPoint, Dictionary
+from flair.data import DataPoint, Dictionary, Label, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.training_utils import MetricRegression, Result, store_embeddings
 

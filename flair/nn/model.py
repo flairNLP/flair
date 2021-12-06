@@ -1,20 +1,20 @@
 import itertools
 import logging
+import typing
 import warnings
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import Union, List, Tuple, Dict, Optional, Any
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch.nn
-import typing
 from torch.nn.modules.loss import _Loss
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DataPoint, Sentence, Dictionary, DT, Label
+from flair.data import DT, DataPoint, Dictionary, Label, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.training_utils import Result, store_embeddings
 

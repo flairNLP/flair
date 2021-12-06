@@ -3,12 +3,12 @@ import os
 import re
 import shutil
 from pathlib import Path
-from typing import Union, Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from torch.utils.data import ConcatDataset, Dataset
 
 import flair
-from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
+from flair.data import Corpus, FlairDataset, MultiCorpus, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file
 
@@ -709,7 +709,8 @@ class CONLL_2000(ColumnCorpus):
             cached_path(
                 f"{conll_2000_path}test.txt.gz", Path("datasets") / dataset_name
             )
-            import gzip, shutil
+            import gzip
+            import shutil
 
             with gzip.open(
                     flair.cache_root / "datasets" / dataset_name / "train.txt.gz",
@@ -939,7 +940,8 @@ class NER_BASQUE(ColumnCorpus):
             cached_path(
                 f"{ner_basque_path}/eiec_v1.0.tgz", Path("datasets") / dataset_name
             )
-            import tarfile, shutil
+            import shutil
+            import tarfile
 
             with tarfile.open(
                     flair.cache_root / "datasets" / dataset_name / "eiec_v1.0.tgz",
@@ -2408,8 +2410,9 @@ class NER_MULTI_WIKIANN(MultiCorpus):
             # if language not downloaded yet, download it
             if not language_folder.exists():
                 if first:
-                    import gdown
                     import tarfile
+
+                    import gdown
                     first = False
                 # create folder
                 os.makedirs(language_folder)
@@ -2950,7 +2953,8 @@ class NER_MULTI_WIKINER(MultiCorpus):
             cached_path(
                 f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2", Path("datasets") / dataset_name
             )
-            import bz2, shutil
+            import bz2
+            import shutil
 
             # unpack and write out in CoNLL column-like format
             bz_file = bz2.BZ2File(

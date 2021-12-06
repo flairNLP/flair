@@ -1,7 +1,8 @@
 from typing import List
+
 from pptree import print_tree
 
-from flair.data import Token, Sentence
+from flair.data import Sentence, Token
 
 
 class NodeToken:

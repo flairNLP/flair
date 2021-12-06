@@ -1,15 +1,12 @@
+import csv
 import logging
+import math
 from collections import defaultdict
 from pathlib import Path
-from typing import Union, List, Dict
-
-import numpy as np
-import csv
-
-import math
+from typing import Dict, List, Union
 
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 # header for 'weights.txt'
 WEIGHT_NAME = 1

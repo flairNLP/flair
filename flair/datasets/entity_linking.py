@@ -3,15 +3,15 @@ import logging
 import os
 from collections import defaultdict
 from pathlib import Path
-from typing import Union, List, Dict, Optional
+from typing import Dict, List, Optional, Union
 
 import requests
 
 import flair
-from flair.data import Dictionary, Sentence, MultiCorpus, _iter_dataset, Corpus
-from flair.datasets import ColumnCorpus
+from flair.data import Corpus, Dictionary, MultiCorpus, Sentence, _iter_dataset
+from flair.datasets.sequence_labeling import ColumnCorpus
 from flair.file_utils import cached_path, unpack_file
-from flair.tokenization import SentenceSplitter, SegtokSentenceSplitter
+from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
 
 log = logging.getLogger("flair")
 

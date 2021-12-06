@@ -1,19 +1,19 @@
-import random
 import logging
+import random
 from collections import defaultdict
 from enum import Enum
+from functools import reduce
 from math import inf
 from pathlib import Path
-from typing import Union, List, Dict
+from typing import Dict, List, Union
 
+from scipy.stats import pearsonr, spearmanr
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 from torch.optim import Optimizer
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import Dictionary, Sentence, _iter_dataset, DataPoint
-from functools import reduce
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-from scipy.stats import pearsonr, spearmanr
+from flair.data import DataPoint, Dictionary, Sentence, _iter_dataset
 
 
 class Result(object):

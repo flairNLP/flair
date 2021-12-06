@@ -1,5 +1,6 @@
 pytest
 pytest-mypy
+pytest-isort
 types-Deprecated
 types-tabulate
 types-requests

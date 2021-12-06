@@ -1,10 +1,10 @@
-from typing import Union, List
+from typing import List, Union
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Label, DataPoint, Sentence, DataPair, TextPair
+from flair.data import DataPair, DataPoint, Label, Sentence, TextPair
 
 
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):

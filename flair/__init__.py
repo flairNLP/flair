@@ -1,6 +1,7 @@
 import os
-import torch
 from pathlib import Path
+
+import torch
 from transformers import set_seed as hf_set_seed
 
 # global variable: cache_root
@@ -15,14 +16,10 @@ else:
 # global variable: embedding_storage_mode
 embedding_storage_mode = "default"
 
-from . import data
-from . import models
-from . import visual
-from . import trainers
-from . import nn
-from .training_utils import AnnealOnPlateau
-
 import logging.config
+
+from . import data, models, nn, trainers, visual
+from .training_utils import AnnealOnPlateau
 
 __version__ = "0.10"
 

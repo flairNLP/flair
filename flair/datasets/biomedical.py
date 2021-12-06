@@ -1,38 +1,35 @@
-import logging
 import inspect
-import flair
-import ftfy
 import json
+import logging
 import os
-import shutil
 import re
+import shutil
 import sys
-
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from copy import copy
-from lxml import etree
-from lxml.etree import XMLSyntaxError
-from typing import Union, Callable, Dict, List, Tuple, Iterable, Optional, \
-    NamedTuple
 from operator import attrgetter
 from pathlib import Path
+from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from warnings import warn
 
-from flair.data import MultiCorpus
-from flair.data import Tokenizer
-from flair.file_utils import cached_path, Tqdm, unpack_file
-from flair.datasets import ColumnCorpus, ColumnDataset
-from flair.tokenization import (
-    SentenceSplitter,
-    SciSpacySentenceSplitter,
-    NoSentenceSplitter,
-    TagSentenceSplitter,
-    SciSpacyTokenizer,
-    NewlineSentenceSplitter,
-    SpaceTokenizer,
-)
+import ftfy
+from lxml import etree
+from lxml.etree import XMLSyntaxError
 
+import flair
+from flair.data import MultiCorpus, Tokenizer
+from flair.datasets.sequence_labeling import ColumnCorpus, ColumnDataset
+from flair.file_utils import Tqdm, cached_path, unpack_file
+from flair.tokenization import (
+    NewlineSentenceSplitter,
+    NoSentenceSplitter,
+    SciSpacySentenceSplitter,
+    SciSpacyTokenizer,
+    SentenceSplitter,
+    SpaceTokenizer,
+    TagSentenceSplitter,
+)
 
 DISEASE_TAG = "Disease"
 CHEMICAL_TAG = "Chemical"

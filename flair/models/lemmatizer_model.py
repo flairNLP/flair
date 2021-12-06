@@ -1,15 +1,15 @@
 import logging
 from math import inf
-from typing import List, Union, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import torch
 from torch import nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import Token, Sentence, Dictionary
+from flair.data import Dictionary, Sentence, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.training_utils import store_embeddings, Result
+from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
 

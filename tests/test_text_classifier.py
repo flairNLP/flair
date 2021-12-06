@@ -1,14 +1,8 @@
-import flair.datasets
-
 import pytest
 
 import flair.datasets
 from flair.data import Sentence
-from flair.embeddings import (
-    WordEmbeddings,
-    FlairEmbeddings,
-    DocumentRNNEmbeddings,
-)
+from flair.embeddings import DocumentRNNEmbeddings, FlairEmbeddings, WordEmbeddings
 from flair.models import TextClassifier
 from flair.samplers import ImbalancedClassificationDatasetSampler
 from flair.trainers import ModelTrainer

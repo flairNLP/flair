@@ -8,7 +8,7 @@ import time
 import warnings
 from inspect import signature
 from pathlib import Path
-from typing import Union, Tuple, Optional, Type, Dict, Any, cast
+from typing import Any, Dict, Optional, Tuple, Type, Union, cast
 
 import torch
 from torch.optim.sgd import SGD
@@ -21,23 +21,25 @@ try:
 except ImportError:
     amp = None
 
+import random
+
+from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
+
 import flair
 import flair.nn
-from flair.data import MultiCorpus, Corpus, Dictionary, _len_dataset
+from flair.data import Corpus, Dictionary, MultiCorpus, _len_dataset
 from flair.datasets import DataLoader
+from flair.models import SequenceTagger
 from flair.optim import ExpAnnealLR, LinearSchedulerWithWarmup
 from flair.training_utils import (
-    init_output_file,
-    WeightExtractor,
-    log_line,
-    add_file_handler,
-    Result,
-    store_embeddings,
     AnnealOnPlateau,
+    Result,
+    WeightExtractor,
+    add_file_handler,
+    init_output_file,
+    log_line,
+    store_embeddings,
 )
-from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
-from flair.models import SequenceTagger
-import random
 
 log = logging.getLogger("flair")
 

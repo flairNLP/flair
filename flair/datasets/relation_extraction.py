@@ -6,7 +6,7 @@ import os
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Union, Sequence, Dict, Any, Tuple, Set, Iterable
+from typing import Any, Dict, Iterable, List, Sequence, Set, Tuple, Union
 
 import conllu
 import gdown
@@ -16,10 +16,7 @@ import flair
 from flair.data import Sentence
 from flair.datasets.conllu import CoNLLUCorpus
 from flair.file_utils import cached_path
-from flair.tokenization import (
-    SentenceSplitter,
-    SegtokSentenceSplitter,
-)
+from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
 
 log = logging.getLogger("flair")
 

@@ -1,9 +1,9 @@
 import pytest
 
 from flair.data import Dictionary, Sentence
-from flair.embeddings import TokenEmbeddings, FlairEmbeddings
+from flair.embeddings import FlairEmbeddings, TokenEmbeddings
 from flair.models import LanguageModel
-from flair.trainers.language_model_trainer import TextCorpus, LanguageModelTrainer
+from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 
 
 @pytest.mark.integration

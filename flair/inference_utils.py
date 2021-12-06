@@ -227,6 +227,7 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
         super().__init__(embedding, 'lmdb', verbose)
         try:
             import lmdb
+
             # if embedding database already exists
             if self.store_path.exists() and self.store_path.is_dir():
                 # open the database in read mode

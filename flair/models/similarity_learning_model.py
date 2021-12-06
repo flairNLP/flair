@@ -1,24 +1,19 @@
+import itertools
 from abc import abstractmethod
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 
+import numpy as np
+import torch
+import torch.nn.functional as F
+from torch import nn
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import DataPoint, DataPair, DT, DT2
-from flair.embeddings import Embeddings
+from flair.data import DT, DT2, DataPair, DataPoint
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.training_utils import Result
-from flair.training_utils import store_embeddings
-
-import torch
-from torch import nn
-import torch.nn.functional as F
-
-import numpy as np
-
-import itertools
-
-from typing import Union, List, Optional, Dict
-from pathlib import Path
+from flair.embeddings import Embeddings
+from flair.training_utils import Result, store_embeddings
 
 
 # == similarity measures ==

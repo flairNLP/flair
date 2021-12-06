@@ -1,15 +1,14 @@
 import logging
 import re
 import typing
-from abc import abstractmethod, ABC
-from collections import Counter
-from collections import defaultdict
+from abc import ABC, abstractmethod
+from collections import Counter, defaultdict
 from operator import itemgetter
 from pathlib import Path
-from typing import List, Dict, Union, Optional, cast, Callable
+from typing import Callable, Dict, List, Optional, Union, cast
 
-from deprecated import deprecated
 import torch
+from deprecated import deprecated
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 

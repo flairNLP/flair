@@ -1,13 +1,14 @@
-import time, datetime
+import datetime
 import random
 import sys
+import time
 from pathlib import Path
-from typing import Union, Iterable, Type
+from typing import Iterable, Type, Union
 
 from torch import cuda
 from torch.optim import AdamW
-from torch.utils.data import Dataset, DataLoader
 from torch.optim.sgd import SGD
+from torch.utils.data import DataLoader, Dataset
 
 try:
     from apex import amp

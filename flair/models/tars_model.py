@@ -1,7 +1,7 @@
 import logging
 from collections import OrderedDict
 from pathlib import Path
-from typing import Union, List, Set, Optional, Tuple
+from typing import List, Optional, Set, Tuple, Union
 
 import numpy as np
 import torch
@@ -11,11 +11,15 @@ from tqdm import tqdm
 
 import flair
 from flair.data import Dictionary, Sentence
-from flair.datasets import FlairDatapointDataset, DataLoader
-from flair.embeddings import TokenEmbeddings, TransformerWordEmbeddings, \
-    TransformerDocumentEmbeddings
+from flair.datasets import DataLoader, FlairDatapointDataset
+from flair.embeddings import (
+    TokenEmbeddings,
+    TransformerDocumentEmbeddings,
+    TransformerWordEmbeddings,
+)
 from flair.file_utils import cached_path
-from flair.models import SequenceTagger, TextClassifier
+from flair.models.sequence_tagger_model import SequenceTagger
+from flair.models.text_classification_model import TextClassifier
 from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")

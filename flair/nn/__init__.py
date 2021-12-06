@@ -1,2 +1,2 @@
 from .dropout import LockedDropout, WordDropout
-from .model import Model, Classifier, DefaultClassifier
+from .model import Classifier, DefaultClassifier, Model

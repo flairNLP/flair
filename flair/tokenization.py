@@ -1,9 +1,9 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Callable, Optional, Union, Any
+from typing import Any, Callable, List, Optional, Union
 
 from more_itertools import stagger
-from segtok.segmenter import split_single, split_multi
+from segtok.segmenter import split_multi, split_single
 from segtok.tokenizer import split_contractions, word_tokenizer
 
 from flair.data import Sentence, Token, Tokenizer

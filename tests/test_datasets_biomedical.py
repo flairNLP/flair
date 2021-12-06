@@ -1,33 +1,31 @@
 import inspect
-import flair
 import os
 import tempfile
-import pytest
-
-import flair.datasets.biomedical as biomedical
-
 from operator import itemgetter
 from pathlib import Path
-from typing import List, Callable, Type
+from typing import Callable, List, Type
+
+import pytest
 from tqdm import tqdm  # type: ignore
 
-from flair.tokenization import (
-    TokenizerWrapper,
-    SpaceTokenizer,
-    TagSentenceSplitter,
-    SentenceSplitter,
-    NoSentenceSplitter
-)
-
+import flair
+import flair.datasets.biomedical as biomedical
 from flair.data import Token, _iter_dataset
 from flair.datasets import ColumnCorpus
 from flair.datasets.biomedical import (
-    Entity,
-    InternalBioNerDataset,
-    CoNLLWriter,
-    filter_nested_entities,
     SENTENCE_TAG,
+    CoNLLWriter,
+    Entity,
     HunerDataset,
+    InternalBioNerDataset,
+    filter_nested_entities,
+)
+from flair.tokenization import (
+    NoSentenceSplitter,
+    SentenceSplitter,
+    SpaceTokenizer,
+    TagSentenceSplitter,
+    TokenizerWrapper,
 )
 
 

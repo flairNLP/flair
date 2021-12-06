@@ -1,23 +1,16 @@
 import logging
 import os
 import re
-
-from deprecated import deprecated
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 
+from deprecated import deprecated
 
 import flair
-from flair.data import (
-    Sentence,
-    Corpus,
-    Token,
-    Tokenizer,
-    MultiCorpus
-)
-from flair.tokenization import SegtokTokenizer, SpaceTokenizer
+from flair.data import Corpus, MultiCorpus, Sentence, Token, Tokenizer
 from flair.file_utils import cached_path
+from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 
 log = logging.getLogger("flair")
 
@@ -661,7 +654,8 @@ class NLPTaskDataFetcher:
                 cached_path(
                     f"{conll_2000_path}test.txt.gz", Path("datasets") / task.value
                 )
-                import gzip, shutil
+                import gzip
+                import shutil
 
                 with gzip.open(
                     flair.cache_root / "datasets" / task.value / "train.txt.gz",
@@ -690,7 +684,8 @@ class NLPTaskDataFetcher:
                 cached_path(
                     f"{ner_basque_path}/eiec_v1.0.tgz", Path("datasets") / task.value
                 )
-                import tarfile, shutil
+                import shutil
+                import tarfile
 
                 with tarfile.open(
                     flair.cache_root / "datasets" / task.value / "eiec_v1.0.tgz",
@@ -838,7 +833,8 @@ class NLPTaskDataFetcher:
                     f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2",
                     Path("datasets") / task.value,
                 )
-                import bz2, shutil
+                import bz2
+                import shutil
 
                 # unpack and write out in CoNLL column-like format
                 bz_file = bz2.BZ2File(

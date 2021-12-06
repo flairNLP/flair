@@ -1,5 +1,5 @@
 import html
-from typing import Union, List
+from typing import List, Union
 
 from flair.data import Sentence
 

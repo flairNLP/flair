@@ -1,10 +1,16 @@
 import pytest
 
 import flair
-from flair.data import Sentence, Corpus
-from flair.datasets import ColumnCorpus, ClassificationCorpus
-from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings, DocumentPoolEmbeddings, \
-    TransformerDocumentEmbeddings, TransformerWordEmbeddings
+from flair.data import Corpus, Sentence
+from flair.datasets import ClassificationCorpus, ColumnCorpus
+from flair.embeddings import (
+    DocumentPoolEmbeddings,
+    FlairEmbeddings,
+    StackedEmbeddings,
+    TransformerDocumentEmbeddings,
+    TransformerWordEmbeddings,
+    WordEmbeddings,
+)
 from flair.models import SequenceTagger, TextClassifier
 from flair.trainers import ModelTrainer
 from flair.training_utils import Result

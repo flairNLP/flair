@@ -3,9 +3,8 @@ import math
 
 import torch
 from torch.optim import Optimizer
+from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau, _LRScheduler
 from torch.optim.optimizer import required  # type: ignore
-from torch.optim.lr_scheduler import _LRScheduler, ReduceLROnPlateau, LambdaLR
-
 
 log = logging.getLogger("flair")
 

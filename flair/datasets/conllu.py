@@ -1,11 +1,18 @@
 import logging
-
 from pathlib import Path
-from typing import List, Union, Optional, Sequence, Dict, Tuple, Any
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import conllu
 
-from flair.data import Sentence, Corpus, Token, FlairDataset, Span, RelationLabel, SpanLabel
+from flair.data import (
+    Corpus,
+    FlairDataset,
+    RelationLabel,
+    Sentence,
+    Span,
+    SpanLabel,
+    Token,
+)
 from flair.datasets.base import find_train_dev_test_files
 
 log = logging.getLogger("flair")

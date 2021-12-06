@@ -1,13 +1,13 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Tuple, Optional, Set
+from typing import List, Optional, Set, Tuple, Union
 
 import torch
 import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import RelationLabel, Span, Sentence
+from flair.data import RelationLabel, Sentence, Span
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")

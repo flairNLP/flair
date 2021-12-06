@@ -13,10 +13,13 @@ exclude = '''
 )
 '''
 [tool.pytest.ini_options]
-addopts = "-W error --mypy --ignore flair/data_fetcher.py --ignore flair/embeddings/legacy.py"
+addopts = "-W error --mypy --ignore flair/data_fetcher.py --ignore flair/embeddings/legacy.py --isort"
 markers = [
     "integration",
 ]
 [tool.mypy]
 exclude = "flair/data_fetcher.py|flair/embeddings/legacy.py"
 ignore_missing_imports = true
+
+[tool.isort]
+profile = "black"

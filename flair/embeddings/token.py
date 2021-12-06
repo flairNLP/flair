@@ -4,7 +4,7 @@ import os
 import re
 from collections import Counter
 from pathlib import Path
-from typing import List, Union, Dict, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Union
 
 import gensim
 import numpy as np
@@ -12,13 +12,20 @@ import torch
 from bpemb import BPEmb
 from gensim.models import KeyedVectors
 from torch import nn
-from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer, XLNetModel, \
-    TransfoXLModel
+from transformers import (
+    CONFIG_MAPPING,
+    AutoConfig,
+    AutoModel,
+    AutoTokenizer,
+    PreTrainedTokenizer,
+    TransfoXLModel,
+    XLNetModel,
+)
 
 import flair
-from flair.data import Sentence, Token, Corpus, Dictionary, _iter_dataset
+from flair.data import Corpus, Dictionary, Sentence, Token, _iter_dataset
 from flair.embeddings.base import Embeddings
-from flair.file_utils import cached_path, open_inside_zip, instance_lru_cache
+from flair.file_utils import cached_path, instance_lru_cache, open_inside_zip
 
 log = logging.getLogger("flair")
 

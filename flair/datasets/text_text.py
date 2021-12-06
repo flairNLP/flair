@@ -1,15 +1,10 @@
 import logging
 import os
 from pathlib import Path
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 import flair
-from flair.data import (
-    Sentence,
-    Corpus,
-    FlairDataset,
-    DataPair, _iter_dataset,
-)
+from flair.data import Corpus, DataPair, FlairDataset, Sentence, _iter_dataset
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file, unzip_file
 

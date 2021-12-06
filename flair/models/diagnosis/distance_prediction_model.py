@@ -1,18 +1,18 @@
 import logging
+from math import floor
 from pathlib import Path
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
+import numpy as np
+import sklearn.metrics as metrics
 import torch
 import torch.nn as nn
 from torch.nn.modules.loss import _Loss
 from torch.utils.data.dataset import Dataset
-import numpy as np
-from math import floor
 
-import sklearn.metrics as metrics
-import flair.nn
 import flair.embeddings
-from flair.data import Sentence, Label, _iter_dataset
+import flair.nn
+from flair.data import Label, Sentence, _iter_dataset
 from flair.training_utils import MetricRegression, Result, store_embeddings
 
 log = logging.getLogger("flair")
