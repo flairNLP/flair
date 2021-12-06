@@ -1,7 +1,7 @@
 import logging
 from collections import OrderedDict
 from pathlib import Path
-from typing import Union, List, Set, Optional
+from typing import Union, List, Set, Optional, Tuple
 
 import numpy as np
 import torch
@@ -11,8 +11,9 @@ from tqdm import tqdm
 
 import flair
 from flair.data import Dictionary, Sentence
-from flair.datasets import SentenceDataset, DataLoader
-from flair.embeddings import TokenEmbeddings
+from flair.datasets import FlairDatapointDataset, DataLoader
+from flair.embeddings import TokenEmbeddings, TransformerWordEmbeddings, \
+    TransformerDocumentEmbeddings
 from flair.file_utils import cached_path
 from flair.models import SequenceTagger, TextClassifier
 from flair.training_utils import store_embeddings
@@ -20,20 +21,21 @@ from flair.training_utils import store_embeddings
 log = logging.getLogger("flair")
 
 
-class FewshotClassifier(flair.nn.Classifier):
+class FewshotClassifier(flair.nn.Classifier[Sentence]):
 
     def __init__(self):
         self._current_task = None
         self._task_specific_attributes = {}
         self.label_nearest_map = None
+        self.tars_model: flair.nn.Classifier[Sentence]
 
         super(FewshotClassifier, self).__init__()
 
     def forward_loss(
             self, data_points: Union[List[Sentence], Sentence]
-    ) -> torch.tensor:
+    ) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
 
-        if type(data_points) == Sentence:
+        if not isinstance(data_points, list):
             data_points = [data_points]
 
         # Transform input data into TARS format
@@ -312,7 +314,7 @@ class TARSTagger(FewshotClassifier):
             task_name: Optional[str] = None,
             label_dictionary: Optional[Dictionary] = None,
             label_type: Optional[str] = None,
-            embeddings: str = 'bert-base-uncased',
+            embeddings: Union[TransformerWordEmbeddings, str] = 'bert-base-uncased',
             num_negative_labels_to_sample: int = 2,
             prefix: bool = True,
             **tagger_args,
@@ -330,9 +332,7 @@ class TARSTagger(FewshotClassifier):
         """
         super(TARSTagger, self).__init__()
 
-        from flair.embeddings import TransformerWordEmbeddings
-
-        if not isinstance(embeddings, TransformerWordEmbeddings):
+        if isinstance(embeddings, str):
             embeddings = TransformerWordEmbeddings(model=embeddings,
                                                    fine_tune=True,
                                                    layers='-1',
@@ -348,7 +348,7 @@ class TARSTagger(FewshotClassifier):
         tars_dictionary.add_item('I-')
 
         # initialize a bare-bones sequence tagger
-        self.tars_model = SequenceTagger(123,
+        self.tars_model: SequenceTagger = SequenceTagger(123,
                                          embeddings,
                                          tag_dictionary=tars_dictionary,
                                          tag_type=self.static_label_type,
@@ -456,11 +456,12 @@ class TARSTagger(FewshotClassifier):
             self,
             sentences: Union[List[Sentence], Sentence],
             mini_batch_size=32,
+            return_probabilities_for_all_classes: bool = False,
             verbose: bool = False,
             label_name: Optional[str] = None,
             return_loss=False,
             embedding_storage_mode="none",
-            most_probable_first: bool = True
+            most_probable_first: bool = True,
     ):
         # return
         """
@@ -477,22 +478,19 @@ class TARSTagger(FewshotClassifier):
         you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         'gpu' to store embeddings in GPU memory.
         """
-        if label_name == None:
+        if label_name is None:
             label_name = self.get_current_label_type()
 
         # with torch.no_grad():
         if not sentences:
             return sentences
 
-        if isinstance(sentences, Sentence):
+        if not isinstance(sentences, list):
             sentences = [sentences]
 
-        # reverse sort all sequences by their length
-        rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
+        reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
 
-        reordered_sentences: List[Union[Sentence, str]] = [sentences[index] for index in rev_order_len_index]
-
-        dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
+        dataloader = DataLoader(dataset=FlairDatapointDataset(reordered_sentences), batch_size=mini_batch_size)
 
         # progress bar for verbosity
         if verbose:
@@ -500,14 +498,8 @@ class TARSTagger(FewshotClassifier):
 
         overall_loss = 0
         overall_count = 0
-        batch_no = 0
         with torch.no_grad():
             for batch in dataloader:
-
-                batch_no += 1
-
-                if verbose:
-                    dataloader.set_description(f"Inferencing on batch {batch_no}")
 
                 batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
@@ -612,7 +604,7 @@ class TARSClassifier(FewshotClassifier):
             task_name: Optional[str] = None,
             label_dictionary: Optional[Dictionary] = None,
             label_type: Optional[str] = None,
-            embeddings: str = 'bert-base-uncased',
+            embeddings: Union[TransformerDocumentEmbeddings, str] = 'bert-base-uncased',
             num_negative_labels_to_sample: int = 2,
             prefix: bool = True,
             **tagger_args,
@@ -634,9 +626,7 @@ class TARSClassifier(FewshotClassifier):
         """
         super(TARSClassifier, self).__init__()
 
-        from flair.embeddings import TransformerDocumentEmbeddings
-
-        if not isinstance(embeddings, TransformerDocumentEmbeddings):
+        if isinstance(embeddings, str):
             embeddings = TransformerDocumentEmbeddings(model=embeddings,
                                                        fine_tune=True,
                                                        layers='-1',
@@ -753,6 +743,7 @@ class TARSClassifier(FewshotClassifier):
             self,
             sentences: Union[List[Sentence], Sentence],
             mini_batch_size=32,
+            return_probabilities_for_all_classes: bool = False,
             verbose: bool = False,
             label_name: Optional[str] = None,
             return_loss=False,
@@ -774,7 +765,7 @@ class TARSClassifier(FewshotClassifier):
         you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         'gpu' to store embeddings in GPU memory.
         """
-        if not label_name:
+        if label_name is None:
             label_name = self.get_current_label_type()
 
         if multi_label is None:
@@ -796,16 +787,15 @@ class TARSClassifier(FewshotClassifier):
             if previous_sentence: previous_sentence._next_sentence = sentence
             previous_sentence = sentence
 
-        # reverse sort all sequences by their length
-        rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
+        reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
 
-        reordered_sentences: List[Union[Sentence, str]] = [sentences[index] for index in rev_order_len_index]
-
-        dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
+        dataloader = DataLoader(dataset=FlairDatapointDataset(reordered_sentences), batch_size=mini_batch_size)
 
         # progress bar for verbosity
         if verbose:
-            dataloader = tqdm(dataloader)
+            progressbar = tqdm(dataloader)
+            progressbar.set_description(f"batch Inference")
+            dataloader = progressbar
 
         overall_loss = 0
         overall_count = 0
@@ -815,8 +805,6 @@ class TARSClassifier(FewshotClassifier):
 
                 batch_no += 1
 
-                if verbose:
-                    dataloader.set_description(f"Inferencing on batch {batch_no}")
 
                 batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty

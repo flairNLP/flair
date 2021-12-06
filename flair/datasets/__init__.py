@@ -1,6 +1,6 @@
 # Expose base classses
 from .base import DataLoader
-from .base import SentenceDataset
+from .base import FlairDatapointDataset
 from .base import StringDataset
 from .base import MongoDataset
 

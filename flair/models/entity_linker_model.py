@@ -6,12 +6,12 @@ import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import DataPoint, Dictionary, SpanLabel
+from flair.data import DataPoint, Dictionary, SpanLabel, Sentence
 
 log = logging.getLogger("flair")
 
 
-class EntityLinker(flair.nn.DefaultClassifier):
+class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
     Entity Linking Model
     The model expects text/sentences with annotated entity mentions and predicts entities to these mentions.
@@ -65,7 +65,7 @@ class EntityLinker(flair.nn.DefaultClassifier):
         if pooling_operation not in cases:
             raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first&last"')
 
-        self.aggregated_embedding = cases.get(pooling_operation)
+        self.aggregated_embedding = cases[pooling_operation]
 
         self.to(flair.device)
 
@@ -82,11 +82,11 @@ class EntityLinker(flair.nn.DefaultClassifier):
         return torch.mean(arg, 0)
 
     def forward_pass(self,
-                     sentences: Union[List[DataPoint], DataPoint],
+                     sentences: Union[List[Sentence], Sentence],
                      return_label_candidates: bool = False,
                      ):
 
-        if isinstance(sentences, DataPoint):
+        if not isinstance(sentences, list):
             sentences = [sentences]
 
         # filter sentences with no candidates (no candidates means nothing can be linked anyway)
@@ -128,19 +128,16 @@ class EntityLinker(flair.nn.DefaultClassifier):
 
                     if return_label_candidates:
                         sentences_to_spans.append(sentence)
-                        candidate = SpanLabel(span=span, value=None, score=None)
+                        candidate = SpanLabel(span=span, value=None, score=0.0)
                         empty_label_candidates.append(candidate)
 
             embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
             scores = self.decoder(embedding_tensor)
 
-        # minimal return is scores and labels
-        return_tuple = (scores, span_labels)
-
         if return_label_candidates:
-            return_tuple += (sentences_to_spans, empty_label_candidates)
+            return scores, span_labels, sentences_to_spans, empty_label_candidates
 
-        return return_tuple
+        return scores, span_labels
 
     def _get_state_dict(self):
         model_state = {

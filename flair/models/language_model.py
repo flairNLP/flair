@@ -3,7 +3,7 @@ from pathlib import Path
 import torch.nn as nn
 import torch
 import math
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 from typing import List
 
 from torch.optim import Optimizer
@@ -50,7 +50,7 @@ class LanguageModel(nn.Module):
 
         self.nout = nout
         if nout is not None:
-            self.proj = nn.Linear(hidden_size, nout)
+            self.proj: Optional[nn.Linear] = nn.Linear(hidden_size, nout)
             self.initialize(self.proj.weight)
             self.decoder = nn.Linear(nout, len(dictionary))
         else:
@@ -317,7 +317,7 @@ class LanguageModel(nn.Module):
                 .unsqueeze(0)
             )
 
-            log_prob = 0.0
+            log_prob = torch.zeros(1, device=flair.device)
 
             for i in range(number_of_characters):
 
@@ -359,13 +359,13 @@ class LanguageModel(nn.Module):
 
             text = prefix + "".join(characters)
 
-            log_prob = log_prob.item()
-            log_prob /= len(characters)
+            log_prob_float = log_prob.item()
+            log_prob_float /= len(characters)
 
             if not self.is_forward_lm:
                 text = text[::-1]
 
-            return text, log_prob
+            return text, log_prob_float
 
     def calculate_perplexity(self, text: str) -> float:
 

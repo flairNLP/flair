@@ -1,9 +1,10 @@
 import logging
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Optional
 
 import torch
 import torch.nn as nn
+from torch.nn.modules.loss import _Loss
 from torch.utils.data.dataset import Dataset
 import numpy as np
 from math import floor
@@ -11,13 +12,24 @@ from math import floor
 import sklearn.metrics as metrics
 import flair.nn
 import flair.embeddings
-from flair.data import Sentence, Label, DataPoint
+from flair.data import Sentence, Label, _iter_dataset
 from flair.training_utils import MetricRegression, Result, store_embeddings
 
 log = logging.getLogger("flair")
 
 
-class DistancePredictor(flair.nn.Model):
+class WeightedMSELoss(_Loss):
+    def __init__(self, regr_loss_step: float, size_average=None, reduce=None, reduction: str = 'mean') -> None:
+        super(WeightedMSELoss, self).__init__(size_average, reduce, reduction)
+        self.regr_loss_step = regr_loss_step
+
+    def forward(self, predictions: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        weight = 1 + self.regr_loss_step * target
+
+        return (weight * ((predictions - target) ** 2)).mean()
+
+
+class DistancePredictor(flair.nn.Model[Sentence]):
     """
     DistancePredictor
     Model to predict distance between two words given their embeddings, modeled either as a classification or a
@@ -33,7 +45,7 @@ class DistancePredictor(flair.nn.Model):
             beta: float = 1.0,
             loss_max_weight: float = 1,
             regression=False,
-            regr_loss_step=0
+            regr_loss_step: float=0
     ):
         """
         Initializes a DistClassifier
@@ -70,7 +82,7 @@ class DistancePredictor(flair.nn.Model):
 
                 weight_list = [1. + i * step for i in range(self.max_distance + 1)]
 
-                self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
+                self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(weight_list).to(flair.device)
 
             else:
                 self.loss_weights = None
@@ -80,11 +92,11 @@ class DistancePredictor(flair.nn.Model):
             self.decoder = nn.Linear(
                 self.word_embeddings.embedding_length * 2, self.max_distance + 1)
 
-            self.loss_function = nn.CrossEntropyLoss(weight=self.loss_weights)
+            self.loss_function: _Loss = nn.CrossEntropyLoss(weight=self.loss_weights)
 
         # regression
         else:
-            self.max_distance = float('inf')
+            self.max_distance = 1000000
 
             # input size is two times word embedding size since we use pair of words as input
             # the output size is 1
@@ -92,7 +104,7 @@ class DistancePredictor(flair.nn.Model):
                 self.word_embeddings.embedding_length * 2, 1)
 
             if regr_loss_step > 0:
-                self.loss_function = self.weighted_mse_loss
+                self.loss_function = WeightedMSELoss(regr_loss_step)
             else:
                 self.loss_function = nn.MSELoss()
 
@@ -104,12 +116,6 @@ class DistancePredictor(flair.nn.Model):
     def label_type(self):
         return "distance"
 
-    # all input should be tensors
-    def weighted_mse_loss(self, predictions, target):
-
-        weight = 1 + self.regr_loss_step * target
-
-        return (weight * ((predictions - target) ** 2)).mean()
 
     # forward allows only a single sentcence!!
     def forward(self, sentence: Sentence):
@@ -168,7 +174,7 @@ class DistancePredictor(flair.nn.Model):
     # If list of sentences is handed the function works with the first sentence of the list
     def forward_loss(
             self, data_points: Union[List[Sentence], Sentence]
-    ) -> torch.tensor:
+    ) -> torch.Tensor:
 
         if isinstance(data_points, list):  # first sentence
             data_points = data_points[0]
@@ -219,38 +225,43 @@ class DistancePredictor(flair.nn.Model):
 
     def evaluate(
             self,
-            sentences: Union[List[DataPoint], Dataset],
+            data_points: Union[List[Sentence], Dataset],
+            gold_label_type: str,
             out_path: Union[str, Path] = None,
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 1,  # unnecessary, but trainer.train calls evaluate with this parameter
-            num_workers: int = 8,
-    ) -> (Result, float):
+            num_workers: Optional[int] = 8,
+            **kwargs
+    ) -> Result:
+
+        if isinstance(data_points, Dataset):
+            data_points = list(_iter_dataset(data_points))
 
         if self.regression:
             return self.evaluate_regression(
-                sentences=sentences,
+                sentences=data_points,
                 out_path=out_path,
                 embedding_storage_mode=embedding_storage_mode,
             )
 
         return self.evaluate_classification(
-            sentences=sentences,
+            sentences=data_points,
             out_path=out_path,
             embedding_storage_mode=embedding_storage_mode,
         )
 
     def evaluate_regression(
             self,
-            sentences: Union[List[DataPoint], Dataset],
+            sentences: List[Sentence],
             out_path: Union[str, Path] = None,
             embedding_storage_mode: str = "none",
-    ) -> (Result, float):
+    ) -> Result:
 
         with torch.no_grad():
 
             buckets = [0 for _ in range(11)]
 
-            eval_loss = 0
+            eval_loss = 0.0
 
             metric = MetricRegression("Evaluation")
 
@@ -305,7 +316,7 @@ class DistancePredictor(flair.nn.Model):
                 metric.true.extend(true_values_for_sentence)
                 metric.pred.extend(predictions)
 
-                store_embeddings(sentence, embedding_storage_mode)
+                store_embeddings([sentence], embedding_storage_mode)
 
             eval_loss /= len(sentences)  # w.r.t self.loss
 
@@ -343,24 +354,24 @@ class DistancePredictor(flair.nn.Model):
             )
 
             result: Result = Result(
-                metric.pearsonr(), log_header, log_line, detailed_result
+                metric.pearsonr(), log_header, log_line, detailed_result, loss=eval_loss
             )
 
-            return result, eval_loss
+            return result
 
     def evaluate_classification(
             self,
-            sentences: Union[List[DataPoint], Dataset],
+            sentences: List[Sentence],
             out_path: Union[str, Path] = None,
             embedding_storage_mode: str = "none",
-    ) -> (Result, float):
+    ) -> Result:
 
         # use scikit-learn to evaluate
         y_true = []
         y_pred = []
 
         with torch.no_grad():
-            eval_loss = 0
+            eval_loss = 0.0
 
             lines: List[str] = []
             # we iterate over each sentence, instead of batches
@@ -405,7 +416,7 @@ class DistancePredictor(flair.nn.Model):
                     y_pred.append(y_pred_instance.tolist())
 
                 # speichert embeddings, falls embedding_storage!= 'None'
-                store_embeddings(sentence, embedding_storage_mode)
+                store_embeddings([sentence], embedding_storage_mode)
 
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
@@ -438,17 +449,17 @@ class DistancePredictor(flair.nn.Model):
             # line for log file
             log_header = "ACCURACY"
             log_line = f"\t{accuracy_score}"
+            eval_loss /= len(sentences)
 
             result = Result(
                 main_score=micro_f_score,
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,
+                loss = eval_loss,
             )
 
-            eval_loss /= len(sentences)
-
-            return result, eval_loss
+            return result
 
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
@@ -485,7 +496,7 @@ class DistancePredictor(flair.nn.Model):
         softmax = torch.nn.functional.softmax(label_scores, dim=0)
         label_probs = []
         for idx, conf in enumerate(softmax):
-            label_probs.append(Label(idx, conf.item()))
+            label_probs.append(Label(str(idx), conf.item()))
         return label_probs
 
     def __str__(self):

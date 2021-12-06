@@ -14,14 +14,14 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DataPoint, Sentence, Dictionary
-from flair.datasets import DataLoader, SentenceDataset
+from flair.data import DataPoint, Sentence, Dictionary, DT, Label
+from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
 
 
-class Model(torch.nn.Module):
+class Model(torch.nn.Module, typing.Generic[DT]):
     """Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.
     Every new type of model must implement these methods."""
 
@@ -34,22 +34,20 @@ class Model(torch.nn.Module):
         raise NotImplementedError
 
     @abstractmethod
-    def forward_loss(self, data_points: Union[List[DataPoint], DataPoint]) -> torch.Tensor:
+    def forward_loss(self, data_points: Union[List[DT], DT]) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
         """Performs a forward pass and returns a loss tensor for backpropagation. Implement this to enable training."""
         raise NotImplementedError
 
     @abstractmethod
     def evaluate(
             self,
-            sentences: Union[List[Sentence], Dataset],
+            data_points: Union[List[DT], Dataset],
             gold_label_type: str,
             out_path: Union[str, Path] = None,
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: Optional[int] = 8,
-            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-            exclude_labels: List[str] = [],
-            gold_label_dictionary: Optional[Dictionary] = None,
+            **kwargs,
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
@@ -172,7 +170,7 @@ class Model(torch.nn.Module):
                 "This model has no model card (likely because it is not yet trained or was trained with Flair version < 0.9.1)")
 
 
-class Classifier(Model):
+class Classifier(Model[DT], typing.Generic[DT]):
     """Abstract base class for all Flair models that do classification, both single- and multi-label.
     It inherits from flair.nn.Model and adds a unified evaluate() function so that all classification models
     use the same evaluation routines and compute the same numbers.
@@ -181,7 +179,7 @@ class Classifier(Model):
 
     def evaluate(
             self,
-            data_points: Union[List[Sentence], Dataset],
+            data_points: Union[List[DT], Dataset],
             gold_label_type: str,
             out_path: Union[str, Path] = None,
             embedding_storage_mode: str = "none",
@@ -190,13 +188,14 @@ class Classifier(Model):
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             exclude_labels: List[str] = [],
             gold_label_dictionary: Optional[Dictionary] = None,
+            **kwargs,
     ) -> Result:
         import numpy as np
         import sklearn
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(data_points, Dataset):
-            data_points = SentenceDataset(data_points)
+            data_points = FlairDatapointDataset(data_points)
         data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
 
         with torch.no_grad():
@@ -389,7 +388,7 @@ class Classifier(Model):
 
     def predict(
             self,
-            sentences: Union[List[Sentence], Sentence],
+            sentences: Union[List[DT], DT],
             mini_batch_size: int = 32,
             return_probabilities_for_all_classes: bool = False,
             verbose: bool = False,
@@ -412,7 +411,7 @@ class Classifier(Model):
         raise NotImplementedError
 
 
-class DefaultClassifier(Classifier):
+class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     """Default base class for all Flair models that do classification, both single- and multi-label.
     It inherits from flair.nn.Classifier and thus from flair.nn.Model. All features shared by all classifiers
     are implemented here, including the loss calculation and the predict() method.
@@ -421,9 +420,9 @@ class DefaultClassifier(Classifier):
     """
 
     def forward_pass(self,
-                     sentences: Union[List[DataPoint], DataPoint],
+                     sentences: Union[List[DT], DT],
                      return_label_candidates: bool = False,
-                     ):
+                     ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]]]:
         """This method does a forward pass through the model given a list of data points as input.
         Returns the tuple (scores, labels) if return_label_candidates = False, where scores are a tensor of logits
         produced by the decoder and labels are the string labels for each data point.
@@ -481,8 +480,8 @@ class DefaultClassifier(Classifier):
         else:
             self._multi_label_threshold = {'default': x}
 
-    def forward_loss(self, sentences: Union[List[DataPoint], DataPoint]) -> torch.Tensor:
-        scores, labels = self.forward_pass(sentences)
+    def forward_loss(self, sentences: Union[List[DT], DT]) -> torch.Tensor:
+        scores, labels = self.forward_pass(sentences)  # type: ignore
         return self._calculate_loss(scores, labels)
 
     def _calculate_loss(self, scores, labels):
@@ -500,9 +499,28 @@ class DefaultClassifier(Classifier):
 
         return self.loss_function(scores, labels), len(labels)
 
+    def _sort_data(self, data_points: List[DT]) -> List[DT]:
+
+        if len(data_points) == 0:
+            return []
+
+        if not isinstance(data_points[0], Sentence):
+            return data_points
+
+
+
+        # filter empty sentences
+        sentences = [sentence for sentence in typing.cast(List[Sentence], data_points) if len(sentence) > 0]
+
+        # reverse sort all sequences by their length
+        reordered_sentences = sorted(sentences, key=lambda s: len(s),
+                                     reverse=True)
+
+        return typing.cast(List[DT], reordered_sentences)
+
     def predict(
             self,
-            sentences: Union[List[Sentence], Sentence],
+            sentences: Union[List[DT], DT],
             mini_batch_size: int = 32,
             return_probabilities_for_all_classes: bool = False,
             verbose: bool = False,
@@ -529,19 +547,15 @@ class DefaultClassifier(Classifier):
             if not sentences:
                 return sentences
 
-            if isinstance(sentences, DataPoint):
+            if not isinstance(sentences, list):
                 sentences = [sentences]
-            sentences = typing.cast(List[Sentence], sentences)
 
-            # filter empty sentences
-            sentences = [sentence for sentence in sentences if len(sentence) > 0]
-            if len(sentences) == 0:
+            reordered_sentences = self._sort_data(sentences)
+
+            if len(reordered_sentences) == 0:
                 return sentences
 
-            # reverse sort all sequences by their length
-            reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
-
-            dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
+            dataloader = DataLoader(dataset=FlairDatapointDataset(reordered_sentences), batch_size=mini_batch_size)
             # progress bar for verbosity
             if verbose:
                 progress_bar = tqdm(dataloader)
@@ -549,18 +563,13 @@ class DefaultClassifier(Classifier):
                 dataloader = progress_bar
 
             overall_loss = 0
-            batch_no = 0
             label_count = 0
             for batch in dataloader:
-
-                batch_no += 1
-
-
                 # stop if all sentences are empty
                 if not batch:
                     continue
 
-                scores, gold_labels, data_points, label_candidates = self.forward_pass(batch,
+                scores, gold_labels, data_points, label_candidates = self.forward_pass(batch,    # type: ignore
                                                                                        return_label_candidates=True)
                 # remove previously predicted labels of this type
                 for sentence in data_points:

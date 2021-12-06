@@ -193,7 +193,7 @@ class Label:
     score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
-    def __init__(self, value: str, score: float = 1.0):
+    def __init__(self, value: Optional[str], score: float = 1.0):
         self._value = value
         self._score = score
         super().__init__()
@@ -244,7 +244,7 @@ class Label:
 
 
 class SpanLabel(Label):
-    def __init__(self, span, value: str, score: float = 1.0):
+    def __init__(self, span, value: Optional[str], score: float = 1.0):
         super().__init__(value, score)
         self.span = span
 
@@ -269,7 +269,7 @@ class SpanLabel(Label):
 
 
 class RelationLabel(Label):
-    def __init__(self, head, tail, value: str, score: float = 1.0):
+    def __init__(self, head, tail, value: Optional[str], score: float = 1.0):
         super().__init__(value, score)
         self.head = head
         self.tail = tail
@@ -390,35 +390,8 @@ class DataPoint:
         return embeddings
 
 
-class DataPair(DataPoint):
-    def __init__(self, first: DataPoint, second: DataPoint):
-        super().__init__()
-        self.first = first
-        self.second = second
-
-    def to(self, device: str, pin_memory: bool = False):
-        self.first.to(device, pin_memory)
-        self.second.to(device, pin_memory)
-
-    def clear_embeddings(self, embedding_names: List[str] = None):
-        self.first.clear_embeddings(embedding_names)
-        self.second.clear_embeddings(embedding_names)
-
-    @property
-    def embedding(self):
-        return torch.cat([self.first.embedding, self.second.embedding])
-
-    def __str__(self):
-        return f"DataPair:\n − First {self.first}\n − Second {self.second}\n − Labels: {self.labels}"
-
-    def to_plain_string(self):
-        return f"DataPair: First {self.first}  ||  Second {self.second}"
-
-    def to_original_text(self):
-        return f"{self.first.to_original_text()} || {self.second.to_original_text()}"
-
-    def __len__(self):
-        return len(self.first) + len(self.second)
+DT = typing.TypeVar("DT", bound=DataPoint)
+DT2 = typing.TypeVar("DT2", bound=DataPoint)
 
 
 class Token(DataPoint):
@@ -1121,6 +1094,40 @@ class Sentence(DataPoint):
 
         return self.annotation_layers[
             label_type] if label_type in self.annotation_layers else []
+
+
+class DataPair(DataPoint, typing.Generic[DT, DT2]):
+    def __init__(self, first: DT, second: DT2):
+        super().__init__()
+        self.first = first
+        self.second = second
+
+    def to(self, device: str, pin_memory: bool = False):
+        self.first.to(device, pin_memory)
+        self.second.to(device, pin_memory)
+
+    def clear_embeddings(self, embedding_names: List[str] = None):
+        self.first.clear_embeddings(embedding_names)
+        self.second.clear_embeddings(embedding_names)
+
+    @property
+    def embedding(self):
+        return torch.cat([self.first.embedding, self.second.embedding])
+
+    def __str__(self):
+        return f"DataPair:\n − First {self.first}\n − Second {self.second}\n − Labels: {self.labels}"
+
+    def to_plain_string(self):
+        return f"DataPair: First {self.first}  ||  Second {self.second}"
+
+    def to_original_text(self):
+        return f"{self.first.to_original_text()} || {self.second.to_original_text()}"
+
+    def __len__(self):
+        return len(self.first) + len(self.second)
+
+
+TextPair = DataPair[Sentence, Sentence]
 
 
 class Image(DataPoint):

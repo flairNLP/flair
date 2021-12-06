@@ -11,7 +11,7 @@ from torch.utils.data import Dataset
 
 import flair.nn
 from flair.data import Dictionary, Sentence, Token, Label, DataPoint
-from flair.datasets import DataLoader, SentenceDataset
+from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import TokenEmbeddings
 from flair.nn.dropout import LockedDropout, WordDropout
 from flair.training_utils import Result, store_embeddings
@@ -121,17 +121,17 @@ class DependencyParser(flair.nn.Model):
         # Main model implementation drops words and tags (independently), instead, we use word dropout!
         if self.use_word_dropout:
             sentence_tensor = self.word_dropout(sentence_tensor)
-
-        x = pack_padded_sequence(sentence_tensor, lengths, True, False)
+            
+        x = pack_padded_sequence(sentence_tensor, torch.tensor(lengths), True, False)
 
         x, _ = self.lstm(x)
-        x, _ = pad_packed_sequence(x, True, total_length=seq_len)
+        x_encoded, _ = pad_packed_sequence(x, True, total_length=seq_len)
 
         # apply MLPs for arc and relations to the BiLSTM output states
-        arc_h = self.mlp_arc_h(x)
-        arc_d = self.mlp_arc_d(x)
-        rel_h = self.mlp_rel_h(x)
-        rel_d = self.mlp_rel_d(x)
+        arc_h = self.mlp_arc_h(x_encoded)
+        arc_d = self.mlp_arc_d(x_encoded)
+        rel_h = self.mlp_rel_h(x_encoded)
+        rel_d = self.mlp_rel_d(x_encoded)
 
         # get scores from the biaffine attentions
         # [batch_size, seq_len, seq_len]
@@ -141,7 +141,7 @@ class DependencyParser(flair.nn.Model):
 
         return score_arc, score_rel
 
-    def forward_loss(self, data_points: List[Sentence]) -> torch.tensor:
+    def forward_loss(self, data_points: List[Sentence]) -> torch.Tensor:
 
         score_arc, score_rel = self.forward(data_points)
         loss_arc, loss_rel = self._calculate_loss(score_arc, score_rel, data_points)
@@ -149,29 +149,29 @@ class DependencyParser(flair.nn.Model):
 
         return main_loss
 
-    def _calculate_loss(self,
-                        score_arc: torch.tensor,
-                        score_relation: torch.tensor,
-                        data_points: List[Sentence]) -> Tuple[float, float]:
+
+    def _calculate_loss(self, score_arc: torch.Tensor,
+                        score_relation: torch.Tensor,
+                        data_points: List[Sentence]) -> Tuple[torch.Tensor, torch.Tensor]:
 
         lengths: List[int] = [len(sentence.tokens) for sentence in data_points]
 
-        arc_loss = 0.0
-        rel_loss = 0.0
-
+        arc_loss = torch.zeros(1, device=flair.device)
+        rel_loss = torch.zeros(1, device=flair.device)
+        
         for sen_id, sen in enumerate(data_points):
             sen_len = lengths[sen_id]
-
-            arc_labels = [token.head_id - 1 if token.head_id != 0 else token.idx - 1
+            
+            arc_labels_list = [token.head_id - 1 if token.head_id != 0 and token.head_id is not None else (token.idx or 0) - 1
                           for token in sen.tokens]
-            arc_labels = torch.tensor(arc_labels, dtype=torch.int64, device=flair.device)
+            arc_labels = torch.tensor(arc_labels_list, dtype=torch.int64, device=flair.device)
             arc_loss += torch.nn.functional.cross_entropy(
                 score_arc[sen_id][:sen_len], arc_labels)
 
-            rel_labels = [self.relations_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
+            rel_labels_list = [self.relations_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
                           for token in sen.tokens]
-
-            rel_labels = torch.tensor(rel_labels, dtype=torch.int64, device=flair.device)
+            
+            rel_labels = torch.tensor(rel_labels_list, dtype=torch.int64, device=flair.device)
             score_rel = score_relation[sen_id][torch.arange(len(arc_labels)), arc_labels]
             rel_loss += torch.nn.functional.cross_entropy(score_rel, rel_labels)
 
@@ -193,9 +193,10 @@ class DependencyParser(flair.nn.Model):
         you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         'gpu' to store embeddings in GPU memory.
         """
-
-        sentences = SentenceDataset(sentences)
-        data_loader = DataLoader(sentences,
+        if not isinstance(sentences, list):
+            sentences = [sentences]
+        sentence_dataset = FlairDatapointDataset(sentences)
+        data_loader = DataLoader(sentence_dataset,
                                  batch_size=mini_batch_size,
                                  num_workers=num_workers)
 
@@ -224,22 +225,24 @@ class DependencyParser(flair.nn.Model):
             out_path: Union[str, Path] = None,
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
-            num_workers: int = 8,
+            num_workers: Optional[int] = 8,
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
             gold_label_dictionary: Optional[Dictionary] = None,
             **kwargs,
-    ) -> Result:
-
+        ) -> Result:
+        
         if not isinstance(data_points, Dataset):
-            data_points = SentenceDataset(data_points)
-
-        data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
+            data_points = FlairDatapointDataset(data_points)
+        data_loader = DataLoader(data_points,
+                                 batch_size=mini_batch_size,
+                                 num_workers=num_workers)
 
         lines: List[str] = ["token gold_tag gold_arc predicted_tag predicted_arc\n"]
 
         average_over = 0
-        eval_loss_arc = 0
-        eval_loss_rel = 0
+        eval_loss_arc = torch.zeros(1, device=flair.device)
+        eval_loss_rel = torch.zeros(1, device=flair.device)
 
         y_true = []
         y_pred = []
@@ -260,7 +263,6 @@ class DependencyParser(flair.nn.Model):
 
             for (sentence, arcs, sent_tags) in zip(batch, arc_prediction, relation_prediction):
                 for (token, arc, tag) in zip(sentence.tokens, arcs, sent_tags):
-                    token: Token = token
                     token.add_tag_label("predicted", Label(tag))
                     token.add_tag_label("predicted_head_id", Label(str(int(arc))))
 
@@ -320,24 +322,26 @@ class DependencyParser(flair.nn.Model):
             log_header=log_header,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            loss=eval_loss_rel + eval_loss_arc
+            loss=(eval_loss_rel+eval_loss_arc).item()
         )
         return result
 
-    def _obtain_labels_(self, score_arc: torch.tensor, score_rel: torch.tensor) -> Tuple[List[List[int]],
-                                                                                         List[List[str]]]:
+    def _obtain_labels_(self,
+                        score_arc: torch.Tensor,
+                        score_rel: torch.Tensor) -> Tuple[List[List[int]],
+                                                          List[List[str]]]:
 
-        arc_prediction: torch.tensor = score_arc.argmax(-1)
-        relation_prediction: torch.tensor = score_rel.argmax(-1)
+        arc_prediction: torch.Tensor = score_arc.argmax(-1)
+        relation_prediction: torch.Tensor = score_rel.argmax(-1)
         relation_prediction = relation_prediction.gather(-1, arc_prediction.unsqueeze(-1)).squeeze(-1)
 
-        arc_prediction = [[arc + 1 if token_index != arc else 0 for token_index, arc in enumerate(batch)]
+        decoded_arc_prediction = [[arc+1 if token_index != arc else 0 for token_index, arc in enumerate(batch)]
                           for batch in arc_prediction]
-        relation_prediction = [[self.relations_dictionary.get_item_for_index(rel_tag_idx)
+        decoded_relation_prediction = [[self.relations_dictionary.get_item_for_index(rel_tag_idx)
                                 for rel_tag_idx in batch] for batch in relation_prediction]
 
-        return arc_prediction, relation_prediction
-
+        return decoded_arc_prediction, decoded_relation_prediction
+    
     def _get_state_dict(self):
         model_state = {
             "state_dict": self.state_dict(),
@@ -464,7 +468,7 @@ class BiLSTM(torch.nn.Module):
 
         return output, hx_n
 
-    def forward(self, sequence, hx=None):
+    def forward(self, sequence, hx=None) -> Tuple[PackedSequence, torch.Tensor]:
         x, batch_sizes = sequence.data, sequence.batch_sizes.tolist()
         batch_size = batch_sizes[0]
         h_n, c_n = [], []

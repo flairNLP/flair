@@ -1,16 +1,15 @@
 from abc import abstractmethod
 import inspect
-from typing import Union, List, Dict, TypeVar, Generic, Sequence
+from typing import Union, List, Dict, Generic, Sequence
 from torch.nn import ParameterList, Parameter
 
 import torch
 import logging
 
 import flair
-from flair.data import DataPoint
+from flair.data import DT
 
 log = logging.getLogger("flair")
-DT = TypeVar("DT", bound=DataPoint)
 
 
 class Embeddings(torch.nn.Module, Generic[DT]):

@@ -1,19 +1,19 @@
 import logging
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Tuple
 
 import torch
 import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import Label, DataPoint
+from flair.data import Label, DataPoint, Sentence
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
 
 
-class TextClassifier(flair.nn.DefaultClassifier):
+class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
     """
     Text Classification Model
     The model takes word embeddings, puts them into an RNN to obtain a text representation, and puts the
@@ -52,9 +52,11 @@ class TextClassifier(flair.nn.DefaultClassifier):
         self.to(flair.device)
 
     def forward_pass(self,
-                     sentences: Union[List[DataPoint], DataPoint],
+                     sentences: Union[List[Sentence], Sentence],
                      return_label_candidates: bool = False,
-                     ):
+                     ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[Sentence], List[Label]]]:
+        if not isinstance(sentences, list):
+            sentences = [sentences]
 
         # embed sentences
         self.document_embeddings.embed(sentences)
@@ -71,14 +73,12 @@ class TextClassifier(flair.nn.DefaultClassifier):
         for sentence in sentences:
             labels.append([label.value for label in sentence.get_labels(self.label_type)])
 
-        # minimal return is scores and labels
-        return_tuple = (scores, labels)
 
         if return_label_candidates:
-            label_candidates = [Label(value=None) for sentence in sentences]
-            return_tuple += (sentences, label_candidates)
+            label_candidates = [Label(value="<None>") for sentence in sentences]
+            return scores, labels, sentences, label_candidates
 
-        return return_tuple
+        return scores, labels
 
     def _get_state_dict(self):
         model_state = {

@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 import flair.nn
 from flair.data import Dictionary, Sentence, Label, SpanLabel
-from flair.datasets import SentenceDataset, DataLoader
+from flair.datasets import FlairDatapointDataset, DataLoader
 from flair.embeddings import TokenEmbeddings, StackedEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import store_embeddings
@@ -64,7 +64,7 @@ def pad_tensors(tensor_list):
     return template, lens_
 
 
-class SequenceTagger(flair.nn.Classifier):
+class SequenceTagger(flair.nn.Classifier[Sentence]):
     def __init__(
             self,
             hidden_size: int,
@@ -134,7 +134,7 @@ class SequenceTagger(flair.nn.Classifier):
             for i, tag in enumerate(self.tag_dictionary.get_items()):
                 if tag in loss_weights.keys():
                     weight_list[i] = loss_weights[tag]
-            self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
+            self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(weight_list).to(flair.device)
         else:
             self.loss_weights = None
 
@@ -311,27 +311,20 @@ class SequenceTagger(flair.nn.Classifier):
         you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         'gpu' to store embeddings in GPU memory.
         """
-        if label_name == None:
+        if label_name is None:
             label_name = self.tag_type
 
         with torch.no_grad():
             if not sentences:
                 return sentences
 
-            if isinstance(sentences, Sentence):
+            if not isinstance(sentences, list):
                 sentences = [sentences]
 
-            # reverse sort all sequences by their length
-            rev_order_len_index = sorted(
-                range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
-            )
-
-            reordered_sentences: List[Union[Sentence, str]] = [
-                sentences[index] for index in rev_order_len_index
-            ]
+            reordered_sentences: List[Union[Sentence, str]] = sorted(sentences, key=lambda s: len(s), reverse=True)
 
             dataloader = DataLoader(
-                dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size
+                dataset=FlairDatapointDataset(reordered_sentences), batch_size=mini_batch_size
             )
 
             if self.use_crf:
@@ -341,17 +334,11 @@ class SequenceTagger(flair.nn.Classifier):
 
             # progress bar for verbosity
             if verbose:
-                dataloader = tqdm(dataloader)
+                dataloader = tqdm(dataloader, desc="Batch inverence")
 
-            overall_loss = 0
+            overall_loss = torch.zeros(1, device=flair.device)
             overall_count = 0
-            batch_no = 0
             for batch in dataloader:
-
-                batch_no += 1
-
-                if verbose:
-                    dataloader.set_description(f"Inferencing on batch {batch_no}")
 
                 batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
@@ -388,8 +375,11 @@ class SequenceTagger(flair.nn.Classifier):
                 return overall_loss, overall_count
 
     def forward_loss(
-            self, data_points: Union[List[Sentence], Sentence], sort=True
-    ) -> torch.tensor:
+            self, data_points: Union[List[Sentence], Sentence]
+    ) -> Tuple[torch.Tensor, int]:
+        if not isinstance(data_points, list):
+            data_points = [data_points]
+
         features = self.forward(data_points)
         return self._calculate_loss(features, data_points)
 
@@ -444,7 +434,7 @@ class SequenceTagger(flair.nn.Classifier):
 
         if self.use_rnn:
             packed = torch.nn.utils.rnn.pack_padded_sequence(
-                sentence_tensor, lengths, enforce_sorted=False, batch_first=True
+                sentence_tensor, torch.tensor(lengths), enforce_sorted=False, batch_first=True
             )
 
             # if initial hidden state is trainable, use this state
@@ -507,8 +497,8 @@ class SequenceTagger(flair.nn.Classifier):
         return score
 
     def _calculate_loss(
-            self, features: torch.tensor, sentences: List[Sentence]
-    ) -> Tuple[float, int]:
+            self, features: torch.Tensor, sentences: List[Sentence]
+    ) -> Tuple[torch.Tensor, int]:
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
 
@@ -537,7 +527,7 @@ class SequenceTagger(flair.nn.Classifier):
             return score.sum(), token_count
 
         else:
-            score = 0
+            score = torch.zeros(1, device=flair.device)
             for sentence_feats, sentence_tags, sentence_length in zip(
                     features, tag_list, lengths
             ):
@@ -554,7 +544,7 @@ class SequenceTagger(flair.nn.Classifier):
             batch_sentences: List[Sentence],
             transitions: Optional[np.ndarray],
             get_all_tags: bool,
-    ) -> (List[List[Label]], List[List[List[Label]]]):
+    ) -> Tuple[List[List[Label]], List[List[List[Label]]]]:
         """
         Returns a tuple of two lists:
          - The first list corresponds to the most likely `Label` per token in each sentence.
@@ -574,10 +564,10 @@ class SequenceTagger(flair.nn.Classifier):
                 feature[index, length:] = 0
             softmax_batch = F.softmax(feature, dim=2).cpu()
             scores_batch, prediction_batch = torch.max(softmax_batch, dim=2)
-            feature = zip(softmax_batch, scores_batch, prediction_batch)
+            feature = zip(softmax_batch, scores_batch, prediction_batch)  # type: ignore
 
         for feats, length in zip(feature, lengths):
-            if self.use_crf:
+            if self.use_crf and transitions is not None:
                 confidences, tag_seq, scores = self._viterbi_decode(
                     feats=feats[:length],
                     transitions=transitions,
@@ -651,7 +641,7 @@ class SequenceTagger(flair.nn.Classifier):
         best_tag_id = terminal_var.argmax()
 
         best_path = [best_tag_id]
-        for bptrs_t in reversed(backpointers):
+        for bptrs_t in backpointers[::-1]:
             best_tag_id = bptrs_t[best_tag_id]
             best_path.append(best_tag_id)
 
@@ -1121,7 +1111,7 @@ class MultiTagger:
             model_names = [model_names]
 
         taggers = {}
-        models = []
+        models: List[SequenceTagger] = []
 
         # load each model
         for model_name in model_names:

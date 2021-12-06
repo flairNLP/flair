@@ -1,19 +1,19 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Tuple, Optional
+from typing import List, Union, Tuple, Optional, Set
 
 import torch
 import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import DataPoint, RelationLabel, Span, Sentence
+from flair.data import RelationLabel, Span, Sentence
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
 
 
-class RelationExtractor(flair.nn.DefaultClassifier):
+class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
     def __init__(
             self,
@@ -49,7 +49,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
         # whether to use gold entity pairs, and whether to filter entity pairs by type
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
         if entity_pair_filters is not None:
-            self.entity_pair_filters = set(entity_pair_filters)
+            self.entity_pair_filters: Optional[Set[Tuple[str, str]]] = set(entity_pair_filters)
         else:
             self.entity_pair_filters = None
 
@@ -74,7 +74,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
         # decoder can be linear or nonlinear
         self.non_linear_decoder = non_linear_decoder
-        if self.non_linear_decoder:
+        if non_linear_decoder is not None:
             self.decoder_1 = nn.Linear(relation_representation_length, non_linear_decoder)
             self.nonlinearity = torch.nn.ReLU()
             self.decoder_2 = nn.Linear(non_linear_decoder, len(self.label_dictionary))
@@ -126,7 +126,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
             if entity_one_is_first else (expanded_span_2, expanded_span_1)
 
     def forward_pass(self,
-                     sentences: Union[List[DataPoint], DataPoint],
+                     sentences: Union[List[Sentence], Sentence],
                      return_label_candidates: bool = False,
                      ):
 
@@ -139,8 +139,8 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
             # super lame: make dictionary to find relation annotations for a given entity pair
             relation_dict = {}
-            for relation_label in sentence.get_labels(self.label_type):
-                relation_label: RelationLabel = relation_label
+            for label in sentence.get_labels(self.label_type):
+                relation_label: RelationLabel = label
                 relation_dict[create_position_string(relation_label.head, relation_label.tail)] = relation_label
 
             # get all entity spans
@@ -165,7 +165,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
                     # get gold label for this relation (if one exists)
                     if position_string in relation_dict:
-                        relation_label: RelationLabel = relation_dict[position_string]
+                        relation_label = relation_dict[position_string]
                         label = relation_label.value
 
                     # if there is no gold label for this entity pair, set to 'O' (no relation)
@@ -179,7 +179,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
                     # if predicting, also remember sentences and label candidates
                     if return_label_candidates:
-                        candidate_label = RelationLabel(head=span_1, tail=span_2, value=None, score=None)
+                        candidate_label = RelationLabel(head=span_1, tail=span_2, value=None, score=0.0)
                         empty_label_candidates.append(candidate_label)
                         sentences_to_label.append(span_1[0].sentence)
 
@@ -223,13 +223,10 @@ class RelationExtractor(flair.nn.DefaultClassifier):
         else:
             sentence_relation_scores = None
 
-        # return either scores and gold labels (for loss calculation), or include label candidates for prediction
-        result_tuple = (sentence_relation_scores, labels)
-
         if return_label_candidates:
-            result_tuple += (sentences_to_label, empty_label_candidates)
+            return sentence_relation_scores, labels, sentences_to_label, empty_label_candidates
 
-        return result_tuple
+        return sentence_relation_scores, labels
 
     def _get_state_dict(self):
         model_state = {

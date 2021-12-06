@@ -2,7 +2,7 @@ import logging
 import os
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Union, Callable
+from typing import List, Union, Callable, Generic
 
 import torch.utils.data.dataloader
 from torch.utils.data.dataset import Subset, ConcatDataset
@@ -11,7 +11,7 @@ from flair.data import (
     Sentence,
     Token,
     Tokenizer,
-    FlairDataset
+    FlairDataset, DT
 )
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 
@@ -77,18 +77,18 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         return os.cpu_count() or 1
 
 
-class SentenceDataset(FlairDataset):
+class FlairDatapointDataset(FlairDataset, Generic[DT]):
     """
     A simple Dataset object to wrap a List of Sentence
     """
 
-    def __init__(self, sentences: Union[Sentence, List[Sentence]]):
+    def __init__(self, sentences: Union[DT, List[DT]]):
         """
         Instantiate SentenceDataset
         :param sentences: Sentence or List of Sentence that make up SentenceDataset
         """
         # cast to list if necessary
-        if isinstance(sentences, Sentence):
+        if not isinstance(sentences, list):
             sentences = [sentences]
         self.sentences = sentences
 
@@ -98,7 +98,7 @@ class SentenceDataset(FlairDataset):
     def __len__(self):
         return len(self.sentences)
 
-    def __getitem__(self, index: int = 0) -> Sentence:
+    def __getitem__(self, index: int = 0) -> DT:
         return self.sentences[index]
 
 

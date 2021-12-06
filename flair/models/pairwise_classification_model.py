@@ -4,10 +4,10 @@ import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Label, DataPoint, Sentence, DataPair
+from flair.data import Label, DataPoint, Sentence, DataPair, TextPair
 
 
-class TextPairClassifier(flair.nn.DefaultClassifier):
+class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
     """
     Text Pair Classification Model for tasks such as Recognizing Textual Entailment, build upon TextClassifier.
     The model takes document embeddings and puts resulting text representation(s) into a linear layer to get the
@@ -72,11 +72,11 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
         return self._label_type
 
     def forward_pass(self,
-                     datapairs: Union[List[DataPoint], DataPoint],
+                     datapairs: Union[List[TextPair], TextPair],
                      return_label_candidates: bool = False,
                      ):
 
-        if isinstance(datapairs, DataPair):
+        if not isinstance(datapairs, list):
             datapairs = [datapairs]
 
         embedding_names = self.document_embeddings.get_names()
@@ -116,14 +116,11 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
         for pair in datapairs:
             labels.append([label.value for label in pair.get_labels(self.label_type)])
 
-        # minimal return is scores and labels
-        return_tuple = (scores, labels)
-
         if return_label_candidates:
-            label_candidates = [Label(value=None) for pair in datapairs]
-            return_tuple += (datapairs, label_candidates)
+            label_candidates = [Label(value=None, score=0.0) for _ in datapairs]
+            return scores, labels, datapairs, label_candidates
 
-        return return_tuple
+        return scores, labels
 
     def _get_state_dict(self):
         model_state = {
