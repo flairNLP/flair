@@ -95,6 +95,8 @@ class RegexpTagger:
         """
             Predict the given sentences according to the registered mappings.
         """
+        if not isinstance(sentences, list):
+            sentences = [sentences]
         if not sentences:
             return sentences
 
