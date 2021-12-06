@@ -9,7 +9,7 @@ import flair.datasets.biomedical as biomedical
 from operator import itemgetter
 from pathlib import Path
 from typing import List, Callable, Type
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 
 from flair.tokenization import (
     TokenizerWrapper,
