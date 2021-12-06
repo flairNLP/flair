@@ -4,7 +4,7 @@ import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import DataPair, DataPoint, Label, Sentence, TextPair
+from flair.data import Label, Sentence, TextPair
 
 
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
@@ -17,11 +17,11 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
     """
 
     def __init__(
-            self,
-            document_embeddings: flair.embeddings.DocumentEmbeddings,
-            label_type: str,
-            embed_separately: bool = False,
-            **classifierargs,
+        self,
+        document_embeddings: flair.embeddings.DocumentEmbeddings,
+        label_type: str,
+        embed_separately: bool = False,
+        **classifierargs,
     ):
         """
         Initializes a TextClassifier
@@ -35,7 +35,9 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
         """
         super().__init__(**classifierargs)
 
-        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
+        self.document_embeddings: flair.embeddings.DocumentEmbeddings = (
+            document_embeddings
+        )
 
         self._label_type = label_type
 
@@ -45,22 +47,30 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
         # since we concatenate the embeddings of the two DataPoints in the DataPairs
         if self.embed_separately:
             self.decoder = torch.nn.Linear(
-                2 * self.document_embeddings.embedding_length, len(self.label_dictionary)
+                2 * self.document_embeddings.embedding_length,
+                len(self.label_dictionary),
             ).to(flair.device)
 
             torch.nn.init.xavier_uniform_(self.decoder.weight)
 
         else:
             # representation for both sentences
-            self.decoder = torch.nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
+            self.decoder = torch.nn.Linear(
+                self.document_embeddings.embedding_length, len(self.label_dictionary)
+            )
 
             # set separator to concatenate two sentences
-            self.sep = ' '
-            if isinstance(self.document_embeddings, flair.embeddings.document.TransformerDocumentEmbeddings):
+            self.sep = " "
+            if isinstance(
+                self.document_embeddings,
+                flair.embeddings.document.TransformerDocumentEmbeddings,
+            ):
                 if self.document_embeddings.tokenizer.sep_token:
-                    self.sep = ' ' + str(self.document_embeddings.tokenizer.sep_token) + ' '
+                    self.sep = (
+                        " " + str(self.document_embeddings.tokenizer.sep_token) + " "
+                    )
                 else:
-                    self.sep = ' [SEP] '
+                    self.sep = " [SEP] "
 
         torch.nn.init.xavier_uniform_(self.decoder.weight)
 
@@ -71,17 +81,20 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
     def label_type(self):
         return self._label_type
 
-    def forward_pass(self,
-                     datapairs: Union[List[TextPair], TextPair],
-                     return_label_candidates: bool = False,
-                     ):
+    def forward_pass(
+        self,
+        datapairs: Union[List[TextPair], TextPair],
+        return_label_candidates: bool = False,
+    ):
 
         if not isinstance(datapairs, list):
             datapairs = [datapairs]
 
         embedding_names = self.document_embeddings.get_names()
 
-        if self.embed_separately:  # embed both sentences seperately, concatenate the resulting vectors
+        if (
+            self.embed_separately
+        ):  # embed both sentences seperately, concatenate the resulting vectors
             first_elements = [pair.first for pair in datapairs]
             second_elements = [pair.second for pair in datapairs]
 
@@ -89,22 +102,32 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
             self.document_embeddings.embed(second_elements)
 
             text_embedding_list = [
-                torch.cat([a.get_embedding(embedding_names), b.get_embedding(embedding_names)], 0).unsqueeze(0)
+                torch.cat(
+                    [
+                        a.get_embedding(embedding_names),
+                        b.get_embedding(embedding_names),
+                    ],
+                    0,
+                ).unsqueeze(0)
                 for (a, b) in zip(first_elements, second_elements)
             ]
 
         else:  # concatenate the sentences and embed together
             concatenated_sentences = [
                 Sentence(
-                    pair.first.to_tokenized_string() + self.sep + pair.second.to_tokenized_string(),
-                    use_tokenizer=False
+                    pair.first.to_tokenized_string()
+                    + self.sep
+                    + pair.second.to_tokenized_string(),
+                    use_tokenizer=False,
                 )
-                for pair in datapairs]
+                for pair in datapairs
+            ]
 
             self.document_embeddings.embed(concatenated_sentences)
 
             text_embedding_list = [
-                sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in concatenated_sentences
+                sentence.get_embedding(embedding_names).unsqueeze(0)
+                for sentence in concatenated_sentences
             ]
 
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
@@ -143,7 +166,9 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
             multi_label=state["multi_label"],
-            multi_label_threshold=0.5 if "multi_label_threshold" not in state.keys() else state["multi_label_threshold"],
+            multi_label_threshold=0.5
+            if "multi_label_threshold" not in state.keys()
+            else state["multi_label_threshold"],
             loss_weights=state["loss_weights"],
             embed_separately=state["embed_separately"],
         )

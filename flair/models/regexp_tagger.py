@@ -9,9 +9,10 @@ class RegexpTagger:
     @dataclass
     class TokenCollection:
         """
-            A utility class for RegexpTagger to hold all tokens for a given Sentence and define some functionality
-            :param sentence: A Sentence object
+        A utility class for RegexpTagger to hold all tokens for a given Sentence and define some functionality
+        :param sentence: A Sentence object
         """
+
         sentence: Sentence
         __tokens_start_pos: List[int] = field(init=False, default_factory=list)
         __tokens_end_pos: List[int] = field(init=False, default_factory=list)
@@ -27,16 +28,16 @@ class RegexpTagger:
 
         def get_token_span(self, span: Tuple[int, int]) -> Span:
             """
-                Given an interval specified with start and end pos as tuple, this function returns a Span object
-                spanning the tokens included in the interval. If the interval is overlapping with a token span, a
-                ValueError is raised
+            Given an interval specified with start and end pos as tuple, this function returns a Span object
+            spanning the tokens included in the interval. If the interval is overlapping with a token span, a
+            ValueError is raised
 
-                :param span: Start and end pos of the requested span as tuple
-                :return: A span object spanning the requested token interval
+            :param span: Start and end pos of the requested span as tuple
+            :return: A span object spanning the requested token interval
             """
             span_start: int = self.__tokens_start_pos.index(span[0])
             span_end: int = self.__tokens_end_pos.index(span[1])
-            return Span(self.tokens[span_start:span_end + 1])
+            return Span(self.tokens[span_start : span_end + 1])
 
     def __init__(self, mapping: Union[List[Tuple[str, str]], Tuple[str, str]]):
         """
@@ -60,8 +61,8 @@ class RegexpTagger:
 
     def register_labels(self, mapping: Union[List[Tuple[str, str]], Tuple[str, str]]):
         """
-            Register a regexp -> label mapping.
-            :param mapping: A list of tuples or a single tuple representing a mapping as regexp -> label
+        Register a regexp -> label mapping.
+        :param mapping: A list of tuples or a single tuple representing a mapping as regexp -> label
         """
         mapping = self._listify(mapping)
 
@@ -70,12 +71,13 @@ class RegexpTagger:
                 self._regexp_mapping[label] = re.compile(regexp)
             except re.error as err:
                 raise re.error(
-                    f"Couldn't compile regexp '{regexp}' for label '{label}'. Aborted with error: '{err.msg}'")
+                    f"Couldn't compile regexp '{regexp}' for label '{label}'. Aborted with error: '{err.msg}'"
+                )
 
     def remove_labels(self, labels: Union[List[str], str]):
         """
-            Remove a registered regexp -> label mapping given by label.
-            :param labels: A list of labels or a single label as strings.
+        Remove a registered regexp -> label mapping given by label.
+        :param labels: A list of labels or a single label as strings.
         """
         labels = self._listify(labels)
 
@@ -93,7 +95,7 @@ class RegexpTagger:
 
     def predict(self, sentences: Union[List[Sentence], Sentence]) -> List[Sentence]:
         """
-            Predict the given sentences according to the registered mappings.
+        Predict the given sentences according to the registered mappings.
         """
         if not isinstance(sentences, list):
             sentences = [sentences]
@@ -107,8 +109,8 @@ class RegexpTagger:
 
     def _label(self, sentence: Sentence):
         """
-            This will add a complex_label to the given sentence for every match.span() for every registered_mapping.
-            If a match span overlaps with a token span an exception is raised.
+        This will add a complex_label to the given sentence for every match.span() for every registered_mapping.
+        If a match span overlaps with a token span an exception is raised.
         """
         collection = RegexpTagger.TokenCollection(sentence)
 
@@ -118,5 +120,7 @@ class RegexpTagger:
                 try:
                     token_span = collection.get_token_span(span)
                 except ValueError:
-                    raise Exception(f"The match span {span} for label '{label}' is overlapping with a token!")
+                    raise Exception(
+                        f"The match span {span} for label '{label}' is overlapping with a token!"
+                    )
                 sentence.add_complex_label(label, SpanLabel(token_span, label))

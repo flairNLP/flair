@@ -60,9 +60,12 @@ class FeideggerDataset(FlairDataset):
         self.data_points: List[DataPair] = []
         self.split: List[int] = []
 
-        preprocessor = lambda x: x
+        def identity(x):
+            return x
+
+        preprocessor = identity
         if "lowercase" in kwargs and kwargs["lowercase"]:
-            preprocessor = lambda x: x.lower()
+            preprocessor = str.lower
 
         for image_info in dataset_info:
             image = Image(imageURL=image_info["url"])

@@ -19,7 +19,13 @@ log = logging.getLogger("flair")
 
 
 class WeightedMSELoss(_Loss):
-    def __init__(self, regr_loss_step: float, size_average=None, reduce=None, reduction: str = 'mean') -> None:
+    def __init__(
+        self,
+        regr_loss_step: float,
+        size_average=None,
+        reduce=None,
+        reduction: str = "mean",
+    ) -> None:
         super(WeightedMSELoss, self).__init__(size_average, reduce, reduction)
         self.regr_loss_step = regr_loss_step
 
@@ -39,13 +45,13 @@ class DistancePredictor(flair.nn.Model[Sentence]):
     """
 
     def __init__(
-            self,
-            word_embeddings: flair.embeddings.TokenEmbeddings,
-            max_distance: int = 20,
-            beta: float = 1.0,
-            loss_max_weight: float = 1,
-            regression=False,
-            regr_loss_step: float=0
+        self,
+        word_embeddings: flair.embeddings.TokenEmbeddings,
+        max_distance: int = 20,
+        beta: float = 1.0,
+        loss_max_weight: float = 1,
+        regression=False,
+        regr_loss_step: float = 0,
     ):
         """
         Initializes a DistClassifier
@@ -80,9 +86,11 @@ class DistancePredictor(flair.nn.Model[Sentence]):
             if self.loss_max_weight > 1:
                 step = (self.loss_max_weight - 1) / self.max_distance
 
-                weight_list = [1. + i * step for i in range(self.max_distance + 1)]
+                weight_list = [1.0 + i * step for i in range(self.max_distance + 1)]
 
-                self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(weight_list).to(flair.device)
+                self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(
+                    weight_list
+                ).to(flair.device)
 
             else:
                 self.loss_weights = None
@@ -90,7 +98,8 @@ class DistancePredictor(flair.nn.Model[Sentence]):
             # iput size is two times wordembedding size since we use pair of words as input
             # the output size is max_distance + 1, i.e. we allow 0,1,...,max_distance words between pairs
             self.decoder = nn.Linear(
-                self.word_embeddings.embedding_length * 2, self.max_distance + 1)
+                self.word_embeddings.embedding_length * 2, self.max_distance + 1
+            )
 
             self.loss_function: _Loss = nn.CrossEntropyLoss(weight=self.loss_weights)
 
@@ -100,8 +109,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
 
             # input size is two times word embedding size since we use pair of words as input
             # the output size is 1
-            self.decoder = nn.Linear(
-                self.word_embeddings.embedding_length * 2, 1)
+            self.decoder = nn.Linear(self.word_embeddings.embedding_length * 2, 1)
 
             if regr_loss_step > 0:
                 self.loss_function = WeightedMSELoss(regr_loss_step)
@@ -116,7 +124,6 @@ class DistancePredictor(flair.nn.Model[Sentence]):
     def label_type(self):
         return "distance"
 
-
     # forward allows only a single sentcence!!
     def forward(self, sentence: Sentence):
 
@@ -129,7 +136,11 @@ class DistancePredictor(flair.nn.Model[Sentence]):
         # go through all pairs
         for i in range(numberOfWords):
             for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
-                text_embedding_list.append(torch.cat((sentence[i].embedding, sentence[j].embedding)).unsqueeze(0))
+                text_embedding_list.append(
+                    torch.cat((sentence[i].embedding, sentence[j].embedding)).unsqueeze(
+                        0
+                    )
+                )
 
         # 2-dim matrix whose rows are the embeddings of word pairs of the sentence
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
@@ -149,14 +160,16 @@ class DistancePredictor(flair.nn.Model[Sentence]):
             "beta": self.beta,
             "loss_max_weight": self.loss_max_weight,
             "regression": self.regression,
-            "regr_loss_step": self.regr_loss_step
+            "regr_loss_step": self.regr_loss_step,
         }
         return model_state
 
     @staticmethod
     def _init_model_with_state_dict(state):
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
-        weight = 1 if "loss_max_weight" not in state.keys() else state["loss_max_weight"]
+        weight = (
+            1 if "loss_max_weight" not in state.keys() else state["loss_max_weight"]
+        )
 
         model = DistancePredictor(
             word_embeddings=state["word_embeddings"],
@@ -164,7 +177,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
             beta=beta,
             loss_max_weight=weight,
             regression=state["regression"],
-            regr_loss_step=state["regr_loss_step"]
+            regr_loss_step=state["regr_loss_step"],
         )
 
         model.load_state_dict(state["state_dict"])
@@ -173,14 +186,14 @@ class DistancePredictor(flair.nn.Model[Sentence]):
     # So far only one sentence allowed
     # If list of sentences is handed the function works with the first sentence of the list
     def forward_loss(
-            self, data_points: Union[List[Sentence], Sentence]
+        self, data_points: Union[List[Sentence], Sentence]
     ) -> torch.Tensor:
 
         if isinstance(data_points, list):  # first sentence
             data_points = data_points[0]
 
         if len(data_points) < 2:
-            return torch.tensor([0.], requires_grad=True)
+            return torch.tensor([0.0], requires_grad=True)
 
         scores = self.forward(data_points)
 
@@ -198,7 +211,9 @@ class DistancePredictor(flair.nn.Model[Sentence]):
         if not self.regression:
             for i in range(numberOfWords):
                 for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
-                    indices.append(torch.LongTensor([j - i - 1]))  # distance between words
+                    indices.append(
+                        torch.LongTensor([j - i - 1])
+                    )  # distance between words
         else:
             for i in range(numberOfWords):
                 for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
@@ -210,7 +225,8 @@ class DistancePredictor(flair.nn.Model[Sentence]):
 
     # only single sentences as input
     def _forward_scores_and_loss(
-            self, data_points: Union[List[Sentence], Sentence], return_loss=False):
+        self, data_points: Union[List[Sentence], Sentence], return_loss=False
+    ):
 
         if isinstance(data_points, list):  # first sentence
             data_points = data_points[0]
@@ -224,14 +240,14 @@ class DistancePredictor(flair.nn.Model[Sentence]):
         return scores, loss
 
     def evaluate(
-            self,
-            data_points: Union[List[Sentence], Dataset],
-            gold_label_type: str,
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
-            mini_batch_size: int = 1,  # unnecessary, but trainer.train calls evaluate with this parameter
-            num_workers: Optional[int] = 8,
-            **kwargs
+        self,
+        data_points: Union[List[Sentence], Dataset],
+        gold_label_type: str,
+        out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
+        mini_batch_size: int = 1,  # unnecessary, but trainer.train calls evaluate with this parameter
+        num_workers: Optional[int] = 8,
+        **kwargs,
     ) -> Result:
 
         if isinstance(data_points, Dataset):
@@ -251,10 +267,10 @@ class DistancePredictor(flair.nn.Model[Sentence]):
         )
 
     def evaluate_regression(
-            self,
-            sentences: List[Sentence],
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
+        self,
+        sentences: List[Sentence],
+        out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
     ) -> Result:
 
         with torch.no_grad():
@@ -286,9 +302,11 @@ class DistancePredictor(flair.nn.Model[Sentence]):
                 true_values_for_sentence = []
                 numberOfPairs = 0
                 numberOfWords = len(sentence)
-                lines.append(sentence.to_tokenized_string() + '\n')
+                lines.append(sentence.to_tokenized_string() + "\n")
                 for i in range(numberOfWords):
-                    for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
+                    for j in range(
+                        i + 1, min(i + self.max_distance + 2, numberOfWords)
+                    ):
                         true_dist = j - i - 1
                         pred = predictions[numberOfPairs]
 
@@ -323,17 +341,31 @@ class DistancePredictor(flair.nn.Model[Sentence]):
             # add some statistics to the output
             eval_line = f"Number of Sentences: {len(sentences)}\nBuckets:\n | 0-1 | 1-2 | 2-3 | 3-4 | 4-5 | 5-6 | 6-7 | 7-8 | 8-9 | 9-10 | >10 |\n"
             lines.append(eval_line)
-            eval_line = "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |".format(buckets[0], buckets[1],
-                                                                                          buckets[2], buckets[3],
-                                                                                          buckets[4], buckets[5],
-                                                                                          buckets[6], buckets[7],
-                                                                                          buckets[8], buckets[9],
-                                                                                          buckets[10])
+            eval_line = (
+                "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |".format(
+                    buckets[0],
+                    buckets[1],
+                    buckets[2],
+                    buckets[3],
+                    buckets[4],
+                    buckets[5],
+                    buckets[6],
+                    buckets[7],
+                    buckets[8],
+                    buckets[9],
+                    buckets[10],
+                )
+            )
             lines.append(eval_line)
             lines.append("\nAverage predicted values per distance:\n")
             eval_line = ""
             for i in range(max_dist_plus_one):
-                eval_line += str(i) + ": " + f"{cumulated_values[i] / num_occurences[i]:.2f}" + " "
+                eval_line += (
+                    str(i)
+                    + ": "
+                    + f"{cumulated_values[i] / num_occurences[i]:.2f}"
+                    + " "
+                )
                 if i != 0 and i % 15 == 0:
                     eval_line += "\n"
 
@@ -360,10 +392,10 @@ class DistancePredictor(flair.nn.Model[Sentence]):
             return result
 
     def evaluate_classification(
-            self,
-            sentences: List[Sentence],
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
+        self,
+        sentences: List[Sentence],
+        out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
     ) -> Result:
 
         # use scikit-learn to evaluate
@@ -389,13 +421,17 @@ class DistancePredictor(flair.nn.Model[Sentence]):
                 true_values_for_sentence = []
                 numberOfPairs = 0
                 numberOfWords = len(sentence)
-                lines.append(sentence.to_tokenized_string() + '\n')
+                lines.append(sentence.to_tokenized_string() + "\n")
                 for i in range(numberOfWords):
-                    for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
+                    for j in range(
+                        i + 1, min(i + self.max_distance + 2, numberOfWords)
+                    ):
                         true_values_for_sentence.append(j - i - 1)
 
                         # for output text file
-                        eval_line = "({},{})\t{}\t{}\n".format(i, j, j - i - 1, predictions[numberOfPairs])
+                        eval_line = "({},{})\t{}\t{}\n".format(
+                            i, j, j - i - 1, predictions[numberOfPairs]
+                        )
                         lines.append(eval_line)
 
                         numberOfPairs += 1
@@ -403,7 +439,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
                 eval_loss += loss / numberOfPairs  # add average loss of word pairs
 
                 for prediction_for_sentence, true_value_for_sentence in zip(
-                        predictions, true_values_for_sentence
+                    predictions, true_values_for_sentence
                 ):
                     # hot one vector of true value
                     y_true_instance = np.zeros(self.max_distance + 1, dtype=int)
@@ -426,24 +462,33 @@ class DistancePredictor(flair.nn.Model[Sentence]):
             target_names = []  # liste aller labels, ins unserem Fall
             for i in range(self.max_distance + 1):
                 target_names.append(str(i))
-            classification_report = metrics.classification_report(y_true, y_pred, digits=4,
-                                                                  target_names=target_names, zero_division=0)
+            classification_report = metrics.classification_report(
+                y_true, y_pred, digits=4, target_names=target_names, zero_division=0
+            )
 
             # get scores
-            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0),
-                                  4)
+            micro_f_score = round(
+                metrics.fbeta_score(
+                    y_true, y_pred, beta=self.beta, average="micro", zero_division=0
+                ),
+                4,
+            )
             accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
-            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0),
-                                  4)
+            macro_f_score = round(
+                metrics.fbeta_score(
+                    y_true, y_pred, beta=self.beta, average="macro", zero_division=0
+                ),
+                4,
+            )
             # precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
             # recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
 
             detailed_result = (
-                    "\nResults:"
-                    f"\n- F-score (micro) {micro_f_score}"
-                    f"\n- F-score (macro) {macro_f_score}"
-                    f"\n- Accuracy {accuracy_score}"
-                    '\n\nBy class:\n' + classification_report
+                "\nResults:"
+                f"\n- F-score (micro) {micro_f_score}"
+                f"\n- F-score (macro) {macro_f_score}"
+                f"\n- Accuracy {accuracy_score}"
+                "\n\nBy class:\n" + classification_report
             )
 
             # line for log file
@@ -456,7 +501,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,
-                loss = eval_loss,
+                loss=eval_loss,
             )
 
             return result
@@ -473,7 +518,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
         return filtered_sentences
 
     def _obtain_labels(
-            self, scores: List[List[float]], predict_prob: bool = False
+        self, scores: List[List[float]], predict_prob: bool = False
     ) -> List[List[Label]]:
         """
         Predicts the labels of sentences.
@@ -500,8 +545,9 @@ class DistancePredictor(flair.nn.Model[Sentence]):
         return label_probs
 
     def __str__(self):
-        return super(flair.nn.Model, self).__str__().rstrip(')') + \
-               f'  (beta): {self.beta}\n' + \
-               f'  (loss_max_weight): {self.loss_max_weight}\n' + \
-               f'  (max_distance) {self.max_distance}\n)'
-
+        return (
+            super(flair.nn.Model, self).__str__().rstrip(")")
+            + f"  (beta): {self.beta}\n"
+            + f"  (loss_max_weight): {self.loss_max_weight}\n"
+            + f"  (max_distance) {self.max_distance}\n)"
+        )

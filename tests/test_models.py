@@ -25,7 +25,8 @@ def test_sequence_tagger_no_crf(results_base_path, tasks_base_path):
 
     # load dataset
     corpus: Corpus = ColumnCorpus(
-        data_folder=tasks_base_path / "trivial" / "trivial_bioes", column_format={0: "text", 1: "ner"}
+        data_folder=tasks_base_path / "trivial" / "trivial_bioes",
+        column_format={0: "text", 1: "ner"},
     )
     tag_dictionary = corpus.make_label_dictionary("ner")
 
@@ -60,12 +61,12 @@ def test_sequence_tagger_no_crf(results_base_path, tasks_base_path):
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.text for span in sentence.get_spans('ner')]
+    entities = [span.text for span in sentence.get_spans("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data
-    result: Result = loaded_model.evaluate(corpus.test, gold_label_type='ner')
-    assert result.classification_report["micro avg"]["f1-score"] == 1.
+    result: Result = loaded_model.evaluate(corpus.test, gold_label_type="ner")
+    assert result.classification_report["micro avg"]["f1-score"] == 1.0
 
     del loaded_model
 
@@ -76,7 +77,8 @@ def test_sequence_tagger_with_crf(results_base_path, tasks_base_path):
 
     # load dataset
     corpus: Corpus = ColumnCorpus(
-        data_folder=tasks_base_path / "trivial" / "trivial_bioes", column_format={0: "text", 1: "ner"}
+        data_folder=tasks_base_path / "trivial" / "trivial_bioes",
+        column_format={0: "text", 1: "ner"},
     )
     tag_dictionary = corpus.make_label_dictionary("ner")
 
@@ -111,12 +113,12 @@ def test_sequence_tagger_with_crf(results_base_path, tasks_base_path):
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.text for span in sentence.get_spans('ner')]
+    entities = [span.text for span in sentence.get_spans("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data
-    result: Result = loaded_model.evaluate(corpus.test, gold_label_type='ner')
-    assert result.classification_report["micro avg"]["f1-score"] == 1.
+    result: Result = loaded_model.evaluate(corpus.test, gold_label_type="ner")
+    assert result.classification_report["micro avg"]["f1-score"] == 1.0
 
     del loaded_model
 
@@ -127,7 +129,8 @@ def test_sequence_tagger_stacked(results_base_path, tasks_base_path):
 
     # load dataset
     corpus: Corpus = ColumnCorpus(
-        data_folder=tasks_base_path / "trivial" / "trivial_bioes", column_format={0: "text", 1: "ner"}
+        data_folder=tasks_base_path / "trivial" / "trivial_bioes",
+        column_format={0: "text", 1: "ner"},
     )
     tag_dictionary = corpus.make_label_dictionary("ner")
 
@@ -162,12 +165,12 @@ def test_sequence_tagger_stacked(results_base_path, tasks_base_path):
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.text for span in sentence.get_spans('ner')]
+    entities = [span.text for span in sentence.get_spans("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data
-    result: Result = loaded_model.evaluate(corpus.test, gold_label_type='ner')
-    assert result.classification_report["micro avg"]["f1-score"] == 1.
+    result: Result = loaded_model.evaluate(corpus.test, gold_label_type="ner")
+    assert result.classification_report["micro avg"]["f1-score"] == 1.0
 
     del loaded_model
 
@@ -178,7 +181,8 @@ def test_sequence_tagger_transformer_finetune(results_base_path, tasks_base_path
 
     # load dataset
     corpus: Corpus = ColumnCorpus(
-        data_folder=tasks_base_path / "trivial" / "trivial_bioes", column_format={0: "text", 1: "ner"}
+        data_folder=tasks_base_path / "trivial" / "trivial_bioes",
+        column_format={0: "text", 1: "ner"},
     )
     tag_dictionary = corpus.make_label_dictionary("ner")
 
@@ -190,17 +194,18 @@ def test_sequence_tagger_transformer_finetune(results_base_path, tasks_base_path
         tag_type="ner",
         use_crf=False,
         use_rnn=False,
-        reproject_embeddings=False
+        reproject_embeddings=False,
     )
 
     # train
     trainer = ModelTrainer(tagger, corpus)
-    trainer.fine_tune(results_base_path,
-                      mini_batch_size=2,
-                      max_epochs=10,
-                      shuffle=True,
-                      learning_rate=0.5e-4,
-                      )
+    trainer.fine_tune(
+        results_base_path,
+        mini_batch_size=2,
+        max_epochs=10,
+        shuffle=True,
+        learning_rate=0.5e-4,
+    )
 
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
@@ -214,12 +219,12 @@ def test_sequence_tagger_transformer_finetune(results_base_path, tasks_base_path
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.text for span in sentence.get_spans('ner')]
+    entities = [span.text for span in sentence.get_spans("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data
-    result: Result = loaded_model.evaluate(corpus.test, gold_label_type='ner')
-    assert result.classification_report["micro avg"]["f1-score"] == 1.
+    result: Result = loaded_model.evaluate(corpus.test, gold_label_type="ner")
+    assert result.classification_report["micro avg"]["f1-score"] == 1.0
 
     del loaded_model
 
@@ -228,20 +233,21 @@ def test_sequence_tagger_transformer_finetune(results_base_path, tasks_base_path
 def test_text_classifier(results_base_path, tasks_base_path):
     flair.set_seed(123)
 
-    corpus = ClassificationCorpus(tasks_base_path / "trivial" / "trivial_text_classification_single",
-                                  label_type="city")
+    corpus = ClassificationCorpus(
+        tasks_base_path / "trivial" / "trivial_text_classification_single",
+        label_type="city",
+    )
     label_dict = corpus.make_label_dictionary(label_type="city")
 
-    model: TextClassifier = TextClassifier(document_embeddings=DocumentPoolEmbeddings([turian_embeddings]),
-                                           label_dictionary=label_dict,
-                                           label_type="city",
-                                           multi_label=False)
+    model: TextClassifier = TextClassifier(
+        document_embeddings=DocumentPoolEmbeddings([turian_embeddings]),
+        label_dictionary=label_dict,
+        label_type="city",
+        multi_label=False,
+    )
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path,
-                  mini_batch_size=2,
-                  max_epochs=10,
-                  shuffle=True)
+    trainer.train(results_base_path, mini_batch_size=2, max_epochs=10, shuffle=True)
 
     # check if model can predict
     sentence = Sentence("this is Berlin")
@@ -270,8 +276,8 @@ def test_text_classifier(results_base_path, tasks_base_path):
     assert "Berlin" in values
 
     # check if loaded model successfully fit the training data
-    result: Result = loaded_model.evaluate(corpus.test, gold_label_type='city')
-    assert result.classification_report["micro avg"]["f1-score"] == 1.
+    result: Result = loaded_model.evaluate(corpus.test, gold_label_type="city")
+    assert result.classification_report["micro avg"]["f1-score"] == 1.0
 
     del loaded_model
 
@@ -280,23 +286,28 @@ def test_text_classifier(results_base_path, tasks_base_path):
 def test_text_classifier_transformer_finetune(results_base_path, tasks_base_path):
     flair.set_seed(123)
 
-    corpus = ClassificationCorpus(tasks_base_path / "trivial" / "trivial_text_classification_single",
-                                  label_type="city")
+    corpus = ClassificationCorpus(
+        tasks_base_path / "trivial" / "trivial_text_classification_single",
+        label_type="city",
+    )
     label_dict = corpus.make_label_dictionary(label_type="city")
 
-    model: TextClassifier = TextClassifier(document_embeddings=TransformerDocumentEmbeddings('distilbert-base-uncased'),
-                                           label_dictionary=label_dict,
-                                           label_type="city",
-                                           multi_label=False)
+    model: TextClassifier = TextClassifier(
+        document_embeddings=TransformerDocumentEmbeddings("distilbert-base-uncased"),
+        label_dictionary=label_dict,
+        label_type="city",
+        multi_label=False,
+    )
 
     trainer = ModelTrainer(model, corpus)
-    trainer.fine_tune(results_base_path,
-                      mini_batch_size=2,
-                      max_epochs=10,
-                      shuffle=True,
-                      learning_rate=0.5e-5,
-                      num_workers=2,
-                      )
+    trainer.fine_tune(
+        results_base_path,
+        mini_batch_size=2,
+        max_epochs=10,
+        shuffle=True,
+        learning_rate=0.5e-5,
+        num_workers=2,
+    )
 
     # check if model can predict
     sentence = Sentence("this is Berlin")
@@ -325,8 +336,8 @@ def test_text_classifier_transformer_finetune(results_base_path, tasks_base_path
     assert "Berlin" in values
 
     # check if loaded model successfully fit the training data
-    result: Result = loaded_model.evaluate(corpus.test, gold_label_type='city')
-    assert result.classification_report["micro avg"]["f1-score"] == 1.
+    result: Result = loaded_model.evaluate(corpus.test, gold_label_type="city")
+    assert result.classification_report["micro avg"]["f1-score"] == 1.0
 
     del loaded_model
 
@@ -335,21 +346,23 @@ def test_text_classifier_transformer_finetune(results_base_path, tasks_base_path
 def test_text_classifier_multi(results_base_path, tasks_base_path):
     flair.set_seed(123)
 
-    corpus = ClassificationCorpus(tasks_base_path / "trivial" / "trivial_text_classification_multi",
-                                  label_type="city")
+    corpus = ClassificationCorpus(
+        tasks_base_path / "trivial" / "trivial_text_classification_multi",
+        label_type="city",
+    )
     label_dict = corpus.make_label_dictionary(label_type="city")
 
-    model: TextClassifier = TextClassifier(document_embeddings=DocumentPoolEmbeddings([turian_embeddings],
-                                                                                      fine_tune_mode="linear"),
-                                           label_dictionary=label_dict,
-                                           label_type="city",
-                                           multi_label=True)
+    model: TextClassifier = TextClassifier(
+        document_embeddings=DocumentPoolEmbeddings(
+            [turian_embeddings], fine_tune_mode="linear"
+        ),
+        label_dictionary=label_dict,
+        label_type="city",
+        multi_label=True,
+    )
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path,
-                  mini_batch_size=2,
-                  max_epochs=50,
-                  shuffle=True)
+    trainer.train(results_base_path, mini_batch_size=2, max_epochs=50, shuffle=True)
 
     # check if model can predict
     sentence = Sentence("this is Berlin")
@@ -379,7 +392,7 @@ def test_text_classifier_multi(results_base_path, tasks_base_path):
     assert "pizza" in values
 
     # check if loaded model successfully fit the training data
-    result: Result = loaded_model.evaluate(corpus.test, gold_label_type='city')
-    assert result.classification_report["micro avg"]["f1-score"] == 1.
+    result: Result = loaded_model.evaluate(corpus.test, gold_label_type="city")
+    assert result.classification_report["micro avg"]["f1-score"] == 1.0
 
     del loaded_model

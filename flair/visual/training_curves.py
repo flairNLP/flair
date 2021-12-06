@@ -18,16 +18,19 @@ log = logging.getLogger("flair")
 
 class Plotter(object):
     """
-    Plots training parameters (loss, f-score, and accuracy) and training weights over time.
-    Input files are the output files 'loss.tsv' and 'weights.txt' from training either a sequence tagger or text
-    classification model.
+    Plots training parameters (loss, f-score, and accuracy) and training
+    weights over time.
+    Input files are the output files 'loss.tsv' and 'weights.txt' from
+    training either a sequence tagger or text classification model.
     """
 
     @staticmethod
-    def _extract_evaluation_data(file_name: Union[str, Path], score: str = "F1") -> dict:
+    def _extract_evaluation_data(
+        file_name: Union[str, Path], score: str = "F1"
+    ) -> dict:
         file_name = Path(file_name)
 
-        training_curves : Dict[str, Dict[str, List[float]]] = {
+        training_curves: Dict[str, Dict[str, List[float]]] = {
             "train": {"loss": [], "score": []},
             "test": {"loss": [], "score": []},
             "dev": {"loss": [], "score": []},
@@ -36,7 +39,8 @@ class Plotter(object):
         with open(file_name, "r") as f:
             tsvin = csv.reader(f, delimiter="\t")
 
-            # determine the column index of loss, f-score and accuracy for train, dev and test split
+            # determine the column index of loss, f-score and accuracy for
+            # train, dev and test split
             row = next(tsvin)
 
             score = score.upper()
@@ -79,7 +83,9 @@ class Plotter(object):
         if type(file_name) is str:
             file_name = Path(file_name)
 
-        weights: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(lambda: list()))
+        weights: Dict[str, Dict[str, List[float]]] = defaultdict(
+            lambda: defaultdict(lambda: list())
+        )
 
         with open(file_name, "r") as f:
             tsvin = csv.reader(f, delimiter="\t")
@@ -125,7 +131,7 @@ class Plotter(object):
         columns = 2
         rows = max(2, int(math.ceil(total / columns)))
 
-        figsize = (4*columns, 3*rows)
+        figsize = (4 * columns, 3 * rows)
 
         fig = plt.figure()
         f, axarr = plt.subplots(rows, columns, figsize=figsize)

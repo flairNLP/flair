@@ -12,7 +12,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
         train_file="train.conllup",
         dev_file="train.conllup",
         test_file="train.conllup",
-        token_annotation_fields=['ner'],
+        token_annotation_fields=["ner"],
     )
 
     relation_label_dict = corpus.make_label_dictionary(label_type="relation")
@@ -46,7 +46,9 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     loaded_model.train_on_gold_pairs_only = False
 
     sentence = Sentence(["Apple", "was", "founded", "by", "Steve", "Jobs", "."])
-    for token, tag in zip(sentence.tokens, ["B-ORG", "O", "O", "O", "B-PER", "I-PER", "O"]):
+    for token, tag in zip(
+        sentence.tokens, ["B-ORG", "O", "O", "O", "B-PER", "I-PER", "O"]
+    ):
         token.set_label("ner", tag)
 
     loaded_model.predict(sentence)

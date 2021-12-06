@@ -1,5 +1,4 @@
 import logging
-import math
 
 import torch
 from torch.optim import Optimizer
@@ -172,20 +171,20 @@ class LinearSchedulerWithWarmup(LambdaLR):
     """
 
     def __init__(self, optimizer, num_train_steps, num_warmup_steps, last_epoch=-1):
-
         def linear_lr_lambda(current_step: int):
             lambda_during_warmup = float(current_step) / float(max(1, num_warmup_steps))
             lambda_after_warmup = max(
-                0.0, float(num_train_steps - current_step) /
-                float(max(1, num_train_steps - num_warmup_steps))
+                0.0,
+                float(num_train_steps - current_step)
+                / float(max(1, num_train_steps - num_warmup_steps)),
             )
             if current_step < num_warmup_steps:
                 return lambda_during_warmup
             return lambda_after_warmup
 
-        super(LinearSchedulerWithWarmup, self).__init__(optimizer,
-                                                        lr_lambda=linear_lr_lambda,
-                                                        last_epoch=last_epoch)
+        super(LinearSchedulerWithWarmup, self).__init__(
+            optimizer, lr_lambda=linear_lr_lambda, last_epoch=last_epoch
+        )
 
 
 class ReduceLRWDOnPlateau(ReduceLROnPlateau):

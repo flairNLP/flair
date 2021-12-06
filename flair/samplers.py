@@ -6,8 +6,6 @@ from typing import Dict
 import torch
 from torch.utils.data.sampler import Sampler
 
-from flair.data import FlairDataset
-
 log = logging.getLogger("flair")
 
 
@@ -24,8 +22,7 @@ class FlairSampler(Sampler):
 
 
 class ImbalancedClassificationDatasetSampler(FlairSampler):
-    """Use this to upsample rare classes and downsample common classes in your unbalanced classification dataset.
-    """
+    """Use this to upsample rare classes and downsample common classes in your unbalanced classification dataset."""
 
     def __init__(self):
         super(ImbalancedClassificationDatasetSampler, self).__init__(None)

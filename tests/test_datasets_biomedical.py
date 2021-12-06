@@ -115,7 +115,9 @@ def simple_tokenizer(text: str) -> List[Token]:
                 start_position = index - len(word)
                 tokens.append(
                     Token(
-                        text=word, start_position=start_position, whitespace_after=(char == " ")
+                        text=word,
+                        start_position=start_position,
+                        whitespace_after=(char == " "),
                     )
                 )
 
@@ -209,7 +211,8 @@ def test_conll_writer_one_token_multiple_entities2():
 def test_conll_writer_whitespace_after():
     text = f"A sentence with cardio-dependent. {SENTENCE_TAG}Clark et al. reported that"
     dataset = InternalBioNerDataset(
-        documents={"1": text}, entities_per_document={"1": []},
+        documents={"1": text},
+        entities_per_document={"1": []},
     )
 
     assert_conll_writer_output(
@@ -226,7 +229,9 @@ def test_conll_writer_whitespace_after():
             "reported O +",
             "that O -",
         ],
-        TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=TokenizerWrapper(simple_tokenizer))
+        TagSentenceSplitter(
+            tag=SENTENCE_TAG, tokenizer=TokenizerWrapper(simple_tokenizer)
+        ),
     )
 
 
@@ -238,13 +243,15 @@ def assert_conll_writer_output(
     fd, outfile_path = tempfile.mkstemp()
     try:
         sentence_splitter = (
-            sentence_splitter if sentence_splitter else NoSentenceSplitter(tokenizer=SpaceTokenizer())
+            sentence_splitter
+            if sentence_splitter
+            else NoSentenceSplitter(tokenizer=SpaceTokenizer())
         )
 
         writer = CoNLLWriter(sentence_splitter=sentence_splitter)
         writer.write_to_conll(dataset, Path(outfile_path))
         with open(outfile_path) as f:
-            contents = [l.strip() for l in f.readlines() if l.strip()]
+            contents = [line.strip() for line in f.readlines() if line.strip()]
     finally:
         os.close(fd)
         os.remove(outfile_path)
@@ -295,7 +302,9 @@ def sanity_check_all_corpora(check: Callable[[ColumnCorpus], None]):
         check(corpus)
 
 
-@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
+@pytest.mark.skip(
+    reason="We skip this test because it's only relevant for development purposes"
+)
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
 def test_sanity_not_starting_with_minus(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()  # type: ignore
@@ -314,7 +323,9 @@ def test_sanity_not_starting_with_minus(CorpusType: Type[ColumnCorpus]):
 
 
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
-@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
+@pytest.mark.skip(
+    reason="We skip this test because it's only relevant for development purposes"
+)
 def test_sanity_no_repeating_Bs(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()  # type: ignore
     longest_repeat_tokens: List[Token] = []
@@ -334,9 +345,11 @@ def test_sanity_no_repeating_Bs(CorpusType: Type[ColumnCorpus]):
 
 
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
-@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
+@pytest.mark.skip(
+    reason="We skip this test because it's only relevant for development purposes"
+)
 def test_sanity_no_long_entities(CorpusType: Type[ColumnCorpus]):
-    corpus = CorpusType() # type: ignore
+    corpus = CorpusType()  # type: ignore
     longest_entity: List[str] = []
     for sentence in _iter_dataset(corpus.get_all_sentences()):
         entities = sentence.get_spans("ner")
@@ -348,7 +361,9 @@ def test_sanity_no_long_entities(CorpusType: Type[ColumnCorpus]):
 
 
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
-@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
+@pytest.mark.skip(
+    reason="We skip this test because it's only relevant for development purposes"
+)
 def test_sanity_no_unmatched_parentheses(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()  # type: ignore
     unbalanced_entities = []
@@ -363,7 +378,9 @@ def test_sanity_no_unmatched_parentheses(CorpusType: Type[ColumnCorpus]):
 
 
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
-@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
+@pytest.mark.skip(
+    reason="We skip this test because it's only relevant for development purposes"
+)
 def test_sanity_not_too_many_entities(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()  # type: ignore
     n_entities_per_sentence = []
@@ -378,13 +395,16 @@ def test_sanity_not_too_many_entities(CorpusType: Type[ColumnCorpus]):
 
 
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
-@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
+@pytest.mark.skip(
+    reason="We skip this test because it's only relevant for development purposes"
+)
 def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
     dataset_name = CorpusType.__class__.__name__.lower()
     base_path = flair.cache_root / "datasets"
     data_folder = base_path / dataset_name
 
     from flair.tokenization import SciSpacyTokenizer
+
     tokenizer = SciSpacyTokenizer()
 
     corpus = CorpusType()
@@ -415,9 +435,12 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
         assert len(misaligned_ends) <= len(entities) // 10
 
 
-@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
+@pytest.mark.skip(
+    reason="We skip this test because it's only relevant for development purposes"
+)
 def test_scispacy_tokenization():
     from flair.tokenization import SciSpacyTokenizer
+
     tokenizer = SciSpacyTokenizer()
 
     tokens = tokenizer.tokenize("HBeAg(+) patients")
@@ -465,4 +488,3 @@ def test_scispacy_tokenization():
     assert tokens[2].text == "DOX"
     assert tokens[3].text == ")"
     assert tokens[4].text == "-induced"
-

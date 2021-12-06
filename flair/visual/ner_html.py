@@ -8,7 +8,7 @@ TAGGED_ENTITY = """
     {entity}
     <span style="font-size: 0.8em; font-weight: bold; line-height: 3; border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; margin-left: 0.5rem">{label}</span>
 </mark>
-"""
+"""  # noqa: E501
 
 PARAGRAPH = """<p>{sentence}</p>"""
 
@@ -21,7 +21,7 @@ HTML_PAGE = """
 
     <body style="font-size: 16px; font-family: 'Segoe UI'; padding: 4rem 2rem">{text}</body>
 </html>
-"""
+"""  # noqa: E501
 
 
 def split_to_spans(s: Sentence):
@@ -58,7 +58,7 @@ def render_ner_html(
     :param title: title of the HTML page
     :param colors: dict where keys are tags and values are color HTML codes
     :param default_color: color to use if colors parameter is missing a tag
-    :param wrap_page: if True method returns result of processing sentences wrapped by &lt;html&gt; and &lt;body&gt; tags, otherwise - without these tags
+    :param wrap_page: if True method returns result of processing sentences wrapped by &lt;html&gt; and &lt;body&gt; tags, otherwise - without these tags  # noqa: E501
     :return: HTML as a string
     """
     if isinstance(sentences, Sentence):

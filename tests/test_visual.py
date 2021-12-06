@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 from flair.data import Sentence, Span, Token
 from flair.embeddings import FlairEmbeddings
-from flair.visual import *
+from flair.visual import Highlighter
 from flair.visual.ner_html import HTML_PAGE, PARAGRAPH, TAGGED_ENTITY, render_ner_html
 from flair.visual.training_curves import Plotter
 
@@ -37,7 +37,7 @@ def test_plotting_training_curves_and_weights(resources_path):
 
 
 def mock_ner_span(text, tag, start, end):
-    span = Span([]).set_label('class', tag)
+    span = Span([]).set_label("class", tag)
     span.start_pos = start
     span.end_pos = end
     span.tokens = [Token(text[start:end])]
@@ -46,7 +46,8 @@ def mock_ner_span(text, tag, start, end):
 
 def test_html_rendering():
     text = (
-        "Boris Johnson has been elected new Conservative leader in a ballot of party members and will become the "
+        "Boris Johnson has been elected new Conservative leader in "
+        "a ballot of party members and will become the "
         "next UK prime minister. &"
     )
     sent = Sentence()

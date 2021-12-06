@@ -17,14 +17,15 @@ from flair.data import DataPoint, Dictionary, Sentence, _iter_dataset
 
 
 class Result(object):
-    def __init__(self,
-                 main_score: float,
-                 log_header: str,
-                 log_line: str,
-                 detailed_results: str,
-                 loss: float,
-                 classification_report: dict = {},
-                 ):
+    def __init__(
+        self,
+        main_score: float,
+        log_header: str,
+        log_line: str,
+        detailed_results: str,
+        loss: float,
+        classification_report: dict = {},
+    ):
         self.main_score: float = main_score
         self.log_header: str = log_header
         self.log_line: str = log_line
@@ -55,7 +56,7 @@ class MetricRegression(object):
     def spearmanr(self):
         return spearmanr(self.true, self.pred)[0]
 
-    ## dummy return to fulfill trainer.train() needs
+    # dummy return to fulfill trainer.train() needs
     def micro_avg_f_score(self):
         return self.mean_squared_error()
 
@@ -103,7 +104,9 @@ class WeightExtractor(object):
         if type(directory) is str:
             directory = Path(directory)
         self.weights_file = init_output_file(directory, "weights.txt")
-        self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(lambda: defaultdict(lambda: list()))
+        self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(
+            lambda: defaultdict(lambda: list())
+        )
         self.number_of_weights = number_of_weights
 
     def extract_weights(self, state_dict, iteration):
@@ -115,7 +118,7 @@ class WeightExtractor(object):
                 weights_to_watch = min(
                     self.number_of_weights, reduce(lambda x, y: x * y, list(vec.size()))
                 )
-            except:
+            except Exception:
                 continue
 
             if key not in self.weights_dict:
@@ -197,23 +200,36 @@ class AnnealOnPlateau(object):
         >>>     scheduler.step(val_loss)
     """
 
-    def __init__(self, optimizer, mode='min', aux_mode='min', factor=0.1, patience=10, initial_extra_patience=0,
-                 verbose=False, cooldown=0, min_lr=0, eps=1e-8):
+    def __init__(
+        self,
+        optimizer,
+        mode="min",
+        aux_mode="min",
+        factor=0.1,
+        patience=10,
+        initial_extra_patience=0,
+        verbose=False,
+        cooldown=0,
+        min_lr=0,
+        eps=1e-8,
+    ):
 
         if factor >= 1.0:
-            raise ValueError('Factor should be < 1.0.')
+            raise ValueError("Factor should be < 1.0.")
         self.factor = factor
 
         # Attach optimizer
         if not isinstance(optimizer, Optimizer):
-            raise TypeError('{} is not an Optimizer'.format(
-                type(optimizer).__name__))
+            raise TypeError("{} is not an Optimizer".format(type(optimizer).__name__))
         self.optimizer = optimizer
 
         if isinstance(min_lr, list) or isinstance(min_lr, tuple):
             if len(min_lr) != len(optimizer.param_groups):
-                raise ValueError("expected {} min_lrs, got {}".format(
-                    len(optimizer.param_groups), len(min_lr)))
+                raise ValueError(
+                    "expected {} min_lrs, got {}".format(
+                        len(optimizer.param_groups), len(min_lr)
+                    )
+                )
             self.min_lrs = list(min_lr)
         else:
             self.min_lrs = [min_lr] * len(optimizer.param_groups)
@@ -248,21 +264,21 @@ class AnnealOnPlateau(object):
 
         is_better = False
 
-        if self.mode == 'min':
+        if self.mode == "min":
             if current < self.best:
                 is_better = True
 
-        if self.mode == 'max':
+        if self.mode == "max":
             if current > self.best:
                 is_better = True
 
         if current == self.best and auxiliary_metric:
             current_aux = float(auxiliary_metric)
-            if self.aux_mode == 'min':
+            if self.aux_mode == "min":
                 if current_aux < self.best_aux:
                     is_better = True
 
-            if self.aux_mode == 'max':
+            if self.aux_mode == "max":
                 if current_aux > self.best_aux:
                     is_better = True
 
@@ -284,27 +300,29 @@ class AnnealOnPlateau(object):
             self.num_bad_epochs = 0
             self.effective_patience = self.default_patience
 
-        self._last_lr = [group['lr'] for group in self.optimizer.param_groups]
+        self._last_lr = [group["lr"] for group in self.optimizer.param_groups]
 
     def _reduce_lr(self, epoch):
         for i, param_group in enumerate(self.optimizer.param_groups):
-            old_lr = float(param_group['lr'])
+            old_lr = float(param_group["lr"])
             new_lr = max(old_lr * self.factor, self.min_lrs[i])
             if old_lr - new_lr > self.eps:
-                param_group['lr'] = new_lr
+                param_group["lr"] = new_lr
                 if self.verbose:
-                    print('Epoch {:5d}: reducing learning rate'
-                          ' of group {} to {:.4e}.'.format(epoch, i, new_lr))
+                    print(
+                        "Epoch {:5d}: reducing learning rate"
+                        " of group {} to {:.4e}.".format(epoch, i, new_lr)
+                    )
 
     @property
     def in_cooldown(self):
         return self.cooldown_counter > 0
 
     def _init_is_better(self, mode):
-        if mode not in {'min', 'max'}:
-            raise ValueError('mode ' + mode + ' is unknown!')
+        if mode not in {"min", "max"}:
+            raise ValueError("mode " + mode + " is unknown!")
 
-        if mode == 'min':
+        if mode == "min":
             self.mode_worse = inf
         else:  # mode == 'max':
             self.mode_worse = -inf
@@ -312,7 +330,9 @@ class AnnealOnPlateau(object):
         self.mode = mode
 
     def state_dict(self):
-        return {key: value for key, value in self.__dict__.items() if key != 'optimizer'}
+        return {
+            key: value for key, value in self.__dict__.items() if key != "optimizer"
+        }
 
     def load_state_dict(self, state_dict):
         self.__dict__.update(state_dict)
@@ -335,7 +355,7 @@ def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
 
 
 def convert_labels_to_one_hot(
-        label_list: List[List[str]], label_dict: Dictionary
+    label_list: List[List[str]], label_dict: Dictionary
 ) -> List[List[int]]:
     """
     Convert list of labels (strings) to a one hot list.
@@ -344,7 +364,7 @@ def convert_labels_to_one_hot(
     :return: converted label list
     """
     return [
-        [1 if l in labels else 0 for l in label_dict.get_items()]
+        [1 if label in labels else 0 for label in label_dict.get_items()]
         for labels in label_list
     ]
 

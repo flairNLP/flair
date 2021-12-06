@@ -121,7 +121,9 @@ class NLPTaskDataFetcher:
 
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
-    def load_corpus(task: Union[NLPTask, str], base_path: Union[str, Path] = None) -> Corpus:
+    def load_corpus(
+        task: Union[NLPTask, str], base_path: Union[str, Path] = None
+    ) -> Corpus:
         """
         Helper function to fetch a Corpus for a specific NLPTask. For this to work you need to first download
         and put into the appropriate folder structure the corresponding NLP task data. The tutorials on
@@ -226,10 +228,15 @@ class NLPTaskDataFetcher:
             NLPTask.TREC_50.value,
             NLPTask.REGRESSION.value,
         ]:
-            tokenizer: Tokenizer = SpaceTokenizer() if task in [
-                NLPTask.TREC_6.value,
-                NLPTask.TREC_50.value,
-            ] else SegtokTokenizer()
+            tokenizer: Tokenizer = (
+                SpaceTokenizer()
+                if task
+                in [
+                    NLPTask.TREC_6.value,
+                    NLPTask.TREC_50.value,
+                ]
+                else SegtokTokenizer()
+            )
 
             return NLPTaskDataFetcher.load_classification_corpus(
                 data_folder, tokenizer=tokenizer
@@ -534,18 +541,24 @@ class NLPTaskDataFetcher:
         sentences: List[Sentence] = []
 
         try:
-            lines: List[str] = open(
-                str(path_to_column_file), encoding="utf-8"
-            ).read().strip().split("\n")
+            lines: List[str] = (
+                open(str(path_to_column_file), encoding="utf-8")
+                .read()
+                .strip()
+                .split("\n")
+            )
         except:
             log.info(
                 'UTF-8 can\'t read: {} ... using "latin-1" instead.'.format(
                     path_to_column_file
                 )
             )
-            lines: List[str] = open(
-                str(path_to_column_file), encoding="latin1"
-            ).read().strip().split("\n")
+            lines: List[str] = (
+                open(str(path_to_column_file), encoding="latin1")
+                .read()
+                .strip()
+                .split("\n")
+            )
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
         text_column: int = 0
@@ -585,15 +598,15 @@ class NLPTaskDataFetcher:
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
     def read_conll_ud(path_to_conll_file: Union[str, Path]) -> List[Sentence]:
         """
-       Reads a file in CoNLL-U format and produces a list of Sentence with full morphosyntactic annotation
-       :param path_to_conll_file: the path to the conll-u file
-       :return: list of sentences
-       """
+        Reads a file in CoNLL-U format and produces a list of Sentence with full morphosyntactic annotation
+        :param path_to_conll_file: the path to the conll-u file
+        :return: list of sentences
+        """
         sentences: List[Sentence] = []
 
-        lines: List[str] = open(
-            path_to_conll_file, encoding="utf-8"
-        ).read().strip().split("\n")
+        lines: List[str] = (
+            open(path_to_conll_file, encoding="utf-8").read().strip().split("\n")
+        )
 
         sentence: Sentence = Sentence()
         for line in lines:
@@ -710,10 +723,7 @@ class NLPTaskDataFetcher:
                 import tarfile
 
                 with tarfile.open(
-                    flair.cache_root
-                    / "datasets"
-                    / task.value
-                    / "aclImdb_v1.tar.gz",
+                    flair.cache_root / "datasets" / task.value / "aclImdb_v1.tar.gz",
                     "r:gz",
                 ) as f_in:
                     datasets = ["train", "test"]

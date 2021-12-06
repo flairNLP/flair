@@ -45,11 +45,10 @@ class TrainingArguments:
         default=8, metadata={"help": "Batch size used for training."}
     )
     mini_batch_chunk_size: int = field(
-        default=1, metadata={"help": "If smaller than batch size, batches will be chunked."}
+        default=1,
+        metadata={"help": "If smaller than batch size, batches will be chunked."},
     )
-    learning_rate: float = field(
-        default=5e-05, metadata={"help": "Learning rate"}
-    )
+    learning_rate: float = field(default=5e-05, metadata={"help": "Learning rate"})
     seed: int = field(
         default=42, metadata={"help": "Seed used for reproducible fine-tuning results."}
     )
@@ -93,9 +92,9 @@ def get_flair_corpus(data_args):
     for name, obj in inspect.getmembers(flair.datasets.sequence_labeling):
         if inspect.isclass(obj):
             if (
-                    name.startswith("NER")
-                    or name.startswith("CONLL")
-                    or name.startswith("WNUT")
+                name.startswith("NER")
+                or name.startswith("CONLL")
+                or name.startswith("WNUT")
             ):
                 ner_task_mapping[name] = obj
 
@@ -166,14 +165,15 @@ def main():
 
     trainer = ModelTrainer(tagger, corpus)
 
-    trainer.fine_tune(data_args.output_dir,
-                      learning_rate=training_args.learning_rate,
-                      mini_batch_size=training_args.batch_size,
-                      mini_batch_chunk_size=training_args.mini_batch_chunk_size,
-                      max_epochs=training_args.num_epochs,
-                      embeddings_storage_mode=training_args.embeddings_storage_mode,
-                      weight_decay=training_args.weight_decay,
-                      )
+    trainer.fine_tune(
+        data_args.output_dir,
+        learning_rate=training_args.learning_rate,
+        mini_batch_size=training_args.batch_size,
+        mini_batch_chunk_size=training_args.mini_batch_chunk_size,
+        max_epochs=training_args.num_epochs,
+        embeddings_storage_mode=training_args.embeddings_storage_mode,
+        weight_decay=training_args.weight_decay,
+    )
 
     torch.save(model_args, os.path.join(data_args.output_dir, "model_args.bin"))
     torch.save(training_args, os.path.join(data_args.output_dir, "training_args.bin"))

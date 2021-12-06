@@ -1,8 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, List, Union
 
-from more_itertools import stagger
 from segtok.segmenter import split_multi, split_single
 from segtok.tokenizer import split_contractions, word_tokenizer
 
@@ -35,8 +34,10 @@ class SpacyTokenizer(Tokenizer):
         elif isinstance(model, str):
             self.model: Language = spacy.load(model)
         else:
-            raise AssertionError(f"Unexpected type of parameter model. Please provide a loaded "
-                                 f"spacy model or the name of the model to load.")
+            raise AssertionError(
+                "Unexpected type of parameter model. Please provide a loaded "
+                "spacy model or the name of the model to load."
+            )
 
     def tokenize(self, text: str) -> List[Token]:
         from spacy.tokens.doc import Doc
@@ -54,7 +55,7 @@ class SpacyTokenizer(Tokenizer):
             tokens.append(token)
 
             if (previous_token is not None) and (
-                    token.start_pos == previous_token.start_pos + len(previous_token.text)
+                token.start_pos == previous_token.start_pos + len(previous_token.text)
             ):
                 previous_token.whitespace_after = False
 
@@ -65,19 +66,19 @@ class SpacyTokenizer(Tokenizer):
     @property
     def name(self) -> str:
         return (
-                self.__class__.__name__
-                + "_"
-                + self.model.meta["name"]
-                + "_"
-                + self.model.meta["version"]
+            self.__class__.__name__
+            + "_"
+            + self.model.meta["name"]
+            + "_"
+            + self.model.meta["version"]
         )
 
 
 class SegtokTokenizer(Tokenizer):
     """
-        Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
+    Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
 
-        For further details see: https://github.com/fnl/segtok
+    For further details see: https://github.com/fnl/segtok
     """
 
     def __init__(self):
@@ -99,15 +100,14 @@ class SegtokTokenizer(Tokenizer):
         words = list(filter(None, words))
 
         # determine offsets for whitespace_after field
-        index = text.index
         current_offset = 0
         previous_word_offset = -1
         previous_token = None
         for word in words:
             try:
-                word_offset = index(word, current_offset)
+                word_offset = text.index(word, current_offset)
                 start_position = word_offset
-            except:
+            except ValueError:
                 word_offset = previous_word_offset + 1
                 start_position = (
                     current_offset + 1 if current_offset > 0 else current_offset
@@ -131,7 +131,7 @@ class SegtokTokenizer(Tokenizer):
 
 class SpaceTokenizer(Tokenizer):
     """
-        Tokenizer based on space character only.
+    Tokenizer based on space character only.
     """
 
     def __init__(self):
@@ -151,7 +151,9 @@ class SpaceTokenizer(Tokenizer):
                     start_position = index - len(word)
                     tokens.append(
                         Token(
-                            text=word, start_position=start_position, whitespace_after=True
+                            text=word,
+                            start_position=start_position,
+                            whitespace_after=True,
                         )
                     )
 
@@ -171,11 +173,11 @@ class SpaceTokenizer(Tokenizer):
 
 class JapaneseTokenizer(Tokenizer):
     """
-        Tokenizer using konoha, a third party library which supports
-        multiple Japanese tokenizer such as MeCab, Janome and SudachiPy.
+    Tokenizer using konoha, a third party library which supports
+    multiple Japanese tokenizer such as MeCab, Janome and SudachiPy.
 
-        For further details see:
-            https://github.com/himkt/konoha
+    For further details see:
+        https://github.com/himkt/konoha
     """
 
     def __init__(self, tokenizer: str, sudachi_mode: str = "A"):
@@ -197,7 +199,9 @@ class JapaneseTokenizer(Tokenizer):
                 '- If you want to use MeCab, install mecab with "sudo apt install mecab libmecab-dev mecab-ipadic".'
             )
             log.warning('- Install konoha with "pip install konoha[{tokenizer_name}]"')
-            log.warning('  - You can choose tokenizer from ["mecab", "janome", "sudachi"].')
+            log.warning(
+                '  - You can choose tokenizer from ["mecab", "janome", "sudachi"].'
+            )
             log.warning("-" * 100)
             exit()
 
@@ -215,15 +219,14 @@ class JapaneseTokenizer(Tokenizer):
             words.extend(list(map(str, konoha_tokens)))
 
         # determine offsets for whitespace_after field
-        index = text.index
         current_offset = 0
         previous_word_offset = -1
         previous_token = None
         for word in words:
             try:
-                word_offset = index(word, current_offset)
+                word_offset = text.index(word, current_offset)
                 start_position = word_offset
-            except:
+            except ValueError:
                 word_offset = previous_word_offset + 1
                 start_position = (
                     current_offset + 1 if current_offset > 0 else current_offset
@@ -245,16 +248,12 @@ class JapaneseTokenizer(Tokenizer):
 
     @property
     def name(self) -> str:
-        return (
-                self.__class__.__name__
-                + "_"
-                + self.tokenizer
-        )
+        return self.__class__.__name__ + "_" + self.tokenizer
 
 
 class TokenizerWrapper(Tokenizer):
     """
-        Helper class to wrap tokenizer functions to the class-based tokenizer interface.
+    Helper class to wrap tokenizer functions to the class-based tokenizer interface.
     """
 
     def __init__(self, tokenizer_func: Callable[[str], List[Token]]):
@@ -271,13 +270,13 @@ class TokenizerWrapper(Tokenizer):
 
 class SciSpacyTokenizer(Tokenizer):
     """
-        Implementation of :class:`Tokenizer` which uses the en_core_sci_sm Spacy model
-        extended by special heuristics to consider characters such as "(", ")" "-" as
-        additional token separators. The latter distinguishs this implementation from
-        :class:`SpacyTokenizer`.
+    Implementation of :class:`Tokenizer` which uses the en_core_sci_sm Spacy model
+    extended by special heuristics to consider characters such as "(", ")" "-" as
+    additional token separators. The latter distinguishs this implementation from
+    :class:`SpacyTokenizer`.
 
-        Note, you if you want to use the "normal" SciSpacy tokenization just use
-        :class:`SpacyTokenizer`.
+    Note, you if you want to use the "normal" SciSpacy tokenization just use
+    :class:`SpacyTokenizer`.
     """
 
     def __init__(self):
@@ -299,52 +298,51 @@ class SciSpacyTokenizer(Tokenizer):
 
         def combined_rule_prefixes() -> List[str]:
             """Helper function that returns the prefix pattern for the tokenizer.
-               It is a helper function to accommodate spacy tests that only test
-               prefixes.
+            It is a helper function to accommodate spacy tests that only test
+            prefixes.
             """
             prefix_punct = char_classes.PUNCT.replace("|", " ")
 
             prefixes = (
-                    ["§", "%", "=", r"\+"]
-                    + char_classes.split_chars(prefix_punct)
-                    + char_classes.LIST_ELLIPSES
-                    + char_classes.LIST_QUOTES
-                    + char_classes.LIST_CURRENCY
-                    + char_classes.LIST_ICONS
+                ["§", "%", "=", r"\+"]
+                + char_classes.split_chars(prefix_punct)
+                + char_classes.LIST_ELLIPSES
+                + char_classes.LIST_QUOTES
+                + char_classes.LIST_CURRENCY
+                + char_classes.LIST_ICONS
             )
             return prefixes
 
         infixes = (
-                char_classes.LIST_ELLIPSES
-                + char_classes.LIST_ICONS
-                + [
-                    r"×",  # added this special x character to tokenize it separately
-                    r"[\(\)\[\]\{\}]",  # want to split at every bracket
-                    r"/",  # want to split at every slash
-                    r"(?<=[0-9])[+\-\*^](?=[0-9-])",
-                    r"(?<=[{al}])\.(?=[{au}])".format(
-                        al=char_classes.ALPHA_LOWER, au=char_classes.ALPHA_UPPER
-                    ),
-                    r"(?<=[{a}]),(?=[{a}])".format(a=char_classes.ALPHA),
-                    r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(
-                        a=char_classes.ALPHA, h=char_classes.HYPHENS
-                    ),
-                    r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=char_classes.ALPHA),
-                ]
+            char_classes.LIST_ELLIPSES
+            + char_classes.LIST_ICONS
+            + [
+                r"×",  # added this special x character to tokenize it separately
+                r"[\(\)\[\]\{\}]",  # want to split at every bracket
+                r"/",  # want to split at every slash
+                r"(?<=[0-9])[+\-\*^](?=[0-9-])",
+                r"(?<=[{al}])\.(?=[{au}])".format(
+                    al=char_classes.ALPHA_LOWER, au=char_classes.ALPHA_UPPER
+                ),
+                r"(?<=[{a}]),(?=[{a}])".format(a=char_classes.ALPHA),
+                r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(
+                    a=char_classes.ALPHA, h=char_classes.HYPHENS
+                ),
+                r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=char_classes.ALPHA),
+            ]
         )
 
         prefix_re = spacy.util.compile_prefix_regex(combined_rule_prefixes())
         infix_re = spacy.util.compile_infix_regex(infixes)
 
         self.model = spacy.load(
-            "en_core_sci_sm", disable=["tagger", "ner", "parser", "textcat", "lemmatizer"]
+            "en_core_sci_sm",
+            disable=["tagger", "ner", "parser", "textcat", "lemmatizer"],
         )
         self.model.tokenizer.prefix_search = prefix_re.search
         self.model.tokenizer.infix_finditer = infix_re.finditer
 
     def tokenize(self, text: str) -> List[Token]:
-        from spacy.tokens.token import Token as SpacyToken
-
         sentence = self.model(text)
 
         previous_token = None
@@ -355,9 +353,14 @@ class SciSpacyTokenizer(Tokenizer):
             )
             tokens.append(token)
 
-            if (previous_token is not None) and (
-                    token.start_pos == previous_token.start_pos + len(previous_token.text)
-            ) and (not word.text[0].isspace()):
+            if (
+                (previous_token is not None)
+                and (
+                    token.start_pos
+                    == previous_token.start_pos + len(previous_token.text)
+                )
+                and (not word.text[0].isspace())
+            ):
                 previous_token.whitespace_after = False
 
             previous_token = token
@@ -367,11 +370,11 @@ class SciSpacyTokenizer(Tokenizer):
     @property
     def name(self) -> str:
         return (
-                self.__class__.__name__
-                + "_"
-                + self.model.meta["name"]
-                + "_"
-                + self.model.meta["version"]
+            self.__class__.__name__
+            + "_"
+            + self.model.meta["name"]
+            + "_"
+            + self.model.meta["version"]
         )
 
 
@@ -407,9 +410,9 @@ class SentenceSplitter(ABC):
 
 class SegtokSentenceSplitter(SentenceSplitter):
     """
-        Implementation of :class:`SentenceSplitter` using the SegTok library.
+    Implementation of :class:`SentenceSplitter` using the SegTok library.
 
-        For further details see: https://github.com/fnl/segtok
+    For further details see: https://github.com/fnl/segtok
     """
 
     def __init__(self, tokenizer: Tokenizer = SegtokTokenizer()):
@@ -425,13 +428,15 @@ class SegtokSentenceSplitter(SentenceSplitter):
             try:
                 sentence_offset = text.index(sentence, sentence_offset)
             except ValueError as error:
-                raise AssertionError(f"Can't find the sentence offset for sentence {repr(sentence)} "
-                                     f"starting from position {repr(sentence_offset)}") from error
+                raise AssertionError(
+                    f"Can't find the sentence offset for sentence {repr(sentence)} "
+                    f"starting from position {repr(sentence_offset)}"
+                ) from error
             sentences.append(
                 Sentence(
                     text=sentence,
                     use_tokenizer=self._tokenizer,
-                    start_position=sentence_offset
+                    start_position=sentence_offset,
                 )
             )
 
@@ -490,7 +495,7 @@ class SpacySentenceSplitter(SentenceSplitter):
             Sentence(
                 text=str(spacy_sent),
                 use_tokenizer=self._tokenizer,
-                start_position=spacy_sent.start_char
+                start_position=spacy_sent.start_char,
             )
             for spacy_sent in document.sents
             if len(str(spacy_sent)) > 0
@@ -509,13 +514,13 @@ class SpacySentenceSplitter(SentenceSplitter):
     @property
     def name(self) -> str:
         return (
-                self.__class__.__name__
-                + "_"
-                + self.model.meta["name"]
-                + "_"
-                + self.model.meta["version"]
-                + "_"
-                + self._tokenizer.name
+            self.__class__.__name__
+            + "_"
+            + self.model.meta["name"]
+            + "_"
+            + self.model.meta["version"]
+            + "_"
+            + self._tokenizer.name
         )
 
 
@@ -526,7 +531,9 @@ class SciSpacySentenceSplitter(SpacySentenceSplitter):
     """
 
     def __init__(self):
-        super(SciSpacySentenceSplitter, self).__init__("en_core_sci_sm", SciSpacyTokenizer())
+        super(SciSpacySentenceSplitter, self).__init__(
+            "en_core_sci_sm", SciSpacyTokenizer()
+        )
 
 
 class TagSentenceSplitter(SentenceSplitter):
@@ -554,7 +561,7 @@ class TagSentenceSplitter(SentenceSplitter):
                 Sentence(
                     text=sentence,
                     use_tokenizer=self._tokenizer,
-                    start_position=last_offset
+                    start_position=last_offset,
                 )
             ]
 
@@ -572,13 +579,7 @@ class TagSentenceSplitter(SentenceSplitter):
 
     @property
     def name(self) -> str:
-        return (
-                self.__class__.__name__
-                + "_"
-                + self.tag
-                + "_"
-                + self._tokenizer.name
-        )
+        return self.__class__.__name__ + "_" + self.tag + "_" + self._tokenizer.name
 
 
 class NewlineSentenceSplitter(TagSentenceSplitter):
@@ -592,11 +593,7 @@ class NewlineSentenceSplitter(TagSentenceSplitter):
 
     @property
     def name(self) -> str:
-        return (
-                self.__class__.__name__
-                + "_"
-                + self._tokenizer.name
-        )
+        return self.__class__.__name__ + "_" + self._tokenizer.name
 
 
 class NoSentenceSplitter(SentenceSplitter):
@@ -609,13 +606,7 @@ class NoSentenceSplitter(SentenceSplitter):
         self._tokenizer = tokenizer
 
     def split(self, text: str) -> List[Sentence]:
-        return [
-            Sentence(
-                text=text,
-                use_tokenizer=self._tokenizer,
-                start_position=0
-            )
-        ]
+        return [Sentence(text=text, use_tokenizer=self._tokenizer, start_position=0)]
 
     @property
     def tokenizer(self) -> Tokenizer:
@@ -627,8 +618,4 @@ class NoSentenceSplitter(SentenceSplitter):
 
     @property
     def name(self) -> str:
-        return (
-                self.__class__.__name__
-                + "_"
-                + self._tokenizer.name
-        )
+        return self.__class__.__name__ + "_" + self._tokenizer.name

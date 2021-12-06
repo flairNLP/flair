@@ -10,7 +10,7 @@ from torch import nn
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import DT, DT2, DataPair, DataPoint
+from flair.data import DT, DT2, DataPair
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
 from flair.training_utils import Result, store_embeddings
@@ -275,14 +275,16 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
         out_path: Union[str, Path] = None,
         embedding_storage_mode="none",
         mini_batch_size=32,
-        num_workers: Optional[int]=8,
-        **kwargs
+        num_workers: Optional[int] = 8,
+        **kwargs,
     ) -> Result:
         # assumes that for each data pair there's at least one embedding per modality
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
 
-        data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
+        data_loader = DataLoader(
+            data_points, batch_size=mini_batch_size, num_workers=num_workers
+        )
 
         with torch.no_grad():
             # pre-compute embeddings for all targets in evaluation dataset
@@ -299,7 +301,9 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
                         self._embed_target(target_inputs).to(self.eval_device)
                     )
                 store_embeddings(data_points, embedding_storage_mode)
-            all_target_embeddings = torch.cat(all_target_embeddings_list, dim=0)  # [n0, d0]
+            all_target_embeddings = torch.cat(
+                all_target_embeddings_list, dim=0
+            )  # [n0, d0]
             assert len(target_index) == all_target_embeddings.shape[0]
 
             ranks = []
@@ -358,12 +362,12 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
         )
 
         return Result(
-                validated_measure,
-                results_header_str,
-                epoch_results_str,
-                detailed_results,
-                loss=0.0,
-            )
+            validated_measure,
+            results_header_str,
+            epoch_results_str,
+            detailed_results,
+            loss=0.0,
+        )
 
     def _get_state_dict(self):
         model_state = {

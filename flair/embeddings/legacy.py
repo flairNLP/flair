@@ -46,7 +46,7 @@ log = logging.getLogger("flair")
 
 
 class CharLMEmbeddings(TokenEmbeddings):
-    """Contextual string embeddings of words, as proposed in Akbik et al., 2018. """
+    """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
     @deprecated(version="0.4", reason="Use 'FlairEmbeddings' instead.")
     def __init__(
@@ -319,7 +319,6 @@ class CharLMEmbeddings(TokenEmbeddings):
 
 
 class TransformerXLEmbeddings(TokenEmbeddings):
-
     @deprecated(
         version="0.4.5",
         reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
@@ -385,7 +384,6 @@ class TransformerXLEmbeddings(TokenEmbeddings):
 
 
 class XLNetEmbeddings(TokenEmbeddings):
-
     @deprecated(
         version="0.4.5",
         reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
@@ -453,7 +451,6 @@ class XLNetEmbeddings(TokenEmbeddings):
 
 
 class XLMEmbeddings(TokenEmbeddings):
-
     @deprecated(
         version="0.4.5",
         reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
@@ -522,7 +519,6 @@ class XLMEmbeddings(TokenEmbeddings):
 
 
 class OpenAIGPTEmbeddings(TokenEmbeddings):
-
     @deprecated(
         version="0.4.5",
         reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
@@ -590,7 +586,6 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
 
 
 class OpenAIGPT2Embeddings(TokenEmbeddings):
-
     @deprecated(
         version="0.4.5",
         reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
@@ -652,7 +647,6 @@ class OpenAIGPT2Embeddings(TokenEmbeddings):
 
 
 class RoBERTaEmbeddings(TokenEmbeddings):
-
     @deprecated(
         version="0.4.5",
         reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
@@ -714,7 +708,6 @@ class RoBERTaEmbeddings(TokenEmbeddings):
 
 
 class CamembertEmbeddings(TokenEmbeddings):
-
     @deprecated(
         version="0.4.5",
         reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
@@ -765,7 +758,8 @@ class CamembertEmbeddings(TokenEmbeddings):
         # 1-camembert-base -> camembert-base
         if any(char.isdigit() for char in self.name):
             self.tokenizer = CamembertTokenizer.from_pretrained(
-                "-".join(self.name.split("-")[1:]))
+                "-".join(self.name.split("-")[1:])
+            )
         else:
             self.tokenizer = CamembertTokenizer.from_pretrained(self.name)
 
@@ -793,7 +787,6 @@ class CamembertEmbeddings(TokenEmbeddings):
 
 
 class XLMRobertaEmbeddings(TokenEmbeddings):
-
     @deprecated(
         version="0.4.5",
         reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
@@ -868,6 +861,7 @@ class XLMRobertaEmbeddings(TokenEmbeddings):
 
         return sentences
 
+
 def _extract_embeddings(
     hidden_states: List[torch.FloatTensor],
     layers: List[int],
@@ -923,7 +917,7 @@ def _extract_embeddings(
 def _build_token_subwords_mapping(
     sentence: Sentence, tokenizer: PreTrainedTokenizer
 ) -> Tuple[Dict[int, int], str]:
-    """ Builds a dictionary that stores the following information:
+    """Builds a dictionary that stores the following information:
     Token index (key) and number of corresponding subwords (value) for a sentence.
 
     :param sentence: input sentence
@@ -949,7 +943,7 @@ def _build_token_subwords_mapping(
 def _build_token_subwords_mapping_gpt2(
     sentence: Sentence, tokenizer: PreTrainedTokenizer
 ) -> Tuple[Dict[int, int], str]:
-    """ Builds a dictionary that stores the following information:
+    """Builds a dictionary that stores the following information:
     Token index (key) and number of corresponding subwords (value) for a sentence.
 
     :param sentence: input sentence
@@ -1058,7 +1052,6 @@ def _get_transformer_sentence_embeddings(
 
 
 class BertEmbeddings(TokenEmbeddings):
-
     @deprecated(
         version="0.4.5",
         reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
@@ -1415,7 +1408,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
-         only if embeddings are non-static."""
+        only if embeddings are non-static."""
 
         if type(sentences) is Sentence:
             sentences = [sentences]
@@ -1445,9 +1438,9 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
             # PADDING: pad shorter sentences out
             for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
                 word_embeddings.append(
-                    torch.zeros(
-                        self.length_of_all_token_embeddings, dtype=torch.float
-                    ).unsqueeze(0).to(flair.device)
+                    torch.zeros(self.length_of_all_token_embeddings, dtype=torch.float)
+                    .unsqueeze(0)
+                    .to(flair.device)
                 )
 
             word_embeddings_tensor = torch.cat(word_embeddings, 0).to(flair.device)

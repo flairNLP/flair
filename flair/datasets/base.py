@@ -15,16 +15,16 @@ log = logging.getLogger("flair")
 
 class DataLoader(torch.utils.data.dataloader.DataLoader):
     def __init__(
-            self,
-            dataset,
-            batch_size=1,
-            shuffle=False,
-            sampler=None,
-            batch_sampler=None,
-            num_workers=None,
-            drop_last=False,
-            timeout=0,
-            worker_init_fn=None,
+        self,
+        dataset,
+        batch_size=1,
+        shuffle=False,
+        sampler=None,
+        batch_sampler=None,
+        num_workers=None,
+        drop_last=False,
+        timeout=0,
+        worker_init_fn=None,
     ):
 
         # in certain cases, multi-CPU data loading makes no sense and slows
@@ -64,7 +64,7 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
 
     @staticmethod
     def estimate_max_workers():
-        if hasattr(os, 'sched_getaffinity'):
+        if hasattr(os, "sched_getaffinity"):
             try:
                 return len(os.sched_getaffinity(0))
             except Exception:
@@ -103,9 +103,11 @@ class StringDataset(FlairDataset):
     """
 
     def __init__(
-            self,
-            texts: Union[str, List[str]],
-            use_tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        self,
+        texts: Union[str, List[str]],
+        use_tokenizer: Union[
+            bool, Callable[[str], List[Token]], Tokenizer
+        ] = SpaceTokenizer(),
     ):
         """
         Instantiate StringDataset
@@ -135,19 +137,19 @@ class StringDataset(FlairDataset):
 
 class MongoDataset(FlairDataset):
     def __init__(
-            self,
-            query: str,
-            host: str,
-            port: int,
-            database: str,
-            collection: str,
-            text_field: str,
-            categories_field: List[str] = None,
-            max_tokens_per_doc: int = -1,
-            max_chars_per_doc: int = -1,
-            tokenizer: Tokenizer = SegtokTokenizer(),
-            in_memory: bool = True,
-            tag_type: str = "class",
+        self,
+        query: str,
+        host: str,
+        port: int,
+        database: str,
+        collection: str,
+        text_field: str,
+        categories_field: List[str] = None,
+        max_tokens_per_doc: int = -1,
+        max_chars_per_doc: int = -1,
+        tokenizer: Tokenizer = SegtokTokenizer(),
+        in_memory: bool = True,
+        tag_type: str = "class",
     ):
         """
         Reads Mongo collections. Each collection should contain one document/text per item.
@@ -209,10 +211,8 @@ class MongoDataset(FlairDataset):
 
         start = 0
 
-        kwargs = lambda start: {"filter": query, "skip": start, "limit": 0}
-
         if self.in_memory:
-            for document in self.__cursor.find(**kwargs(start)):
+            for document in self.__cursor.find(filter=query, skip=start, limit=0):
                 sentence = self._parse_document_to_sentence(
                     document[self.text],
                     [document[_] if _ in document else "" for _ in self.categories],
@@ -226,7 +226,10 @@ class MongoDataset(FlairDataset):
             self.total_sentence_count = self.__cursor.count_documents()
 
     def _parse_document_to_sentence(
-            self, text: str, labels: List[str], tokenizer: Union[Callable[[str], List[Token]], Tokenizer]
+        self,
+        text: str,
+        labels: List[str],
+        tokenizer: Union[Callable[[str], List[Token]], Tokenizer],
     ):
         if self.max_chars_per_doc > 0:
             text = text[: self.max_chars_per_doc]
@@ -238,8 +241,8 @@ class MongoDataset(FlairDataset):
 
             if self.max_tokens_per_doc > 0:
                 sentence.tokens = sentence.tokens[
-                                  : min(len(sentence), self.max_tokens_per_doc)
-                                  ]
+                    : min(len(sentence), self.max_tokens_per_doc)
+                ]
 
             return sentence
         return None
@@ -263,7 +266,9 @@ class MongoDataset(FlairDataset):
             return sentence
 
 
-def find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits=True):
+def find_train_dev_test_files(
+    data_folder, dev_file, test_file, train_file, autofind_splits=True
+):
     if type(data_folder) == str:
         data_folder: Path = Path(data_folder)
 
@@ -282,7 +287,7 @@ def find_train_dev_test_files(data_folder, dev_file, test_file, train_file, auto
             file_name = file.name
             if not suffixes_to_ignore.isdisjoint(file.suffixes):
                 continue
-            if "train" in file_name and not "54019" in file_name:
+            if "train" in file_name and "54019" not in file_name:
                 train_file = file
             if "dev" in file_name:
                 dev_file = file

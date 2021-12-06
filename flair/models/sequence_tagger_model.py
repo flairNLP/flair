@@ -66,22 +66,22 @@ def pad_tensors(tensor_list):
 
 class SequenceTagger(flair.nn.Classifier[Sentence]):
     def __init__(
-            self,
-            hidden_size: int,
-            embeddings: TokenEmbeddings,
-            tag_dictionary: Dictionary,
-            tag_type: str,
-            use_crf: bool = True,
-            use_rnn: bool = True,
-            rnn_layers: int = 1,
-            dropout: float = 0.0,
-            word_dropout: float = 0.05,
-            locked_dropout: float = 0.5,
-            reproject_embeddings: Union[bool, int] = True,
-            train_initial_hidden_state: bool = False,
-            rnn_type: str = "LSTM",
-            beta: float = 1.0,
-            loss_weights: Dict[str, float] = None,
+        self,
+        hidden_size: int,
+        embeddings: TokenEmbeddings,
+        tag_dictionary: Dictionary,
+        tag_type: str,
+        use_crf: bool = True,
+        use_rnn: bool = True,
+        rnn_layers: int = 1,
+        dropout: float = 0.0,
+        word_dropout: float = 0.05,
+        locked_dropout: float = 0.5,
+        reproject_embeddings: Union[bool, int] = True,
+        train_initial_hidden_state: bool = False,
+        rnn_type: str = "LSTM",
+        beta: float = 1.0,
+        loss_weights: Dict[str, float] = None,
     ):
         """
         Initializes a SequenceTagger
@@ -130,11 +130,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # Initialize the weight tensor
         if loss_weights is not None:
             n_classes = len(self.tag_dictionary)
-            weight_list = [1. for i in range(n_classes)]
+            weight_list = [1.0 for i in range(n_classes)]
             for i, tag in enumerate(self.tag_dictionary.get_items()):
                 if tag in loss_weights.keys():
                     weight_list[i] = loss_weights[tag]
-            self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(weight_list).to(flair.device)
+            self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(
+                weight_list
+            ).to(flair.device)
         else:
             self.loss_weights = None
 
@@ -208,9 +210,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 hidden_size * num_directions, len(tag_dictionary)
             )
         else:
-            self.linear = torch.nn.Linear(
-                rnn_input_dim, len(tag_dictionary)
-            )
+            self.linear = torch.nn.Linear(rnn_input_dim, len(tag_dictionary))
 
         if self.use_crf:
             self.transitions = torch.nn.Parameter(
@@ -218,11 +218,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             )
 
             self.transitions.detach()[
-            self.tag_dictionary.get_idx_for_item(START_TAG), :
+                self.tag_dictionary.get_idx_for_item(START_TAG), :
             ] = -10000
 
             self.transitions.detach()[
-            :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
+                :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
             ] = -10000
 
         self.to(flair.device)
@@ -253,8 +253,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         rnn_type = "LSTM" if "rnn_type" not in state.keys() else state["rnn_type"]
         use_dropout = 0.0 if "use_dropout" not in state.keys() else state["use_dropout"]
-        use_word_dropout = 0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
-        use_locked_dropout = 0.0 if "use_locked_dropout" not in state.keys() else state["use_locked_dropout"]
+        use_word_dropout = (
+            0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
+        )
+        use_locked_dropout = (
+            0.0
+            if "use_locked_dropout" not in state.keys()
+            else state["use_locked_dropout"]
+        )
 
         train_initial_hidden_state = (
             False
@@ -263,7 +269,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         )
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
-        reproject_embeddings = True if "reproject_embeddings" not in state.keys() else state["reproject_embeddings"]
+        reproject_embeddings = (
+            True
+            if "reproject_embeddings" not in state.keys()
+            else state["reproject_embeddings"]
+        )
         if "reproject_to" in state.keys():
             reproject_embeddings = state["reproject_to"]
 
@@ -288,14 +298,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return model
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size=32,
-            all_tag_prob: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size=32,
+        all_tag_prob: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
     ):
         """
         Predict sequence tags for Named Entity Recognition task
@@ -321,10 +331,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if not isinstance(sentences, list):
                 sentences = [sentences]
 
-            reordered_sentences: List[Union[Sentence, str]] = sorted(sentences, key=lambda s: len(s), reverse=True)
+            reordered_sentences: List[Union[Sentence, str]] = sorted(
+                sentences, key=lambda s: len(s), reverse=True
+            )
 
             dataloader = DataLoader(
-                dataset=FlairDatapointDataset(reordered_sentences), batch_size=mini_batch_size
+                dataset=FlairDatapointDataset(reordered_sentences),
+                batch_size=mini_batch_size,
             )
 
             if self.use_crf:
@@ -375,7 +388,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 return overall_loss, overall_count
 
     def forward_loss(
-            self, data_points: Union[List[Sentence], Sentence]
+        self, data_points: Union[List[Sentence], Sentence]
     ) -> Tuple[torch.Tensor, int]:
         if not isinstance(data_points, list):
             data_points = [data_points]
@@ -408,7 +421,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if nb_padding_tokens > 0:
                 t = pre_allocated_zero_tensor[
                     : self.embeddings.embedding_length * nb_padding_tokens
-                    ]
+                ]
                 all_embs.append(t)
 
         sentence_tensor = torch.cat(all_embs).view(
@@ -434,7 +447,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         if self.use_rnn:
             packed = torch.nn.utils.rnn.pack_padded_sequence(
-                sentence_tensor, torch.tensor(lengths), enforce_sorted=False, batch_first=True
+                sentence_tensor,
+                torch.tensor(lengths),
+                enforce_sorted=False,
+                batch_first=True,
             )
 
             # if initial hidden state is trainable, use this state
@@ -479,7 +495,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         pad_stop_tags = torch.cat([tags, stop], 1)
 
         for i in range(len(lens_)):
-            pad_stop_tags[i, lens_[i]:] = self.tag_dictionary.get_idx_for_item(
+            pad_stop_tags[i, lens_[i] :] = self.tag_dictionary.get_idx_for_item(
                 STOP_TAG
             )
 
@@ -497,7 +513,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return score
 
     def _calculate_loss(
-            self, features: torch.Tensor, sentences: List[Sentence]
+        self, features: torch.Tensor, sentences: List[Sentence]
     ) -> Tuple[torch.Tensor, int]:
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
@@ -529,21 +545,24 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         else:
             score = torch.zeros(1, device=flair.device)
             for sentence_feats, sentence_tags, sentence_length in zip(
-                    features, tag_list, lengths
+                features, tag_list, lengths
             ):
                 sentence_feats = sentence_feats[:sentence_length]
                 score += torch.nn.functional.cross_entropy(
-                    sentence_feats, sentence_tags, weight=self.loss_weights, reduction='sum',
+                    sentence_feats,
+                    sentence_tags,
+                    weight=self.loss_weights,
+                    reduction="sum",
                 )
 
             return score, token_count
 
     def _obtain_labels(
-            self,
-            feature: torch.Tensor,
-            batch_sentences: List[Sentence],
-            transitions: Optional[np.ndarray],
-            get_all_tags: bool,
+        self,
+        feature: torch.Tensor,
+        batch_sentences: List[Sentence],
+        transitions: Optional[np.ndarray],
+        get_all_tags: bool,
     ) -> Tuple[List[List[Label]], List[List[List[Label]]]]:
         """
         Returns a tuple of two lists:
@@ -609,7 +628,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return y / y.sum(axis=axis, keepdims=True)
 
     def _viterbi_decode(
-            self, feats: np.ndarray, transitions: np.ndarray, all_scores: bool
+        self, feats: np.ndarray, transitions: np.ndarray, all_scores: bool
     ):
         id_start = self.tag_dictionary.get_idx_for_item(START_TAG)
         id_stop = self.tag_dictionary.get_idx_for_item(STOP_TAG)
@@ -701,11 +720,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             emit_score = feats[:, i, :]
 
             tag_var = (
-                    emit_score[:, :, None].repeat(1, 1, transitions.shape[2])
-                    + transitions
-                    + forward_var[:, i, :][:, :, None]
-                    .repeat(1, 1, transitions.shape[2])
-                    .transpose(2, 1)
+                emit_score[:, :, None].repeat(1, 1, transitions.shape[2])
+                + transitions
+                + forward_var[:, i, :][:, :, None]
+                .repeat(1, 1, transitions.shape[2])
+                .transpose(2, 1)
             )
 
             max_tag_var, _ = torch.max(tag_var, dim=2)
@@ -724,8 +743,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         forward_var = forward_var[range(forward_var.shape[0]), lens_, :]
 
         terminal_var = forward_var + self.transitions[
-                                         self.tag_dictionary.get_idx_for_item(STOP_TAG)
-                                     ][None, :].repeat(forward_var.shape[0], 1)
+            self.tag_dictionary.get_idx_for_item(STOP_TAG)
+        ][None, :].repeat(forward_var.shape[0], 1)
 
         alpha = log_sum_exp_batch(terminal_var)
 
@@ -800,38 +819,62 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         hu_model_map = {
             # English NER models
             "ner": "/".join([hu_path, "ner", "en-ner-conll03-v0.4.pt"]),
-            "ner-pooled": "/".join([hu_path, "ner-pooled", "en-ner-conll03-pooled-v0.5.pt"]),
+            "ner-pooled": "/".join(
+                [hu_path, "ner-pooled", "en-ner-conll03-pooled-v0.5.pt"]
+            ),
             "ner-fast": "/".join([hu_path, "ner-fast", "en-ner-fast-conll03-v0.4.pt"]),
-            "ner-ontonotes": "/".join([hu_path, "ner-ontonotes", "en-ner-ontonotes-v0.4.pt"]),
-            "ner-ontonotes-fast": "/".join([hu_path, "ner-ontonotes-fast", "en-ner-ontonotes-fast-v0.4.pt"]),
+            "ner-ontonotes": "/".join(
+                [hu_path, "ner-ontonotes", "en-ner-ontonotes-v0.4.pt"]
+            ),
+            "ner-ontonotes-fast": "/".join(
+                [hu_path, "ner-ontonotes-fast", "en-ner-ontonotes-fast-v0.4.pt"]
+            ),
             # Multilingual NER models
             "ner-multi": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
             "multi-ner": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
-            "ner-multi-fast": "/".join([hu_path, "multi-ner-fast", "ner-multi-fast.pt"]),
+            "ner-multi-fast": "/".join(
+                [hu_path, "multi-ner-fast", "ner-multi-fast.pt"]
+            ),
             # English POS models
             "upos": "/".join([hu_path, "upos", "en-pos-ontonotes-v0.4.pt"]),
-            "upos-fast": "/".join([hu_path, "upos-fast", "en-upos-ontonotes-fast-v0.4.pt"]),
+            "upos-fast": "/".join(
+                [hu_path, "upos-fast", "en-upos-ontonotes-fast-v0.4.pt"]
+            ),
             "pos": "/".join([hu_path, "pos", "en-pos-ontonotes-v0.5.pt"]),
-            "pos-fast": "/".join([hu_path, "pos-fast", "en-pos-ontonotes-fast-v0.5.pt"]),
+            "pos-fast": "/".join(
+                [hu_path, "pos-fast", "en-pos-ontonotes-fast-v0.5.pt"]
+            ),
             # Multilingual POS models
             "pos-multi": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
             "multi-pos": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
-            "pos-multi-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
-            "multi-pos-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
+            "pos-multi-fast": "/".join(
+                [hu_path, "multi-pos-fast", "pos-multi-fast.pt"]
+            ),
+            "multi-pos-fast": "/".join(
+                [hu_path, "multi-pos-fast", "pos-multi-fast.pt"]
+            ),
             # English SRL models
             "frame": "/".join([hu_path, "frame", "en-frame-ontonotes-v0.4.pt"]),
-            "frame-fast": "/".join([hu_path, "frame-fast", "en-frame-ontonotes-fast-v0.4.pt"]),
+            "frame-fast": "/".join(
+                [hu_path, "frame-fast", "en-frame-ontonotes-fast-v0.4.pt"]
+            ),
             # English chunking models
             "chunk": "/".join([hu_path, "chunk", "en-chunk-conll2000-v0.4.pt"]),
-            "chunk-fast": "/".join([hu_path, "chunk-fast", "en-chunk-conll2000-fast-v0.4.pt"]),
+            "chunk-fast": "/".join(
+                [hu_path, "chunk-fast", "en-chunk-conll2000-fast-v0.4.pt"]
+            ),
             # Danish models
             "da-pos": "/".join([hu_path, "da-pos", "da-pos-v0.1.pt"]),
             "da-ner": "/".join([hu_path, "NER-danish", "da-ner-v0.1.pt"]),
             # German models
             "de-pos": "/".join([hu_path, "de-pos", "de-pos-ud-hdt-v0.5.pt"]),
-            "de-pos-tweets": "/".join([hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]),
+            "de-pos-tweets": "/".join(
+                [hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]
+            ),
             "de-ner": "/".join([hu_path, "de-ner", "de-ner-conll03-v0.4.pt"]),
-            "de-ner-germeval": "/".join([hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]),
+            "de-ner-germeval": "/".join(
+                [hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]
+            ),
             "de-ler": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
             "de-ner-legal": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
             # French models
@@ -843,42 +886,95 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "ml-pos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt",
             "ml-upos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt",
             # Portuguese models
-            "pt-pos-clinical": "/".join([hu_path, "pt-pos-clinical", "pucpr-flair-clinical-pos-tagging-best-model.pt"]),
+            "pt-pos-clinical": "/".join(
+                [
+                    hu_path,
+                    "pt-pos-clinical",
+                    "pucpr-flair-clinical-pos-tagging-best-model.pt",
+                ]
+            ),
             # Keyphase models
             "keyphrase": "/".join([hu_path, "keyphrase", "keyphrase-en-scibert.pt"]),
             "negation-speculation": "/".join(
-                [hu_path, "negation-speculation", "negation-speculation-model.pt"]),
+                [hu_path, "negation-speculation", "negation-speculation-model.pt"]
+            ),
             # Biomedical models
             "hunflair-paper-cellline": "/".join(
-                [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_smallish_models",
+                    "cellline",
+                    "hunflair-celline-v1.0.pt",
+                ]
             ),
             "hunflair-paper-chemical": "/".join(
-                [hu_path, "hunflair_smallish_models", "chemical", "hunflair-chemical-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_smallish_models",
+                    "chemical",
+                    "hunflair-chemical-v1.0.pt",
+                ]
             ),
             "hunflair-paper-disease": "/".join(
-                [hu_path, "hunflair_smallish_models", "disease", "hunflair-disease-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_smallish_models",
+                    "disease",
+                    "hunflair-disease-v1.0.pt",
+                ]
             ),
             "hunflair-paper-gene": "/".join(
                 [hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]
             ),
             "hunflair-paper-species": "/".join(
-                [hu_path, "hunflair_smallish_models", "species", "hunflair-species-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_smallish_models",
+                    "species",
+                    "hunflair-species-v1.0.pt",
+                ]
             ),
             "hunflair-cellline": "/".join(
-                [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_smallish_models",
+                    "cellline",
+                    "hunflair-celline-v1.0.pt",
+                ]
             ),
             "hunflair-chemical": "/".join(
-                [hu_path, "hunflair_allcorpus_models", "huner-chemical", "hunflair-chemical-full-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_allcorpus_models",
+                    "huner-chemical",
+                    "hunflair-chemical-full-v1.0.pt",
+                ]
             ),
             "hunflair-disease": "/".join(
-                [hu_path, "hunflair_allcorpus_models", "huner-disease", "hunflair-disease-full-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_allcorpus_models",
+                    "huner-disease",
+                    "hunflair-disease-full-v1.0.pt",
+                ]
             ),
             "hunflair-gene": "/".join(
-                [hu_path, "hunflair_allcorpus_models", "huner-gene", "hunflair-gene-full-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_allcorpus_models",
+                    "huner-gene",
+                    "hunflair-gene-full-v1.0.pt",
+                ]
             ),
             "hunflair-species": "/".join(
-                [hu_path, "hunflair_allcorpus_models", "huner-species", "hunflair-species-full-v1.1.pt"]
-            )}
+                [
+                    hu_path,
+                    "hunflair_allcorpus_models",
+                    "huner-species",
+                    "hunflair-species-full-v1.1.pt",
+                ]
+            ),
+        }
 
         cache_dir = Path("models")
 
@@ -897,11 +993,15 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             # output information
             log.info("-" * 80)
             log.info(
-                f"The model key '{model_name}' now maps to 'https://huggingface.co/{hf_model_name}' on the HuggingFace ModelHub")
-            log.info(f" - The most current version of the model is automatically downloaded from there.")
+                f"The model key '{model_name}' now maps to 'https://huggingface.co/{hf_model_name}' on the HuggingFace ModelHub"
+            )
+            log.info(
+                " - The most current version of the model is automatically downloaded from there."
+            )
             if model_name in hu_model_map:
                 log.info(
-                    f" - (you can alternatively manually download the original model at {hu_model_map[model_name]})")
+                    " - (you can alternatively manually download the original model at {hu_model_map[model_name]})"
+                )
             log.info("-" * 80)
 
             # use mapped name instead
@@ -914,32 +1014,64 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # special handling for the taggers by the @redewiegergabe project (TODO: move to model hub)
         elif model_name == "de-historic-indirect":
-            model_file = flair.cache_root / cache_dir / 'indirect' / 'final-model.pt'
+            model_file = flair.cache_root / cache_dir / "indirect" / "final-model.pt"
             if not model_file.exists():
-                cached_path('http://www.redewiedergabe.de/models/indirect.zip', cache_dir=cache_dir)
-                unzip_file(flair.cache_root / cache_dir / 'indirect.zip', flair.cache_root / cache_dir)
-            model_path = str(flair.cache_root / cache_dir / 'indirect' / 'final-model.pt')
+                cached_path(
+                    "http://www.redewiedergabe.de/models/indirect.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    flair.cache_root / cache_dir / "indirect.zip",
+                    flair.cache_root / cache_dir,
+                )
+            model_path = str(
+                flair.cache_root / cache_dir / "indirect" / "final-model.pt"
+            )
 
         elif model_name == "de-historic-direct":
-            model_file = flair.cache_root / cache_dir / 'direct' / 'final-model.pt'
+            model_file = flair.cache_root / cache_dir / "direct" / "final-model.pt"
             if not model_file.exists():
-                cached_path('http://www.redewiedergabe.de/models/direct.zip', cache_dir=cache_dir)
-                unzip_file(flair.cache_root / cache_dir / 'direct.zip', flair.cache_root / cache_dir)
-            model_path = str(flair.cache_root / cache_dir / 'direct' / 'final-model.pt')
+                cached_path(
+                    "http://www.redewiedergabe.de/models/direct.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    flair.cache_root / cache_dir / "direct.zip",
+                    flair.cache_root / cache_dir,
+                )
+            model_path = str(flair.cache_root / cache_dir / "direct" / "final-model.pt")
 
         elif model_name == "de-historic-reported":
-            model_file = flair.cache_root / cache_dir / 'reported' / 'final-model.pt'
+            model_file = flair.cache_root / cache_dir / "reported" / "final-model.pt"
             if not model_file.exists():
-                cached_path('http://www.redewiedergabe.de/models/reported.zip', cache_dir=cache_dir)
-                unzip_file(flair.cache_root / cache_dir / 'reported.zip', flair.cache_root / cache_dir)
-            model_path = str(flair.cache_root / cache_dir / 'reported' / 'final-model.pt')
+                cached_path(
+                    "http://www.redewiedergabe.de/models/reported.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    flair.cache_root / cache_dir / "reported.zip",
+                    flair.cache_root / cache_dir,
+                )
+            model_path = str(
+                flair.cache_root / cache_dir / "reported" / "final-model.pt"
+            )
 
         elif model_name == "de-historic-free-indirect":
-            model_file = flair.cache_root / cache_dir / 'freeIndirect' / 'final-model.pt'
+            model_file = (
+                flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt"
+            )
             if not model_file.exists():
-                cached_path('http://www.redewiedergabe.de/models/freeIndirect.zip', cache_dir=cache_dir)
-                unzip_file(flair.cache_root / cache_dir / 'freeIndirect.zip', flair.cache_root / cache_dir)
-            model_path = str(flair.cache_root / cache_dir / 'freeIndirect' / 'final-model.pt')
+                cached_path(
+                    "http://www.redewiedergabe.de/models/freeIndirect.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    flair.cache_root / cache_dir / "freeIndirect.zip",
+                    flair.cache_root / cache_dir,
+                )
+            model_path = str(
+                flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt"
+            )
 
         # for all other cases (not local file or special download location), use HF model hub
         else:
@@ -967,19 +1099,29 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             url = hf_hub_url(model_name, revision=revision, filename=hf_model_name)
 
             try:
-                model_path = cached_download(url=url, library_name="flair",
-                                             library_version=flair.__version__,
-                                             cache_dir=flair.cache_root / 'models' / model_folder)
-            except HTTPError as e:
+                model_path = cached_download(
+                    url=url,
+                    library_name="flair",
+                    library_version=flair.__version__,
+                    cache_dir=flair.cache_root / "models" / model_folder,
+                )
+            except HTTPError:
                 # output information
                 log.error("-" * 80)
                 log.error(
-                    f"ACHTUNG: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!")
+                    f"ACHTUNG: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
+                )
                 # log.error(f" - Error message: {e}")
-                log.error(f" -> Please check https://huggingface.co/models?filter=flair for all available models.")
-                log.error(f" -> Alternatively, point to a model file on your local drive.")
+                log.error(
+                    " -> Please check https://huggingface.co/models?filter=flair for all available models."
+                )
+                log.error(
+                    " -> Alternatively, point to a model file on your local drive."
+                )
                 log.error("-" * 80)
-                Path(flair.cache_root / 'models' / model_folder).rmdir()  # remove folder again if not valid
+                Path(
+                    flair.cache_root / "models" / model_folder
+                ).rmdir()  # remove folder again if not valid
 
         return model_path
 
@@ -997,10 +1139,12 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         print(tabulate(data, headers=["FROM", "TO", "SCORE"]))
 
     def __str__(self):
-        return super(flair.nn.Model, self).__str__().rstrip(')') + \
-               f'  (beta): {self.beta}\n' + \
-               f'  (weights): {self.weight_dict}\n' + \
-               f'  (weight_tensor) {self.loss_weights}\n)'
+        return (
+            super(flair.nn.Model, self).__str__().rstrip(")")
+            + f"  (beta): {self.beta}\n"
+            + f"  (weights): {self.weight_dict}\n"
+            + f"  (weight_tensor) {self.loss_weights}\n)"
+        )
 
     @property
     def label_type(self):
@@ -1032,9 +1176,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
             # now print labels in CoNLL format
             for token in datapoint:
-                eval_line = f"{token.text} " \
-                            f"{token.get_tag('gold_bio').value} " \
-                            f"{token.get_tag('predicted_bio').value}\n"
+                eval_line = (
+                    f"{token.text} "
+                    f"{token.get_tag('gold_bio').value} "
+                    f"{token.get_tag('predicted_bio').value}\n"
+                )
                 lines.append(eval_line)
             lines.append("\n")
         return lines
@@ -1046,12 +1192,12 @@ class MultiTagger:
         self.name_to_tagger = name_to_tagger
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size=32,
-            all_tag_prob: bool = False,
-            verbose: bool = False,
-            return_loss: bool = False,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size=32,
+        all_tag_prob: bool = False,
+        verbose: bool = False,
+        return_loss: bool = False,
     ):
         """
         Predict sequence tags for Named Entity Recognition task
@@ -1126,6 +1272,7 @@ class MultiTagger:
                 new_stack = []
                 d = model.embeddings.get_named_embeddings_dict()
                 import collections
+
                 od = collections.OrderedDict(sorted(d.items()))
 
                 for k, embedding in od.items():
@@ -1135,10 +1282,18 @@ class MultiTagger:
                     for previous_model in models:
 
                         # only re-use static embeddings
-                        if not embedding.static_embeddings: continue
+                        if not embedding.static_embeddings:
+                            continue
 
-                        if embedding.name in previous_model.embeddings.get_named_embeddings_dict():
-                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[embedding.name]
+                        if (
+                            embedding.name
+                            in previous_model.embeddings.get_named_embeddings_dict()
+                        ):
+                            previous_embedding = (
+                                previous_model.embeddings.get_named_embeddings_dict()[
+                                    embedding.name
+                                ]
+                            )
                             previous_embedding.name = previous_embedding.name[2:]
                             new_stack.append(previous_embedding)
                             embedding_found = True
@@ -1158,9 +1313,15 @@ class MultiTagger:
                 if not model.embeddings.static_embeddings:
 
                     for previous_model in models:
-                        if model.embeddings.name in previous_model.embeddings.get_named_embeddings_dict():
-                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[
-                                model.embeddings.name]
+                        if (
+                            model.embeddings.name
+                            in previous_model.embeddings.get_named_embeddings_dict()
+                        ):
+                            previous_embedding = (
+                                previous_model.embeddings.get_named_embeddings_dict()[
+                                    model.embeddings.name
+                                ]
+                            )
                             if not previous_embedding.static_embeddings:
                                 model.embeddings = previous_embedding
                                 break

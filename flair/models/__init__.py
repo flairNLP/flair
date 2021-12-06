@@ -7,3 +7,18 @@ from .relation_extractor_model import RelationExtractor
 from .sequence_tagger_model import MultiTagger, SequenceTagger
 from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier
+
+__all__ = [
+    "DependencyParser",
+    "EntityLinker",
+    "LanguageModel",
+    "Lemmatizer",
+    "TextPairClassifier",
+    "RelationExtractor",
+    "MultiTagger",
+    "SequenceTagger",
+    "FewshotClassifier",
+    "TARSClassifier",
+    "TARSTagger",
+    "TextClassifier",
+]

@@ -74,8 +74,11 @@ class Embeddings(torch.nn.Module, Generic[DT]):
         instance_parameter_names = set(inspect.signature(class_definition.__init__).parameters)  # type: ignore
         instance_parameter_names.remove("self")
         instance_parameter_names.add("__class__")
-        instance_parameters = {class_attribute: attribute_value for class_attribute, attribute_value in locals.items()
-                               if class_attribute in instance_parameter_names}
+        instance_parameters = {
+            class_attribute: attribute_value
+            for class_attribute, attribute_value in locals.items()
+            if class_attribute in instance_parameter_names
+        }
         return instance_parameters
 
 
@@ -110,7 +113,6 @@ class ScalarMix(torch.nn.Module):
                         device=flair.device,
                     ),
                     requires_grad=trainable,
-
                 )
                 for i in range(mixture_size)
             ]
@@ -120,7 +122,8 @@ class ScalarMix(torch.nn.Module):
                 [1.0],
                 dtype=torch.float,
                 device=flair.device,
-            ), requires_grad=trainable
+            ),
+            requires_grad=trainable,
         )
 
     def forward(self, tensors: List[torch.Tensor]) -> torch.Tensor:

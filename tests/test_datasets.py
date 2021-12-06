@@ -63,7 +63,9 @@ def test_load_ag_news_data(tasks_base_path):
 
 def test_load_sequence_labeling_data(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "fashion", column_format={0: "text", 2: "ner"})
+    corpus = flair.datasets.ColumnCorpus(
+        tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
 
     assert len(corpus.train) == 6
     assert len(corpus.dev) == 1
@@ -73,7 +75,8 @@ def test_load_sequence_labeling_data(tasks_base_path):
 def test_load_sequence_labeling_whitespace_after(tasks_base_path):
     # get training, test and dev data
     corpus = flair.datasets.ColumnCorpus(
-        tasks_base_path / "column_with_whitespaces", column_format={0: "text", 1: "ner", 2: "space-after"}
+        tasks_base_path / "column_with_whitespaces",
+        column_format={0: "text", 1: "ner", 2: "space-after"},
     )
 
     assert len(corpus.train) == 1
@@ -102,7 +105,9 @@ def test_load_column_corpus_options(tasks_base_path):
 
 def test_load_germeval_data(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
+    corpus = flair.datasets.ColumnCorpus(
+        tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"}
+    )
 
     assert len(corpus.train) == 2
     assert len(corpus.dev) == 1
@@ -120,7 +125,9 @@ def test_load_ud_english_data(tasks_base_path):
 
 def test_load_no_dev_data(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "fashion_nodev", column_format={0: "text", 2: "ner"})
+    corpus = flair.datasets.ColumnCorpus(
+        tasks_base_path / "fashion_nodev", column_format={0: "text", 2: "ner"}
+    )
 
     assert len(corpus.train) == 5
     assert len(corpus.dev) == 1
@@ -142,9 +149,13 @@ def test_load_no_dev_data_explicit(tasks_base_path):
 
 
 def test_multi_corpus(tasks_base_path):
-    corpus_1 = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
+    corpus_1 = flair.datasets.ColumnCorpus(
+        tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"}
+    )
 
-    corpus_2 = flair.datasets.ColumnCorpus(tasks_base_path / "fashion", column_format={0: "text", 2: "ner"})
+    corpus_2 = flair.datasets.ColumnCorpus(
+        tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
     # get two corpora as one
     corpus = MultiCorpus([corpus_1, corpus_2])
 
@@ -186,7 +197,7 @@ def _assert_conllu_dataset(dataset):
         "PROPN",
         "VERB",
         "PROPN",
-        "PUNCT"
+        "PUNCT",
     ]
 
     assert [token.whitespace_after for token in sent1.tokens] == [
@@ -306,7 +317,7 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         True,
         True,
         False,
-        True
+        True,
     ]
 
     assert len(sent1.get_spans("Number")) == 4
@@ -320,7 +331,7 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         "4",
         "2",
         "2",
-        "2"
+        "2",
     ]
 
     assert [token.get_tag("deprel").value for token in sent1.tokens] == [
@@ -329,14 +340,15 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         "cc",
         "conj",
         "obj",
-        "punct"
+        "punct",
     ]
 
 
 def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
     """
     This test only covers basic universal dependencies datasets.
-    For example, multi-word tokens or the "deps" column sentence annotations are not supported yet.
+    For example, multi-word tokens or the "deps" column sentence annotations
+    are not supported yet.
     """
 
     # Here, we use the default token annotation fields.
@@ -344,7 +356,7 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
         tasks_base_path / "conllu",
         train_file="universal_dependencies.conllu",
         dev_file="universal_dependencies.conllu",
-        test_file="universal_dependencies.conllu"
+        test_file="universal_dependencies.conllu",
     )
 
     assert len(corpus.train) == 1

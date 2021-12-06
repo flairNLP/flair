@@ -26,11 +26,11 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
     """
 
     def __init__(
-            self,
-            embeddings: TokenEmbeddings,
-            tag_dictionary: Dictionary,
-            tag_type: str,
-            **classifierargs,
+        self,
+        embeddings: TokenEmbeddings,
+        tag_dictionary: Dictionary,
+        tag_type: str,
+        **classifierargs,
     ):
         """
         Initializes a SimpleSequenceTagger
@@ -49,7 +49,9 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
         self.tagset_size: int = len(tag_dictionary)
 
         # linear layer
-        self.linear = torch.nn.Linear(self.embeddings.embedding_length, len(tag_dictionary))
+        self.linear = torch.nn.Linear(
+            self.embeddings.embedding_length, len(tag_dictionary)
+        )
 
         # all parameters will be pushed internally to the specified device
         self.to(flair.device)
@@ -73,10 +75,11 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
         model.load_state_dict(state["state_dict"])
         return model
 
-    def forward_pass(self,
-                     sentences: Union[List[Sentence], Sentence],
-                     return_label_candidates: bool = False,
-                     ):
+    def forward_pass(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
+    ):
         if not isinstance(sentences, list):
             sentences = [sentences]
 
@@ -96,7 +99,9 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
         labels = [[token.get_tag(self.label_type).value] for token in all_tokens]
 
         if return_label_candidates:
-            empty_label_candidates = [Label(value=None, score=0.0) for token in all_tokens]
+            empty_label_candidates = [
+                Label(value=None, score=0.0) for token in all_tokens
+            ]
             return scores, labels, all_tokens, empty_label_candidates
 
         return scores, labels

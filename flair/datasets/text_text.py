@@ -13,15 +13,15 @@ log = logging.getLogger("flair")
 
 class ParallelTextCorpus(Corpus):
     def __init__(
-            self,
-            source_file: Union[str, Path],
-            target_file: Union[str, Path],
-            name: str,
-            use_tokenizer: bool = True,
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            in_memory: bool = True,
-            **corpusargs,
+        self,
+        source_file: Union[str, Path],
+        target_file: Union[str, Path],
+        name: str,
+        use_tokenizer: bool = True,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Instantiates a Corpus for text classification from CSV column formatted data
@@ -51,15 +51,15 @@ class ParallelTextCorpus(Corpus):
 
 class OpusParallelCorpus(ParallelTextCorpus):
     def __init__(
-            self,
-            dataset: str,
-            l1: str,
-            l2: str,
-            use_tokenizer: bool = True,
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            in_memory: bool = True,
-            **corpusargs,
+        self,
+        dataset: str,
+        l1: str,
+        l2: str,
+        use_tokenizer: bool = True,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Instantiates a Parallel Corpus from OPUS (http://opus.nlpl.eu/)
@@ -84,20 +84,46 @@ class OpusParallelCorpus(ParallelTextCorpus):
         if dataset == "tatoeba":
             link = f"https://object.pouta.csc.fi/OPUS-Tatoeba/v20190709/moses/{l1}-{l2}.txt.zip"
 
-            l1_file = (flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"Tatoeba.{l1}-{l2}.{l1}")
-            l2_file = (flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"Tatoeba.{l1}-{l2}.{l2}")
+            l1_file = (
+                flair.cache_root
+                / "datasets"
+                / dataset
+                / f"{l1}-{l2}"
+                / f"Tatoeba.{l1}-{l2}.{l1}"
+            )
+            l2_file = (
+                flair.cache_root
+                / "datasets"
+                / dataset
+                / f"{l1}-{l2}"
+                / f"Tatoeba.{l1}-{l2}.{l2}"
+            )
 
         # set file names
         if dataset == "subtitles":
             link = f"https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2018/moses/{l1}-{l2}.txt.zip"
 
-            l1_file = (flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"OpenSubtitles.{l1}-{l2}.{l1}")
-            l2_file = (flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"OpenSubtitles.{l1}-{l2}.{l2}")
+            l1_file = (
+                flair.cache_root
+                / "datasets"
+                / dataset
+                / f"{l1}-{l2}"
+                / f"OpenSubtitles.{l1}-{l2}.{l1}"
+            )
+            l2_file = (
+                flair.cache_root
+                / "datasets"
+                / dataset
+                / f"{l1}-{l2}"
+                / f"OpenSubtitles.{l1}-{l2}.{l2}"
+            )
 
         # download and unzip in file structure if necessary
         if not l1_file.exists():
             path = cached_path(link, Path("datasets") / dataset / f"{l1}-{l2}")
-            unzip_file(path, flair.cache_root / Path("datasets") / dataset / f"{l1}-{l2}")
+            unzip_file(
+                path, flair.cache_root / Path("datasets") / dataset / f"{l1}-{l2}"
+            )
 
         # instantiate corpus
         super(OpusParallelCorpus, self).__init__(
@@ -114,13 +140,13 @@ class OpusParallelCorpus(ParallelTextCorpus):
 
 class ParallelTextDataset(FlairDataset):
     def __init__(
-            self,
-            path_to_source: Union[str, Path],
-            path_to_target: Union[str, Path],
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            use_tokenizer=True,
-            in_memory: bool = True,
+        self,
+        path_to_source: Union[str, Path],
+        path_to_target: Union[str, Path],
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        use_tokenizer=True,
+        in_memory: bool = True,
     ):
         path_to_source = Path(path_to_source)
         path_to_target = Path(path_to_target)
@@ -142,7 +168,7 @@ class ParallelTextDataset(FlairDataset):
             self.target_lines: List[str] = []
 
         with open(str(path_to_source), encoding="utf-8") as source_file, open(
-                str(path_to_target), encoding="utf-8"
+            str(path_to_target), encoding="utf-8"
         ) as target_file:
 
             source_line = source_file.readline()
@@ -199,27 +225,27 @@ class ParallelTextDataset(FlairDataset):
 
 class DataPairCorpus(Corpus):
     def __init__(
-            self,
-            data_folder: Union[str, Path],
-            columns: List[int] = [0, 1, 2],
-            train_file=None,
-            test_file=None,
-            dev_file=None,
-            use_tokenizer: bool = True,
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            in_memory: bool = True,
-            label_type: str = None,
-            autofind_splits=True,
-            sample_missing_splits: bool = True,
-            skip_first_line: bool = False,
-            separator: str = '\t',
-            encoding: str = 'utf-8'
+        self,
+        data_folder: Union[str, Path],
+        columns: List[int] = [0, 1, 2],
+        train_file=None,
+        test_file=None,
+        dev_file=None,
+        use_tokenizer: bool = True,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        in_memory: bool = True,
+        label_type: str = None,
+        autofind_splits=True,
+        sample_missing_splits: bool = True,
+        skip_first_line: bool = False,
+        separator: str = "\t",
+        encoding: str = "utf-8",
     ):
         """
-        Corpus for tasks involving pairs of sentences or paragraphs. The data files are expected to be in column format where each line has a colmun 
+        Corpus for tasks involving pairs of sentences or paragraphs. The data files are expected to be in column format where each line has a colmun
         for the first sentence/paragraph, the second sentence/paragraph and the labels, respectively. The columns must be separated by a given separator (default: '\t').
-        
+
         :param data_folder: base folder with the task data
         :param columns: List that indicates the columns for the first sentence (first entry in the list), the second sentence (second entry) and label (last entry).
                         default = [0,1,2]
@@ -236,81 +262,102 @@ class DataPairCorpus(Corpus):
         :param skip_first_line: If True, first line of data files will be ignored
         :param separator: Separator between columns in data files
         :param encoding: Encoding of data files
-        
+
         :return: a Corpus with annotated train, dev and test data
         """
 
         # find train, dev and test files if not specified
-        dev_file, test_file, train_file = \
-            find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits=autofind_splits)
+        dev_file, test_file, train_file = find_train_dev_test_files(
+            data_folder,
+            dev_file,
+            test_file,
+            train_file,
+            autofind_splits=autofind_splits,
+        )
 
         # create DataPairDataset for train, test and dev file, if they are given
 
-        train = DataPairDataset(
-            train_file,
-            columns=columns,
-            use_tokenizer=use_tokenizer,
-            max_tokens_per_doc=max_tokens_per_doc,
-            max_chars_per_doc=max_chars_per_doc,
-            in_memory=in_memory,
-            label_type=label_type,
-            skip_first_line=skip_first_line,
-            separator=separator,
-            encoding=encoding
-        ) if train_file is not None else None
+        train = (
+            DataPairDataset(
+                train_file,
+                columns=columns,
+                use_tokenizer=use_tokenizer,
+                max_tokens_per_doc=max_tokens_per_doc,
+                max_chars_per_doc=max_chars_per_doc,
+                in_memory=in_memory,
+                label_type=label_type,
+                skip_first_line=skip_first_line,
+                separator=separator,
+                encoding=encoding,
+            )
+            if train_file is not None
+            else None
+        )
 
-        test = DataPairDataset(
-            test_file,
-            columns=columns,
-            use_tokenizer=use_tokenizer,
-            max_tokens_per_doc=max_tokens_per_doc,
-            max_chars_per_doc=max_chars_per_doc,
-            in_memory=in_memory,
-            label_type=label_type,
-            skip_first_line=skip_first_line,
-            separator=separator,
-            encoding=encoding
-        ) if test_file is not None else None
+        test = (
+            DataPairDataset(
+                test_file,
+                columns=columns,
+                use_tokenizer=use_tokenizer,
+                max_tokens_per_doc=max_tokens_per_doc,
+                max_chars_per_doc=max_chars_per_doc,
+                in_memory=in_memory,
+                label_type=label_type,
+                skip_first_line=skip_first_line,
+                separator=separator,
+                encoding=encoding,
+            )
+            if test_file is not None
+            else None
+        )
 
-        dev = DataPairDataset(
-            dev_file,
-            columns=columns,
-            use_tokenizer=use_tokenizer,
-            max_tokens_per_doc=max_tokens_per_doc,
-            max_chars_per_doc=max_chars_per_doc,
-            in_memory=in_memory,
-            label_type=label_type,
-            skip_first_line=skip_first_line,
-            separator=separator,
-            encoding=encoding
-        ) if dev_file is not None else None
+        dev = (
+            DataPairDataset(
+                dev_file,
+                columns=columns,
+                use_tokenizer=use_tokenizer,
+                max_tokens_per_doc=max_tokens_per_doc,
+                max_chars_per_doc=max_chars_per_doc,
+                in_memory=in_memory,
+                label_type=label_type,
+                skip_first_line=skip_first_line,
+                separator=separator,
+                encoding=encoding,
+            )
+            if dev_file is not None
+            else None
+        )
 
-        super(DataPairCorpus, self).__init__(train, dev, test,
-                                             sample_missing_splits=sample_missing_splits,
-                                             name=str(data_folder))
+        super(DataPairCorpus, self).__init__(
+            train,
+            dev,
+            test,
+            sample_missing_splits=sample_missing_splits,
+            name=str(data_folder),
+        )
 
 
 class DataPairDataset(FlairDataset):
     def __init__(
-            self,
-            path_to_data: Union[str, Path],
-            columns: List[int] = [0, 1, 2],
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            use_tokenizer=True,
-            in_memory: bool = True,
-            label_type: str = None,
-            skip_first_line: bool = False,
-            separator: str = '\t',
-            encoding: str = 'utf-8',
-            label: bool = True
+        self,
+        path_to_data: Union[str, Path],
+        columns: List[int] = [0, 1, 2],
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        use_tokenizer=True,
+        in_memory: bool = True,
+        label_type: str = None,
+        skip_first_line: bool = False,
+        separator: str = "\t",
+        encoding: str = "utf-8",
+        label: bool = True,
     ):
         """
-        Creates a Dataset for pairs of sentences/paragraphs. The file needs to be in a column format, 
-        where each line has a column for the first sentence/paragraph, the second sentence/paragraph and the label 
+        Creates a Dataset for pairs of sentences/paragraphs. The file needs to be in a column format,
+        where each line has a column for the first sentence/paragraph, the second sentence/paragraph and the label
         seperated by e.g. '\t' (just like in the glue RTE-dataset https://gluebenchmark.com/tasks) .
         For each data pair we create a flair.data.DataPair object.
-        
+
         :param path_to_data: path to the data file
         :param columns: list of integers that indicate the respective columns. The first entry is the column
         for the first sentence, the second for the second sentence and the third for the label. Default [0,1,2]
@@ -375,7 +422,9 @@ class DataPairDataset(FlairDataset):
 
                 if self.in_memory:
 
-                    data_pair = self._make_data_pair(first_element, second_element, pair_label)
+                    data_pair = self._make_data_pair(
+                        first_element, second_element, pair_label
+                    )
                     self.data_pairs.append(data_pair)
                 else:
                     self.first_elements.append(first_element)
@@ -388,7 +437,9 @@ class DataPairDataset(FlairDataset):
                 source_line = source_file.readline()
 
     # create a DataPair object from strings
-    def _make_data_pair(self, first_element: str, second_element: str, label: str = None):
+    def _make_data_pair(
+        self, first_element: str, second_element: str, label: str = None
+    ):
 
         first_sentence = Sentence(first_element, use_tokenizer=self.use_tokenizer)
         second_sentence = Sentence(second_element, use_tokenizer=self.use_tokenizer)
@@ -417,7 +468,9 @@ class DataPairDataset(FlairDataset):
             return self.data_pairs[index]
         elif self.label:
             return self._make_data_pair(
-                self.first_elements[index], self.second_elements[index], self.labels[index]
+                self.first_elements[index],
+                self.second_elements[index],
+                self.labels[index],
             )
         else:
             return self._make_data_pair(
@@ -427,18 +480,18 @@ class DataPairDataset(FlairDataset):
 
 class GLUE_RTE(DataPairCorpus):
     def __init__(
-            self,
-            label_type="entailment",
-            base_path: Union[str, Path] = None,
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            use_tokenizer=True,
-            in_memory: bool = True,
-            sample_missing_splits: bool = True
+        self,
+        label_type="entailment",
+        base_path: Union[str, Path] = None,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        use_tokenizer=True,
+        in_memory: bool = True,
+        sample_missing_splits: bool = True,
     ):
         """
         Creates a DataPairCorpus for the Glue Recognizing Textual Entailment (RTE) data (https://gluebenchmark.com/tasks).
-        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data. 
+        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data.
         This file contains unlabeled test data to evaluate models on the Glue RTE task.
         """
 
@@ -457,19 +510,17 @@ class GLUE_RTE(DataPairCorpus):
         if not data_file.is_file():
             # get the zip file
             zipped_data_path = cached_path(
-                'https://dl.fbaipublicfiles.com/glue/data/RTE.zip',
-                Path("datasets") / dataset_name
+                "https://dl.fbaipublicfiles.com/glue/data/RTE.zip",
+                Path("datasets") / dataset_name,
             )
 
-            unpack_file(
-                zipped_data_path,
-                data_folder,
-                mode="zip",
-                keep=False
-            )
+            unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
 
             # rename test file to eval_dataset, since it has no labels
-            os.rename(str(data_folder / "RTE/test.tsv"), str(data_folder / "RTE/eval_dataset.tsv"))
+            os.rename(
+                str(data_folder / "RTE/test.tsv"),
+                str(data_folder / "RTE/eval_dataset.tsv"),
+            )
 
         super(GLUE_RTE, self).__init__(
             data_folder / "RTE",
@@ -480,8 +531,7 @@ class GLUE_RTE(DataPairCorpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
-            sample_missing_splits=sample_missing_splits
-
+            sample_missing_splits=sample_missing_splits,
         )
 
         self.eval_dataset = DataPairDataset(
@@ -492,10 +542,10 @@ class GLUE_RTE(DataPairCorpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             skip_first_line=True,
-            label=False
+            label=False,
         )
 
-    """    
+    """
     This function creates a tsv file of the predictions of the eval_dataset (after calling classifier.predict(corpus.eval_dataset, label_name='textual_entailment')).
     The resulting file is called RTE.tsv and is in the format required for submission to the Glue Benchmark.
     """
@@ -503,31 +553,36 @@ class GLUE_RTE(DataPairCorpus):
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
         folder_path = Path(folder_path)
-        folder_path = folder_path / 'RTE.tsv'
+        folder_path = folder_path / "RTE.tsv"
 
-        with open(folder_path, mode='w') as tsv_file:
+        with open(folder_path, mode="w") as tsv_file:
             tsv_file.write("index\tprediction\n")
             datapoint: DataPair
             for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
-                tsv_file.write(str(index) + '\t' + datapoint.get_labels('textual_entailment')[0].value + '\n')
+                tsv_file.write(
+                    str(index)
+                    + "\t"
+                    + datapoint.get_labels("textual_entailment")[0].value
+                    + "\n"
+                )
 
 
 class GLUE_MNLI(DataPairCorpus):
     def __init__(
-            self,
-            label_type="entailment",
-            evaluate_on_matched: bool = True,
-            base_path: Union[str, Path] = None,
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            use_tokenizer=True,
-            in_memory: bool = True,
-            sample_missing_splits: bool = True
+        self,
+        label_type="entailment",
+        evaluate_on_matched: bool = True,
+        base_path: Union[str, Path] = None,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        use_tokenizer=True,
+        in_memory: bool = True,
+        sample_missing_splits: bool = True,
     ):
         """
         Creates a DataPairCorpus for the Multi-Genre Natural Language Inference Corpus (MNLI)
-        from GLUE benchmark (https://gluebenchmark.com/tasks). Entailment annotations are: 
-        entailment, contradiction, neutral. This corpus includes two dev sets mathced/mismatched 
+        from GLUE benchmark (https://gluebenchmark.com/tasks). Entailment annotations are:
+        entailment, contradiction, neutral. This corpus includes two dev sets mathced/mismatched
         and two unlabeled test sets: eval_dataset_matched, eval_dataset_mismatched.
         """
 
@@ -547,38 +602,42 @@ class GLUE_MNLI(DataPairCorpus):
             # get the zip file
             zipped_data_path = cached_path(
                 "https://dl.fbaipublicfiles.com/glue/data/MNLI.zip",
-                Path("datasets") / dataset_name
+                Path("datasets") / dataset_name,
             )
 
-            unpack_file(
-                zipped_data_path,
-                data_folder,
-                mode="zip",
-                keep=False
-            )
+            unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
 
             # reorder dev datasets to have same columns as in train set: 8, 9, and 11
             # dev sets include 5 different annotations but we will only keep the gold label
             for dev_filename in ["dev_matched.tsv", "dev_mismatched.tsv"]:
 
                 temp_file = str("temp_" + dev_filename)
-                os.rename(str(data_folder / "MNLI" / dev_filename),
-                          str(data_folder / "MNLI" / temp_file))
+                os.rename(
+                    str(data_folder / "MNLI" / dev_filename),
+                    str(data_folder / "MNLI" / temp_file),
+                )
 
                 with open(data_folder / "MNLI" / dev_filename, "a") as out_file, open(
-                    data_folder / "MNLI" / temp_file) as in_file:
+                    data_folder / "MNLI" / temp_file
+                ) as in_file:
                     for line in in_file:
-                        fields = line.split('\t')
-                        reordered_columns = '\t'.join(fields[column_id] for column_id in range(11))
-                        reordered_columns += '\t' + fields[15]
+                        fields = line.split("\t")
+                        reordered_columns = "\t".join(
+                            fields[column_id] for column_id in range(11)
+                        )
+                        reordered_columns += "\t" + fields[15]
                         out_file.write(reordered_columns)
                 os.remove(str(data_folder / "MNLI" / temp_file))
 
             # rename test file to eval_dataset, since it has no labels
-            os.rename(str(data_folder / "MNLI/test_matched.tsv"),
-                      str(data_folder / "MNLI/eval_dataset_matched.tsv"))
-            os.rename(str(data_folder / "MNLI/test_mismatched.tsv"),
-                      str(data_folder / "MNLI/eval_dataset_mismatched.tsv"))
+            os.rename(
+                str(data_folder / "MNLI/test_matched.tsv"),
+                str(data_folder / "MNLI/eval_dataset_matched.tsv"),
+            )
+            os.rename(
+                str(data_folder / "MNLI/test_mismatched.tsv"),
+                str(data_folder / "MNLI/eval_dataset_mismatched.tsv"),
+            )
 
         matched_suffix = "matched" if evaluate_on_matched else "mismatched"
 
@@ -598,7 +657,7 @@ class GLUE_MNLI(DataPairCorpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
-            sample_missing_splits=sample_missing_splits
+            sample_missing_splits=sample_missing_splits,
         )
 
         self.eval_dataset = DataPairDataset(
@@ -609,12 +668,12 @@ class GLUE_MNLI(DataPairCorpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             skip_first_line=True,
-            label=False
+            label=False,
         )
 
     """
-    This function creates a tsv file of the predictions of the eval_dataset (after calling 
-    classifier.predict(corpus.eval_dataset, label_name='textual_entailment')). The resulting file 
+    This function creates a tsv file of the predictions of the eval_dataset (after calling
+    classifier.predict(corpus.eval_dataset, label_name='textual_entailment')). The resulting file
     is called MNLI-m.tsv or MNLI-mm.tsv and is in the format required for the Glue Benchmark.
     """
 
@@ -624,28 +683,28 @@ class GLUE_MNLI(DataPairCorpus):
         glue_eval_tsv = "MNLI-m.tsv" if self.evaluate_on_matched else "MNLI-mm.tsv"
         folder_path = folder_path / glue_eval_tsv
 
-        with open(folder_path, mode='w') as tsv_file:
+        with open(folder_path, mode="w") as tsv_file:
             tsv_file.write("index\tprediction\n")
             datapoint: DataPair
             for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
-                label = datapoint.get_labels('textual_entailment')[0].value
-                tsv_file.write(str(index) + '\t' + label + '\n')
+                label = datapoint.get_labels("textual_entailment")[0].value
+                tsv_file.write(str(index) + "\t" + label + "\n")
 
 
 class GLUE_MRPC(DataPairCorpus):
     def __init__(
-            self,
-            label_type="paraphrase",
-            base_path: Union[str, Path] = None,
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            use_tokenizer=True,
-            in_memory: bool = True,
-            sample_missing_splits: bool = True
+        self,
+        label_type="paraphrase",
+        base_path: Union[str, Path] = None,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        use_tokenizer=True,
+        in_memory: bool = True,
+        sample_missing_splits: bool = True,
     ):
         """
-        Creates a DataPairCorpus for the Microsoft Research Paraphrase Corpus (MRPC) 
-        from Glue benchmark (https://gluebenchmark.com/tasks). MRPC includes annotated 
+        Creates a DataPairCorpus for the Microsoft Research Paraphrase Corpus (MRPC)
+        from Glue benchmark (https://gluebenchmark.com/tasks). MRPC includes annotated
         train and test sets. Dev set is sampled each time when creating this corpus.
         """
 
@@ -668,13 +727,19 @@ class GLUE_MRPC(DataPairCorpus):
         if not data_file.is_file():
             for original_filename in original_filenames:
                 # get test and dev sets
-                cached_path(f"{mrpc_path}{original_filename}",
-                            Path("datasets") / dataset_name / "MRPC")
+                cached_path(
+                    f"{mrpc_path}{original_filename}",
+                    Path("datasets") / dataset_name / "MRPC",
+                )
 
-            os.rename(str(data_folder / "MRPC/msr_paraphrase_train.txt"),
-                      str(data_folder / "MRPC/train.tsv"))
-            os.rename(str(data_folder / "MRPC/msr_paraphrase_test.txt"),
-                      str(data_folder / "MRPC/test.tsv"))
+            os.rename(
+                str(data_folder / "MRPC/msr_paraphrase_train.txt"),
+                str(data_folder / "MRPC/train.tsv"),
+            )
+            os.rename(
+                str(data_folder / "MRPC/msr_paraphrase_test.txt"),
+                str(data_folder / "MRPC/test.tsv"),
+            )
 
         super(GLUE_MRPC, self).__init__(
             data_folder / "MRPC",
@@ -685,7 +750,7 @@ class GLUE_MRPC(DataPairCorpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
-            sample_missing_splits=sample_missing_splits
+            sample_missing_splits=sample_missing_splits,
         )
 
     """
@@ -698,31 +763,31 @@ class GLUE_MRPC(DataPairCorpus):
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
         folder_path = Path(folder_path)
-        folder_path = folder_path / 'MRPC.tsv'
+        folder_path = folder_path / "MRPC.tsv"
 
-        with open(folder_path, mode='w') as tsv_file:
+        with open(folder_path, mode="w") as tsv_file:
             tsv_file.write("index\tprediction\n")
             datapoint: DataPair
             for index, datapoint in enumerate(_iter_dataset(self.test)):
-                label = datapoint.get_labels('paraphrase')[0].value
-                tsv_file.write(str(index) + '\t' + label + '\n')
+                label = datapoint.get_labels("paraphrase")[0].value
+                tsv_file.write(str(index) + "\t" + label + "\n")
 
 
 class GLUE_QNLI(DataPairCorpus):
     def __init__(
-            self,
-            label_type="entailment",
-            base_path: Union[str, Path] = None,
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            use_tokenizer=True,
-            in_memory: bool = True,
-            sample_missing_splits: bool = True
+        self,
+        label_type="entailment",
+        base_path: Union[str, Path] = None,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        use_tokenizer=True,
+        in_memory: bool = True,
+        sample_missing_splits: bool = True,
     ):
         """
-        Creates a DataPairCorpus for the Question-answering Natural Language Inference dataset 
+        Creates a DataPairCorpus for the Question-answering Natural Language Inference dataset
         (QNLI) from GLUE benchmark (https://gluebenchmark.com/tasks).
-        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data. 
+        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data.
         This file contains unlabeled test data to evaluate models on the Glue QNLI task.
         """
 
@@ -742,19 +807,16 @@ class GLUE_QNLI(DataPairCorpus):
             # get the zip file
             zipped_data_path = cached_path(
                 "https://dl.fbaipublicfiles.com/glue/data/QNLIv2.zip",
-                Path("datasets") / dataset_name
+                Path("datasets") / dataset_name,
             )
 
-            unpack_file(
-                zipped_data_path,
-                data_folder,
-                mode="zip",
-                keep=False
-            )
+            unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
 
             # rename test file to eval_dataset, since it has no labels
-            os.rename(str(data_folder / "QNLI/test.tsv"),
-                      str(data_folder / "QNLI/eval_dataset.tsv"))
+            os.rename(
+                str(data_folder / "QNLI/test.tsv"),
+                str(data_folder / "QNLI/eval_dataset.tsv"),
+            )
 
         super(GLUE_QNLI, self).__init__(
             data_folder / "QNLI",
@@ -765,7 +827,7 @@ class GLUE_QNLI(DataPairCorpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
-            sample_missing_splits=sample_missing_splits
+            sample_missing_splits=sample_missing_splits,
         )
 
         self.eval_dataset = DataPairDataset(
@@ -776,10 +838,10 @@ class GLUE_QNLI(DataPairCorpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             skip_first_line=True,
-            label=False
+            label=False,
         )
 
-    """    
+    """
     This function creates a tsv file of the predictions of the eval_dataset (after calling
     classifier.predict(corpus.eval_dataset, label_name='textual_entailment')). The resulting
     file is called QNLI.tsv and is in the format required for submission to the Glue Benchmark.
@@ -788,31 +850,31 @@ class GLUE_QNLI(DataPairCorpus):
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
         folder_path = Path(folder_path)
-        folder_path = folder_path / 'QNLI.tsv'
+        folder_path = folder_path / "QNLI.tsv"
 
-        with open(folder_path, mode='w') as tsv_file:
+        with open(folder_path, mode="w") as tsv_file:
             tsv_file.write("index\tprediction\n")
             datapoint: DataPair
             for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
-                label = datapoint.get_labels('textual_entailment')[0].value
-                tsv_file.write(str(index) + '\t' + label + '\n')
+                label = datapoint.get_labels("textual_entailment")[0].value
+                tsv_file.write(str(index) + "\t" + label + "\n")
 
 
 class GLUE_QQP(DataPairCorpus):
     def __init__(
-            self,
-            label_type="paraphrase",
-            base_path: Union[str, Path] = None,
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            use_tokenizer=True,
-            in_memory: bool = True,
-            sample_missing_splits: bool = True
+        self,
+        label_type="paraphrase",
+        base_path: Union[str, Path] = None,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        use_tokenizer=True,
+        in_memory: bool = True,
+        sample_missing_splits: bool = True,
     ):
         """
         Creates a Quora Question Pairs (QQP) Corpus from the Glue benchmark (https://gluebenchmark.com/tasks).
         The task is to determine whether a pair of questions are semantically equivalent.
-        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data. 
+        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data.
         This file contains unlabeled test data to evaluate models on the Glue QQP task.
         """
 
@@ -832,19 +894,16 @@ class GLUE_QQP(DataPairCorpus):
             # get the zip file
             zipped_data_path = cached_path(
                 "https://dl.fbaipublicfiles.com/glue/data/QQP-clean.zip",
-                Path("datasets") / dataset_name
+                Path("datasets") / dataset_name,
             )
 
-            unpack_file(
-                zipped_data_path,
-                data_folder,
-                mode="zip",
-                keep=False
-            )
+            unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
 
             # rename test file to eval_dataset, since it has no labels
-            os.rename(str(data_folder / "QQP/test.tsv"),
-                      str(data_folder / "QQP/eval_dataset.tsv"))
+            os.rename(
+                str(data_folder / "QQP/test.tsv"),
+                str(data_folder / "QQP/eval_dataset.tsv"),
+            )
 
         super(GLUE_QQP, self).__init__(
             data_folder / "QQP",
@@ -855,7 +914,7 @@ class GLUE_QQP(DataPairCorpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
-            sample_missing_splits=sample_missing_splits
+            sample_missing_splits=sample_missing_splits,
         )
 
         self.eval_dataset = DataPairDataset(
@@ -866,11 +925,11 @@ class GLUE_QQP(DataPairCorpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             skip_first_line=True,
-            label=False
+            label=False,
         )
 
     """
-    This function creates a tsv file of the predictions of the eval_dataset (after calling 
+    This function creates a tsv file of the predictions of the eval_dataset (after calling
     classifier.predict(corpus.eval_dataset, label_name='paraphrase')). The resulting file
     is called QQP.tsv and is in the format required for submission to the Glue Benchmark.
     """
@@ -878,26 +937,26 @@ class GLUE_QQP(DataPairCorpus):
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
         folder_path = Path(folder_path)
-        folder_path = folder_path / 'QQP.tsv'
+        folder_path = folder_path / "QQP.tsv"
 
-        with open(folder_path, mode='w') as tsv_file:
+        with open(folder_path, mode="w") as tsv_file:
             tsv_file.write("index\tprediction\n")
             datapoint: DataPair
             for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
-                label = datapoint.get_labels('paraphrase')[0].value
-                tsv_file.write(str(index) + '\t' + label + '\n')
+                label = datapoint.get_labels("paraphrase")[0].value
+                tsv_file.write(str(index) + "\t" + label + "\n")
 
 
 class GLUE_WNLI(DataPairCorpus):
     def __init__(
-            self,
-            label_type="entailment",
-            base_path: Union[str, Path] = None,
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            use_tokenizer=True,
-            in_memory: bool = True,
-            sample_missing_splits: bool = True
+        self,
+        label_type="entailment",
+        base_path: Union[str, Path] = None,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        use_tokenizer=True,
+        in_memory: bool = True,
+        sample_missing_splits: bool = True,
     ):
         """
         Creates a Winograd Schema Challenge Corpus formated as Natural Language Inference task (WNLI).
@@ -922,19 +981,16 @@ class GLUE_WNLI(DataPairCorpus):
             # get the zip file
             zipped_data_path = cached_path(
                 "https://dl.fbaipublicfiles.com/glue/data/WNLI.zip",
-                Path("datasets") / dataset_name
+                Path("datasets") / dataset_name,
             )
 
-            unpack_file(
-                zipped_data_path,
-                data_folder,
-                mode="zip",
-                keep=False
-            )
+            unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
 
             # rename test file to eval_dataset, since it has no labels
-            os.rename(str(data_folder / "WNLI/test.tsv"),
-                      str(data_folder / "WNLI/eval_dataset.tsv"))
+            os.rename(
+                str(data_folder / "WNLI/test.tsv"),
+                str(data_folder / "WNLI/eval_dataset.tsv"),
+            )
 
         super(GLUE_WNLI, self).__init__(
             data_folder / "WNLI",
@@ -945,7 +1001,7 @@ class GLUE_WNLI(DataPairCorpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
-            sample_missing_splits=sample_missing_splits
+            sample_missing_splits=sample_missing_splits,
         )
 
         self.eval_dataset = DataPairDataset(
@@ -956,7 +1012,7 @@ class GLUE_WNLI(DataPairCorpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             skip_first_line=True,
-            label=False
+            label=False,
         )
 
     """
@@ -968,28 +1024,33 @@ class GLUE_WNLI(DataPairCorpus):
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
 
         folder_path = Path(folder_path)
-        folder_path = folder_path / 'WNLI.tsv'
+        folder_path = folder_path / "WNLI.tsv"
 
-        with open(folder_path, mode='w') as tsv_file:
+        with open(folder_path, mode="w") as tsv_file:
             tsv_file.write("index\tprediction\n")
             datapoint: DataPair
             for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
-                tsv_file.write(str(index) + '\t' + datapoint.get_labels('entailment')[0].value + '\n')
+                tsv_file.write(
+                    str(index)
+                    + "\t"
+                    + datapoint.get_labels("entailment")[0].value
+                    + "\n"
+                )
 
 
 class SUPERGLUE_RTE(DataPairCorpus):
     def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
-            use_tokenizer=True,
-            in_memory: bool = True,
-            sample_missing_splits: bool = True
+        self,
+        base_path: Union[str, Path] = None,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        use_tokenizer=True,
+        in_memory: bool = True,
+        sample_missing_splits: bool = True,
     ):
         """
         Creates a DataPairCorpus for the SuperGlue Recognizing Textual Entailment (RTE) data (https://super.gluebenchmark.com/tasks).
-        Additionaly to the Corpus we have a eval_dataset containing the test file of the SuperGlue data. 
+        Additionaly to the Corpus we have a eval_dataset containing the test file of the SuperGlue data.
         This file contains unlabeled test data to evaluate models on the SuperGlue RTE task.
         """
 
@@ -1008,24 +1069,24 @@ class SUPERGLUE_RTE(DataPairCorpus):
         if not data_file.is_file():
             # get the zip file
             zipped_data_path = cached_path(
-                'https://dl.fbaipublicfiles.com/glue/superglue/data/v2/RTE.zip',
-                Path("datasets") / dataset_name
+                "https://dl.fbaipublicfiles.com/glue/superglue/data/v2/RTE.zip",
+                Path("datasets") / dataset_name,
             )
 
-            unpack_file(
-                zipped_data_path,
-                data_folder,
-                mode="zip",
-                keep=False
-            )
+            unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
 
             # the downloaded files have json format, we transform them to tsv
             rte_jsonl_to_tsv(data_folder / "RTE/train.jsonl", remove=True)
             rte_jsonl_to_tsv(data_folder / "RTE/test.jsonl", remove=True, label=False)
             rte_jsonl_to_tsv(data_folder / "RTE/val.jsonl", remove=True)
 
-            os.rename(str(data_folder / "RTE/val.tsv"), str(data_folder / "RTE/dev.tsv"))
-            os.rename(str(data_folder / "RTE/test.tsv"), str(data_folder / "RTE/eval_dataset.tsv"))
+            os.rename(
+                str(data_folder / "RTE/val.tsv"), str(data_folder / "RTE/dev.tsv")
+            )
+            os.rename(
+                str(data_folder / "RTE/test.tsv"),
+                str(data_folder / "RTE/eval_dataset.tsv"),
+            )
 
         super(SUPERGLUE_RTE, self).__init__(
             data_folder / "RTE",
@@ -1034,8 +1095,8 @@ class SUPERGLUE_RTE(DataPairCorpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
-            label_type='textual_entailment',
-            sample_missing_splits=sample_missing_splits
+            label_type="textual_entailment",
+            sample_missing_splits=sample_missing_splits,
         )
 
         self.eval_dataset = DataPairDataset(
@@ -1046,10 +1107,10 @@ class SUPERGLUE_RTE(DataPairCorpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             skip_first_line=False,
-            label=False
+            label=False,
         )
 
-    """    
+    """
     Creates JSONL file of the predictions of the eval_dataset (after calling classifier.predict(corpus.eval_dataset, label_name='textual_entailment')).
     The resulting file is called RTE.jsonl and is in the form required for submission to the SuperGlue Benchmark.
     """
@@ -1057,28 +1118,38 @@ class SUPERGLUE_RTE(DataPairCorpus):
     def jsonl_from_eval_dataset(self, folder_path: Union[str, Path]):
 
         folder_path = Path(folder_path)
-        folder_path = folder_path / 'RTE.jsonl'
+        folder_path = folder_path / "RTE.jsonl"
 
-        with open(folder_path, mode='w') as jsonl_file:
+        with open(folder_path, mode="w") as jsonl_file:
             datapoint: DataPair
             for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
-                entry = {"idx": index, "label": datapoint.get_labels('textual_entailment')[0].value}
-                jsonl_file.write(str(entry) + '\n')
+                entry = {
+                    "idx": index,
+                    "label": datapoint.get_labels("textual_entailment")[0].value,
+                }
+                jsonl_file.write(str(entry) + "\n")
 
 
 # Function to transform JSON file to tsv for Recognizing Textual Entailment Data
-def rte_jsonl_to_tsv(file_path: Union[str, Path], label: bool = True, remove: bool = False, encoding='utf-8'):
+def rte_jsonl_to_tsv(
+    file_path: Union[str, Path],
+    label: bool = True,
+    remove: bool = False,
+    encoding="utf-8",
+):
     import json
 
-    tsv_file = os.path.splitext(file_path)[0] + '.tsv'
+    tsv_file = os.path.splitext(file_path)[0] + ".tsv"
 
-    with open(file_path, 'r', encoding=encoding) as jsonl_f, open(tsv_file, 'w', encoding=encoding) as tsv_f:
+    with open(file_path, "r", encoding=encoding) as jsonl_f, open(
+        tsv_file, "w", encoding=encoding
+    ) as tsv_f:
         for line in jsonl_f:
             obj = json.loads(line)
-            new_line = obj["premise"] + '\t' + obj["hypothesis"]
+            new_line = obj["premise"] + "\t" + obj["hypothesis"]
             if label:
-                new_line += '\t' + obj["label"]
-            new_line += '\n'
+                new_line += "\t" + obj["label"]
+            new_line += "\n"
 
             tsv_f.write(new_line)
 

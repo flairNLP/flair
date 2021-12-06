@@ -7,7 +7,7 @@ import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import DataPoint, Label, Sentence
+from flair.data import Label, Sentence
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -16,16 +16,17 @@ log = logging.getLogger("flair")
 class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
     """
     Text Classification Model
-    The model takes word embeddings, puts them into an RNN to obtain a text representation, and puts the
-    text representation in the end into a linear layer to get the actual class label.
-    The model can handle single and multi class data sets.
+    The model takes word embeddings, puts them into an RNN to obtain a text
+    representation, and puts the text representation in the end into a linear
+    layer to get the actual class label. The model can handle single and multi
+    class data sets.
     """
 
     def __init__(
-            self,
-            document_embeddings: flair.embeddings.DocumentEmbeddings,
-            label_type: str,
-            **classifierargs,
+        self,
+        document_embeddings: flair.embeddings.DocumentEmbeddings,
+        label_type: str,
+        **classifierargs,
     ):
         """
         Initializes a TextClassifier
@@ -41,20 +42,28 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         super(TextClassifier, self).__init__(**classifierargs)
 
-        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
+        self.document_embeddings: flair.embeddings.DocumentEmbeddings = (
+            document_embeddings
+        )
 
         self._label_type = label_type
 
-        self.decoder = nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
+        self.decoder = nn.Linear(
+            self.document_embeddings.embedding_length, len(self.label_dictionary)
+        )
         nn.init.xavier_uniform_(self.decoder.weight)
 
         # auto-spawn on GPU if available
         self.to(flair.device)
 
-    def forward_pass(self,
-                     sentences: Union[List[Sentence], Sentence],
-                     return_label_candidates: bool = False,
-                     ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[Sentence], List[Label]]]:
+    def forward_pass(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
+    ) -> Union[
+        Tuple[torch.Tensor, List[List[str]]],
+        Tuple[torch.Tensor, List[List[str]], List[Sentence], List[Label]],
+    ]:
         if not isinstance(sentences, list):
             sentences = [sentences]
 
@@ -63,7 +72,10 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         # make tensor for all embedded sentences in batch
         embedding_names = self.document_embeddings.get_names()
-        text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
+        text_embedding_list = [
+            sentence.get_embedding(embedding_names).unsqueeze(0)
+            for sentence in sentences
+        ]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
         # send through decoder to get logits
@@ -71,8 +83,9 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         labels = []
         for sentence in sentences:
-            labels.append([label.value for label in sentence.get_labels(self.label_type)])
-
+            labels.append(
+                [label.value for label in sentence.get_labels(self.label_type)]
+            )
 
         if return_label_candidates:
             label_candidates = [Label(value="<None>") for sentence in sentences]
@@ -102,7 +115,9 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
             label_dictionary=state["label_dictionary"],
             label_type=label_type,
             multi_label=state["multi_label"],
-            multi_label_threshold=0.5 if "multi_label_threshold" not in state.keys() else state["multi_label_threshold"],
+            multi_label_threshold=0.5
+            if "multi_label_threshold" not in state.keys()
+            else state["multi_label_threshold"],
             loss_weights=weights,
         )
         model.load_state_dict(state["state_dict"])
@@ -120,10 +135,18 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         # English sentiment models
         model_map["sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_4.pt"]
+            [
+                hu_path,
+                "sentiment-curated-distilbert",
+                "sentiment-en-mix-distillbert_4.pt",
+            ]
         )
         model_map["en-sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_4.pt"]
+            [
+                hu_path,
+                "sentiment-curated-distilbert",
+                "sentiment-en-mix-distillbert_4.pt",
+            ]
         )
         model_map["sentiment-fast"] = "/".join(
             [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn_v8.pt"]

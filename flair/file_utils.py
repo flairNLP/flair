@@ -17,8 +17,8 @@ from typing import Optional, Sequence, Tuple, Union, cast
 from urllib.parse import urlparse
 
 import requests
+from tqdm import tqdm as _tqdm
 
-# from allennlp.common.tqdm import Tqdm
 import flair
 
 logger = logging.getLogger("flair")
@@ -114,12 +114,12 @@ def unzip_file(file: Union[str, Path], unzip_to: Union[str, Path]):
 
 def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True):
     """
-        Unpacks a file to the given location.
+    Unpacks a file to the given location.
 
-        :param file Archive file to unpack
-        :param unpack_to Destination where to store the output
-        :param mode Type of the archive (zip, tar, gz, targz, rar)
-        :param keep Indicates whether to keep the archive after extraction or delete it
+    :param file Archive file to unpack
+    :param unpack_to Destination where to store the output
+    :param mode Type of the archive (zip, tar, gz, targz, rar)
+    :param keep Indicates whether to keep the archive after extraction or delete it
     """
     if mode == "zip" or (mode is None and str(file).endswith("zip")):
         from zipfile import ZipFile
@@ -129,7 +129,7 @@ def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True
             zipObj.extractall(unpack_to)
 
     elif mode == "targz" or (
-            mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")
+        mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")
     ):
         import tarfile
 
@@ -253,10 +253,10 @@ def get_from_cache(url: str, cache_dir: Path) -> Path:
 
 
 def open_inside_zip(
-        archive_path: str,
-        cache_dir: Union[str, Path],
-        member_path: Optional[str] = None,
-        encoding: str = "utf8",
+    archive_path: str,
+    cache_dir: Union[str, Path],
+    member_path: Optional[str] = None,
+    encoding: str = "utf8",
 ) -> typing.Iterable:
     cached_archive_path = cached_path(archive_path, cache_dir=Path(cache_dir))
     archive = zipfile.ZipFile(cached_archive_path, "r")
@@ -269,7 +269,7 @@ def open_inside_zip(
 
 
 def get_the_only_file_in_the_archive(
-        members_list: Sequence[str], archive_path: str
+    members_list: Sequence[str], archive_path: str
 ) -> str:
     if len(members_list) > 1:
         raise ValueError(
@@ -286,14 +286,11 @@ def get_the_only_file_in_the_archive(
 
 
 def format_embeddings_file_uri(
-        main_file_path_or_url: str, path_inside_archive: Optional[str] = None
+    main_file_path_or_url: str, path_inside_archive: Optional[str] = None
 ) -> str:
     if path_inside_archive:
         return "({})#{}".format(main_file_path_or_url, path_inside_archive)
     return main_file_path_or_url
-
-
-from tqdm import tqdm as _tqdm
 
 
 class Tqdm:
