@@ -33,7 +33,7 @@ class CRF(torch.nn.Module):
     def forward(self, features: torch.tensor) -> torch.tensor:
         """
         Forward propagation of Conditional Random Field.
-        :param rnn_features: output from RNN / Linear layer in shape (batch size, seq len, hidden size)
+        :param features: output from RNN / Linear layer in shape (batch size, seq len, hidden size)
         :return: CRF scores (emission scores for each token + transitions prob from previous state) in
         shape (batch_size, seq len, tagset size, tagset size)
         """

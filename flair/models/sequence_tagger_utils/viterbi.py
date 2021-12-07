@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import torch
 import torch.nn
 from torch.nn.functional import softmax
@@ -40,33 +40,37 @@ class ViterbiLoss(torch.nn.Module):
         :param lengths: lengths tuple containing sorted lengths and indices from unsorted list
         :return: average Viterbi Loss over batch size
         """
-        features, lengths = features_tuple
+        features, lengths, transitions = features_tuple
+
         batch_size = features.size(0)
         seq_len = features.size(1)
+        transitions = torch.tensor(transitions)
 
-        formatted_targets = self.format_targets(targets, lengths)
+        targets, targets_matrix_indices = self.format_targets(targets, lengths)
+        targets_matrix_indices = torch.tensor(targets_matrix_indices, dtype=torch.long).unsqueeze(2).to(flair.device)
 
-        targets = torch.tensor(formatted_targets, dtype=torch.long).unsqueeze(2).to(flair.device)
-
+        #scores_at_targets[range(features.shape[0]), lengths.values -1]
         # Squeeze crf scores matrices in 1-dim shape and gather scores at targets by matrix indices
-        scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets)
+        scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets_matrix_indices)
         scores_at_targets = pack_padded_sequence(scores_at_targets, lengths.values, batch_first=True)[0]
-        gold_score = scores_at_targets.sum()
+        transitions_to_stop = transitions[np.repeat(self.stop_tag, features.shape[0]), [target[length - 1] for target, length in zip(targets, lengths.values)]]
+        gold_score = scores_at_targets.sum() + transitions_to_stop.sum()
 
         scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device)
+
 
         for t in range(max(lengths.values)):
             batch_size_t = sum([l > t for l in lengths.values])  # since batch is ordered, we can save computation time by reducing our effective batch_size
 
             if t == 0:
                 # Initially, get scores from <start> tag to all other tags
-                scores_upto_t[:batch_size_t] = features[:batch_size_t, t, :, self.start_tag]
+                scores_upto_t[:batch_size_t] = scores_upto_t[:batch_size_t] + features[:batch_size_t, t, :, self.start_tag]
             else:
                 # We add scores at current timestep to scores accumulated up to previous timestep, and log-sum-exp
                 # Remember, the cur_tag of the previous timestep is the prev_tag of this timestep
                 scores_upto_t[:batch_size_t] = log_sum_exp(features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t].unsqueeze(1), dim=2)
 
-        all_paths_scores = scores_upto_t[:, self.stop_tag].sum()
+        all_paths_scores = log_sum_exp(scores_upto_t + transitions[self.stop_tag].unsqueeze(0), dim=1).sum()
 
         viterbi_loss = all_paths_scores - gold_score
 
@@ -83,10 +87,10 @@ class ViterbiLoss(torch.nn.Module):
         for t in targets_per_sentence:
             t += [self.tag_dictionary.get_idx_for_item(STOP_TAG)] * (max(lengths.values) - len(t))
 
-        tmaps = list(map(lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)] + [s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)],
+        matrix_indices = list(map(lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)] + [s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)],
                          targets_per_sentence))
 
-        return tmaps
+        return targets_per_sentence, matrix_indices
 
 class ViterbiDecoder:
     """
@@ -103,14 +107,14 @@ class ViterbiDecoder:
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
-    def decode(self, features_tuple: tuple, transitions: numpy.array) -> List:
+    def decode(self, features_tuple: tuple) -> List:
         """
         Decoding function returning the most likely sequence of tags.
         :param features: CRF scores from CRF forward method in shape (batch size, seq len, tagset size, tagset size)
         :param lengths: lengths tuple containing sorted lengths and indices from unsorted list
         :return: decoded sequences
         """
-        features, lengths = features_tuple
+        features, lengths, transitions = features_tuple
 
         tags = []
         batch_size = features.size(0)
