@@ -41,8 +41,7 @@ class CRF(torch.nn.Module):
         seq_len = features.size(1)
 
         emission_scores = self.emission(features)
-        emission_scores = emission_scores.unsqueeze(2).expand(batch_size, seq_len, self.tagset_size, self.tagset_size)
+        emission_scores = emission_scores.unsqueeze(-1).expand(batch_size, seq_len, self.tagset_size, self.tagset_size)
 
         crf_scores = emission_scores + self.transitions.unsqueeze(0).unsqueeze(0)
-
         return crf_scores
