@@ -252,7 +252,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         # -- A tensor of shape (aggregated sequence length for all sentences in batch, tagset size) for linear layer
         if self.use_crf:
             features = self.crf(sentence_tensor)
-            scores = (features, lengths, self.crf.transitions.detach().cpu().numpy())
+            scores = (features, lengths, self.crf.transitions)
         else:
             features = self.linear2tag(sentence_tensor)
             scores = self._get_scores_from_features(features, lengths)

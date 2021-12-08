@@ -44,7 +44,6 @@ class ViterbiLoss(torch.nn.Module):
 
         batch_size = features.size(0)
         seq_len = features.size(1)
-        transitions = torch.tensor(transitions)
 
         targets, targets_matrix_indices = self.format_targets(targets, lengths)
         targets_matrix_indices = torch.tensor(targets_matrix_indices, dtype=torch.long).unsqueeze(2).to(flair.device)
@@ -118,7 +117,6 @@ class ViterbiDecoder:
 
         batch_size = features.size(0)
         seq_len = features.size(1)
-        transitions = torch.tensor(transitions)
 
         # Create a tensor to hold accumulated sequence scores at each current tag
         scores_upto_t = torch.zeros(batch_size, seq_len + 1, self.tagset_size)
