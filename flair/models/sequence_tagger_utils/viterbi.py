@@ -116,39 +116,37 @@ class ViterbiDecoder:
         """
         features, lengths, transitions = features_tuple
 
-        tags = []
         batch_size = features.size(0)
         seq_len = features.size(1)
+        transitions = torch.tensor(transitions)
 
         # Create a tensor to hold accumulated sequence scores at each current tag
-        scores_upto_t = torch.zeros(batch_size, seq_len + 1, self.tagset_size).to(flair.device)
+        scores_upto_t = torch.zeros(batch_size, seq_len + 1, self.tagset_size)
         # Create a tensor to hold back-pointers
         # i.e., indices of the previous_tag that corresponds to maximum accumulated score at current tag
         # Let pads be the <end> tag index, since that was the last tag in the decoded sequence
         backpointers = torch.ones((batch_size, seq_len + 1, self.tagset_size), dtype=torch.long,
                                   device=flair.device) * self.stop_tag
 
-        start_forward_var = torch.ones([self.tagset_size]).to(flair.device) * -10000
-        start_forward_var[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
-        start_forward_var = start_forward_var + transitions
-
-        # initial fill of forward var
-        scores_upto_t[:, 0], backpointers[:, 0] = torch.max(start_forward_var, dim=1)
-
         for t in range(seq_len):
             batch_size_t = sum([l > t for l in lengths.values])  # effective batch size (sans pads) at this timestep
-            terminate_var = [idx for idx, l in enumerate(lengths.values) if l == t + 1]
+            terminates = [i for i, l in enumerate(lengths.values) if l == t + 1]
 
-            # We add scores at current timestep to scores accumulated up to previous timestep, and
-            # choose the previous timestep that corresponds to the max. accumulated score for each current timestep
-            scores_upto_t[:batch_size_t, t + 1], backpointers[:batch_size_t, t + 1, :] = torch.max(
-                features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t].unsqueeze(1),
-                dim=2)
+            if t == 0:
+                scores_upto_t[:batch_size_t, t] = features[:batch_size_t, t, :, self.start_tag]
+                backpointers[:batch_size_t, t, :] = torch.ones((batch_size_t, self.tagset_size),
+                                                               dtype=torch.long) * self.start_tag
+            else:
+                # We add scores at current timestep to scores accumulated up to previous timestep, and
+                # choose the previous timestep that corresponds to the max. accumulated score for each current timestep
+                scores_upto_t[:batch_size_t, t], backpointers[:batch_size_t, t, :] = torch.max(
+                    features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t - 1].unsqueeze(1),
+                    dim=2)
 
-            # if sentence is completed, add transition to stop tag
-            if terminate_var:
-                scores_upto_t[terminate_var, t + 1, self.tag_dictionary.get_idx_for_item(START_TAG)] = -10000.0
-                scores_upto_t[terminate_var, t + 1, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.0
+            if terminates:
+                scores_upto_t[terminates, t + 1], backpointers[terminates, t + 1, :] = torch.max(
+                    scores_upto_t[terminates, t].unsqueeze(1) + transitions[self.stop_tag].unsqueeze(0),
+                    dim=2)
 
         # Decode/trace best path backwards
         decoded = torch.zeros((batch_size, backpointers.size(1)), dtype=torch.long, device=flair.device)
@@ -161,14 +159,19 @@ class ViterbiDecoder:
         # Sanity check
         assert torch.equal(decoded[:, 0], torch.ones((batch_size), dtype=torch.long, device=flair.device) * self.start_tag)
 
+        # remove start-tag and backscore to stop-tag
+        scores_upto_t = scores_upto_t[:, :-1, :]
+        decoded = decoded[:, 1:]
+
         # Max + Softmax to get confidence score for predicted label and append label to each token
         confidences = torch.max(softmax(scores_upto_t, dim=2), dim=2)
 
+        tags = []
         for tag_seq, tag_seq_conf, length_seq in zip(decoded, confidences.values, lengths.values):
             tags.append(
                 [
                     Label(self.tag_dictionary.get_item_for_index(tag), conf.item())
-                    for tag, conf in list(zip(tag_seq, tag_seq_conf))[1:length_seq + 1]
+                    for tag, conf in list(zip(tag_seq, tag_seq_conf))[:length_seq]
                 ]
             )
 
