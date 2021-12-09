@@ -11,7 +11,7 @@ class CRF(torch.nn.Module):
     but also on previous seen annotations.
     """
 
-    def __init__(self, hidden_dim: int, tagset_size: int, init_from_state_dict: bool):
+    def __init__(self, hidden_dim: int, tag_dictionary, tagset_size: int, init_from_state_dict: bool):
         """
         :param hidden_dim: hidden size of RNN output
         :param tagset_size: number of tag from tag dictionary
@@ -22,11 +22,11 @@ class CRF(torch.nn.Module):
         self.transitions = torch.nn.Parameter(torch.randn(tagset_size, tagset_size))
         if not init_from_state_dict:
             self.transitions.detach()[
-            self.tag_dictionary.get_idx_for_item(START_TAG), :
+            tag_dictionary.get_idx_for_item(START_TAG), :
             ] = -10000
 
             self.transitions.detach()[
-            :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
+            :, tag_dictionary.get_idx_for_item(STOP_TAG)
             ] = -10000
         self.to(flair.device)
 

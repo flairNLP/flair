@@ -144,7 +144,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         # ----- CRF / Linear layer -----
         if use_crf:
-            self.crf = CRF(hidden_output_dim, self.tagset_size, init_from_state_dict)
+            self.crf = CRF(hidden_output_dim, self.tag_dictionary, self.tagset_size, init_from_state_dict)
             self.loss_function = ViterbiLoss(tag_dictionary)
             self.viterbi_decoder = ViterbiDecoder(tag_dictionary)
         else:
