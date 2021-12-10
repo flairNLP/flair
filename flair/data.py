@@ -98,6 +98,17 @@ class Dictionary:
     def get_item_for_index(self, idx):
         return self.idx2item[idx].decode("UTF-8")
 
+    def set_start_stop_tags(self):
+        self.add_item("<START>")
+        self.add_item("<STOP>")
+
+    def start_stop_tags_are_set(self):
+        if {"<START>".encode(), "<STOP>".encode()}.issubset(self.item2idx.keys()):
+            return True
+        else:
+            return False
+
+
     def save(self, savefile):
         import pickle
 

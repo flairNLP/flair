@@ -23,10 +23,6 @@ from ..datasets import DataLoader, SentenceDataset
 log = logging.getLogger("flair")
 
 
-START_TAG: str = "<START>"
-STOP_TAG: str = "<STOP>"
-
-
 class SequenceTagger(flair.nn.DefaultClassifier):
 
     def __init__(
@@ -100,11 +96,8 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         self.use_crf = use_crf
         # Previously trained models have been trained without an explicit CRF, thus it is required to check
         # whether we are loading a model from state dict in order to skip or add START and STOP token
-        if use_crf \
-                and not {START_TAG.encode(), STOP_TAG.encode()}.issubset(self.tag_dictionary.item2idx.keys()) \
-                and not init_from_state_dict:
-            self.tag_dictionary.add_item(START_TAG)
-            self.tag_dictionary.add_item(STOP_TAG)
+        if use_crf and not init_from_state_dict and not self.tag_dictionary.start_stop_tags_are_set():
+            self.tag_dictionary.set_start_stop_tags()
             self.tagset_size += 2
 
         # ----- Dropout parameters -----

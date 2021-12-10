@@ -7,7 +7,9 @@ from torch.nn.utils.rnn import pack_padded_sequence
 import flair
 from flair.data import Dictionary, Label, List
 
-from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
+
+START_TAG: str = "<START>"
+STOP_TAG: str = "<STOP>"
 
 
 class ViterbiLoss(torch.nn.Module):
