@@ -11,7 +11,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_se
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import Sentence, Dictionary, Label, DataPoint, Token
+from flair.data import Sentence, Dictionary, Label, DataPoint
 from flair.embeddings import TokenEmbeddings, StackedEmbeddings
 from flair.training_utils import store_embeddings
 from flair.file_utils import cached_path, unzip_file
@@ -22,6 +22,12 @@ from .sequence_tagger_utils.utils import START_TAG, STOP_TAG
 from ..datasets import DataLoader, SentenceDataset
 
 log = logging.getLogger("flair")
+
+
+def _create_tensor_list(sentences: Union[List[DataPoint], DataPoint]) -> tuple:
+    tensor_list = list(map(lambda sent: sent.get_sequence_tensor(), sentences))
+    lengths = torch.LongTensor([len(sentence) for sentence in sentences])
+    return tensor_list, lengths
 
 
 class SequenceTagger(flair.nn.DefaultClassifier):
@@ -95,8 +101,10 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         # ----- Conditional Random Field parameters -----
         self.use_crf = use_crf
+        # Previously trained models have been trained without an explicit CRF, thus it is required to check
+        # whether we are loading a model from state dict in order to skip or add START and STOP token
         if use_crf \
-                and not {START_TAG.encode(), STOP_TAG.encode()}.issubset(self.tag_dictionary.item2idx.keys())\
+                and not {START_TAG.encode(), STOP_TAG.encode()}.issubset(self.tag_dictionary.item2idx.keys()) \
                 and not init_from_state_dict:
             self.tag_dictionary.add_item(START_TAG)
             self.tag_dictionary.add_item(STOP_TAG)
@@ -129,14 +137,15 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             if rnn:
                 self.rnn = rnn
             else:
-                self.rnn = self.RNN(rnn_type, rnn_layers,  hidden_size, bidirectional, rnn_input_dim=embedding_dim)
+                self.rnn = self.RNN(rnn_type, rnn_layers, hidden_size, bidirectional, rnn_input_dim=embedding_dim)
             num_directions = 2 if self.bidirectional else 1
             hidden_output_dim = self.rnn.hidden_size * num_directions
 
             # Whether to train initial hidden state
             self.train_initial_hidden_state = train_initial_hidden_state
             if self.train_initial_hidden_state:
-                self.hs_initializer, self.lstm_init_h, self.lstm_init_c = self._init_initial_hidden_state(num_directions)
+                self.hs_initializer, self.lstm_init_h, self.lstm_init_c = self._init_initial_hidden_state(
+                    num_directions)
 
         else:
             self.linear = torch.nn.Linear(embedding_dim, embedding_dim)
@@ -157,15 +166,24 @@ class SequenceTagger(flair.nn.DefaultClassifier):
     def label_type(self):
         return self.tag_type
 
-    def _init_loss_weights(self, loss_weights) -> torch.tensor:
+    def _init_loss_weights(self, loss_weights: dict) -> torch.tensor:
+        """
+        Intializes the loss weights based on given dictionary:
+        :param loss_weights: dictionary - contains loss weights
+        """
         n_classes = len(self.label_dictionary)
-        weight_list = [1. for i in range(n_classes)]
+        weight_list = [1. for _ in range(n_classes)]
         for i, tag in enumerate(self.label_dictionary.get_items()):
             if tag in loss_weights.keys():
                 weight_list[i] = loss_weights[tag]
-        return torch.FloatTensor(weight_list).to(flair.device)
+
+        return torch.tensor(weight_list).to(flair.device)
 
     def _init_initial_hidden_state(self, num_directions: int):
+        """
+        Intializes hidden states given the number of directions in RNN.
+        :param num_directions: Number of directions in RNN.
+        """
         hs_initializer = torch.nn.init.xavier_normal_
         lstm_init_h = torch.nn.Parameter(
             torch.randn(self.nlayers * num_directions, self.hidden_size),
@@ -210,13 +228,17 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
     def forward_pass(self,
                      sentences: Union[List[DataPoint], DataPoint],
-                     return_label_candidates: bool = False,
+                     **kwargs
                      ) -> tuple:
+        """
+        Forward propagation through network. Returns gold labels of batch in addition.
+        :param sentences: Batch of current sentences
+        """
 
         self.embeddings.embed(sentences)
 
         # Get embedding for each sentence
-        tensor_list, lengths = self._create_tensor_list(sentences)
+        tensor_list, lengths = _create_tensor_list(sentences)
         sentence_tensor = pad_sequence(tensor_list, batch_first=True)
         lengths = lengths.sort(dim=0, descending=True)
 
@@ -261,35 +283,52 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         return scores, gold_labels
 
-    def _create_tensor_list(self, sentences: Union[List[DataPoint], DataPoint]) -> tuple:
-        tensor_list = list(map(lambda sent: sent.get_sequence_tensor(), sentences))
-        lengths = torch.LongTensor([len(sentence) for sentence in sentences])
-        return tensor_list, lengths
-
     @staticmethod
     def _get_scores_from_features(features: torch.tensor, lengths: torch.tensor):
+        """
+        Trims current batch tensor in shape (batch size, sequence length, tagset size) in such a way that all
+        pads are going to be removed.
+        :param features: torch.tensor containing all features from forward propagation
+        :param lengths: length from each sentence in batch in order to trim padding tokens
+        """
         features_formatted = []
         for feat, length in zip(features, lengths.values):
             features_formatted.append(feat[:length])
         scores = torch.cat(features_formatted)
+
         return scores
 
     def _get_gold_labels(self, sentences: Union[List[DataPoint], DataPoint]):
+        """
+        Extracts gold labels from each sentence.
+        :param sentences: List of sentences in batch
+        """
         tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
         labels = [[[token.get_tag(self.label_type).value] for token in sentence] for sentence in tokens_per_sentence]
         labels = [token for sentence in labels for token in sentence]
+
         return labels
 
     def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size: int = 32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none"
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none"
     ):
+        """
+        Predicts labels for current batch with CRF or Softmax.
+        :param sentences: List of sentences in batch
+        :param mini_batch_size: batch size for test data
+        :param return_probabilities_for_all_classes: Whether to return probabilites for all classes
+        :param verbose: whether to use progress bar
+        :param label_name: which label to predict
+        :param return_loss: whether to return loss value
+        :param embedding_storage_mode: determines where to store embeddings - can be "gpu", "cpu" or None.
+        """
         if label_name is None:
             label_name = self.label_type if self.label_type is not None else "label"
 
@@ -325,17 +364,20 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             if not batch:
                 continue
 
+            # get features from forward propagation
             features, gold_labels = self.forward_pass(batch)
 
             # remove previously predicted labels of this type
             for sentence in batch:
                 sentence.remove_labels(label_name)
 
+            # if return_loss, get loss value
             if return_loss:
                 loss = self._calculate_loss(features, gold_labels)
                 overall_loss += loss[0]
                 label_count += loss[1]
 
+            # Sort batch in same way as forward propagation
             lengths = torch.LongTensor([len(sentence) for sentence in batch])
             lengths = lengths.sort(dim=0, descending=True)
             batch = [batch[i] for i in lengths.indices]
@@ -354,7 +396,12 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         if return_loss:
             return overall_loss, label_count
 
-    def _standard_inference(self, features: torch.tensor, batch):
+    def _standard_inference(self, features: torch.tensor, batch: list):
+        """
+        Softmax over emission scores from forward propagation.
+        :param features: sentence tensor from forward propagation
+        :param batch: list of sentence
+        """
         softmax_batch = F.softmax(features, dim=1).cpu()
         scores_batch, prediction_batch = torch.max(softmax_batch, dim=1)
         predictions = []
@@ -390,6 +437,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             "reproject_embeddings": self.reproject_embeddings,
             "weight_dict": self.weight_dict
         }
+
         return model_state
 
     @staticmethod
