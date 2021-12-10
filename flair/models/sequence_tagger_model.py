@@ -336,11 +336,13 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                 overall_loss += loss[0]
                 label_count += loss[1]
 
+            lengths = torch.LongTensor([len(sentence) for sentence in batch])
+            lengths = lengths.sort(dim=0, descending=True)
+            batch = [batch[i] for i in lengths.indices]
+
             if self.use_crf:
-                batch = [batch[i] for i in features[1].indices]
                 predictions = self.viterbi_decoder.decode(features)
             else:
-                batch = sorted(batch, key=len, reverse=True)
                 predictions = self._standard_inference(features, batch)
 
             for sentence, labels in zip(batch, predictions):
