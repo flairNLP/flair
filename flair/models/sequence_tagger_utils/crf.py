@@ -1,7 +1,7 @@
 import torch
 
 import flair
-from flair.models.sequence_tagger_utils.utils import START_TAG, STOP_TAG
+from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
 
 class CRF(torch.nn.Module):
@@ -14,12 +14,17 @@ class CRF(torch.nn.Module):
     def __init__(self, hidden_dim: int, tag_dictionary, tagset_size: int, init_from_state_dict: bool):
         """
         :param hidden_dim: hidden size of RNN output
+        :param tag_dictionary: tag dictionary in order to find ID for start and stop tags
         :param tagset_size: number of tag from tag dictionary
+        :param init_from_state_dict: whether we load pretrained model from state dict
         """
         super(CRF, self).__init__()
         self.tagset_size = tagset_size
         self.emission = torch.nn.Linear(hidden_dim, tagset_size)
+        # Transitions are used in the following way: transitions[to, from].
         self.transitions = torch.nn.Parameter(torch.randn(tagset_size, tagset_size))
+        # If we are not using a pretrained model and train a fresh one, we need to set transitions from any tag
+        # to START-tag and from STOP-tag to any other tag to -10000.
         if not init_from_state_dict:
             self.transitions.detach()[
             tag_dictionary.get_idx_for_item(START_TAG), :

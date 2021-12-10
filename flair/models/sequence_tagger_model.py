@@ -18,16 +18,13 @@ from flair.file_utils import cached_path, unzip_file
 
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
-from .sequence_tagger_utils.utils import START_TAG, STOP_TAG
 from ..datasets import DataLoader, SentenceDataset
 
 log = logging.getLogger("flair")
 
 
-def _create_tensor_list(sentences: Union[List[DataPoint], DataPoint]) -> tuple:
-    tensor_list = list(map(lambda sent: sent.get_sequence_tensor(), sentences))
-    lengths = torch.LongTensor([len(sentence) for sentence in sentences])
-    return tensor_list, lengths
+START_TAG: str = "<START>"
+STOP_TAG: str = "<STOP>"
 
 
 class SequenceTagger(flair.nn.DefaultClassifier):
@@ -238,7 +235,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         self.embeddings.embed(sentences)
 
         # Get embedding for each sentence
-        tensor_list, lengths = _create_tensor_list(sentences)
+        tensor_list, lengths = self._create_tensor_list(sentences)
         sentence_tensor = pad_sequence(tensor_list, batch_first=True)
         lengths = lengths.sort(dim=0, descending=True)
 
@@ -282,6 +279,17 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         gold_labels = self._get_gold_labels(sentences)
 
         return scores, gold_labels
+
+    @staticmethod
+    def _create_tensor_list(sentences: Union[List[DataPoint], DataPoint]) -> tuple:
+        """
+        Extracts for each sentence its embeddings and creates a Tensor out of it.
+
+        :param sentences: list of current sentences in batch
+        """
+        tensor_list = list(map(lambda sent: sent.get_sequence_tensor(), sentences))
+        lengths = torch.LongTensor([len(sentence) for sentence in sentences])
+        return tensor_list, lengths
 
     @staticmethod
     def _get_scores_from_features(features: torch.tensor, lengths: torch.tensor):

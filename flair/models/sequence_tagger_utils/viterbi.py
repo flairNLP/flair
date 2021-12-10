@@ -7,12 +7,11 @@ from torch.nn.utils.rnn import pack_padded_sequence
 import flair
 from flair.data import Dictionary, Label, List
 
-from .utils import log_sum_exp, START_TAG, STOP_TAG
+from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
 
 class ViterbiLoss(torch.nn.Module):
     """
-    Viterbi Loss according to sgrvinod (https://github.com/sgrvinod).
     Calculates the loss for each sequence up to its length t.
     """
 
@@ -30,14 +29,9 @@ class ViterbiLoss(torch.nn.Module):
         """
         Forward propagation of Viterbi Loss
 
-        :param features: CRF scores from CRF forward method in shape (batch size, seq len, tagset size, tagset size)
-        :param targets: true tags for sentences which come in as matrix indices.
-            CRF scores contain per sentence, per token a (tagset_size x tagset_size) matrix, containing emission score for
-            token j + transition prob from previous token i. Means, if we think of our rows as "from tag" and our columns
-            as "to tag", the matrix in cell [10,5] would contain the emission score for tag 5 + transition score
-            from previous tag 10 and could directly be addressed through the 1-dim indices (10 * tagset_size + 5) = 125,
-            if our tagset consists of 12 tags.
-        :param lengths: lengths tuple containing sorted lengths and indices from unsorted list
+        :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
+            lengths of sentences in batch, transitions from CRF
+        :param targets: true tags for sentences which will be converted to matrix indices.
         :return: average Viterbi Loss over batch size
         """
         features, lengths, transitions = features_tuple
@@ -45,37 +39,65 @@ class ViterbiLoss(torch.nn.Module):
         batch_size = features.size(0)
         seq_len = features.size(1)
 
-        targets, targets_matrix_indices = self.format_targets(targets, lengths)
+        targets, targets_matrix_indices = self._format_targets(targets, lengths)
         targets_matrix_indices = torch.tensor(targets_matrix_indices, dtype=torch.long).unsqueeze(2).to(flair.device)
 
-        #scores_at_targets[range(features.shape[0]), lengths.values -1]
+        # scores_at_targets[range(features.shape[0]), lengths.values -1]
         # Squeeze crf scores matrices in 1-dim shape and gather scores at targets by matrix indices
         scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets_matrix_indices)
         scores_at_targets = pack_padded_sequence(scores_at_targets, lengths.values, batch_first=True)[0]
-        transitions_to_stop = transitions[np.repeat(self.stop_tag, features.shape[0]), [target[length - 1] for target, length in zip(targets, lengths.values)]]
+        transitions_to_stop = transitions[
+            np.repeat(self.stop_tag, features.shape[0]), [target[length - 1] for target, length in
+                                                          zip(targets, lengths.values)]]
         gold_score = scores_at_targets.sum() + transitions_to_stop.sum()
 
         scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device)
 
-
         for t in range(max(lengths.values)):
-            batch_size_t = sum([l > t for l in lengths.values])  # since batch is ordered, we can save computation time by reducing our effective batch_size
+            batch_size_t = sum([l > t for l in
+                                lengths.values])  # since batch is ordered, we can save computation time by reducing our effective batch_size
 
             if t == 0:
                 # Initially, get scores from <start> tag to all other tags
-                scores_upto_t[:batch_size_t] = scores_upto_t[:batch_size_t] + features[:batch_size_t, t, :, self.start_tag]
+                scores_upto_t[:batch_size_t] = scores_upto_t[:batch_size_t] + features[:batch_size_t, t, :,
+                                                                              self.start_tag]
             else:
                 # We add scores at current timestep to scores accumulated up to previous timestep, and log-sum-exp
                 # Remember, the cur_tag of the previous timestep is the prev_tag of this timestep
-                scores_upto_t[:batch_size_t] = log_sum_exp(features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t].unsqueeze(1), dim=2)
+                scores_upto_t[:batch_size_t] = self._log_sum_exp(
+                    features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t].unsqueeze(1), dim=2)
 
-        all_paths_scores = log_sum_exp(scores_upto_t + transitions[self.stop_tag].unsqueeze(0), dim=1).sum()
+        all_paths_scores = self._log_sum_exp(scores_upto_t + transitions[self.stop_tag].unsqueeze(0), dim=1).sum()
 
         viterbi_loss = all_paths_scores - gold_score
 
         return viterbi_loss
 
-    def format_targets(self, targets: torch.tensor, lengths: torch.tensor):
+    @staticmethod
+    def _log_sum_exp(tensor, dim):
+        """
+        Calculates the log-sum-exponent of a tensor's dimension in a numerically stable way.
+
+        :param tensor: tensor
+        :param dim: dimension to calculate log-sum-exp of
+        :return: log-sum-exp
+        """
+        m, _ = torch.max(tensor, dim)
+        m_expanded = m.unsqueeze(dim).expand_as(tensor)
+        return m + torch.log(torch.sum(torch.exp(tensor - m_expanded), dim))
+
+    def _format_targets(self, targets: torch.tensor, lengths: torch.tensor):
+        """
+        Formats targets into matrix indices.
+        CRF scores contain per sentence, per token a (tagset_size x tagset_size) matrix, containing emission score for
+            token j + transition prob from previous token i. Means, if we think of our rows as "to tag" and our columns
+            as "from tag", the matrix in cell [10,5] would contain the emission score for tag 10 + transition score
+            from previous tag 5 and could directly be addressed through the 1-dim indices (10 + tagset_size * 5) = 70,
+            if our tagset consists of 12 tags.
+
+        :param targets: targets as in tag dictionary
+        :param lengths: lengths of sentences in batch
+        """
         targets_per_sentence = []
 
         targets_list = targets.tolist()
@@ -86,14 +108,16 @@ class ViterbiLoss(torch.nn.Module):
         for t in targets_per_sentence:
             t += [self.tag_dictionary.get_idx_for_item(STOP_TAG)] * (max(lengths.values) - len(t))
 
-        matrix_indices = list(map(lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)] + [s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)],
-                         targets_per_sentence))
+        matrix_indices = list(
+            map(lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)] + [
+                s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)],
+                targets_per_sentence))
 
         return targets_per_sentence, matrix_indices
 
+
 class ViterbiDecoder:
     """
-    Viterbi Decoder according to sgrvinod (https://github.com/sgrvinod).
     Decodes a given sequence using the Viterbi algorithm.
     """
 
@@ -109,8 +133,8 @@ class ViterbiDecoder:
     def decode(self, features_tuple: tuple) -> List:
         """
         Decoding function returning the most likely sequence of tags.
-        :param features: CRF scores from CRF forward method in shape (batch size, seq len, tagset size, tagset size)
-        :param lengths: lengths tuple containing sorted lengths and indices from unsorted list
+        :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
+            lengths of sentence in batch, transitions of CRF
         :return: decoded sequences
         """
         features, lengths, transitions = features_tuple
@@ -141,6 +165,7 @@ class ViterbiDecoder:
                     features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t - 1].unsqueeze(1),
                     dim=2)
 
+            # If sentence is over, add transition to STOP-tag
             if terminates:
                 scores_upto_t[terminates, t + 1], backpointers[terminates, t + 1, :] = torch.max(
                     scores_upto_t[terminates, t].unsqueeze(1) + transitions[self.stop_tag].unsqueeze(0),
@@ -155,7 +180,8 @@ class ViterbiDecoder:
             pointer = decoded[:, t].unsqueeze(1)
 
         # Sanity check
-        assert torch.equal(decoded[:, 0], torch.ones((batch_size), dtype=torch.long, device=flair.device) * self.start_tag)
+        assert torch.equal(decoded[:, 0],
+                           torch.ones((batch_size), dtype=torch.long, device=flair.device) * self.start_tag)
 
         # remove start-tag and backscore to stop-tag
         scores_upto_t = scores_upto_t[:, :-1, :]
