@@ -520,6 +520,11 @@ class ModelTrainer:
 
                 self.model.eval()
 
+                if save_model_each_k_epochs > 0 and epoch % save_model_each_k_epochs == 0:
+                    print("saving model of current epoch")
+                    model_name = "model_epoch_" + str(epoch) + ".pt"
+                    self.model.save(base_path / model_name, checkpoint=save_optimizer_state)
+
                 log_line(log)
                 log.info(f"EPOCH {epoch} done: loss {train_loss:.4f} - lr {learning_rate:.7f}")
 
@@ -718,11 +723,6 @@ class ModelTrainer:
                         self.model.load_state_dict(last_epoch_model_state_dict)
                         self.model.save(base_path / "pre-best-model.pt")
                         self.model.load_state_dict(current_state_dict)
-
-                if save_model_each_k_epochs > 0 and not epoch % save_model_each_k_epochs:
-                    print("saving model of current epoch")
-                    model_name = "model_epoch_" + str(epoch) + ".pt"
-                    self.model.save(base_path / model_name, checkpoint=save_optimizer_state)
 
             if use_swa:
                 optimizer.swap_swa_sgd()
