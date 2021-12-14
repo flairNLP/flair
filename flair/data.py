@@ -6,8 +6,8 @@ from collections import defaultdict
 from operator import itemgetter
 from typing import List, Dict, Union, Optional
 
-from deprecated import deprecated
 import torch
+from deprecated import deprecated
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
@@ -107,7 +107,6 @@ class Dictionary:
             return True
         else:
             return False
-
 
     def save(self, savefile):
         import pickle
@@ -820,10 +819,10 @@ class Sentence(DataPoint):
 
         return torch.Tensor()
 
-
     def get_sequence_tensor(self) -> torch.tensor:
         if all(token.get_embedding().nelement() != 0 for token in self.tokens) \
-        and all(token.get_embedding().shape for token in self.tokens): # Check if tokens and embeddings are set and dimension matches
+                and all(token.get_embedding().shape for token in
+                        self.tokens):  # Check if tokens and embeddings are set and dimension matches
             seq_len = len(self.tokens)
             embedding_dim = self.tokens[0].embedding.shape[0]
             sequence_tensor = torch.empty(size=(seq_len, embedding_dim), device=flair.device)
@@ -1172,7 +1171,7 @@ class Corpus:
     ):
         # set name
         self.name: str = name
-        
+
         # abort if no data is provided
         if not train and not dev and not test:
             raise RuntimeError('No data provided when initializing corpus object.')

@@ -1,24 +1,23 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Optional, Dict, Union, List
+from typing import Optional, Dict, Union, List, Tuple
 from urllib.error import HTTPError
 
 import torch
 import torch.nn
 import torch.nn.functional as F
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
 
 import flair.nn
 from flair.data import Sentence, Dictionary, Label, DataPoint
+from flair.datasets import DataLoader, SentenceDataset
 from flair.embeddings import TokenEmbeddings, StackedEmbeddings
-from flair.training_utils import store_embeddings
 from flair.file_utils import cached_path, unzip_file
-
+from flair.training_utils import store_embeddings
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
-from ..datasets import DataLoader, SentenceDataset
 
 log = logging.getLogger("flair")
 
@@ -124,10 +123,12 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         # ----- RNN layer -----
         if use_rnn:
             # If shared RNN provided, else create one for model
-            if rnn:
-                self.rnn = rnn
-            else:
-                self.rnn = self.RNN(rnn_type, rnn_layers, hidden_size, bidirectional, rnn_input_dim=embedding_dim)
+            self.rnn = rnn if rnn else self.RNN(rnn_type,
+                                                rnn_layers,
+                                                hidden_size,
+                                                bidirectional,
+                                                rnn_input_dim=embedding_dim)
+
             num_directions = 2 if self.bidirectional else 1
             hidden_output_dim = self.rnn.hidden_size * num_directions
 
@@ -217,7 +218,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         return RNN
 
     def forward_pass(self,
-                     sentences: Union[List[DataPoint], DataPoint],
+                     sentences: Union[List[Sentence], Sentence],
                      **kwargs
                      ) -> tuple:
         """
@@ -227,12 +228,11 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         self.embeddings.embed(sentences)
 
-        # Get embedding for each sentence
-        tensor_list, lengths = self._create_tensor_list(sentences)
-        sentence_tensor = pad_sequence(tensor_list, batch_first=True)
-        lengths = lengths.sort(dim=0, descending=True)
+        # make a zero-padded tensor for the whole sentence
+        lengths, sentence_tensor = self._make_padded_tensor_for_batch(sentences)
 
         # sort tensor in decreasing order based on lengths of sentences in batch
+        lengths = lengths.sort(dim=0, descending=True)
         sentences = [sentences[i] for i in lengths.indices]
         sentence_tensor = sentence_tensor[lengths.indices]
 
@@ -248,7 +248,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = pack_padded_sequence(sentence_tensor, lengths.values, batch_first=True)
+            packed = pack_padded_sequence(sentence_tensor, lengths.values, batch_first=True, enforce_sorted=False)
             rnn_output, hidden = self.rnn(packed)
             sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
         else:
@@ -273,16 +273,32 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         return scores, gold_labels
 
-    @staticmethod
-    def _create_tensor_list(sentences: Union[List[DataPoint], DataPoint]) -> tuple:
-        """
-        Extracts for each sentence its embeddings and creates a Tensor out of it.
+    def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, torch.Tensor]:
+        names = self.embeddings.get_names()
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        longest_token_sequence_in_batch: int = max(lengths)
+        pre_allocated_zero_tensor = torch.zeros(
+            self.embeddings.embedding_length * longest_token_sequence_in_batch,
+            dtype=torch.float,
+            device=flair.device,
+        )
+        all_embs = list()
+        for sentence in sentences:
+            all_embs += [emb for token in sentence for emb in token.get_each_embedding(names)]
+            nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
 
-        :param sentences: list of current sentences in batch
-        """
-        tensor_list = list(map(lambda sent: sent.get_sequence_tensor(), sentences))
-        lengths = torch.LongTensor([len(sentence) for sentence in sentences])
-        return tensor_list, lengths
+            if nb_padding_tokens > 0:
+                t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
+                all_embs.append(t)
+        sentence_tensor = torch.cat(all_embs).view(
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.embeddings.embedding_length,
+            ]
+        )
+        lengths: torch.Tensor = torch.tensor(lengths, dtype=torch.long)
+        return lengths, sentence_tensor
 
     @staticmethod
     def _get_scores_from_features(features: torch.tensor, lengths: torch.tensor):
