@@ -74,6 +74,7 @@ class ModelTrainer:
             base_path: Union[Path, str],
             learning_rate: float = 0.1,
             mini_batch_size: int = 32,
+            eval_batch_size: int = None,
             mini_batch_chunk_size: Optional[int] = None,
             max_epochs: int = 100,
             train_with_dev: bool = False,
@@ -214,6 +215,8 @@ class ModelTrainer:
                     "to enable mixed-precision training."
                 )
 
+        if not eval_batch_size:
+            eval_batch_size = mini_batch_size
         if mini_batch_chunk_size is None:
             mini_batch_chunk_size = mini_batch_size
         if learning_rate < min_learning_rate:
@@ -517,6 +520,11 @@ class ModelTrainer:
 
                 self.model.eval()
 
+                if save_model_each_k_epochs > 0 and epoch % save_model_each_k_epochs == 0:
+                    print("saving model of current epoch")
+                    model_name = "model_epoch_" + str(epoch) + ".pt"
+                    self.model.save(base_path / model_name, checkpoint=save_optimizer_state)
+
                 log_line(log)
                 log.info(f"EPOCH {epoch} done: loss {train_loss:.4f} - lr {learning_rate:.7f}")
 
@@ -530,7 +538,7 @@ class ModelTrainer:
                     train_eval_result = self.model.evaluate(
                         self.corpus.train,
                         gold_label_type=self.model.label_type,
-                        mini_batch_size=mini_batch_chunk_size,
+                        mini_batch_size=eval_batch_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
@@ -545,7 +553,7 @@ class ModelTrainer:
                     train_part_eval_result = self.model.evaluate(
                         train_part,
                         gold_label_type=self.model.label_type,
-                        mini_batch_size=mini_batch_chunk_size,
+                        mini_batch_size=eval_batch_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
@@ -567,7 +575,7 @@ class ModelTrainer:
                     dev_eval_result = self.model.evaluate(
                         self.corpus.dev,
                         gold_label_type=self.model.label_type,
-                        mini_batch_size=mini_batch_chunk_size,
+                        mini_batch_size=eval_batch_size,
                         num_workers=num_workers,
                         out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
@@ -601,7 +609,7 @@ class ModelTrainer:
                     test_eval_result = self.model.evaluate(
                         self.corpus.test,
                         gold_label_type=self.model.label_type,
-                        mini_batch_size=mini_batch_chunk_size,
+                        mini_batch_size=eval_batch_size,
                         num_workers=num_workers,
                         out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
@@ -716,11 +724,6 @@ class ModelTrainer:
                         self.model.save(base_path / "pre-best-model.pt")
                         self.model.load_state_dict(current_state_dict)
 
-                if save_model_each_k_epochs > 0 and not epoch % save_model_each_k_epochs:
-                    print("saving model of current epoch")
-                    model_name = "model_epoch_" + str(epoch) + ".pt"
-                    self.model.save(base_path / model_name, checkpoint=save_optimizer_state)
-
             if use_swa:
                 optimizer.swap_swa_sgd()
 
@@ -744,7 +747,7 @@ class ModelTrainer:
         if self.corpus.test and not train_with_test:
             final_score = self.final_test(
                 base_path=base_path,
-                eval_mini_batch_size=mini_batch_chunk_size,
+                eval_mini_batch_size=eval_batch_size,
                 num_workers=num_workers,
                 main_evaluation_metric=main_evaluation_metric,
                 gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
