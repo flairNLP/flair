@@ -15,9 +15,7 @@ class NodeToken:
         parent.children.append(self)
 
     def __str__(self):
-        return " {}({}) ".format(
-            self.token.text, self.token.get_labels(self.tag_type)[0].value
-        )
+        return " {}({}) ".format(self.token.text, self.token.get_labels(self.tag_type)[0].value)
 
 
 def tree_printer(sentence: Sentence, tag_type: str):

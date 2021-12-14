@@ -25,9 +25,7 @@ class Plotter(object):
     """
 
     @staticmethod
-    def _extract_evaluation_data(
-        file_name: Union[str, Path], score: str = "F1"
-    ) -> dict:
+    def _extract_evaluation_data(file_name: Union[str, Path], score: str = "F1") -> dict:
         file_name = Path(file_name)
 
         training_curves: Dict[str, Dict[str, List[float]]] = {
@@ -48,14 +46,10 @@ class Plotter(object):
             if f"TEST_{score}" not in row:
                 log.warning("-" * 100)
                 log.warning(f"WARNING: No {score} found for test split in this data.")
-                log.warning(
-                    f"Are you sure you want to plot {score} and not another value?"
-                )
+                log.warning(f"Are you sure you want to plot {score} and not another value?")
                 log.warning("-" * 100)
 
-            TRAIN_SCORE = (
-                row.index(f"TRAIN_{score}") if f"TRAIN_{score}" in row else None
-            )
+            TRAIN_SCORE = row.index(f"TRAIN_{score}") if f"TRAIN_{score}" in row else None
             DEV_SCORE = row.index(f"DEV_{score}") if f"DEV_{score}" in row else None
             TEST_SCORE = row.index(f"TEST_{score}") if f"TEST_{score}" in row else None
 
@@ -64,9 +58,7 @@ class Plotter(object):
 
                 if TRAIN_SCORE is not None:
                     if row[TRAIN_SCORE] != "_":
-                        training_curves["train"]["score"].append(
-                            float(row[TRAIN_SCORE])
-                        )
+                        training_curves["train"]["score"].append(float(row[TRAIN_SCORE]))
 
                 if DEV_SCORE is not None:
                     if row[DEV_SCORE] != "_":
@@ -83,9 +75,7 @@ class Plotter(object):
         if type(file_name) is str:
             file_name = Path(file_name)
 
-        weights: Dict[str, Dict[str, List[float]]] = defaultdict(
-            lambda: defaultdict(lambda: list())
-        )
+        weights: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(lambda: list()))
 
         with open(file_name, "r") as f:
             tsvin = csv.reader(f, delimiter="\t")
@@ -163,14 +153,10 @@ class Plotter(object):
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "weights.png"
         plt.savefig(path, dpi=300)
-        print(
-            f"Weights plots are saved in {path}"
-        )  # to let user know the path of the save plots
+        print(f"Weights plots are saved in {path}")  # to let user know the path of the save plots
         plt.close(fig)
 
-    def plot_training_curves(
-        self, file_name: Union[str, Path], plot_values: List[str] = ["loss", "F1"]
-    ):
+    def plot_training_curves(self, file_name: Union[str, Path], plot_values: List[str] = ["loss", "F1"]):
         file_name = Path(file_name)
 
         fig = plt.figure(figsize=(15, 10))
@@ -182,19 +168,13 @@ class Plotter(object):
             plt.subplot(len(plot_values), 1, plot_no + 1)
             if training_curves["train"]["score"]:
                 x = np.arange(0, len(training_curves["train"]["score"]))
-                plt.plot(
-                    x, training_curves["train"]["score"], label=f"training {plot_value}"
-                )
+                plt.plot(x, training_curves["train"]["score"], label=f"training {plot_value}")
             if training_curves["dev"]["score"]:
                 x = np.arange(0, len(training_curves["dev"]["score"]))
-                plt.plot(
-                    x, training_curves["dev"]["score"], label=f"validation {plot_value}"
-                )
+                plt.plot(x, training_curves["dev"]["score"], label=f"validation {plot_value}")
             if training_curves["test"]["score"]:
                 x = np.arange(0, len(training_curves["test"]["score"]))
-                plt.plot(
-                    x, training_curves["test"]["score"], label=f"test {plot_value}"
-                )
+                plt.plot(x, training_curves["test"]["score"], label=f"test {plot_value}")
             plt.legend(bbox_to_anchor=(1.04, 0), loc="lower left", borderaxespad=0)
             plt.ylabel(plot_value)
             plt.xlabel("epochs")
@@ -203,15 +183,11 @@ class Plotter(object):
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "training.png"
         plt.savefig(path, dpi=300)
-        print(
-            f"Loss and F1 plots are saved in {path}"
-        )  # to let user know the path of the save plots
+        print(f"Loss and F1 plots are saved in {path}")  # to let user know the path of the save plots
         plt.show(block=False)  # to have the plots displayed when user run this module
         plt.close(fig)
 
-    def plot_learning_rate(
-        self, file_name: Union[str, Path], skip_first: int = 10, skip_last: int = 5
-    ):
+    def plot_learning_rate(self, file_name: Union[str, Path], skip_first: int = 10, skip_last: int = 5):
         file_name = Path(file_name)
 
         lrs, losses = self._extract_learning_rate(file_name)
@@ -231,8 +207,6 @@ class Plotter(object):
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "learning_rate.png"
         plt.savefig(path, dpi=300)
-        print(
-            f"Learning_rate plots are saved in {path}"
-        )  # to let user know the path of the save plots
+        print(f"Learning_rate plots are saved in {path}")  # to let user know the path of the save plots
         plt.show(block=True)  # to have the plots displayed when user run this module
         plt.close(fig)

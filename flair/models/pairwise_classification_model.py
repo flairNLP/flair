@@ -35,9 +35,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
         """
         super().__init__(**classifierargs)
 
-        self.document_embeddings: flair.embeddings.DocumentEmbeddings = (
-            document_embeddings
-        )
+        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
 
         self._label_type = label_type
 
@@ -55,9 +53,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
 
         else:
             # representation for both sentences
-            self.decoder = torch.nn.Linear(
-                self.document_embeddings.embedding_length, len(self.label_dictionary)
-            )
+            self.decoder = torch.nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
 
             # set separator to concatenate two sentences
             self.sep = " "
@@ -66,9 +62,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
                 flair.embeddings.document.TransformerDocumentEmbeddings,
             ):
                 if self.document_embeddings.tokenizer.sep_token:
-                    self.sep = (
-                        " " + str(self.document_embeddings.tokenizer.sep_token) + " "
-                    )
+                    self.sep = " " + str(self.document_embeddings.tokenizer.sep_token) + " "
                 else:
                     self.sep = " [SEP] "
 
@@ -92,9 +86,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
 
         embedding_names = self.document_embeddings.get_names()
 
-        if (
-            self.embed_separately
-        ):  # embed both sentences seperately, concatenate the resulting vectors
+        if self.embed_separately:  # embed both sentences seperately, concatenate the resulting vectors
             first_elements = [pair.first for pair in datapairs]
             second_elements = [pair.second for pair in datapairs]
 
@@ -115,9 +107,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
         else:  # concatenate the sentences and embed together
             concatenated_sentences = [
                 Sentence(
-                    pair.first.to_tokenized_string()
-                    + self.sep
-                    + pair.second.to_tokenized_string(),
+                    pair.first.to_tokenized_string() + self.sep + pair.second.to_tokenized_string(),
                     use_tokenizer=False,
                 )
                 for pair in datapairs
@@ -126,8 +116,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
             self.document_embeddings.embed(concatenated_sentences)
 
             text_embedding_list = [
-                sentence.get_embedding(embedding_names).unsqueeze(0)
-                for sentence in concatenated_sentences
+                sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in concatenated_sentences
             ]
 
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)

@@ -59,11 +59,7 @@ class ModelTrainer:
 
     @staticmethod
     def check_for_and_delete_previous_best_models(base_path):
-        all_best_model_names = [
-            filename
-            for filename in os.listdir(base_path)
-            if filename.startswith("best-model")
-        ]
+        all_best_model_names = [filename for filename in os.listdir(base_path) if filename.startswith("best-model")]
         if len(all_best_model_names) != 0:
             warnings.warn(
                 "There should be no best model saved at epoch 1 except there "
@@ -204,21 +200,14 @@ class ModelTrainer:
             try:
                 from torch.utils.tensorboard import SummaryWriter
 
-                if tensorboard_log_dir is not None and not os.path.exists(
-                    tensorboard_log_dir
-                ):
+                if tensorboard_log_dir is not None and not os.path.exists(tensorboard_log_dir):
                     os.mkdir(tensorboard_log_dir)
-                writer = SummaryWriter(
-                    log_dir=tensorboard_log_dir, comment=tensorboard_comment
-                )
+                writer = SummaryWriter(log_dir=tensorboard_log_dir, comment=tensorboard_comment)
                 log.info(f"tensorboard logging path is {tensorboard_log_dir}")
 
             except ImportError:
                 log_line(log)
-                log.warning(
-                    "ATTENTION! PyTorch >= 1.1.0 and pillow are required"
-                    "for TensorBoard support!"
-                )
+                log.warning("ATTENTION! PyTorch >= 1.1.0 and pillow are required" "for TensorBoard support!")
                 log_line(log)
                 use_tensorboard = False
                 pass
@@ -265,31 +254,17 @@ class ModelTrainer:
         log.info(f"Device: {flair.device}")
         log_line(log)
         log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
-        if (
-            isinstance(self.model, SequenceTagger)
-            and self.model.weight_dict
-            and self.model.use_crf
-        ):
+        if isinstance(self.model, SequenceTagger) and self.model.weight_dict and self.model.use_crf:
             log_line(log)
-            log.warning(
-                "WARNING: Specified class weights will not take effect when using CRF"
-            )
+            log.warning("WARNING: Specified class weights will not take effect when using CRF")
 
         self.check_for_and_delete_previous_best_models(base_path)
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
-        log_test = (
-            True
-            if (not param_selection_mode and self.corpus.test and monitor_test)
-            else False
-        )
+        log_test = True if (not param_selection_mode and self.corpus.test and monitor_test) else False
         log_dev = False if train_with_dev or not self.corpus.dev else True
-        log_train_part = (
-            True
-            if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0)
-            else False
-        )
+        log_train_part = True if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0) else False
 
         if log_train_part:
             train_part_size = (
@@ -301,9 +276,7 @@ class ModelTrainer:
             assert train_part_size > 0
             if not eval_on_train_shuffle:
                 train_part_indices = list(range(train_part_size))
-                train_part = torch.utils.data.dataset.Subset(
-                    self.corpus.train, train_part_indices
-                )
+                train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
         # prepare loss logging file and set up header
         loss_txt = init_output_file(base_path, "loss.tsv") if create_loss_file else None
@@ -318,14 +291,10 @@ class ModelTrainer:
         if use_swa:
             import torchcontrib
 
-            optimizer = torchcontrib.optim.SWA(
-                optimizer, swa_start=10, swa_freq=5, swa_lr=learning_rate
-            )
+            optimizer = torchcontrib.optim.SWA(optimizer, swa_start=10, swa_freq=5, swa_lr=learning_rate)
 
         if use_amp:
-            self.model, optimizer = amp.initialize(
-                self.model, optimizer, opt_level=amp_opt_level
-            )
+            self.model, optimizer = amp.initialize(self.model, optimizer, opt_level=amp_opt_level)
 
         optimizer = cast(torch.optim.Optimizer, optimizer)
 
@@ -335,9 +304,7 @@ class ModelTrainer:
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
-        best_validation_score = (
-            100000000000 if train_with_dev or anneal_against_dev_loss else 0.0
-        )
+        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.0
 
         dataset_size = _len_dataset(self.corpus.train)
         if train_with_dev:
@@ -440,9 +407,7 @@ class ModelTrainer:
                     train_part_indices = list(range(_len_dataset(self.corpus.train)))
                     random.shuffle(train_part_indices)
                     train_part_indices = train_part_indices[:train_part_size]
-                    train_part = torch.utils.data.dataset.Subset(
-                        self.corpus.train, train_part_indices
-                    )
+                    train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
                 # get new learning rate
                 for group in optimizer.param_groups:
@@ -459,16 +424,10 @@ class ModelTrainer:
                 ):
                     if anneal_with_restarts:
                         log.info("resetting to best model")
-                        self.model.load_state_dict(
-                            self.model.load(base_path / "best-model.pt").state_dict()
-                        )
+                        self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
                     if anneal_with_prestarts:
                         log.info("resetting to pre-best model")
-                        self.model.load_state_dict(
-                            self.model.load(
-                                base_path / "pre-best-model.pt"
-                            ).state_dict()
-                        )
+                        self.model.load_state_dict(self.model.load(base_path / "pre-best-model.pt").state_dict())
 
                 previous_learning_rate = learning_rate
                 if use_tensorboard:
@@ -487,9 +446,7 @@ class ModelTrainer:
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
-                    shuffle=shuffle
-                    if epoch > 1
-                    else False,  # never shuffle the first epoch
+                    shuffle=shuffle if epoch > 1 else False,  # never shuffle the first epoch
                     num_workers=num_workers,
                     sampler=sampler,
                 )
@@ -517,10 +474,7 @@ class ModelTrainer:
                     # if necessary, make batch_steps
                     batch_steps = [batch]
                     if len(batch) > micro_batch_size:
-                        batch_steps = [
-                            batch[x : x + micro_batch_size]
-                            for x in range(0, len(batch), micro_batch_size)
-                        ]
+                        batch_steps = [batch[x : x + micro_batch_size] for x in range(0, len(batch), micro_batch_size)]
 
                     # forward and backward for batch
                     for batch_step in batch_steps:
@@ -563,14 +517,8 @@ class ModelTrainer:
 
                     batch_time += time.time() - start_time
                     if seen_batches % modulo == 0:
-                        momentum_info = (
-                            f" - momentum: {momentum:.4f}" if cycle_momentum else ""
-                        )
-                        intermittent_loss = (
-                            train_loss / average_over
-                            if average_over > 0
-                            else train_loss / seen_batches
-                        )
+                        momentum_info = f" - momentum: {momentum:.4f}" if cycle_momentum else ""
+                        intermittent_loss = train_loss / average_over if average_over > 0 else train_loss / seen_batches
                         log.info(
                             f"epoch {epoch} - iter {seen_batches}/"
                             f"{total_number_of_batches} - loss "
@@ -581,9 +529,7 @@ class ModelTrainer:
                         batch_time = 0.0
                         iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode and write_weights:
-                            weight_extractor.extract_weights(
-                                self.model.state_dict(), iteration
-                            )
+                            weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
                 if average_over != 0:
                     train_loss /= average_over
@@ -596,10 +542,7 @@ class ModelTrainer:
                     self.model.save(base_path / model_name, checkpoint=save_optimizer_state)
 
                 log_line(log)
-                log.info(
-                    f"EPOCH {epoch} done: loss {train_loss:.4f}"
-                    f" - lr {learning_rate:.7f}"
-                )
+                log.info(f"EPOCH {epoch} done: loss {train_loss:.4f}" f" - lr {learning_rate:.7f}")
 
                 if use_tensorboard:
                     writer.add_scalar("train_loss", train_loss, epoch)
@@ -633,10 +576,7 @@ class ModelTrainer:
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
                     )
-                    result_line += (
-                        f"\t{train_part_eval_result.loss}"
-                        f"\t{train_part_eval_result.log_line}"
-                    )
+                    result_line += f"\t{train_part_eval_result.loss}" f"\t{train_part_eval_result.log_line}"
 
                     log.info(
                         f"TRAIN_SPLIT : loss {train_part_eval_result.loss}"
@@ -648,9 +588,7 @@ class ModelTrainer:
                     for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
                         writer.add_scalar(
                             f"train_{metric_class_avg_type}_{metric_type}",
-                            train_part_eval_result.classification_report[
-                                metric_class_avg_type
-                            ][metric_type],
+                            train_part_eval_result.classification_report[metric_class_avg_type][metric_type],
                             epoch,
                         )
 
@@ -666,9 +604,7 @@ class ModelTrainer:
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
                     )
-                    result_line += (
-                        f"\t{dev_eval_result.loss}\t{dev_eval_result.log_line}"
-                    )
+                    result_line += f"\t{dev_eval_result.loss}\t{dev_eval_result.log_line}"
                     log.info(
                         f"DEV : loss {dev_eval_result.loss}"
                         f" - {main_evaluation_metric[1]}"
@@ -688,18 +624,14 @@ class ModelTrainer:
 
                     if use_tensorboard:
                         writer.add_scalar("dev_loss", dev_eval_result.loss, epoch)
-                        writer.add_scalar(
-                            "dev_score", dev_eval_result.main_score, epoch
-                        )
+                        writer.add_scalar("dev_score", dev_eval_result.main_score, epoch)
                         for (
                             metric_class_avg_type,
                             metric_type,
                         ) in metrics_for_tensorboard:
                             writer.add_scalar(
                                 f"dev_{metric_class_avg_type}_{metric_type}",
-                                dev_eval_result.classification_report[
-                                    metric_class_avg_type
-                                ][metric_type],
+                                dev_eval_result.classification_report[metric_class_avg_type][metric_type],
                                 epoch,
                             )
 
@@ -715,9 +647,7 @@ class ModelTrainer:
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
                     )
-                    result_line += (
-                        f"\t{test_eval_result.loss}\t{test_eval_result.log_line}"
-                    )
+                    result_line += f"\t{test_eval_result.loss}\t{test_eval_result.log_line}"
                     log.info(
                         f"TEST : loss {test_eval_result.loss} -"
                         f" {main_evaluation_metric[1]}"
@@ -731,18 +661,14 @@ class ModelTrainer:
 
                     if use_tensorboard:
                         writer.add_scalar("test_loss", test_eval_result.loss, epoch)
-                        writer.add_scalar(
-                            "test_score", test_eval_result.main_score, epoch
-                        )
+                        writer.add_scalar("test_score", test_eval_result.main_score, epoch)
                         for (
                             metric_class_avg_type,
                             metric_type,
                         ) in metrics_for_tensorboard:
                             writer.add_scalar(
                                 f"test_{metric_class_avg_type}_{metric_type}",
-                                test_eval_result.classification_report[
-                                    metric_class_avg_type
-                                ][metric_type],
+                                test_eval_result.classification_report[metric_class_avg_type][metric_type],
                                 epoch,
                             )
 
@@ -798,42 +724,22 @@ class ModelTrainer:
 
                         # make headers on first epoch
                         if epoch == 1:
-                            f.write(
-                                "EPOCH\tTIMESTAMP\tBAD_EPOCHS"
-                                "\tLEARNING_RATE\tTRAIN_LOSS"
-                            )
+                            f.write("EPOCH\tTIMESTAMP\tBAD_EPOCHS" "\tLEARNING_RATE\tTRAIN_LOSS")
 
                             if log_train:
-                                f.write(
-                                    "\tTRAIN_"
-                                    + "\tTRAIN_".join(
-                                        train_eval_result.log_header.split("\t")
-                                    )
-                                )
+                                f.write("\tTRAIN_" + "\tTRAIN_".join(train_eval_result.log_header.split("\t")))
 
                             if log_train_part:
                                 f.write(
                                     "\tTRAIN_PART_LOSS\tTRAIN_PART_"
-                                    + "\tTRAIN_PART_".join(
-                                        train_part_eval_result.log_header.split("\t")
-                                    )
+                                    + "\tTRAIN_PART_".join(train_part_eval_result.log_header.split("\t"))
                                 )
 
                             if log_dev:
-                                f.write(
-                                    "\tDEV_LOSS\tDEV_"
-                                    + "\tDEV_".join(
-                                        dev_eval_result.log_header.split("\t")
-                                    )
-                                )
+                                f.write("\tDEV_LOSS\tDEV_" + "\tDEV_".join(dev_eval_result.log_header.split("\t")))
 
                             if log_test:
-                                f.write(
-                                    "\tTEST_LOSS\tTEST_"
-                                    + "\tTEST_".join(
-                                        test_eval_result.log_header.split("\t")
-                                    )
-                                )
+                                f.write("\tTEST_LOSS\tTEST_" + "\tTEST_".join(test_eval_result.log_header.split("\t")))
 
                         f.write(
                             f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}"
@@ -848,19 +754,13 @@ class ModelTrainer:
 
                 # Check whether to save best model
                 if (
-                    (
-                        not train_with_dev
-                        or anneal_with_restarts
-                        or anneal_with_prestarts
-                    )
+                    (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
                     and not param_selection_mode
                     and current_epoch_has_best_model_so_far
                     and not use_final_model_for_eval
                 ):
                     log.info("saving best model")
-                    self.model.save(
-                        base_path / "best-model.pt", checkpoint=save_optimizer_state
-                    )
+                    self.model.save(base_path / "best-model.pt", checkpoint=save_optimizer_state)
 
                     if anneal_with_prestarts:
                         current_state_dict = self.model.state_dict()
@@ -875,9 +775,7 @@ class ModelTrainer:
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
-                self.model.save(
-                    base_path / "final-model.pt", checkpoint=save_optimizer_state
-                )
+                self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
 
         except KeyboardInterrupt:
             log_line(log)
@@ -888,9 +786,7 @@ class ModelTrainer:
 
             if not param_selection_mode:
                 log.info("Saving model ...")
-                self.model.save(
-                    base_path / "final-model.pt", checkpoint=save_optimizer_state
-                )
+                self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
         finally:
             if create_file_logs:
@@ -934,15 +830,9 @@ class ModelTrainer:
         # you can overwrite params with your own
         for param in trainer_args:
             args_used_to_train_model[param] = trainer_args[param]
-            if (
-                param == "optimizer"
-                and "optimizer_state_dict" in args_used_to_train_model
-            ):
+            if param == "optimizer" and "optimizer_state_dict" in args_used_to_train_model:
                 del args_used_to_train_model["optimizer_state_dict"]
-            if (
-                param == "scheduler"
-                and "scheduler_state_dict" in args_used_to_train_model
-            ):
+            if param == "scheduler" and "scheduler_state_dict" in args_used_to_train_model:
                 del args_used_to_train_model["scheduler_state_dict"]
 
         # surface nested arguments
@@ -995,9 +885,7 @@ class ModelTrainer:
         self.model.eval()
 
         if (base_path / "best-model.pt").exists():
-            self.model.load_state_dict(
-                self.model.load(base_path / "best-model.pt").state_dict()
-            )
+            self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
         else:
             log.info("Testing using last state of model ...")
 
@@ -1077,9 +965,7 @@ class ModelTrainer:
 
         while step < iterations:
 
-            batch_loader = DataLoader(
-                train_data, batch_size=mini_batch_size, shuffle=True
-            )
+            batch_loader = DataLoader(train_data, batch_size=mini_batch_size, shuffle=True)
 
             for batch in batch_loader:
                 step += 1
@@ -1118,19 +1004,14 @@ class ModelTrainer:
                 if step > iterations:
                     break
 
-                if stop_early and (
-                    moving_avg_loss > 4 * best_loss or torch.isnan(loss)
-                ):
+                if stop_early and (moving_avg_loss > 4 * best_loss or torch.isnan(loss)):
                     log_line(log)
                     log.info("loss diverged - stopping early!")
                     step = iterations
                     break
 
                 with open(str(learning_rate_tsv), "a") as f:
-                    f.write(
-                        f"{step}\t{learning_rate}\t{loss.item()}"
-                        f"\t{moving_avg_loss}\t{drop}\n"
-                    )
+                    f.write(f"{step}\t{learning_rate}\t{loss.item()}" f"\t{moving_avg_loss}\t{drop}\n")
 
             self.model.load_state_dict(model_state)
             self.model.to(flair.device)

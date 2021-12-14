@@ -99,9 +99,7 @@ def cached_path(url_or_filename: str, cache_dir: Union[str, Path]) -> Path:
         raise FileNotFoundError("file {} not found".format(url_or_filename))
     else:
         # Something unknown
-        raise ValueError(
-            "unable to parse {} as a URL or as a local path".format(url_or_filename)
-        )
+        raise ValueError("unable to parse {} as a URL or as a local path".format(url_or_filename))
 
 
 def unzip_file(file: Union[str, Path], unzip_to: Union[str, Path]):
@@ -128,9 +126,7 @@ def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True
             # Extract all the contents of zip file in current directory
             zipObj.extractall(unpack_to)
 
-    elif mode == "targz" or (
-        mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")
-    ):
+    elif mode == "targz" or (mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")):
         import tarfile
 
         with tarfile.open(file, "r:gz") as tarObj:
@@ -217,9 +213,7 @@ def get_from_cache(url: str, cache_dir: Path) -> Path:
     # make HEAD request to check ETag
     response = requests.head(url, headers={"User-Agent": "Flair"}, allow_redirects=True)
     if response.status_code != 200:
-        raise IOError(
-            f"HEAD request failed for url {url} with status code {response.status_code}."
-        )
+        raise IOError(f"HEAD request failed for url {url} with status code {response.status_code}.")
 
     # add ETag to filename if it exists
     # etag = response.headers.get("ETag")
@@ -268,26 +262,20 @@ def open_inside_zip(
     return io.TextIOWrapper(member_file, encoding=encoding)
 
 
-def get_the_only_file_in_the_archive(
-    members_list: Sequence[str], archive_path: str
-) -> str:
+def get_the_only_file_in_the_archive(members_list: Sequence[str], archive_path: str) -> str:
     if len(members_list) > 1:
         raise ValueError(
             "The archive %s contains multiple files, so you must select "
             "one of the files inside providing a uri of the type: %s"
             % (
                 archive_path,
-                format_embeddings_file_uri(
-                    "path_or_url_to_archive", "path_inside_archive"
-                ),
+                format_embeddings_file_uri("path_or_url_to_archive", "path_inside_archive"),
             )
         )
     return members_list[0]
 
 
-def format_embeddings_file_uri(
-    main_file_path_or_url: str, path_inside_archive: Optional[str] = None
-) -> str:
+def format_embeddings_file_uri(main_file_path_or_url: str, path_inside_archive: Optional[str] = None) -> str:
     if path_inside_archive:
         return "({})#{}".format(main_file_path_or_url, path_inside_archive)
     return main_file_path_or_url

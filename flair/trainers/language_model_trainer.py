@@ -69,9 +69,7 @@ class TextDataset(Dataset):
 
         with self.files[index].open("r", encoding="utf-8") as fin:
             text_lines: Iterable[str] = (
-                doc + self.document_delimiter
-                for doc in fin.read().split(self.document_delimiter)
-                if doc
+                doc + self.document_delimiter for doc in fin.read().split(self.document_delimiter) if doc
             )
             if self.random_case_flip:
                 text_lines = map(self.random_casechange, text_lines)
@@ -89,11 +87,7 @@ class TextDataset(Dataset):
                     self.dictionary.add_item(char)
 
         ids = torch.tensor(
-            [
-                self.dictionary.get_idx_for_item(char)
-                for chars in lines
-                for char in chars
-            ],
+            [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars],
             dtype=torch.long,
         )
         if not self.forward:
@@ -248,27 +242,19 @@ class LanguageModelTrainer:
                     optimizer, verbose=True, factor=anneal_factor, patience=patience
                 )
             else:
-                scheduler = ReduceLROnPlateau(
-                    optimizer, verbose=True, factor=anneal_factor, patience=patience
-                )
+                scheduler = ReduceLROnPlateau(optimizer, verbose=True, factor=anneal_factor, patience=patience)
 
             if use_amp:
-                self.model, optimizer = amp.initialize(
-                    self.model, optimizer, opt_level=amp_opt_level
-                )
+                self.model, optimizer = amp.initialize(self.model, optimizer, opt_level=amp_opt_level)
 
-            training_generator = DataLoader(
-                self.corpus.train, shuffle=False, num_workers=num_workers
-            )
+            training_generator = DataLoader(self.corpus.train, shuffle=False, num_workers=num_workers)
 
             for epoch in range(self.epoch, max_epochs):
                 epoch_start_time = time.time()
                 # Shuffle training files randomly after serially iterating
                 # through corpus one
                 if epoch > 0:
-                    training_generator = DataLoader(
-                        self.corpus.train, shuffle=True, num_workers=num_workers
-                    )
+                    training_generator = DataLoader(self.corpus.train, shuffle=True, num_workers=num_workers)
                     self.model.save_checkpoint(
                         base_path / f"epoch_{epoch}.pt",
                         optimizer,
@@ -279,9 +265,7 @@ class LanguageModelTrainer:
 
                 # iterate through training data, starting at
                 # self.split (for checkpointing)
-                for curr_split, train_slice in enumerate(
-                    training_generator, self.split
-                ):
+                for curr_split, train_slice in enumerate(training_generator, self.split):
 
                     if sequence_length < grow_to_sequence_length:
                         sequence_length += 1
@@ -292,10 +276,7 @@ class LanguageModelTrainer:
                     curr_split += 1
                     train_data = self._batchify(train_slice.flatten(), mini_batch_size)
 
-                    log.info(
-                        "Split %d" % curr_split
-                        + "\t - ({:%H:%M:%S})".format(datetime.datetime.now())
-                    )
+                    log.info("Split %d" % curr_split + "\t - ({:%H:%M:%S})".format(datetime.datetime.now()))
 
                     for group in optimizer.param_groups:
                         learning_rate = group["lr"]
@@ -312,16 +293,11 @@ class LanguageModelTrainer:
                     total_loss = torch.zeros(1, device=flair.device)
                     start_time = time.time()
 
-                    for batch, i in enumerate(
-                        range(0, train_data.size(0) - 1, sequence_length)
-                    ):
+                    for batch, i in enumerate(range(0, train_data.size(0) - 1, sequence_length)):
                         data, targets = self._get_batch(train_data, i, sequence_length)
 
                         if not data.is_cuda and cuda.is_available():
-                            log.info(
-                                "Batch %d is not on CUDA, training will be very slow"
-                                % (batch)
-                            )
+                            log.info("Batch %d is not on CUDA, training will be very slow" % (batch))
                             raise Exception("data isnt on cuda")
 
                         self.model.zero_grad()
@@ -375,10 +351,7 @@ class LanguageModelTrainer:
                             total_loss = torch.zeros(1)
                             start_time = time.time()
 
-                    log.info(
-                        "%d seconds for train split %d"
-                        % (time.time() - split_start_time, curr_split)
-                    )
+                    log.info("%d seconds for train split %d" % (time.time() - split_start_time, curr_split))
 
                     ##########################################################
                     self.model.eval()
@@ -447,9 +420,7 @@ class LanguageModelTrainer:
         test_data = self._batchify(self.corpus.test, mini_batch_size)
         test_loss = self.evaluate(test_data, mini_batch_size, sequence_length)
 
-        summary = "TEST: valid loss {:5.2f} | valid ppl {:8.2f}".format(
-            test_loss, math.exp(test_loss)
-        )
+        summary = "TEST: valid loss {:5.2f} | valid ppl {:8.2f}".format(test_loss, math.exp(test_loss))
         with open(loss_txt, "a") as myfile:
             myfile.write("%s\n" % summary)
 

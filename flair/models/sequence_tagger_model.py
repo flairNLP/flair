@@ -134,9 +134,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             for i, tag in enumerate(self.tag_dictionary.get_items()):
                 if tag in loss_weights.keys():
                     weight_list[i] = loss_weights[tag]
-            self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(
-                weight_list
-            ).to(flair.device)
+            self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(weight_list).to(flair.device)
         else:
             self.loss_weights = None
 
@@ -206,24 +204,16 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     # self.hs_initializer(self.lstm_init_c)
 
             # final linear map to tag space
-            self.linear = torch.nn.Linear(
-                hidden_size * num_directions, len(tag_dictionary)
-            )
+            self.linear = torch.nn.Linear(hidden_size * num_directions, len(tag_dictionary))
         else:
             self.linear = torch.nn.Linear(rnn_input_dim, len(tag_dictionary))
 
         if self.use_crf:
-            self.transitions = torch.nn.Parameter(
-                torch.randn(self.tagset_size, self.tagset_size)
-            )
+            self.transitions = torch.nn.Parameter(torch.randn(self.tagset_size, self.tagset_size))
 
-            self.transitions.detach()[
-                self.tag_dictionary.get_idx_for_item(START_TAG), :
-            ] = -10000
+            self.transitions.detach()[self.tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
 
-            self.transitions.detach()[
-                :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
-            ] = -10000
+            self.transitions.detach()[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
 
         self.to(flair.device)
 
@@ -253,27 +243,15 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         rnn_type = "LSTM" if "rnn_type" not in state.keys() else state["rnn_type"]
         use_dropout = 0.0 if "use_dropout" not in state.keys() else state["use_dropout"]
-        use_word_dropout = (
-            0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
-        )
-        use_locked_dropout = (
-            0.0
-            if "use_locked_dropout" not in state.keys()
-            else state["use_locked_dropout"]
-        )
+        use_word_dropout = 0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
+        use_locked_dropout = 0.0 if "use_locked_dropout" not in state.keys() else state["use_locked_dropout"]
 
         train_initial_hidden_state = (
-            False
-            if "train_initial_hidden_state" not in state.keys()
-            else state["train_initial_hidden_state"]
+            False if "train_initial_hidden_state" not in state.keys() else state["train_initial_hidden_state"]
         )
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
-        reproject_embeddings = (
-            True
-            if "reproject_embeddings" not in state.keys()
-            else state["reproject_embeddings"]
-        )
+        reproject_embeddings = True if "reproject_embeddings" not in state.keys() else state["reproject_embeddings"]
         if "reproject_to" in state.keys():
             reproject_embeddings = state["reproject_to"]
 
@@ -331,9 +309,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if not isinstance(sentences, list):
                 sentences = [sentences]
 
-            reordered_sentences: List[Union[Sentence, str]] = sorted(
-                sentences, key=lambda s: len(s), reverse=True
-            )
+            reordered_sentences: List[Union[Sentence, str]] = sorted(sentences, key=lambda s: len(s), reverse=True)
 
             dataloader = DataLoader(
                 dataset=FlairDatapointDataset(reordered_sentences),
@@ -387,9 +363,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if return_loss:
                 return overall_loss, overall_count
 
-    def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence]
-    ) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, data_points: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
         if not isinstance(data_points, list):
             data_points = [data_points]
 
@@ -413,15 +387,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         all_embs = list()
         for sentence in sentences:
-            all_embs += [
-                emb for token in sentence for emb in token.get_each_embedding(names)
-            ]
+            all_embs += [emb for token in sentence for emb in token.get_each_embedding(names)]
             nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
 
             if nb_padding_tokens > 0:
-                t = pre_allocated_zero_tensor[
-                    : self.embeddings.embedding_length * nb_padding_tokens
-                ]
+                t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
 
         sentence_tensor = torch.cat(all_embs).view(
@@ -463,9 +433,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             else:
                 rnn_output, hidden = self.rnn(packed)
 
-            sentence_tensor, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(
-                rnn_output, batch_first=True
-            )
+            sentence_tensor, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(rnn_output, batch_first=True)
 
             if self.use_dropout > 0.0:
                 sentence_tensor = self.dropout(sentence_tensor)
@@ -481,23 +449,17 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     def _score_sentence(self, feats, tags, lens_):
 
-        start = torch.tensor(
-            [self.tag_dictionary.get_idx_for_item(START_TAG)], device=flair.device
-        )
+        start = torch.tensor([self.tag_dictionary.get_idx_for_item(START_TAG)], device=flair.device)
         start = start[None, :].repeat(tags.shape[0], 1)
 
-        stop = torch.tensor(
-            [self.tag_dictionary.get_idx_for_item(STOP_TAG)], device=flair.device
-        )
+        stop = torch.tensor([self.tag_dictionary.get_idx_for_item(STOP_TAG)], device=flair.device)
         stop = stop[None, :].repeat(tags.shape[0], 1)
 
         pad_start_tags = torch.cat([start, tags], 1)
         pad_stop_tags = torch.cat([tags, stop], 1)
 
         for i in range(len(lens_)):
-            pad_stop_tags[i, lens_[i] :] = self.tag_dictionary.get_idx_for_item(
-                STOP_TAG
-            )
+            pad_stop_tags[i, lens_[i] :] = self.tag_dictionary.get_idx_for_item(STOP_TAG)
 
         score = torch.FloatTensor(feats.shape[0]).to(flair.device)
 
@@ -505,16 +467,12 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             r = torch.LongTensor(range(lens_[i])).to(flair.device)
 
             score[i] = torch.sum(
-                self.transitions[
-                    pad_stop_tags[i, : lens_[i] + 1], pad_start_tags[i, : lens_[i] + 1]
-                ]
+                self.transitions[pad_stop_tags[i, : lens_[i] + 1], pad_start_tags[i, : lens_[i] + 1]]
             ) + torch.sum(feats[i, r, tags[i, : lens_[i]]])
 
         return score
 
-    def _calculate_loss(
-        self, features: torch.Tensor, sentences: List[Sentence]
-    ) -> Tuple[torch.Tensor, int]:
+    def _calculate_loss(self, features: torch.Tensor, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
 
@@ -523,8 +481,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         for s_id, sentence in enumerate(sentences):
             # get the tags in this sentence
             tag_idx: List[int] = [
-                self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
-                for token in sentence
+                self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value) for token in sentence
             ]
             token_count += len(tag_idx)
             # add tags as tensor
@@ -544,9 +501,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         else:
             score = torch.zeros(1, device=flair.device)
-            for sentence_feats, sentence_tags, sentence_length in zip(
-                features, tag_list, lengths
-            ):
+            for sentence_feats, sentence_tags, sentence_length in zip(features, tag_list, lengths):
                 sentence_feats = sentence_feats[:sentence_length]
                 score += torch.nn.functional.cross_entropy(
                     sentence_feats,
@@ -599,19 +554,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 scores = softmax[:length].tolist()
 
             tags.append(
-                [
-                    Label(self.tag_dictionary.get_item_for_index(tag), conf)
-                    for conf, tag in zip(confidences, tag_seq)
-                ]
+                [Label(self.tag_dictionary.get_item_for_index(tag), conf) for conf, tag in zip(confidences, tag_seq)]
             )
 
             if get_all_tags:
                 all_tags.append(
                     [
                         [
-                            Label(
-                                self.tag_dictionary.get_item_for_index(score_id), score
-                            )
+                            Label(self.tag_dictionary.get_item_for_index(score_id), score)
                             for score_id, score in enumerate(score_dist)
                         ]
                         for score_dist in scores
@@ -627,20 +577,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         y = np.exp(x_norm)
         return y / y.sum(axis=axis, keepdims=True)
 
-    def _viterbi_decode(
-        self, feats: np.ndarray, transitions: np.ndarray, all_scores: bool
-    ):
+    def _viterbi_decode(self, feats: np.ndarray, transitions: np.ndarray, all_scores: bool):
         id_start = self.tag_dictionary.get_idx_for_item(START_TAG)
         id_stop = self.tag_dictionary.get_idx_for_item(STOP_TAG)
 
         backpointers = np.empty(shape=(feats.shape[0], self.tagset_size), dtype=np.int_)
-        backscores = np.empty(
-            shape=(feats.shape[0], self.tagset_size), dtype=np.float32
-        )
+        backscores = np.empty(shape=(feats.shape[0], self.tagset_size), dtype=np.float32)
 
-        init_vvars = np.expand_dims(
-            np.repeat(-10000.0, self.tagset_size), axis=0
-        ).astype(np.float32)
+        init_vvars = np.expand_dims(np.repeat(-10000.0, self.tagset_size), axis=0).astype(np.float32)
         init_vvars[0][id_start] = 0
 
         forward_var = init_vvars
@@ -678,19 +622,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             for index, (tag_id, tag_scores) in enumerate(zip(best_path, all_scores_np)):
                 if type(tag_id) != int and tag_id.item() != tag_scores.argmax():
                     swap_index_score = tag_scores.argmax()
-                    (
-                        all_scores_np[index][tag_id.item()],
-                        all_scores_np[index][swap_index_score],
-                    ) = (
+                    (all_scores_np[index][tag_id.item()], all_scores_np[index][swap_index_score],) = (
                         all_scores_np[index][swap_index_score],
                         all_scores_np[index][tag_id.item()],
                     )
                 elif type(tag_id) == int and tag_id != tag_scores.argmax():
                     swap_index_score = tag_scores.argmax()
-                    (
-                        all_scores_np[index][tag_id],
-                        all_scores_np[index][swap_index_score],
-                    ) = (
+                    (all_scores_np[index][tag_id], all_scores_np[index][swap_index_score],) = (
                         all_scores_np[index][swap_index_score],
                         all_scores_np[index][tag_id],
                     )
@@ -712,9 +650,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         forward_var[:, 0, :] = init_alphas[None, :].repeat(feats.shape[0], 1)
 
-        transitions = self.transitions.view(
-            1, self.transitions.shape[0], self.transitions.shape[1]
-        ).repeat(feats.shape[0], 1, 1)
+        transitions = self.transitions.view(1, self.transitions.shape[0], self.transitions.shape[1]).repeat(
+            feats.shape[0], 1, 1
+        )
 
         for i in range(feats.shape[1]):
             emit_score = feats[:, i, :]
@@ -722,16 +660,12 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             tag_var = (
                 emit_score[:, :, None].repeat(1, 1, transitions.shape[2])
                 + transitions
-                + forward_var[:, i, :][:, :, None]
-                .repeat(1, 1, transitions.shape[2])
-                .transpose(2, 1)
+                + forward_var[:, i, :][:, :, None].repeat(1, 1, transitions.shape[2]).transpose(2, 1)
             )
 
             max_tag_var, _ = torch.max(tag_var, dim=2)
 
-            tag_var = tag_var - max_tag_var[:, :, None].repeat(
-                1, 1, transitions.shape[2]
-            )
+            tag_var = tag_var - max_tag_var[:, :, None].repeat(1, 1, transitions.shape[2])
 
             agg_ = torch.log(torch.sum(torch.exp(tag_var), dim=2))
 
@@ -742,9 +676,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         forward_var = forward_var[range(forward_var.shape[0]), lens_, :]
 
-        terminal_var = forward_var + self.transitions[
-            self.tag_dictionary.get_idx_for_item(STOP_TAG)
-        ][None, :].repeat(forward_var.shape[0], 1)
+        terminal_var = forward_var + self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)][None, :].repeat(
+            forward_var.shape[0], 1
+        )
 
         alpha = log_sum_exp_batch(terminal_var)
 
@@ -754,18 +688,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
-            log.warning(
-                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
-            )
+            log.warning(f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens.")
         return filtered_sentences
 
     @staticmethod
     def _filter_empty_string(texts: List[str]) -> List[str]:
         filtered_texts = [text for text in texts if text]
         if len(texts) != len(filtered_texts):
-            log.warning(
-                f"Ignore {len(texts) - len(filtered_texts)} string(s) with no tokens."
-            )
+            log.warning(f"Ignore {len(texts) - len(filtered_texts)} string(s) with no tokens.")
         return filtered_texts
 
     @staticmethod
@@ -819,62 +749,38 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         hu_model_map = {
             # English NER models
             "ner": "/".join([hu_path, "ner", "en-ner-conll03-v0.4.pt"]),
-            "ner-pooled": "/".join(
-                [hu_path, "ner-pooled", "en-ner-conll03-pooled-v0.5.pt"]
-            ),
+            "ner-pooled": "/".join([hu_path, "ner-pooled", "en-ner-conll03-pooled-v0.5.pt"]),
             "ner-fast": "/".join([hu_path, "ner-fast", "en-ner-fast-conll03-v0.4.pt"]),
-            "ner-ontonotes": "/".join(
-                [hu_path, "ner-ontonotes", "en-ner-ontonotes-v0.4.pt"]
-            ),
-            "ner-ontonotes-fast": "/".join(
-                [hu_path, "ner-ontonotes-fast", "en-ner-ontonotes-fast-v0.4.pt"]
-            ),
+            "ner-ontonotes": "/".join([hu_path, "ner-ontonotes", "en-ner-ontonotes-v0.4.pt"]),
+            "ner-ontonotes-fast": "/".join([hu_path, "ner-ontonotes-fast", "en-ner-ontonotes-fast-v0.4.pt"]),
             # Multilingual NER models
             "ner-multi": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
             "multi-ner": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
-            "ner-multi-fast": "/".join(
-                [hu_path, "multi-ner-fast", "ner-multi-fast.pt"]
-            ),
+            "ner-multi-fast": "/".join([hu_path, "multi-ner-fast", "ner-multi-fast.pt"]),
             # English POS models
             "upos": "/".join([hu_path, "upos", "en-pos-ontonotes-v0.4.pt"]),
-            "upos-fast": "/".join(
-                [hu_path, "upos-fast", "en-upos-ontonotes-fast-v0.4.pt"]
-            ),
+            "upos-fast": "/".join([hu_path, "upos-fast", "en-upos-ontonotes-fast-v0.4.pt"]),
             "pos": "/".join([hu_path, "pos", "en-pos-ontonotes-v0.5.pt"]),
-            "pos-fast": "/".join(
-                [hu_path, "pos-fast", "en-pos-ontonotes-fast-v0.5.pt"]
-            ),
+            "pos-fast": "/".join([hu_path, "pos-fast", "en-pos-ontonotes-fast-v0.5.pt"]),
             # Multilingual POS models
             "pos-multi": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
             "multi-pos": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
-            "pos-multi-fast": "/".join(
-                [hu_path, "multi-pos-fast", "pos-multi-fast.pt"]
-            ),
-            "multi-pos-fast": "/".join(
-                [hu_path, "multi-pos-fast", "pos-multi-fast.pt"]
-            ),
+            "pos-multi-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
+            "multi-pos-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
             # English SRL models
             "frame": "/".join([hu_path, "frame", "en-frame-ontonotes-v0.4.pt"]),
-            "frame-fast": "/".join(
-                [hu_path, "frame-fast", "en-frame-ontonotes-fast-v0.4.pt"]
-            ),
+            "frame-fast": "/".join([hu_path, "frame-fast", "en-frame-ontonotes-fast-v0.4.pt"]),
             # English chunking models
             "chunk": "/".join([hu_path, "chunk", "en-chunk-conll2000-v0.4.pt"]),
-            "chunk-fast": "/".join(
-                [hu_path, "chunk-fast", "en-chunk-conll2000-fast-v0.4.pt"]
-            ),
+            "chunk-fast": "/".join([hu_path, "chunk-fast", "en-chunk-conll2000-fast-v0.4.pt"]),
             # Danish models
             "da-pos": "/".join([hu_path, "da-pos", "da-pos-v0.1.pt"]),
             "da-ner": "/".join([hu_path, "NER-danish", "da-ner-v0.1.pt"]),
             # German models
             "de-pos": "/".join([hu_path, "de-pos", "de-pos-ud-hdt-v0.5.pt"]),
-            "de-pos-tweets": "/".join(
-                [hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]
-            ),
+            "de-pos-tweets": "/".join([hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]),
             "de-ner": "/".join([hu_path, "de-ner", "de-ner-conll03-v0.4.pt"]),
-            "de-ner-germeval": "/".join(
-                [hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]
-            ),
+            "de-ner-germeval": "/".join([hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]),
             "de-ler": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
             "de-ner-legal": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
             # French models
@@ -895,9 +801,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             ),
             # Keyphase models
             "keyphrase": "/".join([hu_path, "keyphrase", "keyphrase-en-scibert.pt"]),
-            "negation-speculation": "/".join(
-                [hu_path, "negation-speculation", "negation-speculation-model.pt"]
-            ),
+            "negation-speculation": "/".join([hu_path, "negation-speculation", "negation-speculation-model.pt"]),
             # Biomedical models
             "hunflair-paper-cellline": "/".join(
                 [
@@ -923,9 +827,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     "hunflair-disease-v1.0.pt",
                 ]
             ),
-            "hunflair-paper-gene": "/".join(
-                [hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]
-            ),
+            "hunflair-paper-gene": "/".join([hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]),
             "hunflair-paper-species": "/".join(
                 [
                     hu_path,
@@ -995,9 +897,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             log.info(
                 f"The model key '{model_name}' now maps to 'https://huggingface.co/{hf_model_name}' on the HuggingFace ModelHub"
             )
-            log.info(
-                " - The most current version of the model is automatically downloaded from there."
-            )
+            log.info(" - The most current version of the model is automatically downloaded from there.")
             if model_name in hu_model_map:
                 log.info(
                     " - (you can alternatively manually download the original model at {hu_model_map[model_name]})"
@@ -1024,9 +924,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     flair.cache_root / cache_dir / "indirect.zip",
                     flair.cache_root / cache_dir,
                 )
-            model_path = str(
-                flair.cache_root / cache_dir / "indirect" / "final-model.pt"
-            )
+            model_path = str(flair.cache_root / cache_dir / "indirect" / "final-model.pt")
 
         elif model_name == "de-historic-direct":
             model_file = flair.cache_root / cache_dir / "direct" / "final-model.pt"
@@ -1052,14 +950,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     flair.cache_root / cache_dir / "reported.zip",
                     flair.cache_root / cache_dir,
                 )
-            model_path = str(
-                flair.cache_root / cache_dir / "reported" / "final-model.pt"
-            )
+            model_path = str(flair.cache_root / cache_dir / "reported" / "final-model.pt")
 
         elif model_name == "de-historic-free-indirect":
-            model_file = (
-                flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt"
-            )
+            model_file = flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt"
             if not model_file.exists():
                 cached_path(
                     "http://www.redewiedergabe.de/models/freeIndirect.zip",
@@ -1069,9 +963,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     flair.cache_root / cache_dir / "freeIndirect.zip",
                     flair.cache_root / cache_dir,
                 )
-            model_path = str(
-                flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt"
-            )
+            model_path = str(flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt")
 
         # for all other cases (not local file or special download location), use HF model hub
         else:
@@ -1112,16 +1004,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     f"ACHTUNG: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
                 )
                 # log.error(f" - Error message: {e}")
-                log.error(
-                    " -> Please check https://huggingface.co/models?filter=flair for all available models."
-                )
-                log.error(
-                    " -> Alternatively, point to a model file on your local drive."
-                )
+                log.error(" -> Please check https://huggingface.co/models?filter=flair for all available models.")
+                log.error(" -> Alternatively, point to a model file on your local drive.")
                 log.error("-" * 80)
-                Path(
-                    flair.cache_root / "models" / model_folder
-                ).rmdir()  # remove folder again if not valid
+                Path(flair.cache_root / "models" / model_folder).rmdir()  # remove folder again if not valid
 
         return model_path
 
@@ -1177,9 +1063,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             # now print labels in CoNLL format
             for token in datapoint:
                 eval_line = (
-                    f"{token.text} "
-                    f"{token.get_tag('gold_bio').value} "
-                    f"{token.get_tag('predicted_bio').value}\n"
+                    f"{token.text} " f"{token.get_tag('gold_bio').value} " f"{token.get_tag('predicted_bio').value}\n"
                 )
                 lines.append(eval_line)
             lines.append("\n")
@@ -1285,15 +1169,8 @@ class MultiTagger:
                         if not embedding.static_embeddings:
                             continue
 
-                        if (
-                            embedding.name
-                            in previous_model.embeddings.get_named_embeddings_dict()
-                        ):
-                            previous_embedding = (
-                                previous_model.embeddings.get_named_embeddings_dict()[
-                                    embedding.name
-                                ]
-                            )
+                        if embedding.name in previous_model.embeddings.get_named_embeddings_dict():
+                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[embedding.name]
                             previous_embedding.name = previous_embedding.name[2:]
                             new_stack.append(previous_embedding)
                             embedding_found = True
@@ -1313,15 +1190,10 @@ class MultiTagger:
                 if not model.embeddings.static_embeddings:
 
                     for previous_model in models:
-                        if (
-                            model.embeddings.name
-                            in previous_model.embeddings.get_named_embeddings_dict()
-                        ):
-                            previous_embedding = (
-                                previous_model.embeddings.get_named_embeddings_dict()[
-                                    model.embeddings.name
-                                ]
-                            )
+                        if model.embeddings.name in previous_model.embeddings.get_named_embeddings_dict():
+                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[
+                                model.embeddings.name
+                            ]
                             if not previous_embedding.static_embeddings:
                                 model.embeddings = previous_embedding
                                 break

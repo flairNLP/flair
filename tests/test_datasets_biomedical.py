@@ -67,42 +67,19 @@ def cellline_predicate(member):
 
 
 CELLLINE_DATASETS = [
-    i[1]
-    for i in sorted(
-        inspect.getmembers(biomedical, predicate=cellline_predicate), key=itemgetter(0)
-    )
+    i[1] for i in sorted(inspect.getmembers(biomedical, predicate=cellline_predicate), key=itemgetter(0))
 ]
 CHEMICAL_DATASETS = [
-    i[1]
-    for i in sorted(
-        inspect.getmembers(biomedical, predicate=chemical_predicate), key=itemgetter(0)
-    )
+    i[1] for i in sorted(inspect.getmembers(biomedical, predicate=chemical_predicate), key=itemgetter(0))
 ]
 DISEASE_DATASETS = [
-    i[1]
-    for i in sorted(
-        inspect.getmembers(biomedical, predicate=disease_predicate), key=itemgetter(0)
-    )
+    i[1] for i in sorted(inspect.getmembers(biomedical, predicate=disease_predicate), key=itemgetter(0))
 ]
-GENE_DATASETS = [
-    i[1]
-    for i in sorted(
-        inspect.getmembers(biomedical, predicate=gene_predicate), key=itemgetter(0)
-    )
-]
+GENE_DATASETS = [i[1] for i in sorted(inspect.getmembers(biomedical, predicate=gene_predicate), key=itemgetter(0))]
 SPECIES_DATASETS = [
-    i[1]
-    for i in sorted(
-        inspect.getmembers(biomedical, predicate=species_predicate), key=itemgetter(0)
-    )
+    i[1] for i in sorted(inspect.getmembers(biomedical, predicate=species_predicate), key=itemgetter(0))
 ]
-ALL_DATASETS = (
-    CELLLINE_DATASETS
-    + CHEMICAL_DATASETS
-    + DISEASE_DATASETS
-    + GENE_DATASETS
-    + SPECIES_DATASETS
-)
+ALL_DATASETS = CELLLINE_DATASETS + CHEMICAL_DATASETS + DISEASE_DATASETS + GENE_DATASETS + SPECIES_DATASETS
 
 
 def simple_tokenizer(text: str) -> List[Token]:
@@ -129,9 +106,7 @@ def simple_tokenizer(text: str) -> List[Token]:
     index += 1
     if len(word) > 0:
         start_position = index - len(word)
-        tokens.append(
-            Token(text=word, start_position=start_position, whitespace_after=False)
-        )
+        tokens.append(Token(text=word, start_position=start_position, whitespace_after=False))
 
     return tokens
 
@@ -142,12 +117,8 @@ def test_write_to_conll():
         documents={"1": text},
         entities_per_document={
             "1": [
-                Entity(
-                    (text.find("entity1"), text.find("entity1") + len("entity1")), "E"
-                ),
-                Entity(
-                    (text.find("entity2"), text.find("entity2") + len("entity2")), "E"
-                ),
+                Entity((text.find("entity1"), text.find("entity1") + len("entity1")), "E"),
+                Entity((text.find("entity2"), text.find("entity2") + len("entity2")), "E"),
                 Entity(
                     (
                         text.find("a long entity3"),
@@ -179,16 +150,12 @@ def test_conll_writer_one_token_multiple_entities1():
             "1": [
                 Entity((text.find("entity1"), text.find("entity1") + 2), "E"),
                 Entity((text.find("tity1"), text.find("tity1") + 5), "E"),
-                Entity(
-                    (text.find("entity2"), text.find("entity2") + len("entity2")), "E"
-                ),
+                Entity((text.find("entity2"), text.find("entity2") + len("entity2")), "E"),
             ]
         },
     )
 
-    assert_conll_writer_output(
-        dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 B-E -"]
-    )
+    assert_conll_writer_output(dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 B-E -"])
 
 
 def test_conll_writer_one_token_multiple_entities2():
@@ -203,9 +170,7 @@ def test_conll_writer_one_token_multiple_entities2():
         },
     )
 
-    assert_conll_writer_output(
-        dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 O -"]
-    )
+    assert_conll_writer_output(dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 O -"])
 
 
 def test_conll_writer_whitespace_after():
@@ -229,9 +194,7 @@ def test_conll_writer_whitespace_after():
             "reported O +",
             "that O -",
         ],
-        TagSentenceSplitter(
-            tag=SENTENCE_TAG, tokenizer=TokenizerWrapper(simple_tokenizer)
-        ),
+        TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=TokenizerWrapper(simple_tokenizer)),
     )
 
 
@@ -242,11 +205,7 @@ def assert_conll_writer_output(
 ):
     fd, outfile_path = tempfile.mkstemp()
     try:
-        sentence_splitter = (
-            sentence_splitter
-            if sentence_splitter
-            else NoSentenceSplitter(tokenizer=SpaceTokenizer())
-        )
+        sentence_splitter = sentence_splitter if sentence_splitter else NoSentenceSplitter(tokenizer=SpaceTokenizer())
 
         writer = CoNLLWriter(sentence_splitter=sentence_splitter)
         writer.write_to_conll(dataset, Path(outfile_path))
@@ -280,9 +239,7 @@ def test_filter_nested_entities():
         "d6": [Entity((0, 4), "t0")],
     }
 
-    dataset = InternalBioNerDataset(
-        documents={}, entities_per_document=entities_per_document
-    )
+    dataset = InternalBioNerDataset(documents={}, entities_per_document=entities_per_document)
     with pytest.warns(UserWarning):
         filter_nested_entities(dataset)
 
@@ -302,9 +259,7 @@ def sanity_check_all_corpora(check: Callable[[ColumnCorpus], None]):
         check(corpus)
 
 
-@pytest.mark.skip(
-    reason="We skip this test because it's only relevant for development purposes"
-)
+@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
 def test_sanity_not_starting_with_minus(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()  # type: ignore
@@ -313,28 +268,20 @@ def test_sanity_not_starting_with_minus(CorpusType: Type[ColumnCorpus]):
         entities = sentence.get_spans("ner")
         for entity in entities:
             if str(entity.tokens[0].text).startswith("-"):
-                entities_starting_with_minus.append(
-                    " ".join([t.text for t in entity.tokens])
-                )
+                entities_starting_with_minus.append(" ".join([t.text for t in entity.tokens]))
 
-    assert len(entities_starting_with_minus) == 0, "|".join(
-        entities_starting_with_minus
-    )
+    assert len(entities_starting_with_minus) == 0, "|".join(entities_starting_with_minus)
 
 
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
-@pytest.mark.skip(
-    reason="We skip this test because it's only relevant for development purposes"
-)
+@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
 def test_sanity_no_repeating_Bs(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()  # type: ignore
     longest_repeat_tokens: List[Token] = []
     repeat_tokens: List[Token] = []
     for sentence in _iter_dataset(corpus.get_all_sentences()):
         for token in sentence.tokens:
-            if token.get_labels()[0].value.startswith("B") or token.get_labels()[
-                0
-            ].value.startswith("S"):
+            if token.get_labels()[0].value.startswith("B") or token.get_labels()[0].value.startswith("S"):
                 repeat_tokens.append(token)
             else:
                 if len(repeat_tokens) > len(longest_repeat_tokens):
@@ -345,9 +292,7 @@ def test_sanity_no_repeating_Bs(CorpusType: Type[ColumnCorpus]):
 
 
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
-@pytest.mark.skip(
-    reason="We skip this test because it's only relevant for development purposes"
-)
+@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
 def test_sanity_no_long_entities(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()  # type: ignore
     longest_entity: List[str] = []
@@ -361,9 +306,7 @@ def test_sanity_no_long_entities(CorpusType: Type[ColumnCorpus]):
 
 
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
-@pytest.mark.skip(
-    reason="We skip this test because it's only relevant for development purposes"
-)
+@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
 def test_sanity_no_unmatched_parentheses(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()  # type: ignore
     unbalanced_entities = []
@@ -378,26 +321,20 @@ def test_sanity_no_unmatched_parentheses(CorpusType: Type[ColumnCorpus]):
 
 
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
-@pytest.mark.skip(
-    reason="We skip this test because it's only relevant for development purposes"
-)
+@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
 def test_sanity_not_too_many_entities(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()  # type: ignore
     n_entities_per_sentence = []
     for sentence in _iter_dataset(corpus.get_all_sentences()):
         entities = sentence.get_spans("ner")
         n_entities_per_sentence.append(len(entities))
-    avg_entities_per_sentence = sum(n_entities_per_sentence) / len(
-        n_entities_per_sentence
-    )
+    avg_entities_per_sentence = sum(n_entities_per_sentence) / len(n_entities_per_sentence)
 
     assert avg_entities_per_sentence <= 5
 
 
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
-@pytest.mark.skip(
-    reason="We skip this test because it's only relevant for development purposes"
-)
+@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
 def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
     dataset_name = CorpusType.__class__.__name__.lower()
     base_path = flair.cache_root / "datasets"
@@ -435,9 +372,7 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
         assert len(misaligned_ends) <= len(entities) // 10
 
 
-@pytest.mark.skip(
-    reason="We skip this test because it's only relevant for development purposes"
-)
+@pytest.mark.skip(reason="We skip this test because it's only relevant for development purposes")
 def test_scispacy_tokenization():
     from flair.tokenization import SciSpacyTokenizer
 

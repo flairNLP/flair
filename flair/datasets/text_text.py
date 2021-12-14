@@ -84,46 +84,20 @@ class OpusParallelCorpus(ParallelTextCorpus):
         if dataset == "tatoeba":
             link = f"https://object.pouta.csc.fi/OPUS-Tatoeba/v20190709/moses/{l1}-{l2}.txt.zip"
 
-            l1_file = (
-                flair.cache_root
-                / "datasets"
-                / dataset
-                / f"{l1}-{l2}"
-                / f"Tatoeba.{l1}-{l2}.{l1}"
-            )
-            l2_file = (
-                flair.cache_root
-                / "datasets"
-                / dataset
-                / f"{l1}-{l2}"
-                / f"Tatoeba.{l1}-{l2}.{l2}"
-            )
+            l1_file = flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"Tatoeba.{l1}-{l2}.{l1}"
+            l2_file = flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"Tatoeba.{l1}-{l2}.{l2}"
 
         # set file names
         if dataset == "subtitles":
             link = f"https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2018/moses/{l1}-{l2}.txt.zip"
 
-            l1_file = (
-                flair.cache_root
-                / "datasets"
-                / dataset
-                / f"{l1}-{l2}"
-                / f"OpenSubtitles.{l1}-{l2}.{l1}"
-            )
-            l2_file = (
-                flair.cache_root
-                / "datasets"
-                / dataset
-                / f"{l1}-{l2}"
-                / f"OpenSubtitles.{l1}-{l2}.{l2}"
-            )
+            l1_file = flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"OpenSubtitles.{l1}-{l2}.{l1}"
+            l2_file = flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"OpenSubtitles.{l1}-{l2}.{l2}"
 
         # download and unzip in file structure if necessary
         if not l1_file.exists():
             path = cached_path(link, Path("datasets") / dataset / f"{l1}-{l2}")
-            unzip_file(
-                path, flair.cache_root / Path("datasets") / dataset / f"{l1}-{l2}"
-            )
+            unzip_file(path, flair.cache_root / Path("datasets") / dataset / f"{l1}-{l2}")
 
         # instantiate corpus
         super(OpusParallelCorpus, self).__init__(
@@ -215,9 +189,7 @@ class ParallelTextDataset(FlairDataset):
         if self.in_memory:
             return self.bi_sentences[index]
         else:
-            return self._make_bi_sentence(
-                self.source_lines[index], self.target_lines[index]
-            )
+            return self._make_bi_sentence(self.source_lines[index], self.target_lines[index])
 
     def is_in_memory(self) -> bool:
         return self.in_memory
@@ -422,9 +394,7 @@ class DataPairDataset(FlairDataset):
 
                 if self.in_memory:
 
-                    data_pair = self._make_data_pair(
-                        first_element, second_element, pair_label
-                    )
+                    data_pair = self._make_data_pair(first_element, second_element, pair_label)
                     self.data_pairs.append(data_pair)
                 else:
                     self.first_elements.append(first_element)
@@ -437,9 +407,7 @@ class DataPairDataset(FlairDataset):
                 source_line = source_file.readline()
 
     # create a DataPair object from strings
-    def _make_data_pair(
-        self, first_element: str, second_element: str, label: str = None
-    ):
+    def _make_data_pair(self, first_element: str, second_element: str, label: str = None):
 
         first_sentence = Sentence(first_element, use_tokenizer=self.use_tokenizer)
         second_sentence = Sentence(second_element, use_tokenizer=self.use_tokenizer)
@@ -473,9 +441,7 @@ class DataPairDataset(FlairDataset):
                 self.labels[index],
             )
         else:
-            return self._make_data_pair(
-                self.first_elements[index], self.second_elements[index]
-            )
+            return self._make_data_pair(self.first_elements[index], self.second_elements[index])
 
 
 class GLUE_RTE(DataPairCorpus):
@@ -559,12 +525,7 @@ class GLUE_RTE(DataPairCorpus):
             tsv_file.write("index\tprediction\n")
             datapoint: DataPair
             for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
-                tsv_file.write(
-                    str(index)
-                    + "\t"
-                    + datapoint.get_labels("textual_entailment")[0].value
-                    + "\n"
-                )
+                tsv_file.write(str(index) + "\t" + datapoint.get_labels("textual_entailment")[0].value + "\n")
 
 
 class GLUE_MNLI(DataPairCorpus):
@@ -622,9 +583,7 @@ class GLUE_MNLI(DataPairCorpus):
                 ) as in_file:
                     for line in in_file:
                         fields = line.split("\t")
-                        reordered_columns = "\t".join(
-                            fields[column_id] for column_id in range(11)
-                        )
+                        reordered_columns = "\t".join(fields[column_id] for column_id in range(11))
                         reordered_columns += "\t" + fields[15]
                         out_file.write(reordered_columns)
                 os.remove(str(data_folder / "MNLI" / temp_file))
@@ -1030,12 +989,7 @@ class GLUE_WNLI(DataPairCorpus):
             tsv_file.write("index\tprediction\n")
             datapoint: DataPair
             for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
-                tsv_file.write(
-                    str(index)
-                    + "\t"
-                    + datapoint.get_labels("entailment")[0].value
-                    + "\n"
-                )
+                tsv_file.write(str(index) + "\t" + datapoint.get_labels("entailment")[0].value + "\n")
 
 
 class SUPERGLUE_RTE(DataPairCorpus):
@@ -1080,9 +1034,7 @@ class SUPERGLUE_RTE(DataPairCorpus):
             rte_jsonl_to_tsv(data_folder / "RTE/test.jsonl", remove=True, label=False)
             rte_jsonl_to_tsv(data_folder / "RTE/val.jsonl", remove=True)
 
-            os.rename(
-                str(data_folder / "RTE/val.tsv"), str(data_folder / "RTE/dev.tsv")
-            )
+            os.rename(str(data_folder / "RTE/val.tsv"), str(data_folder / "RTE/dev.tsv"))
             os.rename(
                 str(data_folder / "RTE/test.tsv"),
                 str(data_folder / "RTE/eval_dataset.tsv"),
@@ -1141,9 +1093,7 @@ def rte_jsonl_to_tsv(
 
     tsv_file = os.path.splitext(file_path)[0] + ".tsv"
 
-    with open(file_path, "r", encoding=encoding) as jsonl_f, open(
-        tsv_file, "w", encoding=encoding
-    ) as tsv_f:
+    with open(file_path, "r", encoding=encoding) as jsonl_f, open(tsv_file, "w", encoding=encoding) as tsv_f:
         for line in jsonl_f:
             obj = json.loads(line)
             new_line = obj["premise"] + "\t" + obj["hypothesis"]

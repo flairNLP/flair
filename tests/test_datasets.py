@@ -32,9 +32,7 @@ def test_load_imdb_data_streaming(tasks_base_path):
 
 def test_load_imdb_data_max_tokens(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ClassificationCorpus(
-        tasks_base_path / "imdb", memory_mode="full", truncate_to_max_tokens=3
-    )
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", memory_mode="full", truncate_to_max_tokens=3)
 
     assert len(corpus.train[0]) <= 3
     assert len(corpus.dev[0]) <= 3
@@ -43,9 +41,7 @@ def test_load_imdb_data_max_tokens(tasks_base_path):
 
 def test_load_imdb_data_streaming_max_tokens(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ClassificationCorpus(
-        tasks_base_path / "imdb", memory_mode="full", truncate_to_max_tokens=3
-    )
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", memory_mode="full", truncate_to_max_tokens=3)
 
     assert len(corpus.train[0]) <= 3
     assert len(corpus.dev[0]) <= 3
@@ -63,9 +59,7 @@ def test_load_ag_news_data(tasks_base_path):
 
 def test_load_sequence_labeling_data(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ColumnCorpus(
-        tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
-    )
+    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "fashion", column_format={0: "text", 2: "ner"})
 
     assert len(corpus.train) == 6
     assert len(corpus.dev) == 1
@@ -105,9 +99,7 @@ def test_load_column_corpus_options(tasks_base_path):
 
 def test_load_germeval_data(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ColumnCorpus(
-        tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"}
-    )
+    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
 
     assert len(corpus.train) == 2
     assert len(corpus.dev) == 1
@@ -125,9 +117,7 @@ def test_load_ud_english_data(tasks_base_path):
 
 def test_load_no_dev_data(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ColumnCorpus(
-        tasks_base_path / "fashion_nodev", column_format={0: "text", 2: "ner"}
-    )
+    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "fashion_nodev", column_format={0: "text", 2: "ner"})
 
     assert len(corpus.train) == 5
     assert len(corpus.dev) == 1
@@ -149,13 +139,9 @@ def test_load_no_dev_data_explicit(tasks_base_path):
 
 
 def test_multi_corpus(tasks_base_path):
-    corpus_1 = flair.datasets.ColumnCorpus(
-        tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"}
-    )
+    corpus_1 = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
 
-    corpus_2 = flair.datasets.ColumnCorpus(
-        tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
-    )
+    corpus_2 = flair.datasets.ColumnCorpus(tasks_base_path / "fashion", column_format={0: "text", 2: "ner"})
     # get two corpora as one
     corpus = MultiCorpus([corpus_1, corpus_2])
 

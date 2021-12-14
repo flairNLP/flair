@@ -42,11 +42,7 @@ DEFAULT_TOKEN_ANNOTATION_FIELDS: Tuple[str, ...] = (
 # noinspection PyProtectedMember
 DEFAULT_METADATA_PARSERS: Dict[str, conllu._MetadataParserType] = {
     **conllu.parser.DEFAULT_METADATA_PARSERS,
-    **{
-        "relations": lambda key, value: parse_relation_tuple_list(
-            key, value, list_sep="|", value_sep=";"
-        )
-    },
+    **{"relations": lambda key, value: parse_relation_tuple_list(key, value, list_sep="|", value_sep=";")},
 }
 
 
@@ -59,9 +55,7 @@ def parse_relation_tuple_list(
     relation_tuples: List[Tuple[int, int, int, int, str]] = []
     for relation in value.split(list_sep):
         head_start, head_end, tail_start, tail_end, label = relation.split(value_sep)
-        relation_tuples.append(
-            (int(head_start), int(head_end), int(tail_start), int(tail_end), label)
-        )
+        relation_tuples.append((int(head_start), int(head_end), int(tail_start), int(tail_end), label))
 
     return key, relation_tuples
 
@@ -99,9 +93,7 @@ class CoNLLUCorpus(Corpus):
         """
 
         # find train, dev and test files if not specified
-        dev_file, test_file, train_file = find_train_dev_test_files(
-            data_folder, dev_file, test_file, train_file
-        )
+        dev_file, test_file, train_file = find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
         # get train data
         train = CoNLLUDataset(
@@ -185,9 +177,7 @@ class CoNLLUDataset(FlairDataset):
                 fields = conllu.parser.parse_conllu_plus_fields(file)
 
         self.fields = fields or DEFAULT_FIELDS
-        self.token_annotation_fields = (
-            token_annotation_fields or DEFAULT_TOKEN_ANNOTATION_FIELDS
-        )
+        self.token_annotation_fields = token_annotation_fields or DEFAULT_TOKEN_ANNOTATION_FIELDS
 
         # Validate fields and token_annotation_fields
         if not set(self.token_annotation_fields).issubset(self.fields):
@@ -269,11 +259,7 @@ class CoNLLUDataset(FlairDataset):
         else:
             with open(str(self.path_to_conllu_file), encoding="utf-8") as file:
                 file.seek(self.indices[index])
-                token_list = next(
-                    conllu.parse_incr(
-                        file, self.fields, self.field_parsers, self.metadata_parsers
-                    )
-                )
+                token_list = next(conllu.parse_incr(file, self.fields, self.field_parsers, self.metadata_parsers))
                 sentence = self.token_list_to_sentence(token_list)
 
         return sentence
@@ -317,9 +303,7 @@ class CoNLLUDataset(FlairDataset):
                 head = Span(sentence.tokens[head_start - 1 : head_end])
                 tail = Span(sentence.tokens[tail_start - 1 : tail_end])
 
-                sentence.add_complex_label(
-                    "relation", RelationLabel(value=label, head=head, tail=tail)
-                )
+                sentence.add_complex_label("relation", RelationLabel(value=label, head=head, tail=tail))
 
         # determine all NER label types in sentence and add all NER spans as sentence-level labels
         ner_label_types = []

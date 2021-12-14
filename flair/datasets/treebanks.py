@@ -34,36 +34,26 @@ class UniversalDependenciesCorpus(Corpus):
         """
 
         # find train, dev and test files if not specified
-        dev_file, test_file, train_file = find_train_dev_test_files(
-            data_folder, dev_file, test_file, train_file
-        )
+        dev_file, test_file, train_file = find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
         # get train data
-        train = UniversalDependenciesDataset(
-            train_file, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        train = UniversalDependenciesDataset(train_file, in_memory=in_memory, split_multiwords=split_multiwords)
 
         # get test data
         test = (
-            UniversalDependenciesDataset(
-                test_file, in_memory=in_memory, split_multiwords=split_multiwords
-            )
+            UniversalDependenciesDataset(test_file, in_memory=in_memory, split_multiwords=split_multiwords)
             if test_file is not None
             else None
         )
 
         # get dev data
         dev = (
-            UniversalDependenciesDataset(
-                dev_file, in_memory=in_memory, split_multiwords=split_multiwords
-            )
+            UniversalDependenciesDataset(dev_file, in_memory=in_memory, split_multiwords=split_multiwords)
             if dev_file is not None
             else None
         )
 
-        super(UniversalDependenciesCorpus, self).__init__(
-            train, dev, test, name=str(data_folder)
-        )
+        super(UniversalDependenciesCorpus, self).__init__(train, dev, test, name=str(data_folder))
 
 
 class UniversalDependenciesDataset(FlairDataset):
@@ -192,10 +182,7 @@ class UniversalDependenciesDataset(FlairDataset):
             else:
 
                 # if we don't split multiwords, skip over component words
-                if (
-                    not self.split_multiwords
-                    and token_idx < current_multiword_last_token
-                ):
+                if not self.split_multiwords and token_idx < current_multiword_last_token:
                     token_idx += 1
                     line = file.readline()
                     continue
@@ -229,14 +216,9 @@ class UniversalDependenciesDataset(FlairDataset):
                 # print(current_multiword_last_token)
                 # print(current_multiword_first_token)
                 # if multi-word equals component tokens, there should be no whitespace
-                if (
-                    token_idx == current_multiword_last_token
-                    and current_multiword_sequence == current_multiword_text
-                ):
+                if token_idx == current_multiword_last_token and current_multiword_sequence == current_multiword_text:
                     # go through all tokens in subword and set whitespace_after information
-                    for i in range(
-                        current_multiword_last_token - current_multiword_first_token
-                    ):
+                    for i in range(current_multiword_last_token - current_multiword_first_token):
                         # print(i)
                         sentence[-(i + 1)].whitespace_after = False
 
@@ -267,16 +249,10 @@ class UD_ENGLISH(UniversalDependenciesCorpus):
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/master"
         cached_path(f"{web_path}/en_ewt-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{web_path}/en_ewt-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/en_ewt-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/en_ewt-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/en_ewt-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_ENGLISH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_ENGLISH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_GALICIAN(UniversalDependenciesCorpus):
@@ -299,16 +275,10 @@ class UD_GALICIAN(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Galician-TreeGal/master"
-        cached_path(
-            f"{web_path}/gl_treegal-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/gl_treegal-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/gl_treegal-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/gl_treegal-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_GALICIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_GALICIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_ANCIENT_GREEK(UniversalDependenciesCorpus):
@@ -331,19 +301,11 @@ class UD_ANCIENT_GREEK(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Ancient_Greek-PROIEL/master"
-        cached_path(
-            f"{web_path}/grc_proiel-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/grc_proiel-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/grc_proiel-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/grc_proiel-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/grc_proiel-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/grc_proiel-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_ANCIENT_GREEK, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_ANCIENT_GREEK, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_KAZAKH(UniversalDependenciesCorpus):
@@ -366,16 +328,10 @@ class UD_KAZAKH(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Kazakh-KTB/master"
-        cached_path(
-            f"{web_path}/kk_ktb-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/kk_ktb-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/kk_ktb-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/kk_ktb-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_KAZAKH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_KAZAKH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_OLD_CHURCH_SLAVONIC(UniversalDependenciesCorpus):
@@ -398,15 +354,9 @@ class UD_OLD_CHURCH_SLAVONIC(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Old_Church_Slavonic-PROIEL/master"
-        cached_path(
-            f"{web_path}/cu_proiel-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/cu_proiel-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/cu_proiel-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/cu_proiel-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/cu_proiel-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/cu_proiel-ud-train.conllu", Path("datasets") / dataset_name)
 
         super(UD_OLD_CHURCH_SLAVONIC, self).__init__(
             data_folder, in_memory=in_memory, split_multiwords=split_multiwords
@@ -433,19 +383,11 @@ class UD_ARMENIAN(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Armenian-ArmTDP/master/"
-        cached_path(
-            f"{web_path}/hy_armtdp-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/hy_armtdp-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/hy_armtdp-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/hy_armtdp-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/hy_armtdp-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/hy_armtdp-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_ARMENIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_ARMENIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_ESTONIAN(UniversalDependenciesCorpus):
@@ -469,16 +411,10 @@ class UD_ESTONIAN(UniversalDependenciesCorpus):
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Estonian-EDT/master"
         cached_path(f"{web_path}/et_edt-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{web_path}/et_edt-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/et_edt-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/et_edt-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/et_edt-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_ESTONIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_ESTONIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_GERMAN(UniversalDependenciesCorpus):
@@ -503,13 +439,9 @@ class UD_GERMAN(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_German-GSD/master"
         cached_path(f"{ud_path}/de_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/de_gsd-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/de_gsd-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/de_gsd-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_GERMAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_GERMAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_GERMAN_HDT(UniversalDependenciesCorpus):
@@ -531,9 +463,7 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = (
-            "https://raw.githubusercontent.com/UniversalDependencies/UD_German-HDT/dev"
-        )
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_German-HDT/dev"
         cached_path(f"{ud_path}/de_hdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/de_hdt-ud-test.conllu", Path("datasets") / dataset_name)
 
@@ -545,9 +475,7 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
         ]
 
         for train_file in train_filenames:
-            cached_path(
-                f"{ud_path}/{train_file}", Path("datasets") / dataset_name / "original"
-            )
+            cached_path(f"{ud_path}/{train_file}", Path("datasets") / dataset_name / "original")
 
         data_path = flair.cache_root / "datasets" / dataset_name
 
@@ -559,9 +487,7 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
                     with open(data_path / "original" / train_filename, "rt") as f_in:
                         f_out.write(f_in.read())
 
-        super(UD_GERMAN_HDT, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_GERMAN_HDT, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_DUTCH(UniversalDependenciesCorpus):
@@ -584,19 +510,11 @@ class UD_DUTCH(UniversalDependenciesCorpus):
 
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Dutch-Alpino/master"
-        cached_path(
-            f"{ud_path}/nl_alpino-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/nl_alpino-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/nl_alpino-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/nl_alpino-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/nl_alpino-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/nl_alpino-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_DUTCH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_DUTCH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_FAROESE(UniversalDependenciesCorpus):
@@ -624,19 +542,11 @@ class UD_FAROESE(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Faroese-FarPaHC/master"
-        cached_path(
-            f"{web_path}/fo_farpahc-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/fo_farpahc-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/fo_farpahc-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/fo_farpahc-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/fo_farpahc-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/fo_farpahc-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_FAROESE, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_FAROESE, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_FRENCH(UniversalDependenciesCorpus):
@@ -661,12 +571,8 @@ class UD_FRENCH(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_French-GSD/master"
         cached_path(f"{ud_path}/fr_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/fr_gsd-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/fr_gsd-ud-train.conllu", Path("datasets") / dataset_name
-        )
-        super(UD_FRENCH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        cached_path(f"{ud_path}/fr_gsd-ud-train.conllu", Path("datasets") / dataset_name)
+        super(UD_FRENCH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_ITALIAN(UniversalDependenciesCorpus):
@@ -690,15 +596,9 @@ class UD_ITALIAN(UniversalDependenciesCorpus):
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Italian-ISDT/master"
         cached_path(f"{ud_path}/it_isdt-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/it_isdt-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/it_isdt-ud-train.conllu", Path("datasets") / dataset_name
-        )
-        super(UD_ITALIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        cached_path(f"{ud_path}/it_isdt-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/it_isdt-ud-train.conllu", Path("datasets") / dataset_name)
+        super(UD_ITALIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_LATIN(UniversalDependenciesCorpus):
@@ -721,19 +621,11 @@ class UD_LATIN(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Latin-LLCT/master/"
-        cached_path(
-            f"{web_path}/la_llct-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/la_llct-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/la_llct-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/la_llct-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/la_llct-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/la_llct-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_LATIN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_LATIN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_SPANISH(UniversalDependenciesCorpus):
@@ -758,12 +650,8 @@ class UD_SPANISH(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Spanish-GSD/master"
         cached_path(f"{ud_path}/es_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/es_gsd-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/es_gsd-ud-train.conllu", Path("datasets") / dataset_name
-        )
-        super(UD_SPANISH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        cached_path(f"{ud_path}/es_gsd-ud-train.conllu", Path("datasets") / dataset_name)
+        super(UD_SPANISH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_PORTUGUESE(UniversalDependenciesCorpus):
@@ -786,18 +674,10 @@ class UD_PORTUGUESE(UniversalDependenciesCorpus):
 
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Portuguese-Bosque/master"
-        cached_path(
-            f"{ud_path}/pt_bosque-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/pt_bosque-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/pt_bosque-ud-train.conllu", Path("datasets") / dataset_name
-        )
-        super(UD_PORTUGUESE, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        cached_path(f"{ud_path}/pt_bosque-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/pt_bosque-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/pt_bosque-ud-train.conllu", Path("datasets") / dataset_name)
+        super(UD_PORTUGUESE, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_ROMANIAN(UniversalDependenciesCorpus):
@@ -822,12 +702,8 @@ class UD_ROMANIAN(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Romanian-RRT/master"
         cached_path(f"{ud_path}/ro_rrt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ro_rrt-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/ro_rrt-ud-train.conllu", Path("datasets") / dataset_name
-        )
-        super(UD_ROMANIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        cached_path(f"{ud_path}/ro_rrt-ud-train.conllu", Path("datasets") / dataset_name)
+        super(UD_ROMANIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_CATALAN(UniversalDependenciesCorpus):
@@ -850,18 +726,10 @@ class UD_CATALAN(UniversalDependenciesCorpus):
 
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Catalan-AnCora/master"
-        cached_path(
-            f"{ud_path}/ca_ancora-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/ca_ancora-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/ca_ancora-ud-train.conllu", Path("datasets") / dataset_name
-        )
-        super(UD_CATALAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        cached_path(f"{ud_path}/ca_ancora-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/ca_ancora-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/ca_ancora-ud-train.conllu", Path("datasets") / dataset_name)
+        super(UD_CATALAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_POLISH(UniversalDependenciesCorpus):
@@ -886,13 +754,9 @@ class UD_POLISH(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Polish-LFG/master"
         cached_path(f"{ud_path}/pl_lfg-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/pl_lfg-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/pl_lfg-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/pl_lfg-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_POLISH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_POLISH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_CZECH(UniversalDependenciesCorpus):
@@ -949,9 +813,7 @@ class UD_CZECH(UniversalDependenciesCorpus):
                 for train_filename in train_filenames:
                     with open(data_path / "original" / train_filename, "rt") as f_in:
                         f_out.write(f_in.read())
-        super(UD_CZECH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_CZECH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_SLOVAK(UniversalDependenciesCorpus):
@@ -976,13 +838,9 @@ class UD_SLOVAK(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Slovak-SNK/master"
         cached_path(f"{ud_path}/sk_snk-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/sk_snk-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/sk_snk-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/sk_snk-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_SLOVAK, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_SLOVAK, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_SWEDISH(UniversalDependenciesCorpus):
@@ -1005,19 +863,11 @@ class UD_SWEDISH(UniversalDependenciesCorpus):
 
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Swedish-Talbanken/master"
-        cached_path(
-            f"{ud_path}/sv_talbanken-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/sv_talbanken-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/sv_talbanken-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/sv_talbanken-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/sv_talbanken-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/sv_talbanken-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_SWEDISH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_SWEDISH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_DANISH(UniversalDependenciesCorpus):
@@ -1042,13 +892,9 @@ class UD_DANISH(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Danish-DDT/master"
         cached_path(f"{ud_path}/da_ddt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/da_ddt-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/da_ddt-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/da_ddt-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_DANISH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_DANISH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_NORWEGIAN(UniversalDependenciesCorpus):
@@ -1071,19 +917,11 @@ class UD_NORWEGIAN(UniversalDependenciesCorpus):
 
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Norwegian-Bokmaal/master"
-        cached_path(
-            f"{ud_path}/no_bokmaal-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/no_bokmaal-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/no_bokmaal-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/no_bokmaal-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/no_bokmaal-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/no_bokmaal-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_NORWEGIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_NORWEGIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_FINNISH(UniversalDependenciesCorpus):
@@ -1108,13 +946,9 @@ class UD_FINNISH(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Finnish-TDT/master"
         cached_path(f"{ud_path}/fi_tdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/fi_tdt-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/fi_tdt-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/fi_tdt-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_FINNISH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_FINNISH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_SLOVENIAN(UniversalDependenciesCorpus):
@@ -1139,13 +973,9 @@ class UD_SLOVENIAN(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Slovenian-SSJ/master"
         cached_path(f"{ud_path}/sl_ssj-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/sl_ssj-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/sl_ssj-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/sl_ssj-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_SLOVENIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_SLOVENIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_CROATIAN(UniversalDependenciesCorpus):
@@ -1170,13 +1000,9 @@ class UD_CROATIAN(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Croatian-SET/master"
         cached_path(f"{ud_path}/hr_set-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/hr_set-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/hr_set-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/hr_set-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_CROATIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_CROATIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_SERBIAN(UniversalDependenciesCorpus):
@@ -1201,13 +1027,9 @@ class UD_SERBIAN(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Serbian-SET/master"
         cached_path(f"{ud_path}/sr_set-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/sr_set-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/sr_set-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/sr_set-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_SERBIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_SERBIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_BULGARIAN(UniversalDependenciesCorpus):
@@ -1232,13 +1054,9 @@ class UD_BULGARIAN(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Bulgarian-BTB/master"
         cached_path(f"{ud_path}/bg_btb-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/bg_btb-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/bg_btb-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/bg_btb-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_BULGARIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_BULGARIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_ARABIC(UniversalDependenciesCorpus):
@@ -1262,15 +1080,9 @@ class UD_ARABIC(UniversalDependenciesCorpus):
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Arabic-PADT/master"
         cached_path(f"{ud_path}/ar_padt-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/ar_padt-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/ar_padt-ud-train.conllu", Path("datasets") / dataset_name
-        )
-        super(UD_ARABIC, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        cached_path(f"{ud_path}/ar_padt-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/ar_padt-ud-train.conllu", Path("datasets") / dataset_name)
+        super(UD_ARABIC, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_HEBREW(UniversalDependenciesCorpus):
@@ -1295,12 +1107,8 @@ class UD_HEBREW(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Hebrew-HTB/master"
         cached_path(f"{ud_path}/he_htb-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/he_htb-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/he_htb-ud-train.conllu", Path("datasets") / dataset_name
-        )
-        super(UD_HEBREW, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        cached_path(f"{ud_path}/he_htb-ud-train.conllu", Path("datasets") / dataset_name)
+        super(UD_HEBREW, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_TURKISH(UniversalDependenciesCorpus):
@@ -1327,16 +1135,10 @@ class UD_TURKISH(UniversalDependenciesCorpus):
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Turkish-IMST/master"
         cached_path(f"{ud_path}/tr_imst-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/tr_imst-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/tr_imst-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/tr_imst-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/tr_imst-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_TURKISH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_TURKISH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_PERSIAN(UniversalDependenciesCorpus):
@@ -1362,19 +1164,11 @@ class UD_PERSIAN(UniversalDependenciesCorpus):
 
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Persian-Seraji/master"
-        cached_path(
-            f"{ud_path}/fa_seraji-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/fa_seraji-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/fa_seraji-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/fa_seraji-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/fa_seraji-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/fa_seraji-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_PERSIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_PERSIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_RUSSIAN(UniversalDependenciesCorpus):
@@ -1397,19 +1191,11 @@ class UD_RUSSIAN(UniversalDependenciesCorpus):
 
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Russian-SynTagRus/master"
-        cached_path(
-            f"{ud_path}/ru_syntagrus-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/ru_syntagrus-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/ru_syntagrus-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/ru_syntagrus-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/ru_syntagrus-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/ru_syntagrus-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_RUSSIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_RUSSIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_HINDI(UniversalDependenciesCorpus):
@@ -1433,16 +1219,10 @@ class UD_HINDI(UniversalDependenciesCorpus):
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Hindi-HDTB/master"
         cached_path(f"{ud_path}/hi_hdtb-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/hi_hdtb-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/hi_hdtb-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/hi_hdtb-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/hi_hdtb-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_HINDI, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_HINDI, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_INDONESIAN(UniversalDependenciesCorpus):
@@ -1467,13 +1247,9 @@ class UD_INDONESIAN(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Indonesian-GSD/master"
         cached_path(f"{ud_path}/id_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/id_gsd-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/id_gsd-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/id_gsd-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_INDONESIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_INDONESIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_JAPANESE(UniversalDependenciesCorpus):
@@ -1498,13 +1274,9 @@ class UD_JAPANESE(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Japanese-GSD/master"
         cached_path(f"{ud_path}/ja_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ja_gsd-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/ja_gsd-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/ja_gsd-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_JAPANESE, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_JAPANESE, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_CHINESE(UniversalDependenciesCorpus):
@@ -1529,13 +1301,9 @@ class UD_CHINESE(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Chinese-GSD/master"
         cached_path(f"{ud_path}/zh_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/zh_gsd-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/zh_gsd-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/zh_gsd-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_CHINESE, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_CHINESE, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_KOREAN(UniversalDependenciesCorpus):
@@ -1558,19 +1326,11 @@ class UD_KOREAN(UniversalDependenciesCorpus):
 
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Korean-Kaist/master"
-        cached_path(
-            f"{ud_path}/ko_kaist-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/ko_kaist-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ud_path}/ko_kaist-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/ko_kaist-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/ko_kaist-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/ko_kaist-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_KOREAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_KOREAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_BASQUE(UniversalDependenciesCorpus):
@@ -1595,13 +1355,9 @@ class UD_BASQUE(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Basque-BDT/master"
         cached_path(f"{ud_path}/eu_bdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/eu_bdt-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/eu_bdt-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ud_path}/eu_bdt-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_BASQUE, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_BASQUE, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
@@ -1624,19 +1380,11 @@ class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Classical_Chinese-Kyoto/master"
-        cached_path(
-            f"{web_path}/lzh_kyoto-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/lzh_kyoto-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/lzh_kyoto-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/lzh_kyoto-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/lzh_kyoto-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/lzh_kyoto-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_CHINESE_KYOTO, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_CHINESE_KYOTO, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_GREEK(UniversalDependenciesCorpus):
@@ -1660,16 +1408,10 @@ class UD_GREEK(UniversalDependenciesCorpus):
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Greek-GDT/master"
         cached_path(f"{web_path}/el_gdt-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{web_path}/el_gdt-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/el_gdt-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/el_gdt-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/el_gdt-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_GREEK, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_GREEK, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_NAIJA(UniversalDependenciesCorpus):
@@ -1692,19 +1434,11 @@ class UD_NAIJA(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Naija-NSC/master"
-        cached_path(
-            f"{web_path}//pcm_nsc-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}//pcm_nsc-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}//pcm_nsc-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}//pcm_nsc-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}//pcm_nsc-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}//pcm_nsc-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_NAIJA, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_NAIJA, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_LIVVI(UniversalDependenciesCorpus):
@@ -1727,16 +1461,10 @@ class UD_LIVVI(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Livvi-KKPP/master"
-        cached_path(
-            f"{web_path}/olo_kkpp-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/olo_kkpp-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/olo_kkpp-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/olo_kkpp-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_LIVVI, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_LIVVI, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_BURYAT(UniversalDependenciesCorpus):
@@ -1759,16 +1487,10 @@ class UD_BURYAT(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Buryat-BDT/master"
-        cached_path(
-            f"{web_path}/bxr_bdt-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/bxr_bdt-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/bxr_bdt-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/bxr_bdt-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_BURYAT, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_BURYAT, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_NORTH_SAMI(UniversalDependenciesCorpus):
@@ -1791,16 +1513,10 @@ class UD_NORTH_SAMI(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_North_Sami-Giella/master"
-        cached_path(
-            f"{web_path}/sme_giella-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/sme_giella-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/sme_giella-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/sme_giella-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_NORTH_SAMI, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_NORTH_SAMI, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_MARATHI(UniversalDependenciesCorpus):
@@ -1823,19 +1539,11 @@ class UD_MARATHI(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Marathi-UFAL/master"
-        cached_path(
-            f"{web_path}/mr_ufal-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/mr_ufal-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/mr_ufal-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/mr_ufal-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/mr_ufal-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/mr_ufal-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_MARATHI, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_MARATHI, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_MALTESE(UniversalDependenciesCorpus):
@@ -1856,19 +1564,11 @@ class UD_MALTESE(UniversalDependenciesCorpus):
 
         data_folder = base_path / dataset_name
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Maltese-MUDT/master"
-        cached_path(
-            f"{web_path}/mt_mudt-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/mt_mudt-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/mt_mudt-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/mt_mudt-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/mt_mudt-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/mt_mudt-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_MALTESE, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_MALTESE, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_AFRIKAANS(UniversalDependenciesCorpus):
@@ -1889,19 +1589,11 @@ class UD_AFRIKAANS(UniversalDependenciesCorpus):
 
         data_folder = base_path / dataset_name
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Afrikaans-AfriBooms/master"
-        cached_path(
-            f"{web_path}/af_afribooms-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/af_afribooms-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/af_afribooms-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/af_afribooms-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/af_afribooms-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/af_afribooms-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_AFRIKAANS, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_AFRIKAANS, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_GOTHIC(UniversalDependenciesCorpus):
@@ -1924,19 +1616,11 @@ class UD_GOTHIC(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Gothic-PROIEL/master"
-        cached_path(
-            f"{web_path}/got_proiel-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/got_proiel-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/got_proiel-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/got_proiel-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/got_proiel-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/got_proiel-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_GOTHIC, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_GOTHIC, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_OLD_FRENCH(UniversalDependenciesCorpus):
@@ -1959,19 +1643,11 @@ class UD_OLD_FRENCH(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Old_French-SRCMF/master"
-        cached_path(
-            f"{web_path}/fro_srcmf-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/fro_srcmf-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/fro_srcmf-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/fro_srcmf-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/fro_srcmf-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/fro_srcmf-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_OLD_FRENCH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_OLD_FRENCH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_WOLOF(UniversalDependenciesCorpus):
@@ -1993,16 +1669,10 @@ class UD_WOLOF(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Wolof-WTB/master"
         cached_path(f"{web_path}/wo_wtb-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{web_path}/wo_wtb-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/wo_wtb-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/wo_wtb-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/wo_wtb-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_WOLOF, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_WOLOF, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_BELARUSIAN(UniversalDependenciesCorpus):
@@ -2026,16 +1696,10 @@ class UD_BELARUSIAN(UniversalDependenciesCorpus):
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Belarusian-HSE/master"
         cached_path(f"{web_path}/be_hse-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{web_path}/be_hse-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/be_hse-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/be_hse-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/be_hse-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_BELARUSIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_BELARUSIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_COPTIC(UniversalDependenciesCorpus):
@@ -2058,9 +1722,7 @@ class UD_COPTIC(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Coptic-Scriptorium/master"
-        cached_path(
-            f"{web_path}/cop_scriptorium-ud-dev.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/cop_scriptorium-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(
             f"{web_path}/cop_scriptorium-ud-test.conllu",
             Path("datasets") / dataset_name,
@@ -2070,9 +1732,7 @@ class UD_COPTIC(UniversalDependenciesCorpus):
             Path("datasets") / dataset_name,
         )
 
-        super(UD_COPTIC, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_COPTIC, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_IRISH(UniversalDependenciesCorpus):
@@ -2096,16 +1756,10 @@ class UD_IRISH(UniversalDependenciesCorpus):
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Irish-IDT/master"
         cached_path(f"{web_path}/ga_idt-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{web_path}/ga_idt-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/ga_idt-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/ga_idt-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/ga_idt-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_IRISH, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_IRISH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_LATVIAN(UniversalDependenciesCorpus):
@@ -2128,19 +1782,11 @@ class UD_LATVIAN(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Latvian-LVTB/master"
-        cached_path(
-            f"{web_path}/lv_lvtb-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/lv_lvtb-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/lv_lvtb-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/lv_lvtb-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/lv_lvtb-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/lv_lvtb-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_LATVIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_LATVIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_LITHUANIAN(UniversalDependenciesCorpus):
@@ -2164,16 +1810,8 @@ class UD_LITHUANIAN(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Lithuanian-ALKSNIS/master"
-        cached_path(
-            f"{web_path}/lt_alksnis-ud-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/lt_alksnis-ud-test.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{web_path}/lt_alksnis-ud-train.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{web_path}/lt_alksnis-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/lt_alksnis-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/lt_alksnis-ud-train.conllu", Path("datasets") / dataset_name)
 
-        super(UD_LITHUANIAN, self).__init__(
-            data_folder, in_memory=in_memory, split_multiwords=split_multiwords
-        )
+        super(UD_LITHUANIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)

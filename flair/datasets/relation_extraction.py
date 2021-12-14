@@ -58,12 +58,10 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        semeval_2010_task_8_url = "https://drive.google.com/uc?id=0B_jQiLugGTAkMDQ5ZjZiMTUtMzQ1Yy00YWNmLWJlZDYtOWY1ZDMwY2U4YjFk"
-        train_file_name = (
-            "semeval2010-task8-train-aug.conllu"
-            if augment_train
-            else "semeval2010-task8-train.conllu"
+        semeval_2010_task_8_url = (
+            "https://drive.google.com/uc?id=0B_jQiLugGTAkMDQ5ZjZiMTUtMzQ1Yy00YWNmLWJlZDYtOWY1ZDMwY2U4YjFk"
         )
+        train_file_name = "semeval2010-task8-train-aug.conllu" if augment_train else "semeval2010-task8-train.conllu"
         data_file = data_folder / train_file_name
 
         # if True:
@@ -93,24 +91,16 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
             "SemEval2010_task8_all_data/SemEval2010_task8_training/TRAIN_FILE.TXT",
             "SemEval2010_task8_all_data/SemEval2010_task8_testing_keys/TEST_FILE_FULL.TXT",
         ]
-        train_filename = (
-            "semeval2010-task8-train-aug.conllu"
-            if augment_train
-            else "semeval2010-task8-train.conllu"
-        )
+        train_filename = "semeval2010-task8-train-aug.conllu" if augment_train else "semeval2010-task8-train.conllu"
         target_filenames = [train_filename, "semeval2010-task8-test.conllu"]
 
         with zipfile.ZipFile(data_file) as zip_file:
 
-            for source_file_path, target_filename in zip(
-                source_file_paths, target_filenames
-            ):
+            for source_file_path, target_filename in zip(source_file_paths, target_filenames):
                 with zip_file.open(source_file_path, mode="r") as source_file:
 
                     target_file_path = Path(data_folder) / target_filename
-                    with open(
-                        target_file_path, mode="w", encoding="utf-8"
-                    ) as target_file:
+                    with open(target_file_path, mode="w", encoding="utf-8") as target_file:
                         # write CoNLL-U Plus header
                         target_file.write("# global.columns = id form ner\n")
 
@@ -121,9 +111,7 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
                             if not line:
                                 token_list = self._semeval_lines_to_token_list(
                                     raw_lines,
-                                    augment_relations=augment_train
-                                    if "train" in target_filename
-                                    else False,
+                                    augment_relations=augment_train if "train" in target_filename else False,
                                 )
                                 target_file.write(token_list.serialize())
 
@@ -211,9 +199,7 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
         metadata = {
             "text": " ".join(tokens),
             "sentence_id": str(id_),
-            "relations": relation + "|" + relation_inverted
-            if augment_relations
-            else relation,
+            "relations": relation + "|" + relation_inverted if augment_relations else relation,
         }
 
         token_dicts = []
@@ -290,15 +276,11 @@ class RE_ENGLISH_TACRED(CoNLLUCorpus):
 
         with zipfile.ZipFile(data_file) as zip_file:
 
-            for source_file_path, target_filename in zip(
-                source_file_paths, target_filenames
-            ):
+            for source_file_path, target_filename in zip(source_file_paths, target_filenames):
                 with zip_file.open(source_file_path, mode="r") as source_file:
 
                     target_file_path = Path(data_folder) / target_filename
-                    with open(
-                        target_file_path, mode="w", encoding="utf-8"
-                    ) as target_file:
+                    with open(target_file_path, mode="w", encoding="utf-8") as target_file:
                         # write CoNLL-U Plus header
                         target_file.write("# global.columns = id form ner\n")
 
@@ -306,9 +288,7 @@ class RE_ENGLISH_TACRED(CoNLLUCorpus):
                             token_list = self._tacred_example_to_token_list(example)
                             target_file.write(token_list.serialize())
 
-    def _tacred_example_to_token_list(
-        self, example: Dict[str, Any]
-    ) -> conllu.TokenList:
+    def _tacred_example_to_token_list(self, example: Dict[str, Any]) -> conllu.TokenList:
         id_ = example["id"]
         tokens = example["token"]
         ner = example["stanford_ner"]
@@ -382,7 +362,9 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
 
         # TODO: change data source to original CoNLL04 -- this dataset has span formatting errors
         # download data if necessary
-        conll04_url = "https://raw.githubusercontent.com/bekou/multihead_joint_entity_relation_extraction/master/data/CoNLL04/"
+        conll04_url = (
+            "https://raw.githubusercontent.com/bekou/multihead_joint_entity_relation_extraction/master/data/CoNLL04/"
+        )
         data_file = data_folder / "conll04-train.conllu"
 
         if True or not data_file.is_file():
@@ -449,9 +431,7 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
         for source_filename, target_filename in zip(source_filenames, target_filenames):
             with open(source_data_folder / source_filename, mode="r") as source_file:
 
-                with open(
-                    data_folder / target_filename, mode="w", encoding="utf-8"
-                ) as target_file:
+                with open(data_folder / target_filename, mode="w", encoding="utf-8") as target_file:
                     # write CoNLL-U Plus header
                     target_file.write("# global.columns = id form ner\n")
 
@@ -511,9 +491,7 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
                 }
             )
 
-        span_end_to_span = {
-            end: (start, end) for start, end in self._bio_tags_to_spans(ner_tags)
-        }
+        span_end_to_span = {end: (start, end) for start, end in self._bio_tags_to_spans(ner_tags)}
 
         relations = []
         for index, token in enumerate(src_token_list):
@@ -568,12 +546,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
         self.sentence_splitter = sentence_splitter
 
         # this dataset name
-        dataset_name = (
-            self.__class__.__name__.lower()
-            + "_"
-            + type(self.sentence_splitter).__name__
-            + "_v3"
-        )
+        dataset_name = self.__class__.__name__.lower() + "_" + type(self.sentence_splitter).__name__ + "_v3"
 
         data_folder = base_path / dataset_name
 
@@ -584,8 +557,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
             source_data_folder = data_folder / "original"
             cached_path(drugprot_url, source_data_folder)
             self.extract_and_convert_to_conllu(
-                data_file=source_data_folder
-                / "drugprot-training-development-test-background.zip",
+                data_file=source_data_folder / "drugprot-training-development-test-background.zip",
                 data_folder=data_folder,
             )
 
@@ -715,10 +687,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                     if sent_char_start <= char_start and char_end <= sent_char_end:
                         entities_in_sent.add(entity_id)
 
-                entity_char_spans = [
-                    (entities[entity_id][1], entities[entity_id][2])
-                    for entity_id in entities_in_sent
-                ]
+                entity_char_spans = [(entities[entity_id][1], entities[entity_id][2]) for entity_id in entities_in_sent]
 
                 token_offsets = [
                     (
@@ -727,9 +696,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                     )
                     for token in sent.tokens
                 ]
-                entity_token_spans = self.char_spans_to_token_spans(
-                    entity_char_spans, token_offsets
-                )
+                entity_token_spans = self.char_spans_to_token_spans(entity_char_spans, token_offsets)
 
                 tags_1 = ["O"] * len(sent)
                 tags_2 = ["O"] * len(sent)
@@ -785,16 +752,12 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                     )
 
                 relations_in_sent = []
-                for relation, ent1, ent2 in [
-                    r for r in relations if {r[1], r[2]} <= entities_in_sent
-                ]:
+                for relation, ent1, ent2 in [r for r in relations if {r[1], r[2]} <= entities_in_sent]:
                     subj_start = entity_id_to_token_idx[ent1][0]
                     subj_end = entity_id_to_token_idx[ent1][1]
                     obj_start = entity_id_to_token_idx[ent2][0]
                     obj_end = entity_id_to_token_idx[ent2][1]
-                    relations_in_sent.append(
-                        (subj_start, subj_end, obj_start, obj_end, relation)
-                    )
+                    relations_in_sent.append((subj_start, subj_end, obj_start, obj_end, relation))
 
                 metadata = {
                     "text": sent.to_original_text(),
@@ -816,9 +779,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                     ),
                 }
 
-                tokenlists.append(
-                    conllu.TokenList(tokens=token_dicts, metadata=Metadata(metadata))
-                )
+                tokenlists.append(conllu.TokenList(tokens=token_dicts, metadata=Metadata(metadata)))
 
                 sentence_id += 1
 

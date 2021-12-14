@@ -49,9 +49,7 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
         self.tagset_size: int = len(tag_dictionary)
 
         # linear layer
-        self.linear = torch.nn.Linear(
-            self.embeddings.embedding_length, len(tag_dictionary)
-        )
+        self.linear = torch.nn.Linear(self.embeddings.embedding_length, len(tag_dictionary))
 
         # all parameters will be pushed internally to the specified device
         self.to(flair.device)
@@ -99,9 +97,7 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
         labels = [[token.get_tag(self.label_type).value] for token in all_tokens]
 
         if return_label_candidates:
-            empty_label_candidates = [
-                Label(value=None, score=0.0) for token in all_tokens
-            ]
+            empty_label_candidates = [Label(value=None, score=0.0) for token in all_tokens]
             return scores, labels, all_tokens, empty_label_candidates
 
         return scores, labels

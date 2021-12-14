@@ -56,37 +56,26 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
 
     def _get_tars_formatted_sentences(self, sentences: List[Sentence]):
         label_text_pairs = []
-        all_labels = [
-            label.decode("utf-8")
-            for label in self.get_current_label_dictionary().idx2item
-        ]
+        all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
         # print(all_labels)
         for sentence in sentences:
             label_text_pairs_for_sentence = []
             if self.training and self.num_negative_labels_to_sample is not None:
 
                 positive_labels = list(
-                    OrderedDict.fromkeys(
-                        [label.value for label in sentence.get_labels(self.label_type)]
-                    )
+                    OrderedDict.fromkeys([label.value for label in sentence.get_labels(self.label_type)])
                 )
 
                 sampled_negative_labels = self._get_nearest_labels_for(positive_labels)
 
                 for label in positive_labels:
-                    label_text_pairs_for_sentence.append(
-                        self._get_tars_formatted_sentence(label, sentence)
-                    )
+                    label_text_pairs_for_sentence.append(self._get_tars_formatted_sentence(label, sentence))
                 for label in sampled_negative_labels:
-                    label_text_pairs_for_sentence.append(
-                        self._get_tars_formatted_sentence(label, sentence)
-                    )
+                    label_text_pairs_for_sentence.append(self._get_tars_formatted_sentence(label, sentence))
 
             else:
                 for label in all_labels:
-                    label_text_pairs_for_sentence.append(
-                        self._get_tars_formatted_sentence(label, sentence)
-                    )
+                    label_text_pairs_for_sentence.append(self._get_tars_formatted_sentence(label, sentence))
             label_text_pairs.extend(label_text_pairs_for_sentence)
 
         return label_text_pairs
@@ -110,28 +99,19 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
             plausible_labels = []
             plausible_label_probabilities = []
             for plausible_label in self.label_nearest_map[label]:
-                if (
-                    plausible_label in already_sampled_negative_labels
-                    or plausible_label in labels
-                ):
+                if plausible_label in already_sampled_negative_labels or plausible_label in labels:
                     continue
                 else:
                     plausible_labels.append(plausible_label)
-                    plausible_label_probabilities.append(
-                        self.label_nearest_map[label][plausible_label]
-                    )
+                    plausible_label_probabilities.append(self.label_nearest_map[label][plausible_label])
 
             # make sure the probabilities always sum up to 1
-            plausible_label_probabilities = np.array(
-                plausible_label_probabilities, dtype="float64"
-            )
+            plausible_label_probabilities = np.array(plausible_label_probabilities, dtype="float64")
             plausible_label_probabilities += 1e-08
             plausible_label_probabilities /= np.sum(plausible_label_probabilities)
 
             if len(plausible_labels) > 0:
-                num_samples = min(
-                    self.num_negative_labels_to_sample, len(plausible_labels)
-                )
+                num_samples = min(self.num_negative_labels_to_sample, len(plausible_labels))
                 sampled_negative_labels = np.random.choice(
                     plausible_labels,
                     num_samples,
@@ -161,10 +141,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         """
 
         # get and embed all labels by making a Sentence object that contains only the label text
-        all_labels = [
-            label.decode("utf-8")
-            for label in self.get_current_label_dictionary().idx2item
-        ]
+        all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
         label_sentences = [Sentence(label) for label in all_labels]
 
         self.tars_embeddings.eval()  # TODO: check if this is necessary
@@ -173,15 +150,9 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
 
         # get each label embedding and scale between 0 and 1
         if isinstance(self.tars_embeddings, TokenEmbeddings):
-            encodings_np = [
-                sentence[0].get_embedding().cpu().detach().numpy()
-                for sentence in label_sentences
-            ]
+            encodings_np = [sentence[0].get_embedding().cpu().detach().numpy() for sentence in label_sentences]
         else:
-            encodings_np = [
-                sentence.get_embedding().cpu().detach().numpy()
-                for sentence in label_sentences
-            ]
+            encodings_np = [sentence.get_embedding().cpu().detach().numpy() for sentence in label_sentences]
 
         normalized_encoding = minmax_scale(encodings_np)
 
@@ -195,15 +166,11 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
             negative_label_probabilities[label] = {}
             for column_index, other_label in enumerate(all_labels):
                 if label != other_label:
-                    negative_label_probabilities[label][
-                        other_label
-                    ] = similarity_matrix[row_index][column_index]
+                    negative_label_probabilities[label][other_label] = similarity_matrix[row_index][column_index]
         self.label_nearest_map = negative_label_probabilities
 
     def get_current_label_dictionary(self):
-        label_dictionary = self._task_specific_attributes[self._current_task][
-            "label_dictionary"
-        ]
+        label_dictionary = self._task_specific_attributes[self._current_task]["label_dictionary"]
         return label_dictionary
 
     def get_current_label_type(self):
@@ -231,9 +198,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         :param force_switch: if True, will overwrite existing task with same name
         """
         if task_name in self._task_specific_attributes and not force_switch:
-            log.warning(
-                "Task `%s` already exists in TARS model. Switching to it.", task_name
-            )
+            log.warning("Task `%s` already exists in TARS model. Switching to it.", task_name)
         else:
             # make label dictionary if no Dictionary object is passed
             if isinstance(label_dictionary, Dictionary):
@@ -272,8 +237,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         """
         if task_name not in self._task_specific_attributes:
             log.error(
-                "Provided `%s` does not exist in the model. Consider calling "
-                "`add_and_switch_to_new_task` first.",
+                "Provided `%s` does not exist in the model. Consider calling " "`add_and_switch_to_new_task` first.",
                 task_name,
             )
         else:
@@ -283,8 +247,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         if task_name in self._task_specific_attributes:
             if self._current_task == task_name:
                 log.error(
-                    "`%s` is the current task."
-                    " Switch to some other task before dropping this.",
+                    "`%s` is the current task." " Switch to some other task before dropping this.",
                     task_name,
                 )
             else:
@@ -296,9 +259,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
-            log.warning(
-                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
-            )
+            log.warning(f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens.")
         return filtered_sentences
 
     @property
@@ -437,16 +398,10 @@ class TARSTagger(FewshotClassifier):
         original_text = sentence.to_tokenized_string()
 
         label_text_pair = (
-            f"{label} {self.separator} {original_text}"
-            if self.prefix
-            else f"{original_text} {self.separator} {label}"
+            f"{label} {self.separator} {original_text}" if self.prefix else f"{original_text} {self.separator} {label}"
         )
 
-        label_length = (
-            0
-            if not self.prefix
-            else len(label.split(" ")) + len(self.separator.split(" "))
-        )
+        label_length = 0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
 
         # make a tars sentence where all labels are O by default
         tars_sentence = Sentence(label_text_pair, use_tokenizer=False)
@@ -466,9 +421,7 @@ class TARSTagger(FewshotClassifier):
             else:
                 tars_tag = "O"
 
-            tars_sentence.get_token(token.idx + label_length).add_tag(
-                self.static_label_type, tars_tag
-            )
+            tars_sentence.get_token(token.idx + label_length).add_tag(self.static_label_type, tars_tag)
 
         return tars_sentence
 
@@ -584,22 +537,13 @@ class TARSTagger(FewshotClassifier):
                     for token in sentence:
                         token.remove_labels(label_name)
 
-                    all_labels = [
-                        label.decode("utf-8")
-                        for label in self.get_current_label_dictionary().idx2item
-                    ]
+                    all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
 
                     all_detected = {}
                     for label in all_labels:
-                        tars_sentence = self._get_tars_formatted_sentence(
-                            label, sentence
-                        )
+                        tars_sentence = self._get_tars_formatted_sentence(label, sentence)
 
-                        label_length = (
-                            0
-                            if not self.prefix
-                            else len(label.split(" ")) + len(self.separator.split(" "))
-                        )
+                        label_length = 0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
 
                         loss_and_count = self.tars_model.predict(
                             tars_sentence,
@@ -617,17 +561,12 @@ class TARSTagger(FewshotClassifier):
                         if not most_probable_first:
                             for span in tars_sentence.get_spans(label_name):
                                 for token in span:
-                                    corresponding_token = sentence.get_token(
-                                        token.idx - label_length
-                                    )
+                                    corresponding_token = sentence.get_token(token.idx - label_length)
                                     if corresponding_token is None:
                                         continue
                                     if (
-                                        corresponding_token.get_tag(label_name).value
-                                        != ""
-                                        and corresponding_token.get_tag(
-                                            label_name
-                                        ).score
+                                        corresponding_token.get_tag(label_name).value != ""
+                                        and corresponding_token.get_tag(label_name).score
                                         > token.get_tag(label_name).score
                                     ):
                                         continue
@@ -640,34 +579,26 @@ class TARSTagger(FewshotClassifier):
                     if most_probable_first:
                         import operator
 
-                        sorted_x = sorted(
-                            all_detected.items(), key=operator.itemgetter(1)
-                        )
+                        sorted_x = sorted(all_detected.items(), key=operator.itemgetter(1))
                         sorted_x.reverse()
                         for tuple in sorted_x:
                             # get the span and its label
                             span = tuple[0]
                             label = span.get_labels("tars_temp_label")[0].value
                             label_length = (
-                                0
-                                if not self.prefix
-                                else len(label.split(" "))
-                                + len(self.separator.split(" "))
+                                0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
                             )
 
                             # determine whether tokens in this span already have a label
                             tag_this = True
                             for token in span:
-                                corresponding_token = sentence.get_token(
-                                    token.idx - label_length
-                                )
+                                corresponding_token = sentence.get_token(token.idx - label_length)
                                 if corresponding_token is None:
                                     tag_this = False
                                     continue
                                 if (
                                     corresponding_token.get_tag(label_name).value != ""
-                                    and corresponding_token.get_tag(label_name).score
-                                    > token.get_tag(label_name).score
+                                    and corresponding_token.get_tag(label_name).score > token.get_tag(label_name).score
                                 ):
                                     tag_this = False
                                     continue
@@ -675,9 +606,7 @@ class TARSTagger(FewshotClassifier):
                             # only add if all tokens have no label
                             if tag_this:
                                 for token in span:
-                                    corresponding_token = sentence.get_token(
-                                        token.idx - label_length
-                                    )
+                                    corresponding_token = sentence.get_token(token.idx - label_length)
                                     corresponding_token.add_tag(
                                         label_name,
                                         token.get_tag(label_name).value + label,
@@ -783,23 +712,14 @@ class TARSClassifier(FewshotClassifier):
         original_text = sentence.to_tokenized_string()
 
         label_text_pair = (
-            f"{label} {self.separator} {original_text}"
-            if self.prefix
-            else f"{original_text} {self.separator} {label}"
+            f"{label} {self.separator} {original_text}" if self.prefix else f"{original_text} {self.separator} {label}"
         )
 
-        sentence_labels = [
-            self._clean(label.value)
-            for label in sentence.get_labels(self.get_current_label_type())
-        ]
+        sentence_labels = [self._clean(label.value) for label in sentence.get_labels(self.get_current_label_type())]
 
-        tars_label = (
-            self.LABEL_MATCH if label in sentence_labels else self.LABEL_NO_MATCH
-        )
+        tars_label = self.LABEL_MATCH if label in sentence_labels else self.LABEL_NO_MATCH
 
-        tars_sentence = Sentence(label_text_pair, use_tokenizer=False).add_label(
-            self.static_label_type, tars_label
-        )
+        tars_sentence = Sentence(label_text_pair, use_tokenizer=False).add_label(self.static_label_type, tars_label)
 
         return tars_sentence
 
@@ -937,56 +857,40 @@ class TARSClassifier(FewshotClassifier):
                     # always remove tags first
                     sentence.remove_labels(label_name)
 
-                    all_labels = [
-                        label.decode("utf-8")
-                        for label in self.get_current_label_dictionary().idx2item
-                    ]
+                    all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
 
                     best_label = None
                     for label in all_labels:
-                        tars_sentence = self._get_tars_formatted_sentence(
-                            label, sentence
-                        )
+                        tars_sentence = self._get_tars_formatted_sentence(label, sentence)
 
                         loss_and_count = self.tars_model.predict(
                             tars_sentence,
                             label_name=label_name,
                             return_loss=True,
-                            return_probabilities_for_all_classes=True
-                            if label_threshold < 0.5
-                            else False,
+                            return_probabilities_for_all_classes=True if label_threshold < 0.5 else False,
                         )
 
                         overall_loss += loss_and_count[0].item()
                         overall_count += loss_and_count[1]
 
                         # add all labels that according to TARS match the text and are above threshold
-                        for predicted_tars_label in tars_sentence.get_labels(
-                            label_name
-                        ):
+                        for predicted_tars_label in tars_sentence.get_labels(label_name):
                             if (
                                 predicted_tars_label.value == self.LABEL_MATCH
                                 and predicted_tars_label.score > label_threshold
                             ):
                                 # do not add labels below confidence threshold
-                                sentence.add_label(
-                                    label_name, label, predicted_tars_label.score
-                                )
+                                sentence.add_label(label_name, label, predicted_tars_label.score)
 
                     # only use label with highest confidence if enforcing single-label predictions
                     if not multi_label:
                         if len(sentence.get_labels(label_name)) > 0:
                             # get all label scores and do an argmax to get the best label
                             label_scores = torch.tensor(
-                                [
-                                    label.score
-                                    for label in sentence.get_labels(label_name)
-                                ],
+                                [label.score for label in sentence.get_labels(label_name)],
                                 dtype=torch.float,
                             )
-                            best_label = sentence.get_labels(label_name)[
-                                torch.argmax(label_scores)
-                            ]
+                            best_label = sentence.get_labels(label_name)[torch.argmax(label_scores)]
 
                             # remove previously added labels and only add the best label
                             sentence.remove_labels(label_name)

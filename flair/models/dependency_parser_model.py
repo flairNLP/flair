@@ -120,15 +120,11 @@ class DependencyParser(flair.nn.Model):
         # embed sentences
         all_embs = list()
         for sentence in sentences:
-            all_embs += [
-                emb for token in sentence for emb in token.get_each_embedding()
-            ]
+            all_embs += [emb for token in sentence for emb in token.get_each_embedding()]
             nb_padding_tokens = seq_len - len(sentence)
 
             if nb_padding_tokens > 0:
-                t = pre_allocated_zero_tensor[
-                    : self.token_embeddings.embedding_length * nb_padding_tokens
-                ]
+                t = pre_allocated_zero_tensor[: self.token_embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
 
         sentence_tensor = torch.cat(all_embs).view(
@@ -186,31 +182,18 @@ class DependencyParser(flair.nn.Model):
             sen_len = lengths[sen_id]
 
             arc_labels_list = [
-                token.head_id - 1
-                if token.head_id != 0 and token.head_id is not None
-                else (token.idx or 0) - 1
+                token.head_id - 1 if token.head_id != 0 and token.head_id is not None else (token.idx or 0) - 1
                 for token in sen.tokens
             ]
-            arc_labels = torch.tensor(
-                arc_labels_list, dtype=torch.int64, device=flair.device
-            )
-            arc_loss += torch.nn.functional.cross_entropy(
-                score_arc[sen_id][:sen_len], arc_labels
-            )
+            arc_labels = torch.tensor(arc_labels_list, dtype=torch.int64, device=flair.device)
+            arc_loss += torch.nn.functional.cross_entropy(score_arc[sen_id][:sen_len], arc_labels)
 
             rel_labels_list = [
-                self.relations_dictionary.get_idx_for_item(
-                    token.get_tag(self.tag_type).value
-                )
-                for token in sen.tokens
+                self.relations_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value) for token in sen.tokens
             ]
 
-            rel_labels = torch.tensor(
-                rel_labels_list, dtype=torch.int64, device=flair.device
-            )
-            score_rel = score_relation[sen_id][
-                torch.arange(len(arc_labels)), arc_labels
-            ]
+            rel_labels = torch.tensor(rel_labels_list, dtype=torch.int64, device=flair.device)
+            score_rel = score_relation[sen_id][torch.arange(len(arc_labels)), arc_labels]
             rel_loss += torch.nn.functional.cross_entropy(score_rel, rel_labels)
 
         return arc_loss, rel_loss
@@ -235,27 +218,19 @@ class DependencyParser(flair.nn.Model):
         if not isinstance(sentences, list):
             sentences = [sentences]
         sentence_dataset = FlairDatapointDataset(sentences)
-        data_loader = DataLoader(
-            sentence_dataset, batch_size=mini_batch_size, num_workers=num_workers
-        )
+        data_loader = DataLoader(sentence_dataset, batch_size=mini_batch_size, num_workers=num_workers)
 
         for batch in data_loader:
             with torch.no_grad():
                 score_arc, score_rel = self.forward(batch)
-                arc_prediction, relation_prediction = self._obtain_labels_(
-                    score_arc, score_rel
-                )
+                arc_prediction, relation_prediction = self._obtain_labels_(score_arc, score_rel)
 
             for sentnce_index, (sentence, sent_tags, sent_arcs) in enumerate(
                 zip(batch, relation_prediction, arc_prediction)
             ):
 
-                for token_index, (token, tag, head_id) in enumerate(
-                    zip(sentence.tokens, sent_tags, sent_arcs)
-                ):
-                    token.add_tag(
-                        self.tag_type, tag, score_rel[sentnce_index][token_index]
-                    )
+                for token_index, (token, tag, head_id) in enumerate(zip(sentence.tokens, sent_tags, sent_arcs)):
+                    token.add_tag(self.tag_type, tag, score_rel[sentnce_index][token_index])
 
                     token.head_id = int(head_id)
 
@@ -280,9 +255,7 @@ class DependencyParser(flair.nn.Model):
 
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
-        data_loader = DataLoader(
-            data_points, batch_size=mini_batch_size, num_workers=num_workers
-        )
+        data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
 
         lines: List[str] = ["token gold_tag gold_arc predicted_tag predicted_arc\n"]
 
@@ -300,18 +273,14 @@ class DependencyParser(flair.nn.Model):
             with torch.no_grad():
                 score_arc, score_rel = self.forward(batch)
                 loss_arc, loss_rel = self._calculate_loss(score_arc, score_rel, batch)
-                arc_prediction, relation_prediction = self._obtain_labels_(
-                    score_arc, score_rel
-                )
+                arc_prediction, relation_prediction = self._obtain_labels_(score_arc, score_rel)
 
             parsing_metric(arc_prediction, relation_prediction, batch, gold_label_type)
 
             eval_loss_arc += loss_arc
             eval_loss_rel += loss_rel
 
-            for (sentence, arcs, sent_tags) in zip(
-                batch, arc_prediction, relation_prediction
-            ):
+            for (sentence, arcs, sent_tags) in zip(batch, arc_prediction, relation_prediction):
                 for (token, arc, tag) in zip(sentence.tokens, arcs, sent_tags):
                     token.add_tag_label("predicted", Label(tag))
                     token.add_tag_label("predicted_head_id", Label(str(int(arc))))
@@ -328,18 +297,11 @@ class DependencyParser(flair.nn.Model):
                 lines.append("\n")
 
             for sentence in batch:
-                gold_tags = [
-                    token.get_tag(gold_label_type).value for token in sentence.tokens
-                ]
+                gold_tags = [token.get_tag(gold_label_type).value for token in sentence.tokens]
                 predicted_tags = [tag.tag for tag in sentence.get_spans("predicted")]
 
-                y_pred += [
-                    self.relations_dictionary.get_idx_for_item(tag)
-                    for tag in predicted_tags
-                ]
-                y_true += [
-                    self.relations_dictionary.get_idx_for_item(tag) for tag in gold_tags
-                ]
+                y_pred += [self.relations_dictionary.get_idx_for_item(tag) for tag in predicted_tags]
+                y_true += [self.relations_dictionary.get_idx_for_item(tag) for tag in gold_tags]
 
             store_embeddings(batch, embedding_storage_mode)
 
@@ -366,9 +328,7 @@ class DependencyParser(flair.nn.Model):
         micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
         macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
 
-        main_score = classification_report_dict[main_evaluation_metric[0]][
-            main_evaluation_metric[1]
-        ]
+        main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
 
         detailed_result = (
             f"\nUAS : {parsing_metric.get_uas():.4f} - LAS : {parsing_metric.get_las():.4f}"
@@ -377,12 +337,7 @@ class DependencyParser(flair.nn.Model):
             f"\n Accuracy: {accuracy_score} - Precision {precision_score} - Recall {recall_score}"
         )
         log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-        log_line = (
-            f"{precision_score}\t"
-            f"{recall_score}\t"
-            f"{micro_f_score}\t"
-            f"{accuracy_score}"
-        )
+        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
 
         result = Result(
             main_score=main_score,
@@ -400,22 +355,13 @@ class DependencyParser(flair.nn.Model):
 
         arc_prediction: torch.Tensor = score_arc.argmax(-1)
         relation_prediction: torch.Tensor = score_rel.argmax(-1)
-        relation_prediction = relation_prediction.gather(
-            -1, arc_prediction.unsqueeze(-1)
-        ).squeeze(-1)
+        relation_prediction = relation_prediction.gather(-1, arc_prediction.unsqueeze(-1)).squeeze(-1)
 
         decoded_arc_prediction = [
-            [
-                arc + 1 if token_index != arc else 0
-                for token_index, arc in enumerate(batch)
-            ]
-            for batch in arc_prediction
+            [arc + 1 if token_index != arc else 0 for token_index, arc in enumerate(batch)] for batch in arc_prediction
         ]
         decoded_relation_prediction = [
-            [
-                self.relations_dictionary.get_item_for_index(rel_tag_idx)
-                for rel_tag_idx in batch
-            ]
+            [self.relations_dictionary.get_item_for_index(rel_tag_idx) for rel_tag_idx in batch]
             for batch in relation_prediction
         ]
 
@@ -483,12 +429,8 @@ class BiLSTM(torch.nn.Module):
         self.b_cells = torch.nn.ModuleList()
 
         for _ in range(self.num_layers):
-            self.f_cells.append(
-                torch.nn.LSTMCell(input_size=input_size, hidden_size=hidden_size)
-            )
-            self.b_cells.append(
-                torch.nn.LSTMCell(input_size=input_size, hidden_size=hidden_size)
-            )
+            self.f_cells.append(torch.nn.LSTMCell(input_size=input_size, hidden_size=hidden_size))
+            self.b_cells.append(torch.nn.LSTMCell(input_size=input_size, hidden_size=hidden_size))
             input_size = hidden_size * 2
 
         self.reset_parameters()
@@ -519,17 +461,12 @@ class BiLSTM(torch.nn.Module):
         hx_n, output = [], []
         steps = reversed(range(len(x))) if reverse else range(len(x))
         if self.training:
-            hid_mask = hx_0[0].new_empty(hx_0[0].shape).bernoulli_(1 - self.dropout) / (
-                1 - self.dropout
-            )
+            hid_mask = hx_0[0].new_empty(hx_0[0].shape).bernoulli_(1 - self.dropout) / (1 - self.dropout)
 
         for t in steps:
             last_batch_size, batch_size = len(hx_i[0]), batch_sizes[t]
             if last_batch_size < batch_size:
-                hx_i = [
-                    torch.cat((h, ih[last_batch_size:batch_size]))
-                    for h, ih in zip(hx_i, hx_0)
-                ]
+                hx_i = [torch.cat((h, ih[last_batch_size:batch_size])) for h, ih in zip(hx_i, hx_0)]
             else:
                 hx_n.append([h[batch_size:] for h in hx_i])
                 hx_i = [h[:batch_size] for h in hx_i]
@@ -563,9 +500,7 @@ class BiLSTM(torch.nn.Module):
         for i in range(self.num_layers):
             x = torch.split(x, batch_sizes)
             if self.training:
-                mask = x[0].new_empty(x[0].shape).bernoulli_(1 - self.dropout) / (
-                    1 - self.dropout
-                )
+                mask = x[0].new_empty(x[0].shape).bernoulli_(1 - self.dropout) / (1 - self.dropout)
                 x = [i * mask[: len(i)] for i in x]
             x_f, (h_f, c_f) = self.layer_forward(
                 x=x,
@@ -583,9 +518,7 @@ class BiLSTM(torch.nn.Module):
             x = torch.cat((x_f, x_b), -1)
             h_n.append(torch.stack((h_f, h_b)))
             c_n.append(torch.stack((c_f, c_b)))
-        x = PackedSequence(
-            x, sequence.batch_sizes, sequence.sorted_indices, sequence.unsorted_indices
-        )
+        x = PackedSequence(x, sequence.batch_sizes, sequence.sorted_indices, sequence.unsorted_indices)
         hx = torch.cat(h_n, 0), torch.cat(c_n, 0)
         hx = self.permute_hidden(hx, sequence.unsorted_indices)
 
@@ -607,15 +540,11 @@ class Biaffine(torch.nn.Module):
         self.n_out = n_out
         self.bias_x = bias_x
         self.bias_y = bias_y
-        self.weight = torch.nn.Parameter(
-            torch.Tensor(n_out, n_in + bias_x, n_in + bias_y)
-        )
+        self.weight = torch.nn.Parameter(torch.Tensor(n_out, n_in + bias_x, n_in + bias_y))
         self.reset_parameters()
 
     def extra_repr(self):
-        st = "n_in:{}, n_out:{}, bias_x:{}, bias_x:{}".format(
-            self.n_in, self.n_out, self.bias_x, self.bias_y
-        )
+        st = "n_in:{}, n_out:{}, bias_x:{}, bias_x:{}".format(self.n_in, self.n_out, self.bias_x, self.bias_y)
         return st
 
     def reset_parameters(self):
@@ -683,10 +612,7 @@ class ParsingMetric:
                     self.correct_arcs += 1
 
                     # if head AND deprel correct, augment correct_rels score
-                    if (
-                        relation_prediction[batch_indx][token_indx]
-                        == token.get_tag(tag_type).value
-                    ):
+                    if relation_prediction[batch_indx][token_indx] == token.get_tag(tag_type).value:
                         self.correct_rels += 1
 
     def get_las(self) -> float:

@@ -36,9 +36,7 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         raise NotImplementedError
 
     @abstractmethod
-    def forward_loss(
-        self, data_points: Union[List[DT], DT]
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
+    def forward_loss(self, data_points: Union[List[DT], DT]) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
         """Performs a forward pass and returns a loss tensor for backpropagation.
         Implement this to enable training."""
         raise NotImplementedError
@@ -103,9 +101,7 @@ class Model(torch.nn.Module, typing.Generic[DT]):
                 if "optimizer" in training_parameters:
                     optimizer = training_parameters["optimizer"]
                     if checkpoint:
-                        training_parameters[
-                            "optimizer_state_dict"
-                        ] = optimizer.state_dict()
+                        training_parameters["optimizer_state_dict"] = optimizer.state_dict()
                     training_parameters["optimizer"] = optimizer.__class__
 
                 if "scheduler" in training_parameters:
@@ -113,9 +109,7 @@ class Model(torch.nn.Module, typing.Generic[DT]):
                     if checkpoint:
                         with warnings.catch_warnings():
                             warnings.simplefilter("ignore")
-                            training_parameters[
-                                "scheduler_state_dict"
-                            ] = scheduler.state_dict()
+                            training_parameters["scheduler_state_dict"] = scheduler.state_dict()
                     training_parameters["scheduler"] = scheduler.__class__
 
             model_state["model_card"] = self.model_card
@@ -166,10 +160,7 @@ class Model(torch.nn.Module, typing.Generic[DT]):
             param_out += f"-- Flair version {self.model_card['flair_version']}\n"
             param_out += f"-- PyTorch version {self.model_card['pytorch_version']}\n"
             if "transformers_version" in self.model_card:
-                param_out += (
-                    "-- Transformers version "
-                    f"{self.model_card['transformers_version']}\n"
-                )
+                param_out += "-- Transformers version " f"{self.model_card['transformers_version']}\n"
             param_out += "------------------------------------\n"
 
             param_out += "------- Training Parameters: -------\n"
@@ -214,9 +205,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
-        data_loader = DataLoader(
-            data_points, batch_size=mini_batch_size, num_workers=num_workers
-        )
+        data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
 
         with torch.no_grad():
 
@@ -260,10 +249,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                         representation = str(sentence_id) + ": " + gold_label.identifier
 
                         value = gold_label.value
-                        if (
-                            gold_label_dictionary
-                            and gold_label_dictionary.get_idx_for_item(value) == 0
-                        ):
+                        if gold_label_dictionary and gold_label_dictionary.get_idx_for_item(value) == 0:
                             value = "<unk>"
 
                         if representation not in all_true_values:
@@ -275,19 +261,13 @@ class Classifier(Model[DT], typing.Generic[DT]):
                             all_spans.append(representation)
 
                     for predicted_span in datapoint.get_labels("predicted"):
-                        representation = (
-                            str(sentence_id) + ": " + predicted_span.identifier
-                        )
+                        representation = str(sentence_id) + ": " + predicted_span.identifier
 
                         # add to all_predicted_values
                         if representation not in all_predicted_values:
-                            all_predicted_values[representation] = [
-                                predicted_span.value
-                            ]
+                            all_predicted_values[representation] = [predicted_span.value]
                         else:
-                            all_predicted_values[representation].append(
-                                predicted_span.value
-                            )
+                            all_predicted_values[representation].append(predicted_span.value)
 
                         if representation not in all_spans:
                             all_spans.append(representation)
@@ -321,27 +301,17 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
             for span in all_spans:
 
-                true_values = (
-                    all_true_values[span] if span in all_true_values else ["O"]
-                )
-                predicted_values = (
-                    all_predicted_values[span]
-                    if span in all_predicted_values
-                    else ["O"]
-                )
+                true_values = all_true_values[span] if span in all_true_values else ["O"]
+                predicted_values = all_predicted_values[span] if span in all_predicted_values else ["O"]
 
                 y_true_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
                 for true_value in true_values:
-                    y_true_instance[
-                        evaluation_label_dictionary.get_idx_for_item(true_value)
-                    ] = 1
+                    y_true_instance[evaluation_label_dictionary.get_idx_for_item(true_value)] = 1
                 y_true.append(y_true_instance.tolist())
 
                 y_pred_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
                 for predicted_value in predicted_values:
-                    y_pred_instance[
-                        evaluation_label_dictionary.get_idx_for_item(predicted_value)
-                    ] = 1
+                    y_pred_instance[evaluation_label_dictionary.get_idx_for_item(predicted_value)] = 1
                 y_pred.append(y_pred_instance.tolist())
 
         # now, calculate evaluation numbers
@@ -349,9 +319,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
         labels = []
 
         counter = Counter(itertools.chain.from_iterable(all_true_values.values()))
-        counter.update(
-            list(itertools.chain.from_iterable(all_predicted_values.values()))
-        )
+        counter.update(list(itertools.chain.from_iterable(all_predicted_values.values())))
 
         for label_name, count in counter.most_common():
             if label_name == "O":
@@ -383,20 +351,12 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
             accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
 
-            precision_score = round(
-                classification_report_dict["micro avg"]["precision"], 4
-            )
+            precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
             recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
-            micro_f_score = round(
-                classification_report_dict["micro avg"]["f1-score"], 4
-            )
-            macro_f_score = round(
-                classification_report_dict["macro avg"]["f1-score"], 4
-            )
+            micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
+            macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
 
-            main_score = classification_report_dict[main_evaluation_metric[0]][
-                main_evaluation_metric[1]
-            ]
+            main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
 
         else:
             # issue error and default all evaluation numbers to 0.
@@ -405,9 +365,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 "Could be an error in your corpus or how you "
                 "initialize the trainer!"
             )
-            accuracy_score = (
-                precision_score
-            ) = recall_score = micro_f_score = macro_f_score = main_score = 0.0
+            accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.0
             classification_report = ""
             classification_report_dict = {}
 
@@ -421,12 +379,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
         # line for log file
         log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-        log_line = (
-            f"{precision_score}\t"
-            f"{recall_score}\t"
-            f"{micro_f_score}\t"
-            f"{accuracy_score}"
-        )
+        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
 
         if average_over > 0:
             eval_loss /= average_over
@@ -446,14 +399,8 @@ class Classifier(Model[DT], typing.Generic[DT]):
         lines = []
         for datapoint in batch:
             # check if there is a label mismatch
-            g = [
-                label.identifier + label.value
-                for label in datapoint.get_labels(gold_label_type)
-            ]
-            p = [
-                label.identifier + label.value
-                for label in datapoint.get_labels("predicted")
-            ]
+            g = [label.identifier + label.value for label in datapoint.get_labels(gold_label_type)]
+            p = [label.identifier + label.value for label in datapoint.get_labels("predicted")]
             g.sort()
             p.sort()
             correct_string = " -> MISMATCH!\n" if g != p else ""
@@ -503,10 +450,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         self,
         sentences: Union[List[DT], DT],
         return_label_candidates: bool = False,
-    ) -> Union[
-        Tuple[torch.Tensor, List[List[str]]],
-        Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]],
-    ]:
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]],]:
         """This method does a forward pass through the model given a list of data
         points as input.
         Returns the tuple (scores, labels) if return_label_candidates = False,
@@ -545,16 +489,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             for i, tag in enumerate(self.label_dictionary.get_items()):
                 if tag in loss_weights.keys():
                     weight_list[i] = loss_weights[tag]
-            self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(
-                weight_list
-            ).to(flair.device)
+            self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(weight_list).to(flair.device)
         else:
             self.loss_weights = None
 
         if self.multi_label:
-            self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(
-                weight=self.loss_weights
-            )
+            self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
@@ -568,9 +508,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             if "default" in x:
                 self._multi_label_threshold = x
             else:
-                raise Exception(
-                    'multi_label_threshold dict should have a "default" key'
-                )
+                raise Exception('multi_label_threshold dict should have a "default" key')
         else:
             self._multi_label_threshold = {"default": x}
 
@@ -586,10 +524,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         if self.multi_label:
             labels = torch.tensor(
                 [
-                    [
-                        1 if label in all_labels_for_point else 0
-                        for label in self.label_dictionary.get_items()
-                    ]
+                    [1 if label in all_labels_for_point else 0 for label in self.label_dictionary.get_items()]
                     for all_labels_for_point in labels
                 ],
                 dtype=torch.float,
@@ -619,11 +554,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             return data_points
 
         # filter empty sentences
-        sentences = [
-            sentence
-            for sentence in typing.cast(List[Sentence], data_points)
-            if len(sentence) > 0
-        ]
+        sentences = [sentence for sentence in typing.cast(List[Sentence], data_points) if len(sentence) > 0]
 
         # reverse sort all sequences by their length
         reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
@@ -697,61 +628,38 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 # if anything could possibly be predicted
                 if len(label_candidates) > 0:
                     if self.multi_label:
-                        sigmoided = torch.sigmoid(
-                            scores
-                        )  # size: (n_sentences, n_classes)
+                        sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
                         n_labels = sigmoided.size(1)
-                        for s_idx, (data_point, label_candidate) in enumerate(
-                            zip(data_points, label_candidates)
-                        ):
+                        for s_idx, (data_point, label_candidate) in enumerate(zip(data_points, label_candidates)):
                             for l_idx in range(n_labels):
-                                label_value = self.label_dictionary.get_item_for_index(
-                                    l_idx
-                                )
+                                label_value = self.label_dictionary.get_item_for_index(l_idx)
                                 if label_value == "O":
                                     continue
                                 label_threshold = self._get_label_threshold(label_value)
                                 label_score = sigmoided[s_idx, l_idx].item()
-                                if (
-                                    label_score > label_threshold
-                                    or return_probabilities_for_all_classes
-                                ):
-                                    label = label_candidate.spawn(
-                                        value=label_value, score=label_score
-                                    )
+                                if label_score > label_threshold or return_probabilities_for_all_classes:
+                                    label = label_candidate.spawn(value=label_value, score=label_score)
                                     data_point.add_complex_label(label_name, label)
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
 
                         if return_probabilities_for_all_classes:
                             n_labels = softmax.size(1)
-                            for s_idx, (data_point, label_candidate) in enumerate(
-                                zip(data_points, label_candidates)
-                            ):
+                            for s_idx, (data_point, label_candidate) in enumerate(zip(data_points, label_candidates)):
                                 for l_idx in range(n_labels):
-                                    label_value = (
-                                        self.label_dictionary.get_item_for_index(l_idx)
-                                    )
+                                    label_value = self.label_dictionary.get_item_for_index(l_idx)
                                     if label_value == "O":
                                         continue
                                     label_score = softmax[s_idx, l_idx].item()
-                                    label = label_candidate.spawn(
-                                        value=label_value, score=label_score
-                                    )
+                                    label = label_candidate.spawn(value=label_value, score=label_score)
                                     data_point.add_complex_label(label_name, label)
                         else:
                             conf, idx = torch.max(softmax, dim=-1)
-                            for data_point, label_candidate, c, i in zip(
-                                data_points, label_candidates, conf, idx
-                            ):
-                                label_value = self.label_dictionary.get_item_for_index(
-                                    i.item()
-                                )
+                            for data_point, label_candidate, c, i in zip(data_points, label_candidates, conf, idx):
+                                label_value = self.label_dictionary.get_item_for_index(i.item())
                                 if label_value == "O":
                                     continue
-                                label = label_candidate.spawn(
-                                    value=label_value, score=c.item()
-                                )
+                                label = label_candidate.spawn(value=label_value, score=c.item())
                                 data_point.add_complex_label(label_name, label)
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)

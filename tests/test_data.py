@@ -82,9 +82,7 @@ def test_create_sentence_with_newline():
 
 
 def test_create_sentence_with_custom_tokenizer():
-    sentence: Sentence = Sentence(
-        "I love Berlin.", use_tokenizer=TokenizerWrapper(no_op_tokenizer)
-    )
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=TokenizerWrapper(no_op_tokenizer))
     assert 1 == len(sentence.tokens)
     assert 0 == sentence.tokens[0].start_pos
     assert "I love Berlin." == sentence.tokens[0].text
@@ -97,13 +95,9 @@ def test_create_sentence_with_callable():
     assert "I love Berlin." == sentence.tokens[0].text
 
 
-@pytest.mark.skip(
-    reason="SpacyTokenizer needs optional requirements, so we skip the test by default"
-)
+@pytest.mark.skip(reason="SpacyTokenizer needs optional requirements, so we skip the test by default")
 def test_create_sentence_with_spacy_tokenizer():
-    sentence: Sentence = Sentence(
-        "I love Berlin.", use_tokenizer=SpacyTokenizer("en_core_sci_sm")
-    )
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=SpacyTokenizer("en_core_sci_sm"))
 
     assert 4 == len(sentence.tokens)
     assert 0 == sentence.tokens[0].start_pos
@@ -117,9 +111,7 @@ def test_create_sentence_with_spacy_tokenizer():
 
 
 def test_create_sentence_using_japanese_tokenizer():
-    sentence: Sentence = Sentence(
-        "私はベルリンが好き", use_tokenizer=JapaneseTokenizer("janome")
-    )
+    sentence: Sentence = Sentence("私はベルリンが好き", use_tokenizer=JapaneseTokenizer("janome"))
 
     assert 5 == len(sentence.tokens)
     assert "私" == sentence.tokens[0].text
@@ -129,10 +121,7 @@ def test_create_sentence_using_japanese_tokenizer():
     assert "好き" == sentence.tokens[4].text
 
 
-@pytest.mark.skip(
-    reason="SciSpacyTokenizer need optional requirements, "
-    "so we skip the test by default"
-)
+@pytest.mark.skip(reason="SciSpacyTokenizer need optional requirements, " "so we skip the test by default")
 def test_create_sentence_using_scispacy_tokenizer():
     sentence: Sentence = Sentence(
         "Spinal and bulbar muscular atrophy (SBMA) is an inherited motor neuron",
@@ -183,9 +172,7 @@ def test_segtok_sentence_splitter():
     assert sentences[1].start_pos == 15
     assert len(sentences[1].tokens) == 6
 
-    segtok_splitter = SegtokSentenceSplitter(
-        tokenizer=TokenizerWrapper(no_op_tokenizer)
-    )
+    segtok_splitter = SegtokSentenceSplitter(tokenizer=TokenizerWrapper(no_op_tokenizer))
     sentences = segtok_splitter.split("I love Berlin. " "Berlin is a great city.")
     assert len(sentences) == 2
     assert sentences[0].start_pos == 0
@@ -218,9 +205,7 @@ def test_tag_sentence_splitter():
     assert sentences[1].start_pos == 15
     assert len(sentences[1].tokens) == 2
 
-    tag_splitter = TagSentenceSplitter(
-        tag="#!", tokenizer=TokenizerWrapper(no_op_tokenizer)
-    )
+    tag_splitter = TagSentenceSplitter(tag="#!", tokenizer=TokenizerWrapper(no_op_tokenizer))
     sentences = tag_splitter.split("I love Berlin#!Me too")
     assert len(sentences) == 2
     assert sentences[0].start_pos == 0
@@ -248,9 +233,7 @@ def test_newline_sentence_splitter():
     assert sentences[0].start_pos == 0
     assert len(sentences[1].tokens) == 2
 
-    newline_splitter = NewlineSentenceSplitter(
-        tokenizer=TokenizerWrapper(no_op_tokenizer)
-    )
+    newline_splitter = NewlineSentenceSplitter(tokenizer=TokenizerWrapper(no_op_tokenizer))
     sentences = newline_splitter.split("I love Berlin\nMe too")
     assert len(sentences) == 2
     assert len(sentences[0].tokens) == 1
@@ -267,10 +250,7 @@ def test_newline_sentence_splitter():
     assert len(sentences) == 2
 
 
-@pytest.mark.skip(
-    reason="SpacySentenceSplitter need optional requirements, "
-    "so we skip the test by default"
-)
+@pytest.mark.skip(reason="SpacySentenceSplitter need optional requirements, " "so we skip the test by default")
 def test_spacy_sentence_splitter():
     spacy_splitter = SpacySentenceSplitter("en_core_sci_sm")
 
@@ -281,18 +261,14 @@ def test_spacy_sentence_splitter():
     assert sentences[1].start_pos == 17
     assert len(sentences[1].tokens) == 6
 
-    sentences = spacy_splitter.split(
-        "VF inhibits something. ACE-dependent (GH+) issuses too."
-    )
+    sentences = spacy_splitter.split("VF inhibits something. ACE-dependent (GH+) issuses too.")
     assert len(sentences) == 2
     assert sentences[0].start_pos == 0
     assert len(sentences[0].tokens) == 4
     assert sentences[1].start_pos == 23
     assert len(sentences[1].tokens) == 7
 
-    spacy_splitter = SpacySentenceSplitter(
-        "en_core_sci_sm", tokenizer=TokenizerWrapper(no_op_tokenizer)
-    )
+    spacy_splitter = SpacySentenceSplitter("en_core_sci_sm", tokenizer=TokenizerWrapper(no_op_tokenizer))
     sentences = spacy_splitter.split("This a sentence. " "And here is another one.")
     assert len(sentences) == 2
     assert sentences[0].start_pos == 0
@@ -301,15 +277,10 @@ def test_spacy_sentence_splitter():
     assert len(sentences[1].tokens) == 1
 
 
-@pytest.mark.skip(
-    reason="SciSpacySentenceSplitter need optional requirements, "
-    "so we skip the test by default"
-)
+@pytest.mark.skip(reason="SciSpacySentenceSplitter need optional requirements, " "so we skip the test by default")
 def test_scispacy_sentence_splitter():
     scispacy_splitter = SciSpacySentenceSplitter()
-    sentences = scispacy_splitter.split(
-        "VF inhibits something. ACE-dependent (GH+) issuses too."
-    )
+    sentences = scispacy_splitter.split("VF inhibits something. ACE-dependent (GH+) issuses too.")
     assert len(sentences) == 2
     assert sentences[0].start_pos == 0
     assert len(sentences[0].tokens) == 4
@@ -408,13 +379,11 @@ def test_sentence_to_real_string(tasks_base_path):
     sentence.infer_space_after()
     assert (
         "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
-        "Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
-        == sentence.to_tokenized_string()
+        "Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ." == sentence.to_tokenized_string()
     )
     assert (
         "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
-        "Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf."
-        == sentence.to_plain_string()
+        "Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf." == sentence.to_plain_string()
     )
 
 
@@ -567,9 +536,7 @@ def test_dictionary_save_and_load():
 def test_tagged_corpus_get_all_sentences():
     train_sentence = Sentence("I'm used in training.", use_tokenizer=SegtokTokenizer())
     dev_sentence = Sentence("I'm a dev sentence.", use_tokenizer=SegtokTokenizer())
-    test_sentence = Sentence(
-        "I will be only used for testing.", use_tokenizer=SegtokTokenizer()
-    )
+    test_sentence = Sentence("I will be only used for testing.", use_tokenizer=SegtokTokenizer())
 
     corpus: Corpus = Corpus([train_sentence], [dev_sentence], [test_sentence])
 
@@ -579,9 +546,7 @@ def test_tagged_corpus_get_all_sentences():
 
 
 def test_tagged_corpus_make_vocab_dictionary():
-    train_sentence = Sentence(
-        "used in training. training is cool.", use_tokenizer=SegtokTokenizer()
-    )
+    train_sentence = Sentence("used in training. training is cool.", use_tokenizer=SegtokTokenizer())
 
     corpus: Corpus = Corpus([train_sentence], [], [])
 
@@ -633,30 +598,20 @@ def test_tagged_corpus_make_label_dictionary():
 
 
 def test_tagged_corpus_statistics():
-    train_sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label(
-        "label", "class_1"
-    )
+    train_sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label("label", "class_1")
 
-    dev_sentence = Sentence("The sun is shining.", use_tokenizer=True).add_label(
-        "label", "class_2"
-    )
+    dev_sentence = Sentence("The sun is shining.", use_tokenizer=True).add_label("label", "class_2")
 
-    test_sentence = Sentence("Berlin is sunny.", use_tokenizer=True).add_label(
-        "label", "class_1"
-    )
+    test_sentence = Sentence("Berlin is sunny.", use_tokenizer=True).add_label("label", "class_1")
 
-    class_to_count_dict = Corpus._count_sentence_labels(
-        [train_sentence, dev_sentence, test_sentence]
-    )
+    class_to_count_dict = Corpus._count_sentence_labels([train_sentence, dev_sentence, test_sentence])
 
     assert "class_1" in class_to_count_dict
     assert "class_2" in class_to_count_dict
     assert 2 == class_to_count_dict["class_1"]
     assert 1 == class_to_count_dict["class_2"]
 
-    tokens_in_sentences = Corpus._get_tokens_per_sentence(
-        [train_sentence, dev_sentence, test_sentence]
-    )
+    tokens_in_sentences = Corpus._get_tokens_per_sentence([train_sentence, dev_sentence, test_sentence])
 
     assert 3 == len(tokens_in_sentences)
     assert 4 == tokens_in_sentences[0]
@@ -665,30 +620,22 @@ def test_tagged_corpus_statistics():
 
 
 def test_tagged_corpus_statistics_multi_label():
-    train_sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label(
-        "label", "class_1"
-    )
+    train_sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label("label", "class_1")
 
-    dev_sentence = Sentence("The sun is shining.", use_tokenizer=True).add_label(
-        "label", "class_2"
-    )
+    dev_sentence = Sentence("The sun is shining.", use_tokenizer=True).add_label("label", "class_2")
 
     test_sentence = Sentence("Berlin is sunny.", use_tokenizer=True)
     test_sentence.add_label("label", "class_1")
     test_sentence.add_label("label", "class_2")
 
-    class_to_count_dict = Corpus._count_sentence_labels(
-        [train_sentence, dev_sentence, test_sentence]
-    )
+    class_to_count_dict = Corpus._count_sentence_labels([train_sentence, dev_sentence, test_sentence])
 
     assert "class_1" in class_to_count_dict
     assert "class_2" in class_to_count_dict
     assert 2 == class_to_count_dict["class_1"]
     assert 2 == class_to_count_dict["class_2"]
 
-    tokens_in_sentences = Corpus._get_tokens_per_sentence(
-        [train_sentence, dev_sentence, test_sentence]
-    )
+    tokens_in_sentences = Corpus._get_tokens_per_sentence([train_sentence, dev_sentence, test_sentence])
 
     assert 3 == len(tokens_in_sentences)
     assert 4 == tokens_in_sentences[0]
@@ -713,9 +660,7 @@ def test_tagged_corpus_get_tag_statistic():
 
     test_sentence = Sentence("Nothing to do with companies.")
 
-    tag_to_count_dict = Corpus._count_token_labels(
-        [train_sentence, dev_sentence, test_sentence], "ner"
-    )
+    tag_to_count_dict = Corpus._count_token_labels([train_sentence, dev_sentence, test_sentence], "ner")
 
     assert 1 == tag_to_count_dict["S-ORG"]
     assert 1 == tag_to_count_dict["S-LOC"]
@@ -725,9 +670,7 @@ def test_tagged_corpus_get_tag_statistic():
 
 
 def test_tagged_corpus_downsample():
-    sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label(
-        "label", "class_1"
-    )
+    sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label("label", "class_1")
 
     corpus: Corpus = Corpus(
         [
@@ -917,10 +860,7 @@ def test_sentence_to_dict():
 
     dict = sentence.to_dict("ner")
 
-    assert (
-        "Zalando Research is   located in Berlin, the capital of Germany."
-        == dict["text"]
-    )
+    assert "Zalando Research is   located in Berlin, the capital of Germany." == dict["text"]
     assert "Zalando Research" == dict["entities"][0]["text"]
     assert "Berlin" == dict["entities"][1]["text"]
     assert "Germany" == dict["entities"][2]["text"]

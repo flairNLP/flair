@@ -115,9 +115,7 @@ class WordEmbeddingsStore:
         if hasattr(model, "embeddings"):
             embeds = model.embeddings.embeddings
         # TextClassifier
-        elif hasattr(model, "document_embeddings") and hasattr(
-            model.document_embeddings, "embeddings"
-        ):
+        elif hasattr(model, "document_embeddings") and hasattr(model.document_embeddings, "embeddings"):
             embeds = model.document_embeddings.embeddings.embeddings
         else:
             embeds = []
@@ -185,9 +183,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                 self.k = len(result[0]) - 1
                 return
             except sqlite3.Error as err:
-                logger.exception(
-                    f"Fail to open sqlite database {str(self.store_path)}: {str(err)}"
-                )
+                logger.exception(f"Fail to open sqlite database {str(self.store_path)}: {str(err)}")
         # otherwise, push embedding to database
         if hasattr(embedding, "precomputed_word_embeddings"):
             self.db = sqlite3.connect(str(self.store_path))
@@ -197,9 +193,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
             self.db.execute(
                 f"CREATE TABLE embedding(word text,{','.join('v' + str(i) + ' float' for i in range(self.k))});"
             )
-            vectors_it = (
-                [word] + pwe.get_vector(word).tolist() for word in pwe.vocab.keys()
-            )
+            vectors_it = ([word] + pwe.get_vector(word).tolist() for word in pwe.vocab.keys())
             if verbose:
                 logger.info("load vectors to store")
             self.db.executemany(
@@ -251,9 +245,7 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                             cursor.close()
                         return
                 except lmdb.Error as err:
-                    logger.exception(
-                        f"Fail to open lmdb database {str(self.store_path)}: {str(err)}"
-                    )
+                    logger.exception(f"Fail to open lmdb database {str(self.store_path)}: {str(err)}")
             # create and load the database in write mode
             if hasattr(embedding, "precomputed_word_embeddings"):
                 pwe = embedding.precomputed_word_embeddings

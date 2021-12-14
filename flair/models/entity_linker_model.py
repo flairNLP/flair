@@ -45,13 +45,11 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
         # if we concatenate the embeddings we need double input size in our linear layer
         if self.pooling_operation == "first&last":
-            self.decoder = nn.Linear(
-                2 * self.word_embeddings.embedding_length, len(self.label_dictionary)
-            ).to(flair.device)
+            self.decoder = nn.Linear(2 * self.word_embeddings.embedding_length, len(self.label_dictionary)).to(
+                flair.device
+            )
         else:
-            self.decoder = nn.Linear(
-                self.word_embeddings.embedding_length, len(self.label_dictionary)
-            ).to(flair.device)
+            self.decoder = nn.Linear(self.word_embeddings.embedding_length, len(self.label_dictionary)).to(flair.device)
 
         nn.init.xavier_uniform_(self.decoder.weight)
 
@@ -63,9 +61,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         }
 
         if pooling_operation not in cases:
-            raise KeyError(
-                'pooling_operation has to be one of "average", "first", "last" or "first&last"'
-            )
+            raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first&last"')
 
         self.aggregated_embedding = cases[pooling_operation]
 
@@ -120,9 +116,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                 spans = sentence.get_spans(self.label_type)
 
                 for span in spans:
-                    mention_emb = torch.Tensor(
-                        0, self.word_embeddings.embedding_length
-                    ).to(flair.device)
+                    mention_emb = torch.Tensor(0, self.word_embeddings.embedding_length).to(flair.device)
 
                     for token in span.tokens:
                         mention_emb = torch.cat(
@@ -133,16 +127,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                             0,
                         )
 
-                    embedding_list.append(
-                        self.aggregated_embedding(mention_emb).unsqueeze(0)
-                    )
+                    embedding_list.append(self.aggregated_embedding(mention_emb).unsqueeze(0))
 
-                    span_labels.append(
-                        [
-                            label.value
-                            for label in span.get_labels(typename=self.label_type)
-                        ]
-                    )
+                    span_labels.append([label.value for label in span.get_labels(typename=self.label_type)])
 
                     if return_label_candidates:
                         sentences_to_spans.append(sentence)

@@ -49,9 +49,7 @@ class SpacyTokenizer(Tokenizer):
             if len(word.text.strip()) == 0:
                 continue
 
-            token = Token(
-                text=word.text, start_position=word.idx, whitespace_after=True
-            )
+            token = Token(text=word.text, start_position=word.idx, whitespace_after=True)
             tokens.append(token)
 
             if (previous_token is not None) and (
@@ -65,13 +63,7 @@ class SpacyTokenizer(Tokenizer):
 
     @property
     def name(self) -> str:
-        return (
-            self.__class__.__name__
-            + "_"
-            + self.model.meta["name"]
-            + "_"
-            + self.model.meta["version"]
-        )
+        return self.__class__.__name__ + "_" + self.model.meta["name"] + "_" + self.model.meta["version"]
 
 
 class SegtokTokenizer(Tokenizer):
@@ -109,14 +101,10 @@ class SegtokTokenizer(Tokenizer):
                 start_position = word_offset
             except ValueError:
                 word_offset = previous_word_offset + 1
-                start_position = (
-                    current_offset + 1 if current_offset > 0 else current_offset
-                )
+                start_position = current_offset + 1 if current_offset > 0 else current_offset
 
             if word:
-                token = Token(
-                    text=word, start_position=start_position, whitespace_after=True
-                )
+                token = Token(text=word, start_position=start_position, whitespace_after=True)
                 tokens.append(token)
 
             if (previous_token is not None) and word_offset - 1 == previous_word_offset:
@@ -164,9 +152,7 @@ class SpaceTokenizer(Tokenizer):
         index += 1
         if len(word) > 0:
             start_position = index - len(word)
-            tokens.append(
-                Token(text=word, start_position=start_position, whitespace_after=False)
-            )
+            tokens.append(Token(text=word, start_position=start_position, whitespace_after=False))
 
         return tokens
 
@@ -199,9 +185,7 @@ class JapaneseTokenizer(Tokenizer):
                 '- If you want to use MeCab, install mecab with "sudo apt install mecab libmecab-dev mecab-ipadic".'
             )
             log.warning('- Install konoha with "pip install konoha[{tokenizer_name}]"')
-            log.warning(
-                '  - You can choose tokenizer from ["mecab", "janome", "sudachi"].'
-            )
+            log.warning('  - You can choose tokenizer from ["mecab", "janome", "sudachi"].')
             log.warning("-" * 100)
             exit()
 
@@ -228,13 +212,9 @@ class JapaneseTokenizer(Tokenizer):
                 start_position = word_offset
             except ValueError:
                 word_offset = previous_word_offset + 1
-                start_position = (
-                    current_offset + 1 if current_offset > 0 else current_offset
-                )
+                start_position = current_offset + 1 if current_offset > 0 else current_offset
 
-            token = Token(
-                text=word, start_position=start_position, whitespace_after=True
-            )
+            token = Token(text=word, start_position=start_position, whitespace_after=True)
             tokens.append(token)
 
             if (previous_token is not None) and word_offset - 1 == previous_word_offset:
@@ -321,13 +301,9 @@ class SciSpacyTokenizer(Tokenizer):
                 r"[\(\)\[\]\{\}]",  # want to split at every bracket
                 r"/",  # want to split at every slash
                 r"(?<=[0-9])[+\-\*^](?=[0-9-])",
-                r"(?<=[{al}])\.(?=[{au}])".format(
-                    al=char_classes.ALPHA_LOWER, au=char_classes.ALPHA_UPPER
-                ),
+                r"(?<=[{al}])\.(?=[{au}])".format(al=char_classes.ALPHA_LOWER, au=char_classes.ALPHA_UPPER),
                 r"(?<=[{a}]),(?=[{a}])".format(a=char_classes.ALPHA),
-                r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(
-                    a=char_classes.ALPHA, h=char_classes.HYPHENS
-                ),
+                r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=char_classes.ALPHA, h=char_classes.HYPHENS),
                 r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=char_classes.ALPHA),
             ]
         )
@@ -348,17 +324,12 @@ class SciSpacyTokenizer(Tokenizer):
         previous_token = None
         tokens: List[Token] = []
         for word in sentence:
-            token = Token(
-                text=word.text, start_position=word.idx, whitespace_after=True
-            )
+            token = Token(text=word.text, start_position=word.idx, whitespace_after=True)
             tokens.append(token)
 
             if (
                 (previous_token is not None)
-                and (
-                    token.start_pos
-                    == previous_token.start_pos + len(previous_token.text)
-                )
+                and (token.start_pos == previous_token.start_pos + len(previous_token.text))
                 and (not word.text[0].isspace())
             ):
                 previous_token.whitespace_after = False
@@ -369,13 +340,7 @@ class SciSpacyTokenizer(Tokenizer):
 
     @property
     def name(self) -> str:
-        return (
-            self.__class__.__name__
-            + "_"
-            + self.model.meta["name"]
-            + "_"
-            + self.model.meta["version"]
-        )
+        return self.__class__.__name__ + "_" + self.model.meta["name"] + "_" + self.model.meta["version"]
 
 
 class SentenceSplitter(ABC):
@@ -531,9 +496,7 @@ class SciSpacySentenceSplitter(SpacySentenceSplitter):
     """
 
     def __init__(self):
-        super(SciSpacySentenceSplitter, self).__init__(
-            "en_core_sci_sm", SciSpacyTokenizer()
-        )
+        super(SciSpacySentenceSplitter, self).__init__("en_core_sci_sm", SciSpacyTokenizer())
 
 
 class TagSentenceSplitter(SentenceSplitter):

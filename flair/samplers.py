@@ -44,18 +44,12 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
 
         # weight for each sample
         offset = 0
-        weights = [
-            1.0 / (offset + label_count[data_source[idx].labels[0].value])
-            for idx in self.indices
-        ]
+        weights = [1.0 / (offset + label_count[data_source[idx].labels[0].value]) for idx in self.indices]
 
         self.weights = torch.DoubleTensor(weights)
 
     def __iter__(self):
-        return (
-            self.indices[i]
-            for i in torch.multinomial(self.weights, self.num_samples, replacement=True)
-        )
+        return (self.indices[i] for i in torch.multinomial(self.weights, self.num_samples, replacement=True))
 
 
 class ChunkSampler(FlairSampler):
@@ -74,9 +68,7 @@ class ChunkSampler(FlairSampler):
 
         blocksize = self.block_size + random.randint(0, self.plus_window)
 
-        log.info(
-            f"Chunk sampling with blocksize = {blocksize} ({self.block_size} + {self.plus_window})"
-        )
+        log.info(f"Chunk sampling with blocksize = {blocksize} ({self.block_size} + {self.plus_window})")
 
         # Create blocks
         blocks = [data[i : i + blocksize] for i in range(0, len(data), blocksize)]
@@ -109,9 +101,7 @@ class ExpandingChunkSampler(FlairSampler):
         log.info(f"Chunk sampling with blocksize = {self.block_size}")
 
         # Create blocks
-        blocks = [
-            data[i : i + self.block_size] for i in range(0, len(data), self.block_size)
-        ]
+        blocks = [data[i : i + self.block_size] for i in range(0, len(data), self.block_size)]
         # shuffle the blocks
         random.shuffle(blocks)
         # concatenate the shuffled blocks

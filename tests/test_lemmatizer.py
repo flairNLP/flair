@@ -29,9 +29,7 @@ def test_words_to_char_indices():
         ],
         dtype=torch.long,
     ).to(flair.device)
-    out = lemmatizer.words_to_char_indices(
-        string_list, end_symbol=True, start_symbol=False, padding_in_front=True
-    )
+    out = lemmatizer.words_to_char_indices(string_list, end_symbol=True, start_symbol=False, padding_in_front=True)
     assert torch.equal(target, out)
 
     # Without end symbol, with start symbol, padding in back
@@ -47,9 +45,7 @@ def test_words_to_char_indices():
         ],
         dtype=torch.long,
     ).to(flair.device)
-    out = lemmatizer.words_to_char_indices(
-        string_list, end_symbol=False, start_symbol=True, padding_in_front=False
-    )
+    out = lemmatizer.words_to_char_indices(string_list, end_symbol=False, start_symbol=True, padding_in_front=False)
     assert torch.equal(target, out)
 
     # Without end symbol, without start symbol, padding in front

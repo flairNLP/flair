@@ -49,9 +49,7 @@ def test_sequence_tagger_no_crf(results_base_path, tasks_base_path):
         shuffle=False,
     )
 
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("this is New York")
     sentence_empty = Sentence("       ")
@@ -101,9 +99,7 @@ def test_sequence_tagger_with_crf(results_base_path, tasks_base_path):
         shuffle=False,
     )
 
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("this is New York")
     sentence_empty = Sentence("       ")
@@ -153,9 +149,7 @@ def test_sequence_tagger_stacked(results_base_path, tasks_base_path):
         shuffle=False,
     )
 
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("this is New York")
     sentence_empty = Sentence("       ")
@@ -207,9 +201,7 @@ def test_sequence_tagger_transformer_finetune(results_base_path, tasks_base_path
         learning_rate=0.5e-4,
     )
 
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("this is New York")
     sentence_empty = Sentence("       ")
@@ -353,9 +345,7 @@ def test_text_classifier_multi(results_base_path, tasks_base_path):
     label_dict = corpus.make_label_dictionary(label_type="city")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=DocumentPoolEmbeddings(
-            [turian_embeddings], fine_tune_mode="linear"
-        ),
+        document_embeddings=DocumentPoolEmbeddings([turian_embeddings], fine_tune_mode="linear"),
         label_dictionary=label_dict,
         label_type="city",
         multi_label=True,

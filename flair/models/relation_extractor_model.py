@@ -48,9 +48,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
         # whether to use gold entity pairs, and whether to filter entity pairs by type
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
         if entity_pair_filters is not None:
-            self.entity_pair_filters: Optional[Set[Tuple[str, str]]] = set(
-                entity_pair_filters
-            )
+            self.entity_pair_filters: Optional[Set[Tuple[str, str]]] = set(entity_pair_filters)
         else:
             self.entity_pair_filters = None
 
@@ -76,17 +74,13 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
         # decoder can be linear or nonlinear
         self.non_linear_decoder = non_linear_decoder
         if non_linear_decoder is not None:
-            self.decoder_1 = nn.Linear(
-                relation_representation_length, non_linear_decoder
-            )
+            self.decoder_1 = nn.Linear(relation_representation_length, non_linear_decoder)
             self.nonlinearity = torch.nn.ReLU()
             self.decoder_2 = nn.Linear(non_linear_decoder, len(self.label_dictionary))
             nn.init.xavier_uniform_(self.decoder_1.weight)
             nn.init.xavier_uniform_(self.decoder_2.weight)
         else:
-            self.decoder = nn.Linear(
-                relation_representation_length, len(self.label_dictionary)
-            )
+            self.decoder = nn.Linear(relation_representation_length, len(self.label_dictionary))
             nn.init.xavier_uniform_(self.decoder.weight)
 
         self.to(flair.device)
@@ -154,9 +148,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
             relation_dict = {}
             for label in sentence.get_labels(self.label_type):
                 relation_label: RelationLabel = label
-                relation_dict[
-                    create_position_string(relation_label.head, relation_label.tail)
-                ] = relation_label
+                relation_dict[create_position_string(relation_label.head, relation_label.tail)] = relation_label
 
             # get all entity spans
             span_labels = sentence.get_labels(self.entity_label_type)
@@ -174,8 +166,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
                     # filter entity pairs according to their tags if set
                     if (
                         self.entity_pair_filters is not None
-                        and (span_label.value, span_label_2.value)
-                        not in self.entity_pair_filters
+                        and (span_label.value, span_label_2.value) not in self.entity_pair_filters
                     ):
                         continue
 
@@ -198,9 +189,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
                     # if predicting, also remember sentences and label candidates
                     if return_label_candidates:
-                        candidate_label = RelationLabel(
-                            head=span_1, tail=span_2, value=None, score=0.0
-                        )
+                        candidate_label = RelationLabel(head=span_1, tail=span_2, value=None, score=0.0)
                         empty_label_candidates.append(candidate_label)
                         sentences_to_label.append(span_1[0].sentence)
 
@@ -246,9 +235,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
             # send through decoder
             if self.non_linear_decoder:
-                sentence_relation_scores = self.decoder_2(
-                    self.nonlinearity(self.decoder_1(all_relations))
-                )
+                sentence_relation_scores = self.decoder_2(self.nonlinearity(self.decoder_1(all_relations)))
             else:
                 sentence_relation_scores = self.decoder(all_relations)
 
@@ -311,9 +298,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
-        model_map["relations-fast"] = "/".join(
-            [hu_path, "relations-fast", "relations-fast.pt"]
-        )
+        model_map["relations-fast"] = "/".join([hu_path, "relations-fast", "relations-fast.pt"])
         model_map["relations"] = "/".join([hu_path, "relations", "relations.pt"])
 
         cache_dir = Path("models")

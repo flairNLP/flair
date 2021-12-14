@@ -37,9 +37,7 @@ class ClassificationCorpus(Corpus):
         truncate_to_max_tokens: int = -1,
         truncate_to_max_chars: int = -1,
         filter_if_longer_than: int = -1,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SegtokTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "partial",
         label_name_map: Dict[str, str] = None,
         skip_labels: List[str] = None,
@@ -69,9 +67,7 @@ class ClassificationCorpus(Corpus):
         """
 
         # find train, dev and test files if not specified
-        dev_file, test_file, train_file = find_train_dev_test_files(
-            data_folder, dev_file, test_file, train_file
-        )
+        dev_file, test_file, train_file = find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
         train: FlairDataset = ClassificationDataset(
             train_file,
@@ -148,9 +144,7 @@ class ClassificationDataset(FlairDataset):
         truncate_to_max_tokens=-1,
         truncate_to_max_chars=-1,
         filter_if_longer_than: int = -1,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SegtokTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "partial",
         label_name_map: Dict[str, str] = None,
         skip_labels: List[str] = None,
@@ -230,9 +224,7 @@ class ClassificationDataset(FlairDataset):
                         continue
 
                 if self.memory_mode == "full":
-                    sentence = self._parse_line_to_sentence(
-                        line, self.label_prefix, tokenizer
-                    )
+                    sentence = self._parse_line_to_sentence(line, self.label_prefix, tokenizer)
                     if sentence is not None and len(sentence.tokens) > 0:
                         self.sentences.append(sentence)
                         self.total_sentence_count += 1
@@ -321,18 +313,14 @@ class ClassificationDataset(FlairDataset):
             return self.sentences[index]
 
         if self.memory_mode == "partial":
-            sentence = self._parse_line_to_sentence(
-                self.lines[index], self.label_prefix, self.tokenizer
-            )
+            sentence = self._parse_line_to_sentence(self.lines[index], self.label_prefix, self.tokenizer)
             return sentence
 
         if self.memory_mode == "disk":
             with open(str(self.path_to_file), encoding="utf-8") as file:
                 file.seek(self.indices[index])
                 line = file.readline()
-                sentence = self._parse_line_to_sentence(
-                    line, self.label_prefix, self.tokenizer
-                )
+                sentence = self._parse_line_to_sentence(line, self.label_prefix, self.tokenizer)
                 return sentence
         assert False
 
@@ -379,9 +367,7 @@ class CSVClassificationCorpus(Corpus):
         """
 
         # find train, dev and test files if not specified
-        dev_file, test_file, train_file = find_train_dev_test_files(
-            data_folder, dev_file, test_file, train_file
-        )
+        dev_file, test_file, train_file = find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
         train: FlairDataset = CSVClassificationDataset(
             train_file,
@@ -433,9 +419,7 @@ class CSVClassificationCorpus(Corpus):
             else None
         )
 
-        super(CSVClassificationCorpus, self).__init__(
-            train, dev, test, name=str(data_folder)
-        )
+        super(CSVClassificationCorpus, self).__init__(train, dev, test, name=str(data_folder))
 
 
 class CSVClassificationDataset(FlairDataset):
@@ -639,13 +623,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         """
 
         # dataset name includes the split size
-        dataset_name = (
-            self.__class__.__name__.lower()
-            + "_"
-            + str(split_max)
-            + "_"
-            + str(fraction_of_5_star_reviews)
-        )
+        dataset_name = self.__class__.__name__.lower() + "_" + str(split_max) + "_" + str(fraction_of_5_star_reviews)
 
         # default dataset folder is the cache root
         data_folder = flair.cache_root / "datasets" / dataset_name
@@ -846,9 +824,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         fraction_of_5_star_reviews=None,
     ):
         amazon__path = "http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall"
-        cached_path(
-            f"{amazon__path}/{part_name}", Path("datasets") / "Amazon_Product_Reviews"
-        )
+        cached_path(f"{amazon__path}/{part_name}", Path("datasets") / "Amazon_Product_Reviews")
         import gzip
 
         # create dataset directory if necessary
@@ -871,10 +847,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
                         continue
                     text = parsed_json["reviewText"].replace("\n", "")
 
-                    if (
-                        fraction_of_5_star_reviews
-                        and str(parsed_json["overall"]) == "5.0"
-                    ):
+                    if fraction_of_5_star_reviews and str(parsed_json["overall"]) == "5.0":
                         review_5_count += 1
                         if review_5_count != fraction_of_5_star_reviews:
                             continue
@@ -932,9 +905,7 @@ class IMDB(ClassificationCorpus):
         train_data_file = data_path / "train.txt"
         test_data_file = data_path / "test.txt"
 
-        if not train_data_file.is_file() or (
-            not rebalance_corpus and not test_data_file.is_file()
-        ):
+        if not train_data_file.is_file() or (not rebalance_corpus and not test_data_file.is_file()):
             for file_path in [train_data_file, test_data_file]:
                 if file_path.is_file():
                     os.remove(file_path)
@@ -953,11 +924,7 @@ class IMDB(ClassificationCorpus):
                     for dataset in datasets:
                         f_in.extractall(
                             data_path,
-                            members=[
-                                m
-                                for m in f_in.getmembers()
-                                if f"{dataset}/{label}" in m.name
-                            ],
+                            members=[m for m in f_in.getmembers() if f"{dataset}/{label}" in m.name],
                         )
                         data_file = train_data_file
                         if not rebalance_corpus and dataset == "test":
@@ -966,9 +933,7 @@ class IMDB(ClassificationCorpus):
                         with open(data_file, "at") as f_p:
                             current_path = data_path / "aclImdb" / dataset / label
                             for file_name in current_path.iterdir():
-                                if file_name.is_file() and file_name.name.endswith(
-                                    ".txt"
-                                ):
+                                if file_name.is_file() and file_name.name.endswith(".txt"):
                                     if label == "pos":
                                         sentiment_label = "POSITIVE"
                                     if label == "neg":
@@ -1021,24 +986,16 @@ class NEWSGROUPS(ClassificationCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        twenty_newsgroups_path = (
-            "http://qwone.com/~jason/20Newsgroups/20news-bydate.tar.gz"
-        )
+        twenty_newsgroups_path = "http://qwone.com/~jason/20Newsgroups/20news-bydate.tar.gz"
         data_path = flair.cache_root / "datasets" / dataset_name
         data_file = data_path / "20news-bydate-train.txt"
         if not data_file.is_file():
-            cached_path(
-                twenty_newsgroups_path, Path("datasets") / dataset_name / "original"
-            )
+            cached_path(twenty_newsgroups_path, Path("datasets") / dataset_name / "original")
 
             import tarfile
 
             with tarfile.open(
-                flair.cache_root
-                / "datasets"
-                / dataset_name
-                / "original"
-                / "20news-bydate.tar.gz",
+                flair.cache_root / "datasets" / dataset_name / "original" / "20news-bydate.tar.gz",
                 "r:gz",
             ) as f_in:
                 datasets = ["20news-bydate-test", "20news-bydate-train"]
@@ -1069,23 +1026,15 @@ class NEWSGROUPS(ClassificationCorpus):
                     for dataset in datasets:
                         f_in.extractall(
                             data_path / "original",
-                            members=[
-                                m
-                                for m in f_in.getmembers()
-                                if f"{dataset}/{label}" in m.name
-                            ],
+                            members=[m for m in f_in.getmembers() if f"{dataset}/{label}" in m.name],
                         )
-                        with open(
-                            f"{data_path}/{dataset}.txt", "at", encoding="utf-8"
-                        ) as f_p:
+                        with open(f"{data_path}/{dataset}.txt", "at", encoding="utf-8") as f_p:
                             current_path = data_path / "original" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file():
                                     f_p.write(
                                         f"__label__{label} "
-                                        + file_name.open("rt", encoding="latin1")
-                                        .read()
-                                        .replace("\n", " <n> ")
+                                        + file_name.open("rt", encoding="latin1").read().replace("\n", " <n> ")
                                         + "\n"
                                     )
 
@@ -1133,9 +1082,7 @@ class SENTIMENT_140(ClassificationCorpus):
         if True or not (data_folder / "train.txt").is_file():
 
             # download senteval datasets if necessary und unzip
-            sentiment_url = (
-                "https://cs.stanford.edu/people/alecmgo/trainingandtestdata.zip"
-            )
+            sentiment_url = "https://cs.stanford.edu/people/alecmgo/trainingandtestdata.zip"
             cached_path(sentiment_url, Path("datasets") / dataset_name / "raw")
             senteval_folder = flair.cache_root / "datasets" / dataset_name / "raw"
             unzip_file(senteval_folder / "trainingandtestdata.zip", senteval_folder)
@@ -1190,9 +1137,7 @@ class SENTEVAL_CR(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SpaceTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1256,9 +1201,7 @@ class SENTEVAL_MR(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SpaceTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1322,9 +1265,7 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SpaceTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1388,9 +1329,7 @@ class SENTEVAL_MPQA(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SpaceTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1423,15 +1362,11 @@ class SENTEVAL_MPQA(ClassificationCorpus):
             # create train.txt file by iterating over pos and neg file
             with open(data_folder / "train.txt", "a") as train_file:
 
-                with open(
-                    senteval_folder / "data" / "mpqa" / "mpqa.pos", encoding="latin1"
-                ) as file:
+                with open(senteval_folder / "data" / "mpqa" / "mpqa.pos", encoding="latin1") as file:
                     for line in file:
                         train_file.write(f"__label__POSITIVE {line}")
 
-                with open(
-                    senteval_folder / "data" / "mpqa" / "mpqa.neg", encoding="latin1"
-                ) as file:
+                with open(senteval_folder / "data" / "mpqa" / "mpqa.neg", encoding="latin1") as file:
                     for line in file:
                         train_file.write(f"__label__NEGATIVE {line}")
 
@@ -1452,9 +1387,7 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SpaceTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1492,9 +1425,7 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
             new_filenames = ["train.txt", "dev.txt", "test.txt"]
 
             # create train dev and test files in fasttext format
-            for new_filename, original_filename in zip(
-                new_filenames, original_filenames
-            ):
+            for new_filename, original_filename in zip(new_filenames, original_filenames):
                 with open(data_folder / new_filename, "a") as out_file, open(
                     data_folder / "raw" / original_filename
                 ) as in_file:
@@ -1519,9 +1450,7 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SpaceTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1559,9 +1488,7 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
             for split in ["train", "dev", "test"]:
                 with open(data_folder / f"{split}.txt", "w") as train_file:
 
-                    with open(
-                        data_folder / "raw" / f"stsa.fine.{split}", encoding="latin1"
-                    ) as file:
+                    with open(data_folder / "raw" / f"stsa.fine.{split}", encoding="latin1") as file:
                         for line in file:
                             train_file.write(f"__label__{line[0]} {line[2:]}")
 
@@ -1616,23 +1543,15 @@ class GLUE_COLA(ClassificationCorpus):
             unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
 
             # move original .tsv files to another folder
-            Path(data_folder / "CoLA/train.tsv").rename(
-                data_folder / "CoLA/original/train.tsv"
-            )
-            Path(data_folder / "CoLA/dev.tsv").rename(
-                data_folder / "CoLA/original/dev.tsv"
-            )
-            Path(data_folder / "CoLA/test.tsv").rename(
-                data_folder / "CoLA/original/test.tsv"
-            )
+            Path(data_folder / "CoLA/train.tsv").rename(data_folder / "CoLA/original/train.tsv")
+            Path(data_folder / "CoLA/dev.tsv").rename(data_folder / "CoLA/original/dev.tsv")
+            Path(data_folder / "CoLA/test.tsv").rename(data_folder / "CoLA/original/test.tsv")
 
             label_map = {0: "not_grammatical", 1: "grammatical"}
 
             # create train and dev splits in fasttext format
             for split in ["train", "dev"]:
-                with open(
-                    data_folder / "CoLA" / (split + ".txt"), "a"
-                ) as out_file, open(
+                with open(data_folder / "CoLA" / (split + ".txt"), "a") as out_file, open(
                     data_folder / "CoLA" / "original" / (split + ".tsv")
                 ) as in_file:
                     for line in in_file:
@@ -1680,9 +1599,7 @@ class GLUE_COLA(ClassificationCorpus):
             tsv_file.write("index\tprediction\n")
             for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
                 reverse_label_map = {"grammatical": 1, "not_grammatical": 0}
-                predicted_label = reverse_label_map[
-                    datapoint.get_labels("acceptability")[0].value
-                ]
+                predicted_label = reverse_label_map[datapoint.get_labels("acceptability")[0].value]
                 tsv_file.write(str(index) + "\t" + str(predicted_label) + "\n")
 
 
@@ -1694,9 +1611,7 @@ class GO_EMOTIONS(ClassificationCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SegtokTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "partial",
         **corpusargs,
     ):
@@ -1760,9 +1675,7 @@ class GO_EMOTIONS(ClassificationCorpus):
             # download datasets if necessary
             goemotions_url = "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/"
             for name in ["train.tsv", "test.tsv", "dev.tsv"]:
-                cached_path(
-                    goemotions_url + name, Path("datasets") / dataset_name / "raw"
-                )
+                cached_path(goemotions_url + name, Path("datasets") / dataset_name / "raw")
 
             # create dataset directory if necessary
             if not os.path.exists(data_folder):
@@ -1771,12 +1684,8 @@ class GO_EMOTIONS(ClassificationCorpus):
             data_path = flair.cache_root / "datasets" / dataset_name / "raw"
             # create correctly formated txt files
             for name in ["train", "test", "dev"]:
-                with open(
-                    data_folder / (name + ".txt"), "w", encoding="utf-8"
-                ) as txt_file:
-                    with open(
-                        data_path / (name + ".tsv"), "r", encoding="utf-8"
-                    ) as tsv_file:
+                with open(data_folder / (name + ".txt"), "w", encoding="utf-8") as txt_file:
+                    with open(data_path / (name + ".tsv"), "r", encoding="utf-8") as tsv_file:
 
                         lines = tsv_file.readlines()
                         for line in lines:
@@ -1809,9 +1718,7 @@ class TREC_50(ClassificationCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SpaceTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
         memory_mode="full",
         **corpusargs,
     ):
@@ -1847,17 +1754,13 @@ class TREC_50(ClassificationCorpus):
         data_file = data_folder / new_filenames[0]
 
         if not data_file.is_file():
-            for original_filename, new_filename in zip(
-                original_filenames, new_filenames
-            ):
+            for original_filename, new_filename in zip(original_filenames, new_filenames):
                 with open(
                     data_folder / "original" / original_filename,
                     "rt",
                     encoding="latin1",
                 ) as open_fp:
-                    with open(
-                        data_folder / new_filename, "wt", encoding="utf-8"
-                    ) as write_fp:
+                    with open(data_folder / new_filename, "wt", encoding="utf-8") as write_fp:
                         for line in open_fp:
                             line = line.rstrip()
                             fields = line.split()
@@ -1889,9 +1792,7 @@ class TREC_6(ClassificationCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SpaceTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
         memory_mode="full",
         **corpusargs,
     ):
@@ -1927,17 +1828,13 @@ class TREC_6(ClassificationCorpus):
         data_file = data_folder / new_filenames[0]
 
         if not data_file.is_file():
-            for original_filename, new_filename in zip(
-                original_filenames, new_filenames
-            ):
+            for original_filename, new_filename in zip(original_filenames, new_filenames):
                 with open(
                     data_folder / "original" / original_filename,
                     "rt",
                     encoding="latin1",
                 ) as open_fp:
-                    with open(
-                        data_folder / new_filename, "wt", encoding="utf-8"
-                    ) as write_fp:
+                    with open(data_folder / new_filename, "wt", encoding="utf-8") as write_fp:
                         for line in open_fp:
                             line = line.rstrip()
                             fields = line.split()
@@ -1969,9 +1866,7 @@ class YAHOO_ANSWERS(ClassificationCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SpaceTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
         memory_mode="partial",
         **corpusargs,
     ):
@@ -2054,9 +1949,7 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SegtokTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "full",
         fine_grained_classes: bool = False,
         **corpusargs,
@@ -2081,9 +1974,7 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        offlang_path = (
-            "https://raw.githubusercontent.com/uds-lsv/GermEval-2018-Data/master/"
-        )
+        offlang_path = "https://raw.githubusercontent.com/uds-lsv/GermEval-2018-Data/master/"
 
         original_filenames = ["germeval2018.training.txt", "germeval2018.test.txt"]
         new_filenames = ["train.txt", "test.txt"]
@@ -2105,9 +1996,7 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
             os.makedirs(task_folder)
 
         if not data_file.is_file():
-            for original_filename, new_filename in zip(
-                original_filenames, new_filenames
-            ):
+            for original_filename, new_filename in zip(original_filenames, new_filenames):
                 with open(
                     data_folder / "original" / original_filename,
                     "rt",
@@ -2147,9 +2036,7 @@ class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
         self,
         base_path: Union[str, Path] = None,
         memory_mode: str = "full",
-        tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SpaceTokenizer(),
+        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
         **corpusargs,
     ):
         """
@@ -2199,34 +2086,14 @@ class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
                     ) as open_fp:
                         for line in open_fp:
                             liste = line.split("\t")
-                            write_fp.write(
-                                "__label__"
-                                + liste[0].replace(" ", "_")
-                                + " "
-                                + liste[2]
-                                + "\n"
-                            )
-                    with open(
-                        data_folder / "original" / "result.tsv", "rt", encoding="utf-8"
-                    ) as open_fp:
+                            write_fp.write("__label__" + liste[0].replace(" ", "_") + " " + liste[2] + "\n")
+                    with open(data_folder / "original" / "result.tsv", "rt", encoding="utf-8") as open_fp:
                         for line in open_fp:
                             liste = line.split("\t")
                             if liste[0].split(" ")[-1] == "(again)":
-                                write_fp.write(
-                                    "__label__"
-                                    + liste[0][:-8].replace(" ", "_")
-                                    + " "
-                                    + liste[2]
-                                    + "\n"
-                                )
+                                write_fp.write("__label__" + liste[0][:-8].replace(" ", "_") + " " + liste[2] + "\n")
                             else:
-                                write_fp.write(
-                                    "__label__"
-                                    + liste[0].replace(" ", "_")
-                                    + " "
-                                    + liste[2]
-                                    + "\n"
-                                )
+                                write_fp.write("__label__" + liste[0].replace(" ", "_") + " " + liste[2] + "\n")
 
         super(COMMUNICATIVE_FUNCTIONS, self).__init__(
             data_folder,
@@ -2249,7 +2116,9 @@ def _download_wassa_if_not_there(emotion, data_folder, dataset_name):
             if split == "dev":
                 url = f"http://saifmohammad.com/WebDocs/EmoInt%20Dev%20Data%20With%20Gold/{emotion}-ratings-0to1.dev.gold.txt"
             if split == "test":
-                url = f"http://saifmohammad.com/WebDocs/EmoInt%20Test%20Gold%20Data/{emotion}-ratings-0to1.test.gold.txt"
+                url = (
+                    f"http://saifmohammad.com/WebDocs/EmoInt%20Test%20Gold%20Data/{emotion}-ratings-0to1.test.gold.txt"
+                )
 
             path = cached_path(url, Path("datasets") / dataset_name)
 

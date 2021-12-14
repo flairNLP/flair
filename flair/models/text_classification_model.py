@@ -42,15 +42,11 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         super(TextClassifier, self).__init__(**classifierargs)
 
-        self.document_embeddings: flair.embeddings.DocumentEmbeddings = (
-            document_embeddings
-        )
+        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
 
         self._label_type = label_type
 
-        self.decoder = nn.Linear(
-            self.document_embeddings.embedding_length, len(self.label_dictionary)
-        )
+        self.decoder = nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
         nn.init.xavier_uniform_(self.decoder.weight)
 
         # auto-spawn on GPU if available
@@ -72,10 +68,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         # make tensor for all embedded sentences in batch
         embedding_names = self.document_embeddings.get_names()
-        text_embedding_list = [
-            sentence.get_embedding(embedding_names).unsqueeze(0)
-            for sentence in sentences
-        ]
+        text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
         # send through decoder to get logits
@@ -83,9 +76,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         labels = []
         for sentence in sentences:
-            labels.append(
-                [label.value for label in sentence.get_labels(self.label_type)]
-            )
+            labels.append([label.value for label in sentence.get_labels(self.label_type)])
 
         if return_label_candidates:
             label_candidates = [Label(value="<None>") for sentence in sentences]
@@ -153,9 +144,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         )
 
         # Communicative Functions Model
-        model_map["communicative-functions"] = "/".join(
-            [hu_path, "comfunc", "communicative-functions.pt"]
-        )
+        model_map["communicative-functions"] = "/".join([hu_path, "comfunc", "communicative-functions.pt"])
 
         cache_dir = Path("models")
         if model_name in model_map:

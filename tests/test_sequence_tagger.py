@@ -53,9 +53,7 @@ def test_load_use_tagger_keep_embedding():
 
 @pytest.mark.integration
 def test_train_load_use_tagger(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
-    )
+    corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
     tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
@@ -78,9 +76,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
     )
 
     del trainer, tagger, tag_dictionary, corpus
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
@@ -95,9 +91,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_load_use_tagger_empty_tags(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
-    )
+    corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"})
     tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
@@ -120,9 +114,7 @@ def test_train_load_use_tagger_empty_tags(results_base_path, tasks_base_path):
     )
 
     del trainer, tagger, tag_dictionary, corpus
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
@@ -187,9 +179,7 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
     )
 
     del trainer, tagger, tag_dictionary, corpus
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
@@ -203,9 +193,7 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_load_use_tagger_flair_embeddings(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
-    )
+    corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
     tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
@@ -228,9 +216,7 @@ def test_train_load_use_tagger_flair_embeddings(results_base_path, tasks_base_pa
     )
 
     del trainer, tagger, tag_dictionary, corpus
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
@@ -244,9 +230,7 @@ def test_train_load_use_tagger_flair_embeddings(results_base_path, tasks_base_pa
 
 @pytest.mark.integration
 def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
-    )
+    corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
     tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
@@ -270,9 +254,7 @@ def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
     )
 
     del trainer, tagger, tag_dictionary, corpus
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
@@ -286,12 +268,8 @@ def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
-    corpus_1 = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
-    )
-    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path).downsample(
-        0.1
-    )
+    corpus_1 = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
+    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path).downsample(0.1)
 
     corpus = MultiCorpus([corpus_1, corpus_2])
     tag_dictionary = corpus.make_label_dictionary("ner")
@@ -316,9 +294,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
     )
 
     del trainer, tagger, corpus
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
@@ -333,12 +309,8 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_resume_tagger(results_base_path, tasks_base_path):
 
-    corpus_1 = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
-    )
-    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path).downsample(
-        0.1
-    )
+    corpus_1 = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
+    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path).downsample(0.1)
 
     corpus = MultiCorpus([corpus_1, corpus_2])
     tag_dictionary = corpus.make_label_dictionary("ner")
@@ -367,9 +339,7 @@ def test_train_resume_tagger(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_find_learning_rate(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
-    )
+    corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
     tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(

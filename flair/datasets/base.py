@@ -105,9 +105,7 @@ class StringDataset(FlairDataset):
     def __init__(
         self,
         texts: Union[str, List[str]],
-        use_tokenizer: Union[
-            bool, Callable[[str], List[Token]], Tokenizer
-        ] = SpaceTokenizer(),
+        use_tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
     ):
         """
         Instantiate StringDataset
@@ -184,9 +182,7 @@ class MongoDataset(FlairDataset):
         except ModuleNotFoundError:
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "pymongo" is not installed!')
-            log.warning(
-                'To use MongoDataset, please first install with "pip install pymongo"'
-            )
+            log.warning('To use MongoDataset, please first install with "pip install pymongo"')
             log.warning("-" * 100)
             pass
 
@@ -240,9 +236,7 @@ class MongoDataset(FlairDataset):
                 sentence.add_label(self.tag_type, label)
 
             if self.max_tokens_per_doc > 0:
-                sentence.tokens = sentence.tokens[
-                    : min(len(sentence), self.max_tokens_per_doc)
-                ]
+                sentence.tokens = sentence.tokens[: min(len(sentence), self.max_tokens_per_doc)]
 
             return sentence
         return None
@@ -266,9 +260,7 @@ class MongoDataset(FlairDataset):
             return sentence
 
 
-def find_train_dev_test_files(
-    data_folder, dev_file, test_file, train_file, autofind_splits=True
-):
+def find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits=True):
     if type(data_folder) == str:
         data_folder: Path = Path(data_folder)
 

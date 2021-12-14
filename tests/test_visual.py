@@ -70,9 +70,7 @@ def test_html_rendering():
 
     expected_res = HTML_PAGE.format(
         text=PARAGRAPH.format(
-            sentence=TAGGED_ENTITY.format(
-                color="#F7FF53", entity="Boris Johnson", label="PER"
-            )
+            sentence=TAGGED_ENTITY.format(color="#F7FF53", entity="Boris Johnson", label="PER")
             + " has been elected new "
             + TAGGED_ENTITY.format(color="#4647EB", entity="Conservative", label="MISC")
             + " leader in a ballot of party members and will become the next "

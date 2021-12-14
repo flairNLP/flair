@@ -26,9 +26,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
         super().__init__()
         log.info("Using REGRESSION - experimental")
 
-        self.document_embeddings: flair.embeddings.DocumentEmbeddings = (
-            document_embeddings
-        )
+        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
         self.label_name = label_name
 
         self.decoder = nn.Linear(self.document_embeddings.embedding_length, 1)
@@ -49,19 +47,14 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
         embedding_names = self.document_embeddings.get_names()
 
-        text_embedding_list = [
-            sentence.get_embedding(embedding_names).unsqueeze(0)
-            for sentence in sentences
-        ]
+        text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
         label_scores = self.decoder(text_embedding_tensor)
 
         return label_scores
 
-    def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence]
-    ) -> torch.Tensor:
+    def forward_loss(self, data_points: Union[List[Sentence], Sentence]) -> torch.Tensor:
 
         if not isinstance(data_points, list):
             data_points = [data_points]
@@ -72,10 +65,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
     def _labels_to_indices(self, sentences: List[Sentence]):
         indices = [
-            torch.tensor(
-                [float(label.value) for label in sentence.labels], dtype=torch.float
-            )
-            for sentence in sentences
+            torch.tensor([float(label.value) for label in sentence.labels], dtype=torch.float) for sentence in sentences
         ]
 
         vec = torch.cat(indices, 0).to(flair.device)
@@ -130,9 +120,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
             return sentences
 
-    def _calculate_loss(
-        self, scores: torch.Tensor, sentences: List[Sentence]
-    ) -> torch.Tensor:
+    def _calculate_loss(self, scores: torch.Tensor, sentences: List[Sentence]) -> torch.Tensor:
         """
         Calculates the loss.
         :param scores: the prediction scores from the model
@@ -165,9 +153,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
-        data_loader = DataLoader(
-            data_points, batch_size=mini_batch_size, num_workers=num_workers
-        )
+        data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
 
         with torch.no_grad():
             eval_loss = torch.zeros(1, device=flair.device)
@@ -198,12 +184,8 @@ class TextRegressor(flair.nn.Model[Sentence]):
                 metric.true.extend(true_values)
                 metric.pred.extend(results)
 
-                for sentence, prediction, true_value in zip(
-                    batch, results, true_values
-                ):
-                    eval_line = "{}\t{}\t{}\n".format(
-                        sentence.to_original_text(), true_value, prediction
-                    )
+                for sentence, prediction, true_value in zip(batch, results, true_values):
+                    eval_line = "{}\t{}\t{}\n".format(sentence.to_original_text(), true_value, prediction)
                     lines.append(eval_line)
 
                 store_embeddings(batch, embedding_storage_mode)
@@ -215,10 +197,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
 
-            log_line = (
-                f"{metric.mean_squared_error()}\t{metric.spearmanr()}"
-                f"\t{metric.pearsonr()}"
-            )
+            log_line = f"{metric.mean_squared_error()}\t{metric.spearmanr()}" f"\t{metric.pearsonr()}"
             log_header = "MSE\tSPEARMAN\tPEARSON"
 
             detailed_result = (
@@ -251,9 +230,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
         label_name = state["label_name"] if "label_name" in state.keys() else None
 
-        model = TextRegressor(
-            document_embeddings=state["document_embeddings"], label_name=label_name
-        )
+        model = TextRegressor(document_embeddings=state["document_embeddings"], label_name=label_name)
 
         model.load_state_dict(state["state_dict"])
         return model
@@ -262,9 +239,5 @@ class TextRegressor(flair.nn.Model[Sentence]):
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
-            log.warning(
-                "Ignore {} sentence(s) with no tokens.".format(
-                    len(sentences) - len(filtered_sentences)
-                )
-            )
+            log.warning("Ignore {} sentence(s) with no tokens.".format(len(sentences) - len(filtered_sentences)))
         return filtered_sentences

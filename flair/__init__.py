@@ -41,9 +41,7 @@ logging.config.dictConfig(
                 "stream": "ext://sys.stdout",
             }
         },
-        "loggers": {
-            "flair": {"handlers": ["console"], "level": "INFO", "propagate": False}
-        },
+        "loggers": {"flair": {"handlers": ["console"], "level": "INFO", "propagate": False}},
     }
 )
 

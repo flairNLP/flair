@@ -175,16 +175,13 @@ class LinearSchedulerWithWarmup(LambdaLR):
             lambda_during_warmup = float(current_step) / float(max(1, num_warmup_steps))
             lambda_after_warmup = max(
                 0.0,
-                float(num_train_steps - current_step)
-                / float(max(1, num_train_steps - num_warmup_steps)),
+                float(num_train_steps - current_step) / float(max(1, num_train_steps - num_warmup_steps)),
             )
             if current_step < num_warmup_steps:
                 return lambda_during_warmup
             return lambda_after_warmup
 
-        super(LinearSchedulerWithWarmup, self).__init__(
-            optimizer, lr_lambda=linear_lr_lambda, last_epoch=last_epoch
-        )
+        super(LinearSchedulerWithWarmup, self).__init__(optimizer, lr_lambda=linear_lr_lambda, last_epoch=last_epoch)
 
 
 class ReduceLRWDOnPlateau(ReduceLROnPlateau):
@@ -271,6 +268,4 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
                 if old_weight_decay - new_weight_decay > self.eps:
                     param_group["weight_decay"] = new_weight_decay
                     if self.verbose:
-                        log.info(
-                            f"Epoch {epoch}: reducing weight decay factor of group {i} to {new_weight_decay:.4e}."
-                        )
+                        log.info(f"Epoch {epoch}: reducing weight decay factor of group {i} to {new_weight_decay:.4e}.")

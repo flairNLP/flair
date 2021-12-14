@@ -39,9 +39,7 @@ class FeideggerCorpus(Corpus):
 
         feidegger_dataset: Dataset = FeideggerDataset(dataset_info, **kwargs)
 
-        train_indices = list(
-            np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0]
-        )
+        train_indices = list(np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0])
         train = torch.utils.data.dataset.Subset(feidegger_dataset, train_indices)
 
         dev_indices = list(np.where(np.in1d(feidegger_dataset.split, [8]))[0])
@@ -71,9 +69,7 @@ class FeideggerDataset(FlairDataset):
             image = Image(imageURL=image_info["url"])
             for caption in image_info["descriptions"]:
                 # append Sentence-Image data point
-                self.data_points.append(
-                    DataPair(Sentence(preprocessor(caption), use_tokenizer=True), image)
-                )
+                self.data_points.append(DataPair(Sentence(preprocessor(caption), use_tokenizer=True), image))
                 self.split.append(int(image_info["split"]))
 
     def __len__(self):

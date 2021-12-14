@@ -74,21 +74,29 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         # multilingual forward (English, German, French, Italian, Dutch, Polish)
         if model.lower() == "multi-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-multi-forward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-multi-forward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
         # multilingual backward  (English, German, French, Italian, Dutch, Polish)
         elif model.lower() == "multi-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-multi-backward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-multi-backward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # news-english-forward
         elif model.lower() == "news-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-v0.2rc.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-v0.2rc.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # news-english-backward
         elif model.lower() == "news-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-v0.2rc.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-v0.2rc.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # news-english-forward
@@ -103,22 +111,30 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         # mix-english-forward
         elif model.lower() == "mix-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward-v0.2rc.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward-v0.2rc.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # mix-english-backward
         elif model.lower() == "mix-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward-v0.2rc.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward-v0.2rc.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # mix-german-forward
         elif model.lower() == "german-forward" or model.lower() == "de-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward-v0.2rc.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward-v0.2rc.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # mix-german-backward
         elif model.lower() == "german-backward" or model.lower() == "de-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward-v0.2rc.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward-v0.2rc.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # common crawl Polish forward
@@ -133,38 +149,54 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         # Slovenian forward
         elif model.lower() == "slovenian-forward" or model.lower() == "sl-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-sl-large-forward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-sl-large-forward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
         # Slovenian backward
         elif model.lower() == "slovenian-backward" or model.lower() == "sl-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-sl-large-backward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-sl-large-backward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # Bulgarian forward
         elif model.lower() == "bulgarian-forward" or model.lower() == "bg-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-bg-small-forward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-bg-small-forward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
         # Bulgarian backward
         elif model.lower() == "bulgarian-backward" or model.lower() == "bg-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-bg-small-backward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-bg-small-backward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # Dutch forward
         elif model.lower() == "dutch-forward" or model.lower() == "nl-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-nl-large-forward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-nl-large-forward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
         # Dutch backward
         elif model.lower() == "dutch-backward" or model.lower() == "nl-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-nl-large-backward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-nl-large-backward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # Swedish forward
         elif model.lower() == "swedish-forward" or model.lower() == "sv-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-sv-large-forward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-sv-large-forward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
         # Swedish backward
         elif model.lower() == "swedish-backward" or model.lower() == "sv-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-sv-large-backward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-sv-large-backward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # French forward
@@ -178,11 +210,15 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         # Czech forward
         elif model.lower() == "czech-forward" or model.lower() == "cs-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-cs-large-forward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-cs-large-forward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
         # Czech backward
         elif model.lower() == "czech-backward" or model.lower() == "cs-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-cs-large-backward-v0.1.pt"
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-cs-large-backward-v0.1.pt"
+            )
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # Portuguese forward
@@ -195,9 +231,7 @@ class CharLMEmbeddings(TokenEmbeddings):
             model = cached_path(base_path, cache_dir=cache_dir)
 
         elif not Path(model).exists():
-            raise ValueError(
-                f'The given model "{model}" is not available or is not a valid path.'
-            )
+            raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
         self.name = str(model)
         self.static_embeddings = detach
@@ -225,9 +259,7 @@ class CharLMEmbeddings(TokenEmbeddings):
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
         embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(
-            embedded_dummy[0].get_token(1).get_embedding()
-        )
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
         # set to eval mode
         self.eval()
@@ -336,9 +368,7 @@ class TransformerXLEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        self.tokenizer = TransfoXLTokenizer.from_pretrained(
-            pretrained_model_name_or_path
-        )
+        self.tokenizer = TransfoXLTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = TransfoXLModel.from_pretrained(
             pretrained_model_name_or_path=pretrained_model_name_or_path,
             output_hidden_states=True,
@@ -351,9 +381,7 @@ class TransformerXLEmbeddings(TokenEmbeddings):
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
         embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(
-            embedded_dummy[0].get_token(1).get_embedding()
-        )
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     @property
     def embedding_length(self) -> int:
@@ -417,9 +445,7 @@ class XLNetEmbeddings(TokenEmbeddings):
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
         embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(
-            embedded_dummy[0].get_token(1).get_embedding()
-        )
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     @property
     def embedding_length(self) -> int:
@@ -485,9 +511,7 @@ class XLMEmbeddings(TokenEmbeddings):
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
         embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(
-            embedded_dummy[0].get_token(1).get_embedding()
-        )
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     @property
     def embedding_length(self) -> int:
@@ -538,9 +562,7 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        self.tokenizer = OpenAIGPTTokenizer.from_pretrained(
-            pretrained_model_name_or_path
-        )
+        self.tokenizer = OpenAIGPTTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = OpenAIGPTModel.from_pretrained(
             pretrained_model_name_or_path=pretrained_model_name_or_path,
             output_hidden_states=True,
@@ -554,9 +576,7 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
         embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(
-            embedded_dummy[0].get_token(1).get_embedding()
-        )
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     @property
     def embedding_length(self) -> int:
@@ -619,9 +639,7 @@ class OpenAIGPT2Embeddings(TokenEmbeddings):
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
         embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(
-            embedded_dummy[0].get_token(1).get_embedding()
-        )
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     @property
     def embedding_length(self) -> int:
@@ -680,9 +698,7 @@ class RoBERTaEmbeddings(TokenEmbeddings):
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
         embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(
-            embedded_dummy[0].get_token(1).get_embedding()
-        )
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     @property
     def embedding_length(self) -> int:
@@ -727,9 +743,7 @@ class CamembertEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        self.tokenizer = CamembertTokenizer.from_pretrained(
-            pretrained_model_name_or_path
-        )
+        self.tokenizer = CamembertTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = CamembertModel.from_pretrained(
             pretrained_model_name_or_path=pretrained_model_name_or_path,
             output_hidden_states=True,
@@ -743,9 +757,7 @@ class CamembertEmbeddings(TokenEmbeddings):
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
         embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(
-            embedded_dummy[0].get_token(1).get_embedding()
-        )
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -757,9 +769,7 @@ class CamembertEmbeddings(TokenEmbeddings):
 
         # 1-camembert-base -> camembert-base
         if any(char.isdigit() for char in self.name):
-            self.tokenizer = CamembertTokenizer.from_pretrained(
-                "-".join(self.name.split("-")[1:])
-            )
+            self.tokenizer = CamembertTokenizer.from_pretrained("-".join(self.name.split("-")[1:]))
         else:
             self.tokenizer = CamembertTokenizer.from_pretrained(self.name)
 
@@ -806,9 +816,7 @@ class XLMRobertaEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        self.tokenizer = XLMRobertaTokenizer.from_pretrained(
-            pretrained_model_name_or_path
-        )
+        self.tokenizer = XLMRobertaTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = XLMRobertaModel.from_pretrained(
             pretrained_model_name_or_path=pretrained_model_name_or_path,
             output_hidden_states=True,
@@ -822,9 +830,7 @@ class XLMRobertaEmbeddings(TokenEmbeddings):
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
         embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(
-            embedded_dummy[0].get_token(1).get_embedding()
-        )
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -835,9 +841,7 @@ class XLMRobertaEmbeddings(TokenEmbeddings):
         self.__dict__ = d
 
         # 1-xlm-roberta-large -> xlm-roberta-large
-        self.tokenizer = self.tokenizer = XLMRobertaTokenizer.from_pretrained(
-            "-".join(self.name.split("-")[1:])
-        )
+        self.tokenizer = self.tokenizer = XLMRobertaTokenizer.from_pretrained("-".join(self.name.split("-")[1:]))
 
     @property
     def embedding_length(self) -> int:
@@ -888,18 +892,12 @@ def _extract_embeddings(
         first_embedding: torch.FloatTensor = current_embeddings[0]
         if pooling_operation == "first_last":
             last_embedding: torch.FloatTensor = current_embeddings[-1]
-            final_embedding: torch.FloatTensor = torch.cat(
-                [first_embedding, last_embedding]
-            )
+            final_embedding: torch.FloatTensor = torch.cat([first_embedding, last_embedding])
         elif pooling_operation == "last":
             final_embedding: torch.FloatTensor = current_embeddings[-1]
         elif pooling_operation == "mean":
-            all_embeddings: List[torch.FloatTensor] = [
-                embedding.unsqueeze(0) for embedding in current_embeddings
-            ]
-            final_embedding: torch.FloatTensor = torch.mean(
-                torch.cat(all_embeddings, dim=0), dim=0
-            )
+            all_embeddings: List[torch.FloatTensor] = [embedding.unsqueeze(0) for embedding in current_embeddings]
+            final_embedding: torch.FloatTensor = torch.mean(torch.cat(all_embeddings, dim=0), dim=0)
         else:
             final_embedding: torch.FloatTensor = first_embedding
 
@@ -914,9 +912,7 @@ def _extract_embeddings(
     return subtoken_embeddings
 
 
-def _build_token_subwords_mapping(
-    sentence: Sentence, tokenizer: PreTrainedTokenizer
-) -> Tuple[Dict[int, int], str]:
+def _build_token_subwords_mapping(sentence: Sentence, tokenizer: PreTrainedTokenizer) -> Tuple[Dict[int, int], str]:
     """Builds a dictionary that stores the following information:
     Token index (key) and number of corresponding subwords (value) for a sentence.
 
@@ -1003,16 +999,12 @@ def _get_transformer_sentence_embeddings(
                 (
                     token_subwords_mapping,
                     tokenized_string,
-                ) = _build_token_subwords_mapping_gpt2(
-                    sentence=sentence, tokenizer=tokenizer
-                )
+                ) = _build_token_subwords_mapping_gpt2(sentence=sentence, tokenizer=tokenizer)
             else:
                 (
                     token_subwords_mapping,
                     tokenized_string,
-                ) = _build_token_subwords_mapping(
-                    sentence=sentence, tokenizer=tokenizer
-                )
+                ) = _build_token_subwords_mapping(sentence=sentence, tokenizer=tokenizer)
 
             subwords = tokenizer.tokenize(tokenized_string)
 
@@ -1078,9 +1070,7 @@ class BertEmbeddings(TokenEmbeddings):
                 from transformers import DistilBertModel, DistilBertTokenizer
             except ImportError:
                 log.warning("-" * 100)
-                log.warning(
-                    "ATTENTION! To use DistilBert, please first install a recent version of transformers!"
-                )
+                log.warning("ATTENTION! To use DistilBert, please first install a recent version of transformers!")
                 log.warning("-" * 100)
                 pass
 
@@ -1126,9 +1116,7 @@ class BertEmbeddings(TokenEmbeddings):
             self.input_type_ids = input_type_ids
             self.token_subtoken_count = token_subtoken_count
 
-    def _convert_sentences_to_features(
-        self, sentences, max_sequence_length: int
-    ) -> [BertInputFeatures]:
+    def _convert_sentences_to_features(self, sentences, max_sequence_length: int) -> [BertInputFeatures]:
 
         max_sequence_length = max_sequence_length + 2
 
@@ -1187,31 +1175,20 @@ class BertEmbeddings(TokenEmbeddings):
         # first, find longest sentence in batch
         longest_sentence_in_batch: int = len(
             max(
-                [
-                    self.tokenizer.tokenize(sentence.to_tokenized_string())
-                    for sentence in sentences
-                ],
+                [self.tokenizer.tokenize(sentence.to_tokenized_string()) for sentence in sentences],
                 key=len,
             )
         )
 
         # prepare id maps for BERT model
-        features = self._convert_sentences_to_features(
-            sentences, longest_sentence_in_batch
-        )
-        all_input_ids = torch.LongTensor([f.input_ids for f in features]).to(
-            flair.device
-        )
-        all_input_masks = torch.LongTensor([f.input_mask for f in features]).to(
-            flair.device
-        )
+        features = self._convert_sentences_to_features(sentences, longest_sentence_in_batch)
+        all_input_ids = torch.LongTensor([f.input_ids for f in features]).to(flair.device)
+        all_input_masks = torch.LongTensor([f.input_mask for f in features]).to(flair.device)
 
         # put encoded batch through BERT model to get all hidden states of all encoder layers
         self.model.to(flair.device)
         self.model.eval()
-        all_encoder_layers = self.model(all_input_ids, attention_mask=all_input_masks)[
-            -1
-        ]
+        all_encoder_layers = self.model(all_input_ids, attention_mask=all_input_masks)[-1]
 
         with torch.no_grad():
 
@@ -1224,9 +1201,7 @@ class BertEmbeddings(TokenEmbeddings):
                 for token_index, _ in enumerate(feature.tokens):
                     all_layers = []
                     for layer_index in self.layer_indexes:
-                        layer_output = all_encoder_layers[int(layer_index)][
-                            sentence_index
-                        ]
+                        layer_output = all_encoder_layers[int(layer_index)][sentence_index]
                         all_layers.append(layer_output[token_index])
 
                     if self.use_scalar_mix:
@@ -1248,12 +1223,9 @@ class BertEmbeddings(TokenEmbeddings):
                     else:
                         # otherwise, do a mean over all subwords in token
                         embeddings = subtoken_embeddings[
-                            token_idx : token_idx
-                            + feature.token_subtoken_count[token.idx]
+                            token_idx : token_idx + feature.token_subtoken_count[token.idx]
                         ]
-                        embeddings = [
-                            embedding.unsqueeze(0) for embedding in embeddings
-                        ]
+                        embeddings = [embedding.unsqueeze(0) for embedding in embeddings]
                         mean = torch.mean(torch.cat(embeddings, dim=0), dim=0)
                         token.set_embedding(self.name, mean)
 
@@ -1281,9 +1253,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
-        self.embeddings: StackedEmbeddings = StackedEmbeddings(
-            embeddings=token_embeddings
-        )
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=token_embeddings)
         self.name: str = "document_mean"
 
         self.__embedding_length: int = self.embeddings.embedding_length
@@ -1378,9 +1348,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
             self.embeddings_dimension = reproject_words_dimension
 
         # bidirectional LSTM on top of embedding layer
-        self.word_reprojection_map = torch.nn.Linear(
-            self.length_of_all_token_embeddings, self.embeddings_dimension
-        )
+        self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings, self.embeddings_dimension)
         self.rnn = torch.nn.GRU(
             self.embeddings_dimension,
             hidden_size,
@@ -1438,9 +1406,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
             # PADDING: pad shorter sentences out
             for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
                 word_embeddings.append(
-                    torch.zeros(self.length_of_all_token_embeddings, dtype=torch.float)
-                    .unsqueeze(0)
-                    .to(flair.device)
+                    torch.zeros(self.length_of_all_token_embeddings, dtype=torch.float).unsqueeze(0).to(flair.device)
                 )
 
             word_embeddings_tensor = torch.cat(word_embeddings, 0).to(flair.device)
@@ -1538,9 +1504,7 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
         embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(
-            embedded_dummy[0].get_token(1).get_embedding()
-        )
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     @property
     def embedding_length(self) -> int:

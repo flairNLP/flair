@@ -135,19 +135,13 @@ class RankingLoss(SimilarityLoss):
         n = inputs.shape[0]
         neg_targets = torch.ones_like(targets) - targets
         # loss matrices for two directions of alignment, from modality 0 => modality 1 and vice versa
-        ranking_loss_matrix_01 = neg_targets * F.relu(
-            self.margin + inputs - torch.diag(inputs).view(n, 1)
-        )
-        ranking_loss_matrix_10 = neg_targets * F.relu(
-            self.margin + inputs - torch.diag(inputs).view(1, n)
-        )
+        ranking_loss_matrix_01 = neg_targets * F.relu(self.margin + inputs - torch.diag(inputs).view(n, 1))
+        ranking_loss_matrix_10 = neg_targets * F.relu(self.margin + inputs - torch.diag(inputs).view(1, n))
         neg_targets_01_sum = torch.sum(neg_targets, dim=1)
         neg_targets_10_sum = torch.sum(neg_targets, dim=0)
         loss = self.direction_weights[0] * torch.mean(
             torch.sum(ranking_loss_matrix_01 / neg_targets_01_sum, dim=1)
-        ) + self.direction_weights[1] * torch.mean(
-            torch.sum(ranking_loss_matrix_10 / neg_targets_10_sum, dim=0)
-        )
+        ) + self.direction_weights[1] * torch.mean(torch.sum(ranking_loss_matrix_10 / neg_targets_10_sum, dim=0))
 
         return loss
 
@@ -188,9 +182,7 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
 
         self.source_embeddings.embed(data_points)
 
-        source_embedding_tensor = torch.stack(
-            [point.embedding for point in data_points]
-        ).to(flair.device)
+        source_embedding_tensor = torch.stack([point.embedding for point in data_points]).to(flair.device)
 
         if self.source_mapping is not None:
             source_embedding_tensor = self.source_mapping(source_embedding_tensor)
@@ -204,9 +196,7 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
 
         self.target_embeddings.embed(data_points)
 
-        target_embedding_tensor = torch.stack(
-            [point.embedding for point in data_points]
-        ).to(flair.device)
+        target_embedding_tensor = torch.stack([point.embedding for point in data_points]).to(flair.device)
 
         if self.target_mapping is not None:
             target_embedding_tensor = self.target_mapping(target_embedding_tensor)
@@ -219,13 +209,9 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
         :param modality_1_embeddings: embeddings of second modality, a tensor of shape [n1, d1]
         :return: a similarity matrix of shape [n0, n1]
         """
-        return self.similarity_measure.forward(
-            [modality_0_embeddings, modality_1_embeddings]
-        )
+        return self.similarity_measure.forward([modality_0_embeddings, modality_1_embeddings])
 
-    def forward_loss(
-        self, data_points: Union[List[DataPair], DataPair]
-    ) -> torch.Tensor:
+    def forward_loss(self, data_points: Union[List[DataPair], DataPair]) -> torch.Tensor:
         if not isinstance(data_points, list):
             data_points = [data_points]
         mapped_source_embeddings = self._embed_source(data_points)
@@ -239,9 +225,7 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
             elif detach_modality_id == 1:
                 mapped_target_embeddings.detach()
 
-        similarity_matrix = self.similarity_measure.forward(
-            (mapped_source_embeddings, mapped_target_embeddings)
-        )
+        similarity_matrix = self.similarity_measure.forward((mapped_source_embeddings, mapped_target_embeddings))
 
         def add_to_index_map(hashmap, key, val):
             if key not in hashmap:
@@ -259,9 +243,7 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
         for data_point in data_points:
             first_indices = index_map["first"][str(data_point.first)]
             second_indices = index_map["second"][str(data_point.second)]
-            for first_index, second_index in itertools.product(
-                first_indices, second_indices
-            ):
+            for first_index, second_index in itertools.product(first_indices, second_indices):
                 targets[first_index, second_index] = 1.0
 
         loss = self.similarity_loss(similarity_matrix, targets)
@@ -282,9 +264,7 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
 
-        data_loader = DataLoader(
-            data_points, batch_size=mini_batch_size, num_workers=num_workers
-        )
+        data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
 
         with torch.no_grad():
             # pre-compute embeddings for all targets in evaluation dataset
@@ -297,13 +277,9 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
                         target_index[str(data_point.second)] = len(target_index)
                         target_inputs.append(data_point)
                 if target_inputs:
-                    all_target_embeddings_list.append(
-                        self._embed_target(target_inputs).to(self.eval_device)
-                    )
+                    all_target_embeddings_list.append(self._embed_target(target_inputs).to(self.eval_device))
                 store_embeddings(data_points, embedding_storage_mode)
-            all_target_embeddings = torch.cat(
-                all_target_embeddings_list, dim=0
-            )  # [n0, d0]
+            all_target_embeddings = torch.cat(all_target_embeddings_list, dim=0)  # [n0, d0]
             assert len(target_index) == all_target_embeddings.shape[0]
 
             ranks = []
@@ -317,18 +293,12 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
                 )
 
                 # sort the similarity matrix across modality 1
-                batch_modality_1_argsort = torch.argsort(
-                    batch_similarity_matrix, descending=True, dim=1
-                )
+                batch_modality_1_argsort = torch.argsort(batch_similarity_matrix, descending=True, dim=1)
 
                 # get the ranks, so +1 to start counting ranks from 1
-                batch_modality_1_ranks = (
-                    torch.argsort(batch_modality_1_argsort, dim=1) + 1
-                )
+                batch_modality_1_ranks = torch.argsort(batch_modality_1_argsort, dim=1) + 1
 
-                batch_target_indices = [
-                    target_index[str(data_point.second)] for data_point in batch
-                ]
+                batch_target_indices = [target_index[str(data_point.second)] for data_point in batch]
 
                 batch_gt_ranks = batch_modality_1_ranks[
                     torch.arange(batch_similarity_matrix.shape[0]),
@@ -342,23 +312,14 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
         median_rank = np.median(ranks_arr)
         recall_at = {k: np.mean(ranks_arr <= k) for k in self.recall_at_points}
 
-        results_header = ["Median rank"] + [
-            "Recall@top" + str(r) for r in self.recall_at_points
-        ]
+        results_header = ["Median rank"] + ["Recall@top" + str(r) for r in self.recall_at_points]
         results_header_str = "\t".join(results_header)
-        epoch_results = [str(median_rank)] + [
-            str(recall_at[k]) for k in self.recall_at_points
-        ]
+        epoch_results = [str(median_rank)] + [str(recall_at[k]) for k in self.recall_at_points]
         epoch_results_str = "\t".join(epoch_results)
-        detailed_results = ", ".join(
-            [f"{h}={v}" for h, v in zip(results_header, epoch_results)]
-        )
+        detailed_results = ", ".join([f"{h}={v}" for h, v in zip(results_header, epoch_results)])
 
         validated_measure = sum(
-            [
-                recall_at[r] * w
-                for r, w in zip(self.recall_at_points, self.recall_at_points_weights)
-            ]
+            [recall_at[r] * w for r, w in zip(self.recall_at_points, self.recall_at_points_weights)]
         )
 
         return Result(

@@ -85,9 +85,7 @@ class EntityLinkingCorpus(ColumnCorpus):
                 spans = sentence.get_spans("nel")
                 for span in spans:
                     annotation = span.tag
-                    if (
-                        self.ent_dictionary.get_idx_for_item(annotation) == 0
-                    ):  # unknown label
+                    if self.ent_dictionary.get_idx_for_item(annotation) == 0:  # unknown label
                         if remove:
                             for token in span:
                                 token.remove_labels("nel")
@@ -130,9 +128,7 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
         self.agreement_threshold = agreement_threshold
 
         # this dataset name
-        dataset_name = (
-            self.__class__.__name__.lower() + "_" + type(sentence_splitter).__name__
-        )
+        dataset_name = self.__class__.__name__.lower() + "_" + type(sentence_splitter).__name__
 
         # default dataset folder is the cache root
 
@@ -144,9 +140,7 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
 
         # download and parse data if necessary
         if not parsed_dataset.exists():
-            aquaint_el_zip = cached_path(
-                f"{aquaint_el_path}", Path("datasets") / dataset_name
-            )
+            aquaint_el_zip = cached_path(f"{aquaint_el_path}", Path("datasets") / dataset_name)
             unpack_file(aquaint_el_zip, data_folder, "zip", False)
 
             try:
@@ -158,9 +152,7 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                         if not file.endswith(".htm"):
                             continue
 
-                        with open(
-                            str(data_folder / file), "r", encoding="utf-8"
-                        ) as txt_in:
+                        with open(str(data_folder / file), "r", encoding="utf-8") as txt_in:
                             text = txt_in.read()
 
                         # get rid of html syntax, we only need the text
@@ -186,9 +178,7 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                             lengths = []
                             wikinames = []
 
-                            current_entity = string.find(
-                                "[["
-                            )  # each annotation starts with '[['
+                            current_entity = string.find("[[")  # each annotation starts with '[['
                             while current_entity != -1:
                                 wikiname = ""
                                 surface_form = ""
@@ -198,9 +188,7 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                                     wikiname += string[j]
                                     j += 1
 
-                                if (
-                                    string[j] == "]"
-                                ):  # entity mention ends, i.e. looks like this [[wikiname]]
+                                if string[j] == "]":  # entity mention ends, i.e. looks like this [[wikiname]]
                                     surface_form = wikiname  # in this case entity mention = wiki-page name
                                 else:  # string[j] == '|'
                                     j += 1
@@ -213,42 +201,26 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                                     ):  # entity has a score, i.e. looks like this [[wikiname|surface_form|agreement_score]]
                                         agreement_score = float(string[j + 1 : j + 4])
                                         j += 4  # points to first ']' of entity now
-                                        if (
-                                            agreement_score < self.agreement_threshold
-                                        ):  # discard entity
-                                            string = (
-                                                string[:current_entity]
-                                                + surface_form
-                                                + string[j + 2 :]
-                                            )
+                                        if agreement_score < self.agreement_threshold:  # discard entity
+                                            string = string[:current_entity] + surface_form + string[j + 2 :]
                                             current_entity = string.find("[[")
                                             continue
 
                                 # replace [[wikiname|surface_form|score]] by surface_form and save index, length and wikiname of mention
                                 indices.append(current_entity)
                                 lengths.append(len(surface_form))
-                                wikinames.append(
-                                    wikiname[0].upper() + wikiname.replace(" ", "_")[1:]
-                                )
+                                wikinames.append(wikiname[0].upper() + wikiname.replace(" ", "_")[1:])
 
-                                string = (
-                                    string[:current_entity]
-                                    + surface_form
-                                    + string[j + 2 :]
-                                )
+                                string = string[:current_entity] + surface_form + string[j + 2 :]
 
                                 current_entity = string.find("[[")
 
                             # sentence splitting and tokenization
                             sentences = sentence_splitter.split(string)
-                            sentence_offsets = [
-                                sentence.start_pos or 0 for sentence in sentences
-                            ]
+                            sentence_offsets = [sentence.start_pos or 0 for sentence in sentences]
 
                             # iterate through all annotations and add to corresponding tokens
-                            for mention_start, mention_length, wikiname in zip(
-                                indices, lengths, wikinames
-                            ):
+                            for mention_start, mention_length, wikiname in zip(indices, lengths, wikinames):
 
                                 # find sentence to which annotation belongs
                                 sentence_index = 0
@@ -268,18 +240,13 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                                     assert token.start_pos is not None
                                     assert token.end_pos is not None
                                     if (
-                                        token.start_pos >= mention_start
-                                        and token.end_pos <= mention_end
+                                        token.start_pos >= mention_start and token.end_pos <= mention_end
                                     ):  # token belongs to entity mention
                                         if first:
-                                            token.set_label(
-                                                typename="nel", value="B-" + wikiname
-                                            )
+                                            token.set_label(typename="nel", value="B-" + wikiname)
                                             first = False
                                         else:
-                                            token.set_label(
-                                                typename="nel", value="I-" + wikiname
-                                            )
+                                            token.set_label(typename="nel", value="I-" + wikiname)
 
                             # write to out-file in column format
                             for sentence in sentences:
@@ -292,9 +259,7 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                                         txt_out.write(token.text + "\tO\n")
 
                                     else:  # annotation
-                                        txt_out.write(
-                                            token.text + "\t" + labels[0].value + "\n"
-                                        )
+                                        txt_out.write(token.text + "\t" + labels[0].value + "\n")
 
                                 txt_out.write("\n")  # empty line after each sentence
 
@@ -357,15 +322,9 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
 
             # from qwikidata.linked_data_interface import get_entity_dict_from_api
 
-            original_train_path = cached_path(
-                f"{train_raw_url}", Path("datasets") / dataset_name
-            )
-            original_test_path = cached_path(
-                f"{test_raw_url}", Path("datasets") / dataset_name
-            )
-            original_dev_path = cached_path(
-                f"{dev_raw_url}", Path("datasets") / dataset_name
-            )
+            original_train_path = cached_path(f"{train_raw_url}", Path("datasets") / dataset_name)
+            original_test_path = cached_path(f"{test_raw_url}", Path("datasets") / dataset_name)
+            original_dev_path = cached_path(f"{dev_raw_url}", Path("datasets") / dataset_name)
 
             # generate qid wikiname dictionaries
             log.info("Get wikinames from wikidata...")
@@ -484,9 +443,9 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
                 for qid in response_json["entities"]:
 
                     try:
-                        wikiname = response_json["entities"][qid]["sitelinks"][
-                            self.wiki_language
-                        ]["title"].replace(" ", "_")
+                        wikiname = response_json["entities"][qid]["sitelinks"][self.wiki_language]["title"].replace(
+                            " ", "_"
+                        )
                     except KeyError:  # language not available for specific wikiitem
                         wikiname = "O"
 
@@ -542,15 +501,9 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
 
             wiki_wiki = wikipediaapi.Wikipedia(language="en")
 
-            testa_unprocessed_path = cached_path(
-                f"{conll_yago_path}aida_conll_testa", Path("datasets") / dataset_name
-            )
-            testb_unprocessed_path = cached_path(
-                f"{conll_yago_path}aida_conll_testb", Path("datasets") / dataset_name
-            )
-            train_unprocessed_path = cached_path(
-                f"{conll_yago_path}aida_conll_train", Path("datasets") / dataset_name
-            )
+            testa_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_testa", Path("datasets") / dataset_name)
+            testb_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_testb", Path("datasets") / dataset_name)
+            train_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_train", Path("datasets") / dataset_name)
 
             # we use the wikiids in the data instead of directly utilizing the wikipedia urls.
             # like this we can quickly check if the corresponding page exists
@@ -584,39 +537,18 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
                         else:  # line with annotation
                             wikiname = wikiid_wikiname_dict[line_list[5].strip()]
                             if wikiname != "O":
-                                write.write(
-                                    line_list[0]
-                                    + "\t"
-                                    + line_list[1]
-                                    + "-"
-                                    + wikiname
-                                    + "\n"
-                                )
+                                write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
                             else:
                                 # if there is a bad wikiid we can check if the given url in the data exists using wikipediaapi
                                 wikiname = line_list[4].split("/")[-1]
                                 if check_existence:
                                     page = wiki_wiki.page(wikiname)
                                     if page.exists():
-                                        write.write(
-                                            line_list[0]
-                                            + "\t"
-                                            + line_list[1]
-                                            + "-"
-                                            + wikiname
-                                            + "\n"
-                                        )
+                                        write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
                                     else:  # neither the wikiid nor the url exist
                                         write.write(line_list[0] + "\tO\n")
                                 else:
-                                    write.write(
-                                        line_list[0]
-                                        + "\t"
-                                        + line_list[4]
-                                        + "-"
-                                        + wikiname
-                                        + "\n"
-                                    )
+                                    write.write(line_list[0] + "\t" + line_list[4] + "-" + wikiname + "\n")
 
                 # delete unprocessed file
                 os.remove(path)
@@ -668,9 +600,7 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
 
                 for wikiid in resp["query"]["pages"]:
                     try:
-                        wikiname = resp["query"]["pages"][wikiid]["title"].replace(
-                            " ", "_"
-                        )
+                        wikiname = resp["query"]["pages"][wikiid]["title"].replace(" ", "_")
                     except KeyError:  # bad wikiid
                         wikiname = "O"
                     wikiid_wikiname_dict[wikiid] = wikiname
@@ -710,29 +640,19 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
             base_path = Path(base_path)
 
         # this dataset name
-        dataset_name = (
-            self.__class__.__name__.lower() + "_" + type(sentence_splitter).__name__
-        )
+        dataset_name = self.__class__.__name__.lower() + "_" + type(sentence_splitter).__name__
 
         data_folder = base_path / dataset_name
 
-        iitb_el_docs_path = (
-            "https://www.cse.iitb.ac.in/~soumen/doc/CSAW/Annot/CSAW_crawledDocs.tar.gz"
-        )
-        iitb_el_annotations_path = (
-            "https://www.cse.iitb.ac.in/~soumen/doc/CSAW/Annot/CSAW_Annotations.xml"
-        )
+        iitb_el_docs_path = "https://www.cse.iitb.ac.in/~soumen/doc/CSAW/Annot/CSAW_crawledDocs.tar.gz"
+        iitb_el_annotations_path = "https://www.cse.iitb.ac.in/~soumen/doc/CSAW/Annot/CSAW_Annotations.xml"
         corpus_file_name = "iitb.txt"
         parsed_dataset = data_folder / corpus_file_name
 
         if not parsed_dataset.exists():
 
-            docs_zip_path = cached_path(
-                f"{iitb_el_docs_path}", Path("datasets") / dataset_name
-            )
-            annotations_xml_path = cached_path(
-                f"{iitb_el_annotations_path}", Path("datasets") / dataset_name
-            )
+            docs_zip_path = cached_path(f"{iitb_el_docs_path}", Path("datasets") / dataset_name)
+            annotations_xml_path = cached_path(f"{iitb_el_annotations_path}", Path("datasets") / dataset_name)
 
             unpack_file(docs_zip_path, data_folder, "tar", False)
 
@@ -751,23 +671,17 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
             with open(parsed_dataset, "w", encoding="utf-8") as write:
                 # iterate through all documents
                 for doc_name in doc_names:
-                    with open(
-                        data_folder / "crawledDocs" / doc_name, "r", encoding="utf-8"
-                    ) as read:
+                    with open(data_folder / "crawledDocs" / doc_name, "r", encoding="utf-8") as read:
                         text = read.read()
 
                         # split sentences and tokenize
                         sentences = sentence_splitter.split(text)
-                        sentence_offsets = [
-                            sentence.start_pos or 0 for sentence in sentences
-                        ]
+                        sentence_offsets = [sentence.start_pos or 0 for sentence in sentences]
 
                         # iterate through all annotations and add to corresponding tokens
                         for elem in root:
 
-                            if (
-                                elem[0].text == doc_name and elem[2].text
-                            ):  # annotation belongs to current document
+                            if elem[0].text == doc_name and elem[2].text:  # annotation belongs to current document
 
                                 wikiname = elem[2].text.replace(" ", "_")
                                 assert elem[3].text is not None
@@ -793,8 +707,7 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
                                     assert token.start_pos is not None
                                     assert token.end_pos is not None
                                     if (
-                                        token.start_pos >= mention_start
-                                        and token.end_pos <= mention_end
+                                        token.start_pos >= mention_start and token.end_pos <= mention_end
                                     ):  # token belongs to entity mention
                                         assert elem[1].text is not None
                                         if first:
@@ -822,18 +735,12 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
                                     write.write(token.text + "\tO\n")
 
                                 elif len(labels) == 1:  # annotation from one annotator
-                                    write.write(
-                                        token.text + "\t" + labels[0].value + "\n"
-                                    )
+                                    write.write(token.text + "\t" + labels[0].value + "\n")
 
                                 else:  # annotations from two annotators
 
-                                    if (
-                                        labels[0].value == labels[1].value
-                                    ):  # annotators agree
-                                        write.write(
-                                            token.text + "\t" + labels[0].value + "\n"
-                                        )
+                                    if labels[0].value == labels[1].value:  # annotators agree
+                                        write.write(token.text + "\t" + labels[0].value + "\n")
 
                                     else:  # annotators disagree: ignore or arbitrarily take first annotation
 
@@ -841,12 +748,7 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
                                             write.write(token.text + "\tO\n")
 
                                         else:
-                                            write.write(
-                                                token.text
-                                                + "\t"
-                                                + labels[0].value
-                                                + "\n"
-                                            )
+                                            write.write(token.text + "\t" + labels[0].value + "\n")
 
                             write.write("\n")  # empty line after each sentence
 
@@ -894,9 +796,7 @@ class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
         # download and parse data if necessary
         if not parsed_dataset.exists():
 
-            original_file_path = cached_path(
-                f"{tweeki_gold_el_path}", Path("datasets") / dataset_name
-            )
+            original_file_path = cached_path(f"{tweeki_gold_el_path}", Path("datasets") / dataset_name)
 
             with open(original_file_path, "r", encoding="utf-8") as read, open(
                 parsed_dataset, "w", encoding="utf-8"
@@ -913,11 +813,7 @@ class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
                         if line_list[3] == "-\n":  # no wiki name
                             out_line += "O\n"
                         else:
-                            out_line += (
-                                line_list[2][:2]
-                                + line_list[3].split("|")[0].replace(" ", "_")
-                                + "\n"
-                            )
+                            out_line += line_list[2][:2] + line_list[3].split("|")[0].replace(" ", "_") + "\n"
                     write.write(out_line)
                     line = read.readline()
 
@@ -962,17 +858,13 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
         parsed_dataset = data_folder / corpus_file_name
 
         if not parsed_dataset.exists():
-            reddit_el_zip = cached_path(
-                f"{reddit_el_path}", Path("datasets") / dataset_name
-            )
+            reddit_el_zip = cached_path(f"{reddit_el_path}", Path("datasets") / dataset_name)
             unpack_file(reddit_el_zip, data_folder, "zip", False)
 
             with open(data_folder / corpus_file_name, "w", encoding="utf-8") as txtout:
 
                 # First parse the post titles
-                with open(
-                    data_folder / "posts.tsv", "r", encoding="utf-8"
-                ) as tsvin1, open(
+                with open(data_folder / "posts.tsv", "r", encoding="utf-8") as tsvin1, open(
                     data_folder / "gold_post_annotations.tsv", "r", encoding="utf-8"
                 ) as tsvin2:
 
@@ -982,14 +874,10 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
 
                     for row in posts:  # Go through all the post titles
 
-                        txtout.writelines(
-                            "-DOCSTART-\n\n"
-                        )  # Start each post with a -DOCSTART- token
+                        txtout.writelines("-DOCSTART-\n\n")  # Start each post with a -DOCSTART- token
 
                         # Keep track of how many and which entity mentions does a given post title have
-                        link_annots = (
-                            []
-                        )  # [start pos, end pos, wiki page title] of an entity mention
+                        link_annots = []  # [start pos, end pos, wiki page title] of an entity mention
 
                         # Check if the current post title has an entity link and parse accordingly
                         if row[0] == self.curr_annot[0]:
@@ -1001,9 +889,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                                     self.curr_annot[3],
                                 )
                             )
-                            link_annots = self._fill_annot_array(
-                                link_annots, row[0], post_flag=True
-                            )
+                            link_annots = self._fill_annot_array(link_annots, row[0], post_flag=True)
 
                             # Post titles with entity mentions (if any) are handled via this function
                             self._text_to_cols(
@@ -1019,9 +905,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                             )
 
                 # Then parse the comments
-                with open(
-                    data_folder / "comments.tsv", "r", encoding="utf-8"
-                ) as tsvin3, open(
+                with open(data_folder / "comments.tsv", "r", encoding="utf-8") as tsvin3, open(
                     data_folder / "gold_comment_annotations.tsv", "r", encoding="utf-8"
                 ) as tsvin4:
 
@@ -1034,9 +918,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                     # Iterate over the comments.tsv file, until the end is reached
                     while not self.stop_iter:
 
-                        txtout.writelines(
-                            "-DOCSTART-\n"
-                        )  # Start each comment thread with a -DOCSTART- token
+                        txtout.writelines("-DOCSTART-\n")  # Start each comment thread with a -DOCSTART- token
 
                         # Keep track of the current comment thread and its corresponding key, on which the annotations are matched.
                         # Each comment thread is handled as one 'document'.
@@ -1047,18 +929,14 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                         # This if-condition is needed to handle this problem.
                         if comm_key in {"en5rf4c", "es3ia8j", "es3lrmw"}:
                             if comm_key == "en5rf4c":
-                                self.parsed_row = (
-                                    r.split("\t") for r in self.curr_row[4].split("\n")
-                                )
+                                self.parsed_row = (r.split("\t") for r in self.curr_row[4].split("\n"))
                                 self.curr_comm = next(self.parsed_row)  # type: ignore
                             self._fill_curr_comment(fix_flag=True)
                         # In case we are dealing with properly parsed rows, proceed with a regular parsing procedure
                         else:
                             self._fill_curr_comment(fix_flag=False)
 
-                        link_annots = (
-                            []
-                        )  # [start pos, end pos, wiki page title] of an entity mention
+                        link_annots = []  # [start pos, end pos, wiki page title] of an entity mention
 
                         # Check if the current comment thread has an entity link and parse accordingly, same as with post titles above
                         if comm_key == self.curr_annot[0]:
@@ -1069,9 +947,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                                     self.curr_annot[3],
                                 )
                             )
-                            link_annots = self._fill_annot_array(
-                                link_annots, comm_key, post_flag=False
-                            )
+                            link_annots = self._fill_annot_array(link_annots, comm_key, post_flag=False)
                             self._text_to_cols(
                                 Sentence(self.curr_comm, use_tokenizer=True),
                                 link_annots,
@@ -1083,10 +959,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                             # and not just single letters into single rows.
                             if comm_key == "dv74ybb":
                                 self.curr_comm = " ".join(
-                                    [
-                                        word.replace(" ", "")
-                                        for word in self.curr_comm.split("  ")
-                                    ]
+                                    [word.replace(" ", "") for word in self.curr_comm.split("  ")]
                                 )
                             elif comm_key == "eci2lut":
                                 self.curr_comm = (
@@ -1125,33 +998,20 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
             if links:
                 # Keep track which is the correct corresponding entity link, in cases where there is >1 link in a sentence
                 link_index = [
-                    j
-                    for j, v in enumerate(links)
-                    if (sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1])
+                    j for j, v in enumerate(links) if (sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1])
                 ]
                 # Write the token with a corresponding tag to file
                 try:
-                    if any(
-                        sentence[i].start_pos == v[0] and sentence[i].end_pos == v[1]
-                        for j, v in enumerate(links)
-                    ):
-                        outfile.writelines(
-                            sentence[i].text + "\tS-" + links[link_index[0]][2] + "\n"
-                        )
+                    if any(sentence[i].start_pos == v[0] and sentence[i].end_pos == v[1] for j, v in enumerate(links)):
+                        outfile.writelines(sentence[i].text + "\tS-" + links[link_index[0]][2] + "\n")
                     elif any(
-                        sentence[i].start_pos == v[0] and sentence[i].end_pos != v[1]
-                        for j, v in enumerate(links)
+                        sentence[i].start_pos == v[0] and sentence[i].end_pos != v[1] for j, v in enumerate(links)
                     ):
-                        outfile.writelines(
-                            sentence[i].text + "\tB-" + links[link_index[0]][2] + "\n"
-                        )
+                        outfile.writelines(sentence[i].text + "\tB-" + links[link_index[0]][2] + "\n")
                     elif any(
-                        sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1]
-                        for j, v in enumerate(links)
+                        sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1] for j, v in enumerate(links)
                     ):
-                        outfile.writelines(
-                            sentence[i].text + "\tI-" + links[link_index[0]][2] + "\n"
-                        )
+                        outfile.writelines(sentence[i].text + "\tI-" + links[link_index[0]][2] + "\n")
                     else:
                         outfile.writelines(sentence[i].text + "\tO\n")
                 # IndexError is raised in cases when there is exactly one link in a sentence, therefore can be dismissed
@@ -1167,10 +1027,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
             try:
                 if (
                     (sentence[i].text in {".", "!", "?", "!*"})
-                    and (
-                        sentence[i + 1].text
-                        not in {'"', "“", "'", "''", "!", "?", ";)", "."}
-                    )
+                    and (sentence[i + 1].text not in {'"', "“", "'", "''", "!", "?", ";)", "."})
                     and ("." not in sentence[i - 1].text)
                 ):
                     outfile.writelines("\n")
@@ -1195,15 +1052,9 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
         while True:
             # Check if further annotations belong to the current post title or comment thread as well
             try:
-                next_annot = (
-                    next(self.post_annotations)
-                    if post_flag
-                    else next(self.comment_annotations)
-                )
+                next_annot = next(self.post_annotations) if post_flag else next(self.comment_annotations)
                 if next_annot[0] == key:
-                    annot_array.append(
-                        (int(next_annot[4]), int(next_annot[5]), next_annot[3])
-                    )
+                    annot_array.append((int(next_annot[4]), int(next_annot[5]), next_annot[3]))
                 else:
                     self.curr_annot = next_annot
                     break
@@ -1223,9 +1074,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
         while True:
             # Check if further annotations belong to the current sentence as well
             try:
-                next_row = (
-                    next(self.comments) if not fix_flag else next(self.parsed_row)
-                )
+                next_row = next(self.comments) if not fix_flag else next(self.parsed_row)
                 if len(next_row) < 2:
                     # 'else "  "' is needed to keep the proper token positions (for accordance with annotations)
                     self.curr_comm += next_row[0] if any(next_row) else "  "
@@ -1338,10 +1187,7 @@ def from_ufsac_to_tsv(
                 for word in sentence:
 
                     dictionary = word.attrib
-                    fields_of_word = [
-                        word.attrib[field] if (field in dictionary) else "O"
-                        for field in fields
-                    ]
+                    fields_of_word = [word.attrib[field] if (field in dictionary) else "O" for field in fields]
 
                     chunks = split_span(fields_of_word, datasetname)
 
@@ -1476,11 +1322,7 @@ class WSD_UFSAC(MultiCorpus):
 
         # if no filenames are specified we use all the data
         if not filenames:
-            filenames = [
-                name[:-4]
-                for name in os.listdir(original_data_folder)
-                if "raganato" not in name
-            ]
+            filenames = [name[:-4] for name in os.listdir(original_data_folder) if "raganato" not in name]
 
         if isinstance(filenames, str):
             filenames = [filenames]
@@ -1680,9 +1522,7 @@ class WSD_SEMCOR(EntityLinkingCorpus):
         else:
             test_file = None
 
-        train_file = determine_tsv_file(
-            filename="semcor", data_folder=data_folder, cut_multisense=cut_multisense
-        )
+        train_file = determine_tsv_file(filename="semcor", data_folder=data_folder, cut_multisense=cut_multisense)
 
         super(WSD_SEMCOR, self).__init__(
             data_folder=data_folder,
@@ -1752,9 +1592,7 @@ class WSD_WORDNET_GLOSS_TAGGED(EntityLinkingCorpus):
                 sample_missing_splits = "only_dev"
 
             # generate the test file
-            test_file = determine_tsv_file(
-                filename="raganato_ALL", data_folder=data_folder, cut_multisense=True
-            )
+            test_file = determine_tsv_file(filename="raganato_ALL", data_folder=data_folder, cut_multisense=True)
         else:
             test_file = None
 
@@ -1840,9 +1678,7 @@ class WSD_MASC(EntityLinkingCorpus):
         else:
             test_file = None
 
-        train_file = determine_tsv_file(
-            filename="masc", data_folder=data_folder, cut_multisense=cut_multisense
-        )
+        train_file = determine_tsv_file(filename="masc", data_folder=data_folder, cut_multisense=cut_multisense)
 
         super(WSD_MASC, self).__init__(
             data_folder=data_folder,
@@ -1923,9 +1759,7 @@ class WSD_OMSTI(EntityLinkingCorpus):
         else:
             test_file = None
 
-        train_file = determine_tsv_file(
-            filename="omsti", data_folder=data_folder, cut_multisense=cut_multisense
-        )
+        train_file = determine_tsv_file(filename="omsti", data_folder=data_folder, cut_multisense=cut_multisense)
 
         super(WSD_OMSTI, self).__init__(
             data_folder=data_folder,
@@ -1997,9 +1831,7 @@ class WSD_TRAINOMATIC(EntityLinkingCorpus):
                 sample_missing_splits = "only_dev"
 
             # generate the test file
-            test_file = determine_tsv_file(
-                filename="raganato_ALL", data_folder=data_folder, cut_multisense=True
-            )
+            test_file = determine_tsv_file(filename="raganato_ALL", data_folder=data_folder, cut_multisense=True)
         else:
             test_file = None
 

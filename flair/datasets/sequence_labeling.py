@@ -264,9 +264,7 @@ class ColumnDataset(FlairDataset):
                 # pointer to previous
                 previous_sentence = None
                 while True:
-                    sentence = self._convert_lines_to_sentence(
-                        self._read_next_sentence(file)
-                    )
+                    sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
                     if not sentence:
                         break
                     if self.banned_sentences is not None and any(
@@ -310,9 +308,7 @@ class ColumnDataset(FlairDataset):
             if self.__line_completes_sentence(line):
                 if len(sentence) > 0:
                     if self.tag_to_bioes is not None:
-                        sentence.convert_tag_scheme(
-                            tag_type=self.tag_to_bioes, target_scheme="iobes"
-                        )
+                        sentence.convert_tag_scheme(tag_type=self.tag_to_bioes, target_scheme="iobes")
                     # check if this sentence is a document boundary
                     if sentence.to_original_text() == self.document_separator_token:
                         sentence.is_document_boundary = True
@@ -328,9 +324,7 @@ class ColumnDataset(FlairDataset):
             sentence.is_document_boundary = True
 
         if self.tag_to_bioes is not None:
-            sentence.convert_tag_scheme(
-                tag_type=self.tag_to_bioes, target_scheme="iobes"
-            )
+            sentence.convert_tag_scheme(tag_type=self.tag_to_bioes, target_scheme="iobes")
 
         if len(sentence) > 0:
             return sentence
@@ -340,39 +334,24 @@ class ColumnDataset(FlairDataset):
         token = Token(fields[self.text_column])
         for column in self.column_name_map:
             if len(fields) > column:
-                if (
-                    column != self.text_column
-                    and self.column_name_map[column] != self.SPACE_AFTER_KEY
-                ):
+                if column != self.text_column and self.column_name_map[column] != self.SPACE_AFTER_KEY:
                     task = self.column_name_map[column]  # for example 'pos'
                     tag = fields[column]
                     if tag.count("-") >= 1:  # tag with prefix, for example tag='B-OBJ'
                         split_at_first_hyphen = tag.split("-", 1)
                         tagging_format_prefix = split_at_first_hyphen[0]
                         tag_without_tagging_format = split_at_first_hyphen[1]
-                        if (
-                            self.label_name_map
-                            and tag_without_tagging_format in self.label_name_map.keys()
-                        ):
-                            tag = (
-                                tagging_format_prefix
-                                + "-"
-                                + self.label_name_map[tag_without_tagging_format]
-                            )
+                        if self.label_name_map and tag_without_tagging_format in self.label_name_map.keys():
+                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format]
                             # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
                             if self.label_name_map[tag_without_tagging_format] == "O":
                                 tag = "O"
                     else:  # tag without prefix, for example tag='PPER'
                         if self.label_name_map and tag in self.label_name_map.keys():
-                            tag = self.label_name_map[
-                                tag
-                            ]  # for example, transforming 'PPER' to 'person'
+                            tag = self.label_name_map[tag]  # for example, transforming 'PPER' to 'person'
 
                     token.add_label(task, tag)
-                if (
-                    self.column_name_map[column] == self.SPACE_AFTER_KEY
-                    and fields[column] == "-"
-                ):
+                if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == "-":
                     token.whitespace_after = False
         return token
 
@@ -396,9 +375,7 @@ class ColumnDataset(FlairDataset):
         else:
             with open(str(self.path_to_column_file), encoding=self.encoding) as file:
                 file.seek(self.indices[index])
-                sentence = self._convert_lines_to_sentence(
-                    self._read_next_sentence(file)
-                )
+                sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
 
             # set sentence context using partials
             sentence._position_in_dataset = (self, index)
@@ -466,9 +443,7 @@ class MultiCoNer(MultiFileColumnCorpus):
         if not data_folder.exists():
             log.warning("-" * 100)
             log.warning(f'WARNING: MultiCoNer dataset not found at "{data_folder}".')
-            log.warning(
-                'Instructions for obtaining the data can be found here: https://multiconer.github.io/dataset"'
-            )
+            log.warning('Instructions for obtaining the data can be found here: https://multiconer.github.io/dataset"')
             log.warning("-" * 100)
 
         if task in ["multi", "code-switch"]:
@@ -643,15 +618,9 @@ class CONLL_03_DUTCH(ColumnCorpus):
         # we need to slightly modify the original files by adding some new lines after document separators
         train_data_file = data_folder / "train.txt"
         if not train_data_file.is_file():
-            self.__offset_docstarts(
-                data_folder / "raw" / "ned.train", data_folder / "train.txt"
-            )
-            self.__offset_docstarts(
-                data_folder / "raw" / "ned.testa", data_folder / "dev.txt"
-            )
-            self.__offset_docstarts(
-                data_folder / "raw" / "ned.testb", data_folder / "test.txt"
-            )
+            self.__offset_docstarts(data_folder / "raw" / "ned.train", data_folder / "train.txt")
+            self.__offset_docstarts(data_folder / "raw" / "ned.testa", data_folder / "dev.txt")
+            self.__offset_docstarts(data_folder / "raw" / "ned.testb", data_folder / "test.txt")
 
         super(CONLL_03_DUTCH, self).__init__(
             data_folder,
@@ -756,12 +725,8 @@ class CONLL_2000(ColumnCorpus):
         conll_2000_path = "https://www.clips.uantwerpen.be/conll2000/chunking/"
         data_file = flair.cache_root / "datasets" / dataset_name / "train.txt"
         if not data_file.is_file():
-            cached_path(
-                f"{conll_2000_path}train.txt.gz", Path("datasets") / dataset_name
-            )
-            cached_path(
-                f"{conll_2000_path}test.txt.gz", Path("datasets") / dataset_name
-            )
+            cached_path(f"{conll_2000_path}train.txt.gz", Path("datasets") / dataset_name)
+            cached_path(f"{conll_2000_path}test.txt.gz", Path("datasets") / dataset_name)
             import gzip
             import shutil
 
@@ -774,9 +739,7 @@ class CONLL_2000(ColumnCorpus):
                     "wb",
                 ) as f_out:
                     shutil.copyfileobj(f_in, f_out)
-            with gzip.open(
-                flair.cache_root / "datasets" / dataset_name / "test.txt.gz", "rb"
-            ) as f_in:
+            with gzip.open(flair.cache_root / "datasets" / dataset_name / "test.txt.gz", "rb") as f_in:
                 with open(
                     flair.cache_root / "datasets" / dataset_name / "test.txt",
                     "wb",
@@ -817,9 +780,7 @@ class WNUT_17(ColumnCorpus):
         wnut_path = "https://noisy-text.github.io/2017/files/"
         cached_path(f"{wnut_path}wnut17train.conll", Path("datasets") / dataset_name)
         cached_path(f"{wnut_path}emerging.dev.conll", Path("datasets") / dataset_name)
-        cached_path(
-            f"{wnut_path}emerging.test.annotated", Path("datasets") / dataset_name
-        )
+        cached_path(f"{wnut_path}emerging.test.annotated", Path("datasets") / dataset_name)
 
         super(WNUT_17, self).__init__(
             data_folder,
@@ -851,7 +812,9 @@ class BIOSCOPE(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        bioscope_path = "https://raw.githubusercontent.com/whoisjones/BioScopeSequenceLabelingData/master/sequence_labeled/"
+        bioscope_path = (
+            "https://raw.githubusercontent.com/whoisjones/BioScopeSequenceLabelingData/master/sequence_labeled/"
+        )
         cached_path(f"{bioscope_path}output.txt", Path("datasets") / dataset_name)
 
         super(BIOSCOPE, self).__init__(
@@ -1002,9 +965,7 @@ class NER_BASQUE(ColumnCorpus):
         data_path = flair.cache_root / "datasets" / dataset_name
         data_file = data_path / "named_ent_eu.train"
         if not data_file.is_file():
-            cached_path(
-                f"{ner_basque_path}/eiec_v1.0.tgz", Path("datasets") / dataset_name
-            )
+            cached_path(f"{ner_basque_path}/eiec_v1.0.tgz", Path("datasets") / dataset_name)
             import shutil
             import tarfile
 
@@ -1062,9 +1023,7 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        weiboNER_conll_path = (
-            "https://raw.githubusercontent.com/87302380/WEIBO_NER/main/data/"
-        )
+        weiboNER_conll_path = "https://raw.githubusercontent.com/87302380/WEIBO_NER/main/data/"
         cached_path(
             f"{weiboNER_conll_path}weiboNER_2nd_conll_format.train",
             Path("datasets") / dataset_name,
@@ -1134,9 +1093,7 @@ class NER_DANISH_DANE(ColumnCorpus):
                     for line in file:
                         if line.startswith("#") or line == "\n":
                             lines.append(line)
-                        lines.append(
-                            line.replace("name=", "").replace("|SpaceAfter=No", "")
-                        )
+                        lines.append(line.replace("name=", "").replace("|SpaceAfter=No", ""))
 
                 with open(data_path / data_file, "w") as file:
                     file.writelines(lines)
@@ -1283,12 +1240,8 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
 
         # download data if necessary
         SEC_FILLINGS_Path = "https://raw.githubusercontent.com/juand-r/entity-recognition-datasets/master/data/SEC-filings/CONLL-format/data/"
-        cached_path(
-            f"{SEC_FILLINGS_Path}test/FIN3.txt", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{SEC_FILLINGS_Path}train/FIN5.txt", Path("datasets") / dataset_name
-        )
+        cached_path(f"{SEC_FILLINGS_Path}test/FIN3.txt", Path("datasets") / dataset_name)
+        cached_path(f"{SEC_FILLINGS_Path}train/FIN5.txt", Path("datasets") / dataset_name)
 
         super(NER_ENGLISH_SEC_FILLINGS, self).__init__(
             data_folder,
@@ -1335,9 +1288,7 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        mit_restaurants_path = (
-            "https://megantosh.s3.eu-central-1.amazonaws.com/MITRestoCorpus/"
-        )
+        mit_restaurants_path = "https://megantosh.s3.eu-central-1.amazonaws.com/MITRestoCorpus/"
         cached_path(f"{mit_restaurants_path}test.txt", Path("datasets") / dataset_name)
         cached_path(f"{mit_restaurants_path}train.txt", Path("datasets") / dataset_name)
 
@@ -1424,9 +1375,7 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
             questions = 0
             answers = 0
 
-            cached_path(
-                f"{STACKOVERFLOW_NER_path}{file}.txt", Path("datasets") / dataset_name
-            )
+            cached_path(f"{STACKOVERFLOW_NER_path}{file}.txt", Path("datasets") / dataset_name)
             for line in open(data_folder / (file + ".txt"), mode="r", encoding="utf-8"):
                 if line.startswith("Question_ID"):
                     questions += 1
@@ -1543,9 +1492,7 @@ class NER_ENGLISH_PERSON(ColumnCorpus):
 
         self.__concatAllFiles(data_folder)
 
-        super(NER_ENGLISH_PERSON, self).__init__(
-            data_folder, columns, in_memory=in_memory, train_file="bigFile.conll"
-        )
+        super(NER_ENGLISH_PERSON, self).__init__(data_folder, columns, in_memory=in_memory, train_file="bigFile.conll")
 
     @staticmethod
     def __concatAllFiles(data_folder):
@@ -1671,20 +1618,12 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
                 zip_path = cached_path(f"{github_url}", Path("datasets") / dataset_name)
 
                 # unzip the downloaded repo and merge the train, dev and test datasets
-                unpack_file(
-                    zip_path, data_folder, "zip", False
-                )  # unzipped folder name: WNUT_2020_NER-master
+                unpack_file(zip_path, data_folder, "zip", False)  # unzipped folder name: WNUT_2020_NER-master
 
                 if sample == "test":
-                    file_path = data_folder / Path(
-                        "WNUT_2020_NER-master/data/"
-                        + sample
-                        + "_data_2020/Conll_Format/"
-                    )
+                    file_path = data_folder / Path("WNUT_2020_NER-master/data/" + sample + "_data_2020/Conll_Format/")
                 else:
-                    file_path = data_folder / Path(
-                        "WNUT_2020_NER-master/data/" + sample + "_data/Conll_Format/"
-                    )
+                    file_path = data_folder / Path("WNUT_2020_NER-master/data/" + sample + "_data/Conll_Format/")
                 filenames = os.listdir(file_path)
                 with open(data_folder / (sample + ".txt"), "w") as outfile:
                     for fname in filenames:
@@ -1692,9 +1631,7 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
                             lines = infile.read()
                             outfile.write(lines)
 
-                shutil.rmtree(
-                    str(data_folder / "WNUT_2020_NER-master")
-                )  # clean up when done
+                shutil.rmtree(str(data_folder / "WNUT_2020_NER-master"))  # clean up when done
 
         super(NER_ENGLISH_WNUT_2020, self).__init__(
             data_folder,
@@ -1740,9 +1677,7 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
 
         # download data if necessary
         wikigold_ner_path = "https://raw.githubusercontent.com/juand-r/entity-recognition-datasets/master/data/wikigold/CONLL-format/data/"
-        cached_path(
-            f"{wikigold_ner_path}wikigold.conll.txt", Path("datasets") / dataset_name
-        )
+        cached_path(f"{wikigold_ner_path}wikigold.conll.txt", Path("datasets") / dataset_name)
 
         super(NER_ENGLISH_WIKIGOLD, self).__init__(
             data_folder,
@@ -1782,15 +1717,11 @@ class NER_FINNISH(ColumnCorpus):
 
         # download data if necessary
         ner_finnish_path = "https://raw.githubusercontent.com/mpsilfve/finer-data/master/data/digitoday."
-        cached_path(
-            f"{ner_finnish_path}2014.train.csv", Path("datasets") / dataset_name
-        )
+        cached_path(f"{ner_finnish_path}2014.train.csv", Path("datasets") / dataset_name)
         cached_path(f"{ner_finnish_path}2014.dev.csv", Path("datasets") / dataset_name)
         cached_path(f"{ner_finnish_path}2015.test.csv", Path("datasets") / dataset_name)
 
-        self._remove_lines_without_annotations(
-            data_file=Path(data_folder / "digitoday.2015.test.csv")
-        )
+        self._remove_lines_without_annotations(data_file=Path(data_folder / "digitoday.2015.test.csv"))
 
         super(NER_FINNISH, self).__init__(
             data_folder,
@@ -1910,9 +1841,7 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
             **corpusargs,
         )
 
-    def _add_IOB_tags(
-        self, data_file: Union[str, Path], encoding: str = "utf8", ner_column: int = 1
-    ):
+    def _add_IOB_tags(self, data_file: Union[str, Path], encoding: str = "utf8", ner_column: int = 1):
         """
         Function that adds IOB tags if only chunk names are provided (e.g. words are tagged PER instead
         of B-PER or I-PER). Replaces '0' with 'O' as the no-chunk tag since ColumnCorpus expects
@@ -2054,21 +1983,15 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
             import gdown
 
             gdown.download(
-                url="https://drive.google.com/uc?id={}".format(
-                    "1Jjhbal535VVz2ap4v4r_rN1UEHTdLK5P"
-                ),
+                url="https://drive.google.com/uc?id={}".format("1Jjhbal535VVz2ap4v4r_rN1UEHTdLK5P"),
                 output=str(data_folder / "train.tsv"),
             )
             gdown.download(
-                url="https://drive.google.com/uc?id={}".format(
-                    "1u9mb7kNJHWQCWyweMDRMuTFoOHOfeBTH"
-                ),
+                url="https://drive.google.com/uc?id={}".format("1u9mb7kNJHWQCWyweMDRMuTFoOHOfeBTH"),
                 output=str(data_folder / "test.tsv"),
             )
             gdown.download(
-                url="https://drive.google.com/uc?id={}".format(
-                    "1ZfRcQThdtAR5PPRjIDtrVP7BtXSCUBbm"
-                ),
+                url="https://drive.google.com/uc?id={}".format("1ZfRcQThdtAR5PPRjIDtrVP7BtXSCUBbm"),
                 output=str(data_folder / "dev.tsv"),
             )
 
@@ -2116,16 +2039,12 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download and parse data if necessary
-        german_politics_path = (
-            "https://www.thomas-zastrow.de/nlp/nemgp_trainingdata_01.txt.zip"
-        )
+        german_politics_path = "https://www.thomas-zastrow.de/nlp/nemgp_trainingdata_01.txt.zip"
         corpus_file_name = "nemgp_trainingdata_01.txt"
         parsed_dataset = data_folder / "raw" / corpus_file_name
 
         if not parsed_dataset.exists():
-            german_politics_zip = cached_path(
-                f"{german_politics_path}", Path("datasets") / dataset_name / "raw"
-            )
+            german_politics_zip = cached_path(f"{german_politics_path}", Path("datasets") / dataset_name / "raw")
             unpack_file(german_politics_zip, data_folder / "raw", "zip", False)
             self._convert_to_column_corpus(parsed_dataset)
 
@@ -2242,12 +2161,8 @@ class NER_HUNGARIAN(ColumnCorpus):
         # If the extracted corpus file is not yet present in dir
         if not os.path.isfile(data_folder / "hun_ner_corpus.txt"):
             # download zip if necessary
-            hun_ner_path = (
-                "https://rgai.sed.hu/sites/rgai.sed.hu/files/business_NER.zip"
-            )
-            path_to_zipped_corpus = cached_path(
-                hun_ner_path, Path("datasets") / dataset_name
-            )
+            hun_ner_path = "https://rgai.sed.hu/sites/rgai.sed.hu/files/business_NER.zip"
+            path_to_zipped_corpus = cached_path(hun_ner_path, Path("datasets") / dataset_name)
             # extracted corpus is not present , so unpacking it.
             unpack_file(path_to_zipped_corpus, data_folder, mode="zip", keep=True)
 
@@ -2299,9 +2214,7 @@ class NER_ICELANDIC(ColumnCorpus):
         if not os.path.isfile(data_folder / "icelandic_ner.txt"):
             # download zip
             icelandic_ner = "https://repository.clarin.is/repository/xmlui/handle/20.500.12537/42/allzip"
-            icelandic_ner_path = cached_path(
-                icelandic_ner, Path("datasets") / dataset_name
-            )
+            icelandic_ner_path = cached_path(icelandic_ner, Path("datasets") / dataset_name)
 
             # unpacking the zip
             unpack_file(icelandic_ner_path, data_folder, mode="zip", keep=True)
@@ -2368,12 +2281,8 @@ class NER_JAPANESE(ColumnCorpus):
         # we need to modify the original files by adding new lines after after the end of each sentence
         train_data_file = data_folder / "train.txt"
         if not train_data_file.is_file():
-            self.__prepare_jap_wikinews_corpus(
-                data_folder / "raw" / "hironsan.txt", data_folder / "train.txt"
-            )
-            self.__prepare_jap_wikipedia_corpus(
-                data_folder / "raw" / "ja.wikipedia.conll", data_folder / "train.txt"
-            )
+            self.__prepare_jap_wikinews_corpus(data_folder / "raw" / "hironsan.txt", data_folder / "train.txt")
+            self.__prepare_jap_wikipedia_corpus(data_folder / "raw" / "ja.wikipedia.conll", data_folder / "train.txt")
 
         super(NER_JAPANESE, self).__init__(
             data_folder,
@@ -2385,9 +2294,7 @@ class NER_JAPANESE(ColumnCorpus):
         )
 
     @staticmethod
-    def __prepare_jap_wikipedia_corpus(
-        file_in: Union[str, Path], file_out: Union[str, Path]
-    ):
+    def __prepare_jap_wikipedia_corpus(file_in: Union[str, Path], file_out: Union[str, Path]):
         with open(file_in, "r") as f:
             lines = f.readlines()
         with open(file_out, "a") as f:
@@ -2401,9 +2308,7 @@ class NER_JAPANESE(ColumnCorpus):
                     f.write(line)
 
     @staticmethod
-    def __prepare_jap_wikinews_corpus(
-        file_in: Union[str, Path], file_out: Union[str, Path]
-    ):
+    def __prepare_jap_wikinews_corpus(file_in: Union[str, Path], file_out: Union[str, Path]):
         with open(file_in, "r") as f:
             lines = f.readlines()
         with open(file_out, "a") as f:
@@ -2475,13 +2380,9 @@ class NER_MASAKHANE(MultiCorpus):
                 language = language_to_code[language]
 
             if language not in language_to_code.values():
-                log.error(
-                    f"Language '{language}' is not in list of supported languages!"
-                )
+                log.error(f"Language '{language}' is not in list of supported languages!")
                 log.error(f"Supported are '{language_to_code.values()}'!")
-                log.error(
-                    "Instantiate this Corpus for instance like so 'corpus = NER_MASAKHANE(languages='luo')'"
-                )
+                log.error("Instantiate this Corpus for instance like so 'corpus = NER_MASAKHANE(languages='luo')'")
                 raise Exception()
 
             language_folder = data_folder / language
@@ -2598,9 +2499,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
                 # transform data into required format
                 # the processed dataset has the additional ending "_new"
                 log.info("Processing dataset...")
-                self._silver_standard_to_simple_ner_annotation(
-                    str(language_folder / file_name)
-                )
+                self._silver_standard_to_simple_ner_annotation(str(language_folder / file_name))
                 # remove the unprocessed dataset
                 os.remove(str(language_folder / file_name))
                 log.info("...done.")
@@ -3151,14 +3050,10 @@ class NER_MULTI_WIKINER(MultiCorpus):
 
     def _download_wikiner(self, language_code: str, dataset_name: str):
         # download data if necessary
-        wikiner_path = (
-            "https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/"
-        )
+        wikiner_path = "https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/"
         lc = language_code
 
-        data_file = (
-            flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.train"
-        )
+        data_file = flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.train"
         if not data_file.is_file():
 
             cached_path(
@@ -3169,17 +3064,11 @@ class NER_MULTI_WIKINER(MultiCorpus):
 
             # unpack and write out in CoNLL column-like format
             bz_file = bz2.BZ2File(
-                flair.cache_root
-                / "datasets"
-                / dataset_name
-                / f"aij-wikiner-{lc}-wp3.bz2",
+                flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.bz2",
                 "rb",
             )
             with bz_file as f, open(
-                flair.cache_root
-                / "datasets"
-                / dataset_name
-                / f"aij-wikiner-{lc}-wp3.train",
+                flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.train",
                 "w",
                 encoding="utf-8",
             ) as out:
@@ -3221,15 +3110,9 @@ class NER_SWEDISH(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ner_spraakbanken_path = (
-            "https://raw.githubusercontent.com/klintan/swedish-ner-corpus/master/"
-        )
-        cached_path(
-            f"{ner_spraakbanken_path}test_corpus.txt", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{ner_spraakbanken_path}train_corpus.txt", Path("datasets") / dataset_name
-        )
+        ner_spraakbanken_path = "https://raw.githubusercontent.com/klintan/swedish-ner-corpus/master/"
+        cached_path(f"{ner_spraakbanken_path}test_corpus.txt", Path("datasets") / dataset_name)
+        cached_path(f"{ner_spraakbanken_path}train_corpus.txt", Path("datasets") / dataset_name)
 
         # data is not in IOB2 format. Thus we transform it to IOB2
         self._add_IOB2_tags(data_file=Path(data_folder / "test_corpus.txt"))
@@ -3534,15 +3417,9 @@ class UP_ENGLISH(ColumnCorpus):
 
         # download data if necessary
         up_en_path = "https://raw.githubusercontent.com/System-T/UniversalPropositions/master/UP_English-EWT/"
-        cached_path(
-            f"{up_en_path}en_ewt-up-train.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{up_en_path}en_ewt-up-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{up_en_path}en_ewt-up-test.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{up_en_path}en_ewt-up-train.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_en_path}en_ewt-up-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_en_path}en_ewt-up-test.conllu", Path("datasets") / dataset_name)
 
         super(UP_ENGLISH, self).__init__(
             data_folder,
@@ -3841,15 +3718,9 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
 
         # download data if necessary
         up_es_path = "https://raw.githubusercontent.com/System-T/UniversalPropositions/master/UP_Spanish-AnCora/"
-        cached_path(
-            f"{up_es_path}es_ancora-up-train.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{up_es_path}es_ancora-up-dev.conllu", Path("datasets") / dataset_name
-        )
-        cached_path(
-            f"{up_es_path}es_ancora-up-test.conllu", Path("datasets") / dataset_name
-        )
+        cached_path(f"{up_es_path}es_ancora-up-train.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_es_path}es_ancora-up-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_es_path}es_ancora-up-test.conllu", Path("datasets") / dataset_name)
 
         super(UP_SPANISH_ANCORA, self).__init__(
             data_folder,

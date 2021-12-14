@@ -71,9 +71,7 @@ class MetricRegression(object):
     @staticmethod
     def tsv_header(prefix=None):
         if prefix:
-            return "{0}_MEAN_SQUARED_ERROR\t{0}_MEAN_ABSOLUTE_ERROR\t{0}_PEARSON\t{0}_SPEARMAN".format(
-                prefix
-            )
+            return "{0}_MEAN_SQUARED_ERROR\t{0}_MEAN_ABSOLUTE_ERROR\t{0}_PEARSON\t{0}_SPEARMAN".format(prefix)
 
         return "MEAN_SQUARED_ERROR\tMEAN_ABSOLUTE_ERROR\tPEARSON\tSPEARMAN"
 
@@ -82,11 +80,13 @@ class MetricRegression(object):
         return "\t_\t_\t_\t_"
 
     def __str__(self):
-        line = "mean squared error: {0:.4f} - mean absolute error: {1:.4f} - pearson: {2:.4f} - spearman: {3:.4f}".format(
-            self.mean_squared_error(),
-            self.mean_absolute_error(),
-            self.pearsonr(),
-            self.spearmanr(),
+        line = (
+            "mean squared error: {0:.4f} - mean absolute error: {1:.4f} - pearson: {2:.4f} - spearman: {3:.4f}".format(
+                self.mean_squared_error(),
+                self.mean_absolute_error(),
+                self.pearsonr(),
+                self.spearmanr(),
+            )
         )
         return line
 
@@ -104,9 +104,7 @@ class WeightExtractor(object):
         if type(directory) is str:
             directory = Path(directory)
         self.weights_file = init_output_file(directory, "weights.txt")
-        self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(
-            lambda: defaultdict(lambda: list())
-        )
+        self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(lambda: defaultdict(lambda: list()))
         self.number_of_weights = number_of_weights
 
     def extract_weights(self, state_dict, iteration):
@@ -115,9 +113,7 @@ class WeightExtractor(object):
             vec = state_dict[key]
             # print(vec)
             try:
-                weights_to_watch = min(
-                    self.number_of_weights, reduce(lambda x, y: x * y, list(vec.size()))
-                )
+                weights_to_watch = min(self.number_of_weights, reduce(lambda x, y: x * y, list(vec.size())))
             except Exception:
                 continue
 
@@ -225,11 +221,7 @@ class AnnealOnPlateau(object):
 
         if isinstance(min_lr, list) or isinstance(min_lr, tuple):
             if len(min_lr) != len(optimizer.param_groups):
-                raise ValueError(
-                    "expected {} min_lrs, got {}".format(
-                        len(optimizer.param_groups), len(min_lr)
-                    )
-                )
+                raise ValueError("expected {} min_lrs, got {}".format(len(optimizer.param_groups), len(min_lr)))
             self.min_lrs = list(min_lr)
         else:
             self.min_lrs = [min_lr] * len(optimizer.param_groups)
@@ -309,10 +301,7 @@ class AnnealOnPlateau(object):
             if old_lr - new_lr > self.eps:
                 param_group["lr"] = new_lr
                 if self.verbose:
-                    print(
-                        "Epoch {:5d}: reducing learning rate"
-                        " of group {} to {:.4e}.".format(epoch, i, new_lr)
-                    )
+                    print("Epoch {:5d}: reducing learning rate" " of group {} to {:.4e}.".format(epoch, i, new_lr))
 
     @property
     def in_cooldown(self):
@@ -330,9 +319,7 @@ class AnnealOnPlateau(object):
         self.mode = mode
 
     def state_dict(self):
-        return {
-            key: value for key, value in self.__dict__.items() if key != "optimizer"
-        }
+        return {key: value for key, value in self.__dict__.items() if key != "optimizer"}
 
     def load_state_dict(self, state_dict):
         self.__dict__.update(state_dict)
@@ -354,19 +341,14 @@ def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
     return file
 
 
-def convert_labels_to_one_hot(
-    label_list: List[List[str]], label_dict: Dictionary
-) -> List[List[int]]:
+def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionary) -> List[List[int]]:
     """
     Convert list of labels (strings) to a one hot list.
     :param label_list: list of labels
     :param label_dict: label dictionary
     :return: converted label list
     """
-    return [
-        [1 if label in labels else 0 for label in label_dict.get_items()]
-        for labels in label_list
-    ]
+    return [[1 if label in labels else 0 for label in label_dict.get_items()] for labels in label_list]
 
 
 def log_line(log):
