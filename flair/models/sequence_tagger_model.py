@@ -18,7 +18,7 @@ from flair.file_utils import cached_path, unzip_file
 
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
-from ..datasets import DataLoader, SentenceDataset
+from flair.datasets import DataLoader, SentenceDataset
 
 log = logging.getLogger("flair")
 
@@ -124,10 +124,12 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         # ----- RNN layer -----
         if use_rnn:
             # If shared RNN provided, else create one for model
-            if rnn:
-                self.rnn = rnn
-            else:
-                self.rnn = self.RNN(rnn_type, rnn_layers, hidden_size, bidirectional, rnn_input_dim=embedding_dim)
+            self.rnn = rnn if rnn else self.RNN(rnn_type,
+                                                rnn_layers,
+                                                hidden_size,
+                                                bidirectional,
+                                                rnn_input_dim=embedding_dim)
+
             num_directions = 2 if self.bidirectional else 1
             hidden_output_dim = self.rnn.hidden_size * num_directions
 
@@ -227,14 +229,28 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         self.embeddings.embed(sentences)
 
-        # Get embedding for each sentence
-        tensor_list, lengths = self._create_tensor_list(sentences)
-        sentence_tensor = pad_sequence(tensor_list, batch_first=True)
-        lengths = lengths.sort(dim=0, descending=True)
+        new = False
+        if new:
 
-        # sort tensor in decreasing order based on lengths of sentences in batch
-        sentences = [sentences[i] for i in lengths.indices]
-        sentence_tensor = sentence_tensor[lengths.indices]
+            # Get embedding for each sentence
+            tensor_list, lengths = self._create_tensor_list(sentences)
+            sentence_tensor = pad_sequence(tensor_list, batch_first=True)
+            # print(lengths)
+            lengths = lengths.sort(dim=0, descending=True)
+
+            # sort tensor in decreasing order based on lengths of sentences in batch
+            sentences = [sentences[i] for i in lengths.indices]
+            sentence_tensor = sentence_tensor[lengths.indices]
+
+        else:
+            lengths, sentence_tensor = self.make_sentence_tensor(sentences)
+
+            lengths = torch.LongTensor(lengths)
+            lengths = lengths.sort(dim=0, descending=True)
+
+            # sort tensor in decreasing order based on lengths of sentences in batch
+            sentences = [sentences[i] for i in lengths.indices]
+            sentence_tensor = sentence_tensor[lengths.indices]
 
         # ----- Forward Propagation -----
         if self.use_dropout:
@@ -248,7 +264,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = pack_padded_sequence(sentence_tensor, lengths.values, batch_first=True)
+            packed = pack_padded_sequence(sentence_tensor, lengths.values, batch_first=True, enforce_sorted=False)
             rnn_output, hidden = self.rnn(packed)
             sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
         else:
@@ -272,6 +288,36 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         gold_labels = self._get_gold_labels(sentences)
 
         return scores, gold_labels
+
+    def make_sentence_tensor(self, sentences):
+        names = self.embeddings.get_names()
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        longest_token_sequence_in_batch: int = max(lengths)
+        pre_allocated_zero_tensor = torch.zeros(
+            self.embeddings.embedding_length * longest_token_sequence_in_batch,
+            dtype=torch.float,
+            device=flair.device,
+        )
+        all_embs = list()
+        for sentence in sentences:
+            all_embs += [
+                emb for token in sentence for emb in token.get_each_embedding(names)
+            ]
+            nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
+
+            if nb_padding_tokens > 0:
+                t = pre_allocated_zero_tensor[
+                    : self.embeddings.embedding_length * nb_padding_tokens
+                    ]
+                all_embs.append(t)
+        sentence_tensor = torch.cat(all_embs).view(
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.embeddings.embedding_length,
+            ]
+        )
+        return lengths, sentence_tensor
 
     @staticmethod
     def _create_tensor_list(sentences: Union[List[DataPoint], DataPoint]) -> tuple:
