@@ -64,7 +64,7 @@ In general, it is recommended to ensure all basic tests are running through befo
 To ensure a standardized code style we use the formatter [black](https://github.com/ambv/black) and for standardizing imports we use [isort](https://github.com/PyCQA/isort).
 If your code is not formatted properly, the tests will fail.
 simply execute
-You can automatically format the code via `black . && isort .`
+You can automatically format the code via `black --config pyproject.toml flair/ && isort flair/` in the flair root folder.
 
 ### pre-commit hook
 
