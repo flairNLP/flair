@@ -171,6 +171,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         self.bidirectional = True
         self.rnn_type = rnn_type
 
+        if self.weight_dict and self.use_crf:
+            log.warning("Specified class weights will not take effect when using CRF")
+
         # bidirectional LSTM on top of embedding layer
         if self.use_rnn:
             num_directions = 2 if self.bidirectional else 1

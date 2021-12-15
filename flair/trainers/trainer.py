@@ -254,9 +254,6 @@ class ModelTrainer:
         log.info(f"Device: {flair.device}")
         log_line(log)
         log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
-        if isinstance(self.model, SequenceTagger) and self.model.weight_dict and self.model.use_crf:
-            log_line(log)
-            log.warning("WARNING: Specified class weights will not take effect when using CRF")
 
         self.check_for_and_delete_previous_best_models(base_path)
 
