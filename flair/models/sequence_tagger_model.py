@@ -366,9 +366,15 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             if not sentences:
                 return sentences
 
+            # make sure its a list
             if not isinstance(sentences, list):
                 sentences = [sentences]
 
+            # filter empty sentences
+            if isinstance(sentences[0], Sentence):
+                sentences = [sentence for sentence in sentences if len(sentence) > 0]
+
+            # order by length
             reordered_sentences: List[Union[Sentence, str]] = sorted(sentences, key=lambda s: len(s), reverse=True)
 
             dataloader = DataLoader(
