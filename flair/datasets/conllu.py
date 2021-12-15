@@ -1,30 +1,54 @@
 import logging
-
 from pathlib import Path
-from typing import List, Union, Optional, Sequence, Dict, Tuple, Any
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import conllu
 
-from flair.data import Sentence, Corpus, Token, FlairDataset, Span, RelationLabel, SpanLabel
+from flair.data import (
+    Corpus,
+    FlairDataset,
+    RelationLabel,
+    Sentence,
+    Span,
+    SpanLabel,
+    Token,
+)
 from flair.datasets.base import find_train_dev_test_files
 
 log = logging.getLogger("flair")
 
-DEFAULT_FIELDS: Tuple[str, ...] = ("id", "form", "lemma", "upos", "xpos", "feats", "head", "deprel", "deps", "misc")
+DEFAULT_FIELDS: Tuple[str, ...] = (
+    "id",
+    "form",
+    "lemma",
+    "upos",
+    "xpos",
+    "feats",
+    "head",
+    "deprel",
+    "deps",
+    "misc",
+)
 
-DEFAULT_TOKEN_ANNOTATION_FIELDS: Tuple[str, ...] = ("lemma", "upos", "xpos", "feats", "head", "deprel")
+DEFAULT_TOKEN_ANNOTATION_FIELDS: Tuple[str, ...] = (
+    "lemma",
+    "upos",
+    "xpos",
+    "feats",
+    "head",
+    "deprel",
+)
 
 # noinspection PyProtectedMember
 DEFAULT_METADATA_PARSERS: Dict[str, conllu._MetadataParserType] = {
     **conllu.parser.DEFAULT_METADATA_PARSERS,
-    **{"relations": lambda key, value: parse_relation_tuple_list(key, value, list_sep="|", value_sep=";")}
+    **{"relations": lambda key, value: parse_relation_tuple_list(key, value, list_sep="|", value_sep=";")},
 }
 
 
-def parse_relation_tuple_list(key: str,
-                              value: Optional[str] = None,
-                              list_sep: str = "|",
-                              value_sep: str = ";") -> Optional[Tuple[str, List[Tuple[int, int, int, int, str]]]]:
+def parse_relation_tuple_list(
+    key: str, value: Optional[str] = None, list_sep: str = "|", value_sep: str = ";"
+) -> Optional[Tuple[str, List[Tuple[int, int, int, int, str]]]]:
     if value is None:
         return value
 
@@ -39,17 +63,19 @@ def parse_relation_tuple_list(key: str,
 class CoNLLUCorpus(Corpus):
 
     # noinspection PyProtectedMember
-    def __init__(self,
-                 data_folder: Union[str, Path],
-                 train_file=None,
-                 test_file=None,
-                 dev_file=None,
-                 in_memory: bool = True,
-                 fields: Optional[Sequence[str]] = None,
-                 token_annotation_fields: Optional[Sequence[str]] = None,
-                 field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
-                 metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
-                 sample_missing_splits: bool = True):
+    def __init__(
+        self,
+        data_folder: Union[str, Path],
+        train_file=None,
+        test_file=None,
+        dev_file=None,
+        in_memory: bool = True,
+        fields: Optional[Sequence[str]] = None,
+        token_annotation_fields: Optional[Sequence[str]] = None,
+        field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
+        metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
+        sample_missing_splits: bool = True,
+    ):
         """
         Instantiates a Corpus from CoNLL-U (Plus) column-formatted task data
 
@@ -107,20 +133,27 @@ class CoNLLUCorpus(Corpus):
             else None
         )
 
-        super(CoNLLUCorpus, self).__init__(train, dev, test, name=str(data_folder),
-                                           sample_missing_splits=sample_missing_splits)
+        super(CoNLLUCorpus, self).__init__(
+            train,
+            dev,
+            test,
+            name=str(data_folder),
+            sample_missing_splits=sample_missing_splits,
+        )
 
 
 class CoNLLUDataset(FlairDataset):
 
     # noinspection PyProtectedMember
-    def __init__(self,
-                 path_to_conllu_file: Union[str, Path],
-                 in_memory: bool = True,
-                 fields: Optional[Sequence[str]] = None,
-                 token_annotation_fields: Optional[Sequence[str]] = None,
-                 field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
-                 metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None):
+    def __init__(
+        self,
+        path_to_conllu_file: Union[str, Path],
+        in_memory: bool = True,
+        fields: Optional[Sequence[str]] = None,
+        token_annotation_fields: Optional[Sequence[str]] = None,
+        field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
+        metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
+    ):
         """
         Instantiates a column dataset in CoNLL-U (Plus) format.
 
@@ -132,8 +165,7 @@ class CoNLLUDataset(FlairDataset):
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
         :param token_annotation_fields: A subset of the fields parameter for token level annotations
         """
-        if type(path_to_conllu_file) is str:
-            path_to_conllu_file = Path(path_to_conllu_file)
+        path_to_conllu_file = Path(path_to_conllu_file)
         assert path_to_conllu_file.exists()
 
         self.path_to_conllu_file = path_to_conllu_file
@@ -149,8 +181,10 @@ class CoNLLUDataset(FlairDataset):
 
         # Validate fields and token_annotation_fields
         if not set(self.token_annotation_fields).issubset(self.fields):
-            raise ValueError(f"The token annotation fields {repr(self.token_annotation_fields)} "
-                             f"are not a subset of the parsed fields {repr(self.fields)}.")
+            raise ValueError(
+                f"The token annotation fields {repr(self.token_annotation_fields)} "
+                f"are not a subset of the parsed fields {repr(self.fields)}."
+            )
 
         # noinspection PyProtectedMember
         augmented_default_field_parsers: Dict[str, conllu._FieldParserType] = {
@@ -158,7 +192,7 @@ class CoNLLUDataset(FlairDataset):
                 field: lambda line_, i: conllu.parser.parse_nullable_value(line_[i])
                 for field in self.token_annotation_fields
             },
-            **conllu.parser.DEFAULT_FIELD_PARSERS
+            **conllu.parser.DEFAULT_FIELD_PARSERS,
         }
 
         self.field_parsers = field_parsers or augmented_default_field_parsers
@@ -203,7 +237,8 @@ class CoNLLUDataset(FlairDataset):
 
                     sentence._previous_sentence = previous_sentence
                     sentence._next_sentence = None
-                    if previous_sentence: previous_sentence._next_sentence = sentence
+                    if previous_sentence:
+                        previous_sentence._next_sentence = sentence
                     previous_sentence = sentence
 
                 self.total_sentence_count = len(self.sentences)
@@ -257,10 +292,16 @@ class CoNLLUDataset(FlairDataset):
             sentence.add_label("sentence_id", token_list.metadata["sentence_id"])
 
         if "relations" in token_list.metadata:
-            for head_start, head_end, tail_start, tail_end, label in token_list.metadata["relations"]:
+            for (
+                head_start,
+                head_end,
+                tail_start,
+                tail_end,
+                label,
+            ) in token_list.metadata["relations"]:
                 # head and tail span indices are 1-indexed and end index is inclusive
-                head = Span(sentence.tokens[head_start - 1: head_end])
-                tail = Span(sentence.tokens[tail_start - 1: tail_end])
+                head = Span(sentence.tokens[head_start - 1 : head_end])
+                tail = Span(sentence.tokens[tail_start - 1 : tail_end])
 
                 sentence.add_complex_label("relation", RelationLabel(value=label, head=head, tail=tail))
 
@@ -274,6 +315,9 @@ class CoNLLUDataset(FlairDataset):
         for label_type in ner_label_types:
             spans = sentence.get_spans(label_type)
             for span in spans:
-                sentence.add_complex_label("entity", label=SpanLabel(span=span, value=span.tag, score=span.score))
+                sentence.add_complex_label(
+                    "entity",
+                    label=SpanLabel(span=span, value=span.tag, score=span.score),
+                )
 
         return sentence

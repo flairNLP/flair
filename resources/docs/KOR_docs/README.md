@@ -205,9 +205,3 @@ pytest tests/
 pytest --runintegration tests/
 ```
 통합 테스트는 작은 모델을 훈련합니다.
-그 후에 예측을 위해 훈련된 모델이 로드됩니다.
-
-또한 flair에서 제공하는 임베딩을 로드하고 사용하는 것처럼 느린 테스트를 실행하려면 다음을 실행해야 합니다:
-```bash
-pytest --runslow tests/
-```

@@ -1,16 +1,18 @@
 import pytest
 import torch
 
-from flair.data import Sentence, Dictionary
+from flair.data import Dictionary, Sentence
 from flair.embeddings import (
-    WordEmbeddings,
-    TokenEmbeddings,
-    StackedEmbeddings,
-    DocumentPoolEmbeddings,
-    FlairEmbeddings,
-    DocumentRNNEmbeddings,
-    DocumentLMEmbeddings, TransformerWordEmbeddings, TransformerDocumentEmbeddings,
     DocumentCNNEmbeddings,
+    DocumentLMEmbeddings,
+    DocumentPoolEmbeddings,
+    DocumentRNNEmbeddings,
+    FlairEmbeddings,
+    StackedEmbeddings,
+    TokenEmbeddings,
+    TransformerDocumentEmbeddings,
+    TransformerWordEmbeddings,
+    WordEmbeddings,
 )
 from flair.models import LanguageModel
 
@@ -63,7 +65,7 @@ def test_stacked_embeddings():
 
 
 def test_transformer_word_embeddings():
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='-1,-2,-3,-4', layer_mean=False)
+    embeddings = TransformerWordEmbeddings("distilbert-base-uncased", layers="-1,-2,-3,-4", layer_mean=False)
 
     sentence: Sentence = Sentence("I love Berlin")
     embeddings.embed(sentence)
@@ -75,7 +77,7 @@ def test_transformer_word_embeddings():
 
         assert len(token.get_embedding()) == 0
 
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', layer_mean=False)
+    embeddings = TransformerWordEmbeddings("distilbert-base-uncased", layers="all", layer_mean=False)
 
     embeddings.embed(sentence)
 
@@ -87,7 +89,7 @@ def test_transformer_word_embeddings():
         assert len(token.get_embedding()) == 0
     del embeddings
 
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', layer_mean=True)
+    embeddings = TransformerWordEmbeddings("distilbert-base-uncased", layers="all", layer_mean=True)
 
     embeddings.embed(sentence)
 
@@ -109,7 +111,12 @@ def test_transformer_word_embeddings_forward_language_ids():
     embeddings = TransformerWordEmbeddings("xlm-mlm-ende-1024", allow_long_sentences=False)
 
     embeddings.embed([sent_de, sent_en])
-    expected_similarities = [0.7102344036102295, 0.7598986625671387, 0.7437312602996826, 0.5584433674812317]
+    expected_similarities = [
+        0.7102344036102295,
+        0.7598986625671387,
+        0.7437312602996826,
+        0.5584433674812317,
+    ]
 
     for (token_de, token_en, exp_sim) in zip(sent_de, sent_en, expected_similarities):
         sim = cos(token_de.embedding, token_en.embedding).item()
@@ -117,7 +124,7 @@ def test_transformer_word_embeddings_forward_language_ids():
 
 
 def test_transformer_weird_sentences():
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', layer_mean=True)
+    embeddings = TransformerWordEmbeddings("distilbert-base-uncased", layers="all", layer_mean=True)
 
     sentence = Sentence("Hybrid mesons , qq ̄ states with an admixture")
     embeddings.embed(sentence)
@@ -159,9 +166,7 @@ def test_transformer_weird_sentences():
 
 
 def test_fine_tunable_flair_embedding():
-    language_model_forward = LanguageModel(
-        Dictionary.load("chars"), is_forward_lm=True, hidden_size=32, nlayers=1
-    )
+    language_model_forward = LanguageModel(Dictionary.load("chars"), is_forward_lm=True, hidden_size=32, nlayers=1)
 
     embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
         [FlairEmbeddings(language_model_forward, fine_tune=True)],
@@ -180,9 +185,7 @@ def test_fine_tunable_flair_embedding():
 
     assert len(sentence.get_embedding()) == 0
 
-    embeddings: DocumentLMEmbeddings = DocumentLMEmbeddings(
-        [FlairEmbeddings(language_model_forward, fine_tune=True)]
-    )
+    embeddings: DocumentLMEmbeddings = DocumentLMEmbeddings([FlairEmbeddings(language_model_forward, fine_tune=True)])
 
     sentence: Sentence = Sentence("I love Berlin.")
 
@@ -270,7 +273,7 @@ def test_document_pool_embeddings_nonlinear():
 
 
 def test_transformer_document_embeddings():
-    embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased')
+    embeddings = TransformerDocumentEmbeddings("distilbert-base-uncased")
 
     sentence: Sentence = Sentence("I love Berlin")
     embeddings.embed(sentence)
@@ -281,7 +284,7 @@ def test_transformer_document_embeddings():
 
     assert len(sentence.get_embedding()) == 0
 
-    embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', layers='all')
+    embeddings = TransformerDocumentEmbeddings("distilbert-base-uncased", layers="all")
 
     embeddings.embed(sentence)
 
@@ -291,7 +294,7 @@ def test_transformer_document_embeddings():
 
     assert len(sentence.get_embedding()) == 0
 
-    embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', layers='all', layer_mean=True)
+    embeddings = TransformerDocumentEmbeddings("distilbert-base-uncased", layers="all", layer_mean=True)
 
     embeddings.embed(sentence)
 
@@ -305,9 +308,7 @@ def test_transformer_document_embeddings():
 def test_document_cnn_embeddings():
     sentence: Sentence = Sentence("I love Berlin. Berlin is a great place to live.")
 
-    embeddings: DocumentCNNEmbeddings = DocumentCNNEmbeddings(
-        [glove, flair_embedding], kernels=((50, 2), (50, 3))
-    )
+    embeddings: DocumentCNNEmbeddings = DocumentCNNEmbeddings([glove, flair_embedding], kernels=((50, 2), (50, 3)))
 
     embeddings.embed(sentence)
 

@@ -1,37 +1,37 @@
 import logging
 from math import inf
-from typing import List, Union, Optional
+from typing import List, Optional, Tuple, Union
 
 import torch
 from torch import nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import Token, Sentence, Dictionary
-from flair.datasets import DataLoader, SentenceDataset
-from flair.training_utils import store_embeddings, Result
+from flair.data import Dictionary, Sentence, Token
+from flair.datasets import DataLoader, FlairDatapointDataset
+from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
 
 
-class Lemmatizer(flair.nn.Classifier):
-
-    def __init__(self,
-                 embeddings: flair.embeddings.TokenEmbeddings = None,
-                 label_type: str = 'lemma',
-                 rnn_input_size: int = 50,
-                 rnn_hidden_size: int = 256,
-                 rnn_layers: int = 2,
-                 encode_characters: bool = True,
-                 char_dict: Union[str, Dictionary] = "common-chars-lemmatizer",
-                 max_sequence_length_dependent_on_input: bool = True,
-                 max_sequence_length: int = 20,
-                 use_attention: bool = True,
-                 beam_size: int = 1,
-                 start_symbol_for_encoding: bool = True,
-                 end_symbol_for_encoding: bool = True,
-                 bidirectional_encoding: bool = True,
-                 ):
+class Lemmatizer(flair.nn.Classifier[Sentence]):
+    def __init__(
+        self,
+        embeddings: flair.embeddings.TokenEmbeddings = None,
+        label_type: str = "lemma",
+        rnn_input_size: int = 50,
+        rnn_hidden_size: int = 256,
+        rnn_layers: int = 2,
+        encode_characters: bool = True,
+        char_dict: Union[str, Dictionary] = "common-chars-lemmatizer",
+        max_sequence_length_dependent_on_input: bool = True,
+        max_sequence_length: int = 20,
+        use_attention: bool = True,
+        beam_size: int = 1,
+        start_symbol_for_encoding: bool = True,
+        end_symbol_for_encoding: bool = True,
+        bidirectional_encoding: bool = True,
+    ):
         """
         Initializes a Lemmatizer model
         The model consists of a decoder and an encoder. The encoder is either a RNN-cell (torch.nn.GRU) or a Token-Embedding from flair
@@ -83,9 +83,9 @@ class Lemmatizer(flair.nn.Classifier):
             raise KeyError("<unk> must be contained in char_dict")
 
         # add special symbols to dictionary if necessary and save respective indices
-        self.dummy_index = self.char_dictionary.add_item('<>')
-        self.start_index = self.char_dictionary.add_item('<S>')
-        self.end_index = self.char_dictionary.add_item('<E>')
+        self.dummy_index = self.char_dictionary.add_item("<>")
+        self.start_index = self.char_dictionary.add_item("<S>")
+        self.end_index = self.char_dictionary.add_item("<E>")
 
         # ---- ENCODER ----
         # encoder character embeddings
@@ -95,36 +95,54 @@ class Lemmatizer(flair.nn.Classifier):
         self.encoder_embeddings = embeddings
 
         hidden_input_size = 0
-        if embeddings: hidden_input_size += embeddings.embedding_length
-        if encode_characters: hidden_input_size += rnn_hidden_size
-        if encode_characters and bidirectional_encoding: hidden_input_size += rnn_hidden_size
+        if embeddings:
+            hidden_input_size += embeddings.embedding_length
+        if encode_characters:
+            hidden_input_size += rnn_hidden_size
+        if encode_characters and bidirectional_encoding:
+            hidden_input_size += rnn_hidden_size
         self.emb_to_hidden = nn.Linear(hidden_input_size, rnn_hidden_size)
 
         # encoder RNN
-        self.encoder_rnn = nn.GRU(input_size=rnn_input_size, hidden_size=self.rnn_hidden_size, batch_first=True,
-                                  num_layers=rnn_layers, bidirectional=self.bi_encoding)
+        self.encoder_rnn = nn.GRU(
+            input_size=rnn_input_size,
+            hidden_size=self.rnn_hidden_size,
+            batch_first=True,
+            num_layers=rnn_layers,
+            bidirectional=self.bi_encoding,
+        )
 
         # additional encoder linear layer if bidirectional encoding
         if self.bi_encoding:
-            self.bi_hidden_states_to_hidden_size = nn.Linear(2 * self.rnn_hidden_size, self.rnn_hidden_size, bias=False)
+            self.bi_hidden_states_to_hidden_size: Optional[nn.Linear] = nn.Linear(
+                2 * self.rnn_hidden_size, self.rnn_hidden_size, bias=False
+            )
+        else:
+            self.bi_hidden_states_to_hidden_size = None
 
         # ---- DECODER ----
         # decoder: linear layers to transform vectors to and from alphabet_size
         self.decoder_character_embedding = nn.Embedding(len(self.char_dictionary), rnn_input_size)
 
         # when using attention we concatenate attention outcome and decoder hidden states
-        self.character_decoder = nn.Linear(2 * self.rnn_hidden_size if self.use_attention else self.rnn_hidden_size,
-                                           len(self.char_dictionary))
+        self.character_decoder = nn.Linear(
+            2 * self.rnn_hidden_size if self.use_attention else self.rnn_hidden_size,
+            len(self.char_dictionary),
+        )
 
         # decoder RNN
         self.rnn_input_size = rnn_input_size
         self.rnn_layers = rnn_layers
 
-        self.decoder_rnn = nn.GRU(input_size=rnn_input_size, hidden_size=self.rnn_hidden_size, batch_first=True,
-                                  num_layers=rnn_layers)
+        self.decoder_rnn = nn.GRU(
+            input_size=rnn_input_size,
+            hidden_size=self.rnn_hidden_size,
+            batch_first=True,
+            num_layers=rnn_layers,
+        )
 
         # loss and softmax
-        self.loss = nn.CrossEntropyLoss(reduction='sum')
+        self.loss = nn.CrossEntropyLoss(reduction="sum")
         # self.unreduced_loss = nn.CrossEntropyLoss(reduction='none')  # for prediction
         self.softmax = nn.Softmax(dim=2)
 
@@ -134,8 +152,14 @@ class Lemmatizer(flair.nn.Classifier):
     def label_type(self):
         return self._label_type
 
-    def words_to_char_indices(self, tokens: List[str], end_symbol=True, start_symbol=False, padding_in_front=False,
-                              seq_length=None):
+    def words_to_char_indices(
+        self,
+        tokens: List[str],
+        end_symbol=True,
+        start_symbol=False,
+        padding_in_front=False,
+        seq_length=None,
+    ):
         """
         For a given list of strings this function creates index vectors that represent the characters of the strings.
         Each string is represented by sequence_length (maximum string length + entries for special symbold) many indices representing characters
@@ -186,8 +210,9 @@ class Lemmatizer(flair.nn.Classifier):
         # get char indices for labels of sentence
         # (batch_size, max_sequence_length) batch_size = #words in sentence,
         # max_sequence_length = length of longest label of sentence + 1
-        decoder_input_indices = self.words_to_char_indices(labels, start_symbol=True, end_symbol=False,
-                                                           padding_in_front=False)
+        decoder_input_indices = self.words_to_char_indices(
+            labels, start_symbol=True, end_symbol=False, padding_in_front=False
+        )
 
         # get char embeddings
         # (batch_size,max_sequence_length,input_size), i.e. replaces char indices with vectors of length input_size
@@ -195,7 +220,7 @@ class Lemmatizer(flair.nn.Classifier):
 
         return output_vectors, labels
 
-    def decode(self, decoder_input_indices, initial_hidden_states, all_encoder_outputs: Optional):
+    def decode(self, decoder_input_indices, initial_hidden_states, all_encoder_outputs):
 
         # take decoder input and initial hidden and pass through RNN
         input_tensor = self.decoder_character_embedding(decoder_input_indices)
@@ -207,7 +232,10 @@ class Lemmatizer(flair.nn.Classifier):
 
             # take convex combinations of encoder hidden states as new output using the computed attention coefficients
             attention_output = torch.transpose(
-                torch.matmul(torch.transpose(all_encoder_outputs, 1, 2), attention_coeff), 1, 2)
+                torch.matmul(torch.transpose(all_encoder_outputs, 1, 2), attention_coeff),
+                1,
+                2,
+            )
 
             output = torch.cat((output, attention_output), dim=2)
 
@@ -222,37 +250,42 @@ class Lemmatizer(flair.nn.Classifier):
 
         # variable to store initial hidden states for decoder
         initial_hidden_for_decoder = []
-        all_encoder_outputs = None
 
         # encode input characters by sending them through RNN
         if self.encode_characters:
             # get one-hots for characters and add special symbols / padding
-            encoder_input_indices = self.words_to_char_indices([token.text for token in tokens],
-                                                               start_symbol=self.start_symbol,
-                                                               end_symbol=self.end_symbol,
-                                                               padding_in_front=False)
+            encoder_input_indices = self.words_to_char_indices(
+                [token.text for token in tokens],
+                start_symbol=self.start_symbol,
+                end_symbol=self.end_symbol,
+                padding_in_front=False,
+            )
 
             # determine length of each token
             extra = 0
-            if self.start_symbol: extra += 1
-            if self.end_symbol: extra += 1
+            if self.start_symbol:
+                extra += 1
+            if self.end_symbol:
+                extra += 1
             lengths = torch.tensor([len(token.text) + extra for token in tokens])
 
             # embed character one-hots
             input_vectors = self.encoder_character_embedding(encoder_input_indices)
 
             # test packing and padding
-            packed_sequence = torch.nn.utils.rnn.pack_padded_sequence(input_vectors,
-                                                                      lengths,
-                                                                      enforce_sorted=False,
-                                                                      batch_first=True, )
+            packed_sequence = torch.nn.utils.rnn.pack_padded_sequence(
+                input_vectors,
+                lengths,
+                enforce_sorted=False,
+                batch_first=True,
+            )
 
             encoding_flat, initial_hidden_states = self.encoder_rnn(packed_sequence)
-            all_encoder_outputs, lengths = torch.nn.utils.rnn.pad_packed_sequence(encoding_flat, batch_first=True)
+            encoder_outputs, lengths = torch.nn.utils.rnn.pad_packed_sequence(encoding_flat, batch_first=True)
 
             # since bidirectional rnn is only used in encoding we need to project outputs to hidden_size of decoder
-            if self.bi_encoding:
-                all_encoder_outputs = self.bi_hidden_states_to_hidden_size(all_encoder_outputs)
+            if self.bi_encoding and self.bi_hidden_states_to_hidden_size is not None:
+                encoder_outputs = self.bi_hidden_states_to_hidden_size(encoder_outputs)
 
                 # concatenate the final hidden states of the encoder. These will be projected to hidden_size of decoder later with self.emb_to_hidden
                 # initial_hidden_states = torch.transpose(initial_hidden_states, 0,1).reshape(1,len(tokens),2*self.rnn_hidden_size) # works only for rnn_layers = 1
@@ -263,9 +296,15 @@ class Lemmatizer(flair.nn.Classifier):
             initial_hidden_for_decoder.append(initial_hidden_states)
 
             # mask out vectors that correspond to a dummy symbol (TODO: check attention masking)
-            mask = torch.cat((self.rnn_hidden_size * [(encoder_input_indices == self.dummy_index).unsqueeze(2)]), dim=2)
-            all_encoder_outputs = torch.where(mask, torch.tensor(0., device=flair.device), all_encoder_outputs)
-
+            mask = torch.cat(
+                (self.rnn_hidden_size * [(encoder_input_indices == self.dummy_index).unsqueeze(2)]),
+                dim=2,
+            )
+            all_encoder_outputs: Optional[torch.Tensor] = torch.where(
+                mask, torch.tensor(0.0, device=flair.device), encoder_outputs
+            )
+        else:
+            all_encoder_outputs = None
         # use token embedding as initial hidden state for decoder
         if self.encoder_embeddings:
             # embed sentences
@@ -273,7 +312,8 @@ class Lemmatizer(flair.nn.Classifier):
 
             # create initial hidden state tensor for batch (num_layers, batch_size, hidden_size)
             token_embedding_hidden = torch.stack(
-                self.rnn_layers * [torch.stack([token.get_embedding() for token in tokens])])
+                self.rnn_layers * [torch.stack([token.get_embedding() for token in tokens])]
+            )
             initial_hidden_for_decoder.append(token_embedding_hidden)
 
         # concatenate everything together and project to appropriate size for decoder
@@ -290,16 +330,16 @@ class Lemmatizer(flair.nn.Classifier):
         # encode input characters by sending them through RNN
         if self.encode_characters:
             # note that we do not need to fill up with dummy symbols since we process each token seperately
-            encoder_input_indices = self.words_to_char_indices([token.text],
-                                                               start_symbol=self.start_symbol,
-                                                               end_symbol=self.end_symbol)
+            encoder_input_indices = self.words_to_char_indices(
+                [token.text], start_symbol=self.start_symbol, end_symbol=self.end_symbol
+            )
             # embed character one-hots
             input_vector = self.encoder_character_embedding(encoder_input_indices)
             # send through encoder RNN (produces initial hidden for decoder)
             all_encoder_outputs, initial_hidden_states = self.encoder_rnn(input_vector)
 
             # since bidirectional rnn is only used in encoding we need to project outputs to hidden_size of decoder
-            if self.bi_encoding:
+            if self.bi_encoding and self.bi_hidden_states_to_hidden_size is not None:
                 # project 2*hidden_size to hidden_size
                 all_encoder_outputs = self.bi_hidden_states_to_hidden_size(all_encoder_outputs)
 
@@ -334,20 +374,22 @@ class Lemmatizer(flair.nn.Classifier):
 
         return self.loss(scores_in_correct_format, target), len(labels)
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
         scores, labels = self.forward_pass(sentences)
 
         return self._calculate_loss(scores, labels)
 
-    def predict(self,
-                sentences: Union[List[Sentence], Sentence],
-                label_name='predicted',
-                mini_batch_size: int = 16,
-                embedding_storage_mode="None",
-                return_loss=False,
-                print_prediction=False,
-                ):
-        '''
+    def predict(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size: int = 16,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name="predicted",
+        return_loss=False,
+        embedding_storage_mode="none",
+    ):
+        """
         Predict lemmas of words for a given (list of) sentence(s).
         :param sentences: sentences to predict
         :param label_name: label name used for predicted lemmas
@@ -355,8 +397,8 @@ class Lemmatizer(flair.nn.Classifier):
         :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
             you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         :param return_loss: whether or not to compute and return loss. Setting it to True only makes sense if labels are provided
-        :param print_prediction: If True, lemmatized sentences will be printed in the console.
-        '''
+        :param verbose: If True, lemmatized sentences will be printed in the console.
+        """
         if isinstance(sentences, Sentence):
             sentences = [sentences]
 
@@ -372,19 +414,20 @@ class Lemmatizer(flair.nn.Classifier):
             max_length = max([len(token.text) + 1 for sentence in sentences for token in sentence])
 
         # for printing
-        line_to_print = ''
+        line_to_print = ""
 
-        overall_loss = 0
+        overall_loss = 0.0
         number_tokens_in_total = 0
 
         with torch.no_grad():
 
-            dataloader = DataLoader(dataset=SentenceDataset(sentences), batch_size=mini_batch_size)
+            dataloader = DataLoader(dataset=FlairDatapointDataset(sentences), batch_size=mini_batch_size)
 
             for batch in dataloader:
 
                 # stop if all sentences are empty
-                if not batch: continue
+                if not batch:
+                    continue
 
                 # remove previously predicted labels of this type
                 for sentence in batch:
@@ -401,14 +444,15 @@ class Lemmatizer(flair.nn.Classifier):
 
                 # create input for first pass (batch_size, 1, input_size), first letter is special character <S>
                 # sequence length is always set to one in prediction
-                input_indices = self.start_index * torch.ones(number_tokens, dtype=torch.long,
-                                                              device=flair.device).unsqueeze(1)
+                input_indices = self.start_index * torch.ones(
+                    number_tokens, dtype=torch.long, device=flair.device
+                ).unsqueeze(1)
 
                 # option 1: greedy decoding
                 if self.beam_size == 1:
 
                     # predictions
-                    predicted = [[] for _ in range(number_tokens)]
+                    predicted: List[List[int]] = [[] for _ in range(number_tokens)]
 
                     for decode_step in range(max_length):
 
@@ -420,13 +464,15 @@ class Lemmatizer(flair.nn.Classifier):
                         input_indices = log_softmax_probs.argmax(dim=2)
 
                         for i in range(number_tokens):
-                            if len(predicted[i]) > 0 and predicted[i][-1] == self.end_index: continue
+                            if len(predicted[i]) > 0 and predicted[i][-1] == self.end_index:
+                                continue
                             predicted[i].append(input_indices[i].item())
 
                     for t_id, token in enumerate(tokens_in_batch):
-                        predicted_lemma = ''.join(
+                        predicted_lemma = "".join(
                             self.char_dictionary.get_item_for_index(idx) if idx != self.end_index else ""
-                            for idx in predicted[t_id])
+                            for idx in predicted[t_id]
+                        )
                         token.set_label(typename=label_name, value=predicted_lemma)
 
                 # option 2: beam search
@@ -449,25 +495,31 @@ class Lemmatizer(flair.nn.Classifier):
                     # stack all leading indices of all hypothesis and corresponding hidden states in two tensors
                     leading_indices = leading_indices.view(-1, 1)  # this vector goes through RNN in each iteration
 
-                    hidden_states_beam = torch.stack(self.beam_size * [hidden], dim=2).view(self.rnn_layers, -1,
-                                                                                            self.rnn_hidden_size)
+                    hidden_states_beam = torch.stack(self.beam_size * [hidden], dim=2).view(
+                        self.rnn_layers, -1, self.rnn_hidden_size
+                    )
 
                     # save sequences so far
                     sequences = torch.tensor([[i.item()] for i in leading_indices], device=flair.device)
 
                     # keep track of how many hypothesis were completed for each token
                     n_completed = [0 for _ in range(number_tokens)]  # cpu
-                    final_candidates = [[] for _ in range(number_tokens)]  # cpu
+                    final_candidates: List[List[Tuple[torch.Tensor, float]]] = [[] for _ in range(number_tokens)]  # cpu
 
                     # if all_encoder_outputs returned, expand them to beam size (otherwise keep this as None)
-                    batched_encoding_output = torch.stack(self.beam_size * [all_encoder_outputs], dim=1).view(
-                        self.beam_size * number_tokens, -1, self.rnn_hidden_size) if self.use_attention else None
+                    batched_encoding_output = (
+                        torch.stack(self.beam_size * [all_encoder_outputs], dim=1).view(
+                            self.beam_size * number_tokens, -1, self.rnn_hidden_size
+                        )
+                        if self.use_attention
+                        else None
+                    )
 
                     for j in range(1, max_length):
 
-                        output_vectors, hidden_states_beam = self.decode(leading_indices,
-                                                                         hidden_states_beam,
-                                                                         batched_encoding_output)
+                        output_vectors, hidden_states_beam = self.decode(
+                            leading_indices, hidden_states_beam, batched_encoding_output
+                        )
 
                         # decode with log softmax
                         out_log_probs = torch.nn.functional.log_softmax(output_vectors, dim=2)
@@ -483,16 +535,17 @@ class Lemmatizer(flair.nn.Classifier):
                         for tuple in end_symbols:
 
                             # if the sequence is already ended, do not record as candidate
-                            if sequences[tuple[0], -1].item() == self.end_index: continue
+                            if sequences[tuple[0], -1].item() == self.end_index:
+                                continue
 
                             # index of token in in list tokens_in_batch
-                            token_number = torch.div(tuple[0], self.beam_size, rounding_mode='trunc')
+                            token_number = torch.div(tuple[0], self.beam_size, rounding_mode="trunc")
                             # print(token_number)
                             seq = sequences[tuple[0], :]  # hypothesis sequence
                             # hypothesis score
                             score = (scores[tuple[0]] + log_probabilities[tuple[0], tuple[1]]) / (len(seq) + 1)
 
-                            final_candidates[token_number].append((seq, score))
+                            final_candidates[token_number].append((seq, score.item()))
                             # TODO: remove token if number of completed hypothesis exceeds given value
                             n_completed[token_number] += 1
 
@@ -512,12 +565,15 @@ class Lemmatizer(flair.nn.Classifier):
                         # print(hypothesis_scores_per_token)
 
                         # choose beam_size best for each token - size (batch_size, beam_size)
-                        best_scores, indices_per_token = hypothesis_scores_per_token.topk(self.beam_size, 1)
+                        (
+                            best_scores,
+                            indices_per_token,
+                        ) = hypothesis_scores_per_token.topk(self.beam_size, 1)
 
                         # out of indices_per_token we now need to recompute the original indices of the hypothesis in a list of length beam_size*batch_size
                         # where the first three inidices belong to the first token, the next three to the second token, and so on
-                        beam_numbers = []
-                        seq_numbers = []
+                        beam_numbers: List[int] = []
+                        seq_numbers: List[int] = []
 
                         for i, row in enumerate(indices_per_token):
                             beam_numbers.extend(i * self.beam_size + index.item() // self.beam_size for index in row)
@@ -527,7 +583,12 @@ class Lemmatizer(flair.nn.Classifier):
                         # with these indices we can compute the tensors for the next iteration
                         # expand sequences with corresponding index
                         sequences = torch.cat(
-                            (sequences[beam_numbers], index_candidates[beam_numbers, seq_numbers].unsqueeze(1)), dim=1)
+                            (
+                                sequences[beam_numbers],
+                                index_candidates[beam_numbers, seq_numbers].unsqueeze(1),
+                            ),
+                            dim=1,
+                        )
 
                         # add log-probabilities to the scores
                         scores = scores[beam_numbers] + log_probabilities[beam_numbers, seq_numbers].unsqueeze(1)
@@ -545,21 +606,21 @@ class Lemmatizer(flair.nn.Classifier):
                     for j, (score, index) in enumerate(zip(best_scores.squeeze(1), indices.squeeze(1))):
                         if len(final_candidates[j]) == 0:
                             beam = j * self.beam_size + index.item()
-                            final_candidates[j].append((sequences[beam, :], score / max_length))
+                            final_candidates[j].append((sequences[beam, :], score.item() / max_length))
 
                     # get best final hypothesis for each token
                     output_sequences = []
-                    for l in final_candidates:
-                        l_ordered = sorted(l, key=lambda tup: tup[1], reverse=True)
+                    for candidate in final_candidates:
+                        l_ordered = sorted(candidate, key=lambda tup: tup[1], reverse=True)
                         output_sequences.append(l_ordered[0])
 
                     # get characters from index sequences and add predicted label to token
-                    for i, seq in enumerate(output_sequences):
-                        predicted_lemma = ''
-                        for idx in seq[0]:
+                    for i, out_seq in enumerate(output_sequences):
+                        predicted_lemma = ""
+                        for idx in out_seq[0]:
                             predicted_lemma += self.char_dictionary.get_item_for_index(idx)
                         line_to_print += predicted_lemma
-                        line_to_print += ' '
+                        line_to_print += " "
                         tokens_in_batch[i].add_tag(tag_type=label_name, tag_value=predicted_lemma)
 
                 if return_loss:
@@ -567,7 +628,7 @@ class Lemmatizer(flair.nn.Classifier):
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            if print_prediction:
+            if verbose:
                 print(line_to_print)
 
             if return_loss:
@@ -589,7 +650,7 @@ class Lemmatizer(flair.nn.Classifier):
             "encode_characters": self.encode_characters,
             "start_symbol": self.start_symbol,
             "end_symbol": self.end_symbol,
-            "bidirectional_encoding": self.bi_encoding
+            "bidirectional_encoding": self.bi_encoding,
         }
 
         return model_state
@@ -609,7 +670,7 @@ class Lemmatizer(flair.nn.Classifier):
             use_attention=state["use_attention"],
             start_symbol_for_encoding=state["start_symbol"],
             end_symbol_for_encoding=state["end_symbol"],
-            bidirectional_encoding=state["bidirectional_encoding"]
+            bidirectional_encoding=state["bidirectional_encoding"],
         )
         model.load_state_dict(state["state_dict"])
         return model
@@ -617,9 +678,11 @@ class Lemmatizer(flair.nn.Classifier):
     def _print_predictions(self, batch, gold_label_type):
         lines = []
         for sentence in batch:
-            eval_line = f" - Text:       {' '.join([token.text for token in sentence])}\n" \
-                        f" - Gold-Lemma: {' '.join([token.get_tag(gold_label_type).value for token in sentence])}\n" \
-                        f" - Predicted:  {' '.join([token.get_tag('predicted').value for token in sentence])}\n\n"
+            eval_line = (
+                f" - Text:       {' '.join([token.text for token in sentence])}\n"
+                f" - Gold-Lemma: {' '.join([token.get_tag(gold_label_type).value for token in sentence])}\n"
+                f" - Predicted:  {' '.join([token.get_tag('predicted').value for token in sentence])}\n\n"
+            )
             lines.append(eval_line)
         return lines
 

@@ -1,31 +1,32 @@
 import logging
 from pathlib import Path
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import torch
 import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import Label, DataPoint
+from flair.data import Label, Sentence
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
 
 
-class TextClassifier(flair.nn.DefaultClassifier):
+class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
     """
     Text Classification Model
-    The model takes word embeddings, puts them into an RNN to obtain a text representation, and puts the
-    text representation in the end into a linear layer to get the actual class label.
-    The model can handle single and multi class data sets.
+    The model takes word embeddings, puts them into an RNN to obtain a text
+    representation, and puts the text representation in the end into a linear
+    layer to get the actual class label. The model can handle single and multi
+    class data sets.
     """
 
     def __init__(
-            self,
-            document_embeddings: flair.embeddings.DocumentEmbeddings,
-            label_type: str,
-            **classifierargs,
+        self,
+        document_embeddings: flair.embeddings.DocumentEmbeddings,
+        label_type: str,
+        **classifierargs,
     ):
         """
         Initializes a TextClassifier
@@ -51,10 +52,16 @@ class TextClassifier(flair.nn.DefaultClassifier):
         # auto-spawn on GPU if available
         self.to(flair.device)
 
-    def forward_pass(self,
-                     sentences: Union[List[DataPoint], DataPoint],
-                     return_label_candidates: bool = False,
-                     ):
+    def forward_pass(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
+    ) -> Union[
+        Tuple[torch.Tensor, List[List[str]]],
+        Tuple[torch.Tensor, List[List[str]], List[Sentence], List[Label]],
+    ]:
+        if not isinstance(sentences, list):
+            sentences = [sentences]
 
         # embed sentences
         self.document_embeddings.embed(sentences)
@@ -71,14 +78,11 @@ class TextClassifier(flair.nn.DefaultClassifier):
         for sentence in sentences:
             labels.append([label.value for label in sentence.get_labels(self.label_type)])
 
-        # minimal return is scores and labels
-        return_tuple = (scores, labels)
-
         if return_label_candidates:
-            label_candidates = [Label(value=None) for sentence in sentences]
-            return_tuple += (sentences, label_candidates)
+            label_candidates = [Label(value="<None>") for sentence in sentences]
+            return scores, labels, sentences, label_candidates
 
-        return return_tuple
+        return scores, labels
 
     def _get_state_dict(self):
         model_state = {
@@ -102,7 +106,9 @@ class TextClassifier(flair.nn.DefaultClassifier):
             label_dictionary=state["label_dictionary"],
             label_type=label_type,
             multi_label=state["multi_label"],
-            multi_label_threshold=0.5 if "multi_label_threshold" not in state.keys() else state["multi_label_threshold"],
+            multi_label_threshold=0.5
+            if "multi_label_threshold" not in state.keys()
+            else state["multi_label_threshold"],
             loss_weights=weights,
         )
         model.load_state_dict(state["state_dict"])
@@ -120,19 +126,25 @@ class TextClassifier(flair.nn.DefaultClassifier):
 
         # English sentiment models
         model_map["sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_4.pt"]
+            [
+                hu_path,
+                "sentiment-curated-distilbert",
+                "sentiment-en-mix-distillbert_4.pt",
+            ]
         )
         model_map["en-sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_4.pt"]
+            [
+                hu_path,
+                "sentiment-curated-distilbert",
+                "sentiment-en-mix-distillbert_4.pt",
+            ]
         )
         model_map["sentiment-fast"] = "/".join(
             [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn_v8.pt"]
         )
 
         # Communicative Functions Model
-        model_map["communicative-functions"] = "/".join(
-            [hu_path, "comfunc", "communicative-functions.pt"]
-        )
+        model_map["communicative-functions"] = "/".join([hu_path, "comfunc", "communicative-functions.pt"])
 
         cache_dir = Path("models")
         if model_name in model_map:

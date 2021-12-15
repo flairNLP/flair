@@ -5,13 +5,13 @@ import torch
 import torch.nn
 
 import flair.nn
-from flair.data import Dictionary, Label, DataPoint
+from flair.data import Dictionary, Label, Sentence
 from flair.embeddings import TokenEmbeddings
 
 log = logging.getLogger("flair")
 
 
-class SimpleSequenceTagger(flair.nn.DefaultClassifier):
+class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
     """
     This class is a simple version of the SequenceTagger class.
     The purpose of this class is to demonstrate the basic hierarchy of a
@@ -26,11 +26,11 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier):
     """
 
     def __init__(
-            self,
-            embeddings: TokenEmbeddings,
-            tag_dictionary: Dictionary,
-            tag_type: str,
-            **classifierargs,
+        self,
+        embeddings: TokenEmbeddings,
+        tag_dictionary: Dictionary,
+        tag_type: str,
+        **classifierargs,
     ):
         """
         Initializes a SimpleSequenceTagger
@@ -73,10 +73,13 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier):
         model.load_state_dict(state["state_dict"])
         return model
 
-    def forward_pass(self,
-                     sentences: Union[List[DataPoint], DataPoint],
-                     return_label_candidates: bool = False,
-                     ):
+    def forward_pass(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
+    ):
+        if not isinstance(sentences, list):
+            sentences = [sentences]
 
         self.embeddings.embed(sentences)
 
@@ -93,14 +96,11 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier):
 
         labels = [[token.get_tag(self.label_type).value] for token in all_tokens]
 
-        # minimal return is scores and labels
-        return_tuple = (scores, labels)
-
         if return_label_candidates:
-            empty_label_candidates = [Label(value=None, score=None) for token in all_tokens]
-            return_tuple += (all_tokens, empty_label_candidates)
+            empty_label_candidates = [Label(value=None, score=0.0) for token in all_tokens]
+            return scores, labels, all_tokens, empty_label_candidates
 
-        return return_tuple
+        return scores, labels
 
     @property
     def label_type(self):
