@@ -1,7 +1,8 @@
 import csv
 import logging
 import os
-from collections import defaultdict
+import typing
+from collections import Counter
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
@@ -53,18 +54,14 @@ class EntityLinkingCorpus(ColumnCorpus):
         ent_dictionary contains all wikinames that occure at least threshold times and gives each name an ID
         """
         self.threshold = threshold
-        self.entity_occurences: Dict[str, int] = defaultdict(int)
-        self.total_number_of_entity_mentions = 0
+        self.entity_occurences: typing.Counter[str] = Counter()
 
         for sentence in _iter_dataset(self.get_all_sentences()):
             if not sentence.is_document_boundary:  # exclude "-DOCSTART-"-sentences
 
                 spans = sentence.get_spans(label_type)
-                for span in spans:
-                    annotation = span.tag
-                    self.total_number_of_entity_mentions += 1
-                    self.entity_occurences[annotation] = 1
-
+                self.entity_occurences.update(span.tag for span in spans)
+        self.total_number_of_entity_mentions = sum(self.entity_occurences.values())
         self.number_of_entities = len(self.entity_occurences)
 
         # Create the annotation dictionary

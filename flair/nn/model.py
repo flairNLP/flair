@@ -450,7 +450,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         self,
         sentences: Union[List[DT], DT],
         return_label_candidates: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]],]:
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]]]:
         """This method does a forward pass through the model given a list of data
         points as input.
         Returns the tuple (scores, labels) if return_label_candidates = False,
