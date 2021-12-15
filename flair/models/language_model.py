@@ -1,11 +1,9 @@
-from pathlib import Path
-
-import torch.nn as nn
-import torch
 import math
-from typing import Union, Tuple
-from typing import List
+from pathlib import Path
+from typing import List, Optional, Tuple, Union
 
+import torch
+import torch.nn as nn
 from torch.optim import Optimizer
 
 import flair
@@ -23,7 +21,7 @@ class LanguageModel(nn.Module):
         nlayers: int,
         embedding_size: int = 100,
         nout=None,
-        document_delimiter: str = '\n',
+        document_delimiter: str = "\n",
         dropout=0.1,
     ):
 
@@ -50,7 +48,7 @@ class LanguageModel(nn.Module):
 
         self.nout = nout
         if nout is not None:
-            self.proj = nn.Linear(hidden_size, nout)
+            self.proj: Optional[nn.Linear] = nn.Linear(hidden_size, nout)
             self.initialize(self.proj.weight)
             self.decoder = nn.Linear(nout, len(dictionary))
         else:
@@ -84,9 +82,7 @@ class LanguageModel(nn.Module):
 
         output = self.drop(output)
 
-        decoded = self.decoder(
-            output.view(output.size(0) * output.size(1), output.size(2))
-        )
+        decoded = self.decoder(output.view(output.size(0) * output.size(1), output.size(2)))
 
         return (
             decoded.view(output.size(0), output.size(1), decoded.size(1)),
@@ -129,9 +125,7 @@ class LanguageModel(nn.Module):
             chunks.append([text[splice_begin:splice_end] for text in padded_strings])
             splice_begin = splice_end
 
-        chunks.append(
-            [text[splice_begin:longest_padded_str] for text in padded_strings]
-        )
+        chunks.append([text[splice_begin:longest_padded_str] for text in padded_strings])
         hidden = self.init_hidden(len(chunks[0]))
 
         padding_char_index = self.dictionary.get_idx_for_item(" ")
@@ -146,9 +140,7 @@ class LanguageModel(nn.Module):
                 char_indices += [padding_char_index] * (len_longest_chunk - len(string))
 
                 sequences_as_char_indices.append(char_indices)
-            t = torch.tensor(sequences_as_char_indices, dtype=torch.long).to(
-                device=flair.device, non_blocking=True
-            )
+            t = torch.tensor(sequences_as_char_indices, dtype=torch.long).to(device=flair.device, non_blocking=True)
             batches.append(t)
 
         output_parts = []
@@ -189,7 +181,7 @@ class LanguageModel(nn.Module):
 
         state = torch.load(str(model_file), map_location=flair.device)
 
-        document_delimiter = state["document_delimiter"] if "document_delimiter" in state else '\n'
+        document_delimiter = state["document_delimiter"] if "document_delimiter" in state else "\n"
 
         model = LanguageModel(
             dictionary=state["dictionary"],
@@ -214,11 +206,9 @@ class LanguageModel(nn.Module):
         epoch = state["epoch"] if "epoch" in state else None
         split = state["split"] if "split" in state else None
         loss = state["loss"] if "loss" in state else None
-        document_delimiter = state["document_delimiter"] if "document_delimiter" in state else '\n'
+        document_delimiter = state["document_delimiter"] if "document_delimiter" in state else "\n"
 
-        optimizer_state_dict = (
-            state["optimizer_state_dict"] if "optimizer_state_dict" in state else None
-        )
+        optimizer_state_dict = state["optimizer_state_dict"] if "optimizer_state_dict" in state else None
 
         model = LanguageModel(
             dictionary=state["dictionary"],
@@ -243,7 +233,12 @@ class LanguageModel(nn.Module):
         }
 
     def save_checkpoint(
-        self, file: Union[Path, str], optimizer: Optimizer, epoch: int, split: int, loss: float
+        self,
+        file: Union[Path, str],
+        optimizer: Optimizer,
+        epoch: int,
+        split: int,
+        loss: float,
     ):
         model_state = {
             "state_dict": self.state_dict(),
@@ -302,22 +297,16 @@ class LanguageModel(nn.Module):
                 char_tensors = []
                 for character in prefix[:-1]:
                     char_tensors.append(
-                        torch.tensor(self.dictionary.get_idx_for_item(character))
-                        .unsqueeze(0)
-                        .unsqueeze(0)
+                        torch.tensor(self.dictionary.get_idx_for_item(character)).unsqueeze(0).unsqueeze(0)
                     )
 
                 input = torch.cat(char_tensors).to(flair.device)
 
                 prediction, _, hidden = self.forward(input, hidden)
 
-            input = (
-                torch.tensor(self.dictionary.get_idx_for_item(prefix[-1]))
-                .unsqueeze(0)
-                .unsqueeze(0)
-            )
+            input = torch.tensor(self.dictionary.get_idx_for_item(prefix[-1])).unsqueeze(0).unsqueeze(0)
 
-            log_prob = 0.0
+            log_prob = torch.zeros(1, device=flair.device)
 
             for i in range(number_of_characters):
 
@@ -342,7 +331,7 @@ class LanguageModel(nn.Module):
                 # try sampling multinomial distribution for next character
                 try:
                     word_idx = torch.multinomial(word_weights, 1)[0]
-                except:
+                except:  # noqa: E722 TODO: figure out exception type
                     word_idx = torch.tensor(0)
 
                 # print(word_idx)
@@ -359,13 +348,13 @@ class LanguageModel(nn.Module):
 
             text = prefix + "".join(characters)
 
-            log_prob = log_prob.item()
-            log_prob /= len(characters)
+            log_prob_float = log_prob.item()
+            log_prob_float /= len(characters)
 
             if not self.is_forward_lm:
                 text = text[::-1]
 
-            return text, log_prob
+            return text, log_prob_float
 
     def calculate_perplexity(self, text: str) -> float:
 
@@ -373,9 +362,7 @@ class LanguageModel(nn.Module):
             text = text[::-1]
 
         # input ids
-        input = torch.tensor(
-            [self.dictionary.get_idx_for_item(char) for char in text[:-1]]
-        ).unsqueeze(1)
+        input = torch.tensor([self.dictionary.get_idx_for_item(char) for char in text[:-1]]).unsqueeze(1)
         input = input.to(flair.device)
 
         # push list of character IDs through model
@@ -383,16 +370,12 @@ class LanguageModel(nn.Module):
         prediction, _, hidden = self.forward(input, hidden)
 
         # the target is always the next character
-        targets = torch.tensor(
-            [self.dictionary.get_idx_for_item(char) for char in text[1:]]
-        )
+        targets = torch.tensor([self.dictionary.get_idx_for_item(char) for char in text[1:]])
         targets = targets.to(flair.device)
 
         # use cross entropy loss to compare output of forward pass with targets
         cross_entroy_loss = torch.nn.CrossEntropyLoss()
-        loss = cross_entroy_loss(
-            prediction.view(-1, len(self.dictionary)), targets
-        ).item()
+        loss = cross_entroy_loss(prediction.view(-1, len(self.dictionary)), targets).item()
 
         # exponentiate cross-entropy loss to calculate perplexity
         perplexity = math.exp(loss)
@@ -404,7 +387,6 @@ class LanguageModel(nn.Module):
         # serialize the language models and the constructor arguments (but nothing else)
         model_state = {
             "state_dict": self.state_dict(),
-
             "dictionary": self.dictionary,
             "is_forward_lm": self.is_forward_lm,
             "hidden_size": self.hidden_size,
@@ -424,17 +406,17 @@ class LanguageModel(nn.Module):
 
             # re-initialize language model with constructor arguments
             language_model = LanguageModel(
-                dictionary=d['dictionary'],
-                is_forward_lm=d['is_forward_lm'],
-                hidden_size=d['hidden_size'],
-                nlayers=d['nlayers'],
-                embedding_size=d['embedding_size'],
-                nout=d['nout'],
-                document_delimiter=d['document_delimiter'],
-                dropout=d['dropout'],
+                dictionary=d["dictionary"],
+                is_forward_lm=d["is_forward_lm"],
+                hidden_size=d["hidden_size"],
+                nlayers=d["nlayers"],
+                embedding_size=d["embedding_size"],
+                nout=d["nout"],
+                document_delimiter=d["document_delimiter"],
+                dropout=d["dropout"],
             )
 
-            language_model.load_state_dict(d['state_dict'])
+            language_model.load_state_dict(d["state_dict"])
 
             # copy over state dictionary to self
             for key in language_model.__dict__.keys():
@@ -465,12 +447,9 @@ class LanguageModel(nn.Module):
                         param_names = ["weight_ih_l{}{}", "weight_hh_l{}{}"]
                         if child_module.__dict__["bias"]:
                             param_names += ["bias_ih_l{}{}", "bias_hh_l{}{}"]
-                        param_names = [
-                            x.format(layer, suffix) for x in param_names
-                        ]
+                        param_names = [x.format(layer, suffix) for x in param_names]
                         _flat_weights_names.extend(param_names)
 
-                setattr(child_module, "_flat_weights_names",
-                        _flat_weights_names)
+                setattr(child_module, "_flat_weights_names", _flat_weights_names)
 
             child_module._apply(fn)

@@ -91,13 +91,9 @@ class Visualizer(object):
             sentence = " ".join([token.text for token in sentence])
 
             for i, char in enumerate(sentence):
-                context = '<span style="background-color: yellow"><b>{}</b></span>'.format(
-                    char
-                )
+                context = '<span style="background-color: yellow"><b>{}</b></span>'.format(char)
                 context = "".join(sentence[max(i - 30, 0) : i]) + context
-                context = context + "".join(
-                    sentence[i + 1 : min(len(sentence), i + 30)]
-                )
+                context = context + "".join(sentence[i + 1 : min(len(sentence), i + 30)])
 
                 contexts.append(context)
 
@@ -112,17 +108,13 @@ class Visualizer(object):
 
         ax.grid(True, alpha=0.3)
 
-        points = ax.plot(
-            X[:, 0], X[:, 1], "o", color="b", mec="k", ms=5, mew=1, alpha=0.6
-        )
+        points = ax.plot(X[:, 0], X[:, 1], "o", color="b", mec="k", ms=5, mew=1, alpha=0.6)
 
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         ax.set_title("Hover mouse to reveal context", size=20)
 
-        tooltip = mpld3.plugins.PointHTMLTooltip(
-            points[0], contexts, voffset=10, hoffset=10
-        )
+        tooltip = mpld3.plugins.PointHTMLTooltip(points[0], contexts, voffset=10, hoffset=10)
 
         mpld3.plugins.connect(fig, tooltip)
 

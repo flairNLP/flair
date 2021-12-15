@@ -1,7 +1,7 @@
 import logging
 from collections import OrderedDict
 from pathlib import Path
-from typing import Union, List, Set, Optional
+from typing import List, Optional, Set, Tuple, Union
 
 import numpy as np
 import torch
@@ -11,29 +11,34 @@ from tqdm import tqdm
 
 import flair
 from flair.data import Dictionary, Sentence
-from flair.datasets import SentenceDataset, DataLoader
-from flair.embeddings import TokenEmbeddings
+from flair.datasets import DataLoader, FlairDatapointDataset
+from flair.embeddings import (
+    TokenEmbeddings,
+    TransformerDocumentEmbeddings,
+    TransformerWordEmbeddings,
+)
 from flair.file_utils import cached_path
-from flair.models import SequenceTagger, TextClassifier
+from flair.models.sequence_tagger_model import SequenceTagger
+from flair.models.text_classification_model import TextClassifier
 from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")
 
 
-class FewshotClassifier(flair.nn.Classifier):
-
+class FewshotClassifier(flair.nn.Classifier[Sentence]):
     def __init__(self):
         self._current_task = None
         self._task_specific_attributes = {}
         self.label_nearest_map = None
+        self.tars_model: flair.nn.Classifier[Sentence]
 
         super(FewshotClassifier, self).__init__()
 
     def forward_loss(
-            self, data_points: Union[List[Sentence], Sentence]
-    ) -> torch.tensor:
+        self, data_points: Union[List[Sentence], Sentence]
+    ) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
 
-        if type(data_points) == Sentence:
+        if not isinstance(data_points, list):
             data_points = [data_points]
 
         # Transform input data into TARS format
@@ -57,8 +62,9 @@ class FewshotClassifier(flair.nn.Classifier):
             label_text_pairs_for_sentence = []
             if self.training and self.num_negative_labels_to_sample is not None:
 
-                positive_labels = list(OrderedDict.fromkeys(
-                    [label.value for label in sentence.get_labels(self.label_type)]))
+                positive_labels = list(
+                    OrderedDict.fromkeys([label.value for label in sentence.get_labels(self.label_type)])
+                )
 
                 sampled_negative_labels = self._get_nearest_labels_for(positive_labels)
 
@@ -80,6 +86,7 @@ class FewshotClassifier(flair.nn.Classifier):
         if len(labels) == 0:
             tags = self.get_current_label_dictionary().get_items()
             import random
+
             sample = random.sample(tags, k=self.num_negative_labels_to_sample)
             # print(sample)
             return sample
@@ -99,16 +106,18 @@ class FewshotClassifier(flair.nn.Classifier):
                     plausible_label_probabilities.append(self.label_nearest_map[label][plausible_label])
 
             # make sure the probabilities always sum up to 1
-            plausible_label_probabilities = np.array(plausible_label_probabilities, dtype='float64')
+            plausible_label_probabilities = np.array(plausible_label_probabilities, dtype="float64")
             plausible_label_probabilities += 1e-08
             plausible_label_probabilities /= np.sum(plausible_label_probabilities)
 
             if len(plausible_labels) > 0:
                 num_samples = min(self.num_negative_labels_to_sample, len(plausible_labels))
-                sampled_negative_labels = np.random.choice(plausible_labels,
-                                                           num_samples,
-                                                           replace=False,
-                                                           p=plausible_label_probabilities)
+                sampled_negative_labels = np.random.choice(
+                    plausible_labels,
+                    num_samples,
+                    replace=False,
+                    p=plausible_label_probabilities,
+                )
                 already_sampled_negative_labels.update(sampled_negative_labels)
 
         return already_sampled_negative_labels
@@ -157,27 +166,27 @@ class FewshotClassifier(flair.nn.Classifier):
             negative_label_probabilities[label] = {}
             for column_index, other_label in enumerate(all_labels):
                 if label != other_label:
-                    negative_label_probabilities[label][other_label] = \
-                        similarity_matrix[row_index][column_index]
+                    negative_label_probabilities[label][other_label] = similarity_matrix[row_index][column_index]
         self.label_nearest_map = negative_label_probabilities
 
     def get_current_label_dictionary(self):
-        label_dictionary = self._task_specific_attributes[self._current_task]['label_dictionary']
+        label_dictionary = self._task_specific_attributes[self._current_task]["label_dictionary"]
         return label_dictionary
 
     def get_current_label_type(self):
-        return self._task_specific_attributes[self._current_task]['label_type']
+        return self._task_specific_attributes[self._current_task]["label_type"]
 
     def is_current_task_multi_label(self):
-        return self._task_specific_attributes[self._current_task]['multi_label']
+        return self._task_specific_attributes[self._current_task]["multi_label"]
 
-    def add_and_switch_to_new_task(self,
-                                   task_name,
-                                   label_dictionary: Union[List, Set, Dictionary, str],
-                                   label_type: str,
-                                   multi_label: bool = True,
-                                   force_switch: bool = False,
-                                   ):
+    def add_and_switch_to_new_task(
+        self,
+        task_name,
+        label_dictionary: Union[List, Set, Dictionary, str],
+        label_type: str,
+        multi_label: bool = True,
+        force_switch: bool = False,
+    ):
         """
         Adds a new task to an existing TARS model. Sets necessary attributes and finally 'switches'
         to the new task. Parameters are similar to the constructor except for model choice, batch
@@ -200,16 +209,19 @@ class FewshotClassifier(flair.nn.Classifier):
             # prepare dictionary of tags (without B- I- prefixes and without UNK)
             tag_dictionary = Dictionary(add_unk=False)
             for tag in label_dictionary:
-                if tag == '<unk>' or tag == 'O': continue
+                if tag == "<unk>" or tag == "O":
+                    continue
                 if tag[1] == "-":
                     tag = tag[2:]
                     tag_dictionary.add_item(tag)
                 else:
                     tag_dictionary.add_item(tag)
 
-            self._task_specific_attributes[task_name] = {'label_dictionary': tag_dictionary,
-                                                         'label_type': label_type,
-                                                         'multi_label': multi_label}
+            self._task_specific_attributes[task_name] = {
+                "label_dictionary": tag_dictionary,
+                "label_type": label_type,
+                "multi_label": multi_label,
+            }
 
         self.switch_to_task(task_name)
 
@@ -224,16 +236,20 @@ class FewshotClassifier(flair.nn.Classifier):
         Switches to a task which was previously added.
         """
         if task_name not in self._task_specific_attributes:
-            log.error("Provided `%s` does not exist in the model. Consider calling "
-                      "`add_and_switch_to_new_task` first.", task_name)
+            log.error(
+                "Provided `%s` does not exist in the model. Consider calling " "`add_and_switch_to_new_task` first.",
+                task_name,
+            )
         else:
             self._current_task = task_name
 
     def _drop_task(self, task_name):
         if task_name in self._task_specific_attributes:
             if self._current_task == task_name:
-                log.error("`%s` is the current task."
-                          " Switch to some other task before dropping this.", task_name)
+                log.error(
+                    "`%s` is the current task." " Switch to some other task before dropping this.",
+                    task_name,
+                )
             else:
                 self._task_specific_attributes.pop(task_name)
         else:
@@ -243,19 +259,19 @@ class FewshotClassifier(flair.nn.Classifier):
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
-            log.warning(
-                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
-            )
+            log.warning(f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens.")
         return filtered_sentences
 
     @property
     def label_type(self):
         return self.get_current_label_type()
 
-    def predict_zero_shot(self,
-                          sentences: Union[List[Sentence], Sentence],
-                          candidate_label_set: Union[List[str], Set[str], str],
-                          multi_label: bool = True):
+    def predict_zero_shot(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        candidate_label_set: Union[List[str], Set[str], str],
+        multi_label: bool = True,
+    ):
         """
         Method to make zero shot predictions from the TARS model
         :param sentences: input sentence objects to classify
@@ -281,10 +297,12 @@ class FewshotClassifier(flair.nn.Classifier):
         existing_current_task = self._current_task
 
         # create a temporary task
-        self.add_and_switch_to_new_task(task_name="ZeroShot",
-                                        label_dictionary=label_dictionary,
-                                        label_type='-'.join(label_dictionary.get_items()),
-                                        multi_label=multi_label)
+        self.add_and_switch_to_new_task(
+            task_name="ZeroShot",
+            label_dictionary=label_dictionary,
+            label_type="-".join(label_dictionary.get_items()),
+            multi_label=multi_label,
+        )
 
         try:
             # make zero shot predictions
@@ -308,14 +326,14 @@ class TARSTagger(FewshotClassifier):
     static_label_type = "tars_label"
 
     def __init__(
-            self,
-            task_name: Optional[str] = None,
-            label_dictionary: Optional[Dictionary] = None,
-            label_type: Optional[str] = None,
-            embeddings: str = 'bert-base-uncased',
-            num_negative_labels_to_sample: int = 2,
-            prefix: bool = True,
-            **tagger_args,
+        self,
+        task_name: Optional[str] = None,
+        label_dictionary: Optional[Dictionary] = None,
+        label_type: Optional[str] = None,
+        embeddings: Union[TransformerWordEmbeddings, str] = "bert-base-uncased",
+        num_negative_labels_to_sample: int = 2,
+        prefix: bool = True,
+        **tagger_args,
     ):
         """
         Initializes a TextClassifier
@@ -330,33 +348,33 @@ class TARSTagger(FewshotClassifier):
         """
         super(TARSTagger, self).__init__()
 
-        from flair.embeddings import TransformerWordEmbeddings
-
-        if not isinstance(embeddings, TransformerWordEmbeddings):
-            embeddings = TransformerWordEmbeddings(model=embeddings,
-                                                   fine_tune=True,
-                                                   layers='-1',
-                                                   layer_mean=False,
-                                                   )
+        if isinstance(embeddings, str):
+            embeddings = TransformerWordEmbeddings(
+                model=embeddings,
+                fine_tune=True,
+                layers="-1",
+                layer_mean=False,
+            )
 
         # prepare TARS dictionary
         tars_dictionary = Dictionary(add_unk=False)
-        tars_dictionary.add_item('O')
-        tars_dictionary.add_item('S-')
-        tars_dictionary.add_item('B-')
-        tars_dictionary.add_item('E-')
-        tars_dictionary.add_item('I-')
+        tars_dictionary.add_item("O")
+        tars_dictionary.add_item("S-")
+        tars_dictionary.add_item("B-")
+        tars_dictionary.add_item("E-")
+        tars_dictionary.add_item("I-")
 
         # initialize a bare-bones sequence tagger
-        self.tars_model = SequenceTagger(123,
-                                         embeddings,
-                                         tag_dictionary=tars_dictionary,
-                                         tag_type=self.static_label_type,
-                                         use_crf=False,
-                                         use_rnn=False,
-                                         reproject_embeddings=False,
-                                         **tagger_args,
-                                         )
+        self.tars_model: SequenceTagger = SequenceTagger(
+            123,
+            embeddings,
+            tag_dictionary=tars_dictionary,
+            tag_type=self.static_label_type,
+            use_crf=False,
+            use_rnn=False,
+            reproject_embeddings=False,
+            **tagger_args,
+        )
 
         # transformer separator
         self.separator = str(self.tars_embeddings.tokenizer.sep_token)
@@ -370,15 +388,18 @@ class TARSTagger(FewshotClassifier):
             # Store task specific labels since TARS can handle multiple tasks
             self.add_and_switch_to_new_task(task_name, label_dictionary, label_type)
         else:
-            log.info("TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
-                     "before training this model")
+            log.info(
+                "TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
+                "before training this model"
+            )
 
     def _get_tars_formatted_sentence(self, label, sentence):
 
         original_text = sentence.to_tokenized_string()
 
-        label_text_pair = f"{label} {self.separator} {original_text}" if self.prefix \
-            else f"{original_text} {self.separator} {label}"
+        label_text_pair = (
+            f"{label} {self.separator} {original_text}" if self.prefix else f"{original_text} {self.separator} {label}"
+        )
 
         label_length = 0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
 
@@ -396,7 +417,7 @@ class TARSTagger(FewshotClassifier):
             elif tag == label:
                 tars_tag = "S-"
             elif tag[1] == "-" and tag[2:] == label:
-                tars_tag = tag.split('-')[0] + '-'
+                tars_tag = tag.split("-")[0] + "-"
             else:
                 tars_tag = "O"
 
@@ -407,14 +428,12 @@ class TARSTagger(FewshotClassifier):
     def _get_state_dict(self):
         model_state = {
             "state_dict": self.state_dict(),
-
             "current_task": self._current_task,
             "tag_type": self.get_current_label_type(),
             "tag_dictionary": self.get_current_label_dictionary(),
             "tars_model": self.tars_model,
             "num_negative_labels_to_sample": self.num_negative_labels_to_sample,
             "prefix": self.prefix,
-
             "task_specific_attributes": self._task_specific_attributes,
         }
         return model_state
@@ -424,8 +443,10 @@ class TARSTagger(FewshotClassifier):
 
         if model_name == "tars-ner":
             cache_dir = Path("models")
-            model_name = cached_path("https://nlp.informatik.hu-berlin.de/resources/models/tars-ner/tars-ner.pt",
-                                     cache_dir=cache_dir)
+            model_name = cached_path(
+                "https://nlp.informatik.hu-berlin.de/resources/models/tars-ner/tars-ner.pt",
+                cache_dir=cache_dir,
+            )
 
         return model_name
 
@@ -453,14 +474,15 @@ class TARSTagger(FewshotClassifier):
         return self.tars_model.embeddings
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size=32,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
-            most_probable_first: bool = True
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size=32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
+        most_probable_first: bool = True,
     ):
         # return
         """
@@ -477,22 +499,22 @@ class TARSTagger(FewshotClassifier):
         you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         'gpu' to store embeddings in GPU memory.
         """
-        if label_name == None:
+        if label_name is None:
             label_name = self.get_current_label_type()
 
         # with torch.no_grad():
         if not sentences:
             return sentences
 
-        if isinstance(sentences, Sentence):
+        if not isinstance(sentences, list):
             sentences = [sentences]
 
-        # reverse sort all sequences by their length
-        rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
+        reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
 
-        reordered_sentences: List[Union[Sentence, str]] = [sentences[index] for index in rev_order_len_index]
-
-        dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
+        dataloader = DataLoader(
+            dataset=FlairDatapointDataset(reordered_sentences),
+            batch_size=mini_batch_size,
+        )
 
         # progress bar for verbosity
         if verbose:
@@ -500,14 +522,8 @@ class TARSTagger(FewshotClassifier):
 
         overall_loss = 0
         overall_count = 0
-        batch_no = 0
         with torch.no_grad():
             for batch in dataloader:
-
-                batch_no += 1
-
-                if verbose:
-                    dataloader.set_description(f"Inferencing on batch {batch_no}")
 
                 batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
@@ -529,25 +545,30 @@ class TARSTagger(FewshotClassifier):
 
                         label_length = 0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
 
-                        loss_and_count = self.tars_model.predict(tars_sentence,
-                                                                 label_name=label_name,
-                                                                 all_tag_prob=True,
-                                                                 return_loss=True)
+                        loss_and_count = self.tars_model.predict(
+                            tars_sentence,
+                            label_name=label_name,
+                            all_tag_prob=True,
+                            return_loss=True,
+                        )
                         overall_loss += loss_and_count[0].item()
                         overall_count += loss_and_count[1]
 
                         for span in tars_sentence.get_spans(label_name):
-                            span.set_label('tars_temp_label', label)
+                            span.set_label("tars_temp_label", label)
                             all_detected[span] = span.score
 
                         if not most_probable_first:
                             for span in tars_sentence.get_spans(label_name):
                                 for token in span:
                                     corresponding_token = sentence.get_token(token.idx - label_length)
-                                    if corresponding_token is None: continue
-                                    if corresponding_token.get_tag(label_name).value != '' and \
-                                            corresponding_token.get_tag(label_name).score > token.get_tag(
-                                        label_name).score:
+                                    if corresponding_token is None:
+                                        continue
+                                    if (
+                                        corresponding_token.get_tag(label_name).value != ""
+                                        and corresponding_token.get_tag(label_name).score
+                                        > token.get_tag(label_name).score
+                                    ):
                                         continue
                                     corresponding_token.add_tag(
                                         label_name,
@@ -557,14 +578,16 @@ class TARSTagger(FewshotClassifier):
 
                     if most_probable_first:
                         import operator
+
                         sorted_x = sorted(all_detected.items(), key=operator.itemgetter(1))
                         sorted_x.reverse()
                         for tuple in sorted_x:
                             # get the span and its label
                             span = tuple[0]
-                            label = span.get_labels('tars_temp_label')[0].value
-                            label_length = 0 if not self.prefix else len(label.split(" ")) + len(
-                                self.separator.split(" "))
+                            label = span.get_labels("tars_temp_label")[0].value
+                            label_length = (
+                                0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
+                            )
 
                             # determine whether tokens in this span already have a label
                             tag_this = True
@@ -573,8 +596,10 @@ class TARSTagger(FewshotClassifier):
                                 if corresponding_token is None:
                                     tag_this = False
                                     continue
-                                if corresponding_token.get_tag(label_name).value != '' and \
-                                        corresponding_token.get_tag(label_name).score > token.get_tag(label_name).score:
+                                if (
+                                    corresponding_token.get_tag(label_name).value != ""
+                                    and corresponding_token.get_tag(label_name).score > token.get_tag(label_name).score
+                                ):
                                     tag_this = False
                                     continue
 
@@ -608,14 +633,14 @@ class TARSClassifier(FewshotClassifier):
     LABEL_NO_MATCH = "NO"
 
     def __init__(
-            self,
-            task_name: Optional[str] = None,
-            label_dictionary: Optional[Dictionary] = None,
-            label_type: Optional[str] = None,
-            embeddings: str = 'bert-base-uncased',
-            num_negative_labels_to_sample: int = 2,
-            prefix: bool = True,
-            **tagger_args,
+        self,
+        task_name: Optional[str] = None,
+        label_dictionary: Optional[Dictionary] = None,
+        label_type: Optional[str] = None,
+        embeddings: Union[TransformerDocumentEmbeddings, str] = "bert-base-uncased",
+        num_negative_labels_to_sample: int = 2,
+        prefix: bool = True,
+        **tagger_args,
     ):
         """
         Initializes a TextClassifier
@@ -634,14 +659,13 @@ class TARSClassifier(FewshotClassifier):
         """
         super(TARSClassifier, self).__init__()
 
-        from flair.embeddings import TransformerDocumentEmbeddings
-
-        if not isinstance(embeddings, TransformerDocumentEmbeddings):
-            embeddings = TransformerDocumentEmbeddings(model=embeddings,
-                                                       fine_tune=True,
-                                                       layers='-1',
-                                                       layer_mean=False,
-                                                       )
+        if isinstance(embeddings, str):
+            embeddings = TransformerDocumentEmbeddings(
+                model=embeddings,
+                fine_tune=True,
+                layers="-1",
+                layer_mean=False,
+            )
 
         # prepare TARS dictionary
         tars_dictionary = Dictionary(add_unk=False)
@@ -649,11 +673,12 @@ class TARSClassifier(FewshotClassifier):
         tars_dictionary.add_item(self.LABEL_MATCH)
 
         # initialize a bare-bones sequence tagger
-        self.tars_model = TextClassifier(document_embeddings=embeddings,
-                                         label_dictionary=tars_dictionary,
-                                         label_type=self.static_label_type,
-                                         **tagger_args,
-                                         )
+        self.tars_model = TextClassifier(
+            document_embeddings=embeddings,
+            label_dictionary=tars_dictionary,
+            label_type=self.static_label_type,
+            **tagger_args,
+        )
 
         # transformer separator
         self.separator = str(self.tars_embeddings.tokenizer.sep_token)
@@ -667,8 +692,10 @@ class TARSClassifier(FewshotClassifier):
             # Store task specific labels since TARS can handle multiple tasks
             self.add_and_switch_to_new_task(task_name, label_dictionary, label_type)
         else:
-            log.info("TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
-                     "before training this model")
+            log.info(
+                "TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
+                "before training this model"
+            )
 
         self.clean_up_labels = True
 
@@ -684,8 +711,9 @@ class TARSClassifier(FewshotClassifier):
 
         original_text = sentence.to_tokenized_string()
 
-        label_text_pair = f"{label} {self.separator} {original_text}" if self.prefix \
-            else f"{original_text} {self.separator} {label}"
+        label_text_pair = (
+            f"{label} {self.separator} {original_text}" if self.prefix else f"{original_text} {self.separator} {label}"
+        )
 
         sentence_labels = [self._clean(label.value) for label in sentence.get_labels(self.get_current_label_type())]
 
@@ -698,13 +726,11 @@ class TARSClassifier(FewshotClassifier):
     def _get_state_dict(self):
         model_state = {
             "state_dict": self.state_dict(),
-
             "current_task": self._current_task,
             "label_type": self.get_current_label_type(),
             "label_dictionary": self.get_current_label_dictionary(),
             "tars_model": self.tars_model,
             "num_negative_labels_to_sample": self.num_negative_labels_to_sample,
-
             "task_specific_attributes": self._task_specific_attributes,
         }
         return model_state
@@ -750,15 +776,16 @@ class TARSClassifier(FewshotClassifier):
         return self.tars_model.document_embeddings
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size=32,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
-            label_threshold: float = 0.5,
-            multi_label: Optional[bool] = None,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size=32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
+        label_threshold: float = 0.5,
+        multi_label: Optional[bool] = None,
     ):
         """
         Predict sequence tags for Named Entity Recognition task
@@ -774,7 +801,7 @@ class TARSClassifier(FewshotClassifier):
         you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         'gpu' to store embeddings in GPU memory.
         """
-        if not label_name:
+        if label_name is None:
             label_name = self.get_current_label_type()
 
         if multi_label is None:
@@ -790,22 +817,26 @@ class TARSClassifier(FewshotClassifier):
         # set context if not set already
         previous_sentence = None
         for sentence in sentences:
-            if sentence.is_context_set(): continue
+            if sentence.is_context_set():
+                continue
             sentence._previous_sentence = previous_sentence
             sentence._next_sentence = None
-            if previous_sentence: previous_sentence._next_sentence = sentence
+            if previous_sentence:
+                previous_sentence._next_sentence = sentence
             previous_sentence = sentence
 
-        # reverse sort all sequences by their length
-        rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
+        reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
 
-        reordered_sentences: List[Union[Sentence, str]] = [sentences[index] for index in rev_order_len_index]
-
-        dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
+        dataloader = DataLoader(
+            dataset=FlairDatapointDataset(reordered_sentences),
+            batch_size=mini_batch_size,
+        )
 
         # progress bar for verbosity
         if verbose:
-            dataloader = tqdm(dataloader)
+            progressbar = tqdm(dataloader)
+            progressbar.set_description("Batch inference")
+            dataloader = progressbar
 
         overall_loss = 0
         overall_count = 0
@@ -814,9 +845,6 @@ class TARSClassifier(FewshotClassifier):
             for batch in dataloader:
 
                 batch_no += 1
-
-                if verbose:
-                    dataloader.set_description(f"Inferencing on batch {batch_no}")
 
                 batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
@@ -835,20 +863,22 @@ class TARSClassifier(FewshotClassifier):
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
 
-                        loss_and_count = self.tars_model.predict(tars_sentence,
-                                                                 label_name=label_name,
-                                                                 return_loss=True,
-                                                                 return_probabilities_for_all_classes=True
-                                                                 if label_threshold < 0.5 else False,
-                                                                 )
+                        loss_and_count = self.tars_model.predict(
+                            tars_sentence,
+                            label_name=label_name,
+                            return_loss=True,
+                            return_probabilities_for_all_classes=True if label_threshold < 0.5 else False,
+                        )
 
                         overall_loss += loss_and_count[0].item()
                         overall_count += loss_and_count[1]
 
                         # add all labels that according to TARS match the text and are above threshold
                         for predicted_tars_label in tars_sentence.get_labels(label_name):
-                            if predicted_tars_label.value == self.LABEL_MATCH \
-                                    and predicted_tars_label.score > label_threshold:
+                            if (
+                                predicted_tars_label.value == self.LABEL_MATCH
+                                and predicted_tars_label.score > label_threshold
+                            ):
                                 # do not add labels below confidence threshold
                                 sentence.add_label(label_name, label, predicted_tars_label.score)
 
@@ -856,13 +886,19 @@ class TARSClassifier(FewshotClassifier):
                     if not multi_label:
                         if len(sentence.get_labels(label_name)) > 0:
                             # get all label scores and do an argmax to get the best label
-                            label_scores = torch.tensor([label.score for label in sentence.get_labels(label_name)],
-                                                        dtype=torch.float)
+                            label_scores = torch.tensor(
+                                [label.score for label in sentence.get_labels(label_name)],
+                                dtype=torch.float,
+                            )
                             best_label = sentence.get_labels(label_name)[torch.argmax(label_scores)]
 
                             # remove previously added labels and only add the best label
                             sentence.remove_labels(label_name)
-                            sentence.add_label(typename=label_name, value=best_label.value, score=best_label.score)
+                            sentence.add_label(
+                                typename=label_name,
+                                value=best_label.value,
+                                score=best_label.score,
+                            )
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)

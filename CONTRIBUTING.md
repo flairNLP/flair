@@ -21,27 +21,53 @@ Use meaningful commit messages that described what you did.
 **Example:** `GH-42: Added new type of embeddings: DocumentEmbedding.` 
 
 
-## Running unit tests locally
+## Developing locally
 
 For contributors looking to get deeper into the API we suggest cloning the repository and checking out the unit
 tests for examples of how to call methods. Nearly all classes and methods are documented, so finding your way around
 the code should hopefully be easy.
 
-You need [Pipenv](https://pipenv.readthedocs.io/) for this:
+### setup
+
+You can either use [Pipenv](https://pipenv.readthedocs.io/) for this:
 
 ```bash
 pipenv install --dev && pipenv shell
-pytest tests/
+```
+
+or create a python environment of your preference and run
+```bash
+pip install -r requirements-dev.txt
+```
+
+### tests
+
+To only run typechecks and check the code formatting execute:
+```bash
+pytest flair
+```
+
+To run all basic tests execute:
+```bash
+pytest
 ```
 
 To run integration tests execute:
 ```bash
-pytest --runintegration tests/
+pytest --runintegration
 ```
-The integration tests will train small models.
-Afterwards, the trained model will be loaded for prediction.
+The integration tests will train small models and therefore take more time.
+In general, it is recommended to ensure all basic tests are running through before testing the integration tests 
 
-To also run slow tests, such as loading and using the embeddings provided by flair, you should execute:
-```bash
-pytest --runslow tests/
-```
+### code formatting
+
+To ensure a standardized code style we use the formatter [black](https://github.com/ambv/black) and for standardizing imports we use [isort](https://github.com/PyCQA/isort).
+If your code is not formatted properly, the tests will fail.
+simply execute
+You can automatically format the code via `black . && isort .`
+
+### pre-commit hook
+
+If you want to automatically format your code on every commit, you can use [pre-commit](https://pre-commit.com/).
+Just install it via `pip install pre-commit` and execute `pre-commit install` in the root folder.
+This will add a hook to the repository, which reformats files on every commit.

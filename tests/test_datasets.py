@@ -32,9 +32,7 @@ def test_load_imdb_data_streaming(tasks_base_path):
 
 def test_load_imdb_data_max_tokens(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ClassificationCorpus(
-        tasks_base_path / "imdb", memory_mode="full", truncate_to_max_tokens=3
-    )
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", memory_mode="full", truncate_to_max_tokens=3)
 
     assert len(corpus.train[0]) <= 3
     assert len(corpus.dev[0]) <= 3
@@ -43,9 +41,7 @@ def test_load_imdb_data_max_tokens(tasks_base_path):
 
 def test_load_imdb_data_streaming_max_tokens(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ClassificationCorpus(
-        tasks_base_path / "imdb", memory_mode="full", truncate_to_max_tokens=3
-    )
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", memory_mode="full", truncate_to_max_tokens=3)
 
     assert len(corpus.train[0]) <= 3
     assert len(corpus.dev[0]) <= 3
@@ -73,7 +69,8 @@ def test_load_sequence_labeling_data(tasks_base_path):
 def test_load_sequence_labeling_whitespace_after(tasks_base_path):
     # get training, test and dev data
     corpus = flair.datasets.ColumnCorpus(
-        tasks_base_path / "column_with_whitespaces", column_format={0: "text", 1: "ner", 2: "space-after"}
+        tasks_base_path / "column_with_whitespaces",
+        column_format={0: "text", 1: "ner", 2: "space-after"},
     )
 
     assert len(corpus.train) == 1
@@ -186,7 +183,7 @@ def _assert_conllu_dataset(dataset):
         "PROPN",
         "VERB",
         "PROPN",
-        "PUNCT"
+        "PUNCT",
     ]
 
     assert [token.whitespace_after for token in sent1.tokens] == [
@@ -306,7 +303,7 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         True,
         True,
         False,
-        True
+        True,
     ]
 
     assert len(sent1.get_spans("Number")) == 4
@@ -320,7 +317,7 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         "4",
         "2",
         "2",
-        "2"
+        "2",
     ]
 
     assert [token.get_tag("deprel").value for token in sent1.tokens] == [
@@ -329,14 +326,15 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         "cc",
         "conj",
         "obj",
-        "punct"
+        "punct",
     ]
 
 
 def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
     """
     This test only covers basic universal dependencies datasets.
-    For example, multi-word tokens or the "deps" column sentence annotations are not supported yet.
+    For example, multi-word tokens or the "deps" column sentence annotations
+    are not supported yet.
     """
 
     # Here, we use the default token annotation fields.
@@ -344,7 +342,7 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
         tasks_base_path / "conllu",
         train_file="universal_dependencies.conllu",
         dev_file="universal_dependencies.conllu",
-        test_file="universal_dependencies.conllu"
+        test_file="universal_dependencies.conllu",
     )
 
     assert len(corpus.train) == 1

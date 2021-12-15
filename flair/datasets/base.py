@@ -1,17 +1,13 @@
 import logging
+import os
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Union, Callable
+from typing import Callable, Generic, List, Union
 
 import torch.utils.data.dataloader
-from torch.utils.data.dataset import Subset, ConcatDataset
+from torch.utils.data.dataset import ConcatDataset, Subset
 
-from flair.data import (
-    Sentence,
-    Token,
-    Tokenizer,
-    FlairDataset
-)
+from flair.data import DT, FlairDataset, Sentence, Token, Tokenizer
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 
 log = logging.getLogger("flair")
@@ -19,16 +15,16 @@ log = logging.getLogger("flair")
 
 class DataLoader(torch.utils.data.dataloader.DataLoader):
     def __init__(
-            self,
-            dataset,
-            batch_size=1,
-            shuffle=False,
-            sampler=None,
-            batch_sampler=None,
-            num_workers=8,
-            drop_last=False,
-            timeout=0,
-            worker_init_fn=None,
+        self,
+        dataset,
+        batch_size=1,
+        shuffle=False,
+        sampler=None,
+        batch_sampler=None,
+        num_workers=None,
+        drop_last=False,
+        timeout=0,
+        worker_init_fn=None,
     ):
 
         # in certain cases, multi-CPU data loading makes no sense and slows
@@ -48,6 +44,11 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         elif isinstance(flair_dataset, FlairDataset) and flair_dataset.is_in_memory():
             num_workers = 0
 
+        if num_workers is None:
+            num_workers = min(self.estimate_max_workers(), 8)
+        else:
+            num_workers = min(num_workers, self.estimate_max_workers())
+
         super(DataLoader, self).__init__(
             dataset,
             batch_size=batch_size,
@@ -61,19 +62,28 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
             worker_init_fn=worker_init_fn,
         )
 
+    @staticmethod
+    def estimate_max_workers():
+        if hasattr(os, "sched_getaffinity"):
+            try:
+                return len(os.sched_getaffinity(0))
+            except Exception:
+                pass
+        return os.cpu_count() or 1
 
-class SentenceDataset(FlairDataset):
+
+class FlairDatapointDataset(FlairDataset, Generic[DT]):
     """
     A simple Dataset object to wrap a List of Sentence
     """
 
-    def __init__(self, sentences: Union[Sentence, List[Sentence]]):
+    def __init__(self, sentences: Union[DT, List[DT]]):
         """
         Instantiate SentenceDataset
         :param sentences: Sentence or List of Sentence that make up SentenceDataset
         """
         # cast to list if necessary
-        if type(sentences) == Sentence:
+        if not isinstance(sentences, list):
             sentences = [sentences]
         self.sentences = sentences
 
@@ -83,7 +93,7 @@ class SentenceDataset(FlairDataset):
     def __len__(self):
         return len(self.sentences)
 
-    def __getitem__(self, index: int = 0) -> Sentence:
+    def __getitem__(self, index: int = 0) -> DT:
         return self.sentences[index]
 
 
@@ -93,9 +103,9 @@ class StringDataset(FlairDataset):
     """
 
     def __init__(
-            self,
-            texts: Union[str, List[str]],
-            use_tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        self,
+        texts: Union[str, List[str]],
+        use_tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
     ):
         """
         Instantiate StringDataset
@@ -106,7 +116,7 @@ class StringDataset(FlairDataset):
         If instead of providing a function, this parameter is just set to True, SegTokTokenizer will be used.
         """
         # cast to list if necessary
-        if type(texts) == Sentence:
+        if isinstance(texts, str):
             texts = [texts]
         self.texts = texts
         self.use_tokenizer = use_tokenizer
@@ -125,18 +135,19 @@ class StringDataset(FlairDataset):
 
 class MongoDataset(FlairDataset):
     def __init__(
-            self,
-            query: str,
-            host: str,
-            port: int,
-            database: str,
-            collection: str,
-            text_field: str,
-            categories_field: List[str] = None,
-            max_tokens_per_doc: int = -1,
-            max_chars_per_doc: int = -1,
-            tokenizer: Tokenizer = SegtokTokenizer(),
-            in_memory: bool = True,
+        self,
+        query: str,
+        host: str,
+        port: int,
+        database: str,
+        collection: str,
+        text_field: str,
+        categories_field: List[str] = None,
+        max_tokens_per_doc: int = -1,
+        max_chars_per_doc: int = -1,
+        tokenizer: Tokenizer = SegtokTokenizer(),
+        in_memory: bool = True,
+        tag_type: str = "class",
     ):
         """
         Reads Mongo collections. Each collection should contain one document/text per item.
@@ -171,9 +182,7 @@ class MongoDataset(FlairDataset):
         except ModuleNotFoundError:
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "pymongo" is not installed!')
-            log.warning(
-                'To use MongoDataset, please first install with "pip install pymongo"'
-            )
+            log.warning('To use MongoDataset, please first install with "pip install pymongo"')
             log.warning("-" * 100)
             pass
 
@@ -194,13 +203,12 @@ class MongoDataset(FlairDataset):
 
         self.text = text_field
         self.categories = categories_field if categories_field is not None else []
+        self.tag_type = tag_type
 
         start = 0
 
-        kwargs = lambda start: {"filter": query, "skip": start, "limit": 0}
-
         if self.in_memory:
-            for document in self.__cursor.find(**kwargs(start)):
+            for document in self.__cursor.find(filter=query, skip=start, limit=0):
                 sentence = self._parse_document_to_sentence(
                     document[self.text],
                     [document[_] if _ in document else "" for _ in self.categories],
@@ -214,18 +222,21 @@ class MongoDataset(FlairDataset):
             self.total_sentence_count = self.__cursor.count_documents()
 
     def _parse_document_to_sentence(
-            self, text: str, labels: List[str], tokenizer: Union[Callable[[str], List[Token]], Tokenizer]
+        self,
+        text: str,
+        labels: List[str],
+        tokenizer: Union[Callable[[str], List[Token]], Tokenizer],
     ):
         if self.max_chars_per_doc > 0:
             text = text[: self.max_chars_per_doc]
 
         if text and labels:
-            sentence = Sentence(text, labels=labels, use_tokenizer=tokenizer)
+            sentence = Sentence(text, use_tokenizer=tokenizer)
+            for label in labels:
+                sentence.add_label(self.tag_type, label)
 
             if self.max_tokens_per_doc > 0:
-                sentence.tokens = sentence.tokens[
-                                  : min(len(sentence), self.max_tokens_per_doc)
-                                  ]
+                sentence.tokens = sentence.tokens[: min(len(sentence), self.max_tokens_per_doc)]
 
             return sentence
         return None
@@ -268,7 +279,7 @@ def find_train_dev_test_files(data_folder, dev_file, test_file, train_file, auto
             file_name = file.name
             if not suffixes_to_ignore.isdisjoint(file.suffixes):
                 continue
-            if "train" in file_name and not "54019" in file_name:
+            if "train" in file_name and "54019" not in file_name:
                 train_file = file
             if "dev" in file_name:
                 dev_file = file
