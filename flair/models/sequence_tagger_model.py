@@ -11,8 +11,8 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Label, Sentence
-from flair.datasets import DataLoader, SentenceDataset
+from flair.data import DataPoint, Dictionary, Label, Sentence, SpanLabel
+from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import store_embeddings
@@ -38,7 +38,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         use_crf: bool = True,
         reproject_embeddings: bool = True,
         dropout: float = 0.0,
-        word_dropout: float = 0.0,
+        word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
         train_initial_hidden_state: bool = False,
         beta: float = 1.0,
@@ -105,26 +105,28 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             self.tag_dictionary.set_start_stop_tags()
             self.tagset_size += 2
 
-        # ----- Dropout parameters -----
-        self.use_dropout = True if dropout > 0.0 else False
-        self.use_word_dropout = True if word_dropout > 0.0 else False
-        self.use_locked_dropout = True if locked_dropout > 0.0 else False
-
         # ----- F-beta score for training + annealing
         self.beta = beta
+
+        # ----- Dropout parameters -----
+        # dropouts
+        self.use_dropout: float = dropout
+        self.use_word_dropout: float = word_dropout
+        self.use_locked_dropout: float = locked_dropout
+
+        if dropout > 0.0:
+            self.dropout = torch.nn.Dropout(dropout)
+
+        if word_dropout > 0.0:
+            self.word_dropout = flair.nn.WordDropout(word_dropout)
+
+        if locked_dropout > 0.0:
+            self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
         # ----- Model layers -----
         self.reproject_embeddings = reproject_embeddings
         if self.reproject_embeddings:
             self.embedding2nn = torch.nn.Linear(embedding_dim, embedding_dim)
-
-        # ----- Dropout layers -----
-        if self.use_dropout:
-            self.dropout = torch.nn.Dropout(dropout)
-        if self.use_word_dropout:
-            self.word_dropout = flair.nn.WordDropout(word_dropout)
-        if self.use_locked_dropout:
-            self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
         # ----- RNN layer -----
         if use_rnn:
@@ -383,73 +385,70 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         :param embedding_storage_mode: determines where to store embeddings - can be "gpu", "cpu" or None.
         """
         if label_name is None:
-            label_name = self.label_type if self.label_type is not None else "label"
+            label_name = self.tag_type
 
         with torch.no_grad():
             if not sentences:
                 return sentences
 
-        if isinstance(sentences, DataPoint):
-            sentences = [sentences]
+            if not isinstance(sentences, list):
+                sentences = [sentences]
 
-        # filter empty sentences
-        if isinstance(sentences[0], DataPoint):
-            sentences = [sentence for sentence in sentences if len(sentence) > 0]
-        if len(sentences) == 0:
-            return sentences
+            reordered_sentences: List[Union[Sentence, str]] = sorted(sentences, key=lambda s: len(s), reverse=True)
 
-        dataloader = DataLoader(
-            dataset=SentenceDataset(sentences), batch_size=mini_batch_size
-        )
-        # progress bar for verbosity
-        if verbose:
-            dataloader = tqdm(dataloader)
-
-        overall_loss = 0
-        batch_no = 0
-        label_count = 0
-        for batch in dataloader:
-
-            batch_no += 1
-
+            dataloader = DataLoader(
+                dataset=FlairDatapointDataset(reordered_sentences),
+                batch_size=mini_batch_size,
+            )
+            # progress bar for verbosity
             if verbose:
-                dataloader.set_description(f"Inferencing on batch {batch_no}")
+                dataloader = tqdm(dataloader)
 
-            # stop if all sentences are empty
-            if not batch:
-                continue
+            overall_loss = 0
+            batch_no = 0
+            label_count = 0
+            for batch in dataloader:
 
-            # get features from forward propagation
-            features, gold_labels = self.forward_pass(batch)
+                batch_no += 1
 
-            # remove previously predicted labels of this type
-            for sentence in batch:
-                sentence.remove_labels(label_name)
+                if verbose:
+                    dataloader.set_description(f"Inferencing on batch {batch_no}")
 
-            # if return_loss, get loss value
+                # stop if all sentences are empty
+                if not batch:
+                    continue
+
+                # get features from forward propagation
+                features, gold_labels = self.forward_pass(batch)
+
+                # remove previously predicted labels of this type
+                for sentence in batch:
+                    sentence.remove_labels(label_name)
+
+                # if return_loss, get loss value
+                if return_loss:
+                    loss = self._calculate_loss(features, gold_labels)
+                    overall_loss += loss[0]
+                    label_count += loss[1]
+
+                # Sort batch in same way as forward propagation
+                lengths = torch.LongTensor([len(sentence) for sentence in batch])
+                lengths = lengths.sort(dim=0, descending=True)
+                batch = [batch[i] for i in lengths.indices]
+
+                if self.use_crf:
+                    predictions = self.viterbi_decoder.decode(features)
+                else:
+                    predictions = self._standard_inference(features, batch)
+
+                for sentence, labels in zip(batch, predictions):
+                    for token, label in zip(sentence.tokens, labels):
+                        token.add_tag_label(label_name, label)
+
+            store_embeddings(sentences, storage_mode=embedding_storage_mode)
+
             if return_loss:
-                loss = self._calculate_loss(features, gold_labels)
-                overall_loss += loss[0]
-                label_count += loss[1]
-
-            # Sort batch in same way as forward propagation
-            lengths = torch.LongTensor([len(sentence) for sentence in batch])
-            lengths = lengths.sort(dim=0, descending=True)
-            batch = [batch[i] for i in lengths.indices]
-
-            if self.use_crf:
-                predictions = self.viterbi_decoder.decode(features)
-            else:
-                predictions = self._standard_inference(features, batch)
-
-            for sentence, labels in zip(batch, predictions):
-                for token, label in zip(sentence.tokens, labels):
-                    token.add_tag_label(label_name, label)
-
-        store_embeddings(sentences, storage_mode=embedding_storage_mode)
-
-        if return_loss:
-            return overall_loss, label_count
+                return overall_loss, label_count
 
     def _standard_inference(self, features: torch.tensor, batch: list):
         """
