@@ -23,7 +23,7 @@ from .sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
 log = logging.getLogger("flair")
 
 
-class SequenceTagger(flair.nn.DefaultClassifier):
+class SequenceTagger(flair.nn.DefaultClassifier[Sentence]):
     def __init__(
         self,
         embeddings: TokenEmbeddings,
@@ -41,7 +41,6 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
         train_initial_hidden_state: bool = False,
-        beta: float = 1.0,
         loss_weights: Dict[str, float] = None,
         init_from_state_dict: bool = False,
     ):
@@ -65,7 +64,6 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         :param word_dropout: If > 0, then use word dropout.
         :param locked_dropout: If > 0, then use locked dropout.
         :param train_initial_hidden_state: if True, trains initial hidden state of RNN
-        :param beta: Beta value for evaluation metric.
         :param loss_weights: Dictionary of weights for labels for the loss function
             (if any label's weight is unspecified it will default to 1.0)
         :param init_from_state_dict: Indicator whether we are loading a model from state dict
@@ -98,9 +96,6 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         if use_crf and not init_from_state_dict and not self.tag_dictionary.start_stop_tags_are_set():
             self.tag_dictionary.set_start_stop_tags()
             self.tagset_size += 2
-
-        # ----- F-beta score for training + annealing
-        self.beta = beta
 
         # ----- Dropout parameters -----
         # dropouts
@@ -149,14 +144,14 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                     self.lstm_init_c,
                 ) = self._init_initial_hidden_state(num_directions)
 
+            # final linear map to tag space
+            self.linear = torch.nn.Linear(hidden_output_dim, len(tag_dictionary))
         else:
-            self.linear = torch.nn.Linear(embedding_dim, embedding_dim)
-            hidden_output_dim = embedding_dim
+            self.linear = torch.nn.Linear(embedding_dim, len(tag_dictionary))
 
         # ----- CRF / Linear layer -----
         if use_crf:
             self.crf = CRF(
-                hidden_output_dim,
                 self.tag_dictionary,
                 self.tagset_size,
                 init_from_state_dict,
@@ -164,7 +159,6 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             self.loss_function = ViterbiLoss(tag_dictionary)
             self.viterbi_decoder = ViterbiDecoder(tag_dictionary)
         else:
-            self.linear2tag = torch.nn.Linear(hidden_output_dim, self.tagset_size)
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
 
         self.to(flair.device)
@@ -264,22 +258,22 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             packed = pack_padded_sequence(sentence_tensor, lengths.values, batch_first=True, enforce_sorted=False)
             rnn_output, hidden = self.rnn(packed)
             sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
-        else:
-            sentence_tensor = self.linear(sentence_tensor)
 
         if self.use_dropout:
             sentence_tensor = self.dropout(sentence_tensor)
         if self.use_locked_dropout:
             sentence_tensor = self.locked_dropout(sentence_tensor)
 
+        # linear map to tag space
+        features = self.linear(sentence_tensor)
+
         # Depending on whether we are using CRF or a linear layer, scores is either:
         # -- A tensor of shape (batch size, sequence length, tagset size, tagset size) for CRF
         # -- A tensor of shape (aggregated sequence length for all sentences in batch, tagset size) for linear layer
         if self.use_crf:
-            features = self.crf(sentence_tensor)
+            features = self.crf(features)
             scores = (features, lengths, self.crf.transitions)
         else:
-            features = self.linear2tag(sentence_tensor)
             scores = self._get_scores_from_features(features, lengths)
 
         gold_labels = self._get_gold_labels(sentences)
@@ -370,11 +364,11 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             if not isinstance(sentences, list):
                 sentences = [sentences]
 
-            # filter empty sentences
-            sentences = [sentence for sentence in sentences if len(sentence) > 0]
+            # order by length and filter empty sentences
+            reordered_sentences = self._sort_data(sentences)
 
-            # order by length
-            reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
+            if len(reordered_sentences) == 0:
+                return sentences
 
             dataloader = DataLoader(
                 dataset=FlairDatapointDataset(reordered_sentences),
@@ -488,11 +482,6 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             if "transitions" in state["state_dict"]:
                 state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"]
                 del state["state_dict"]["transitions"]
-            if "linear.weight" in state["state_dict"] and "linear.bias" in state["state_dict"]:
-                state["state_dict"]["crf.emission.weight"] = state["state_dict"]["linear.weight"]
-                state["state_dict"]["crf.emission.bias"] = state["state_dict"]["linear.bias"]
-                del state["state_dict"]["linear.weight"]
-                del state["state_dict"]["linear.bias"]
 
         model = SequenceTagger(
             embeddings=state["embeddings"],
@@ -705,18 +694,6 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
             # get mapped name
             hf_model_name = huggingface_model_map[model_name]
-
-            # output information
-            log.info("-" * 80)
-            log.info(
-                f"The model key '{model_name}' now maps to 'https://huggingface.co/{hf_model_name}' on the HuggingFace ModelHub"
-            )
-            log.info(f" - The most current version of the model is automatically downloaded from there.")
-            if model_name in hu_model_map:
-                log.info(
-                    f" - (you can alternatively manually download the original model at {hu_model_map[model_name]})"
-                )
-            log.info("-" * 80)
 
             # use mapped name instead
             model_name = hf_model_name
