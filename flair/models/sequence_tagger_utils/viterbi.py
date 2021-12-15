@@ -7,7 +7,6 @@ from torch.nn.utils.rnn import pack_padded_sequence
 import flair
 from flair.data import Dictionary, Label, List
 
-
 START_TAG: str = "<START>"
 STOP_TAG: str = "<STOP>"
 
@@ -49,25 +48,29 @@ class ViterbiLoss(torch.nn.Module):
         scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets_matrix_indices)
         scores_at_targets = pack_padded_sequence(scores_at_targets, lengths.values, batch_first=True)[0]
         transitions_to_stop = transitions[
-            np.repeat(self.stop_tag, features.shape[0]), [target[length - 1] for target, length in
-                                                          zip(targets, lengths.values)]]
+            np.repeat(self.stop_tag, features.shape[0]),
+            [target[length - 1] for target, length in zip(targets, lengths.values)],
+        ]
         gold_score = scores_at_targets.sum() + transitions_to_stop.sum()
 
         scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device)
 
         for t in range(max(lengths.values)):
-            batch_size_t = sum([l > t for l in
-                                lengths.values])  # since batch is ordered, we can save computation time by reducing our effective batch_size
+            batch_size_t = sum(
+                [l > t for l in lengths.values]
+            )  # since batch is ordered, we can save computation time by reducing our effective batch_size
 
             if t == 0:
                 # Initially, get scores from <start> tag to all other tags
-                scores_upto_t[:batch_size_t] = scores_upto_t[:batch_size_t] + features[:batch_size_t, t, :,
-                                                                              self.start_tag]
+                scores_upto_t[:batch_size_t] = (
+                    scores_upto_t[:batch_size_t] + features[:batch_size_t, t, :, self.start_tag]
+                )
             else:
                 # We add scores at current timestep to scores accumulated up to previous timestep, and log-sum-exp
                 # Remember, the cur_tag of the previous timestep is the prev_tag of this timestep
                 scores_upto_t[:batch_size_t] = self._log_sum_exp(
-                    features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t].unsqueeze(1), dim=2)
+                    features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t].unsqueeze(1), dim=2
+                )
 
         all_paths_scores = self._log_sum_exp(scores_upto_t + transitions[self.stop_tag].unsqueeze(0), dim=1).sum()
 
@@ -111,9 +114,12 @@ class ViterbiLoss(torch.nn.Module):
             t += [self.tag_dictionary.get_idx_for_item(STOP_TAG)] * (max(lengths.values) - len(t))
 
         matrix_indices = list(
-            map(lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)] + [
-                s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)],
-                targets_per_sentence))
+            map(
+                lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)]
+                + [s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)],
+                targets_per_sentence,
+            )
+        )
 
         return targets_per_sentence, matrix_indices
 
@@ -149,8 +155,10 @@ class ViterbiDecoder:
         # Create a tensor to hold back-pointers
         # i.e., indices of the previous_tag that corresponds to maximum accumulated score at current tag
         # Let pads be the <end> tag index, since that was the last tag in the decoded sequence
-        backpointers = torch.ones((batch_size, seq_len + 1, self.tagset_size), dtype=torch.long,
-                                  device=flair.device) * self.stop_tag
+        backpointers = (
+            torch.ones((batch_size, seq_len + 1, self.tagset_size), dtype=torch.long, device=flair.device)
+            * self.stop_tag
+        )
 
         for t in range(seq_len):
             batch_size_t = sum([l > t for l in lengths.values])  # effective batch size (sans pads) at this timestep
@@ -158,20 +166,21 @@ class ViterbiDecoder:
 
             if t == 0:
                 scores_upto_t[:batch_size_t, t] = features[:batch_size_t, t, :, self.start_tag]
-                backpointers[:batch_size_t, t, :] = torch.ones((batch_size_t, self.tagset_size),
-                                                               dtype=torch.long) * self.start_tag
+                backpointers[:batch_size_t, t, :] = (
+                    torch.ones((batch_size_t, self.tagset_size), dtype=torch.long) * self.start_tag
+                )
             else:
                 # We add scores at current timestep to scores accumulated up to previous timestep, and
                 # choose the previous timestep that corresponds to the max. accumulated score for each current timestep
                 scores_upto_t[:batch_size_t, t], backpointers[:batch_size_t, t, :] = torch.max(
-                    features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t - 1].unsqueeze(1),
-                    dim=2)
+                    features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t - 1].unsqueeze(1), dim=2
+                )
 
             # If sentence is over, add transition to STOP-tag
             if terminates:
                 scores_upto_t[terminates, t + 1], backpointers[terminates, t + 1, :] = torch.max(
-                    scores_upto_t[terminates, t].unsqueeze(1) + transitions[self.stop_tag].unsqueeze(0),
-                    dim=2)
+                    scores_upto_t[terminates, t].unsqueeze(1) + transitions[self.stop_tag].unsqueeze(0), dim=2
+                )
 
         # Decode/trace best path backwards
         decoded = torch.zeros((batch_size, backpointers.size(1)), dtype=torch.long, device=flair.device)
@@ -182,8 +191,9 @@ class ViterbiDecoder:
             pointer = decoded[:, t].unsqueeze(1)
 
         # Sanity check
-        assert torch.equal(decoded[:, 0],
-                           torch.ones((batch_size), dtype=torch.long, device=flair.device) * self.start_tag)
+        assert torch.equal(
+            decoded[:, 0], torch.ones((batch_size), dtype=torch.long, device=flair.device) * self.start_tag
+        )
 
         # remove start-tag and backscore to stop-tag
         scores_upto_t = scores_upto_t[:, :-1, :]

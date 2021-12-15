@@ -2,7 +2,6 @@ import torch
 
 import flair
 
-
 START_TAG: str = "<START>"
 STOP_TAG: str = "<STOP>"
 
@@ -29,13 +28,9 @@ class CRF(torch.nn.Module):
         # If we are not using a pretrained model and train a fresh one, we need to set transitions from any tag
         # to START-tag and from STOP-tag to any other tag to -10000.
         if not init_from_state_dict:
-            self.transitions.detach()[
-            tag_dictionary.get_idx_for_item(START_TAG), :
-            ] = -10000
+            self.transitions.detach()[tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
 
-            self.transitions.detach()[
-            :, tag_dictionary.get_idx_for_item(STOP_TAG)
-            ] = -10000
+            self.transitions.detach()[:, tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
         self.to(flair.device)
 
     def forward(self, features: torch.tensor) -> torch.tensor:

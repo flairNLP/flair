@@ -82,9 +82,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         # ----- Initial loss weights parameters -----
         self.weight_dict = loss_weights
-        self.loss_weights = (
-            self._init_loss_weights(loss_weights) if loss_weights else None
-        )
+        self.loss_weights = self._init_loss_weights(loss_weights) if loss_weights else None
 
         # ----- RNN specific parameters -----
         self.use_rnn = use_rnn
@@ -97,11 +95,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         self.use_crf = use_crf
         # Previously trained models have been trained without an explicit CRF, thus it is required to check
         # whether we are loading a model from state dict in order to skip or add START and STOP token
-        if (
-            use_crf
-            and not init_from_state_dict
-            and not self.tag_dictionary.start_stop_tags_are_set()
-        ):
+        if use_crf and not init_from_state_dict and not self.tag_dictionary.start_stop_tags_are_set():
             self.tag_dictionary.set_start_stop_tags()
             self.tagset_size += 2
 
@@ -171,9 +165,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             self.viterbi_decoder = ViterbiDecoder(tag_dictionary)
         else:
             self.linear2tag = torch.nn.Linear(hidden_output_dim, self.tagset_size)
-            self.loss_function = torch.nn.CrossEntropyLoss(
-                weight=self.loss_weights, reduction="sum"
-            )
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
 
         self.to(flair.device)
 
@@ -237,15 +229,11 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                 batch_first=True,
             )
         else:
-            raise Exception(
-                f"Unknown RNN type: {rnn_type}. Please use either LSTM, GRU or RNN."
-            )
+            raise Exception(f"Unknown RNN type: {rnn_type}. Please use either LSTM, GRU or RNN.")
 
         return RNN
 
-    def forward_pass(
-        self, sentences: Union[List[Sentence], Sentence], **kwargs
-    ) -> tuple:
+    def forward_pass(self, sentences: Union[List[Sentence], Sentence], **kwargs) -> tuple:
         """
         Forward propagation through network. Returns gold labels of batch in addition.
         :param sentences: Batch of current sentences
@@ -273,13 +261,9 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = pack_padded_sequence(
-                sentence_tensor, lengths.values, batch_first=True, enforce_sorted=False
-            )
+            packed = pack_padded_sequence(sentence_tensor, lengths.values, batch_first=True, enforce_sorted=False)
             rnn_output, hidden = self.rnn(packed)
-            sentence_tensor, output_lengths = pad_packed_sequence(
-                rnn_output, batch_first=True
-            )
+            sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
         else:
             sentence_tensor = self.linear(sentence_tensor)
 
@@ -302,9 +286,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         return scores, gold_labels
 
-    def _make_padded_tensor_for_batch(
-        self, sentences: List[Sentence]
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, torch.Tensor]:
         names = self.embeddings.get_names()
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         longest_token_sequence_in_batch: int = max(lengths)
@@ -315,15 +297,11 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         )
         all_embs = list()
         for sentence in sentences:
-            all_embs += [
-                emb for token in sentence for emb in token.get_each_embedding(names)
-            ]
+            all_embs += [emb for token in sentence for emb in token.get_each_embedding(names)]
             nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
 
             if nb_padding_tokens > 0:
-                t = pre_allocated_zero_tensor[
-                    : self.embeddings.embedding_length * nb_padding_tokens
-                ]
+                t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
         sentence_tensor = torch.cat(all_embs).view(
             [
@@ -356,10 +334,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         :param sentences: List of sentences in batch
         """
         tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
-        labels = [
-            [[token.get_tag(self.label_type).value] for token in sentence]
-            for sentence in tokens_per_sentence
-        ]
+        labels = [[[token.get_tag(self.label_type).value] for token in sentence] for sentence in tokens_per_sentence]
         labels = [token for sentence in labels for token in sentence]
 
         return labels
@@ -464,12 +439,8 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             predictions_for_sentence = prediction_batch[: len(sentence)]
             predictions.append(
                 [
-                    Label(
-                        self.tag_dictionary.get_item_for_index(prediction), score.item()
-                    )
-                    for token, score, prediction in zip(
-                        sentence, scores, predictions_for_sentence
-                    )
+                    Label(self.tag_dictionary.get_item_for_index(prediction), score.item())
+                    for token, score, prediction in zip(sentence, scores, predictions_for_sentence)
                 ]
             )
             scores_batch = scores_batch[len(sentence) :]
@@ -503,37 +474,18 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         """Initialize the model from a state dictionary."""
         rnn_type = "LSTM" if "rnn_type" not in state.keys() else state["rnn_type"]
         use_dropout = 0.0 if "use_dropout" not in state.keys() else state["use_dropout"]
-        use_word_dropout = (
-            0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
-        )
-        use_locked_dropout = (
-            0.0
-            if "use_locked_dropout" not in state.keys()
-            else state["use_locked_dropout"]
-        )
-        reproject_embeddings = (
-            True
-            if "reproject_embeddings" not in state.keys()
-            else state["reproject_embeddings"]
-        )
+        use_word_dropout = 0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
+        use_locked_dropout = 0.0 if "use_locked_dropout" not in state.keys() else state["use_locked_dropout"]
+        reproject_embeddings = True if "reproject_embeddings" not in state.keys() else state["reproject_embeddings"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
 
         if state["use_crf"]:
             if "transitions" in state["state_dict"]:
-                state["state_dict"]["crf.transitions"] = state["state_dict"][
-                    "transitions"
-                ]
+                state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"]
                 del state["state_dict"]["transitions"]
-            if (
-                "linear.weight" in state["state_dict"]
-                and "linear.bias" in state["state_dict"]
-            ):
-                state["state_dict"]["crf.emission.weight"] = state["state_dict"][
-                    "linear.weight"
-                ]
-                state["state_dict"]["crf.emission.bias"] = state["state_dict"][
-                    "linear.bias"
-                ]
+            if "linear.weight" in state["state_dict"] and "linear.bias" in state["state_dict"]:
+                state["state_dict"]["crf.emission.weight"] = state["state_dict"]["linear.weight"]
+                state["state_dict"]["crf.emission.bias"] = state["state_dict"]["linear.bias"]
                 del state["state_dict"]["linear.weight"]
                 del state["state_dict"]["linear.bias"]
 
@@ -606,62 +558,38 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         hu_model_map = {
             # English NER models
             "ner": "/".join([hu_path, "ner", "en-ner-conll03-v0.4.pt"]),
-            "ner-pooled": "/".join(
-                [hu_path, "ner-pooled", "en-ner-conll03-pooled-v0.5.pt"]
-            ),
+            "ner-pooled": "/".join([hu_path, "ner-pooled", "en-ner-conll03-pooled-v0.5.pt"]),
             "ner-fast": "/".join([hu_path, "ner-fast", "en-ner-fast-conll03-v0.4.pt"]),
-            "ner-ontonotes": "/".join(
-                [hu_path, "ner-ontonotes", "en-ner-ontonotes-v0.4.pt"]
-            ),
-            "ner-ontonotes-fast": "/".join(
-                [hu_path, "ner-ontonotes-fast", "en-ner-ontonotes-fast-v0.4.pt"]
-            ),
+            "ner-ontonotes": "/".join([hu_path, "ner-ontonotes", "en-ner-ontonotes-v0.4.pt"]),
+            "ner-ontonotes-fast": "/".join([hu_path, "ner-ontonotes-fast", "en-ner-ontonotes-fast-v0.4.pt"]),
             # Multilingual NER models
             "ner-multi": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
             "multi-ner": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
-            "ner-multi-fast": "/".join(
-                [hu_path, "multi-ner-fast", "ner-multi-fast.pt"]
-            ),
+            "ner-multi-fast": "/".join([hu_path, "multi-ner-fast", "ner-multi-fast.pt"]),
             # English POS models
             "upos": "/".join([hu_path, "upos", "en-pos-ontonotes-v0.4.pt"]),
-            "upos-fast": "/".join(
-                [hu_path, "upos-fast", "en-upos-ontonotes-fast-v0.4.pt"]
-            ),
+            "upos-fast": "/".join([hu_path, "upos-fast", "en-upos-ontonotes-fast-v0.4.pt"]),
             "pos": "/".join([hu_path, "pos", "en-pos-ontonotes-v0.5.pt"]),
-            "pos-fast": "/".join(
-                [hu_path, "pos-fast", "en-pos-ontonotes-fast-v0.5.pt"]
-            ),
+            "pos-fast": "/".join([hu_path, "pos-fast", "en-pos-ontonotes-fast-v0.5.pt"]),
             # Multilingual POS models
             "pos-multi": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
             "multi-pos": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
-            "pos-multi-fast": "/".join(
-                [hu_path, "multi-pos-fast", "pos-multi-fast.pt"]
-            ),
-            "multi-pos-fast": "/".join(
-                [hu_path, "multi-pos-fast", "pos-multi-fast.pt"]
-            ),
+            "pos-multi-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
+            "multi-pos-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
             # English SRL models
             "frame": "/".join([hu_path, "frame", "en-frame-ontonotes-v0.4.pt"]),
-            "frame-fast": "/".join(
-                [hu_path, "frame-fast", "en-frame-ontonotes-fast-v0.4.pt"]
-            ),
+            "frame-fast": "/".join([hu_path, "frame-fast", "en-frame-ontonotes-fast-v0.4.pt"]),
             # English chunking models
             "chunk": "/".join([hu_path, "chunk", "en-chunk-conll2000-v0.4.pt"]),
-            "chunk-fast": "/".join(
-                [hu_path, "chunk-fast", "en-chunk-conll2000-fast-v0.4.pt"]
-            ),
+            "chunk-fast": "/".join([hu_path, "chunk-fast", "en-chunk-conll2000-fast-v0.4.pt"]),
             # Danish models
             "da-pos": "/".join([hu_path, "da-pos", "da-pos-v0.1.pt"]),
             "da-ner": "/".join([hu_path, "NER-danish", "da-ner-v0.1.pt"]),
             # German models
             "de-pos": "/".join([hu_path, "de-pos", "de-pos-ud-hdt-v0.5.pt"]),
-            "de-pos-tweets": "/".join(
-                [hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]
-            ),
+            "de-pos-tweets": "/".join([hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]),
             "de-ner": "/".join([hu_path, "de-ner", "de-ner-conll03-v0.4.pt"]),
-            "de-ner-germeval": "/".join(
-                [hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]
-            ),
+            "de-ner-germeval": "/".join([hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]),
             "de-ler": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
             "de-ner-legal": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
             # French models
@@ -682,9 +610,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             ),
             # Keyphase models
             "keyphrase": "/".join([hu_path, "keyphrase", "keyphrase-en-scibert.pt"]),
-            "negation-speculation": "/".join(
-                [hu_path, "negation-speculation", "negation-speculation-model.pt"]
-            ),
+            "negation-speculation": "/".join([hu_path, "negation-speculation", "negation-speculation-model.pt"]),
             # Biomedical models
             "hunflair-paper-cellline": "/".join(
                 [
@@ -710,9 +636,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                     "hunflair-disease-v1.0.pt",
                 ]
             ),
-            "hunflair-paper-gene": "/".join(
-                [hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]
-            ),
+            "hunflair-paper-gene": "/".join([hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]),
             "hunflair-paper-species": "/".join(
                 [
                     hu_path,
@@ -782,9 +706,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             log.info(
                 f"The model key '{model_name}' now maps to 'https://huggingface.co/{hf_model_name}' on the HuggingFace ModelHub"
             )
-            log.info(
-                f" - The most current version of the model is automatically downloaded from there."
-            )
+            log.info(f" - The most current version of the model is automatically downloaded from there.")
             if model_name in hu_model_map:
                 log.info(
                     f" - (you can alternatively manually download the original model at {hu_model_map[model_name]})"
@@ -811,9 +733,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                     flair.cache_root / cache_dir / "indirect.zip",
                     flair.cache_root / cache_dir,
                 )
-            model_path = str(
-                flair.cache_root / cache_dir / "indirect" / "final-model.pt"
-            )
+            model_path = str(flair.cache_root / cache_dir / "indirect" / "final-model.pt")
 
         elif model_name == "de-historic-direct":
             model_file = flair.cache_root / cache_dir / "direct" / "final-model.pt"
@@ -839,14 +759,10 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                     flair.cache_root / cache_dir / "reported.zip",
                     flair.cache_root / cache_dir,
                 )
-            model_path = str(
-                flair.cache_root / cache_dir / "reported" / "final-model.pt"
-            )
+            model_path = str(flair.cache_root / cache_dir / "reported" / "final-model.pt")
 
         elif model_name == "de-historic-free-indirect":
-            model_file = (
-                flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt"
-            )
+            model_file = flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt"
             if not model_file.exists():
                 cached_path(
                     "http://www.redewiedergabe.de/models/freeIndirect.zip",
@@ -856,9 +772,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                     flair.cache_root / cache_dir / "freeIndirect.zip",
                     flair.cache_root / cache_dir,
                 )
-            model_path = str(
-                flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt"
-            )
+            model_path = str(flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt")
 
         # for all other cases (not local file or special download location), use HF model hub
         else:
@@ -899,16 +813,10 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                     f"ACHTUNG: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
                 )
                 # log.error(f" - Error message: {e}")
-                log.error(
-                    f" -> Please check https://huggingface.co/models?filter=flair for all available models."
-                )
-                log.error(
-                    f" -> Alternatively, point to a model file on your local drive."
-                )
+                log.error(f" -> Please check https://huggingface.co/models?filter=flair for all available models.")
+                log.error(f" -> Alternatively, point to a model file on your local drive.")
                 log.error("-" * 80)
-                Path(
-                    flair.cache_root / "models" / model_folder
-                ).rmdir()  # remove folder again if not valid
+                Path(flair.cache_root / "models" / model_folder).rmdir()  # remove folder again if not valid
 
         return model_path
 
@@ -916,9 +824,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
-            log.warning(
-                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
-            )
+            log.warning(f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens.")
         return filtered_sentences
 
     def _print_predictions(self, batch, gold_label_type):
@@ -948,9 +854,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             # now print labels in CoNLL format
             for token in datapoint:
                 eval_line = (
-                    f"{token.text} "
-                    f"{token.get_tag('gold_bio').value} "
-                    f"{token.get_tag('predicted_bio').value}\n"
+                    f"{token.text} " f"{token.get_tag('gold_bio').value} " f"{token.get_tag('predicted_bio').value}\n"
                 )
                 lines.append(eval_line)
             lines.append("\n")
@@ -1050,15 +954,8 @@ class MultiTagger:
                         if not embedding.static_embeddings:
                             continue
 
-                        if (
-                            embedding.name
-                            in previous_model.embeddings.get_named_embeddings_dict()
-                        ):
-                            previous_embedding = (
-                                previous_model.embeddings.get_named_embeddings_dict()[
-                                    embedding.name
-                                ]
-                            )
+                        if embedding.name in previous_model.embeddings.get_named_embeddings_dict():
+                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[embedding.name]
                             previous_embedding.name = previous_embedding.name[2:]
                             new_stack.append(previous_embedding)
                             embedding_found = True
@@ -1078,15 +975,10 @@ class MultiTagger:
                 if not model.embeddings.static_embeddings:
 
                     for previous_model in models:
-                        if (
-                            model.embeddings.name
-                            in previous_model.embeddings.get_named_embeddings_dict()
-                        ):
-                            previous_embedding = (
-                                previous_model.embeddings.get_named_embeddings_dict()[
-                                    model.embeddings.name
-                                ]
-                            )
+                        if model.embeddings.name in previous_model.embeddings.get_named_embeddings_dict():
+                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[
+                                model.embeddings.name
+                            ]
                             if not previous_embedding.static_embeddings:
                                 model.embeddings = previous_embedding
                                 break
