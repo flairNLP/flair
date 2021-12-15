@@ -374,7 +374,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             sentences = [sentence for sentence in sentences if len(sentence) > 0]
 
             # order by length
-            reordered_sentences: List[Union[Sentence, str]] = sorted(sentences, key=lambda s: len(s), reverse=True)
+            reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
 
             dataloader = DataLoader(
                 dataset=FlairDatapointDataset(reordered_sentences),
