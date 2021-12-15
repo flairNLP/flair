@@ -301,8 +301,9 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
             for span in all_spans:
 
-                true_values = all_true_values[span] if span in all_true_values else ["O"]
-                predicted_values = all_predicted_values[span] if span in all_predicted_values else ["O"]
+                """
+                true_values = all_true_values[span] if span in all_true_values else ['O']
+                predicted_values = all_predicted_values[span] if span in all_predicted_values else ['O']
 
                 y_true_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
                 for true_value in true_values:
@@ -313,6 +314,12 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 for predicted_value in predicted_values:
                     y_pred_instance[evaluation_label_dictionary.get_idx_for_item(predicted_value)] = 1
                 y_pred.append(y_pred_instance.tolist())
+                """
+                true_value = all_true_values[span][0] if span in all_true_values else 'O'
+                predicted_value = all_predicted_values[span][0] if span in all_predicted_values else 'O'
+
+                y_true.append(evaluation_label_dictionary.get_idx_for_item(true_value))
+                y_pred.append(evaluation_label_dictionary.get_idx_for_item(predicted_value))
 
         # now, calculate evaluation numbers
         target_names = []
@@ -351,12 +358,20 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
             accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
 
-            precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
-            recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
-            micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
+            try:
+                precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
+                recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
+                micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
+                main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
+            except KeyError:
+                precision_score = round(classification_report_dict["accuracy"], 4)
+                recall_score = round(classification_report_dict["accuracy"], 4)
+                micro_f_score = round(classification_report_dict["accuracy"], 4)
+                main_score = round(classification_report_dict["accuracy"], 4)
+
             macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
 
-            main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
+
 
         else:
             # issue error and default all evaluation numbers to 0.
