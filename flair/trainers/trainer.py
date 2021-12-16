@@ -234,27 +234,6 @@ class ModelTrainer:
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
 
-        log_line(log)
-        log.info(f'Model: "{self.model}"')
-        log_line(log)
-        log.info(f'Corpus: "{self.corpus}"')
-        log_line(log)
-        log.info("Parameters:")
-        log.info(f' - learning_rate: "{learning_rate}"')
-        log.info(f' - mini_batch_size: "{mini_batch_size}"')
-        log.info(f' - patience: "{patience}"')
-        log.info(f' - anneal_factor: "{anneal_factor}"')
-        log.info(f' - max_epochs: "{max_epochs}"')
-        log.info(f' - shuffle: "{shuffle}"')
-        log.info(f' - train_with_dev: "{train_with_dev}"')
-        log.info(f' - batch_growth_annealing: "{batch_growth_annealing}"')
-        log_line(log)
-        log.info(f'Model training base path: "{base_path}"')
-        log_line(log)
-        log.info(f"Device: {flair.device}")
-        log_line(log)
-        log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
-
         self.check_for_and_delete_previous_best_models(base_path)
 
         # determine what splits (train, dev, test) to evaluate and log
@@ -384,6 +363,27 @@ class ModelTrainer:
                 log_handler = add_file_handler(log, base_path / "training.log")
             else:
                 log_handler = None
+
+            log_line(log)
+            log.info(f'Model: "{self.model}"')
+            log_line(log)
+            log.info(f'Corpus: "{self.corpus}"')
+            log_line(log)
+            log.info("Parameters:")
+            log.info(f' - learning_rate: "{learning_rate}"')
+            log.info(f' - mini_batch_size: "{mini_batch_size}"')
+            log.info(f' - patience: "{patience}"')
+            log.info(f' - anneal_factor: "{anneal_factor}"')
+            log.info(f' - max_epochs: "{max_epochs}"')
+            log.info(f' - shuffle: "{shuffle}"')
+            log.info(f' - train_with_dev: "{train_with_dev}"')
+            log.info(f' - batch_growth_annealing: "{batch_growth_annealing}"')
+            log_line(log)
+            log.info(f'Model training base path: "{base_path}"')
+            log_line(log)
+            log.info(f"Device: {flair.device}")
+            log_line(log)
+            log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
 
             previous_learning_rate = learning_rate
             momentum = 0
