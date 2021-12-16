@@ -450,7 +450,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             self.__dict__[key] = embedding.__dict__[key]
 
         if model_state_dict:
-            self.load_state_dict(model_state_dict)
+            self.model.load_state_dict(model_state_dict)
 
     @classmethod
     def create_from_state(cls, **state):
