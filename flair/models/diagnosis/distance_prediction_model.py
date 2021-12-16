@@ -261,7 +261,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
 
             buckets = [0 for _ in range(11)]
 
-            eval_loss = 0.0
+            eval_loss = torch.zeros(1, device=flair.device)
 
             metric = MetricRegression("Evaluation")
 
@@ -360,7 +360,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
                 f"spearman: {metric.spearmanr():.4f}"
             )
 
-            result: Result = Result(metric.pearsonr(), log_header, log_line, detailed_result, loss=eval_loss)
+            result: Result = Result(metric.pearsonr(), log_header, log_line, detailed_result, loss=eval_loss.item())
 
             return result
 
@@ -376,7 +376,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
         y_pred = []
 
         with torch.no_grad():
-            eval_loss = 0.0
+            eval_loss = torch.zeros(1, device=flair.device)
 
             lines: List[str] = []
             # we iterate over each sentence, instead of batches
@@ -464,7 +464,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,
-                loss=eval_loss,
+                loss=eval_loss.item(),
             )
 
             return result

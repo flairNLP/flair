@@ -29,7 +29,6 @@ import flair
 import flair.nn
 from flair.data import Corpus, Dictionary, MultiCorpus, _len_dataset
 from flair.datasets import DataLoader
-from flair.models import SequenceTagger
 from flair.optim import ExpAnnealLR, LinearSchedulerWithWarmup
 from flair.training_utils import (
     AnnealOnPlateau,
@@ -234,27 +233,6 @@ class ModelTrainer:
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
 
-        log_line(log)
-        log.info(f'Model: "{self.model}"')
-        log_line(log)
-        log.info(f'Corpus: "{self.corpus}"')
-        log_line(log)
-        log.info("Parameters:")
-        log.info(f' - learning_rate: "{learning_rate}"')
-        log.info(f' - mini_batch_size: "{mini_batch_size}"')
-        log.info(f' - patience: "{patience}"')
-        log.info(f' - anneal_factor: "{anneal_factor}"')
-        log.info(f' - max_epochs: "{max_epochs}"')
-        log.info(f' - shuffle: "{shuffle}"')
-        log.info(f' - train_with_dev: "{train_with_dev}"')
-        log.info(f' - batch_growth_annealing: "{batch_growth_annealing}"')
-        log_line(log)
-        log.info(f'Model training base path: "{base_path}"')
-        log_line(log)
-        log.info(f"Device: {flair.device}")
-        log_line(log)
-        log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
-
         self.check_for_and_delete_previous_best_models(base_path)
 
         # determine what splits (train, dev, test) to evaluate and log
@@ -384,6 +362,27 @@ class ModelTrainer:
                 log_handler = add_file_handler(log, base_path / "training.log")
             else:
                 log_handler = None
+
+            log_line(log)
+            log.info(f'Model: "{self.model}"')
+            log_line(log)
+            log.info(f'Corpus: "{self.corpus}"')
+            log_line(log)
+            log.info("Parameters:")
+            log.info(f' - learning_rate: "{learning_rate}"')
+            log.info(f' - mini_batch_size: "{mini_batch_size}"')
+            log.info(f' - patience: "{patience}"')
+            log.info(f' - anneal_factor: "{anneal_factor}"')
+            log.info(f' - max_epochs: "{max_epochs}"')
+            log.info(f' - shuffle: "{shuffle}"')
+            log.info(f' - train_with_dev: "{train_with_dev}"')
+            log.info(f' - batch_growth_annealing: "{batch_growth_annealing}"')
+            log_line(log)
+            log.info(f'Model training base path: "{base_path}"')
+            log_line(log)
+            log.info(f"Device: {flair.device}")
+            log_line(log)
+            log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
 
             previous_learning_rate = learning_rate
             momentum = 0
@@ -778,18 +777,16 @@ class ModelTrainer:
             log_line(log)
             log.info("Exiting from training early.")
 
-            if use_tensorboard:
-                writer.close()
-
             if not param_selection_mode:
                 log.info("Saving model ...")
                 self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
-        finally:
+        except Exception:
             if create_file_logs:
                 log_handler.close()
                 log.removeHandler(log_handler)
-
+            raise
+        finally:
             if use_tensorboard:
                 writer.close()
 
@@ -805,6 +802,10 @@ class ModelTrainer:
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
+
+        if create_file_logs:
+            log_handler.close()
+            log.removeHandler(log_handler)
 
         return {
             "test_score": final_score,

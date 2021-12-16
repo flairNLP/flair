@@ -210,7 +210,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
         with torch.no_grad():
 
             # loss calculation
-            eval_loss = 0.0
+            eval_loss = torch.zeros(1, device=flair.device)
             average_over = 0
 
             # variables for printing
@@ -390,7 +390,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
             log_header=log_header,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            loss=eval_loss,
+            loss=eval_loss.item(),
         )
 
         return result
