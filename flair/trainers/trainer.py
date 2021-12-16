@@ -29,7 +29,6 @@ import flair
 import flair.nn
 from flair.data import Corpus, Dictionary, MultiCorpus, _len_dataset
 from flair.datasets import DataLoader
-from flair.models import SequenceTagger
 from flair.optim import ExpAnnealLR, LinearSchedulerWithWarmup
 from flair.training_utils import (
     AnnealOnPlateau,
@@ -778,18 +777,16 @@ class ModelTrainer:
             log_line(log)
             log.info("Exiting from training early.")
 
-            if use_tensorboard:
-                writer.close()
-
             if not param_selection_mode:
                 log.info("Saving model ...")
                 self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
-        finally:
+        except Exception:
             if create_file_logs:
                 log_handler.close()
                 log.removeHandler(log_handler)
-
+            raise
+        finally:
             if use_tensorboard:
                 writer.close()
 
@@ -805,6 +802,10 @@ class ModelTrainer:
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
+
+        if create_file_logs:
+            log_handler.close()
+            log.removeHandler(log_handler)
 
         return {
             "test_score": final_score,
