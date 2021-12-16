@@ -435,6 +435,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
             lines.append(eval_line)
         return lines
 
+
 class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     """Default base class for all Flair models that do classification, both
     single- and multi-label. It inherits from flair.nn.Classifier and thus from
