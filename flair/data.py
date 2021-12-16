@@ -290,10 +290,10 @@ class RelationLabel(Label):
 
     def __eq__(self, other):
         return (
-                self.value == other.value
-                and self.score == other.score
-                and self.head.id_text == other.head.id_text
-                and self.tail.id_text == other.tail.id_text
+            self.value == other.value
+            and self.score == other.score
+            and self.head.id_text == other.head.id_text
+            and self.tail.id_text == other.tail.id_text
         )
 
     @property
@@ -403,12 +403,12 @@ class Token(DataPoint):
     """
 
     def __init__(
-            self,
-            text: str,
-            idx: int = None,
-            head_id: int = None,
-            whitespace_after: bool = True,
-            start_position: int = None,
+        self,
+        text: str,
+        idx: int = None,
+        head_id: int = None,
+        whitespace_after: bool = True,
+        start_position: int = None,
     ):
         super().__init__()
 
@@ -610,11 +610,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-            self,
-            text: Union[str, List[str]] = [],
-            use_tokenizer: Union[bool, Tokenizer, Callable] = True,
-            language_code: str = None,
-            start_position: int = None,
+        self,
+        text: Union[str, List[str]] = [],
+        use_tokenizer: Union[bool, Tokenizer, Callable] = True,
+        language_code: str = None,
+        start_position: int = None,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -835,7 +835,7 @@ class Sentence(DataPoint):
     @lru_cache(maxsize=1)  # cache last context, as training repeats calls
     def left_context(self, context_length: int, respect_document_boundaries: bool = True):
         sentence = self
-        left_context = []
+        left_context: List[str] = []
         while True:
             sentence = sentence.previous_sentence()
             if sentence is None:
@@ -853,7 +853,7 @@ class Sentence(DataPoint):
     @lru_cache(maxsize=1)  # cache last context, as training repeats calls
     def right_context(self, context_length: int, respect_document_boundaries: bool = True):
         sentence = self
-        right_context = []
+        right_context: List[str] = []
         while True:
             sentence = sentence.next_sentence()
             if sentence is None:
@@ -863,10 +863,9 @@ class Sentence(DataPoint):
 
             right_context += [t.text for t in sentence.tokens]
             if len(right_context) > context_length:
-                right_context = right_context[: context_length]
+                right_context = right_context[:context_length]
                 break
         return right_context
-
 
     def to_tagged_string(self, main_tag=None) -> str:
         list = []
@@ -1177,12 +1176,12 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-            self,
-            train: Dataset = None,
-            dev: Dataset = None,
-            test: Dataset = None,
-            name: str = "corpus",
-            sample_missing_splits: Union[bool, str] = True,
+        self,
+        train: Dataset = None,
+        dev: Dataset = None,
+        test: Dataset = None,
+        name: str = "corpus",
+        sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1221,11 +1220,11 @@ class Corpus:
         return self._test
 
     def downsample(
-            self,
-            percentage: float = 0.1,
-            downsample_train=True,
-            downsample_dev=True,
-            downsample_test=True,
+        self,
+        percentage: float = 0.1,
+        downsample_train=True,
+        downsample_dev=True,
+        downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:

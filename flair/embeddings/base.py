@@ -1,25 +1,25 @@
 import inspect
 import logging
 import os
+import random
 import re
 import tempfile
 import zipfile
 from abc import abstractmethod
 from io import BytesIO
-import random
-from typing import Dict, Generic, List, Sequence, Union, Optional
+from typing import Dict, Generic, List, Optional, Sequence, Union
 
 import torch
 from torch.nn import Parameter, ParameterList
 from transformers import (
-    PreTrainedTokenizer,
-    AutoTokenizer,
-    PretrainedConfig,
+    CONFIG_MAPPING,
     AutoConfig,
     AutoModel,
+    AutoTokenizer,
+    PretrainedConfig,
+    PreTrainedTokenizer,
     TransfoXLModel,
     XLNetModel,
-    CONFIG_MAPPING,
 )
 
 import flair
@@ -171,23 +171,23 @@ class TransformerEmbedding(Embeddings[Sentence]):
     NO_MAX_SEQ_LENGTH_MODELS = (XLNetModel, TransfoXLModel)
 
     def __init__(
-            self,
-            model: str = "bert-base-uncased",
-            fine_tune: bool = True,
-            layers: str = "all",
-            layer_mean: bool = True,
-            subtoken_pooling: str = "first",
-            cls_pooling: str = "cls",
-            is_token_embedding: bool = True,
-            is_document_embedding: bool = True,
-            allow_long_sentences: bool = False,
-            use_context: Union[bool, int] = False,
-            respect_document_boundaries: bool = True,
-            context_dropout: float = 0.5,
-            saved_config: Optional[PretrainedConfig] = None,
-            tokenizer_data: Optional[BytesIO] = None,
-            name: Optional[str] = None,
-            **kwargs,
+        self,
+        model: str = "bert-base-uncased",
+        fine_tune: bool = True,
+        layers: str = "all",
+        layer_mean: bool = True,
+        subtoken_pooling: str = "first",
+        cls_pooling: str = "cls",
+        is_token_embedding: bool = True,
+        is_document_embedding: bool = True,
+        allow_long_sentences: bool = False,
+        use_context: Union[bool, int] = False,
+        respect_document_boundaries: bool = True,
+        context_dropout: float = 0.5,
+        saved_config: Optional[PretrainedConfig] = None,
+        tokenizer_data: Optional[BytesIO] = None,
+        name: Optional[str] = None,
+        **kwargs,
     ):
         self.instance_parameters = self.get_instance_parameters(locals=locals())
         super().__init__()
@@ -311,8 +311,8 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
         for begin_offset, token in enumerate(tokens):
             if (
-                    self.tokenizer.decode([token]) == test_string
-                    or self.tokenizer.decode([token]) == self.tokenizer.unk_token
+                self.tokenizer.decode([token]) == test_string
+                or self.tokenizer.decode([token]) == self.tokenizer.unk_token
             ):
                 break
         return begin_offset
@@ -330,6 +330,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
                 log.warning(
                     "Token embedding length and Document embedding length vary, due to `first_last` subtoken pooling, this might not be supported"
                 )
+        return length
 
     @property
     def embedding_type(self) -> str:
@@ -550,7 +551,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             tokenized_sentences.append(tokenized_string)
         return tokenized_sentences, all_token_subtoken_lengths
 
-    def _build_transformer_model_inputs(self, batch_encoding, tokenized_sentences):
+    def _build_transformer_model_inputs(self, batch_encoding, tokenized_sentences, sentences):
         model_kwargs = {}
         input_ids = batch_encoding["input_ids"].to(flair.device)
 
@@ -568,7 +569,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
         return input_ids, model_kwargs
 
     def _combine_strided_sentences(
-            self, hidden_states: torch.Tensor, sentence_parts_lengths: torch.Tensor
+        self, hidden_states: torch.Tensor, sentence_parts_lengths: torch.Tensor
     ) -> List[torch.Tensor]:
         sentence_idx_offset = 0
         sentence_hidden_states = []
@@ -582,7 +583,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
                 sentence_hidden_state = torch.cat(
                     (
                         sentence_hidden_state[:, : -1 - self.stride // 2, :],
-                        remainder_sentence_hidden_state[:, 1 + self.stride // 2:, :],
+                        remainder_sentence_hidden_state[:, 1 + self.stride // 2 :, :],
                     ),
                     1,
                 )
@@ -592,10 +593,10 @@ class TransformerEmbedding(Embeddings[Sentence]):
     def _try_document_embedding_shortcut(self, hidden_states, sentences):
         # cls first pooling can be done without recreating sentence hidden states
         if (
-                self.document_embedding
-                and not self.token_embedding
-                and self.cls_pooling == "cls"
-                and self.initial_cls_token
+            self.document_embedding
+            and not self.token_embedding
+            and self.cls_pooling == "cls"
+            and self.initial_cls_token
         ):
             embeddings_all_document_layers = hidden_states[:, :, 0]
             if self.layer_mean:
@@ -626,7 +627,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
     def _extract_token_embeddings(self, sentence_hidden_states, sentences, all_token_subtoken_lengths):
         for sentence_hidden_state, sentence, subtoken_lengths in zip(
-                sentence_hidden_states, sentences, all_token_subtoken_lengths
+            sentence_hidden_states, sentences, all_token_subtoken_lengths
         ):
             subword_start_idx = self.begin_offset
 
@@ -665,7 +666,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             return_tensors="pt",
         )
 
-        input_ids, model_kwargs = self._build_transformer_model_inputs(batch_encoding, tokenized_sentences)
+        input_ids, model_kwargs = self._build_transformer_model_inputs(batch_encoding, tokenized_sentences, sentences)
 
         hidden_states = self.model(input_ids, **model_kwargs)[-1]
 
@@ -701,7 +702,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             ]
 
             if self.document_embedding:
-                self._extract_document_embedding(sentence_hidden_states, sentences)
+                self._extract_document_embeddings(sentence_hidden_states, sentences)
 
             if self.token_embedding:
                 self._extract_token_embeddings(sentence_hidden_states, sentences, all_token_subtoken_lengths)
@@ -750,7 +751,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
         # move embeddings from context back to original sentence (if using context)
         if self.context_length > 0:
             for original_sentence, expanded_sentence, context_offset in zip(
-                    sentences, expanded_sentences, context_offsets
+                sentences, expanded_sentences, context_offsets
             ):
                 for token_idx, token in enumerate(original_sentence):
                     token.set_embedding(

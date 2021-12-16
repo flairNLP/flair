@@ -5,17 +5,10 @@ import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
 from torch.nn import RNNBase
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from transformers import (
-    CONFIG_MAPPING,
-    AutoConfig,
-    AutoModel,
-    AutoTokenizer,
-    PreTrainedTokenizer,
-)
 
 import flair
 from flair.data import Sentence
-from flair.embeddings.base import Embeddings, ScalarMix, TransformerEmbedding
+from flair.embeddings.base import Embeddings, TransformerEmbedding
 from flair.embeddings.token import FlairEmbeddings, StackedEmbeddings, TokenEmbeddings
 from flair.nn import LockedDropout, WordDropout
 
@@ -31,14 +24,13 @@ class DocumentEmbeddings(Embeddings[Sentence]):
 
 
 class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbedding):
-
     def __init__(
-            self,
-            model: str = "bert-base-uncased",  # set parameters with different default values
-            layers: str = "-1",
-            layer_mean: bool = False,
-            is_token_embedding: bool = False,
-            **kwargs,
+        self,
+        model: str = "bert-base-uncased",  # set parameters with different default values
+        layers: str = "-1",
+        layer_mean: bool = False,
+        is_token_embedding: bool = False,
+        **kwargs,
     ):
         """
         Bidirectional transformer embeddings of words from various transformer architectures.
@@ -57,7 +49,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbedding):
             layer_mean=layer_mean,
             is_token_embedding=is_token_embedding,
             is_document_embedding=True,
-            **kwargs)
+            **kwargs,
+        )
 
     @classmethod
     def create_from_state(cls, **state):
