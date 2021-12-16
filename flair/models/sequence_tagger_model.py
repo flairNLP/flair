@@ -231,15 +231,12 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
 
         # forward pass to get scores
-        scores = self.forward(sentences)  # type: ignore
-
-        # get the gold labels
-        gold_labels = self._get_gold_labels(sentences)
+        scores, gold_labels = self.forward(sentences)  # type: ignore
 
         # calculate loss given scores and labels
         return self._calculate_loss(scores, gold_labels)
 
-    def forward(self, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
+    def forward(self, sentences: Union[List[Sentence], Sentence]):
         """
         Forward propagation through network. Returns gold labels of batch in addition.
         :param sentences: Batch of current sentences
@@ -288,7 +285,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         else:
             scores = self._get_scores_from_features(features, lengths)
 
-        return scores
+        # get the gold labels
+        gold_labels = self._get_gold_labels(sentences)
+
+        return scores, gold_labels
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
 
@@ -424,7 +424,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     continue
 
                 # get features from forward propagation
-                features = self.forward(batch)
+                features, gold_labels = self.forward(batch)
 
                 # remove previously predicted labels of this type
                 for sentence in batch:
@@ -432,7 +432,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
                 # if return_loss, get loss value
                 if return_loss:
-                    gold_labels = self._get_gold_labels(batch)
                     loss = self._calculate_loss(features, gold_labels)
                     overall_loss += loss[0]
                     label_count += loss[1]
