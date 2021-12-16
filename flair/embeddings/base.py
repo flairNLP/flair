@@ -324,7 +324,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             length = self.model.config.hidden_size
 
         # in case of doubt: token embedding has higher priority than document embedding
-        if self.token_embedding and self.pooling_operation == "first_last":
+        if self.token_embedding and self.subtoken_pooling == "first_last":
             length *= 2
             if self.document_embedding:
                 log.warning(
