@@ -602,7 +602,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             if self.layer_mean:
                 document_embs = torch.mean(embeddings_all_document_layers, dim=0)
             else:
-                document_embs = embeddings_all_document_layers.view(-1, embeddings_all_document_layers.size[-1])
+                document_embs = embeddings_all_document_layers.view(-1, embeddings_all_document_layers.size()[-1])
             for (document_emb, sentence) in zip(document_embs, sentences):
                 sentence.set_embedding(self.name, document_emb)
             return True
