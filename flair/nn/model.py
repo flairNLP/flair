@@ -395,24 +395,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
         return result
 
-    def _print_predictions(self, batch, gold_label_type):
-        lines = []
-        for datapoint in batch:
-            # check if there is a label mismatch
-            g = [label.identifier + label.value for label in datapoint.get_labels(gold_label_type)]
-            p = [label.identifier + label.value for label in datapoint.get_labels("predicted")]
-            g.sort()
-            p.sort()
-            correct_string = " -> MISMATCH!\n" if g != p else ""
-            # print info
-            eval_line = (
-                f"{datapoint.to_original_text()}\n"
-                f" - Gold: {datapoint.get_labels(gold_label_type)}\n"
-                f" - Pred: {datapoint.get_labels('predicted')}\n{correct_string}\n"
-            )
-            lines.append(eval_line)
-        return lines
-
     def predict(
         self,
         sentences: Union[List[DT], DT],
@@ -435,6 +417,23 @@ class Classifier(Model[DT], typing.Generic[DT]):
         """
         raise NotImplementedError
 
+    def _print_predictions(self, batch, gold_label_type):
+        lines = []
+        for datapoint in batch:
+            # check if there is a label mismatch
+            g = [label.identifier + label.value for label in datapoint.get_labels(gold_label_type)]
+            p = [label.identifier + label.value for label in datapoint.get_labels("predicted")]
+            g.sort()
+            p.sort()
+            correct_string = " -> MISMATCH!\n" if g != p else ""
+            # print info
+            eval_line = (
+                f"{datapoint.to_original_text()}\n"
+                f" - Gold: {datapoint.get_labels(gold_label_type)}\n"
+                f" - Pred: {datapoint.get_labels('predicted')}\n{correct_string}\n"
+            )
+            lines.append(eval_line)
+        return lines
 
 class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     """Default base class for all Flair models that do classification, both
@@ -512,11 +511,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         else:
             self._multi_label_threshold = {"default": x}
 
-    def forward_loss(self, sentences: Union[List[DT], DT]) -> torch.Tensor:
+    def forward_loss(self, sentences: Union[List[DT], DT]) -> Tuple[torch.Tensor, int]:
         scores, labels = self.forward_pass(sentences)  # type: ignore
         return self._calculate_loss(scores, labels)
 
-    def _calculate_loss(self, scores, labels):
+    def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
 
         if not any(labels):
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1

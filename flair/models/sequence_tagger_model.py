@@ -23,7 +23,7 @@ from .sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
 log = logging.getLogger("flair")
 
 
-class SequenceTagger(flair.nn.DefaultClassifier[Sentence]):
+class SequenceTagger(flair.nn.Classifier[Sentence]):
     def __init__(
         self,
         embeddings: TokenEmbeddings,
@@ -69,7 +69,7 @@ class SequenceTagger(flair.nn.DefaultClassifier[Sentence]):
         :param init_from_state_dict: Indicator whether we are loading a model from state dict
             since we need to transform previous models' weights into CRF instance weights
         """
-        super(SequenceTagger, self).__init__(label_dictionary=tag_dictionary)
+        super(SequenceTagger, self).__init__()
 
         # ----- Embedding specific parameters -----
         self.embeddings = embeddings
@@ -77,6 +77,7 @@ class SequenceTagger(flair.nn.DefaultClassifier[Sentence]):
         self.tag_dictionary = tag_dictionary
         self.tagset_size = len(tag_dictionary)
         self.tag_type = tag_type
+        self.label_dictionary = tag_dictionary
 
         # ----- Initial loss weights parameters -----
         self.weight_dict = loss_weights
@@ -227,7 +228,18 @@ class SequenceTagger(flair.nn.DefaultClassifier[Sentence]):
 
         return RNN
 
-    def forward_pass(self, sentences: Union[List[Sentence], Sentence], **kwargs) -> tuple:
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
+
+        # forward pass to get scores
+        scores = self.forward(sentences)  # type: ignore
+
+        # get the gold labels
+        gold_labels = self._get_gold_labels(sentences)
+
+        # calculate loss given scores and labels
+        return self._calculate_loss(scores, gold_labels)
+
+    def forward(self, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
         """
         Forward propagation through network. Returns gold labels of batch in addition.
         :param sentences: Batch of current sentences
@@ -276,9 +288,25 @@ class SequenceTagger(flair.nn.DefaultClassifier[Sentence]):
         else:
             scores = self._get_scores_from_features(features, lengths)
 
-        gold_labels = self._get_gold_labels(sentences)
+        return scores
 
-        return scores, gold_labels
+    def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
+
+        if not any(labels):
+            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+
+        labels = torch.tensor(
+            [
+                self.label_dictionary.get_idx_for_item(label[0])
+                if len(label) > 0
+                else self.label_dictionary.get_idx_for_item("O")
+                for label in labels
+            ],
+            dtype=torch.long,
+            device=flair.device,
+        )
+
+        return self.loss_function(scores, labels), len(labels)
 
     def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, torch.Tensor]:
         names = self.embeddings.get_names()
@@ -364,8 +392,11 @@ class SequenceTagger(flair.nn.DefaultClassifier[Sentence]):
             if not isinstance(sentences, list):
                 sentences = [sentences]
 
-            # order by length and filter empty sentences
-            reordered_sentences = self._sort_data(sentences)
+            # filter empty sentences
+            sentences = [sentence for sentence in sentences if len(sentence) > 0]
+
+            # reverse sort all sequences by their length
+            reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
 
             if len(reordered_sentences) == 0:
                 return sentences
@@ -393,7 +424,7 @@ class SequenceTagger(flair.nn.DefaultClassifier[Sentence]):
                     continue
 
                 # get features from forward propagation
-                features, gold_labels = self.forward_pass(batch)
+                features = self.forward(batch)
 
                 # remove previously predicted labels of this type
                 for sentence in batch:
@@ -401,6 +432,7 @@ class SequenceTagger(flair.nn.DefaultClassifier[Sentence]):
 
                 # if return_loss, get loss value
                 if return_loss:
+                    gold_labels = self._get_gold_labels(batch)
                     loss = self._calculate_loss(features, gold_labels)
                     overall_loss += loss[0]
                     label_count += loss[1]
