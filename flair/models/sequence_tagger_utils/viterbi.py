@@ -138,7 +138,7 @@ class ViterbiDecoder:
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
-    def decode(self, features_tuple: tuple) -> List:
+    def decode(self, features_tuple: tuple, probabilities_for_all_classes: bool) -> (List, List):
         """
         Decoding function returning the most likely sequence of tags.
         :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
@@ -211,4 +211,4 @@ class ViterbiDecoder:
                 ]
             )
 
-        return tags
+        return tags, []

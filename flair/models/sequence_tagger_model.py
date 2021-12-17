@@ -389,7 +389,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 return sentences
 
             # make sure its a list
-            if not isinstance(sentences, list):
+            if not isinstance(sentences, list) and not isinstance(sentences, flair.data.Dataset):
                 sentences = [sentences]
 
             # filter empty sentences
@@ -442,28 +442,36 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 batch = [batch[i] for i in lengths.indices]
 
                 if self.use_crf:
-                    predictions = self.viterbi_decoder.decode(features)
+                    predictions, all_tags = self.viterbi_decoder.decode(features, return_probabilities_for_all_classes)
                 else:
-                    predictions = self._standard_inference(features, batch)
+                    predictions, all_tags = self._standard_inference(features, batch, return_probabilities_for_all_classes)
 
                 for sentence, labels in zip(batch, predictions):
                     for token, label in zip(sentence.tokens, labels):
                         token.add_tag_label(label_name, label)
+
+                # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
+                for (sentence, sent_all_tags) in zip(batch, all_tags):
+                    for (token, token_all_tags) in zip(sentence.tokens, sent_all_tags):
+                        token.add_tags_proba_dist(label_name, token_all_tags)
 
             store_embeddings(sentences, storage_mode=embedding_storage_mode)
 
             if return_loss:
                 return overall_loss, label_count
 
-    def _standard_inference(self, features: torch.tensor, batch: list):
+    def _standard_inference(self, features: torch.tensor, batch: list, probabilities_for_all_classes: bool):
         """
         Softmax over emission scores from forward propagation.
         :param features: sentence tensor from forward propagation
         :param batch: list of sentence
+        :param probabilities_for_all_classes: whether to return score for each tag in tag dictionary
         """
         softmax_batch = F.softmax(features, dim=1).cpu()
         scores_batch, prediction_batch = torch.max(softmax_batch, dim=1)
         predictions = []
+        all_tags = []
+
         for sentence in batch:
             scores = scores_batch[: len(sentence)]
             predictions_for_sentence = prediction_batch[: len(sentence)]
@@ -476,7 +484,29 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             scores_batch = scores_batch[len(sentence) :]
             prediction_batch = prediction_batch[len(sentence) :]
 
-        return predictions
+        if probabilities_for_all_classes:
+            lengths = [len(sentence) for sentence in batch]
+            all_tags = self._all_scores_for_token(softmax_batch, lengths)
+
+        return predictions, all_tags
+
+    def _all_scores_for_token(self, scores: torch.tensor, lengths: list):
+        """
+        Returns all scores for each tag in tag dictionary.
+        :param scores: Scores for current sentence.
+        """
+        scores = scores.numpy()
+        prob_all_tags = [[Label(self.tag_dictionary.get_item_for_index(score_id), score)
+                         for score_id, score in enumerate(score_dist)]
+                         for score_dist in scores]
+
+        prob_tags_per_sentence = []
+        previous = 0
+        for length in lengths:
+            prob_tags_per_sentence.append(prob_all_tags[previous:previous+length])
+            previous = length
+        return prob_tags_per_sentence
+
 
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""
