@@ -23,6 +23,7 @@ class LearnedPrototypesTagger(Classifier):
                  learning_mode='joint',
                  expectation_maximization_data=None,
                  normal_distributed_initial_prototypes: bool = False,
+                 use_radius=False
                  ):
         """
         Prototypical model to tag tokens in a sentence using an embedding and
@@ -34,6 +35,7 @@ class LearnedPrototypesTagger(Classifier):
         (otherwise token tagging done this way becomes pointless).
         :param tag_type: The tag to predict.
         :param distance_function: Which distance function to use.
+        :param use_radius: Whether to use a radius after distance calculation, defaults to False.
         """
         super().__init__()
         self.embeddings = embeddings
@@ -60,6 +62,12 @@ class LearnedPrototypesTagger(Classifier):
         # create initial prototypes for all classes (all initial prototypes are a vector of all 1s)
         self.prototype_vectors = torch.nn.Parameter(torch.ones(len(self.prototype_labels), self.prototype_size),
                                                     requires_grad=True)
+
+        if use_radius:
+            self.prototype_radii = torch.nn.Parameter(
+                torch.ones(len(self.prototype_labels)), required_grad=True)
+        else:
+            self.prototype_radii = None
 
         # if set, create initial prototypes from normal distribution
         if normal_distributed_initial_prototypes:
@@ -172,6 +180,7 @@ class LearnedPrototypesTagger(Classifier):
             encoded = embedded
 
         prot = self.prototype_vectors
+        radii = self.prototype_radii
 
         if self.learning_mode == 'learn_only_prototypes':
             encoded = encoded.detach()
@@ -179,10 +188,16 @@ class LearnedPrototypesTagger(Classifier):
         if self.learning_mode == 'learn_only_embeddings_and_map':
             prot = prot.detach()
 
+            if radii is not None:
+                radii = radii.detach()
+
         if return_prototypes:
             return encoded
 
         distance = self.distance(encoded, prot)
+
+        if radii is not None:
+            distance /= radii
 
         # if unlabeled distance is set, mask out loss to unlabeled class prototype
         if self.unlabeled_distance:
