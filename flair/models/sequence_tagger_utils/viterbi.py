@@ -143,9 +143,11 @@ class ViterbiDecoder:
         Decoding function returning the most likely sequence of tags.
         :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
             lengths of sentence in batch, transitions of CRF
+        :param probabilities_for_all_classes: whether to return probabilities for all tags
         :return: decoded sequences
         """
         features, lengths, transitions = features_tuple
+        all_tags = []
 
         batch_size = features.size(0)
         seq_len = features.size(1)
@@ -200,7 +202,8 @@ class ViterbiDecoder:
         decoded = decoded[:, 1:]
 
         # Max + Softmax to get confidence score for predicted label and append label to each token
-        confidences = torch.max(softmax(scores_upto_t, dim=2), dim=2)
+        scores = softmax(scores_upto_t, dim=2)
+        confidences = torch.max(scores, dim=2)
 
         tags = []
         for tag_seq, tag_seq_conf, length_seq in zip(decoded, confidences.values, lengths.values):
@@ -211,4 +214,21 @@ class ViterbiDecoder:
                 ]
             )
 
-        return tags, []
+        if probabilities_for_all_classes:
+            all_tags = self._all_scores_for_token(scores, lengths)
+
+        return tags, all_tags
+
+    def _all_scores_for_token(self, scores: torch.tensor, lengths: torch.tensor):
+        """
+        Returns all scores for each tag in tag dictionary.
+        :param scores: Scores for current sentence.
+        """
+        scores = scores.numpy()
+        prob_tags_per_sentence = []
+        for scores_sentence, length in zip(scores, lengths.values):
+            scores_sentence = scores_sentence[:length]
+            prob_tags_per_sentence.append([[Label(self.tag_dictionary.get_item_for_index(score_id), score)
+                                       for score_id, score in enumerate(score_dist)]
+                                       for score_dist in scores_sentence])
+        return prob_tags_per_sentence
