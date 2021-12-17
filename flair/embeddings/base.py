@@ -270,7 +270,6 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
         self.cls_pooling = cls_pooling
         self.subtoken_pooling = subtoken_pooling
-
         self.layer_mean = layer_mean
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune
@@ -347,9 +346,11 @@ class TransformerEmbedding(Embeddings[Sentence]):
         with tempfile.TemporaryDirectory() as temp_dir:
             files = self.tokenizer.save_pretrained(temp_dir)
             zip_data = BytesIO()
-            zip_obj = zipfile.ZipFile(zip_data, "w+")
+            zip_obj = zipfile.ZipFile(zip_data, "w")
             for f in files:
-                zip_obj.write(f, os.path.relpath(f, temp_dir))
+                # transformers returns the "added_tokens.json" even if it doesn't create it
+                if os.path.exists(f):
+                    zip_obj.write(f, os.path.relpath(f, temp_dir))
 
         zip_data.seek(0)
         return zip_data
@@ -560,12 +561,24 @@ class TransformerEmbedding(Embeddings[Sentence]):
             model_kwargs["attention_mask"] = batch_encoding["attention_mask"].to(flair.device)
 
         # set language IDs for XLM-style transformers
-        if self.use_lang_emb:
+        if self.use_lang_emb and self.tokenizer.lang2id is not None:
             model_kwargs["langs"] = torch.zeros_like(input_ids, dtype=input_ids.dtype)
-            for s_id, sentence_text in enumerate(tokenized_sentences):
-                sequence_length = len(sentence_text)
-                lang_id = self.tokenizer.lang2id.get(sentences[s_id].get_language_code(), 0)  # type: ignore
-                model_kwargs["langs"][s_id][:sequence_length] = lang_id
+            if not self.allow_long_sentences:
+                for s_id, sentence_text in enumerate(tokenized_sentences):
+                    lang_id = self.tokenizer.lang2id.get(sentences[s_id].get_language_code(), 0)
+                    model_kwargs["langs"][s_id] = lang_id
+            else:
+                sentence_part_lengths = torch.unique(
+                    batch_encoding["overflow_to_sample_mapping"],
+                    return_counts=True,
+                    sorted=True,
+                )[1].tolist()
+                sentence_idx = 0
+                for sentence, part_length in zip(sentences, sentence_part_lengths):
+                    lang_id = self.tokenizer.lang2id.get(sentence.get_language_code(), 0)
+                    model_kwargs["langs"][sentence_idx : sentence_idx + part_length] = lang_id
+                    sentence_idx += part_length
+
         return input_ids, model_kwargs
 
     def _combine_strided_sentences(
@@ -602,7 +615,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             if self.layer_mean:
                 document_embs = torch.mean(embeddings_all_document_layers, dim=0)
             else:
-                document_embs = embeddings_all_document_layers.view(-1, embeddings_all_document_layers.size()[-1])
+                document_embs = torch.flatten(embeddings_all_document_layers.permute((1, 0, 2)), 1)
             for (document_emb, sentence) in zip(document_embs, sentences):
                 sentence.set_embedding(self.name, document_emb)
             return True
@@ -636,10 +649,9 @@ class TransformerEmbedding(Embeddings[Sentence]):
                     token.set_embedding(self.name, torch.zeros(self.embedding_length))
                     continue
                 subword_end_idx = subword_start_idx + n_subtokens
-
+                assert subword_start_idx < subword_end_idx <= sentence_hidden_state.size()[1]
                 current_embeddings = sentence_hidden_state[:, subword_start_idx:subword_end_idx]
                 subword_start_idx = subword_end_idx
-
                 if self.subtoken_pooling == "first":
                     final_embedding = current_embeddings[:, 0]
                 elif self.subtoken_pooling == "last":
@@ -650,6 +662,11 @@ class TransformerEmbedding(Embeddings[Sentence]):
                     final_embedding = current_embeddings.mean(dim=1)
                 else:
                     raise ValueError(f"subtoken pooling method: `{self.subtoken_pooling}` is not implemented")
+
+                if self.layer_mean:
+                    final_embedding = final_embedding.mean(dim=0)
+                else:
+                    final_embedding = torch.flatten(final_embedding)
 
                 token.set_embedding(self.name, final_embedding)
 
@@ -693,11 +710,11 @@ class TransformerEmbedding(Embeddings[Sentence]):
                     )[1].tolist(),
                 )
             else:
-                sentence_hidden_states = hidden_states.tolist()
+                sentence_hidden_states = list(hidden_states.permute((1, 0, 2, 3)))
 
             # remove padding tokens
             sentence_hidden_states = [
-                sentence_hidden_state[:, : len(subtokens), :]
+                sentence_hidden_state[:, : len(subtokens) + 1, :]
                 for (subtokens, sentence_hidden_state) in zip(tokenized_sentences, sentence_hidden_states)
             ]
 
