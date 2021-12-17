@@ -301,20 +301,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
             for span in all_spans:
 
-                """
-                true_values = all_true_values[span] if span in all_true_values else ['O']
-                predicted_values = all_predicted_values[span] if span in all_predicted_values else ['O']
-
-                y_true_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
-                for true_value in true_values:
-                    y_true_instance[evaluation_label_dictionary.get_idx_for_item(true_value)] = 1
-                y_true.append(y_true_instance.tolist())
-
-                y_pred_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
-                for predicted_value in predicted_values:
-                    y_pred_instance[evaluation_label_dictionary.get_idx_for_item(predicted_value)] = 1
-                y_pred.append(y_pred_instance.tolist())
-                """
                 true_value = all_true_values[span][0] if span in all_true_values else 'O'
                 predicted_value = all_predicted_values[span][0] if span in all_predicted_values else 'O'
 
