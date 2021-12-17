@@ -23,7 +23,8 @@ class LearnedPrototypesTagger(Classifier):
                  learning_mode='joint',
                  expectation_maximization_data=None,
                  normal_distributed_initial_prototypes: bool = False,
-                 use_radius=False
+                 use_radius=False,
+                 radius_bound=0,
                  ):
         """
         Prototypical model to tag tokens in a sentence using an embedding and
@@ -68,6 +69,8 @@ class LearnedPrototypesTagger(Classifier):
                 torch.ones(len(self.prototype_labels)), required_grad=True)
         else:
             self.prototype_radii = None
+
+        self.radius_bound = radius_bound
 
         # if set, create initial prototypes from normal distribution
         if normal_distributed_initial_prototypes:
@@ -197,7 +200,7 @@ class LearnedPrototypesTagger(Classifier):
         distance = self.distance(encoded, prot)
 
         if radii is not None:
-            distance /= radii
+            distance /= self.radius_bound + torch.softplus(radii)
 
         # if unlabeled distance is set, mask out loss to unlabeled class prototype
         if self.unlabeled_distance:
