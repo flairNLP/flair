@@ -548,7 +548,6 @@ class TARSTagger(FewshotClassifier):
                         loss_and_count = self.tars_model.predict(
                             tars_sentence,
                             label_name=label_name,
-                            return_probabilities_for_all_classes=True,
                             return_loss=True,
                         )
                         overall_loss += loss_and_count[0].item()
