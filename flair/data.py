@@ -1532,11 +1532,11 @@ def iob_iobes(tags):
         if tag.value == "O" or tag.value == "":
             tag.value = "O"
             continue
-        t, label = tag.value.split("-")
+        t, label = tag.value.split("-", 1)
         if len(tags) == i + 1 or tags[i + 1].value == "O":
             next_same = False
         else:
-            nt, next_label = tags[i + 1].value.split("-")
+            nt, next_label = tags[i + 1].value.split("-", 1)
             next_same = nt == "I" and next_label == label
         if t == "B":
             if not next_same:
