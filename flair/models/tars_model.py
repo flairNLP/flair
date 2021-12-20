@@ -57,7 +57,6 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
     def _get_tars_formatted_sentences(self, sentences: List[Sentence]):
         label_text_pairs = []
         all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
-        # print(all_labels)
         for sentence in sentences:
             label_text_pairs_for_sentence = []
             if self.training and self.num_negative_labels_to_sample is not None:
@@ -88,7 +87,6 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
             import random
 
             sample = random.sample(tags, k=self.num_negative_labels_to_sample)
-            # print(sample)
             return sample
 
         already_sampled_negative_labels = set()

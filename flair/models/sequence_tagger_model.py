@@ -230,6 +230,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
 
+        # if there are no sentences, there is no loss
+        if len(sentences) == 0:
+            return torch.tensor(0., dtype=torch.float, device=flair.device, requires_grad=True), 0
+
         # forward pass to get scores
         scores, gold_labels = self.forward(sentences)  # type: ignore
 
@@ -241,7 +245,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         Forward propagation through network. Returns gold labels of batch in addition.
         :param sentences: Batch of current sentences
         """
-
         self.embeddings.embed(sentences)
 
         # make a zero-padded tensor for the whole sentence
