@@ -366,8 +366,8 @@ class TARSTagger(FewshotClassifier):
 
         # initialize a bare-bones sequence tagger
         self.tars_model: SequenceTagger = SequenceTagger(
-            123,
-            embeddings,
+            hidden_size=123,
+            embeddings=embeddings,
             tag_dictionary=tars_dictionary,
             tag_type=self.static_label_type,
             use_crf=False,
@@ -548,7 +548,6 @@ class TARSTagger(FewshotClassifier):
                         loss_and_count = self.tars_model.predict(
                             tars_sentence,
                             label_name=label_name,
-                            all_tag_prob=True,
                             return_loss=True,
                         )
                         overall_loss += loss_and_count[0].item()
