@@ -3,12 +3,10 @@ from pathlib import Path
 from typing import Union, List, Dict, Tuple, Optional
 import random
 
-import torch.nn
 from torch.utils.data.dataset import Dataset
 
 import flair.nn
 from flair.data import Sentence, Dictionary
-from flair.datasets import SentenceDataset, DataLoader
 from flair.training_utils import Result
 
 log = logging.getLogger("flair")
