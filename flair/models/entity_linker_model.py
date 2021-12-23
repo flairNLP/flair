@@ -6,12 +6,12 @@ import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import DataPoint, Dictionary, SpanLabel
+from flair.data import Dictionary, Sentence, SpanLabel
 
 log = logging.getLogger("flair")
 
 
-class EntityLinker(flair.nn.DefaultClassifier):
+class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
     Entity Linking Model
     The model expects text/sentences with annotated entity mentions and predicts entities to these mentions.
@@ -20,20 +20,20 @@ class EntityLinker(flair.nn.DefaultClassifier):
     """
 
     def __init__(
-            self,
-            word_embeddings: flair.embeddings.TokenEmbeddings,
-            label_dictionary: Dictionary,
-            pooling_operation: str = 'average',
-            label_type: str = 'nel',
-            **classifierargs,
+        self,
+        word_embeddings: flair.embeddings.TokenEmbeddings,
+        label_dictionary: Dictionary,
+        pooling_operation: str = "average",
+        label_type: str = "nel",
+        **classifierargs,
     ):
         """
         Initializes an EntityLinker
         :param word_embeddings: embeddings used to embed the words/sentences
         :param label_dictionary: dictionary that gives ids to all classes. Should contain <unk>
-        :param pooling_operation: either 'average', 'first', 'last' or 'first&last'. Specifies the way of how text representations of entity mentions (with more than one word) are handled. 
+        :param pooling_operation: either 'average', 'first', 'last' or 'first&last'. Specifies the way of how text representations of entity mentions (with more than one word) are handled.
         E.g. 'average' means that as text representation we take the average of the embeddings of the words in the mention. 'first&last' concatenates
-        the embedding of the first and the embedding of the last word. 
+        the embedding of the first and the embedding of the last word.
         :param label_type: name of the label you use.
         """
 
@@ -44,28 +44,26 @@ class EntityLinker(flair.nn.DefaultClassifier):
         self._label_type = label_type
 
         # if we concatenate the embeddings we need double input size in our linear layer
-        if self.pooling_operation == 'first&last':
-            self.decoder = nn.Linear(
-                2 * self.word_embeddings.embedding_length, len(self.label_dictionary)
-            ).to(flair.device)
+        if self.pooling_operation == "first&last":
+            self.decoder = nn.Linear(2 * self.word_embeddings.embedding_length, len(self.label_dictionary)).to(
+                flair.device
+            )
         else:
-            self.decoder = nn.Linear(
-                self.word_embeddings.embedding_length, len(self.label_dictionary)
-            ).to(flair.device)
+            self.decoder = nn.Linear(self.word_embeddings.embedding_length, len(self.label_dictionary)).to(flair.device)
 
         nn.init.xavier_uniform_(self.decoder.weight)
 
         cases = {
-            'average': self.emb_mean,
-            'first': self.emb_first,
-            'last': self.emb_last,
-            'first&last': self.emb_firstAndLast
+            "average": self.emb_mean,
+            "first": self.emb_first,
+            "last": self.emb_last,
+            "first&last": self.emb_firstAndLast,
         }
 
         if pooling_operation not in cases:
             raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first&last"')
 
-        self.aggregated_embedding = cases.get(pooling_operation)
+        self.aggregated_embedding = cases[pooling_operation]
 
         self.to(flair.device)
 
@@ -81,12 +79,13 @@ class EntityLinker(flair.nn.DefaultClassifier):
     def emb_mean(self, arg):
         return torch.mean(arg, 0)
 
-    def forward_pass(self,
-                     sentences: Union[List[DataPoint], DataPoint],
-                     return_label_candidates: bool = False,
-                     ):
+    def forward_pass(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
+    ):
 
-        if isinstance(sentences, DataPoint):
+        if not isinstance(sentences, list):
             sentences = [sentences]
 
         # filter sentences with no candidates (no candidates means nothing can be linked anyway)
@@ -120,7 +119,13 @@ class EntityLinker(flair.nn.DefaultClassifier):
                     mention_emb = torch.Tensor(0, self.word_embeddings.embedding_length).to(flair.device)
 
                     for token in span.tokens:
-                        mention_emb = torch.cat((mention_emb, token.get_embedding(embedding_names).unsqueeze(0)), 0)
+                        mention_emb = torch.cat(
+                            (
+                                mention_emb,
+                                token.get_embedding(embedding_names).unsqueeze(0),
+                            ),
+                            0,
+                        )
 
                     embedding_list.append(self.aggregated_embedding(mention_emb).unsqueeze(0))
 
@@ -128,19 +133,16 @@ class EntityLinker(flair.nn.DefaultClassifier):
 
                     if return_label_candidates:
                         sentences_to_spans.append(sentence)
-                        candidate = SpanLabel(span=span, value=None, score=None)
+                        candidate = SpanLabel(span=span, value=None, score=0.0)
                         empty_label_candidates.append(candidate)
 
             embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
             scores = self.decoder(embedding_tensor)
 
-        # minimal return is scores and labels
-        return_tuple = (scores, span_labels)
-
         if return_label_candidates:
-            return_tuple += (sentences_to_spans, empty_label_candidates)
+            return scores, span_labels, sentences_to_spans, empty_label_candidates
 
-        return return_tuple
+        return scores, span_labels
 
     def _get_state_dict(self):
         model_state = {

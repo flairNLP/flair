@@ -1,34 +1,36 @@
-import random
 import logging
+import random
 from collections import defaultdict
 from enum import Enum
+from functools import reduce
 from math import inf
 from pathlib import Path
-from typing import Union, List
+from typing import Dict, List, Union
 
+from scipy.stats import pearsonr, spearmanr
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 from torch.optim import Optimizer
+from torch.utils.data import Dataset
 
 import flair
-from flair.data import Dictionary, Sentence
-from functools import reduce
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-from scipy.stats import pearsonr, spearmanr
+from flair.data import DataPoint, Dictionary, Sentence, _iter_dataset
 
 
 class Result(object):
-    def __init__(self,
-                 main_score: float,
-                 log_header: str,
-                 log_line: str,
-                 detailed_results: str,
-                 loss: float,
-                 classification_report: dict = None,
-                 ):
+    def __init__(
+        self,
+        main_score: float,
+        log_header: str,
+        log_line: str,
+        detailed_results: str,
+        loss: float,
+        classification_report: dict = {},
+    ):
         self.main_score: float = main_score
         self.log_header: str = log_header
         self.log_line: str = log_line
         self.detailed_results: str = detailed_results
-        self.classification_report: dict = classification_report
+        self.classification_report = classification_report
         self.loss: float = loss
 
     def __str__(self):
@@ -54,7 +56,7 @@ class MetricRegression(object):
     def spearmanr(self):
         return spearmanr(self.true, self.pred)[0]
 
-    ## dummy return to fulfill trainer.train() needs
+    # dummy return to fulfill trainer.train() needs
     def micro_avg_f_score(self):
         return self.mean_squared_error()
 
@@ -69,9 +71,7 @@ class MetricRegression(object):
     @staticmethod
     def tsv_header(prefix=None):
         if prefix:
-            return "{0}_MEAN_SQUARED_ERROR\t{0}_MEAN_ABSOLUTE_ERROR\t{0}_PEARSON\t{0}_SPEARMAN".format(
-                prefix
-            )
+            return "{0}_MEAN_SQUARED_ERROR\t{0}_MEAN_ABSOLUTE_ERROR\t{0}_PEARSON\t{0}_SPEARMAN".format(prefix)
 
         return "MEAN_SQUARED_ERROR\tMEAN_ABSOLUTE_ERROR\tPEARSON\tSPEARMAN"
 
@@ -80,11 +80,13 @@ class MetricRegression(object):
         return "\t_\t_\t_\t_"
 
     def __str__(self):
-        line = "mean squared error: {0:.4f} - mean absolute error: {1:.4f} - pearson: {2:.4f} - spearman: {3:.4f}".format(
-            self.mean_squared_error(),
-            self.mean_absolute_error(),
-            self.pearsonr(),
-            self.spearmanr(),
+        line = (
+            "mean squared error: {0:.4f} - mean absolute error: {1:.4f} - pearson: {2:.4f} - spearman: {3:.4f}".format(
+                self.mean_squared_error(),
+                self.mean_absolute_error(),
+                self.pearsonr(),
+                self.spearmanr(),
+            )
         )
         return line
 
@@ -102,7 +104,7 @@ class WeightExtractor(object):
         if type(directory) is str:
             directory = Path(directory)
         self.weights_file = init_output_file(directory, "weights.txt")
-        self.weights_dict = defaultdict(lambda: defaultdict(lambda: list()))
+        self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(lambda: defaultdict(lambda: list()))
         self.number_of_weights = number_of_weights
 
     def extract_weights(self, state_dict, iteration):
@@ -111,10 +113,8 @@ class WeightExtractor(object):
             vec = state_dict[key]
             # print(vec)
             try:
-                weights_to_watch = min(
-                    self.number_of_weights, reduce(lambda x, y: x * y, list(vec.size()))
-                )
-            except:
+                weights_to_watch = min(self.number_of_weights, reduce(lambda x, y: x * y, list(vec.size())))
+            except Exception:
                 continue
 
             if key not in self.weights_dict:
@@ -196,23 +196,32 @@ class AnnealOnPlateau(object):
         >>>     scheduler.step(val_loss)
     """
 
-    def __init__(self, optimizer, mode='min', aux_mode='min', factor=0.1, patience=10, initial_extra_patience=0,
-                 verbose=False, cooldown=0, min_lr=0, eps=1e-8):
+    def __init__(
+        self,
+        optimizer,
+        mode="min",
+        aux_mode="min",
+        factor=0.1,
+        patience=10,
+        initial_extra_patience=0,
+        verbose=False,
+        cooldown=0,
+        min_lr=0,
+        eps=1e-8,
+    ):
 
         if factor >= 1.0:
-            raise ValueError('Factor should be < 1.0.')
+            raise ValueError("Factor should be < 1.0.")
         self.factor = factor
 
         # Attach optimizer
         if not isinstance(optimizer, Optimizer):
-            raise TypeError('{} is not an Optimizer'.format(
-                type(optimizer).__name__))
+            raise TypeError("{} is not an Optimizer".format(type(optimizer).__name__))
         self.optimizer = optimizer
 
         if isinstance(min_lr, list) or isinstance(min_lr, tuple):
             if len(min_lr) != len(optimizer.param_groups):
-                raise ValueError("expected {} min_lrs, got {}".format(
-                    len(optimizer.param_groups), len(min_lr)))
+                raise ValueError("expected {} min_lrs, got {}".format(len(optimizer.param_groups), len(min_lr)))
             self.min_lrs = list(min_lr)
         else:
             self.min_lrs = [min_lr] * len(optimizer.param_groups)
@@ -247,21 +256,21 @@ class AnnealOnPlateau(object):
 
         is_better = False
 
-        if self.mode == 'min':
+        if self.mode == "min":
             if current < self.best:
                 is_better = True
 
-        if self.mode == 'max':
+        if self.mode == "max":
             if current > self.best:
                 is_better = True
 
         if current == self.best and auxiliary_metric:
             current_aux = float(auxiliary_metric)
-            if self.aux_mode == 'min':
+            if self.aux_mode == "min":
                 if current_aux < self.best_aux:
                     is_better = True
 
-            if self.aux_mode == 'max':
+            if self.aux_mode == "max":
                 if current_aux > self.best_aux:
                     is_better = True
 
@@ -283,27 +292,26 @@ class AnnealOnPlateau(object):
             self.num_bad_epochs = 0
             self.effective_patience = self.default_patience
 
-        self._last_lr = [group['lr'] for group in self.optimizer.param_groups]
+        self._last_lr = [group["lr"] for group in self.optimizer.param_groups]
 
     def _reduce_lr(self, epoch):
         for i, param_group in enumerate(self.optimizer.param_groups):
-            old_lr = float(param_group['lr'])
+            old_lr = float(param_group["lr"])
             new_lr = max(old_lr * self.factor, self.min_lrs[i])
             if old_lr - new_lr > self.eps:
-                param_group['lr'] = new_lr
+                param_group["lr"] = new_lr
                 if self.verbose:
-                    print('Epoch {:5d}: reducing learning rate'
-                          ' of group {} to {:.4e}.'.format(epoch, i, new_lr))
+                    print("Epoch {:5d}: reducing learning rate" " of group {} to {:.4e}.".format(epoch, i, new_lr))
 
     @property
     def in_cooldown(self):
         return self.cooldown_counter > 0
 
     def _init_is_better(self, mode):
-        if mode not in {'min', 'max'}:
-            raise ValueError('mode ' + mode + ' is unknown!')
+        if mode not in {"min", "max"}:
+            raise ValueError("mode " + mode + " is unknown!")
 
-        if mode == 'min':
+        if mode == "min":
             self.mode_worse = inf
         else:  # mode == 'max':
             self.mode_worse = -inf
@@ -311,7 +319,7 @@ class AnnealOnPlateau(object):
         self.mode = mode
 
     def state_dict(self):
-        return {key: value for key, value in self.__dict__.items() if key != 'optimizer'}
+        return {key: value for key, value in self.__dict__.items() if key != "optimizer"}
 
     def load_state_dict(self, state_dict):
         self.__dict__.update(state_dict)
@@ -325,8 +333,7 @@ def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
     :param file_name: the file name
     :return: the created file
     """
-    if type(base_path) is str:
-        base_path = Path(base_path)
+    base_path = Path(base_path)
     base_path.mkdir(parents=True, exist_ok=True)
 
     file = base_path / file_name
@@ -334,19 +341,14 @@ def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
     return file
 
 
-def convert_labels_to_one_hot(
-        label_list: List[List[str]], label_dict: Dictionary
-) -> List[List[int]]:
+def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionary) -> List[List[int]]:
     """
     Convert list of labels (strings) to a one hot list.
     :param label_list: list of labels
     :param label_dict: label dictionary
     :return: converted label list
     """
-    return [
-        [1 if l in labels else 0 for l in label_dict.get_items()]
-        for labels in label_list
-    ]
+    return [[1 if label in labels else 0 for label in label_dict.get_items()] for labels in label_list]
 
 
 def log_line(log):
@@ -363,30 +365,37 @@ def add_file_handler(log, output_file):
     return fh
 
 
-def store_embeddings(sentences: List[Sentence], storage_mode: str):
+def store_embeddings(data_points: Union[List[DataPoint], Dataset], storage_mode: str):
     # if memory mode option 'none' delete everything
-    if storage_mode == "none":
-        for sentence in sentences:
-            sentence.clear_embeddings()
+    if isinstance(data_points, Dataset):
+        data_points = list(_iter_dataset(data_points))
 
+    if storage_mode == "none":
+        delete_keys = None
     # else delete only dynamic embeddings (otherwise autograd will keep everything in memory)
     else:
         # find out which ones are dynamic embeddings
         delete_keys = []
-        if type(sentences[0]) == Sentence:
-            for name, vector in sentences[0][0]._embeddings.items():
-                if sentences[0][0]._embeddings[name].requires_grad:
+        data_point = data_points[0]
+        if isinstance(data_point, Sentence):
+            first_token = data_point[0]
+            for name, vector in first_token._embeddings.items():
+                if vector.requires_grad:
                     delete_keys.append(name)
 
+        for name, vector in data_point._embeddings.items():
+            if vector.requires_grad:
+                delete_keys.append(name)
+
         # find out which ones are dynamic embeddings
-        for sentence in sentences:
-            sentence.clear_embeddings(delete_keys)
+    for data_point in data_points:
+        data_point.clear_embeddings(delete_keys)
 
     # memory management - option 1: send everything to CPU (pin to memory if we train on GPU)
     if storage_mode == "cpu":
-        pin_memory = False if str(flair.device) == "cpu" else True
-        for sentence in sentences:
-            sentence.to("cpu", pin_memory=pin_memory)
+        pin_memory = str(flair.device) != "cpu"
+        for data_point in data_points:
+            data_point.to("cpu", pin_memory=pin_memory)
 
     # record current embedding storage mode to allow optimization (for instance in FlairEmbeddings class)
     flair.embedding_storage_mode = storage_mode
