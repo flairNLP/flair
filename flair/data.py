@@ -289,10 +289,10 @@ class RelationLabel(Label):
 
     def __eq__(self, other):
         return (
-            self.value == other.value
-            and self.score == other.score
-            and self.head.id_text == other.head.id_text
-            and self.tail.id_text == other.tail.id_text
+                self.value == other.value
+                and self.score == other.score
+                and self.head.id_text == other.head.id_text
+                and self.tail.id_text == other.tail.id_text
         )
 
     @property
@@ -402,12 +402,12 @@ class Token(DataPoint):
     """
 
     def __init__(
-        self,
-        text: str,
-        idx: int = None,
-        head_id: int = None,
-        whitespace_after: bool = True,
-        start_position: int = None,
+            self,
+            text: str,
+            idx: int = None,
+            head_id: int = None,
+            whitespace_after: bool = True,
+            start_position: int = None,
     ):
         super().__init__()
 
@@ -609,11 +609,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-        self,
-        text: Union[str, List[str]] = [],
-        use_tokenizer: Union[bool, Tokenizer, Callable] = True,
-        language_code: str = None,
-        start_position: int = None,
+            self,
+            text: Union[str, List[str]] = [],
+            use_tokenizer: Union[bool, Tokenizer, Callable] = True,
+            language_code: str = None,
+            start_position: int = None,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -708,8 +708,7 @@ class Sentence(DataPoint):
             label_names.append(label.value)
         return label_names
 
-    def _add_spans_internal(self, spans: List[Span], label_type: str, min_score):
-
+    def _convert_span_labels(self, label_type: str, min_score=-1):
         current_span: List[Token] = []
 
         tags: Dict[str, float] = defaultdict(lambda: 0.0)
@@ -746,12 +745,10 @@ class Sentence(DataPoint):
                 span_score = sum(scores) / len(scores)
                 if span_score > min_score:
                     span = Span(current_span)
-                    span.add_label(
-                        typename=label_type,
-                        value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
-                        score=span_score,
-                    )
-                    spans.append(span)
+                    value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
+                    self.add_complex_label(typename=label_type,
+                                           label=SpanLabel(span=span, value=value, score=span_score),
+                                           )
 
                 current_span = []
                 tags = defaultdict(lambda: 0.0)
@@ -769,33 +766,99 @@ class Sentence(DataPoint):
             span_score = sum(scores) / len(scores)
             if span_score > min_score:
                 span = Span(current_span)
-                span.add_label(
-                    typename=label_type,
-                    value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
-                    score=span_score,
-                )
-                spans.append(span)
+                value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
+                self.add_complex_label(typename=label_type,
+                                       label=SpanLabel(span=span, value=value, score=span_score),
+                                       )
 
-        return spans
+    # def _add_spans_internal(self, spans: List[Span], label_type: str, min_score):
+    #
+    #     current_span: List[Token] = []
+    #
+    #     tags: Dict[str, float] = defaultdict(lambda: 0.0)
+    #
+    #     previous_tag_value: str = "O"
+    #     for token in self:
+    #
+    #         tag: Label = token.get_tag(label_type)
+    #         tag_value = tag.value
+    #
+    #         # non-set tags are OUT tags
+    #         if tag_value == "" or tag_value == "O" or tag_value == "_":
+    #             tag_value = "O-"
+    #
+    #         # anything that is not a BIOES tag is a SINGLE tag
+    #         if tag_value[0:2] not in ["B-", "I-", "O-", "E-", "S-"]:
+    #             tag_value = "S-" + tag_value
+    #
+    #         # anything that is not OUT is IN
+    #         in_span = False
+    #         if tag_value[0:2] not in ["O-"]:
+    #             in_span = True
+    #
+    #         # single and begin tags start a new span
+    #         starts_new_span = False
+    #         if tag_value[0:2] in ["B-", "S-"]:
+    #             starts_new_span = True
+    #
+    #         if previous_tag_value[0:2] in ["S-"] and previous_tag_value[2:] != tag_value[2:] and in_span:
+    #             starts_new_span = True
+    #
+    #         if (starts_new_span or not in_span) and len(current_span) > 0:
+    #             scores = [t.get_labels(label_type)[0].score for t in current_span]
+    #             span_score = sum(scores) / len(scores)
+    #             if span_score > min_score:
+    #                 span = Span(current_span)
+    #                 span.add_label(
+    #                     typename=label_type,
+    #                     value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
+    #                     score=span_score,
+    #                 )
+    #                 spans.append(span)
+    #
+    #             current_span = []
+    #             tags = defaultdict(lambda: 0.0)
+    #
+    #         if in_span:
+    #             current_span.append(token)
+    #             weight = 1.1 if starts_new_span else 1.0
+    #             tags[tag_value[2:]] += weight
+    #
+    #         # remember previous tag
+    #         previous_tag_value = tag_value
+    #
+    #     if len(current_span) > 0:
+    #         scores = [t.get_labels(label_type)[0].score for t in current_span]
+    #         span_score = sum(scores) / len(scores)
+    #         if span_score > min_score:
+    #             span = Span(current_span)
+    #             span.add_label(
+    #                 typename=label_type,
+    #                 value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
+    #                 score=span_score,
+    #             )
+    #             spans.append(span)
+    #
+    #     return spans
 
-    def get_spans(self, label_type: Optional[str] = None, min_score=-1) -> List[Span]:
-
-        spans: List[Span] = []
-
-        # if label type is explicitly specified, get spans for this label type
-        if label_type is not None:
-            return self._add_spans_internal(spans, label_type, min_score)
-
-        # else determine all label types in sentence and get all spans
-        label_types = []
-        for token in self:
-            for annotation in token.annotation_layers.keys():
-                if annotation not in label_types:
-                    label_types.append(annotation)
-
-        for label_type in label_types:
-            self._add_spans_internal(spans, label_type, min_score)
-        return spans
+    # def get_spans(self, label_type: Optional[str] = None, min_score=-1) -> List[Span]:
+    #
+    #     spans: List[Span] = []
+    #
+    #     # if label type is explicitly specified, get spans for this label type
+    #     if label_type is not None:
+    #         return self._add_spans_internal(spans, label_type, min_score)
+    #
+    #     # else determine all label types in sentence and get all spans
+    #     label_types = []
+    #     for token in self:
+    #         for annotation in token.annotation_layers.keys():
+    #             if annotation not in label_types:
+    #                 label_types.append(annotation)
+    #
+    #     for label_type in label_types:
+    #         self._add_spans_internal(spans, label_type, min_score)
+    #     return spans
 
     @property
     def embedding(self):
@@ -1050,12 +1113,6 @@ class Sentence(DataPoint):
 
     def get_labels(self, label_type: str = None):
 
-        # TODO: crude hack - replace with something better
-        if label_type:
-            spans = self.get_spans(label_type)
-            for span in spans:
-                self.add_complex_label(label_type, label=SpanLabel(span, span.tag, span.score))
-
         if label_type is None:
             return self.labels
 
@@ -1140,12 +1197,12 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-        self,
-        train: Dataset = None,
-        dev: Dataset = None,
-        test: Dataset = None,
-        name: str = "corpus",
-        sample_missing_splits: Union[bool, str] = True,
+            self,
+            train: Dataset = None,
+            dev: Dataset = None,
+            test: Dataset = None,
+            name: str = "corpus",
+            sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1184,11 +1241,11 @@ class Corpus:
         return self._test
 
     def downsample(
-        self,
-        percentage: float = 0.1,
-        downsample_train=True,
-        downsample_dev=True,
-        downsample_test=True,
+            self,
+            percentage: float = 0.1,
+            downsample_train=True,
+            downsample_dev=True,
+            downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:

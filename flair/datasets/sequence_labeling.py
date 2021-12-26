@@ -289,33 +289,34 @@ class ColumnDataset(FlairDataset):
 
     def _convert_lines_to_sentence(self, lines):
 
+        span_annotations = set()
+
         sentence: Sentence = Sentence()
         for line in lines:
             # skip comments
             if self.comment_symbol is not None and line.startswith(self.comment_symbol):
                 continue
 
-            # if sentence ends, convert and return
-            if self.__line_completes_sentence(line):
-                if len(sentence) > 0:
-                    if self.tag_to_bioes is not None:
-                        sentence.convert_tag_scheme(tag_type=self.tag_to_bioes, target_scheme="iobes")
-                    # check if this sentence is a document boundary
-                    if sentence.to_original_text() == self.document_separator_token:
-                        sentence.is_document_boundary = True
-                    return sentence
-
             # otherwise, this line is a token. parse and add to sentence
-            else:
-                token = self._parse_token(line)
-                sentence.add_token(token)
+            token: Token = self._parse_token(line)
+
+            for layer in token.annotation_layers:
+                labels = token.annotation_layers[layer]
+                for label in labels:
+                    if label.value.startswith('B-') or label.value.startswith('I-') or label.value == 'O':
+                        span_annotations.add(layer)
+
+            sentence.add_token(token)
 
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token:
             sentence.is_document_boundary = True
 
-        if self.tag_to_bioes is not None:
-            sentence.convert_tag_scheme(tag_type=self.tag_to_bioes, target_scheme="iobes")
+        for span_annotation in span_annotations:
+            sentence.convert_tag_scheme(tag_type=span_annotation, target_scheme="iob") # TODO: remove this
+            sentence._convert_span_labels(label_type=span_annotation)
+            for token in sentence:
+                token.remove_labels(span_annotation)
 
         if len(sentence) > 0:
             return sentence
@@ -326,25 +327,35 @@ class ColumnDataset(FlairDataset):
         for column in self.column_name_map:
             if len(fields) > column:
                 if column != self.text_column and self.column_name_map[column] != self.SPACE_AFTER_KEY:
-                    task = self.column_name_map[column]  # for example 'pos'
-                    tag = fields[column]
-                    if tag.count("-") >= 1:  # tag with prefix, for example tag='B-OBJ'
-                        split_at_first_hyphen = tag.split("-", 1)
-                        tagging_format_prefix = split_at_first_hyphen[0]
-                        tag_without_tagging_format = split_at_first_hyphen[1]
-                        if self.label_name_map and tag_without_tagging_format in self.label_name_map.keys():
-                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format]
-                            # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
-                            if self.label_name_map[tag_without_tagging_format] == "O":
-                                tag = "O"
-                    else:  # tag without prefix, for example tag='PPER'
-                        if self.label_name_map and tag in self.label_name_map.keys():
-                            tag = self.label_name_map[tag]  # for example, transforming 'PPER' to 'person'
+                    # get the task name (e.g. 'ner')
+                    label_name = self.column_name_map[column]
 
-                    token.add_label(task, tag)
+                    # get the label value
+                    label_value = self._remap_label(fields[column])
+
+                    # add label
+                    token.add_label(label_name, label_value)
+
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == "-":
                     token.whitespace_after = False
         return token
+
+    def _remap_label(self, tag):
+        # remap BIOES tag names # TODO: make this more fool-proof
+        if tag.count("-") >= 1:
+            split_at_first_hyphen = tag.split("-", 1)
+            tagging_format_prefix = split_at_first_hyphen[0]
+            tag_without_tagging_format = split_at_first_hyphen[1]
+            if self.label_name_map and tag_without_tagging_format in self.label_name_map.keys():
+                tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format]
+                # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
+                if self.label_name_map[tag_without_tagging_format] == "O":
+                    tag = "O"
+                return tag
+        # remap regular tag names
+        if self.label_name_map and tag in self.label_name_map.keys():
+            tag = self.label_name_map[tag]  # for example, transforming 'PPER' to 'person'
+        return tag
 
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace() or line == ""
