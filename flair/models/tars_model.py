@@ -57,7 +57,6 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
     def _get_tars_formatted_sentences(self, sentences: List[Sentence]):
         label_text_pairs = []
         all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
-        # print(all_labels)
         for sentence in sentences:
             label_text_pairs_for_sentence = []
             if self.training and self.num_negative_labels_to_sample is not None:
@@ -88,7 +87,6 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
             import random
 
             sample = random.sample(tags, k=self.num_negative_labels_to_sample)
-            # print(sample)
             return sample
 
         already_sampled_negative_labels = set()
@@ -366,8 +364,8 @@ class TARSTagger(FewshotClassifier):
 
         # initialize a bare-bones sequence tagger
         self.tars_model: SequenceTagger = SequenceTagger(
-            123,
-            embeddings,
+            hidden_size=123,
+            embeddings=embeddings,
             tag_dictionary=tars_dictionary,
             tag_type=self.static_label_type,
             use_crf=False,
@@ -548,7 +546,6 @@ class TARSTagger(FewshotClassifier):
                         loss_and_count = self.tars_model.predict(
                             tars_sentence,
                             label_name=label_name,
-                            all_tag_prob=True,
                             return_loss=True,
                         )
                         overall_loss += loss_and_count[0].item()
