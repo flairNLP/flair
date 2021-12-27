@@ -1446,34 +1446,29 @@ class Corpus:
 
         log.info("Computing label dictionary. Progress:")
 
-        # if there are token labels of provided type, use these. Otherwise use sentence labels
-        token_labels_exist = False
-
         all_label_types: typing.Counter[str] = Counter()
         label_occurrence: typing.Counter[str] = Counter()
         all_sentence_labels: List[str] = []
         for sentence in Tqdm.tqdm(_iter_dataset(data)):
+
             # check for labels of words
             if isinstance(sentence, Sentence):
                 for token in sentence.tokens:
                     all_label_types.update(token.annotation_layers.keys())
                     for label in token.get_labels(label_type):
                         label_occurrence[label.value] += 1
-                        token_labels_exist = True
 
-            # if we are looking for sentence-level labels
-            if not token_labels_exist:
-                # check if sentence itself has labels
-                labels = sentence.get_labels(label_type)
-                all_label_types.update(sentence.annotation_layers.keys())
+            # check if sentence itself has labels
+            labels = sentence.get_labels(label_type)
+            all_label_types.update(sentence.annotation_layers.keys())
 
-                for label in labels:
-                    if label.value not in all_sentence_labels:
-                        label_occurrence[label.value] += 1
+            for label in labels:
+                if label.value not in all_sentence_labels:
+                    label_occurrence[label.value] += 1
 
-                if not label_dictionary.multi_label:
-                    if len(labels) > 1:
-                        label_dictionary.multi_label = True
+            if not label_dictionary.multi_label:
+                if len(labels) > 1:
+                    label_dictionary.multi_label = True
 
         for label, count in label_occurrence.most_common():
             if count < min_count: break

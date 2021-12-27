@@ -303,7 +303,7 @@ class ColumnDataset(FlairDataset):
             for layer in token.annotation_layers:
                 labels = token.annotation_layers[layer]
                 for label in labels:
-                    if label.value.startswith('B-') or label.value.startswith('I-') or label.value == 'O':
+                    if label.value.startswith('S-') or label.value.startswith('B-') or label.value.startswith('I-') or label.value == 'O':
                         span_annotations.add(layer)
 
             sentence.add_token(token)
