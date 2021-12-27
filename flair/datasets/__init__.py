@@ -137,7 +137,6 @@ from .entity_linking import (
     WSD_TRAINOMATIC,
     WSD_UFSAC,
     WSD_WORDNET_GLOSS_TAGGED,
-    EntityLinkingCorpus,
 )
 
 # Expose all relation extraction datasets

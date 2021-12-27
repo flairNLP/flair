@@ -1,15 +1,13 @@
 import csv
 import logging
 import os
-import typing
-from collections import Counter
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 import requests
 
 import flair
-from flair.data import Corpus, Dictionary, MultiCorpus, Sentence, _iter_dataset
+from flair.data import Corpus, MultiCorpus, Sentence
 from flair.datasets.sequence_labeling import ColumnCorpus
 from flair.file_utils import cached_path, unpack_file
 from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
@@ -17,88 +15,14 @@ from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
 log = logging.getLogger("flair")
 
 
-class EntityLinkingCorpus(ColumnCorpus):
+class NEL_ENGLISH_AQUAINT(ColumnCorpus):
     def __init__(
-        self,
-        data_folder,
-        train_file,
-        columns={0: "text", 1: "nel"},
-        column_delimiter="\t",
-        in_memory=True,
-        document_separator_token="-DOCSTART-",
-        **corpusargs,
-    ):
-        """
-        Super class for all entity linking corpora. Expects the data to be in column format with one column for words and another one for BIO-tags and wikipedia-page
-        name, e.g. B-Brad_Pitt.
-        The class provides the function make_entity_dict to create an entity dictionary suited for entity linking.
-        """
-        # TODO: Add a routine, that checks annotations for some widespread errors/inconsistencies??? (e.g. in AQUAINT corpus Iran-Iraq_War vs. Iran-Iraq_war)
-
-        super(EntityLinkingCorpus, self).__init__(
-            data_folder,
-            columns,
-            train_file=train_file,
-            column_delimiter=column_delimiter,
-            in_memory=in_memory,
-            document_separator_token=document_separator_token,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            agreement_threshold: float = 0.5,
+            sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
             **corpusargs,
-        )
-
-    def make_entity_dict(self, label_type="nel", threshold: int = 1) -> Dictionary:
-        """
-        Create ID-dictionary for the wikipedia-page names.
-        param threshold: Ignore links that occur less than threshold value
-
-        In entity_occurences all wikinames and their number of occurence is saved.
-        ent_dictionary contains all wikinames that occure at least threshold times and gives each name an ID
-        """
-        self.threshold = threshold
-        self.entity_occurences: typing.Counter[str] = Counter()
-
-        for sentence in _iter_dataset(self.get_all_sentences()):
-            if not sentence.is_document_boundary:  # exclude "-DOCSTART-"-sentences
-
-                spans = sentence.get_spans(label_type)
-                self.entity_occurences.update(span.tag for span in spans)
-        self.total_number_of_entity_mentions = sum(self.entity_occurences.values())
-        self.number_of_entities = len(self.entity_occurences)
-
-        # Create the annotation dictionary
-        self.ent_dictionary: Dictionary = Dictionary(add_unk=True)
-
-        for x in self.entity_occurences:
-            if self.entity_occurences[x] >= threshold:
-                self.ent_dictionary.add_item(x)
-
-        return self.ent_dictionary
-
-    # this fct removes every second unknown label
-    def remove_unknowns(self):
-        remove = True
-        for sentence in self.get_all_sentences():
-            if not sentence.is_document_boundary:  # exclude "-DOCSTART-"-sentences
-
-                spans = sentence.get_spans("nel")
-                for span in spans:
-                    annotation = span.tag
-                    if self.ent_dictionary.get_idx_for_item(annotation) == 0:  # unknown label
-                        if remove:
-                            for token in span:
-                                token.remove_labels("nel")
-                            remove = False
-                        else:
-                            remove = True
-
-
-class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
-    def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        agreement_threshold: float = 0.5,
-        sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
-        **corpusargs,
     ):
         """
         Initialize Aquaint Entity Linking corpus introduced in: D. Milne and I. H. Witten.
@@ -194,12 +118,12 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                                         j += 1
 
                                     if (
-                                        string[j] == "|"
+                                            string[j] == "|"
                                     ):  # entity has a score, i.e. looks like this [[wikiname|surface_form|agreement_score]]
-                                        agreement_score = float(string[j + 1 : j + 4])
+                                        agreement_score = float(string[j + 1: j + 4])
                                         j += 4  # points to first ']' of entity now
                                         if agreement_score < self.agreement_threshold:  # discard entity
-                                            string = string[:current_entity] + surface_form + string[j + 2 :]
+                                            string = string[:current_entity] + surface_form + string[j + 2:]
                                             current_entity = string.find("[[")
                                             continue
 
@@ -208,7 +132,7 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                                 lengths.append(len(surface_form))
                                 wikinames.append(wikiname[0].upper() + wikiname.replace(" ", "_")[1:])
 
-                                string = string[:current_entity] + surface_form + string[j + 2 :]
+                                string = string[:current_entity] + surface_form + string[j + 2:]
 
                                 current_entity = string.find("[[")
 
@@ -237,7 +161,7 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                                     assert token.start_pos is not None
                                     assert token.end_pos is not None
                                     if (
-                                        token.start_pos >= mention_start and token.end_pos <= mention_end
+                                            token.start_pos >= mention_start and token.end_pos <= mention_end
                                     ):  # token belongs to entity mention
                                         if first:
                                             token.set_label(typename="nel", value="B-" + wikiname)
@@ -267,19 +191,20 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
 
         super(NEL_ENGLISH_AQUAINT, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
             in_memory=in_memory,
             **corpusargs,
         )
 
 
-class NEL_GERMAN_HIPE(EntityLinkingCorpus):
+class NEL_GERMAN_HIPE(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        wiki_language: str = "dewiki",
-        **corpusargs,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            wiki_language: str = "dewiki",
+            **corpusargs,
     ):
         """
         Initialize a sentence-segmented version of the HIPE entity linking corpus for historical German (see description
@@ -334,15 +259,15 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
             qid_wikiname_dict = {**train_dict, **test_dict, **dev_dict}
 
             for doc_path, file_name in zip(
-                [original_train_path, original_test_path, original_dev_path],
-                [
-                    train_file_name,
-                    wiki_language + "_test.tsv",
-                    wiki_language + "_dev.tsv",
-                ],
+                    [original_train_path, original_test_path, original_dev_path],
+                    [
+                        train_file_name,
+                        wiki_language + "_test.tsv",
+                        wiki_language + "_dev.tsv",
+                    ],
             ):
                 with open(doc_path, "r", encoding="utf-8") as read, open(
-                    data_folder / file_name, "w", encoding="utf-8"
+                        data_folder / file_name, "w", encoding="utf-8"
                 ) as write:
 
                     # ignore first line
@@ -391,6 +316,7 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
 
         super(NEL_GERMAN_HIPE, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=train_file_name,
             dev_file=wiki_language + "_dev.tsv",
             test_file=wiki_language + "_test.tsv",
@@ -419,9 +345,9 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
                 line = read.readline()
 
         base_url = (
-            "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=sitelinks&sitefilter="
-            + self.wiki_language
-            + "&ids="
+                "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=sitelinks&sitefilter="
+                + self.wiki_language
+                + "&ids="
         )
 
         qid_list = list(qid_set)
@@ -430,7 +356,7 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
         qid_wikiname_dict = {}
         for i in range(length):
             if (
-                i + 1
+                    i + 1
             ) % 50 == 0 or i == length - 1:  # there is a limit to the number of ids in one request in the wikidata api
 
                 ids += qid_list[i]
@@ -457,13 +383,13 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
         return qid_wikiname_dict
 
 
-class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
+class NEL_ENGLISH_AIDA(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        check_existence: bool = False,
-        **corpusargs,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            check_existence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize AIDA CoNLL-YAGO Entity Linking corpus introduced here https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/ambiverse-nlu/aida/downloads.
@@ -507,15 +433,15 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
             wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
 
             for name, path in zip(
-                ["train", "testa", "testb"],
-                [
-                    train_unprocessed_path,
-                    testa_unprocessed_path,
-                    testb_unprocessed_path,
-                ],
+                    ["train", "testa", "testb"],
+                    [
+                        train_unprocessed_path,
+                        testa_unprocessed_path,
+                        testb_unprocessed_path,
+                    ],
             ):
                 with open(data_folder / name, "w", encoding="utf-8") as write, open(
-                    path, "r", encoding="utf-8"
+                        path, "r", encoding="utf-8"
                 ) as read:
 
                     for line in read:
@@ -552,6 +478,7 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
 
         super(NEL_ENGLISH_AIDA, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
             dev_file="testa",
             test_file="testb",
@@ -580,7 +507,7 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
 
         for i in range(length):
             if (
-                i + 1
+                    i + 1
             ) % 50 == 0 or i == length - 1:  # there is a limit to the number of ids in one request in the wikimedia api
 
                 ids += wikiid_list[i]
@@ -610,14 +537,14 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
         return wikiid_wikiname_dict
 
 
-class NEL_ENGLISH_IITB(EntityLinkingCorpus):
+class NEL_ENGLISH_IITB(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        ignore_disagreements: bool = False,
-        sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
-        **corpusargs,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            ignore_disagreements: bool = False,
+            sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
+            **corpusargs,
     ):
         """
         Initialize ITTB Entity Linking corpus introduced in "Collective Annotation of Wikipedia Entities in Web Text" Sayali Kulkarni, Amit Singh, Ganesh Ramakrishnan, and Soumen Chakrabarti.
@@ -704,7 +631,7 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
                                     assert token.start_pos is not None
                                     assert token.end_pos is not None
                                     if (
-                                        token.start_pos >= mention_start and token.end_pos <= mention_end
+                                            token.start_pos >= mention_start and token.end_pos <= mention_end
                                     ):  # token belongs to entity mention
                                         assert elem[1].text is not None
                                         if first:
@@ -751,18 +678,19 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
 
         super(NEL_ENGLISH_IITB, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
             in_memory=in_memory,
             **corpusargs,
         )
 
 
-class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
+class NEL_ENGLISH_TWEEKI(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        **corpusargs,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Initialize Tweeki Entity Linking corpus introduced in "Tweeki: Linking Named Entities on Twitter to a Knowledge Graph" Harandizadeh, Singh.
@@ -796,7 +724,7 @@ class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
             original_file_path = cached_path(f"{tweeki_gold_el_path}", Path("datasets") / dataset_name)
 
             with open(original_file_path, "r", encoding="utf-8") as read, open(
-                parsed_dataset, "w", encoding="utf-8"
+                    parsed_dataset, "w", encoding="utf-8"
             ) as write:
                 line = read.readline()
                 while line:
@@ -818,18 +746,19 @@ class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
 
         super(NEL_ENGLISH_TWEEKI, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
             in_memory=in_memory,
             **corpusargs,
         )
 
 
-class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
+class NEL_ENGLISH_REDDIT(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        **corpusargs,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Initialize the Reddit Entity Linking corpus containing gold annotations only (https://arxiv.org/abs/2101.01228v2) in the NER-like column format.
@@ -862,7 +791,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
 
                 # First parse the post titles
                 with open(data_folder / "posts.tsv", "r", encoding="utf-8") as tsvin1, open(
-                    data_folder / "gold_post_annotations.tsv", "r", encoding="utf-8"
+                        data_folder / "gold_post_annotations.tsv", "r", encoding="utf-8"
                 ) as tsvin2:
 
                     posts = csv.reader(tsvin1, delimiter="\t")
@@ -903,7 +832,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
 
                 # Then parse the comments
                 with open(data_folder / "comments.tsv", "r", encoding="utf-8") as tsvin3, open(
-                    data_folder / "gold_comment_annotations.tsv", "r", encoding="utf-8"
+                        data_folder / "gold_comment_annotations.tsv", "r", encoding="utf-8"
                 ) as tsvin4:
 
                     self.comments = csv.reader(tsvin3, delimiter="\t")
@@ -960,13 +889,13 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                                 )
                             elif comm_key == "eci2lut":
                                 self.curr_comm = (
-                                    self.curr_comm[:18]
-                                    + self.curr_comm[18:27].replace(" ", "")
-                                    + self.curr_comm[27:55]
-                                    + self.curr_comm[55:68].replace(" ", "")
-                                    + self.curr_comm[68:85]
-                                    + self.curr_comm[85:92].replace(" ", "")
-                                    + self.curr_comm[92:]
+                                        self.curr_comm[:18]
+                                        + self.curr_comm[18:27].replace(" ", "")
+                                        + self.curr_comm[27:55]
+                                        + self.curr_comm[55:68].replace(" ", "")
+                                        + self.curr_comm[68:85]
+                                        + self.curr_comm[85:92].replace(" ", "")
+                                        + self.curr_comm[92:]
                                 )
 
                             self._text_to_cols(
@@ -977,6 +906,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
 
         super(NEL_ENGLISH_REDDIT, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
             in_memory=in_memory,
             **corpusargs,
@@ -1002,11 +932,11 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                     if any(sentence[i].start_pos == v[0] and sentence[i].end_pos == v[1] for j, v in enumerate(links)):
                         outfile.writelines(sentence[i].text + "\tS-" + links[link_index[0]][2] + "\n")
                     elif any(
-                        sentence[i].start_pos == v[0] and sentence[i].end_pos != v[1] for j, v in enumerate(links)
+                            sentence[i].start_pos == v[0] and sentence[i].end_pos != v[1] for j, v in enumerate(links)
                     ):
                         outfile.writelines(sentence[i].text + "\tB-" + links[link_index[0]][2] + "\n")
                     elif any(
-                        sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1] for j, v in enumerate(links)
+                            sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1] for j, v in enumerate(links)
                     ):
                         outfile.writelines(sentence[i].text + "\tI-" + links[link_index[0]][2] + "\n")
                     else:
@@ -1023,9 +953,9 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
             # incorrectly, in order to keep the desired format (empty line as a sentence separator).
             try:
                 if (
-                    (sentence[i].text in {".", "!", "?", "!*"})
-                    and (sentence[i + 1].text not in {'"', "“", "'", "''", "!", "?", ";)", "."})
-                    and ("." not in sentence[i - 1].text)
+                        (sentence[i].text in {".", "!", "?", "!*"})
+                        and (sentence[i + 1].text not in {'"', "“", "'", "''", "!", "?", ";)", "."})
+                        and ("." not in sentence[i - 1].text)
                 ):
                     outfile.writelines("\n")
             except IndexError:
@@ -1085,11 +1015,11 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
 
 
 def from_ufsac_to_tsv(
-    xml_file: Union[str, Path],
-    conll_file: Union[str, Path],
-    datasetname: str,
-    encoding: str = "utf8",
-    cut_multisense: bool = True,
+        xml_file: Union[str, Path],
+        conll_file: Union[str, Path],
+        datasetname: str,
+        encoding: str = "utf8",
+        cut_multisense: bool = True,
 ):
     """
     Function that converts the UFSAC format into tab separated column format in a new file.
@@ -1155,7 +1085,7 @@ def from_ufsac_to_tsv(
             return [span]
         elif datasetname == "omsti":
             if (
-                word_fields[3] != "O" and not span == "_" and "__" not in span
+                    word_fields[3] != "O" and not span == "_" and "__" not in span
             ):  # has annotation and does not consist only of '_' (still not 100% clean)
                 return span.split("_")
             else:
@@ -1244,18 +1174,18 @@ def determine_tsv_file(filename: str, data_folder: Path, cut_multisense: bool = 
 
 class WSD_UFSAC(MultiCorpus):
     def __init__(
-        self,
-        filenames: Union[str, List[str]] = ["masc", "semcor"],
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        cut_multisense: bool = True,
-        columns={0: "text", 3: "wn30_key"},
-        tag_to_bioes=None,
-        banned_sentences: List[str] = None,
-        sample_missing_splits_in_multicorpus: Union[bool, str] = True,
-        sample_missing_splits_in_each_corpus: Union[bool, str] = True,
-        use_raganato_ALL_as_test_data: bool = False,
-        name: str = "multicorpus",
+            self,
+            filenames: Union[str, List[str]] = ["masc", "semcor"],
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            cut_multisense: bool = True,
+            columns={0: "text", 3: "wn30_key"},
+            tag_to_bioes=None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits_in_multicorpus: Union[bool, str] = True,
+            sample_missing_splits_in_each_corpus: Union[bool, str] = True,
+            use_raganato_ALL_as_test_data: bool = False,
+            name: str = "multicorpus",
     ):
         """
         Initialize a custom corpus with any Word Sense Disambiguation (WSD) datasets in the UFSAC format from https://github.com/getalp/UFSAC.
@@ -1391,17 +1321,17 @@ class WSD_UFSAC(MultiCorpus):
         )
 
 
-class WSD_RAGANATO_ALL(EntityLinkingCorpus):
+class WSD_RAGANATO_ALL(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
-        tag_to_bioes=None,
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
-        sample_missing_splits: bool = True,
-        cut_multisense: bool = True,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns={0: "text", 3: "wn30_key"},
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: bool = True,
+            cut_multisense: bool = True,
     ):
         """
         Initialize ragnato_ALL (concatenation of all SensEval and SemEval all-words tasks) provided in UFSAC https://github.com/getalp/UFSAC
@@ -1458,18 +1388,18 @@ class WSD_RAGANATO_ALL(EntityLinkingCorpus):
         )
 
 
-class WSD_SEMCOR(EntityLinkingCorpus):
+class WSD_SEMCOR(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
-        tag_to_bioes=None,
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
-        sample_missing_splits: Union[bool, str] = True,
-        cut_multisense: bool = True,
-        use_raganato_ALL_as_test_data: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns={0: "text", 3: "wn30_key"},
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: Union[bool, str] = True,
+            cut_multisense: bool = True,
+            use_raganato_ALL_as_test_data: bool = False,
     ):
         """
         Initialize SemCor provided in UFSAC https://github.com/getalp/UFSAC
@@ -1537,17 +1467,17 @@ class WSD_SEMCOR(EntityLinkingCorpus):
         )
 
 
-class WSD_WORDNET_GLOSS_TAGGED(EntityLinkingCorpus):
+class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
-        tag_to_bioes=None,
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
-        sample_missing_splits: Union[bool, str] = True,
-        use_raganato_ALL_as_test_data: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns={0: "text", 3: "wn30_key"},
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: Union[bool, str] = True,
+            use_raganato_ALL_as_test_data: bool = False,
     ):
         """
         Initialize Princeton WordNet Gloss Corpus provided in UFSAC https://github.com/getalp/UFSAC
@@ -1613,18 +1543,18 @@ class WSD_WORDNET_GLOSS_TAGGED(EntityLinkingCorpus):
         )
 
 
-class WSD_MASC(EntityLinkingCorpus):
+class WSD_MASC(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
-        tag_to_bioes=None,
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
-        sample_missing_splits: Union[bool, str] = True,
-        cut_multisense: bool = True,
-        use_raganato_ALL_as_test_data: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns={0: "text", 3: "wn30_key"},
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: Union[bool, str] = True,
+            cut_multisense: bool = True,
+            use_raganato_ALL_as_test_data: bool = False,
     ):
         """
         Initialize MASC (Manually Annotated Sub-Corpus) provided in UFSAC https://github.com/getalp/UFSAC
@@ -1693,18 +1623,18 @@ class WSD_MASC(EntityLinkingCorpus):
         )
 
 
-class WSD_OMSTI(EntityLinkingCorpus):
+class WSD_OMSTI(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
-        tag_to_bioes=None,
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
-        sample_missing_splits: Union[bool, str] = True,
-        cut_multisense: bool = True,
-        use_raganato_ALL_as_test_data: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns={0: "text", 3: "wn30_key"},
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: Union[bool, str] = True,
+            cut_multisense: bool = True,
+            use_raganato_ALL_as_test_data: bool = False,
     ):
         """
         Initialize OMSTI (One Million Sense-Tagged Instances) provided in UFSAC https://github.com/getalp/UFSAC
@@ -1774,17 +1704,17 @@ class WSD_OMSTI(EntityLinkingCorpus):
         )
 
 
-class WSD_TRAINOMATIC(EntityLinkingCorpus):
+class WSD_TRAINOMATIC(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
-        tag_to_bioes=None,
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
-        sample_missing_splits: Union[bool, str] = True,
-        use_raganato_ALL_as_test_data: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns={0: "text", 3: "wn30_key"},
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: Union[bool, str] = True,
+            use_raganato_ALL_as_test_data: bool = False,
     ):
         """
         Initialize Train-O-Matic provided in UFSAC https://github.com/getalp/UFSAC
