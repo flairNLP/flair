@@ -313,7 +313,7 @@ class ColumnDataset(FlairDataset):
             sentence.is_document_boundary = True
 
         for span_annotation in span_annotations:
-            sentence.convert_tag_scheme(tag_type=span_annotation, target_scheme="iob") # TODO: remove this
+            sentence.convert_tag_scheme(tag_type=span_annotation, target_scheme="iob")  # TODO: remove this
             sentence._convert_span_labels(label_type=span_annotation)
             for token in sentence:
                 token.remove_labels(span_annotation)
@@ -477,6 +477,7 @@ class CONLL_03(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
+            column_format={0: "text", 3: "ner"},
             in_memory: bool = True,
             **corpusargs,
     ):
@@ -497,9 +498,6 @@ class CONLL_03(ColumnCorpus):
         else:
             base_path = Path(base_path)
 
-        # column format
-        columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
-
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -516,7 +514,7 @@ class CONLL_03(ColumnCorpus):
 
         super(CONLL_03, self).__init__(
             data_folder,
-            columns,
+            column_format=column_format,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
