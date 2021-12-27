@@ -1470,9 +1470,14 @@ class Corpus:
                 if len(labels) > 1:
                     label_dictionary.multi_label = True
 
+        erfasst_count = 0
+        unked_count = 0
         for label, count in label_occurrence.most_common():
-            if count < min_count: break
-            label_dictionary.add_item(label)
+            if count >= min_count:
+                label_dictionary.add_item(label)
+                erfasst_count += count
+            else:
+                unked_count += count
 
         if len(label_dictionary.idx2item) == 0:
             log.error(
@@ -1485,6 +1490,7 @@ class Corpus:
         log.info(
             f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}"
         )
+        log.info(f"{erfasst_count} instances in dict, {unked_count} instances are UNK'ed")
         log.info(f"Most commonly observed '{label_type}'-labels are {label_occurrence.most_common(20)}")
         log.info(f"Created (for label '{label_type}') {label_dictionary}")
 
