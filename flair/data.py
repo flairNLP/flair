@@ -432,9 +432,9 @@ class Token(DataPoint):
     def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
         self.set_label(tag_type, tag_value, confidence)
 
-    def get_tag(self, label_type):
+    def get_tag(self, label_type, zero_tag_value=""):
         if len(self.get_labels(label_type)) == 0:
-            return Label("")
+            return Label(zero_tag_value)
         return self.get_labels(label_type)[0]
 
     def get_tags_proba_dist(self, tag_type: str) -> List[Label]:
@@ -1432,7 +1432,7 @@ class Corpus:
             _len_dataset(self.test) if self.test else 0,
         )
 
-    def make_label_dictionary(self, label_type: str) -> Dictionary:
+    def make_label_dictionary(self, label_type: str, min_count: int = -1) -> Dictionary:
         """
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
@@ -1450,6 +1450,7 @@ class Corpus:
         token_labels_exist = False
 
         all_label_types: typing.Counter[str] = Counter()
+        label_occurrence: typing.Counter[str] = Counter()
         all_sentence_labels: List[str] = []
         for sentence in Tqdm.tqdm(_iter_dataset(data)):
             # check for labels of words
@@ -1457,7 +1458,7 @@ class Corpus:
                 for token in sentence.tokens:
                     all_label_types.update(token.annotation_layers.keys())
                     for label in token.get_labels(label_type):
-                        label_dictionary.add_item(label.value)
+                        label_occurrence[label.value] += 1
                         token_labels_exist = True
 
             # if we are looking for sentence-level labels
@@ -1468,16 +1469,15 @@ class Corpus:
 
                 for label in labels:
                     if label.value not in all_sentence_labels:
-                        all_sentence_labels.append(label.value)
+                        label_occurrence[label.value] += 1
 
                 if not label_dictionary.multi_label:
                     if len(labels) > 1:
                         label_dictionary.multi_label = True
 
-        # if this is not a token-level prediction problem, add sentence-level labels to dictionary
-        if not token_labels_exist:
-            for label in all_sentence_labels:
-                label_dictionary.add_item(label)
+        for label, count in label_occurrence.most_common():
+            if count < min_count: break
+            label_dictionary.add_item(label)
 
         if len(label_dictionary.idx2item) == 0:
             log.error(
@@ -1490,6 +1490,7 @@ class Corpus:
         log.info(
             f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}"
         )
+        log.info(f"Most commonly observed '{label_type}'-labels are {label_occurrence.most_common(20)}")
         log.info(f"Created (for label '{label_type}') {label_dictionary}")
 
         return label_dictionary

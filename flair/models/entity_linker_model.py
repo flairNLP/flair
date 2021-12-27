@@ -113,12 +113,12 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
             embedding_list = []
             # get the embeddings of the entity mentions
             for sentence in filtered_sentences:
-                spans = sentence.get_spans(self.label_type)
+                entities = sentence.get_labels(self.label_type)
 
-                for span in spans:
+                for entity in entities:
                     mention_emb = torch.Tensor(0, self.word_embeddings.embedding_length).to(flair.device)
 
-                    for token in span.tokens:
+                    for token in entity.span.tokens:
                         mention_emb = torch.cat(
                             (
                                 mention_emb,
@@ -129,11 +129,11 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
                     embedding_list.append(self.aggregated_embedding(mention_emb).unsqueeze(0))
 
-                    span_labels.append([label.value for label in span.get_labels(typename=self.label_type)])
+                    span_labels.append([entity.value])
 
                     if return_label_candidates:
                         sentences_to_spans.append(sentence)
-                        candidate = SpanLabel(span=span, value=None, score=0.0)
+                        candidate = SpanLabel(span=entity.span, value=None, score=0.0)
                         empty_label_candidates.append(candidate)
 
             embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
