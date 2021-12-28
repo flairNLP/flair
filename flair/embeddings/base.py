@@ -436,12 +436,12 @@ class TransformerEmbedding(Embeddings[Sentence]):
             # legacy TransformerDocumentEmbedding
             state["cls_pooling"] = state.pop("pooling")
 
+        config = None
+
         if config_state_dict:
             model_type = config_state_dict.get("model_type", "bert")
             config_class = CONFIG_MAPPING[model_type]
             config = config_class.from_dict(config_state_dict)
-        else:
-            config = None
 
         embedding = self.create_from_state(saved_config=config, **state)
 
