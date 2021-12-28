@@ -211,7 +211,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
             self.model = AutoModel.from_pretrained(model, config=config)
         else:
-            self.model = AutoModel.from_config(saved_config)
+            self.model = AutoModel.from_config(saved_config, **kwargs)
 
         self.truncate = True
 
@@ -442,8 +442,10 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
         if "embedding_length_internal" in state:
             del state["embedding_length_internal"]
-
-        embedding = self.create_from_state(saved_config=config, **state, state_dict=model_state_dict)
+        if model_state_dict:
+            embedding = self.create_from_state(saved_config=config, **state, state_dict=model_state_dict)
+        else:
+            embedding = self.create_from_state(saved_config=config, **state)
 
         # copy values from new embedding
         for key in embedding.__dict__.keys():
