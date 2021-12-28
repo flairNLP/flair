@@ -303,7 +303,8 @@ class ColumnDataset(FlairDataset):
             for layer in token.annotation_layers:
                 labels = token.annotation_layers[layer]
                 for label in labels:
-                    if label.value.startswith('S-') or label.value.startswith('B-') or label.value.startswith('I-') or label.value == 'O':
+                    if label.value.startswith('S-') or label.value.startswith('B-') or label.value.startswith(
+                            'I-') or label.value == 'O':
                         span_annotations.add(layer)
 
             sentence.add_token(token)
@@ -377,7 +378,8 @@ class ColumnDataset(FlairDataset):
         else:
             sentence = self._convert_lines_to_sentence(self.sentences_raw[index])
 
-            # set sentence context using partials # TODO: fix
+            # set sentence context using partials TODO: pointer to dataset is really inefficient
+            sentence._position_in_dataset = (self, index)
 
         return sentence
 

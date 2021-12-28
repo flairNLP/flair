@@ -46,6 +46,7 @@ class Dictionary:
         self.idx2item: List[bytes] = []
         self.add_unk = add_unk
         self.multi_label = False
+        self.span_labels = False
         # in order to deal with unknown tokens, add <unk>
         if add_unk:
             self.add_item("<unk>")
@@ -1438,6 +1439,7 @@ class Corpus:
         :return: dictionary of labels
         """
         label_dictionary: Dictionary = Dictionary(add_unk=True)
+        label_dictionary.span_labels = False
 
         assert self.train
         datasets = [self.train]
@@ -1462,9 +1464,14 @@ class Corpus:
             labels = sentence.get_labels(label_type)
             all_label_types.update(sentence.annotation_layers.keys())
 
+            # go through all labels and increment count
             for label in labels:
                 if label.value not in all_sentence_labels:
                     label_occurrence[label.value] += 1
+
+                # check if there are any span labels
+                if type(label) == SpanLabel and len(label.span) > 1:
+                    label_dictionary.span_labels = True
 
             if not label_dictionary.multi_label:
                 if len(labels) > 1:

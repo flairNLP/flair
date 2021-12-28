@@ -77,18 +77,23 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         if init_from_state_dict:
             self.label_dictionary = tag_dictionary
         else:
-            self.label_dictionary = Dictionary()
-            for label in tag_dictionary.get_items():
-                if label == '<unk>': continue
-                self.label_dictionary.add_item('O')
-                if tag_format == 'BIOES':
-                    self.label_dictionary.add_item('B-' + label)
-                    self.label_dictionary.add_item('I-' + label)
-                    self.label_dictionary.add_item('E-' + label)
-                    self.label_dictionary.add_item('S-' + label)
-                if tag_format == 'BIO':
-                    self.label_dictionary.add_item('B-' + label)
-                    self.label_dictionary.add_item('I-' + label)
+            # span-labels need special encoding (BIO or BIOES)
+            if tag_dictionary.span_labels:
+                self.label_dictionary = Dictionary()
+                for label in tag_dictionary.get_items():
+                    if label == '<unk>': continue
+                    self.label_dictionary.add_item('O')
+                    if tag_format == 'BIOES':
+                        self.label_dictionary.add_item('B-' + label)
+                        self.label_dictionary.add_item('I-' + label)
+                        self.label_dictionary.add_item('E-' + label)
+                        self.label_dictionary.add_item('S-' + label)
+                    if tag_format == 'BIO':
+                        self.label_dictionary.add_item('B-' + label)
+                        self.label_dictionary.add_item('I-' + label)
+            else:
+                self.label_dictionary = tag_dictionary
+
         self.tagset_size = len(self.label_dictionary)
         log.info(f"SequenceTagger internal label dictionary: {self.label_dictionary}")
 
