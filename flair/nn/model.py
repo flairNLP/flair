@@ -221,8 +221,10 @@ class Classifier(Model[DT], typing.Generic[DT]):
             all_true_values = {}
             all_predicted_values = {}
 
+            loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=0)
+
             sentence_id = 0
-            for batch in Tqdm.tqdm(_iter_dataset(data_points, batch_size=mini_batch_size)):
+            for batch in Tqdm.tqdm(loader):
 
                 # remove any previously predicted labels
                 for datapoint in batch:
