@@ -405,6 +405,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
         # legacy TransformerDocumentEmbedding
         state.pop("batch_size", None)
+        state.pop("embedding_length_internal", None)
 
         if "base_model_name" in state:
             state["model"] = state.pop("base_model_name")
@@ -449,7 +450,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             self.__dict__[key] = embedding.__dict__[key]
 
         if model_state_dict:
-            self.load_state_dict(model_state_dict)
+            self.model.load_state_dict(model_state_dict)
 
     @classmethod
     def create_from_state(cls, **state):
