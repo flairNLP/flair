@@ -406,6 +406,9 @@ class TransformerEmbedding(Embeddings[Sentence]):
         config_state_dict = state.pop("config_state_dict", None)
         model_state_dict = state.pop("model_state_dict", None)
 
+        # legacy TransformerDocumentEmbedding
+        state.pop("batch_size", None)
+
         if "base_model_name" in state:
             state["model"] = state.pop("base_model_name")
 
