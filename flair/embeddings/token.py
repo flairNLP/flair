@@ -901,7 +901,6 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbedding):
         :param layer_mean: If True, uses a scalar mix of layers as embedding
         :param fine_tune: If True, allows transformers to be fine-tuned during training
         """
-        super().__init__()
         TransformerEmbedding.__init__(
             self, model=model, is_token_embedding=True, is_document_embedding=is_document_embedding, **kwargs
         )

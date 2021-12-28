@@ -190,6 +190,8 @@ class TransformerEmbedding(Embeddings[Sentence]):
         **kwargs,
     ):
         self.instance_parameters = self.get_instance_parameters(locals=locals())
+        del self.instance_parameters["saved_config"]
+        del self.instance_parameters["tokenizer_data"]
         super().__init__()
         # temporary fix to disable tokenizer parallelism warning
         # (see https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning)
