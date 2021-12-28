@@ -369,13 +369,24 @@ class Classifier(Model[DT], typing.Generic[DT]):
             )
 
             accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
-
-            precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
-            recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
-            micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
             macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
 
-            main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
+            if "micro avg" in classification_report_dict:
+                # micro average is only computed if zero-label exists (for instance "O")
+                precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
+                recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
+                micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
+            else:
+                # if no zero-label exists (such as in POS tagging) micro average is equal to accuracy
+                precision_score = round(classification_report_dict["accuracy"], 4)
+                recall_score = round(classification_report_dict["accuracy"], 4)
+                micro_f_score = round(classification_report_dict["accuracy"], 4)
+
+            # same for the main score
+            if "micro avg" not in classification_report_dict and main_evaluation_metric[0] == "micro avg":
+                main_score = classification_report_dict["accuracy"]
+            else:
+                main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
 
         else:
             # issue error and default all evaluation numbers to 0.
