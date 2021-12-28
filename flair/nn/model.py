@@ -629,19 +629,22 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             if len(reordered_sentences) == 0:
                 return sentences
 
-            dataloader = DataLoader(
-                dataset=FlairDatapointDataset(reordered_sentences),
-                batch_size=mini_batch_size,
-            )
-            # progress bar for verbosity
-            if verbose:
-                progress_bar = tqdm(dataloader)
-                progress_bar.set_description("Batch inference")
-                dataloader = progress_bar
+            if len(sentences) > mini_batch_size:
+                batches = DataLoader(
+                    dataset=FlairDatapointDataset(reordered_sentences),
+                    batch_size=mini_batch_size,
+                )
+                # progress bar for verbosity
+                if verbose:
+                    progress_bar = tqdm(batches)
+                    progress_bar.set_description("Batch inference")
+                    batches = progress_bar
+            else:
+                batches = [reordered_sentences]
 
             overall_loss = 0
             label_count = 0
-            for batch in dataloader:
+            for batch in batches:
                 # stop if all sentences are empty
                 if not batch:
                     continue

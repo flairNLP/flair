@@ -956,6 +956,7 @@ class MultiTagger:
             self,
             sentences: Union[List[Sentence], Sentence],
             return_loss: bool = False,
+            mini_batch_size: int = 32,
     ):
         """
         Predict sequence tags for Named Entity Recognition task
@@ -984,6 +985,7 @@ class MultiTagger:
                 label_name=name,
                 return_loss=return_loss,
                 embedding_storage_mode="cpu",
+                mini_batch_size=mini_batch_size,
             )
 
         # clear embeddings after predicting
