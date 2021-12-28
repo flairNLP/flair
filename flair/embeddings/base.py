@@ -393,7 +393,6 @@ class TransformerEmbedding(Embeddings[Sentence]):
             "config_state_dict": config_dict,
             "tokenizer_data": tokenizer_data,
             "name": self.name,
-            "model_state_dict": model_state_dict,
             "context_length": self.context_length,
             "respect_document_boundaries": self.respect_document_boundaries,
             "context_dropout": self.context_dropout,
