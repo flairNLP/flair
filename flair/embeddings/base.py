@@ -266,9 +266,9 @@ class TransformerEmbedding(Embeddings[Sentence]):
         if layers == "all":
             # send mini-token through to check how many layers the model has
             hidden_states = self.model(torch.tensor([1], device=flair.device).unsqueeze(0))[-1]
-            self.layer_indexes = [int(x) for x in range(len(hidden_states))]
+            self.layer_indexes = list(range(len(hidden_states)))
         else:
-            self.layer_indexes = [int(x) for x in layers.split(",")]
+            self.layer_indexes = list(map(int,layers.split(",")))
 
         self.cls_pooling = cls_pooling
         self.subtoken_pooling = subtoken_pooling
@@ -377,9 +377,6 @@ class TransformerEmbedding(Embeddings[Sentence]):
     def __getstate__(self):
         config_dict = self.model.config.to_dict()
 
-        # not necessary when loaded via model, but we keep it for now.
-        model_state_dict = self.model.state_dict()
-
         tokenizer_data = self._tokenizer_bytes()
 
         model_state = {
@@ -445,16 +442,14 @@ class TransformerEmbedding(Embeddings[Sentence]):
         else:
             config = None
 
-        if "embedding_length_internal" in state:
-            del state["embedding_length_internal"]
-        if model_state_dict:
-            embedding = self.create_from_state(saved_config=config, **state, state_dict=model_state_dict)
-        else:
-            embedding = self.create_from_state(saved_config=config, **state)
+        embedding = self.create_from_state(saved_config=config, **state)
 
         # copy values from new embedding
         for key in embedding.__dict__.keys():
             self.__dict__[key] = embedding.__dict__[key]
+
+        if model_state_dict:
+            self.load_state_dict(model_state_dict)
 
     @classmethod
     def create_from_state(cls, **state):
