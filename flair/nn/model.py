@@ -14,8 +14,9 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DT, Dictionary, Label, Sentence
+from flair.data import DT, Dictionary, Label, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
+from flair.file_utils import Tqdm
 from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
@@ -205,7 +206,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
-        data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
 
         with torch.no_grad():
 
@@ -222,7 +222,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
             all_predicted_values = {}
 
             sentence_id = 0
-            for batch in data_loader:
+            for batch in Tqdm.tqdm(_iter_dataset(data_points, batch_size=mini_batch_size)):
 
                 # remove any previously predicted labels
                 for datapoint in batch:
@@ -309,6 +309,8 @@ class Classifier(Model[DT], typing.Generic[DT]):
             if len(true_instance) > 1 or len(predicted_instance) > 1:
                 multi_label = True
                 break
+
+        log.info(f"Evaluating as a multi-label problem: {multi_label}")
 
         # compute numbers by formatting true and predicted such that Scikit-Learn can use them
         y_true = []
