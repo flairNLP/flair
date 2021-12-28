@@ -444,14 +444,11 @@ class TransformerEmbedding(Embeddings[Sentence]):
         if "embedding_length_internal" in state:
             del state["embedding_length_internal"]
 
-        embedding = self.create_from_state(saved_config=config, **state)
+        embedding = self.create_from_state(saved_config=config, **state, state_dict=model_state_dict)
 
         # copy values from new embedding
         for key in embedding.__dict__.keys():
             self.__dict__[key] = embedding.__dict__[key]
-
-        if model_state_dict:
-            self.model.load_state_dict(model_state_dict)
 
     @classmethod
     def create_from_state(cls, **state):
