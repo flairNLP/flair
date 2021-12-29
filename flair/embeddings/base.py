@@ -686,17 +686,16 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
         input_ids, model_kwargs = self._build_transformer_model_inputs(batch_encoding, tokenized_sentences, sentences)
 
-        hidden_states = self.model(input_ids, **model_kwargs)[-1]
-
-        # make the tuple a tensor; makes working with it easier.
-        hidden_states = torch.stack(hidden_states)
-
-        # only use layers that will be outputted
-        hidden_states = hidden_states[self.layer_indexes, :, :]
-
         gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
 
         with gradient_context:
+            hidden_states = self.model(input_ids, **model_kwargs)[-1]
+
+            # make the tuple a tensor; makes working with it easier.
+            hidden_states = torch.stack(hidden_states)
+
+            # only use layers that will be outputted
+            hidden_states = hidden_states[self.layer_indexes, :, :]
 
             if self._try_document_embedding_shortcut(hidden_states, sentences):
                 return
