@@ -628,9 +628,9 @@ class TransformerEmbedding(Embeddings[Sentence]):
                 index_of_cls_token = 0 if self.initial_cls_token else -1
                 embedding_all_document_layers = sentence_hidden_state[:, index_of_cls_token, :]
             elif self.cls_pooling == "mean":
-                embedding_all_document_layers = sentence_hidden_state.mean(dim=2)
+                embedding_all_document_layers = sentence_hidden_state.mean(dim=1)
             elif self.cls_pooling == "max":
-                _, embedding_all_document_layers = sentence_hidden_state.max(dim=2)
+                embedding_all_document_layers, _ = sentence_hidden_state.max(dim=1)
             else:
                 raise ValueError(f"cls pooling method: `{self.cls_pooling}` is not implemented")
             if self.layer_mean:
