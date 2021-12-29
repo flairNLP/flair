@@ -406,6 +406,8 @@ class TransformerEmbedding(Embeddings[Sentence]):
         # legacy TransformerDocumentEmbedding
         state.pop("batch_size", None)
         state.pop("embedding_length_internal", None)
+        # legacy TransformerTokenEmbedding
+        state.pop("memory_effective_training", None)
 
         if "base_model_name" in state:
             state["model"] = state.pop("base_model_name")
