@@ -502,6 +502,7 @@ class GLUE_RTE(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "RTE/eval_dataset.tsv",
+            label_type=label_type,
             columns=[1, 2, 3],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -621,6 +622,7 @@ class GLUE_MNLI(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "MNLI" / eval_dataset,
+            label_type=label_type,
             columns=[8, 9, 11],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -791,6 +793,7 @@ class GLUE_QNLI(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "QNLI/eval_dataset.tsv",
+            label_type=label_type,
             columns=[1, 2, 3],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -878,6 +881,7 @@ class GLUE_QQP(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "QQP/eval_dataset.tsv",
+            label_type=label_type,
             columns=[1, 2, 0],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -965,6 +969,7 @@ class GLUE_WNLI(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "WNLI/eval_dataset.tsv",
+            label_type=label_type,
             columns=[1, 2, 3],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -1053,6 +1058,7 @@ class SUPERGLUE_RTE(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "RTE/eval_dataset.tsv",
+            label_type="textual_entailment",
             columns=[0, 1, 2],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
