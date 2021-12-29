@@ -1153,18 +1153,18 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 lang_id = self.tokenizer.lang2id.get(sentences[s_id].get_language_code(), 0)  # type: ignore
                 model_kwargs["langs"][s_id][:sequence_length] = lang_id
 
-        # put encoded batch through transformer model to get all hidden states of all encoder layers
-        hidden_states = self.model(input_ids, **model_kwargs)[-1]
-        # make the tuple a tensor; makes working with it easier.
-        hidden_states = torch.stack(hidden_states)
-
-        sentence_idx_offset = 0
+        
 
         # gradients are enabled if fine-tuning is enabled
         gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
 
         with gradient_context:
+            # put encoded batch through transformer model to get all hidden states of all encoder layers
+            hidden_states = self.model(input_ids, **model_kwargs)[-1]
+            # make the tuple a tensor; makes working with it easier.
+            hidden_states = torch.stack(hidden_states)
 
+            sentence_idx_offset = 0
             # iterate over all subtokenized sentences
             for sentence_idx, (
                 sentence,
