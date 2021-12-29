@@ -1,10 +1,10 @@
 import numpy as np
 
-from flair.models.clustering.birch.model.CfNode import CfNode
-from flair.models.clustering.birch.model.ClusteringFeature import ClusteringFeature
-from flair.models.clustering.birch.model.LeafNode import LeafNode
-from flair.models.clustering.birch.model.NonLeafNode import NonLeafNode
-from flair.models.clustering.distance import Distance
+from flair.models.clustering.birch.model.cfNode import CfNode
+from flair.models.clustering.birch.model.clusteringFeature import ClusteringFeature
+from flair.models.clustering.birch.model.leafNode import LeafNode
+from flair.models.clustering.birch.model.nonLeafNode import NonLeafNode
+from flair.models.clustering.distance import distance
 
 
 class CfTree:
@@ -29,7 +29,7 @@ class CfTree:
 
     def split_leaf(self, leaf: LeafNode, cf: ClusteringFeature) -> LeafNode:
         leaf.cfs.append(cf)
-        indices = Distance.get_furthest_2_points(leaf.cfs)
+        indices = distance.get_furthest_2_points(leaf.cfs)
         old_cf = [leaf.cfs[indices[0]]]
         new_cf = [leaf.cfs[indices[1]]]
 
@@ -74,7 +74,7 @@ class CfTree:
         else:
             non_leaf_node = node
 
-        indices = Distance.get_furthest_2_points(non_leaf_node.cfs)
+        indices = distance.get_furthest_2_points(non_leaf_node.cfs)
         old_cf = [indices[0]]
         new_cf = [indices[1]]
         node_cfs = non_leaf_node.cfs

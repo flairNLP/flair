@@ -1,4 +1,4 @@
-from flair.models.clustering.birch.model.ClusteringFeature import ClusteringFeature
+from flair.models.clustering.birch.model.clusteringFeature import ClusteringFeature
 
 
 class CfNode:

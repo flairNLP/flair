@@ -8,15 +8,15 @@ from flair.embeddings import (
     TransformerDocumentEmbeddings,
 )
 
-import Evaluation
-from em.EM_Clustering import EM_Clustering
+import evaluation
+from em.em_Clustering import EM_Clustering
 
 if __name__ == "__main__":
     # embeddings = TransformerDocumentEmbeddings('bert-base-uncased')
     embeddings = SentenceTransformerDocumentEmbeddings("bert-base-nli-mean-tokens")
 
-    labels = Evaluation.get_stackoverflow_labels()[1:20]
-    documents = Evaluation.get_stackoverflow_data()[1:20]
+    labels = evaluation.get_stackoverflow_labels()[1:20]
+    documents = evaluation.get_stackoverflow_data()[1:20]
     sentences = [Sentence(i) for i in documents]
 
     em = EM_Clustering(2, embeddings)
@@ -24,4 +24,4 @@ if __name__ == "__main__":
 
     predict = em.get_diskret_result()
 
-    Evaluation.evaluate(labels, predict)
+    evaluation.evaluate(labels, predict)

@@ -5,7 +5,7 @@ from flair.embeddings import DocumentEmbeddings
 from torch import logsumexp, Tensor
 from torch.distributions import MultivariateNormal
 
-from flair.models.clustering.Clustering import Clustering
+from flair.models.clustering.clustering import Clustering
 
 
 class EM_Clustering(Clustering):

@@ -1,8 +1,8 @@
 from torch import Tensor
 
 from flair.models.clustering.birch import distance_max, branching_factor_leaf
-from flair.models.clustering.birch.model.CfNode import CfNode
-from flair.models.clustering.birch.model.ClusteringFeature import ClusteringFeature
+from flair.models.clustering.birch.model.cfNode import CfNode
+from flair.models.clustering.birch.model.clusteringFeature import ClusteringFeature
 
 
 class LeafNode(CfNode):

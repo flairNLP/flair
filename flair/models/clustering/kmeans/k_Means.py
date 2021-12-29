@@ -5,8 +5,8 @@ import torch
 
 from flair.datasets import DataLoader
 from flair.embeddings import DocumentEmbeddings
-from flair.models.clustering.Clustering import Clustering
-from flair.models.clustering.distance import Distance
+from flair.models.clustering.clustering import Clustering
+from flair.models.clustering.distance import distance
 
 
 class KMeans(Clustering):
@@ -67,7 +67,7 @@ class KMeans(Clustering):
             maxi = 0
 
             for i in range(self.k):
-                distance = Distance.get_cosine_distance(item, self.k_points[i])
+                distance = distance.get_cosine_distance(item, self.k_points[i])
                 if distance > maxi and distance != 1:
                     maxi = distance
                     cluster_index = i

@@ -1,10 +1,10 @@
 from flair.datasets import DataLoader
 
 from flair.embeddings import DocumentEmbeddings
-from flair.models.clustering.Clustering import Clustering
-from flair.models.clustering.birch.model.CfTree import CfTree
-from flair.models.clustering.birch.model.ClusteringFeature import ClusteringFeature
-from flair.models.clustering.kmeans.K_Means import KMeans
+from flair.models.clustering.clustering import Clustering
+from flair.models.clustering.birch.model.cfTree import CfTree
+from flair.models.clustering.birch.model.clusteringFeature import ClusteringFeature
+from flair.models.clustering.kmeans.k_Means import KMeans
 
 
 class Birch(Clustering):
