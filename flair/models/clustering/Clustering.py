@@ -6,5 +6,5 @@ class Clustering(ABC):
     def cluster(self, vectors: list) -> list:
         pass
 
-    def getLabelList(self, listSenctence) -> list:
-        return list(map(lambda e: int(e.get_labels('cluster')[0].value), listSenctence))
+    def get_label_list(self, sentences) -> list:
+        return list(map(lambda e: int(e.get_labels("cluster")[0].value), sentences))

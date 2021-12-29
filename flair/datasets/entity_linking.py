@@ -266,20 +266,13 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
                 raise
 
         super(NEL_ENGLISH_AQUAINT, self).__init__(
-            data_folder,
-            train_file=corpus_file_name,
-            in_memory=in_memory,
-            **corpusargs,
+            data_folder, train_file=corpus_file_name, in_memory=in_memory, **corpusargs
         )
 
 
 class NEL_GERMAN_HIPE(EntityLinkingCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        wiki_language: str = "dewiki",
-        **corpusargs,
+        self, base_path: Union[str, Path] = None, in_memory: bool = True, wiki_language: str = "dewiki", **corpusargs
     ):
         """
         Initialize a sentence-segmented version of the HIPE entity linking corpus for historical German (see description
@@ -335,11 +328,7 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
 
             for doc_path, file_name in zip(
                 [original_train_path, original_test_path, original_dev_path],
-                [
-                    train_file_name,
-                    wiki_language + "_test.tsv",
-                    wiki_language + "_dev.tsv",
-                ],
+                [train_file_name, wiki_language + "_test.tsv", wiki_language + "_dev.tsv"],
             ):
                 with open(doc_path, "r", encoding="utf-8") as read, open(
                     data_folder / file_name, "w", encoding="utf-8"
@@ -363,10 +352,7 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
 
                         else:
                             line_list = line.split("\t")
-                            if not line_list[7] in [
-                                "_",
-                                "NIL",
-                            ]:  # line has wikidata link
+                            if not line_list[7] in ["_", "NIL"]:  # line has wikidata link
 
                                 wikiname = qid_wikiname_dict[line_list[7]]
 
@@ -459,11 +445,7 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
 
 class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        check_existence: bool = False,
-        **corpusargs,
+        self, base_path: Union[str, Path] = None, in_memory: bool = True, check_existence: bool = False, **corpusargs
     ):
         """
         Initialize AIDA CoNLL-YAGO Entity Linking corpus introduced here https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/ambiverse-nlu/aida/downloads.
@@ -507,12 +489,7 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
             wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
 
             for name, path in zip(
-                ["train", "testa", "testb"],
-                [
-                    train_unprocessed_path,
-                    testa_unprocessed_path,
-                    testb_unprocessed_path,
-                ],
+                ["train", "testa", "testb"], [train_unprocessed_path, testa_unprocessed_path, testb_unprocessed_path]
             ):
                 with open(data_folder / name, "w", encoding="utf-8") as write, open(
                     path, "r", encoding="utf-8"
@@ -587,12 +564,7 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
                 # request
                 resp = requests.get(
                     "https://en.wikipedia.org/w/api.php",
-                    params={
-                        "action": "query",
-                        "prop": "info",
-                        "pageids": ids,
-                        "format": "json",
-                    },
+                    params={"action": "query", "prop": "info", "pageids": ids, "format": "json"},
                 ).json()
 
                 for wikiid in resp["query"]["pages"]:
@@ -708,16 +680,10 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
                                     ):  # token belongs to entity mention
                                         assert elem[1].text is not None
                                         if first:
-                                            token.set_label(
-                                                typename=elem[1].text,
-                                                value="B-" + wikiname,
-                                            )
+                                            token.set_label(typename=elem[1].text, value="B-" + wikiname)
                                             first = False
                                         else:
-                                            token.set_label(
-                                                typename=elem[1].text,
-                                                value="I-" + wikiname,
-                                            )
+                                            token.set_label(typename=elem[1].text, value="I-" + wikiname)
 
                         # write to out file
                         write.write("-DOCSTART-\n\n")  # each file is one document
@@ -750,20 +716,12 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
                             write.write("\n")  # empty line after each sentence
 
         super(NEL_ENGLISH_IITB, self).__init__(
-            data_folder,
-            train_file=corpus_file_name,
-            in_memory=in_memory,
-            **corpusargs,
+            data_folder, train_file=corpus_file_name, in_memory=in_memory, **corpusargs
         )
 
 
 class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
-    def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        **corpusargs,
-    ):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, **corpusargs):
         """
         Initialize Tweeki Entity Linking corpus introduced in "Tweeki: Linking Named Entities on Twitter to a Knowledge Graph" Harandizadeh, Singh.
         The data consits of tweets with manually annotated wikipedia links.
@@ -817,20 +775,12 @@ class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
             os.rename(original_file_path, str(original_file_path) + "_original")
 
         super(NEL_ENGLISH_TWEEKI, self).__init__(
-            data_folder,
-            train_file=corpus_file_name,
-            in_memory=in_memory,
-            **corpusargs,
+            data_folder, train_file=corpus_file_name, in_memory=in_memory, **corpusargs
         )
 
 
 class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
-    def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        **corpusargs,
-    ):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, **corpusargs):
         """
         Initialize the Reddit Entity Linking corpus containing gold annotations only (https://arxiv.org/abs/2101.01228v2) in the NER-like column format.
         The first time you call this constructor it will automatically download the dataset.
@@ -879,27 +829,13 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                         # Check if the current post title has an entity link and parse accordingly
                         if row[0] == self.curr_annot[0]:
 
-                            link_annots.append(
-                                (
-                                    int(self.curr_annot[4]),
-                                    int(self.curr_annot[5]),
-                                    self.curr_annot[3],
-                                )
-                            )
+                            link_annots.append((int(self.curr_annot[4]), int(self.curr_annot[5]), self.curr_annot[3]))
                             link_annots = self._fill_annot_array(link_annots, row[0], post_flag=True)
 
                             # Post titles with entity mentions (if any) are handled via this function
-                            self._text_to_cols(
-                                Sentence(row[2], use_tokenizer=True),
-                                link_annots,
-                                txtout,
-                            )
+                            self._text_to_cols(Sentence(row[2], use_tokenizer=True), link_annots, txtout)
                         else:
-                            self._text_to_cols(
-                                Sentence(row[2], use_tokenizer=True),
-                                link_annots,
-                                txtout,
-                            )
+                            self._text_to_cols(Sentence(row[2], use_tokenizer=True), link_annots, txtout)
 
                 # Then parse the comments
                 with open(data_folder / "comments.tsv", "r", encoding="utf-8") as tsvin3, open(
@@ -937,19 +873,9 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
 
                         # Check if the current comment thread has an entity link and parse accordingly, same as with post titles above
                         if comm_key == self.curr_annot[0]:
-                            link_annots.append(
-                                (
-                                    int(self.curr_annot[4]),
-                                    int(self.curr_annot[5]),
-                                    self.curr_annot[3],
-                                )
-                            )
+                            link_annots.append((int(self.curr_annot[4]), int(self.curr_annot[5]), self.curr_annot[3]))
                             link_annots = self._fill_annot_array(link_annots, comm_key, post_flag=False)
-                            self._text_to_cols(
-                                Sentence(self.curr_comm, use_tokenizer=True),
-                                link_annots,
-                                txtout,
-                            )
+                            self._text_to_cols(Sentence(self.curr_comm, use_tokenizer=True), link_annots, txtout)
                         else:
                             # In two of the comment thread a case of capital letter spacing occurs, which the SegtokTokenizer cannot properly handle.
                             # The following if-elif condition handles these two cases and as result writes full capitalized words in each corresponding row,
@@ -969,17 +895,10 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
                                     + self.curr_comm[92:]
                                 )
 
-                            self._text_to_cols(
-                                Sentence(self.curr_comm, use_tokenizer=True),
-                                link_annots,
-                                txtout,
-                            )
+                            self._text_to_cols(Sentence(self.curr_comm, use_tokenizer=True), link_annots, txtout)
 
         super(NEL_ENGLISH_REDDIT, self).__init__(
-            data_folder,
-            train_file=corpus_file_name,
-            in_memory=in_memory,
-            **corpusargs,
+            data_folder, train_file=corpus_file_name, in_memory=in_memory, **corpusargs
         )
 
     def _text_to_cols(self, sentence: Sentence, links: list, outfile):
@@ -1148,10 +1067,7 @@ def from_ufsac_to_tsv(
 
         span = word_fields[0]
 
-        if datasetname in [
-            "trainomatic",
-            "masc",
-        ]:  # splitting not sensible for these datasets
+        if datasetname in ["trainomatic", "masc"]:  # splitting not sensible for these datasets
             return [span]
         elif datasetname == "omsti":
             if (
@@ -1341,9 +1257,7 @@ class WSD_UFSAC(MultiCorpus):
 
             # generate the test file
             test_file = determine_tsv_file(
-                filename="raganato_ALL",
-                data_folder=data_folder,
-                cut_multisense=cut_multisense,
+                filename="raganato_ALL", data_folder=data_folder, cut_multisense=cut_multisense
             )
 
             corpus = ColumnCorpus(
@@ -1363,11 +1277,7 @@ class WSD_UFSAC(MultiCorpus):
         for filename in filenames:
             # make column file and save to data_folder
 
-            new_filename = determine_tsv_file(
-                filename=filename,
-                data_folder=data_folder,
-                cut_multisense=cut_multisense,
-            )
+            new_filename = determine_tsv_file(filename=filename, data_folder=data_folder, cut_multisense=cut_multisense)
 
             corpus = ColumnCorpus(
                 data_folder=data_folder,
@@ -1384,11 +1294,7 @@ class WSD_UFSAC(MultiCorpus):
             corpora.append(corpus)
         print("...done!")
 
-        super(WSD_UFSAC, self).__init__(
-            corpora,
-            sample_missing_splits=sample_missing_splits_in_multicorpus,
-            name=name,
-        )
+        super(WSD_UFSAC, self).__init__(corpora, sample_missing_splits=sample_missing_splits_in_multicorpus, name=name)
 
 
 class WSD_RAGANATO_ALL(EntityLinkingCorpus):
@@ -1437,11 +1343,7 @@ class WSD_RAGANATO_ALL(EntityLinkingCorpus):
 
             os.rename(data_folder / "ufsac-public-2.1", original_data_folder)
 
-        train_file = determine_tsv_file(
-            filename="raganato_ALL",
-            data_folder=data_folder,
-            cut_multisense=cut_multisense,
-        )
+        train_file = determine_tsv_file(filename="raganato_ALL", data_folder=data_folder, cut_multisense=cut_multisense)
 
         super(WSD_RAGANATO_ALL, self).__init__(
             data_folder=data_folder,
@@ -1512,9 +1414,7 @@ class WSD_SEMCOR(EntityLinkingCorpus):
 
             # generate the test file
             test_file = determine_tsv_file(
-                filename="raganato_ALL",
-                data_folder=data_folder,
-                cut_multisense=cut_multisense,
+                filename="raganato_ALL", data_folder=data_folder, cut_multisense=cut_multisense
             )
         else:
             test_file = None
@@ -1668,9 +1568,7 @@ class WSD_MASC(EntityLinkingCorpus):
 
             # generate the test file
             test_file = determine_tsv_file(
-                filename="raganato_ALL",
-                data_folder=data_folder,
-                cut_multisense=cut_multisense,
+                filename="raganato_ALL", data_folder=data_folder, cut_multisense=cut_multisense
             )
         else:
             test_file = None
@@ -1749,9 +1647,7 @@ class WSD_OMSTI(EntityLinkingCorpus):
 
             # generate the test file
             test_file = determine_tsv_file(
-                filename="raganato_ALL",
-                data_folder=data_folder,
-                cut_multisense=cut_multisense,
+                filename="raganato_ALL", data_folder=data_folder, cut_multisense=cut_multisense
             )
         else:
             test_file = None

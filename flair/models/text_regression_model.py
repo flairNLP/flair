@@ -17,11 +17,7 @@ log = logging.getLogger("flair")
 
 
 class TextRegressor(flair.nn.Model[Sentence]):
-    def __init__(
-        self,
-        document_embeddings: flair.embeddings.DocumentEmbeddings,
-        label_name: str = "label",
-    ):
+    def __init__(self, document_embeddings: flair.embeddings.DocumentEmbeddings, label_name: str = "label"):
 
         super().__init__()
         log.info("Using REGRESSION - experimental")
@@ -96,10 +92,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
             if len(reordered_sentences) == 0:
                 return sentences
 
-            dataloader = DataLoader(
-                dataset=FlairDatapointDataset(reordered_sentences),
-                batch_size=mini_batch_size,
-            )
+            dataloader = DataLoader(dataset=FlairDatapointDataset(reordered_sentences), batch_size=mini_batch_size)
             # progress bar for verbosity
             if verbose:
                 progress_bar = tqdm(dataloader)

@@ -84,11 +84,7 @@ class LanguageModel(nn.Module):
 
         decoded = self.decoder(output.view(output.size(0) * output.size(1), output.size(2)))
 
-        return (
-            decoded.view(output.size(0), output.size(1), decoded.size(1)),
-            output,
-            hidden,
-        )
+        return (decoded.view(output.size(0), output.size(1), decoded.size(1)), output, hidden)
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).detach()
@@ -97,13 +93,7 @@ class LanguageModel(nn.Module):
             weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
         )
 
-    def get_representation(
-        self,
-        strings: List[str],
-        start_marker: str,
-        end_marker: str,
-        chars_per_chunk: int = 512,
-    ):
+    def get_representation(self, strings: List[str], start_marker: str, end_marker: str, chars_per_chunk: int = 512):
 
         len_longest_str: int = len(max(strings, key=len))
 
@@ -232,14 +222,7 @@ class LanguageModel(nn.Module):
             "optimizer_state_dict": optimizer_state_dict,
         }
 
-    def save_checkpoint(
-        self,
-        file: Union[Path, str],
-        optimizer: Optimizer,
-        epoch: int,
-        split: int,
-        loss: float,
-    ):
+    def save_checkpoint(self, file: Union[Path, str], optimizer: Optimizer, epoch: int, split: int, loss: float):
         model_state = {
             "state_dict": self.state_dict(),
             "dictionary": self.dictionary,
@@ -274,11 +257,7 @@ class LanguageModel(nn.Module):
         torch.save(model_state, str(file), pickle_protocol=4)
 
     def generate_text(
-        self,
-        prefix: str = "\n",
-        number_of_characters: int = 1000,
-        temperature: float = 1.0,
-        break_on_suffix=None,
+        self, prefix: str = "\n", number_of_characters: int = 1000, temperature: float = 1.0, break_on_suffix=None
     ) -> Tuple[str, float]:
 
         if prefix == "":

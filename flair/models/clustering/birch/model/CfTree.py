@@ -1,128 +1,129 @@
 import numpy as np
-from birch.model import LeafNode
-from birch.model.CfNode import CfNode
-from birch.model.ClusteringFeature import ClusteringFeature
-from birch.model.NonLeafNode import NonLeafNode
-from distance import Distance
+
+from flair.models.clustering.birch.model.CfNode import CfNode
+from flair.models.clustering.birch.model.ClusteringFeature import ClusteringFeature
+from flair.models.clustering.birch.model.LeafNode import LeafNode
+from flair.models.clustering.birch.model.NonLeafNode import NonLeafNode
+from flair.models.clustering.distance import Distance
 
 
 class CfTree:
     def __init__(self):
         self.root = NonLeafNode()
-        self.firstChild = self.root.entries[0]
+        self.first_child = self.root.entries[0]
 
-    def insertCf(self, cf: ClusteringFeature):
-        leaf = self.getClosestLeaf(cf, self.root)
-        cf_node = leaf.getClosestCF(cf)
+    def insert_cf(self, cf: ClusteringFeature):
+        leaf = self.get_closest_leaf(cf, self.root)
+        cf_node = leaf.get_closest_cf(cf)
 
-        if cf_node.canAbsorbCf(cf):
-            cf_node.absorbCf(cf)
-            self.updatePathSimple(leaf)
+        if cf_node.can_absorb_cf(cf):
+            cf_node.absorb_cf(cf)
+            self.update_path_simple(leaf)
             return
-        if leaf.canAddNewCf():
-            leaf.addCF(cf)
-            self.updatePathSimple(leaf)
+        if leaf.can_add_new_cf():
+            leaf.add_cf(cf)
+            self.update_path_simple(leaf)
         else:
-            newLeaf = self.splitLeaf(leaf, cf)
-            self.updatePathWithNewLeaf(newLeaf)
+            new_leaf = self.split_leaf(leaf, cf)
+            self.update_path_with_new_leaf(new_leaf)
 
-    def splitLeaf(self, leaf: LeafNode, cf: ClusteringFeature) -> LeafNode:
+    def split_leaf(self, leaf: LeafNode, cf: ClusteringFeature) -> LeafNode:
         leaf.cfs.append(cf)
-        indices = Distance.getFurthest2Points(leaf.cfs)
-        oldCf = [leaf.cfs[indices[0]]]
-        newCf = [leaf.cfs[indices[1]]]
+        indices = Distance.get_furthest_2_points(leaf.cfs)
+        old_cf = [leaf.cfs[indices[0]]]
+        new_cf = [leaf.cfs[indices[1]]]
 
         for cf in leaf.cfs:
-            if not cf is oldCf[0] and not cf is newCf[0]:
-                if cf.calcualteDistance(oldCf[0]) < cf.calcualteDistance(newCf[0]):
-                    oldCf.append(cf)
+            if not cf is old_cf[0] and not cf is new_cf[0]:
+                if cf.calculate_distance(old_cf[0]) < cf.calculate_distance(new_cf[0]):
+                    old_cf.append(cf)
                 else:
-                    newCf.append(cf)
+                    new_cf.append(cf)
 
-        index = leaf.parent.getChildIndex(leaf)
-        leaf.cfs = oldCf
-        leaf.parent.cfs[index] = leaf.sumAllCfs()
+        index = leaf.parent.get_child_index(leaf)
+        leaf.cfs = old_cf
+        leaf.parent.cfs[index] = leaf.sum_all_cfs()
 
-        newLeaf = LeafNode.LeafNode(newCf, parent=leaf.parent)
-        leaf.next = newLeaf
-        newLeaf.prev = newLeaf
+        new_leaf = LeafNode(new_cf, parent=leaf.parent)
+        leaf.next = new_leaf
+        new_leaf.prev = new_leaf
 
-        return newLeaf
+        return new_leaf
 
-    def updatePathSimple(self, child: LeafNode):
+    def update_path_simple(self, child: LeafNode):
         parent = child.parent
 
         while parent is not None:
-            idx = parent.getChildIndex(child)
-            parent.cfs[idx] = child.sumAllCfs()
+            idx = parent.get_child_index(child)
+            parent.cfs[idx] = child.sum_all_cfs()
             child = parent
             parent = parent.parent
 
-    def updatePathWithNewLeaf(self, newLeaf: LeafNode):
+    def update_path_with_new_leaf(self, new_leaf: LeafNode):
         # TODO: update the whole path in a loop
-        if newLeaf.parent.canAddNode():
-            newLeaf.parent.addNode(newLeaf)
+        if new_leaf.parent.can_add_node():
+            new_leaf.parent.add_node(new_leaf)
         else:
-            self.splitNonLeafNode(newLeaf)
+            self.split_non_leaf_node(new_leaf)
 
-    def splitNonLeafNode(self, node: CfNode):
+    def split_non_leaf_node(self, node: CfNode):
 
-        if node.parent != None:
-            node.parent.addNode(node)
-            nonLeafNode = node.parent
+        if node.parent is not None:
+            node.parent.add_node(node)
+            non_leaf_node = node.parent
         else:
-            nonLeafNode = node
+            non_leaf_node = node
 
-        indices = Distance.getFurthest2Points(nonLeafNode.cfs)
-        oldCf = [indices[0]]
-        newCf = [indices[1]]
-        nodeCfs = nonLeafNode.cfs
-        nodeEntries = nonLeafNode.entries
+        indices = Distance.get_furthest_2_points(non_leaf_node.cfs)
+        old_cf = [indices[0]]
+        new_cf = [indices[1]]
+        node_cfs = non_leaf_node.cfs
+        node_entries = non_leaf_node.entries
 
-        for idx, cf in enumerate(nonLeafNode.cfs):
-            if not cf is nodeCfs[oldCf[0]] and not cf is nodeCfs[newCf[0]]:
-                if cf.calcualteDistance(nodeCfs[oldCf[0]]) < cf.calcualteDistance(nodeCfs[newCf[0]]):
-                    oldCf.append(idx)
+        for idx, cf in enumerate(non_leaf_node.cfs):
+            if not cf is node_cfs[old_cf[0]] and not cf is node_cfs[new_cf[0]]:
+                if cf.calculate_distance(node_cfs[old_cf[0]]) < cf.calculate_distance(node_cfs[new_cf[0]]):
+                    old_cf.append(idx)
                 else:
-                    newCf.append(idx)
+                    new_cf.append(idx)
 
-        newNode = NonLeafNode()
-        newNode.cfs = list(np.array(nodeCfs)[np.array(newCf)])
-        newNode.entries = list(np.array(nodeEntries)[np.array(newCf)])
+        new_node = NonLeafNode()
+        new_node.cfs = list(np.array(node_cfs)[np.array(new_cf)])
+        new_node.entries = list(np.array(node_entries)[np.array(new_cf)])
 
-        for item in newNode.entries:
-            item.parent = newNode
+        for item in new_node.entries:
+            item.parent = new_node
 
-        nonLeafNode.cfs = list(np.array(nodeCfs)[np.array(oldCf)])
-        nonLeafNode.entries = list(np.array(nodeEntries)[np.array(oldCf)])
+        non_leaf_node.cfs = list(np.array(node_cfs)[np.array(old_cf)])
+        non_leaf_node.entries = list(np.array(node_entries)[np.array(old_cf)])
 
-        for item in nonLeafNode.entries:
-            item.parent = nonLeafNode
+        for item in non_leaf_node.entries:
+            item.parent = non_leaf_node
 
-        if nonLeafNode.parent is None:
+        if non_leaf_node.parent is None:
             self.root = NonLeafNode()
             self.root.entries = []
             self.root.cfs = []
-            self.root.addNode(nonLeafNode)
-            self.root.addNode(newNode)
+            self.root.add_node(non_leaf_node)
+            self.root.add_node(new_node)
             print("new Height -> new root")
         else:
-            if nonLeafNode.parent.canAddNode():
+            if non_leaf_node.parent.can_add_node():
                 print("add Node")
-                nonLeafNode.parent.addNode(newNode)
+                non_leaf_node.parent.add_node(new_node)
             else:
                 print("split again ")
-                self.splitNonLeafNode(nonLeafNode.parent)
+                self.split_non_leaf_node(non_leaf_node.parent)
 
-    def getClosestLeaf(self, cf: ClusteringFeature, nonLeafNode: NonLeafNode) -> LeafNode:
-        cfNode = nonLeafNode.getClosestChild(cf)
-        if cfNode is None:
+    def get_closest_leaf(self, cf: ClusteringFeature, non_leaf_node: NonLeafNode) -> LeafNode:
+        cf_node = non_leaf_node.get_closest_child(cf)
+        if cf_node is None:
             return None
 
-        if cfNode.isLeaf:
-            return cfNode
+        if cf_node.is_leaf:
+            return cf_node
         else:
-            return self.getClosestLeaf(cf, cfNode)
+            return self.get_closest_leaf(cf, cf_node)
 
     def validate(self):
         self.validateNode(self.root)
@@ -139,19 +140,19 @@ class CfTree:
 
         return True
 
-    def calculateCfs(self, nonLeafNode: NonLeafNode) -> int:
-        if nonLeafNode.isLeaf:
-            return nonLeafNode.sumAllCfs().N
+    def calculate_cfs(self, non_leaf_node: NonLeafNode) -> int:
+        if non_leaf_node.isLeaf:
+            return non_leaf_node.sum_all_cfs().N
         else:
             n = 0
-            for idx, node in enumerate(nonLeafNode.entries):
+            for idx, node in enumerate(non_leaf_node.entries):
                 n = self.validateNode(node)
-                nNonLeaf = nonLeafNode.cfs[idx].N
-                if n != nNonLeaf:
-                    print(False, n, nNonLeaf)
+                n_non_leaf = non_leaf_node.cfs[idx].N
+                if n != n_non_leaf:
+                    print(False, n, n_non_leaf)
 
-    def getLeafList(self) -> list:
-        next = self.firstChild
+    def get_leafs(self) -> list:
+        next = self.first_child
         leafs = [next]
         while next.next is not None:
             print("next")
@@ -160,13 +161,13 @@ class CfTree:
 
         return leafs
 
-    def getLeafCfs(self) -> list:
-        leafs = self.getLeafList()
-        cfVectors = []
+    def get_leaf_cfs(self) -> list:
+        leafs = self.get_leafs()
+        cf_vectors = []
         for leaf in leafs:
             for cf in leaf.cfs:
-                cfVectors.append(cf)
-        return cfVectors
+                cf_vectors.append(cf)
+        return cf_vectors
 
-    def getVectorsFromCf(self, cfs: list) -> list:
-        return [cf.getCenter() for cf in cfs]
+    def get_vectors_from_cf(self, cfs: list) -> list:
+        return [cf.get_center() for cf in cfs]

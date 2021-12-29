@@ -59,15 +59,7 @@ class SGDW(Optimizer):
         The Nesterov version is analogously modified.
     """
 
-    def __init__(
-        self,
-        params,
-        lr=required,
-        momentum=0,
-        dampening=0,
-        weight_decay=0,
-        nesterov=False,
-    ):
+    def __init__(self, params, lr=required, momentum=0, dampening=0, weight_decay=0, nesterov=False):
         if lr is not required and lr < 0.0:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if momentum < 0.0:
@@ -75,13 +67,7 @@ class SGDW(Optimizer):
         if weight_decay < 0.0:
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
 
-        defaults = dict(
-            lr=lr,
-            momentum=momentum,
-            dampening=dampening,
-            weight_decay=weight_decay,
-            nesterov=nesterov,
-        )
+        defaults = dict(lr=lr, momentum=momentum, dampening=dampening, weight_decay=weight_decay, nesterov=nesterov)
         if nesterov and (momentum <= 0 or dampening != 0):
             raise ValueError("Nesterov momentum requires a momentum and zero dampening")
         super(SGDW, self).__init__(params, defaults)
@@ -174,8 +160,7 @@ class LinearSchedulerWithWarmup(LambdaLR):
         def linear_lr_lambda(current_step: int):
             lambda_during_warmup = float(current_step) / float(max(1, num_warmup_steps))
             lambda_after_warmup = max(
-                0.0,
-                float(num_train_steps - current_step) / float(max(1, num_train_steps - num_warmup_steps)),
+                0.0, float(num_train_steps - current_step) / float(max(1, num_train_steps - num_warmup_steps))
             )
             if current_step < num_warmup_steps:
                 return lambda_during_warmup

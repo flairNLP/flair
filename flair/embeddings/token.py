@@ -116,12 +116,7 @@ class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
     def __init__(
-        self,
-        embeddings: str,
-        field: str = None,
-        fine_tune: bool = False,
-        force_cpu: bool = True,
-        stable: bool = False,
+        self, embeddings: str, field: str = None, fine_tune: bool = False, force_cpu: bool = True, stable: bool = False
     ):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
@@ -157,10 +152,7 @@ class WordEmbeddings(TokenEmbeddings):
 
         # pubmed embeddings
         elif embeddings.lower() == "pubmed" or embeddings.lower() == "en-pubmed":
-            cached_path(
-                f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim.vectors.npy",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim.vectors.npy", cache_dir=cache_dir)
             embeddings_path = cached_path(f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim", cache_dir=cache_dir)
 
         # FT-CRAWL embeddings
@@ -180,30 +172,18 @@ class WordEmbeddings(TokenEmbeddings):
 
         # two-letter language code wiki embeddings
         elif len(embeddings.lower()) == 2:
-            cached_path(
-                f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
             embeddings_path = cached_path(f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M", cache_dir=cache_dir)
 
         # two-letter language code wiki embeddings
         elif len(embeddings.lower()) == 7 and embeddings.endswith("-wiki"):
-            cached_path(
-                f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
             embeddings_path = cached_path(f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M", cache_dir=cache_dir)
 
         # two-letter language code crawl embeddings
         elif len(embeddings.lower()) == 8 and embeddings.endswith("-crawl"):
-            cached_path(
-                f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings_path = cached_path(
-                f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings_path = cached_path(f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M", cache_dir=cache_dir)
 
         elif not Path(embeddings).exists():
             raise ValueError(f'The given embeddings "{embeddings}" is not available or is not a valid path.')
@@ -227,12 +207,7 @@ class WordEmbeddings(TokenEmbeddings):
 
         self.__embedding_length: int = precomputed_word_embeddings.vector_size
 
-        vectors = np.row_stack(
-            (
-                precomputed_word_embeddings.vectors,
-                np.zeros(self.__embedding_length, dtype="float"),
-            )
-        )
+        vectors = np.row_stack((precomputed_word_embeddings.vectors, np.zeros(self.__embedding_length, dtype="float")))
         self.embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not fine_tune)
 
         try:
@@ -348,10 +323,7 @@ class WordEmbeddings(TokenEmbeddings):
         if "precomputed_word_embeddings" in state:
             precomputed_word_embeddings: KeyedVectors = state.pop("precomputed_word_embeddings")
             vectors = np.row_stack(
-                (
-                    precomputed_word_embeddings.vectors,
-                    np.zeros(precomputed_word_embeddings.vector_size, dtype="float"),
-                )
+                (precomputed_word_embeddings.vectors, np.zeros(precomputed_word_embeddings.vector_size, dtype="float"))
             )
             embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not state["fine_tune"])
 
@@ -373,12 +345,7 @@ class WordEmbeddings(TokenEmbeddings):
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
-    def __init__(
-        self,
-        path_to_char_dict: str = None,
-        char_embedding_dim: int = 25,
-        hidden_size_char: int = 25,
-    ):
+    def __init__(self, path_to_char_dict: str = None, char_embedding_dim: int = 25, hidden_size_char: int = 25):
         """Uses the default character dictionary if none provided."""
 
         super().__init__()
@@ -395,12 +362,7 @@ class CharacterEmbeddings(TokenEmbeddings):
         self.char_embedding_dim: int = char_embedding_dim
         self.hidden_size_char: int = hidden_size_char
         self.char_embedding = torch.nn.Embedding(len(self.char_dictionary.item2idx), self.char_embedding_dim)
-        self.char_rnn = torch.nn.LSTM(
-            self.char_embedding_dim,
-            self.hidden_size_char,
-            num_layers=1,
-            bidirectional=True,
-        )
+        self.char_rnn = torch.nn.LSTM(self.char_embedding_dim, self.hidden_size_char, num_layers=1, bidirectional=True)
 
         self.__embedding_length = self.hidden_size_char * 2
 
@@ -432,9 +394,7 @@ class CharacterEmbeddings(TokenEmbeddings):
             chars2_length = [len(c) for c in tokens_sorted_by_length]
             longest_token_in_sentence = max(chars2_length)
             tokens_mask = torch.zeros(
-                (len(tokens_sorted_by_length), longest_token_in_sentence),
-                dtype=torch.long,
-                device=flair.device,
+                (len(tokens_sorted_by_length), longest_token_in_sentence), dtype=torch.long, device=flair.device
             )
 
             for i, c in enumerate(tokens_sorted_by_length):
@@ -451,11 +411,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
             outputs = outputs.transpose(0, 1)
-            chars_embeds_temp = torch.zeros(
-                (outputs.size(0), outputs.size(2)),
-                dtype=torch.float,
-                device=flair.device,
-            )
+            chars_embeds_temp = torch.zeros((outputs.size(0), outputs.size(2)), dtype=torch.float, device=flair.device)
             for i, index in enumerate(output_lengths):
                 chars_embeds_temp[i] = outputs[i, index - 1]
             character_embeddings = chars_embeds_temp.clone()
@@ -1130,11 +1086,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         sentence_parts_lengths = (
             torch.ones(len(tokenized_sentences), dtype=torch.int)
             if not self.allow_long_sentences
-            else torch.unique(
-                batch_encoding["overflow_to_sample_mapping"],
-                return_counts=True,
-                sorted=True,
-            )[1].tolist()
+            else torch.unique(batch_encoding["overflow_to_sample_mapping"], return_counts=True, sorted=True)[1].tolist()
         )
 
         # set language IDs for XLM-style transformers
@@ -1158,11 +1110,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         with gradient_context:
 
             # iterate over all subtokenized sentences
-            for sentence_idx, (
-                sentence,
-                subtoken_lengths,
-                nr_sentence_parts,
-            ) in enumerate(zip(sentences, all_token_subtoken_lengths, sentence_parts_lengths)):
+            for sentence_idx, (sentence, subtoken_lengths, nr_sentence_parts) in enumerate(
+                zip(sentences, all_token_subtoken_lengths, sentence_parts_lengths)
+            ):
 
                 sentence_hidden_state = hidden_states[:, sentence_idx + sentence_idx_offset, ...]
 
@@ -1230,8 +1180,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             ):
                 for token_idx, token in enumerate(original_sentence):
                     token.set_embedding(
-                        self.name,
-                        expanded_sentence[token_idx + context_offset].get_embedding(self.name),
+                        self.name, expanded_sentence[token_idx + context_offset].get_embedding(self.name)
                     )
                 sentence = original_sentence
 
@@ -1561,11 +1510,7 @@ class OneHotEmbeddings(TokenEmbeddings):
     """One-hot encoded embeddings."""
 
     def __init__(
-        self,
-        vocab_dictionary: Dictionary,
-        field: str = "text",
-        embedding_length: int = 300,
-        stable: bool = False,
+        self, vocab_dictionary: Dictionary, field: str = "text", embedding_length: int = 300, stable: bool = False
     ):
         """
         Initializes one-hot encoded word embeddings and a trainable embedding layer
@@ -1699,9 +1644,7 @@ class HashEmbeddings(TokenEmbeddings):
 
 
 class MuseCrosslingualEmbeddings(TokenEmbeddings):
-    def __init__(
-        self,
-    ):
+    def __init__(self,):
         self.name: str = "muse-crosslingual"
         self.static_embeddings = True
         self.__embedding_length: int = 300
@@ -1762,10 +1705,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
                 # download if necessary
                 hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/muse"
                 cache_dir = Path("embeddings") / "MUSE"
-                cached_path(
-                    f"{hu_path}/muse.{language_code}.vec.gensim.vectors.npy",
-                    cache_dir=cache_dir,
-                )
+                cached_path(f"{hu_path}/muse.{language_code}.vec.gensim.vectors.npy", cache_dir=cache_dir)
                 embeddings_file = cached_path(f"{hu_path}/muse.{language_code}.vec.gensim", cache_dir=cache_dir)
 
                 # load the model
@@ -1906,11 +1846,7 @@ class ELMoEmbeddings(TokenEmbeddings):
     Default is to concatene the top 3 layers in the LM."""
 
     def __init__(
-        self,
-        model: str = "original",
-        options_file: str = None,
-        weight_file: str = None,
-        embedding_mode: str = "all",
+        self, model: str = "original", options_file: str = None, weight_file: str = None, embedding_mode: str = "all"
     ):
         super().__init__()
 

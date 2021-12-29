@@ -123,19 +123,10 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
         return (
             expanded_sentence,
-            (
-                expanded_span_1,
-                expanded_span_2,
-            )
-            if entity_one_is_first
-            else (expanded_span_2, expanded_span_1),
+            (expanded_span_1, expanded_span_2) if entity_one_is_first else (expanded_span_2, expanded_span_1),
         )
 
-    def forward_pass(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
-    ):
+    def forward_pass(self, sentences: Union[List[Sentence], Sentence], return_label_candidates: bool = False):
 
         empty_label_candidates = []
         entity_pairs = []
@@ -215,12 +206,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
                         ]
                     )
                 else:
-                    embedding = torch.cat(
-                        [
-                            span_1.tokens[0].get_embedding(),
-                            span_2.tokens[0].get_embedding(),
-                        ]
-                    )
+                    embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
 
                 relation_embeddings.append(embedding)
 
@@ -243,12 +229,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
             sentence_relation_scores = None
 
         if return_label_candidates:
-            return (
-                sentence_relation_scores,
-                labels,
-                sentences_to_label,
-                empty_label_candidates,
-            )
+            return (sentence_relation_scores, labels, sentences_to_label, empty_label_candidates)
 
         return sentence_relation_scores, labels
 

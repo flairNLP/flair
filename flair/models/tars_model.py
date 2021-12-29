@@ -12,11 +12,7 @@ from tqdm import tqdm
 import flair
 from flair.data import Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.embeddings import (
-    TokenEmbeddings,
-    TransformerDocumentEmbeddings,
-    TransformerWordEmbeddings,
-)
+from flair.embeddings import TokenEmbeddings, TransformerDocumentEmbeddings, TransformerWordEmbeddings
 from flair.file_utils import cached_path
 from flair.models.sequence_tagger_model import SequenceTagger
 from flair.models.text_classification_model import TextClassifier
@@ -111,10 +107,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
             if len(plausible_labels) > 0:
                 num_samples = min(self.num_negative_labels_to_sample, len(plausible_labels))
                 sampled_negative_labels = np.random.choice(
-                    plausible_labels,
-                    num_samples,
-                    replace=False,
-                    p=plausible_label_probabilities,
+                    plausible_labels, num_samples, replace=False, p=plausible_label_probabilities
                 )
                 already_sampled_negative_labels.update(sampled_negative_labels)
 
@@ -244,10 +237,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
     def _drop_task(self, task_name):
         if task_name in self._task_specific_attributes:
             if self._current_task == task_name:
-                log.error(
-                    "`%s` is the current task." " Switch to some other task before dropping this.",
-                    task_name,
-                )
+                log.error("`%s` is the current task." " Switch to some other task before dropping this.", task_name)
             else:
                 self._task_specific_attributes.pop(task_name)
         else:
@@ -347,12 +337,7 @@ class TARSTagger(FewshotClassifier):
         super(TARSTagger, self).__init__()
 
         if isinstance(embeddings, str):
-            embeddings = TransformerWordEmbeddings(
-                model=embeddings,
-                fine_tune=True,
-                layers="-1",
-                layer_mean=False,
-            )
+            embeddings = TransformerWordEmbeddings(model=embeddings, fine_tune=True, layers="-1", layer_mean=False)
 
         # prepare TARS dictionary
         tars_dictionary = Dictionary(add_unk=False)
@@ -442,8 +427,7 @@ class TARSTagger(FewshotClassifier):
         if model_name == "tars-ner":
             cache_dir = Path("models")
             model_name = cached_path(
-                "https://nlp.informatik.hu-berlin.de/resources/models/tars-ner/tars-ner.pt",
-                cache_dir=cache_dir,
+                "https://nlp.informatik.hu-berlin.de/resources/models/tars-ner/tars-ner.pt", cache_dir=cache_dir
             )
 
         return model_name
@@ -509,10 +493,7 @@ class TARSTagger(FewshotClassifier):
 
         reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
 
-        dataloader = DataLoader(
-            dataset=FlairDatapointDataset(reordered_sentences),
-            batch_size=mini_batch_size,
-        )
+        dataloader = DataLoader(dataset=FlairDatapointDataset(reordered_sentences), batch_size=mini_batch_size)
 
         # progress bar for verbosity
         if verbose:
@@ -543,11 +524,7 @@ class TARSTagger(FewshotClassifier):
 
                         label_length = 0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
 
-                        loss_and_count = self.tars_model.predict(
-                            tars_sentence,
-                            label_name=label_name,
-                            return_loss=True,
-                        )
+                        loss_and_count = self.tars_model.predict(tars_sentence, label_name=label_name, return_loss=True)
                         overall_loss += loss_and_count[0].item()
                         overall_count += loss_and_count[1]
 
@@ -657,12 +634,7 @@ class TARSClassifier(FewshotClassifier):
         super(TARSClassifier, self).__init__()
 
         if isinstance(embeddings, str):
-            embeddings = TransformerDocumentEmbeddings(
-                model=embeddings,
-                fine_tune=True,
-                layers="-1",
-                layer_mean=False,
-            )
+            embeddings = TransformerDocumentEmbeddings(model=embeddings, fine_tune=True, layers="-1", layer_mean=False)
 
         # prepare TARS dictionary
         tars_dictionary = Dictionary(add_unk=False)
@@ -824,10 +796,7 @@ class TARSClassifier(FewshotClassifier):
 
         reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
 
-        dataloader = DataLoader(
-            dataset=FlairDatapointDataset(reordered_sentences),
-            batch_size=mini_batch_size,
-        )
+        dataloader = DataLoader(dataset=FlairDatapointDataset(reordered_sentences), batch_size=mini_batch_size)
 
         # progress bar for verbosity
         if verbose:
@@ -884,18 +853,13 @@ class TARSClassifier(FewshotClassifier):
                         if len(sentence.get_labels(label_name)) > 0:
                             # get all label scores and do an argmax to get the best label
                             label_scores = torch.tensor(
-                                [label.score for label in sentence.get_labels(label_name)],
-                                dtype=torch.float,
+                                [label.score for label in sentence.get_labels(label_name)], dtype=torch.float
                             )
                             best_label = sentence.get_labels(label_name)[torch.argmax(label_scores)]
 
                             # remove previously added labels and only add the best label
                             sentence.remove_labels(label_name)
-                            sentence.add_label(
-                                typename=label_name,
-                                value=best_label.value,
-                                score=best_label.score,
-                            )
+                            sentence.add_label(typename=label_name, value=best_label.value, score=best_label.score)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)

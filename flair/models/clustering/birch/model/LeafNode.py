@@ -1,39 +1,37 @@
 from torch import Tensor
 
-import birch.Birch
-from birch.model.ClusteringFeature import ClusteringFeature
-from birch.model.CfNode import CfNode
+from flair.models.clustering.birch import distance_max, branching_factor_leaf
+from flair.models.clustering.birch.model.CfNode import CfNode
+from flair.models.clustering.birch.model.ClusteringFeature import ClusteringFeature
 
 
 class LeafNode(CfNode):
-    def __init__(self, initCfs: list = None, parent=None):
+    def __init__(self, init_cfs: list = None, parent=None):
         super().__init__()
-        if initCfs is None:
+        if init_cfs is None:
             self.cfs = [ClusteringFeature()]
         else:
-            self.cfs = initCfs
+            self.cfs = init_cfs
         self.parent = parent
-        self.isLeaf = True
+        self.is_leaf = True
         self.prev = None
         self.next = None
 
-    def addCF(self, cf: ClusteringFeature):
+    def add_cf(self, cf: ClusteringFeature):
         self.cfs.append(cf)
 
-    def canAddNewCf(self):
-        return self.cfs.__len__() < birch.Birch.branchingFactorLeaf
+    def can_add_new_cf(self):
+        return self.cfs.__len__() < branching_factor_leaf
 
-    def getClosestCF(self, vector: Tensor) -> ClusteringFeature:
-        minDistance = birch.Birch.distanceMax
-        cfResult = None
+    def get_closest_cf(self, vector: Tensor) -> ClusteringFeature:
+        min_distance = distance_max
+        cf_result = None
 
         for cf in self.cfs:
-            distance = cf.calcualteDistance(vector)
+            distance = cf.calculate_distance(vector)
 
-            if distance < minDistance:
-                minDistance = distance
-                cfResult = cf
+            if distance < min_distance:
+                min_distance = distance
+                cf_result = cf
 
-        return cfResult
-
-
+        return cf_result

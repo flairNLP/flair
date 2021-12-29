@@ -1,85 +1,84 @@
 import copy
-import random
 
 import numpy as np
 import torch
+
 from flair.datasets import DataLoader
 from flair.embeddings import DocumentEmbeddings
-
-from Clustering import Clustering
-from distance import Distance
+from flair.models.clustering.Clustering import Clustering
+from flair.models.clustering.distance import Distance
 
 
 class KMeans(Clustering):
     def __init__(self, k, embeddings: DocumentEmbeddings = None):
         self.k = k
         self.embeddings = embeddings
-        self.kPoints = []
+        self.k_points = []
         self.predict = []
-        self.maxIteration = 100
+        self.max_iteration = 100
 
-    def cluster(self, sentences: list, batchSize: int = 64) -> list:
-        print('k Means cluster start with k: ' + str(self.k))
+    def cluster(self, sentences: list, batch_size: int = 64) -> list:
+        print("k Means cluster start with k: " + str(self.k))
 
-        for batch in DataLoader(sentences, batch_size=batchSize):
+        for batch in DataLoader(sentences, batch_size=batch_size):
             self.embeddings.embed(batch)
 
         vectors = [sentence.embedding for sentence in sentences]
-        clusterResult = self.clusterVectors(vectors)
+        cluster_result = self.cluster_vectors(vectors)
 
         for idx, sentence in enumerate(sentences):
-            sentence.set_label('cluster', str(self.predict[idx]))
+            sentence.set_label("cluster", str(self.predict[idx]))
 
-        return clusterResult
+        return cluster_result
 
-    def clusterVectors(self, vectors: list) -> list:
+    def cluster_vectors(self, vectors: list) -> list:
         self.predict = [0] * len(vectors)
 
         for i in range(self.k):
             idxs = torch.from_numpy(np.random.choice(len(vectors), self.k, replace=False))
-            self.kPoints = [vectors[i] for i in idxs]
+            self.k_points = [vectors[i] for i in idxs]
 
-        for i in range(0, self.maxIteration):
-            clusters = self.iterateAndAssign(vectors)
-            oldPoints = copy.copy(self.kPoints)
-            self.recalculateClusters(clusters)
+        for i in range(0, self.max_iteration):
+            clusters = self.iterate_and_assign(vectors)
+            old_points = copy.copy(self.k_points)
+            self.recalculate_clusters(clusters)
 
-            if self.isAlgorithmConvered(oldPoints):
+            if self.is_algorithm_converged(old_points):
                 print("Finished the k-Means with: " + str(i) + " iterations. ")
                 return clusters
 
-        print("Finished the k-Means with maxItertation: " + str(self.maxIteration))
+        print("Finished the k-Means with maxItertation: " + str(self.max_iteration))
         return clusters
 
-    def isAlgorithmConvered(self, oldPoints: list) -> bool:
+    def is_algorithm_converged(self, old_points: list) -> bool:
         bools = []
 
-        for idx, point in enumerate(self.kPoints):
-            bools.append(bool(torch.all(torch.eq(self.kPoints[idx], oldPoints[idx]))))
+        for idx, point in enumerate(self.k_points):
+            bools.append(bool(torch.all(torch.eq(self.k_points[idx], old_points[idx]))))
         return all(bools)
 
-    def iterateAndAssign(self, vectors: list) -> list:
+    def iterate_and_assign(self, vectors: list) -> list:
         cluster = []
         for i in range(self.k):
             cluster.append([])
 
         for idx, item in enumerate(vectors):
-            clusterIndex = -1
+            cluster_index = -1
             maxi = 0
 
             for i in range(self.k):
-                distance = Distance.getCosineDistance(item, self.kPoints[i])
+                distance = Distance.get_cosine_distance(item, self.k_points[i])
                 if distance > maxi and distance != 1:
                     maxi = distance
-                    clusterIndex = i
+                    cluster_index = i
 
-            cluster[clusterIndex].append(vectors[idx])
-            self.predict[idx] = clusterIndex
+            cluster[cluster_index].append(vectors[idx])
+            self.predict[idx] = cluster_index
 
         return cluster
 
-    def recalculateClusters(self, clusters: list):
+    def recalculate_clusters(self, clusters: list):
         # TODO: ZeroDivisionError: division by zero
         for idx, cluster in enumerate(clusters):
             if cluster.__len__() != 0:
-                self.kPoints[idx] = 1 / cluster.__len__() * sum(cluster)
+                self.k_points[idx] = 1 / cluster.__len__() * sum(cluster)

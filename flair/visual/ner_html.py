@@ -43,13 +43,7 @@ def split_to_spans(s: Sentence):
 def render_ner_html(
     sentences: Union[List[Sentence], Sentence],
     title: str = "Flair",
-    colors={
-        "PER": "#F7FF53",
-        "ORG": "#E8902E",
-        "LOC": "#FF40A3",
-        "MISC": "#4647EB",
-        "O": "#ddd",
-    },
+    colors={"PER": "#F7FF53", "ORG": "#E8902E", "LOC": "#FF40A3", "MISC": "#4647EB", "O": "#ddd"},
     default_color: str = "#ddd",
     wrap_page=True,
 ) -> str:
@@ -71,9 +65,7 @@ def render_ner_html(
             escaped_fragment = html.escape(fragment).replace("\n", "<br/>")
             if tag:
                 escaped_fragment = TAGGED_ENTITY.format(
-                    entity=escaped_fragment,
-                    label=tag,
-                    color=colors.get(tag, default_color),
+                    entity=escaped_fragment, label=tag, color=colors.get(tag, default_color)
                 )
             spans_html.append(escaped_fragment)
         line = PARAGRAPH.format(sentence="".join(spans_html))

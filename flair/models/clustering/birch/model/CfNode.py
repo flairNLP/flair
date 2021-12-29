@@ -1,16 +1,16 @@
-from birch.model.ClusteringFeature import ClusteringFeature
+from flair.models.clustering.birch.model.ClusteringFeature import ClusteringFeature
 
 
 class CfNode:
     def __init__(self):
         self.cfs = []
-        self.isLeaf = False
+        self.is_leaf = False
         self.parent = None
 
-    def sumAllCfs(self) -> ClusteringFeature:
-        cf = ClusteringFeature()
+    def sum_all_cfs(self) -> ClusteringFeature:
+        result = ClusteringFeature()
 
-        for help in self.cfs:
-            cf.absorbCf(help)
+        for cf in self.cfs:
+            result.absorb_cf(cf)
 
-        return cf
+        return result

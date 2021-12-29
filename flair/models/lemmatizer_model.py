@@ -126,8 +126,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
         # when using attention we concatenate attention outcome and decoder hidden states
         self.character_decoder = nn.Linear(
-            2 * self.rnn_hidden_size if self.use_attention else self.rnn_hidden_size,
-            len(self.char_dictionary),
+            2 * self.rnn_hidden_size if self.use_attention else self.rnn_hidden_size, len(self.char_dictionary)
         )
 
         # decoder RNN
@@ -135,10 +134,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         self.rnn_layers = rnn_layers
 
         self.decoder_rnn = nn.GRU(
-            input_size=rnn_input_size,
-            hidden_size=self.rnn_hidden_size,
-            batch_first=True,
-            num_layers=rnn_layers,
+            input_size=rnn_input_size, hidden_size=self.rnn_hidden_size, batch_first=True, num_layers=rnn_layers
         )
 
         # loss and softmax
@@ -153,12 +149,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         return self._label_type
 
     def words_to_char_indices(
-        self,
-        tokens: List[str],
-        end_symbol=True,
-        start_symbol=False,
-        padding_in_front=False,
-        seq_length=None,
+        self, tokens: List[str], end_symbol=True, start_symbol=False, padding_in_front=False, seq_length=None
     ):
         """
         For a given list of strings this function creates index vectors that represent the characters of the strings.
@@ -232,9 +223,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
             # take convex combinations of encoder hidden states as new output using the computed attention coefficients
             attention_output = torch.transpose(
-                torch.matmul(torch.transpose(all_encoder_outputs, 1, 2), attention_coeff),
-                1,
-                2,
+                torch.matmul(torch.transpose(all_encoder_outputs, 1, 2), attention_coeff), 1, 2
             )
 
             output = torch.cat((output, attention_output), dim=2)
@@ -274,10 +263,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
             # test packing and padding
             packed_sequence = torch.nn.utils.rnn.pack_padded_sequence(
-                input_vectors,
-                lengths,
-                enforce_sorted=False,
-                batch_first=True,
+                input_vectors, lengths, enforce_sorted=False, batch_first=True
             )
 
             encoding_flat, initial_hidden_states = self.encoder_rnn(packed_sequence)
@@ -296,10 +282,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
             initial_hidden_for_decoder.append(initial_hidden_states)
 
             # mask out vectors that correspond to a dummy symbol (TODO: check attention masking)
-            mask = torch.cat(
-                (self.rnn_hidden_size * [(encoder_input_indices == self.dummy_index).unsqueeze(2)]),
-                dim=2,
-            )
+            mask = torch.cat((self.rnn_hidden_size * [(encoder_input_indices == self.dummy_index).unsqueeze(2)]), dim=2)
             all_encoder_outputs: Optional[torch.Tensor] = torch.where(
                 mask, torch.tensor(0.0, device=flair.device), encoder_outputs
             )
@@ -565,10 +548,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                         # print(hypothesis_scores_per_token)
 
                         # choose beam_size best for each token - size (batch_size, beam_size)
-                        (
-                            best_scores,
-                            indices_per_token,
-                        ) = hypothesis_scores_per_token.topk(self.beam_size, 1)
+                        (best_scores, indices_per_token) = hypothesis_scores_per_token.topk(self.beam_size, 1)
 
                         # out of indices_per_token we now need to recompute the original indices of the hypothesis in a list of length beam_size*batch_size
                         # where the first three inidices belong to the first token, the next three to the second token, and so on
@@ -583,11 +563,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                         # with these indices we can compute the tensors for the next iteration
                         # expand sequences with corresponding index
                         sequences = torch.cat(
-                            (
-                                sequences[beam_numbers],
-                                index_candidates[beam_numbers, seq_numbers].unsqueeze(1),
-                            ),
-                            dim=1,
+                            (sequences[beam_numbers], index_candidates[beam_numbers, seq_numbers].unsqueeze(1)), dim=1
                         )
 
                         # add log-probabilities to the scores

@@ -62,10 +62,7 @@ class MetricRegression(object):
 
     def to_tsv(self):
         return "{}\t{}\t{}\t{}".format(
-            self.mean_squared_error(),
-            self.mean_absolute_error(),
-            self.pearsonr(),
-            self.spearmanr(),
+            self.mean_squared_error(), self.mean_absolute_error(), self.pearsonr(), self.spearmanr()
         )
 
     @staticmethod
@@ -80,13 +77,8 @@ class MetricRegression(object):
         return "\t_\t_\t_\t_"
 
     def __str__(self):
-        line = (
-            "mean squared error: {0:.4f} - mean absolute error: {1:.4f} - pearson: {2:.4f} - spearman: {3:.4f}".format(
-                self.mean_squared_error(),
-                self.mean_absolute_error(),
-                self.pearsonr(),
-                self.spearmanr(),
-            )
+        line = "mean squared error: {0:.4f} - mean absolute error: {1:.4f} - pearson: {2:.4f} - spearman: {3:.4f}".format(
+            self.mean_squared_error(), self.mean_absolute_error(), self.pearsonr(), self.spearmanr()
         )
         return line
 

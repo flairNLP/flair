@@ -45,8 +45,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
         # since we concatenate the embeddings of the two DataPoints in the DataPairs
         if self.embed_separately:
             self.decoder = torch.nn.Linear(
-                2 * self.document_embeddings.embedding_length,
-                len(self.label_dictionary),
+                2 * self.document_embeddings.embedding_length, len(self.label_dictionary)
             ).to(flair.device)
 
             torch.nn.init.xavier_uniform_(self.decoder.weight)
@@ -57,10 +56,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
 
             # set separator to concatenate two sentences
             self.sep = " "
-            if isinstance(
-                self.document_embeddings,
-                flair.embeddings.document.TransformerDocumentEmbeddings,
-            ):
+            if isinstance(self.document_embeddings, flair.embeddings.document.TransformerDocumentEmbeddings):
                 if self.document_embeddings.tokenizer.sep_token:
                     self.sep = " " + str(self.document_embeddings.tokenizer.sep_token) + " "
                 else:
@@ -75,11 +71,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
     def label_type(self):
         return self._label_type
 
-    def forward_pass(
-        self,
-        datapairs: Union[List[TextPair], TextPair],
-        return_label_candidates: bool = False,
-    ):
+    def forward_pass(self, datapairs: Union[List[TextPair], TextPair], return_label_candidates: bool = False):
 
         if not isinstance(datapairs, list):
             datapairs = [datapairs]
@@ -94,21 +86,14 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
             self.document_embeddings.embed(second_elements)
 
             text_embedding_list = [
-                torch.cat(
-                    [
-                        a.get_embedding(embedding_names),
-                        b.get_embedding(embedding_names),
-                    ],
-                    0,
-                ).unsqueeze(0)
+                torch.cat([a.get_embedding(embedding_names), b.get_embedding(embedding_names)], 0).unsqueeze(0)
                 for (a, b) in zip(first_elements, second_elements)
             ]
 
         else:  # concatenate the sentences and embed together
             concatenated_sentences = [
                 Sentence(
-                    pair.first.to_tokenized_string() + self.sep + pair.second.to_tokenized_string(),
-                    use_tokenizer=False,
+                    pair.first.to_tokenized_string() + self.sep + pair.second.to_tokenized_string(), use_tokenizer=False
                 )
                 for pair in datapairs
             ]

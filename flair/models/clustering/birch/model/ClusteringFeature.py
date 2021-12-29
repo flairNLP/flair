@@ -1,8 +1,8 @@
 import torch
 from torch import Tensor
 
-from birch import Birch
-from distance import Distance
+from flair.models.clustering.birch import distance_max, threshold
+from flair.models.clustering.distance import Distance
 
 
 class ClusteringFeature:
@@ -20,7 +20,7 @@ class ClusteringFeature:
         else:
             self.indices = [idx]
 
-    def absorbCf(self, cf):
+    def absorb_cf(self, cf):
         self.N += cf.N
         self.indices.extend(cf.indices)
         if self.LS is None:
@@ -32,18 +32,18 @@ class ClusteringFeature:
         else:
             self.SS *= cf.SS
 
-    def getCenter(self) -> Tensor:
+    def get_center(self) -> Tensor:
         return self.LS / self.N
 
-    def calcualteDistance(self, vector) -> Tensor:
+    def calculate_distance(self, vector) -> Tensor:
         if self.LS is None:
-            return Tensor([Birch.distanceMax - 100])
+            return torch.empty(1, device="cuda").fill_(distance_max - 100)
         else:
-            return Distance.getCosineDistance(self.getCenter(), vector.getCenter())
+            return Distance.get_cosine_distance(self.get_center(), vector.get_center())
 
-    def canAbsorbCf(self, cf) -> bool:
+    def can_absorb_cf(self, cf) -> bool:
         if self.LS is None:
             return True
 
-        distance = Distance.getCosineDistance(self.getCenter(), cf.getCenter())
-        return distance <= Birch.threshold
+        distance = Distance.get_cosine_distance(self.get_center(), cf.get_center())
+        return distance <= threshold

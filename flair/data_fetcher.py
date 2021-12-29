@@ -184,18 +184,11 @@ class NLPTaskDataFetcher:
         if task == NLPTask.WSD.value:
             columns = {0: "text", 1: "lemma", 2: "pos", 3: "sense"}
             return NLPTaskDataFetcher.load_column_corpus(
-                data_folder,
-                columns,
-                train_file="semcor.tsv",
-                test_file="semeval2015.tsv",
+                data_folder, columns, train_file="semcor.tsv", test_file="semeval2015.tsv"
             )
 
         # the UD corpora follow the CoNLL-U format, for which we have a special reader
-        if task.startswith("ud_") or task in [
-            NLPTask.ONTONOTES.value,
-            NLPTask.CONLL_12.value,
-            NLPTask.PENN.value,
-        ]:
+        if task.startswith("ud_") or task in [NLPTask.ONTONOTES.value, NLPTask.CONLL_12.value, NLPTask.PENN.value]:
             return NLPTaskDataFetcher.load_ud_corpus(data_folder)
 
         # for text classifiers, we use our own special format
@@ -207,13 +200,7 @@ class NLPTaskDataFetcher:
             NLPTask.REGRESSION.value,
         ]:
             tokenizer: Tokenizer = (
-                SpaceTokenizer()
-                if task
-                in [
-                    NLPTask.TREC_6.value,
-                    NLPTask.TREC_50.value,
-                ]
-                else SegtokTokenizer()
+                SpaceTokenizer() if task in [NLPTask.TREC_6.value, NLPTask.TREC_50.value] else SegtokTokenizer()
             )
 
             return NLPTaskDataFetcher.load_classification_corpus(data_folder, tokenizer=tokenizer)
@@ -426,9 +413,7 @@ class NLPTaskDataFetcher:
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
     def read_text_classification_file(
-        path_to_file: Union[str, Path],
-        max_tokens_per_doc=-1,
-        tokenizer: Tokenizer = SegtokTokenizer(),
+        path_to_file: Union[str, Path], max_tokens_per_doc=-1, tokenizer: Tokenizer = SegtokTokenizer()
     ) -> List[Sentence]:
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -473,9 +458,7 @@ class NLPTaskDataFetcher:
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
     def read_column_data(
-        path_to_column_file: Union[str, Path],
-        column_name_map: Dict[int, str],
-        infer_whitespace_after: bool = True,
+        path_to_column_file: Union[str, Path], column_name_map: Dict[int, str], infer_whitespace_after: bool = True
     ):
         """
         Reads a file in column format and produces a list of Sentence with tokenlevel annotation as specified in the
@@ -599,23 +582,11 @@ class NLPTaskDataFetcher:
                 import gzip
                 import shutil
 
-                with gzip.open(
-                    flair.cache_root / "datasets" / task.value / "train.txt.gz",
-                    "rb",
-                ) as f_in:
-                    with open(
-                        flair.cache_root / "datasets" / task.value / "train.txt",
-                        "wb",
-                    ) as f_out:
+                with gzip.open(flair.cache_root / "datasets" / task.value / "train.txt.gz", "rb") as f_in:
+                    with open(flair.cache_root / "datasets" / task.value / "train.txt", "wb") as f_out:
                         shutil.copyfileobj(f_in, f_out)
-                with gzip.open(
-                    flair.cache_root / "datasets" / task.value / "test.txt.gz",
-                    "rb",
-                ) as f_in:
-                    with open(
-                        flair.cache_root / "datasets" / task.value / "test.txt",
-                        "wb",
-                    ) as f_out:
+                with gzip.open(flair.cache_root / "datasets" / task.value / "test.txt.gz", "rb") as f_in:
+                    with open(flair.cache_root / "datasets" / task.value / "test.txt", "wb") as f_out:
                         shutil.copyfileobj(f_in, f_out)
 
         if task == NLPTask.NER_BASQUE:
@@ -627,14 +598,8 @@ class NLPTaskDataFetcher:
                 import shutil
                 import tarfile
 
-                with tarfile.open(
-                    flair.cache_root / "datasets" / task.value / "eiec_v1.0.tgz",
-                    "r:gz",
-                ) as f_in:
-                    corpus_files = (
-                        "eiec_v1.0/named_ent_eu.train",
-                        "eiec_v1.0/named_ent_eu.test",
-                    )
+                with tarfile.open(flair.cache_root / "datasets" / task.value / "eiec_v1.0.tgz", "r:gz") as f_in:
+                    corpus_files = ("eiec_v1.0/named_ent_eu.train", "eiec_v1.0/named_ent_eu.test")
                     for corpus_file in corpus_files:
                         f_in.extract(corpus_file, data_path)
                         shutil.move(f"{data_path}/{corpus_file}", data_path)
@@ -647,18 +612,14 @@ class NLPTaskDataFetcher:
                 cached_path(imdb_acl_path, Path("datasets") / task.value)
                 import tarfile
 
-                with tarfile.open(
-                    flair.cache_root / "datasets" / task.value / "aclImdb_v1.tar.gz",
-                    "r:gz",
-                ) as f_in:
+                with tarfile.open(flair.cache_root / "datasets" / task.value / "aclImdb_v1.tar.gz", "r:gz") as f_in:
                     datasets = ["train", "test"]
                     labels = ["pos", "neg"]
 
                     for label in labels:
                         for dataset in datasets:
                             f_in.extractall(
-                                data_path,
-                                members=[m for m in f_in.getmembers() if f"{dataset}/{label}" in m.name],
+                                data_path, members=[m for m in f_in.getmembers() if f"{dataset}/{label}" in m.name]
                             )
                             with open(f"{data_path}/{dataset}.txt", "at") as f_p:
                                 current_path = data_path / "aclImdb" / dataset / label
@@ -675,21 +636,14 @@ class NLPTaskDataFetcher:
             original_filenames = ["train_5500.label", "TREC_10.label"]
             new_filenames = ["train.txt", "test.txt"]
             for original_filename in original_filenames:
-                cached_path(
-                    f"{trec_path}{original_filename}",
-                    Path("datasets") / task.value / "original",
-                )
+                cached_path(f"{trec_path}{original_filename}", Path("datasets") / task.value / "original")
 
             data_path = flair.cache_root / "datasets" / task.value
             data_file = data_path / new_filenames[0]
 
             if not data_file.is_file():
                 for original_filename, new_filename in zip(original_filenames, new_filenames):
-                    with open(
-                        data_path / "original" / original_filename,
-                        "rt",
-                        encoding="latin1",
-                    ) as open_fp:
+                    with open(data_path / "original" / original_filename, "rt", encoding="latin1") as open_fp:
                         with open(data_path / new_filename, "wt", encoding="utf-8") as write_fp:
                             for line in open_fp:
                                 line = line.rstrip()
@@ -737,21 +691,14 @@ class NLPTaskDataFetcher:
             data_file = flair.cache_root / "datasets" / task.value / f"aij-wikiner-{lc}-wp3.train"
             if not data_file.is_file():
 
-                cached_path(
-                    f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2",
-                    Path("datasets") / task.value,
-                )
+                cached_path(f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2", Path("datasets") / task.value)
                 import bz2
                 import shutil
 
                 # unpack and write out in CoNLL column-like format
-                bz_file = bz2.BZ2File(
-                    flair.cache_root / "datasets" / task.value / f"aij-wikiner-{lc}-wp3.bz2",
-                    "rb",
-                )
+                bz_file = bz2.BZ2File(flair.cache_root / "datasets" / task.value / f"aij-wikiner-{lc}-wp3.bz2", "rb")
                 with bz_file as f, open(
-                    flair.cache_root / "datasets" / task.value / f"aij-wikiner-{lc}-wp3.train",
-                    "w",
+                    flair.cache_root / "datasets" / task.value / f"aij-wikiner-{lc}-wp3.train", "w"
                 ) as out:
                     for line in f:
                         line = line.decode("utf-8")
@@ -774,443 +721,186 @@ class NLPTaskDataFetcher:
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/"
         # --- UD Germanic
         if task == NLPTask.UD_ENGLISH:
-            cached_path(
-                f"{ud_path}UD_English-EWT/master/en_ewt-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_English-EWT/master/en_ewt-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_English-EWT/master/en_ewt-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_English-EWT/master/en_ewt-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_English-EWT/master/en_ewt-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_English-EWT/master/en_ewt-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_GERMAN:
-            cached_path(
-                f"{ud_path}UD_German-GSD/master/de_gsd-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_German-GSD/master/de_gsd-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_German-GSD/master/de_gsd-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_German-GSD/master/de_gsd-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_German-GSD/master/de_gsd-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_German-GSD/master/de_gsd-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_DUTCH:
-            cached_path(
-                f"{ud_path}UD_Dutch-Alpino/master/nl_alpino-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Dutch-Alpino/master/nl_alpino-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Dutch-Alpino/master/nl_alpino-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Dutch-Alpino/master/nl_alpino-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Dutch-Alpino/master/nl_alpino-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Dutch-Alpino/master/nl_alpino-ud-train.conllu", Path("datasets") / task.value)
 
         # --- UD Romance
         if task == NLPTask.UD_FRENCH:
-            cached_path(
-                f"{ud_path}UD_French-GSD/master/fr_gsd-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_French-GSD/master/fr_gsd-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_French-GSD/master/fr_gsd-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_French-GSD/master/fr_gsd-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_French-GSD/master/fr_gsd-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_French-GSD/master/fr_gsd-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_ITALIAN:
-            cached_path(
-                f"{ud_path}UD_Italian-ISDT/master/it_isdt-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Italian-ISDT/master/it_isdt-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Italian-ISDT/master/it_isdt-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Italian-ISDT/master/it_isdt-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Italian-ISDT/master/it_isdt-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Italian-ISDT/master/it_isdt-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_SPANISH:
-            cached_path(
-                f"{ud_path}UD_Spanish-GSD/master/es_gsd-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Spanish-GSD/master/es_gsd-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Spanish-GSD/master/es_gsd-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Spanish-GSD/master/es_gsd-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Spanish-GSD/master/es_gsd-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Spanish-GSD/master/es_gsd-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_PORTUGUESE:
             cached_path(
-                f"{ud_path}UD_Portuguese-Bosque/blob/master/pt_bosque-ud-dev.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_Portuguese-Bosque/blob/master/pt_bosque-ud-dev.conllu", Path("datasets") / task.value
             )
             cached_path(
-                f"{ud_path}UD_Portuguese-Bosque/blob/master/pt_bosque-ud-test.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_Portuguese-Bosque/blob/master/pt_bosque-ud-test.conllu", Path("datasets") / task.value
             )
             cached_path(
-                f"{ud_path}UD_Portuguese-Bosque/blob/master/pt_bosque-ud-train.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_Portuguese-Bosque/blob/master/pt_bosque-ud-train.conllu", Path("datasets") / task.value
             )
 
         if task == NLPTask.UD_ROMANIAN:
-            cached_path(
-                f"{ud_path}UD_Romanian-RRT/master/ro_rrt-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Romanian-RRT/master/ro_rrt-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Romanian-RRT/master/ro_rrt-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Romanian-RRT/master/ro_rrt-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Romanian-RRT/master/ro_rrt-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Romanian-RRT/master/ro_rrt-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_CATALAN:
-            cached_path(
-                f"{ud_path}UD_Catalan-AnCora/master/ca_ancora-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Catalan-AnCora/master/ca_ancora-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Catalan-AnCora/master/ca_ancora-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Catalan-AnCora/master/ca_ancora-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Catalan-AnCora/master/ca_ancora-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Catalan-AnCora/master/ca_ancora-ud-train.conllu", Path("datasets") / task.value)
 
         # --- UD West-Slavic
         if task == NLPTask.UD_POLISH:
-            cached_path(
-                f"{ud_path}UD_Polish-LFG/master/pl_lfg-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Polish-LFG/master/pl_lfg-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Polish-LFG/master/pl_lfg-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Polish-LFG/master/pl_lfg-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Polish-LFG/master/pl_lfg-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Polish-LFG/master/pl_lfg-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_CZECH:
-            cached_path(
-                f"{ud_path}UD_Czech-PDT/master/cs_pdt-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Czech-PDT/master/cs_pdt-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Czech-PDT/master/cs_pdt-ud-train-l.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Czech-PDT/master/cs_pdt-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Czech-PDT/master/cs_pdt-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Czech-PDT/master/cs_pdt-ud-train-l.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_SLOVAK:
-            cached_path(
-                f"{ud_path}UD_Slovak-SNK/master/sk_snk-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Slovak-SNK/master/sk_snk-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Slovak-SNK/master/sk_snk-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Slovak-SNK/master/sk_snk-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Slovak-SNK/master/sk_snk-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Slovak-SNK/master/sk_snk-ud-train.conllu", Path("datasets") / task.value)
 
         # --- UD Scandinavian
         if task == NLPTask.UD_SWEDISH:
             cached_path(
-                f"{ud_path}UD_Swedish-Talbanken/master/sv_talbanken-ud-dev.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_Swedish-Talbanken/master/sv_talbanken-ud-dev.conllu", Path("datasets") / task.value
             )
             cached_path(
-                f"{ud_path}UD_Swedish-Talbanken/master/sv_talbanken-ud-test.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_Swedish-Talbanken/master/sv_talbanken-ud-test.conllu", Path("datasets") / task.value
             )
             cached_path(
-                f"{ud_path}UD_Swedish-Talbanken/master/sv_talbanken-ud-train.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_Swedish-Talbanken/master/sv_talbanken-ud-train.conllu", Path("datasets") / task.value
             )
 
         if task == NLPTask.UD_DANISH:
-            cached_path(
-                f"{ud_path}UD_Danish-DDT/master/da_ddt-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Danish-DDT/master/da_ddt-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Danish-DDT/master/da_ddt-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Danish-DDT/master/da_ddt-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Danish-DDT/master/da_ddt-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Danish-DDT/master/da_ddt-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_NORWEGIAN:
+            cached_path(f"{ud_path}UD_Norwegian-Bokmaal/master/no_bokmaal-ud-dev.conllu", Path("datasets") / task.value)
             cached_path(
-                f"{ud_path}UD_Norwegian-Bokmaal/master/no_bokmaal-ud-dev.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_Norwegian-Bokmaal/master/no_bokmaal-ud-test.conllu", Path("datasets") / task.value
             )
             cached_path(
-                f"{ud_path}UD_Norwegian-Bokmaal/master/no_bokmaal-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Norwegian-Bokmaal/master/no_bokmaal-ud-train.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_Norwegian-Bokmaal/master/no_bokmaal-ud-train.conllu", Path("datasets") / task.value
             )
 
         if task == NLPTask.UD_FINNISH:
-            cached_path(
-                f"{ud_path}UD_Finnish-TDT/master/fi_tdt-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Finnish-TDT/master/fi_tdt-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Finnish-TDT/master/fi_tdt-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Finnish-TDT/master/fi_tdt-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Finnish-TDT/master/fi_tdt-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Finnish-TDT/master/fi_tdt-ud-train.conllu", Path("datasets") / task.value)
 
         # --- UD South-Slavic
         if task == NLPTask.UD_SLOVENIAN:
-            cached_path(
-                f"{ud_path}UD_Slovenian-SSJ/master/sl_ssj-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Slovenian-SSJ/master/sl_ssj-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Slovenian-SSJ/master/sl_ssj-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Slovenian-SSJ/master/sl_ssj-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Slovenian-SSJ/master/sl_ssj-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Slovenian-SSJ/master/sl_ssj-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_CROATIAN:
-            cached_path(
-                f"{ud_path}UD_Croatian-SET/master/hr_set-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Croatian-SET/master/hr_set-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Croatian-SET/master/hr_set-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Croatian-SET/master/hr_set-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Croatian-SET/master/hr_set-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Croatian-SET/master/hr_set-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_SERBIAN:
-            cached_path(
-                f"{ud_path}UD_Serbian-SET/master/sr_set-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Serbian-SET/master/sr_set-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Serbian-SET/master/sr_set-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Serbian-SET/master/sr_set-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Serbian-SET/master/sr_set-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Serbian-SET/master/sr_set-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_BULGARIAN:
-            cached_path(
-                f"{ud_path}UD_Bulgarian-BTB/master/bg_btb-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Bulgarian-BTB/master/bg_btb-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Bulgarian-BTB/master/bg_btb-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Bulgarian-BTB/master/bg_btb-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Bulgarian-BTB/master/bg_btb-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Bulgarian-BTB/master/bg_btb-ud-train.conllu", Path("datasets") / task.value)
 
         # --- UD Asian
         if task == NLPTask.UD_ARABIC:
-            cached_path(
-                f"{ud_path}UD_Arabic-PADT/master/ar_padt-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Arabic-PADT/master/ar_padt-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Arabic-PADT/master/ar_padt-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Arabic-PADT/master/ar_padt-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Arabic-PADT/master/ar_padt-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Arabic-PADT/master/ar_padt-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_HEBREW:
-            cached_path(
-                f"{ud_path}UD_Hebrew-HTB/master/he_htb-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Hebrew-HTB/master/he_htb-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Hebrew-HTB/master/he_htb-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Hebrew-HTB/master/he_htb-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Hebrew-HTB/master/he_htb-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Hebrew-HTB/master/he_htb-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_TURKISH:
-            cached_path(
-                f"{ud_path}UD_Turkish-IMST/master/tr_imst-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Turkish-IMST/master/tr_imst-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Turkish-IMST/master/tr_imst-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Turkish-IMST/master/tr_imst-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Turkish-IMST/master/tr_imst-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Turkish-IMST/master/tr_imst-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_PERSIAN:
-            cached_path(
-                f"{ud_path}UD_Persian-Seraji/master/fa_seraji-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Persian-Seraji/master/fa_seraji-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Persian-Seraji/master/fa_seraji-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Persian-Seraji/master/fa_seraji-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Persian-Seraji/master/fa_seraji-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Persian-Seraji/master/fa_seraji-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_RUSSIAN:
             cached_path(
-                f"{ud_path}UD_Russian-SynTagRus/master/ru_syntagrus-ud-dev.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_Russian-SynTagRus/master/ru_syntagrus-ud-dev.conllu", Path("datasets") / task.value
             )
             cached_path(
-                f"{ud_path}UD_Russian-SynTagRus/master/ru_syntagrus-ud-test.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_Russian-SynTagRus/master/ru_syntagrus-ud-test.conllu", Path("datasets") / task.value
             )
             cached_path(
-                f"{ud_path}UD_Russian-SynTagRus/master/ru_syntagrus-ud-train.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_Russian-SynTagRus/master/ru_syntagrus-ud-train.conllu", Path("datasets") / task.value
             )
 
         if task == NLPTask.UD_HINDI:
-            cached_path(
-                f"{ud_path}UD_Hindi-HDTB/master/hi_hdtb-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Hindi-HDTB/master/hi_hdtb-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Hindi-HDTB/master/hi_hdtb-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Hindi-HDTB/master/hi_hdtb-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Hindi-HDTB/master/hi_hdtb-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Hindi-HDTB/master/hi_hdtb-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_INDONESIAN:
-            cached_path(
-                f"{ud_path}UD_Indonesian-GSD/master/id_gsd-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Indonesian-GSD/master/id_gsd-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Indonesian-GSD/master/id_gsd-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Indonesian-GSD/master/id_gsd-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Indonesian-GSD/master/id_gsd-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Indonesian-GSD/master/id_gsd-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_JAPANESE:
-            cached_path(
-                f"{ud_path}UD_Japanese-GSD/master/ja_gsd-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Japanese-GSD/master/ja_gsd-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Japanese-GSD/master/ja_gsd-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Japanese-GSD/master/ja_gsd-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Japanese-GSD/master/ja_gsd-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Japanese-GSD/master/ja_gsd-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_CHINESE:
-            cached_path(
-                f"{ud_path}UD_Chinese-GSD/master/zh_gsd-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Chinese-GSD/master/zh_gsd-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Chinese-GSD/master/zh_gsd-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Chinese-GSD/master/zh_gsd-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Chinese-GSD/master/zh_gsd-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Chinese-GSD/master/zh_gsd-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_KOREAN:
-            cached_path(
-                f"{ud_path}UD_Korean-Kaist/master/ko_kaist-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Korean-Kaist/master/ko_kaist-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Korean-Kaist/master/ko_kaist-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Korean-Kaist/master/ko_kaist-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Korean-Kaist/master/ko_kaist-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Korean-Kaist/master/ko_kaist-ud-train.conllu", Path("datasets") / task.value)
 
         if task == NLPTask.UD_BASQUE:
-            cached_path(
-                f"{ud_path}UD_Basque-BDT/master/eu_bdt-ud-dev.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Basque-BDT/master/eu_bdt-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_Basque-BDT/master/eu_bdt-ud-train.conllu",
-                Path("datasets") / task.value,
-            )
+            cached_path(f"{ud_path}UD_Basque-BDT/master/eu_bdt-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Basque-BDT/master/eu_bdt-ud-test.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_Basque-BDT/master/eu_bdt-ud-train.conllu", Path("datasets") / task.value)
 
         if task.value.startswith("wassa"):
 
@@ -1241,21 +931,13 @@ class NLPTaskDataFetcher:
                     os.remove(path)
 
         if task == NLPTask.UD_GERMAN_HDT:
+            cached_path(f"{ud_path}UD_German-HDT/dev/de_hdt-ud-dev.conllu", Path("datasets") / task.value)
+            cached_path(f"{ud_path}UD_German-HDT/dev/de_hdt-ud-test.conllu", Path("datasets") / task.value)
             cached_path(
-                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-dev.conllu",
-                Path("datasets") / task.value,
+                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-train-a.conllu", Path("datasets") / task.value / "original"
             )
             cached_path(
-                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-test.conllu",
-                Path("datasets") / task.value,
-            )
-            cached_path(
-                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-train-a.conllu",
-                Path("datasets") / task.value / "original",
-            )
-            cached_path(
-                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-train-b.conllu",
-                Path("datasets") / task.value / "original",
+                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-train-b.conllu", Path("datasets") / task.value / "original"
             )
             data_path = flair.cache_root / "datasets" / task.value
 

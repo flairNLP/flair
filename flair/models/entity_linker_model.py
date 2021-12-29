@@ -79,11 +79,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     def emb_mean(self, arg):
         return torch.mean(arg, 0)
 
-    def forward_pass(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
-    ):
+    def forward_pass(self, sentences: Union[List[Sentence], Sentence], return_label_candidates: bool = False):
 
         if not isinstance(sentences, list):
             sentences = [sentences]
@@ -119,13 +115,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                     mention_emb = torch.Tensor(0, self.word_embeddings.embedding_length).to(flair.device)
 
                     for token in span.tokens:
-                        mention_emb = torch.cat(
-                            (
-                                mention_emb,
-                                token.get_embedding(embedding_names).unsqueeze(0),
-                            ),
-                            0,
-                        )
+                        mention_emb = torch.cat((mention_emb, token.get_embedding(embedding_names).unsqueeze(0)), 0)
 
                     embedding_list.append(self.aggregated_embedding(mention_emb).unsqueeze(0))
 

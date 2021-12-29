@@ -82,10 +82,7 @@ class CosineSimilarity(SimilarityMeasure):
         input_modality_0_norms = torch.norm(input_modality_0, dim=-1, keepdim=True)
         input_modality_1_norms = torch.norm(input_modality_1, dim=-1, keepdim=True)
 
-        return torch.matmul(
-            input_modality_0 / input_modality_0_norms,
-            (input_modality_1 / input_modality_1_norms).t(),
-        )
+        return torch.matmul(input_modality_0 / input_modality_0_norms, (input_modality_1 / input_modality_1_norms).t())
 
 
 # == similarity losses ==
@@ -301,8 +298,7 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
                 batch_target_indices = [target_index[str(data_point.second)] for data_point in batch]
 
                 batch_gt_ranks = batch_modality_1_ranks[
-                    torch.arange(batch_similarity_matrix.shape[0]),
-                    torch.tensor(batch_target_indices),
+                    torch.arange(batch_similarity_matrix.shape[0]), torch.tensor(batch_target_indices)
                 ]
                 ranks.extend(batch_gt_ranks.tolist())
 
@@ -322,13 +318,7 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
             [recall_at[r] * w for r, w in zip(self.recall_at_points, self.recall_at_points_weights)]
         )
 
-        return Result(
-            validated_measure,
-            results_header_str,
-            epoch_results_str,
-            detailed_results,
-            loss=0.0,
-        )
+        return Result(validated_measure, results_header_str, epoch_results_str, detailed_results, loss=0.0)
 
     def _get_state_dict(self):
         model_state = {

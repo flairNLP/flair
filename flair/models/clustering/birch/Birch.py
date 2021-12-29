@@ -1,51 +1,45 @@
-from flair.embeddings import DocumentEmbeddings
-
-from Clustering import Clustering
-from birch.model.CfTree import CfTree
-from birch.model.ClusteringFeature import ClusteringFeature
 from flair.datasets import DataLoader
 
-from kmeans.K_Means import KMeans
-
-branchingFactorNonLeaf = 0
-branchingFactorLeaf = 0
-distanceMax = 1000000000
-threshold = 0
+from flair.embeddings import DocumentEmbeddings
+from flair.models.clustering.Clustering import Clustering
+from flair.models.clustering.birch.model.CfTree import CfTree
+from flair.models.clustering.birch.model.ClusteringFeature import ClusteringFeature
+from flair.models.clustering.kmeans.K_Means import KMeans
 
 
 class Birch(Clustering):
-    def __init__(self, thresholds: float, embeddings: DocumentEmbeddings, B: int, L: int):
+    def __init__(self, thresholds: float, embeddings: DocumentEmbeddings, b: int, l: int):
         global threshold
         threshold = thresholds
-        global branchingFactorLeaf
-        branchingFactorLeaf = L
-        global branchingFactorNonLeaf
-        branchingFactorNonLeaf = B
-        global distanceMax
+        global branching_factor_leaf
+        branching_factor_leaf = l
+        global branching_factor_non_leaf
+        branching_factor_non_leaf = b
+        global distance_max
 
         self.embeddings = embeddings
-        self.cfTree = CfTree()
+        self.cf_tree = CfTree()
         self.predict = []
 
-    def cluster(self, vectors: list, batchSize: int = 64):
+    def cluster(self, vectors: list, batch_size: int = 64):
         print("Starting BIRCH clustering with threshold: " + str(threshold))
         self.predict = [0] * len(vectors)
 
-        for batch in DataLoader(vectors, batch_size=batchSize):
+        for batch in DataLoader(vectors, batch_size=batch_size):
             self.embeddings.embed(batch)
 
         for idx, vector in enumerate(vectors):
-            self.cfTree.insertCf(ClusteringFeature(vector.embedding, idx=idx))
-            self.cfTree.validate()
+            self.cf_tree.insert_cf(ClusteringFeature(vector.embedding, idx=idx))
+            self.cf_tree.validate()
 
-        cfs = self.cfTree.getLeafCfs()
-        cfVectors = self.cfTree.getVectorsFromCf(cfs)
+        cfs = self.cf_tree.get_leaf_cfs()
+        cf_vectors = self.cf_tree.get_vectors_from_cf(cfs)
 
-        kMeans = KMeans(3)
-        kMeans.clusterVectors(cfVectors)
+        k_means = KMeans(3)
+        k_means.cluster_vectors(cf_vectors)
 
         for idx, cf in enumerate(cfs):
-            for cfIndex in cf.indices:
-                self.predict[cfIndex] = kMeans.predict[idx]
+            for cf_index in cf.indices:
+                self.predict[cf_index] = k_means.predict[idx]
 
-        return self.cfTree
+        return self.cf_tree

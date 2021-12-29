@@ -332,21 +332,11 @@ class Classifier(Model[DT], typing.Generic[DT]):
         # there is at least one gold label or one prediction (default)
         if len(all_true_values) + len(all_predicted_values) > 1:
             classification_report = sklearn.metrics.classification_report(
-                y_true,
-                y_pred,
-                digits=4,
-                target_names=target_names,
-                zero_division=0,
-                labels=labels,
+                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=labels
             )
 
             classification_report_dict = sklearn.metrics.classification_report(
-                y_true,
-                y_pred,
-                target_names=target_names,
-                zero_division=0,
-                output_dict=True,
-                labels=labels,
+                y_true, y_pred, target_names=target_names, zero_division=0, output_dict=True, labels=labels
             )
 
             accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
@@ -447,9 +437,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     """
 
     def forward_pass(
-        self,
-        sentences: Union[List[DT], DT],
-        return_label_candidates: bool = False,
+        self, sentences: Union[List[DT], DT], return_label_candidates: bool = False
     ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]]]:
         """This method does a forward pass through the model given a list of data
         points as input.
@@ -597,10 +585,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             if len(reordered_sentences) == 0:
                 return sentences
 
-            dataloader = DataLoader(
-                dataset=FlairDatapointDataset(reordered_sentences),
-                batch_size=mini_batch_size,
-            )
+            dataloader = DataLoader(dataset=FlairDatapointDataset(reordered_sentences), batch_size=mini_batch_size)
             # progress bar for verbosity
             if verbose:
                 progress_bar = tqdm(dataloader)

@@ -4,40 +4,14 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import conllu
 
-from flair.data import (
-    Corpus,
-    FlairDataset,
-    RelationLabel,
-    Sentence,
-    Span,
-    SpanLabel,
-    Token,
-)
+from flair.data import Corpus, FlairDataset, RelationLabel, Sentence, Span, SpanLabel, Token
 from flair.datasets.base import find_train_dev_test_files
 
 log = logging.getLogger("flair")
 
-DEFAULT_FIELDS: Tuple[str, ...] = (
-    "id",
-    "form",
-    "lemma",
-    "upos",
-    "xpos",
-    "feats",
-    "head",
-    "deprel",
-    "deps",
-    "misc",
-)
+DEFAULT_FIELDS: Tuple[str, ...] = ("id", "form", "lemma", "upos", "xpos", "feats", "head", "deprel", "deps", "misc")
 
-DEFAULT_TOKEN_ANNOTATION_FIELDS: Tuple[str, ...] = (
-    "lemma",
-    "upos",
-    "xpos",
-    "feats",
-    "head",
-    "deprel",
-)
+DEFAULT_TOKEN_ANNOTATION_FIELDS: Tuple[str, ...] = ("lemma", "upos", "xpos", "feats", "head", "deprel")
 
 # noinspection PyProtectedMember
 DEFAULT_METADATA_PARSERS: Dict[str, conllu._MetadataParserType] = {
@@ -134,11 +108,7 @@ class CoNLLUCorpus(Corpus):
         )
 
         super(CoNLLUCorpus, self).__init__(
-            train,
-            dev,
-            test,
-            name=str(data_folder),
-            sample_missing_splits=sample_missing_splits,
+            train, dev, test, name=str(data_folder), sample_missing_splits=sample_missing_splits
         )
 
 
@@ -292,13 +262,7 @@ class CoNLLUDataset(FlairDataset):
             sentence.add_label("sentence_id", token_list.metadata["sentence_id"])
 
         if "relations" in token_list.metadata:
-            for (
-                head_start,
-                head_end,
-                tail_start,
-                tail_end,
-                label,
-            ) in token_list.metadata["relations"]:
+            for (head_start, head_end, tail_start, tail_end, label) in token_list.metadata["relations"]:
                 # head and tail span indices are 1-indexed and end index is inclusive
                 head = Span(sentence.tokens[head_start - 1 : head_end])
                 tail = Span(sentence.tokens[tail_start - 1 : tail_end])
@@ -315,9 +279,6 @@ class CoNLLUDataset(FlairDataset):
         for label_type in ner_label_types:
             spans = sentence.get_spans(label_type)
             for span in spans:
-                sentence.add_complex_label(
-                    "entity",
-                    label=SpanLabel(span=span, value=span.tag, score=span.score),
-                )
+                sentence.add_complex_label("entity", label=SpanLabel(span=span, value=span.tag, score=span.score))
 
         return sentence
