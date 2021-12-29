@@ -48,7 +48,7 @@ class MultitaskModel(flair.nn.Model):
         loss = 0
         count = 0
         for model, split in batch_split.items():
-            task_loss, task_count = self.__getattr__(model).forward_loss([sentences[i] for i in split])
+            task_loss, task_count = self.__getattr__(model).forward_loss([sentences[i] for i in split], task=model)
             loss += task_loss
             count += task_count
 
