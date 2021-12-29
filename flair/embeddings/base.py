@@ -770,8 +770,11 @@ class TransformerEmbedding(Embeddings[Sentence]):
             for original_sentence, expanded_sentence, context_offset in zip(
                 sentences, expanded_sentences, context_offsets
             ):
-                for token_idx, token in enumerate(original_sentence):
-                    token.set_embedding(
-                        self.name,
-                        expanded_sentence[token_idx + context_offset].get_embedding(self.name),
-                    )
+                if self.token_embedding:
+                    for token_idx, token in enumerate(original_sentence):
+                        token.set_embedding(
+                            self.name,
+                            expanded_sentence[token_idx + context_offset].get_embedding(self.name),
+                        )
+                if self.document_embedding:
+                    original_sentence.set_embedding(self.name, expanded_sentence.get_embedding(self.name))
