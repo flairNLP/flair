@@ -5,7 +5,7 @@ import warnings
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, Set
 
 import torch.nn
 from torch.nn.modules.loss import _Loss
@@ -217,7 +217,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
             lines: List[str] = []
 
             # variables for computing scores
-            all_spans: List[str] = []
+            all_spans: Set[str] = set()
             all_true_values = {}
             all_predicted_values = {}
 
@@ -260,7 +260,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                             all_true_values[representation].append(value)
 
                         if representation not in all_spans:
-                            all_spans.append(representation)
+                            all_spans.add(representation)
 
                     for predicted_span in datapoint.get_labels("predicted"):
                         representation = str(sentence_id) + ": " + predicted_span.identifier
@@ -272,7 +272,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                             all_predicted_values[representation].append(predicted_span.value)
 
                         if representation not in all_spans:
-                            all_spans.append(representation)
+                            all_spans.add(representation)
 
                     sentence_id += 1
 
@@ -281,6 +281,14 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 # make printout lines
                 if out_path:
                     lines.extend(self._print_predictions(batch, gold_label_type))
+
+            # convert true and predicted values to two span-aligned lists
+            true_values_span_aligned = []
+            predicted_values_span_aligned = []
+            for span in all_spans:
+                true_values_span_aligned.append(all_true_values[span] if span in all_true_values else ["O"])
+                predicted_values_span_aligned.append(
+                    all_predicted_values[span] if span in all_predicted_values else ["O"])
 
             # write all_predicted_values to out_file if set
             if out_path:
@@ -296,14 +304,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
             for predicted_values in all_predicted_values.values():
                 for label in predicted_values:
                     evaluation_label_dictionary.add_item(label)
-
-            # convert true and predicted values to two span-aligned lists
-            true_values_span_aligned = []
-            predicted_values_span_aligned = []
-            for span in all_spans:
-                true_values_span_aligned.append(all_true_values[span] if span in all_true_values else ["O"])
-                predicted_values_span_aligned.append(
-                    all_predicted_values[span] if span in all_predicted_values else ["O"])
 
         # check if this is a multi-label problem
         multi_label = False
