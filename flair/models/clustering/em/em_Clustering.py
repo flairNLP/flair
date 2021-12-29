@@ -16,7 +16,7 @@ class EM_Clustering(Clustering):
         self.embeddings = embeddings
         self.maxIteration = 10
 
-    def cluster(self, vectors: list, batch_size: int = 64):
+    def cluster(self, vectors: list, batch_size: int = 64, rtol=1e-3):
 
         try:
             for batch in DataLoader(vectors, batch_size=batch_size):
@@ -41,6 +41,17 @@ class EM_Clustering(Clustering):
             self.m_step(data)
 
             self.lls.append(self.lower_bound(data, self.z))
+
+            if (
+                self.lls.__len__() >= 2
+                and torch.abs(
+                    (self.lls[self.lls.__len__() - 1] - self.lls[self.lls.__len__() - 2])
+                    / self.lls[self.lls.__len__() - 2]
+                )
+                < rtol
+            ):
+                print("Break")
+                break
 
         print(self.lls)
         return []
