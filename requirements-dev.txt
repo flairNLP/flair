@@ -1,0 +1,9 @@
+pytest
+pytest-mypy
+pytest-isort
+pytest-flake8
+flake8-black
+flake8<4.0.0
+types-Deprecated
+types-tabulate
+types-requests

@@ -1,13 +1,14 @@
+import logging.config
 import os
-import torch
 from pathlib import Path
+
+import torch
 from transformers import set_seed as hf_set_seed
 
 # global variable: cache_root
-cache_root = Path(os.getenv('FLAIR_CACHE_ROOT', Path(Path.home(), ".flair")))
+cache_root = Path(os.getenv("FLAIR_CACHE_ROOT", Path(Path.home(), ".flair")))
 
 # global variable: device
-device = None
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
 else:
@@ -16,14 +17,14 @@ else:
 # global variable: embedding_storage_mode
 embedding_storage_mode = "default"
 
-from . import data
-from . import models
-from . import visual
-from . import trainers
-from . import nn
-from .training_utils import AnnealOnPlateau
 
-import logging.config
+from . import (  # noqa: E402 import after setting device
+    data,
+    models,
+    nn,
+    trainers,
+    visual,
+)
 
 __version__ = "0.10"
 
@@ -40,13 +41,27 @@ logging.config.dictConfig(
                 "stream": "ext://sys.stdout",
             }
         },
-        "loggers": {
-            "flair": {"handlers": ["console"], "level": "INFO", "propagate": False}
-        },
+        "loggers": {"flair": {"handlers": ["console"], "level": "INFO", "propagate": False}},
     }
 )
 
 logger = logging.getLogger("flair")
 
+
 def set_seed(seed: int):
     hf_set_seed(seed)
+
+
+__all__ = [
+    "cache_root",
+    "device",
+    "__version__",
+    "logger",
+    "set_seed",
+    "embedding_storage_mode",
+    "data",
+    "models",
+    "nn",
+    "trainers",
+    "visual",
+]

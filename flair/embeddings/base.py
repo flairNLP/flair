@@ -1,17 +1,18 @@
+import inspect
+import logging
 from abc import abstractmethod
-from typing import Union, List, Dict
-from torch.nn import ParameterList, Parameter
+from typing import Dict, Generic, List, Sequence, Union
 
 import torch
-import logging
+from torch.nn import Parameter, ParameterList
 
 import flair
-from flair.data import Sentence, Image
+from flair.data import DT
 
 log = logging.getLogger("flair")
 
 
-class Embeddings(torch.nn.Module):
+class Embeddings(torch.nn.Module, Generic[DT]):
     """Abstract base class for all embeddings. Every new type of embedding must implement these methods."""
 
     def __init__(self):
@@ -34,35 +35,27 @@ class Embeddings(torch.nn.Module):
     def embedding_type(self) -> str:
         raise NotImplementedError
 
-    def embed(self, sentences: Union[Sentence, List[Sentence]]) -> List[Sentence]:
+    def embed(self, data_points: Union[DT, List[DT]]) -> List[DT]:
         """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
         are non-static."""
 
         # if only one sentence is passed, convert to list of sentence
-        if (type(sentences) is Sentence) or (type(sentences) is Image):
-            sentences = [sentences]
+        if not isinstance(data_points, list):
+            data_points = [data_points]
 
-        everything_embedded: bool = True
+        if not self._everything_embedded(data_points) or not self.static_embeddings:
+            self._add_embeddings_internal(data_points)
 
-        if self.embedding_type == "word-level":
-            for sentence in sentences:
-                for token in sentence.tokens:
-                    if self.name not in token._embeddings.keys():
-                        everything_embedded = False
-                        break
-        else:
-            for sentence in sentences:
-                if self.name not in sentence._embeddings.keys():
-                    everything_embedded = False
-                    break
+        return data_points
 
-        if not everything_embedded or not self.static_embeddings:
-            self._add_embeddings_internal(sentences)
-
-        return sentences
+    def _everything_embedded(self, data_points: Sequence[DT]) -> bool:
+        for data_point in data_points:
+            if self.name not in data_point._embeddings.keys():
+                return False
+        return True
 
     @abstractmethod
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: List[DT]):
         """Private method for adding embeddings to all words in a list of sentences."""
         pass
 
@@ -74,6 +67,19 @@ class Embeddings(torch.nn.Module):
 
     def get_named_embeddings_dict(self) -> Dict:
         return {self.name: self}
+
+    @staticmethod
+    def get_instance_parameters(locals: dict) -> dict:
+        class_definition = locals.get("__class__")
+        instance_parameter_names = set(inspect.signature(class_definition.__init__).parameters)  # type: ignore
+        instance_parameter_names.remove("self")
+        instance_parameter_names.add("__class__")
+        instance_parameters = {
+            class_attribute: attribute_value
+            for class_attribute, attribute_value in locals.items()
+            if class_attribute in instance_parameter_names
+        }
+        return instance_parameters
 
 
 class ScalarMix(torch.nn.Module):
@@ -107,7 +113,6 @@ class ScalarMix(torch.nn.Module):
                         device=flair.device,
                     ),
                     requires_grad=trainable,
-
                 )
                 for i in range(mixture_size)
             ]
@@ -117,7 +122,8 @@ class ScalarMix(torch.nn.Module):
                 [1.0],
                 dtype=torch.float,
                 device=flair.device,
-            ), requires_grad=trainable
+            ),
+            requires_grad=trainable,
         )
 
     def forward(self, tensors: List[torch.Tensor]) -> torch.Tensor:

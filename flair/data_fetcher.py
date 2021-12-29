@@ -1,23 +1,16 @@
 import logging
 import os
 import re
-
-from deprecated import deprecated
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 
+from deprecated import deprecated
 
 import flair
-from flair.data import (
-    Sentence,
-    Corpus,
-    Token,
-    Tokenizer,
-    MultiCorpus
-)
-from flair.tokenization import SegtokTokenizer, SpaceTokenizer
+from flair.data import Corpus, MultiCorpus, Sentence, Token, Tokenizer
 from flair.file_utils import cached_path
+from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 
 log = logging.getLogger("flair")
 
@@ -119,12 +112,8 @@ class NLPTask(Enum):
 class NLPTaskDataFetcher:
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
-    def load_corpora(
-        tasks: List[Union[NLPTask, str]], base_path: Union[str, Path] = None
-    ) -> MultiCorpus:
-        return MultiCorpus(
-            [NLPTaskDataFetcher.load_corpus(task, Path(base_path)) for task in tasks]
-        )
+    def load_corpora(tasks: List[Union[NLPTask, str]], base_path: Union[str, Path] = None) -> MultiCorpus:
+        return MultiCorpus([NLPTaskDataFetcher.load_corpus(task, Path(base_path)) for task in tasks])
 
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
@@ -159,53 +148,37 @@ class NLPTaskDataFetcher:
         if task == NLPTask.CONLL_2000.value:
             columns = {0: "text", 1: "pos", 2: "np"}
 
-            return NLPTaskDataFetcher.load_column_corpus(
-                data_folder, columns, tag_to_biloes="np"
-            )
+            return NLPTaskDataFetcher.load_column_corpus(data_folder, columns, tag_to_biloes="np")
 
         # many NER tasks follow the CoNLL 03 format with four colulms: text, pos, np and ner tag
-        if (
-            task == NLPTask.CONLL_03.value
-            or task == NLPTask.ONTONER.value
-            or task == NLPTask.FASHION.value
-        ):
+        if task == NLPTask.CONLL_03.value or task == NLPTask.ONTONER.value or task == NLPTask.FASHION.value:
             columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
 
-            return NLPTaskDataFetcher.load_column_corpus(
-                data_folder, columns, tag_to_biloes="ner"
-            )
+            return NLPTaskDataFetcher.load_column_corpus(data_folder, columns, tag_to_biloes="ner")
 
         # the CoNLL 03 task for German has an additional lemma column
         if task == NLPTask.CONLL_03_GERMAN.value:
             columns = {0: "text", 1: "lemma", 2: "pos", 3: "np", 4: "ner"}
 
-            return NLPTaskDataFetcher.load_column_corpus(
-                data_folder, columns, tag_to_biloes="ner"
-            )
+            return NLPTaskDataFetcher.load_column_corpus(data_folder, columns, tag_to_biloes="ner")
 
         # the CoNLL 03 task for Dutch has no NP column
         if task == NLPTask.CONLL_03_DUTCH.value or task.startswith("wikiner"):
             columns = {0: "text", 1: "pos", 2: "ner"}
 
-            return NLPTaskDataFetcher.load_column_corpus(
-                data_folder, columns, tag_to_biloes="ner"
-            )
+            return NLPTaskDataFetcher.load_column_corpus(data_folder, columns, tag_to_biloes="ner")
 
         # the CoNLL 03 task for Spanish only has two columns
         if task == NLPTask.CONLL_03_SPANISH.value or task == NLPTask.WNUT_17.value:
             columns = {0: "text", 1: "ner"}
 
-            return NLPTaskDataFetcher.load_column_corpus(
-                data_folder, columns, tag_to_biloes="ner"
-            )
+            return NLPTaskDataFetcher.load_column_corpus(data_folder, columns, tag_to_biloes="ner")
 
         # the GERMEVAL task only has two columns: text and ner
         if task == NLPTask.GERMEVAL.value:
             columns = {1: "text", 2: "ner"}
 
-            return NLPTaskDataFetcher.load_column_corpus(
-                data_folder, columns, tag_to_biloes="ner"
-            )
+            return NLPTaskDataFetcher.load_column_corpus(data_folder, columns, tag_to_biloes="ner")
 
         # WSD tasks may be put into this column format
         if task == NLPTask.WSD.value:
@@ -233,26 +206,25 @@ class NLPTaskDataFetcher:
             NLPTask.TREC_50.value,
             NLPTask.REGRESSION.value,
         ]:
-            tokenizer: Tokenizer = SpaceTokenizer() if task in [
-                NLPTask.TREC_6.value,
-                NLPTask.TREC_50.value,
-            ] else SegtokTokenizer()
-
-            return NLPTaskDataFetcher.load_classification_corpus(
-                data_folder, tokenizer=tokenizer
+            tokenizer: Tokenizer = (
+                SpaceTokenizer()
+                if task
+                in [
+                    NLPTask.TREC_6.value,
+                    NLPTask.TREC_50.value,
+                ]
+                else SegtokTokenizer()
             )
+
+            return NLPTaskDataFetcher.load_classification_corpus(data_folder, tokenizer=tokenizer)
 
         # NER corpus for Basque
         if task == NLPTask.NER_BASQUE.value:
             columns = {0: "text", 1: "ner"}
-            return NLPTaskDataFetcher.load_column_corpus(
-                data_folder, columns, tag_to_biloes="ner"
-            )
+            return NLPTaskDataFetcher.load_column_corpus(data_folder, columns, tag_to_biloes="ner")
 
         if task.startswith("wassa"):
-            return NLPTaskDataFetcher.load_classification_corpus(
-                data_folder, tokenizer=SegtokTokenizer()
-            )
+            return NLPTaskDataFetcher.load_classification_corpus(data_folder, tokenizer=SegtokTokenizer())
 
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
@@ -316,50 +288,36 @@ class NLPTaskDataFetcher:
         log.info("Test: {}".format(test_file))
 
         # get train and test data
-        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_column_data(
-            train_file, column_format
-        )
+        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_column_data(train_file, column_format)
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
         if test_file is not None:
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_column_data(
-                test_file, column_format
-            )
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_column_data(test_file, column_format)
         else:
             sentences_test: List[Sentence] = [
-                sentences_train[i]
-                for i in NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)
+                sentences_train[i] for i in NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)
             ]
             sentences_train = [x for x in sentences_train if x not in sentences_test]
 
         # read in dev file if exists, otherwise sample 10% of train data as dev dataset
         if dev_file is not None:
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_column_data(
-                dev_file, column_format
-            )
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_column_data(dev_file, column_format)
         else:
             sentences_dev: List[Sentence] = [
-                sentences_train[i]
-                for i in NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)
+                sentences_train[i] for i in NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)
             ]
             sentences_train = [x for x in sentences_train if x not in sentences_dev]
 
         if tag_to_biloes is not None:
             # convert tag scheme to iobes
             for sentence in sentences_train + sentences_test + sentences_dev:
-                sentence.convert_tag_scheme(
-                    tag_type=tag_to_biloes, target_scheme="iobes"
-                )
+                sentence.convert_tag_scheme(tag_type=tag_to_biloes, target_scheme="iobes")
 
-        return Corpus(
-            sentences_train, sentences_dev, sentences_test, name=data_folder.name
-        )
+        return Corpus(sentences_train, sentences_dev, sentences_test, name=data_folder.name)
 
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
-    def load_ud_corpus(
-        data_folder: Union[str, Path], train_file=None, test_file=None, dev_file=None
-    ) -> Corpus:
+    def load_ud_corpus(data_folder: Union[str, Path], train_file=None, test_file=None, dev_file=None) -> Corpus:
         """
         Helper function to get a Corpus from CoNLL-U column-formatted task data such as the UD corpora
 
@@ -393,9 +351,7 @@ class NLPTaskDataFetcher:
         sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(test_file)
         sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(dev_file)
 
-        return Corpus(
-            sentences_train, sentences_dev, sentences_test, name=data_folder.name
-        )
+        return Corpus(sentences_train, sentences_dev, sentences_test, name=data_folder.name)
 
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
@@ -448,27 +404,20 @@ class NLPTaskDataFetcher:
         log.info("Dev: {}".format(dev_file))
         log.info("Test: {}".format(test_file))
 
-        sentences_train: List[
-            Sentence
-        ] = NLPTaskDataFetcher.read_text_classification_file(
+        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
             train_file, tokenizer=tokenizer, max_tokens_per_doc=max_tokens_per_doc
         )
-        sentences_test: List[
-            Sentence
-        ] = NLPTaskDataFetcher.read_text_classification_file(
+        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
             test_file, tokenizer=tokenizer, max_tokens_per_doc=max_tokens_per_doc
         )
 
         if dev_file is not None:
-            sentences_dev: List[
-                Sentence
-            ] = NLPTaskDataFetcher.read_text_classification_file(
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
                 dev_file, tokenizer=tokenizer, max_tokens_per_doc=max_tokens_per_doc
             )
         else:
             sentences_dev: List[Sentence] = [
-                sentences_train[i]
-                for i in NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)
+                sentences_train[i] for i in NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)
             ]
             sentences_train = [x for x in sentences_train if x not in sentences_dev]
 
@@ -541,18 +490,10 @@ class NLPTaskDataFetcher:
         sentences: List[Sentence] = []
 
         try:
-            lines: List[str] = open(
-                str(path_to_column_file), encoding="utf-8"
-            ).read().strip().split("\n")
+            lines: List[str] = open(str(path_to_column_file), encoding="utf-8").read().strip().split("\n")
         except:
-            log.info(
-                'UTF-8 can\'t read: {} ... using "latin-1" instead.'.format(
-                    path_to_column_file
-                )
-            )
-            lines: List[str] = open(
-                str(path_to_column_file), encoding="latin1"
-            ).read().strip().split("\n")
+            log.info('UTF-8 can\'t read: {} ... using "latin-1" instead.'.format(path_to_column_file))
+            lines: List[str] = open(str(path_to_column_file), encoding="latin1").read().strip().split("\n")
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
         text_column: int = 0
@@ -592,15 +533,13 @@ class NLPTaskDataFetcher:
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
     def read_conll_ud(path_to_conll_file: Union[str, Path]) -> List[Sentence]:
         """
-       Reads a file in CoNLL-U format and produces a list of Sentence with full morphosyntactic annotation
-       :param path_to_conll_file: the path to the conll-u file
-       :return: list of sentences
-       """
+        Reads a file in CoNLL-U format and produces a list of Sentence with full morphosyntactic annotation
+        :param path_to_conll_file: the path to the conll-u file
+        :return: list of sentences
+        """
         sentences: List[Sentence] = []
 
-        lines: List[str] = open(
-            path_to_conll_file, encoding="utf-8"
-        ).read().strip().split("\n")
+        lines: List[str] = open(path_to_conll_file, encoding="utf-8").read().strip().split("\n")
 
         sentence: Sentence = Sentence()
         for line in lines:
@@ -655,13 +594,10 @@ class NLPTaskDataFetcher:
             conll_2000_path = "https://www.clips.uantwerpen.be/conll2000/chunking/"
             data_file = flair.cache_root / "datasets" / task.value / "train.txt"
             if not data_file.is_file():
-                cached_path(
-                    f"{conll_2000_path}train.txt.gz", Path("datasets") / task.value
-                )
-                cached_path(
-                    f"{conll_2000_path}test.txt.gz", Path("datasets") / task.value
-                )
-                import gzip, shutil
+                cached_path(f"{conll_2000_path}train.txt.gz", Path("datasets") / task.value)
+                cached_path(f"{conll_2000_path}test.txt.gz", Path("datasets") / task.value)
+                import gzip
+                import shutil
 
                 with gzip.open(
                     flair.cache_root / "datasets" / task.value / "train.txt.gz",
@@ -687,10 +623,9 @@ class NLPTaskDataFetcher:
             data_path = flair.cache_root / "datasets" / task.value
             data_file = data_path / "named_ent_eu.train"
             if not data_file.is_file():
-                cached_path(
-                    f"{ner_basque_path}/eiec_v1.0.tgz", Path("datasets") / task.value
-                )
-                import tarfile, shutil
+                cached_path(f"{ner_basque_path}/eiec_v1.0.tgz", Path("datasets") / task.value)
+                import shutil
+                import tarfile
 
                 with tarfile.open(
                     flair.cache_root / "datasets" / task.value / "eiec_v1.0.tgz",
@@ -705,9 +640,7 @@ class NLPTaskDataFetcher:
                         shutil.move(f"{data_path}/{corpus_file}", data_path)
 
         if task == NLPTask.IMDB:
-            imdb_acl_path = (
-                "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
-            )
+            imdb_acl_path = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
             data_path = flair.cache_root / "datasets" / task.value
             data_file = data_path / "train.txt"
             if not data_file.is_file():
@@ -715,10 +648,7 @@ class NLPTaskDataFetcher:
                 import tarfile
 
                 with tarfile.open(
-                    flair.cache_root
-                    / "datasets"
-                    / task.value
-                    / "aclImdb_v1.tar.gz",
+                    flair.cache_root / "datasets" / task.value / "aclImdb_v1.tar.gz",
                     "r:gz",
                 ) as f_in:
                     datasets = ["train", "test"]
@@ -728,24 +658,14 @@ class NLPTaskDataFetcher:
                         for dataset in datasets:
                             f_in.extractall(
                                 data_path,
-                                members=[
-                                    m
-                                    for m in f_in.getmembers()
-                                    if f"{dataset}/{label}" in m.name
-                                ],
+                                members=[m for m in f_in.getmembers() if f"{dataset}/{label}" in m.name],
                             )
                             with open(f"{data_path}/{dataset}.txt", "at") as f_p:
                                 current_path = data_path / "aclImdb" / dataset / label
                                 for file_name in current_path.iterdir():
-                                    if file_name.is_file() and file_name.name.endswith(
-                                        ".txt"
-                                    ):
+                                    if file_name.is_file() and file_name.name.endswith(".txt"):
                                         f_p.write(
-                                            f"__label__{label} "
-                                            + file_name.open(
-                                                "rt", encoding="utf-8"
-                                            ).read()
-                                            + "\n"
+                                            f"__label__{label} " + file_name.open("rt", encoding="utf-8").read() + "\n"
                                         )
 
         # Support both TREC-6 and TREC-50
@@ -764,17 +684,13 @@ class NLPTaskDataFetcher:
             data_file = data_path / new_filenames[0]
 
             if not data_file.is_file():
-                for original_filename, new_filename in zip(
-                    original_filenames, new_filenames
-                ):
+                for original_filename, new_filename in zip(original_filenames, new_filenames):
                     with open(
                         data_path / "original" / original_filename,
                         "rt",
                         encoding="latin1",
                     ) as open_fp:
-                        with open(
-                            data_path / new_filename, "wt", encoding="utf-8"
-                        ) as write_fp:
+                        with open(data_path / new_filename, "wt", encoding="utf-8") as write_fp:
                             for line in open_fp:
                                 line = line.rstrip()
                                 fields = line.split()
@@ -785,11 +701,7 @@ class NLPTaskDataFetcher:
                                 # TREC-6 : NUM:dist -> __label__NUM
                                 # TREC-50: NUM:dist -> __label__NUM:dist
                                 new_label = "__label__"
-                                new_label += (
-                                    old_label.split(":")[0]
-                                    if task.value == "trec-6"
-                                    else old_label
-                                )
+                                new_label += old_label.split(":")[0] if task.value == "trec-6" else old_label
 
                                 write_fp.write(f"{new_label} {question}\n")
 
@@ -797,14 +709,10 @@ class NLPTaskDataFetcher:
             wnut_path = "https://noisy-text.github.io/2017/files/"
             cached_path(f"{wnut_path}wnut17train.conll", Path("datasets") / task.value)
             cached_path(f"{wnut_path}emerging.dev.conll", Path("datasets") / task.value)
-            cached_path(
-                f"{wnut_path}emerging.test.annotated", Path("datasets") / task.value
-            )
+            cached_path(f"{wnut_path}emerging.test.annotated", Path("datasets") / task.value)
 
         # Wikiner NER task
-        wikiner_path = (
-            "https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/"
-        )
+        wikiner_path = "https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/"
         if task.value.startswith("wikiner"):
             lc = ""
             if task == NLPTask.WIKINER_ENGLISH:
@@ -826,33 +734,23 @@ class NLPTaskDataFetcher:
             if task == NLPTask.WIKINER_RUSSIAN:
                 lc = "ru"
 
-            data_file = (
-                flair.cache_root
-                / "datasets"
-                / task.value
-                / f"aij-wikiner-{lc}-wp3.train"
-            )
+            data_file = flair.cache_root / "datasets" / task.value / f"aij-wikiner-{lc}-wp3.train"
             if not data_file.is_file():
 
                 cached_path(
                     f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2",
                     Path("datasets") / task.value,
                 )
-                import bz2, shutil
+                import bz2
+                import shutil
 
                 # unpack and write out in CoNLL column-like format
                 bz_file = bz2.BZ2File(
-                    flair.cache_root
-                    / "datasets"
-                    / task.value
-                    / f"aij-wikiner-{lc}-wp3.bz2",
+                    flair.cache_root / "datasets" / task.value / f"aij-wikiner-{lc}-wp3.bz2",
                     "rb",
                 )
                 with bz_file as f, open(
-                    flair.cache_root
-                    / "datasets"
-                    / task.value
-                    / f"aij-wikiner-{lc}-wp3.train",
+                    flair.cache_root / "datasets" / task.value / f"aij-wikiner-{lc}-wp3.train",
                     "w",
                 ) as out:
                     for line in f:
@@ -1320,12 +1218,7 @@ class NLPTaskDataFetcher:
 
             for split in ["train", "dev", "test"]:
 
-                data_file = (
-                    flair.cache_root
-                    / "datasets"
-                    / task.value
-                    / f"{emotion}-{split}.txt"
-                )
+                data_file = flair.cache_root / "datasets" / task.value / f"{emotion}-{split}.txt"
 
                 if not data_file.is_file():
 
@@ -1343,9 +1236,7 @@ class NLPTaskDataFetcher:
                             next(f)
                             for line in f:
                                 fields = line.split("\t")
-                                out.write(
-                                    f"__label__{fields[3].rstrip()} {fields[1]}\n"
-                                )
+                                out.write(f"__label__{fields[3].rstrip()} {fields[1]}\n")
 
                     os.remove(path)
 
@@ -1375,7 +1266,5 @@ class NLPTaskDataFetcher:
             if not new_train_file.is_file():
                 with open(new_train_file, "wt") as f_out:
                     for train_filename in train_filenames:
-                        with open(
-                            data_path / "original" / train_filename, "rt"
-                        ) as f_in:
+                        with open(data_path / "original" / train_filename, "rt") as f_in:
                             f_out.write(f_in.read())

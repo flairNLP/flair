@@ -1,13 +1,13 @@
-from typing import Union, List
+from typing import List, Union
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Label, DataPoint, Sentence, DataPair
+from flair.data import Label, Sentence, TextPair
 
 
-class TextPairClassifier(flair.nn.DefaultClassifier):
+class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
     """
     Text Pair Classification Model for tasks such as Recognizing Textual Entailment, build upon TextClassifier.
     The model takes document embeddings and puts resulting text representation(s) into a linear layer to get the
@@ -17,11 +17,11 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
     """
 
     def __init__(
-            self,
-            document_embeddings: flair.embeddings.DocumentEmbeddings,
-            label_type: str,
-            embed_separately: bool = False,
-            **classifierargs,
+        self,
+        document_embeddings: flair.embeddings.DocumentEmbeddings,
+        label_type: str,
+        embed_separately: bool = False,
+        **classifierargs,
     ):
         """
         Initializes a TextClassifier
@@ -45,7 +45,8 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
         # since we concatenate the embeddings of the two DataPoints in the DataPairs
         if self.embed_separately:
             self.decoder = torch.nn.Linear(
-                2 * self.document_embeddings.embedding_length, len(self.label_dictionary)
+                2 * self.document_embeddings.embedding_length,
+                len(self.label_dictionary),
             ).to(flair.device)
 
             torch.nn.init.xavier_uniform_(self.decoder.weight)
@@ -55,12 +56,15 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
             self.decoder = torch.nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
 
             # set separator to concatenate two sentences
-            self.sep = ' '
-            if isinstance(self.document_embeddings, flair.embeddings.document.TransformerDocumentEmbeddings):
+            self.sep = " "
+            if isinstance(
+                self.document_embeddings,
+                flair.embeddings.document.TransformerDocumentEmbeddings,
+            ):
                 if self.document_embeddings.tokenizer.sep_token:
-                    self.sep = ' ' + str(self.document_embeddings.tokenizer.sep_token) + ' '
+                    self.sep = " " + str(self.document_embeddings.tokenizer.sep_token) + " "
                 else:
-                    self.sep = ' [SEP] '
+                    self.sep = " [SEP] "
 
         torch.nn.init.xavier_uniform_(self.decoder.weight)
 
@@ -71,12 +75,13 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
     def label_type(self):
         return self._label_type
 
-    def forward_pass(self,
-                     datapairs: Union[List[DataPoint], DataPoint],
-                     return_label_candidates: bool = False,
-                     ):
+    def forward_pass(
+        self,
+        datapairs: Union[List[TextPair], TextPair],
+        return_label_candidates: bool = False,
+    ):
 
-        if isinstance(datapairs, DataPair):
+        if not isinstance(datapairs, list):
             datapairs = [datapairs]
 
         embedding_names = self.document_embeddings.get_names()
@@ -89,7 +94,13 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
             self.document_embeddings.embed(second_elements)
 
             text_embedding_list = [
-                torch.cat([a.get_embedding(embedding_names), b.get_embedding(embedding_names)], 0).unsqueeze(0)
+                torch.cat(
+                    [
+                        a.get_embedding(embedding_names),
+                        b.get_embedding(embedding_names),
+                    ],
+                    0,
+                ).unsqueeze(0)
                 for (a, b) in zip(first_elements, second_elements)
             ]
 
@@ -97,9 +108,10 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
             concatenated_sentences = [
                 Sentence(
                     pair.first.to_tokenized_string() + self.sep + pair.second.to_tokenized_string(),
-                    use_tokenizer=False
+                    use_tokenizer=False,
                 )
-                for pair in datapairs]
+                for pair in datapairs
+            ]
 
             self.document_embeddings.embed(concatenated_sentences)
 
@@ -116,14 +128,11 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
         for pair in datapairs:
             labels.append([label.value for label in pair.get_labels(self.label_type)])
 
-        # minimal return is scores and labels
-        return_tuple = (scores, labels)
-
         if return_label_candidates:
-            label_candidates = [Label(value=None) for pair in datapairs]
-            return_tuple += (datapairs, label_candidates)
+            label_candidates = [Label(value=None, score=0.0) for _ in datapairs]
+            return scores, labels, datapairs, label_candidates
 
-        return return_tuple
+        return scores, labels
 
     def _get_state_dict(self):
         model_state = {
@@ -133,7 +142,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
             "label_type": self.label_type,
             "multi_label": self.multi_label,
             "multi_label_threshold": self.multi_label_threshold,
-            "loss_weights": self.loss_weights,
+            "weight_dict": self.weight_dict,
             "embed_separately": self.embed_separately,
         }
         return model_state
@@ -146,8 +155,10 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
             multi_label=state["multi_label"],
-            multi_label_threshold=0.5 if "multi_label_threshold" not in state.keys() else state["multi_label_threshold"],
-            loss_weights=state["loss_weights"],
+            multi_label_threshold=0.5
+            if "multi_label_threshold" not in state.keys()
+            else state["multi_label_threshold"],
+            loss_weights=state["weight_dict"],
             embed_separately=state["embed_separately"],
         )
         model.load_state_dict(state["state_dict"])
