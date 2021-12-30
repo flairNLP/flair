@@ -13,7 +13,7 @@ from torch.optim import Optimizer
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import DataPoint, Dictionary, Sentence, _iter_dataset, DT
+from flair.data import DT, Dictionary, Sentence, _iter_dataset
 
 
 class Result(object):

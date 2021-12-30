@@ -11,7 +11,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Label, Sentence, SpanLabel
+from flair.data import Dictionary, Label, Sentence, SpanLabel
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
@@ -232,7 +232,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
-            return torch.tensor(0., dtype=torch.float, device=flair.device, requires_grad=True), 0
+            return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
         # forward pass to get scores
         scores, gold_labels = self.forward(sentences)  # type: ignore
@@ -447,7 +447,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 if self.use_crf:
                     predictions, all_tags = self.viterbi_decoder.decode(features, return_probabilities_for_all_classes)
                 else:
-                    predictions, all_tags = self._standard_inference(features, batch, return_probabilities_for_all_classes)
+                    predictions, all_tags = self._standard_inference(
+                        features, batch, return_probabilities_for_all_classes
+                    )
 
                 for sentence, labels in zip(batch, predictions):
                     for token, label in zip(sentence.tokens, labels):
@@ -499,17 +501,20 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         :param scores: Scores for current sentence.
         """
         scores = scores.numpy()
-        prob_all_tags = [[Label(self.tag_dictionary.get_item_for_index(score_id), score)
-                         for score_id, score in enumerate(score_dist)]
-                         for score_dist in scores]
+        prob_all_tags = [
+            [
+                Label(self.tag_dictionary.get_item_for_index(score_id), score)
+                for score_id, score in enumerate(score_dist)
+            ]
+            for score_dist in scores
+        ]
 
         prob_tags_per_sentence = []
         previous = 0
         for length in lengths:
-            prob_tags_per_sentence.append(prob_all_tags[previous:previous+length])
+            prob_tags_per_sentence.append(prob_all_tags[previous : previous + length])
             previous = length
         return prob_tags_per_sentence
-
 
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""
@@ -852,15 +857,15 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     library_version=flair.__version__,
                     cache_dir=flair.cache_root / "models" / model_folder,
                 )
-            except HTTPError as e:
+            except HTTPError:
                 # output information
                 log.error("-" * 80)
                 log.error(
                     f"ACHTUNG: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
                 )
                 # log.error(f" - Error message: {e}")
-                log.error(f" -> Please check https://huggingface.co/models?filter=flair for all available models.")
-                log.error(f" -> Alternatively, point to a model file on your local drive.")
+                log.error(" -> Please check https://huggingface.co/models?filter=flair for all available models.")
+                log.error(" -> Alternatively, point to a model file on your local drive.")
                 log.error("-" * 80)
                 Path(flair.cache_root / "models" / model_folder).rmdir()  # remove folder again if not valid
 

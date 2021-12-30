@@ -59,7 +59,7 @@ class ViterbiLoss(torch.nn.Module):
 
         for t in range(max(lengths)):
             batch_size_t = sum(
-                [l > t for l in lengths]
+                [length > t for length in lengths]
             )  # since batch is ordered, we can save computation time by reducing our effective batch_size
 
             if t == 0:
@@ -165,8 +165,8 @@ class ViterbiDecoder:
         )
 
         for t in range(seq_len):
-            batch_size_t = sum([l > t for l in lengths.values])  # effective batch size (sans pads) at this timestep
-            terminates = [i for i, l in enumerate(lengths.values) if l == t + 1]
+            batch_size_t = sum([length > t for length in lengths])  # effective batch size (sans pads) at this timestep
+            terminates = [i for i, length in enumerate(lengths) if length == t + 1]
 
             if t == 0:
                 scores_upto_t[:batch_size_t, t] = features[:batch_size_t, t, :, self.start_tag]
@@ -208,7 +208,7 @@ class ViterbiDecoder:
         confidences = torch.max(scores, dim=2)
 
         tags = []
-        for tag_seq, tag_seq_conf, length_seq in zip(decoded, confidences.values, lengths.values):
+        for tag_seq, tag_seq_conf, length_seq in zip(decoded, confidences.values, lengths):
             tags.append(
                 [
                     Label(self.tag_dictionary.get_item_for_index(tag), conf.item())
@@ -230,7 +230,13 @@ class ViterbiDecoder:
         prob_tags_per_sentence = []
         for scores_sentence, length in zip(scores, lengths):
             scores_sentence = scores_sentence[:length]
-            prob_tags_per_sentence.append([[Label(self.tag_dictionary.get_item_for_index(score_id), score)
-                                       for score_id, score in enumerate(score_dist)]
-                                       for score_dist in scores_sentence])
+            prob_tags_per_sentence.append(
+                [
+                    [
+                        Label(self.tag_dictionary.get_item_for_index(score_id), score)
+                        for score_id, score in enumerate(score_dist)
+                    ]
+                    for score_dist in scores_sentence
+                ]
+            )
         return prob_tags_per_sentence
