@@ -6,7 +6,7 @@ import torch
 from flair.datasets import DataLoader
 from flair.embeddings import DocumentEmbeddings
 from flair.models.clustering.clustering import Clustering
-from flair.models.clustering.distance import distance
+from flair.models.clustering.distance.distance import get_cosine_distance
 
 
 class KMeans(Clustering):
@@ -62,17 +62,17 @@ class KMeans(Clustering):
         for i in range(self.k):
             cluster.append([])
 
-        for idx, item in enumerate(vectors):
+        for idx, vector in enumerate(vectors):
             cluster_index = -1
-            maxi = 0
+            min_distance = 1000
 
             for i in range(self.k):
-                distance = distance.get_cosine_distance(item, self.k_points[i])
-                if distance > maxi and distance != 1:
-                    maxi = distance
+                distance_to_centroid = get_cosine_distance(vector, self.k_points[i])
+                if distance_to_centroid < min_distance:
+                    min_distance = distance_to_centroid
                     cluster_index = i
 
-            cluster[cluster_index].append(vectors[idx])
+            cluster[cluster_index].append(vector)
             self.predict[idx] = cluster_index
 
         return cluster
@@ -82,3 +82,5 @@ class KMeans(Clustering):
         for idx, cluster in enumerate(clusters):
             if cluster.__len__() != 0:
                 self.k_points[idx] = 1 / cluster.__len__() * sum(cluster)
+            else:
+                print("No element found in Cluster: ERROR")
