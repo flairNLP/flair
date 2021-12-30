@@ -363,6 +363,7 @@ class ColumnDataset(FlairDataset):
         if last_token is None:
             start = 0
         else:
+            assert last_token.end_pos is not None
             start = last_token.end_pos
             if last_token.whitespace_after:
                 start += 1
