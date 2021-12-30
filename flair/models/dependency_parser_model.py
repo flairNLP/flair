@@ -272,8 +272,8 @@ class DependencyParser(flair.nn.Model):
         lines: List[str] = ["token gold_tag gold_arc predicted_tag predicted_arc\n"]
 
         average_over = 0
-        eval_loss_arc = torch.zeros(1, device=flair.device)
-        eval_loss_rel = torch.zeros(1, device=flair.device)
+        eval_loss_arc = 0.
+        eval_loss_rel = 0.
 
         y_true = []
         y_pred = []
@@ -289,8 +289,8 @@ class DependencyParser(flair.nn.Model):
 
             parsing_metric(arc_prediction, relation_prediction, batch, gold_label_type)
 
-            eval_loss_arc += loss_arc
-            eval_loss_rel += loss_rel
+            eval_loss_arc += loss_arc.item()
+            eval_loss_rel += loss_rel.item()
 
             for (sentence, arcs, sent_tags) in zip(batch, arc_prediction, relation_prediction):
                 for (token, arc, tag) in zip(sentence.tokens, arcs, sent_tags):
@@ -357,7 +357,7 @@ class DependencyParser(flair.nn.Model):
             log_header=log_header,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            loss=(eval_loss_rel + eval_loss_arc).item(),
+            loss=(eval_loss_rel + eval_loss_arc),
         )
         return result
 
