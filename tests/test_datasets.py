@@ -79,6 +79,9 @@ def test_load_sequence_labeling_whitespace_after(tasks_base_path):
 
     assert corpus.train[0].to_tokenized_string() == "It is a German - owned firm ."
     assert corpus.train[0].to_plain_string() == "It is a German-owned firm."
+    for token in corpus.train[0]:
+        assert token.start_pos is not None
+        assert token.end_pos is not None
 
 
 def test_load_column_corpus_options(tasks_base_path):
