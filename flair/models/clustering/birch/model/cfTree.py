@@ -20,6 +20,7 @@ class CfTree:
             cf_node.absorb_cf(cf)
             self.update_path_simple(leaf)
             return
+
         if leaf.can_add_new_cf():
             leaf.add_cf(cf)
             self.update_path_simple(leaf)

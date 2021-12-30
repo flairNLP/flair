@@ -14,7 +14,7 @@ class EM_Clustering(Clustering):
         self.lls = []
         self.k = k
         self.embeddings = embeddings
-        self.maxIteration = 10
+        self.max_iteration = 10
 
     def cluster(self, vectors: list, batch_size: int = 64, rtol=1e-3):
 
@@ -32,29 +32,25 @@ class EM_Clustering(Clustering):
         data = torch.stack([i.embedding for i in vectors])
         self.pi = torch.empty(self.k, device="cuda").fill_(1.0 / self.k).log()
         self.z = torch.empty((self.datapoints, self.k), device="cuda").fill_(0)
+        prev_lls = None
 
         for i in range(self.k):
             self.models.append(MultivariateNormal(means[i], variance))
 
-        for i in range(0, self.maxIteration):
+        for i in range(0, self.max_iteration):
             self.e_step(data)
             self.m_step(data)
+            current_lls = self.lower_bound(data, self.z)
 
-            self.lls.append(self.lower_bound(data, self.z))
+            if prev_lls and torch.abs((current_lls - prev_lls) / prev_lls) < rtol:
+                print("Finished the EM Clustering with: " + str(i) + " iterations. ")
+                return self.z
 
-            if (
-                self.lls.__len__() >= 2
-                and torch.abs(
-                    (self.lls[self.lls.__len__() - 1] - self.lls[self.lls.__len__() - 2])
-                    / self.lls[self.lls.__len__() - 2]
-                )
-                < rtol
-            ):
-                print("Break")
-                break
+            prev_lls = current_lls
+            self.lls.append(current_lls)
 
-        print(self.lls)
-        return []
+        print("Finished the EM Clustering with maxItertation: " + str(self.max_iteration))
+        return self.z
 
     def e_step(self, data: Tensor):
         for idx, model in enumerate(self.models):
@@ -85,5 +81,5 @@ class EM_Clustering(Clustering):
             ll[:, c] = self.models[c].log_prob(data)
         return torch.sum(q * (ll + torch.log(self.pi) - torch.log(q)))
 
-    def get_diskret_result(self):
+    def get_discrete_result(self):
         return torch.max(self.z, dim=1).indices.cpu().detach().numpy()

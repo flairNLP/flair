@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 from flair.models.clustering.birch import distance_max, threshold
-from flair.models.clustering.distance import distance
+from flair.models.clustering.distance.distance import get_cosine_distance
 
 
 class ClusteringFeature:
@@ -39,11 +39,11 @@ class ClusteringFeature:
         if self.LS is None:
             return torch.empty(1, device="cuda").fill_(distance_max - 100)
         else:
-            return distance.get_cosine_distance(self.get_center(), vector.get_center())
+            return get_cosine_distance(self.get_center(), vector.get_center())
 
     def can_absorb_cf(self, cf) -> bool:
         if self.LS is None:
             return True
 
-        distance = distance.get_cosine_distance(self.get_center(), cf.get_center())
+        distance = get_cosine_distance(self.get_center(), cf.get_center())
         return distance <= threshold

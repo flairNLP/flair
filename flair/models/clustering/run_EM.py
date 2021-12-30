@@ -22,6 +22,6 @@ if __name__ == "__main__":
     em = EM_Clustering(2, embeddings)
     em.cluster(sentences, batch_size=1)
 
-    predict = em.get_diskret_result()
+    predict = em.get_discrete_result()
 
     evaluation.evaluate(labels, predict)

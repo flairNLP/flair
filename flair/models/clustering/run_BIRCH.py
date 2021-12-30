@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     embedding = SentenceTransformerDocumentEmbeddings("bert-base-nli-mean-tokens")
 
-    birch = Birch(0.005, embedding, 3, 2)
+    birch = Birch(0.005, embedding, 3, 2, 5)
     result = birch.cluster(sentences)
 
     evaluation.evaluate(labels, birch.predict)
