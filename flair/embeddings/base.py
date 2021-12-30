@@ -238,9 +238,6 @@ class TransformerEmbedding(Embeddings[Sentence]):
         if not self.token_embedding and not self.document_embedding:
             raise ValueError("either 'is_token_embedding' or 'is_document_embedding' needs to be set.")
 
-        if self.token_embedding and self.document_embedding:
-            log.info("Using TransformerEmbedding for both token embeddings and document embeddings is experimental")
-
         if self.document_embedding and cls_pooling not in ["cls", "max", "mean"]:
             raise ValueError(f"Document Pooling operation `{cls_pooling}` is not defined for TransformerEmbedding")
 
@@ -268,7 +265,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             hidden_states = self.model(torch.tensor([1], device=flair.device).unsqueeze(0))[-1]
             self.layer_indexes = list(range(len(hidden_states)))
         else:
-            self.layer_indexes = list(map(int,layers.split(",")))
+            self.layer_indexes = list(map(int, layers.split(",")))
 
         self.cls_pooling = cls_pooling
         self.subtoken_pooling = subtoken_pooling
@@ -526,6 +523,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
     def _gather_tokenized_strings(self, sentences: List[Sentence]):
         tokenized_sentences = []
         all_token_subtoken_lengths = []
+        subtoken_lengths = []
         for sentence in sentences:
 
             # subtokenize the sentence
@@ -548,10 +546,11 @@ class TransformerEmbedding(Embeddings[Sentence]):
                 all_token_subtoken_lengths.append(
                     self._reconstruct_tokens_from_subtokens(sentence, subtokenized_sentence)
                 )
+            subtoken_lengths.append(len(subtokenized_sentence))
 
             # remember tokenized sentences and their subtokenization
             tokenized_sentences.append(tokenized_string)
-        return tokenized_sentences, all_token_subtoken_lengths
+        return tokenized_sentences, all_token_subtoken_lengths, subtoken_lengths
 
     def _build_transformer_model_inputs(self, batch_encoding, tokenized_sentences, sentences):
         model_kwargs = {}
@@ -672,7 +671,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
                 token.set_embedding(self.name, final_embedding)
 
     def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
-        tokenized_sentences, all_token_subtoken_lengths = self._gather_tokenized_strings(sentences)
+        tokenized_sentences, all_token_subtoken_lengths, subtoken_lengths = self._gather_tokenized_strings(sentences)
 
         # encode inputs
         batch_encoding = self.tokenizer(
@@ -714,8 +713,8 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
             # remove padding tokens
             sentence_hidden_states = [
-                sentence_hidden_state[:, : len(subtokens) + 1, :]
-                for (subtokens, sentence_hidden_state) in zip(tokenized_sentences, sentence_hidden_states)
+                sentence_hidden_state[:, : subtoken_length + 1, :]
+                for (subtoken_length, sentence_hidden_state) in zip(subtoken_lengths, sentence_hidden_states)
             ]
 
             if self.document_embedding:
