@@ -18,19 +18,20 @@ from flair.visual.tree_printer import tree_printer
 
 
 class DependencyParser(flair.nn.Model):
-    def __init__(self,
-                 token_embeddings: TokenEmbeddings,
-                 relations_dictionary: Dictionary,
-                 tag_type: str = 'dependency',
-                 use_rnn: Union[bool, str] = True,
-                 lstm_hidden_size: int = 400,
-                 mlp_arc_units: int = 500,
-                 mlp_rel_units: int = 100,
-                 lstm_layers: int = 3,
-                 mlp_dropout: float = 0.33,
-                 lstm_dropout: float = 0.33,
-                 word_dropout: float = 0.05,
-                 ):
+    def __init__(
+        self,
+        token_embeddings: TokenEmbeddings,
+        relations_dictionary: Dictionary,
+        tag_type: str = "dependency",
+        use_rnn: Union[bool, str] = True,
+        lstm_hidden_size: int = 400,
+        mlp_arc_units: int = 500,
+        mlp_rel_units: int = 100,
+        lstm_layers: int = 3,
+        mlp_dropout: float = 0.33,
+        lstm_dropout: float = 0.33,
+        word_dropout: float = 0.05,
+    ):
         """
         Initializes a DependencyParser
         The model is based on biaffine dependency parser :cite: "Dozat T. & Manning C. Deep biaffine attention for neural dependency parsing."
@@ -77,41 +78,31 @@ class DependencyParser(flair.nn.Model):
             self.lstm_input_dim: int = self.token_embeddings.embedding_length
             mlp_input_dim = self.lstm_hidden_size * 2
 
-            if use_rnn == 'Variational':
-                self.lstm = BiLSTM(input_size=self.lstm_input_dim,
-                                   hidden_size=self.lstm_hidden_size,
-                                   num_layers=self.lstm_layers,
-                                   dropout=self.lstm_dropout)
+            if use_rnn == "Variational":
+                self.lstm = BiLSTM(
+                    input_size=self.lstm_input_dim,
+                    hidden_size=self.lstm_hidden_size,
+                    num_layers=self.lstm_layers,
+                    dropout=self.lstm_dropout,
+                )
             else:
-                self.lstm = torch.nn.LSTM(self.lstm_input_dim,
-                                          self.lstm_hidden_size,
-                                          num_layers=self.lstm_layers,
-                                          dropout=lstm_dropout,
-                                          bidirectional=True,
-                                          batch_first=True,
-                                          )
+                self.lstm = torch.nn.LSTM(
+                    self.lstm_input_dim,
+                    self.lstm_hidden_size,
+                    num_layers=self.lstm_layers,
+                    dropout=lstm_dropout,
+                    bidirectional=True,
+                    batch_first=True,
+                )
 
-        self.mlp_arc_h = MLP(n_in=mlp_input_dim,
-                             n_hidden=self.mlp_arc_units,
-                             dropout=self.mlp_dropout)
-        self.mlp_arc_d = MLP(n_in=mlp_input_dim,
-                             n_hidden=self.mlp_arc_units,
-                             dropout=self.mlp_dropout)
-        self.mlp_rel_h = MLP(n_in=mlp_input_dim,
-                             n_hidden=self.mlp_rel_units,
-                             dropout=self.mlp_dropout)
-        self.mlp_rel_d = MLP(n_in=mlp_input_dim,
-                             n_hidden=self.mlp_rel_units,
-                             dropout=self.mlp_dropout)
+        self.mlp_arc_h = MLP(n_in=mlp_input_dim, n_hidden=self.mlp_arc_units, dropout=self.mlp_dropout)
+        self.mlp_arc_d = MLP(n_in=mlp_input_dim, n_hidden=self.mlp_arc_units, dropout=self.mlp_dropout)
+        self.mlp_rel_h = MLP(n_in=mlp_input_dim, n_hidden=self.mlp_rel_units, dropout=self.mlp_dropout)
+        self.mlp_rel_d = MLP(n_in=mlp_input_dim, n_hidden=self.mlp_rel_units, dropout=self.mlp_dropout)
 
-        self.arc_attn = Biaffine(n_in=self.mlp_arc_units,
-                                 bias_x=True,
-                                 bias_y=False)
+        self.arc_attn = Biaffine(n_in=self.mlp_arc_units, bias_x=True, bias_y=False)
 
-        self.rel_attn = Biaffine(n_in=self.mlp_rel_units,
-                                 n_out=len(relations_dictionary),
-                                 bias_x=True,
-                                 bias_y=True)
+        self.rel_attn = Biaffine(n_in=self.mlp_rel_units, n_out=len(relations_dictionary), bias_x=True, bias_y=True)
 
         self.to(flair.device)
 
@@ -272,8 +263,8 @@ class DependencyParser(flair.nn.Model):
         lines: List[str] = ["token gold_tag gold_arc predicted_tag predicted_arc\n"]
 
         average_over = 0
-        eval_loss_arc = 0.
-        eval_loss_rel = 0.
+        eval_loss_arc = 0.0
+        eval_loss_rel = 0.0
 
         y_true = []
         y_pred = []
@@ -397,16 +388,17 @@ class DependencyParser(flair.nn.Model):
     @staticmethod
     def _init_model_with_state_dict(state):
 
-        model = DependencyParser(token_embeddings=state["token_embeddings"],
-                                 relations_dictionary=state["relations_dictionary"],
-                                 use_rnn=state["use_rnn"],
-                                 lstm_hidden_size=state["lstm_hidden_size"],
-                                 mlp_arc_units=state["mlp_arc_units"],
-                                 mlp_rel_units=state["mlp_rel_units"],
-                                 lstm_layers=state["lstm_layers"],
-                                 mlp_dropout=state["mlp_dropout"],
-                                 lstm_dropout=state["lstm_dropout"],
-                                 )
+        model = DependencyParser(
+            token_embeddings=state["token_embeddings"],
+            relations_dictionary=state["relations_dictionary"],
+            use_rnn=state["use_rnn"],
+            lstm_hidden_size=state["lstm_hidden_size"],
+            mlp_arc_units=state["mlp_arc_units"],
+            mlp_rel_units=state["mlp_rel_units"],
+            lstm_layers=state["lstm_layers"],
+            mlp_dropout=state["mlp_dropout"],
+            lstm_dropout=state["lstm_dropout"],
+        )
         model.load_state_dict(state["state_dict"])
         return model
 
