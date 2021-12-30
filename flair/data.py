@@ -3,6 +3,7 @@ import re
 import typing
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
+from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Union, cast
@@ -894,6 +895,41 @@ class Sentence(DataPoint):
         # clear token embeddings
         for token in self:
             token.clear_embeddings(embedding_names)
+
+    @lru_cache(maxsize=1)  # cache last context, as training repeats calls
+    def left_context(self, context_length: int, respect_document_boundaries: bool = True):
+        sentence = self
+        left_context: List[str] = []
+        while True:
+            sentence = sentence.previous_sentence()
+            if sentence is None:
+                break
+
+            if respect_document_boundaries and sentence.is_document_boundary:
+                break
+
+            left_context = [t.text for t in sentence.tokens] + left_context
+            if len(left_context) > context_length:
+                left_context = left_context[-context_length:]
+                break
+        return left_context
+
+    @lru_cache(maxsize=1)  # cache last context, as training repeats calls
+    def right_context(self, context_length: int, respect_document_boundaries: bool = True):
+        sentence = self
+        right_context: List[str] = []
+        while True:
+            sentence = sentence.next_sentence()
+            if sentence is None:
+                break
+            if respect_document_boundaries and sentence.is_document_boundary:
+                break
+
+            right_context += [t.text for t in sentence.tokens]
+            if len(right_context) > context_length:
+                right_context = right_context[:context_length]
+                break
+        return right_context
 
     def to_tagged_string(self, main_tag=None) -> str:
         list = []
