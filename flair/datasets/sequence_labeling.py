@@ -483,7 +483,7 @@ class CONLL_03(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         tag_to_bioes: str = "ner",
-        column_format={0: "text", 3: "ner"},
+        column_format={0: "text", 1: 'pos', 3: "ner"},
         in_memory: bool = True,
         **corpusargs,
     ):

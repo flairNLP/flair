@@ -11,7 +11,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Label, Sentence, SpanLabel
+from flair.data import DataPoint, Dictionary, Label, Sentence, SpanLabel, Span
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
@@ -95,6 +95,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                         self.label_dictionary.add_item("I-" + label)
             else:
                 self.label_dictionary = tag_dictionary
+        self.predict_spans = True
 
         self.tagset_size = len(self.label_dictionary)
         log.info(f"SequenceTagger internal label dictionary: {self.label_dictionary}")
@@ -382,21 +383,40 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         Extracts gold labels from each sentence.
         :param sentences: List of sentences in batch
         """
-        for sentence in sentences:
-            for label in sentence.get_labels(self.label_type):
-                if len(label.span) == 1:
-                    label.span[0].set_label(self.label_type, "S-" + label.value)
-                else:
-                    label.span[0].set_label(self.label_type, "B-" + label.value)
-                    label.span[-1].set_label(self.label_type, "E-" + label.value)
-                    for token in label.span[1:-1]:
-                        token.set_label(self.label_type, "I-" + label.value)
+        # spans need to be encoded as token-level predictions
+        if self.predict_spans:
+            for sentence in sentences:
+                sentence_labels = ['O'] * len(sentence)
+                for label in sentence.get_labels(self.label_type):
+                    print(label.span)
+                    print(label.span.start_pos)
+                    if len(label.span) == 1:
+                        sentence_labels[label.span.start_pos] = "S-" + label.value
+                    else:
+                        sentence_labels[label.span.start_pos] = "B-" + label.value
+                        sentence_labels[label.span.end_pos] = "E-" + label.value
+                        for i in range(label.span.start_pos, label.span.end_pos):
+                            sentence_labels[i] = "I-" + label.value
+
+                print(sentence_labels)
+
+            for sentence in sentences:
+                for label in sentence.get_labels(self.label_type):
+                    if len(label.span) == 1:
+                        label.span[0].set_label(self.label_type, "S-" + label.value)
+                    else:
+                        label.span[0].set_label(self.label_type, "B-" + label.value)
+                        label.span[-1].set_label(self.label_type, "E-" + label.value)
+                        for token in label.span[1:-1]:
+                            token.set_label(self.label_type, "I-" + label.value)
 
         labels = [[token.get_tag(self.label_type, "O").value] for sentence in sentences for token in sentence]
-
-        for sentence in sentences:
-            for token in sentence:
-                token.remove_labels(self.label_type)
+        print(labels)
+        asd
+        if self.predict_spans:
+            for sentence in sentences:
+                for token in sentence:
+                    token.remove_labels(self.label_type)
 
         return labels
 
@@ -497,10 +517,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                         token.add_tags_proba_dist(label_name, token_all_tags)
 
                 # convert predictions to spans
-                for sentence in batch:
-                    sentence._convert_span_labels(label_type=label_name)
-                    for token in sentence:
-                        token.remove_labels(label_name)
+                if self.predict_spans:
+                    for sentence in batch:
+                        sentence._convert_span_labels(label_type=label_name)
+                        for token in sentence:
+                            token.remove_labels(label_name)
 
             store_embeddings(sentences, storage_mode=embedding_storage_mode)
 

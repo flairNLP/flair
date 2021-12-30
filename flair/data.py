@@ -291,10 +291,10 @@ class RelationLabel(Label):
 
     def __eq__(self, other):
         return (
-            self.value == other.value
-            and self.score == other.score
-            and self.head.id_text == other.head.id_text
-            and self.tail.id_text == other.tail.id_text
+                self.value == other.value
+                and self.score == other.score
+                and self.head.id_text == other.head.id_text
+                and self.tail.id_text == other.tail.id_text
         )
 
     @property
@@ -404,12 +404,12 @@ class Token(DataPoint):
     """
 
     def __init__(
-        self,
-        text: str,
-        idx: int = None,
-        head_id: int = None,
-        whitespace_after: bool = True,
-        start_position: int = None,
+            self,
+            text: str,
+            idx: int = None,
+            head_id: int = None,
+            whitespace_after: bool = True,
+            start_position: int = None,
     ):
         super().__init__()
 
@@ -488,16 +488,17 @@ class Span(DataPoint):
     """
 
     def __init__(self, tokens: List[Token]):
-
         super().__init__()
 
         self.tokens = tokens
-        self.start_pos = None
-        self.end_pos = None
 
-        if tokens:
-            self.start_pos = tokens[0].start_position
-            self.end_pos = tokens[len(tokens) - 1].end_position
+    @property
+    def start_pos(self) -> int:
+        return self.tokens[0].start_position
+
+    @property
+    def end_pos(self) -> int:
+        return self.tokens[1].end_position
 
     @property
     def text(self) -> str:
@@ -611,11 +612,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-        self,
-        text: Union[str, List[str]] = [],
-        use_tokenizer: Union[bool, Tokenizer, Callable] = True,
-        language_code: str = None,
-        start_position: int = None,
+            self,
+            text: Union[str, List[str]] = [],
+            use_tokenizer: Union[bool, Tokenizer, Callable] = True,
+            language_code: str = None,
+            start_position: int = None,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -1152,10 +1153,23 @@ class Sentence(DataPoint):
 
     def get_labels(self, label_type: str = None):
 
+        # if no label if specified, return all labels
         if label_type is None:
             return self.labels
 
-        return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
+        # if the label type exists in the Sentence, return it
+        if label_type in self.annotation_layers:
+            return self.annotation_layers[label_type]
+
+        # otherwise check if the label exists on the token-level
+        # in this case, create span-labels and return those
+        if label_type in self[0].annotation_layers:
+            return [SpanLabel(Span([token]), token.get_tag(label_type).value, token.get_tag(label_type).score)
+                    for token in self]
+
+        # return empty list if none of the ebove
+        return []
+
 
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):
@@ -1236,12 +1250,12 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-        self,
-        train: Dataset = None,
-        dev: Dataset = None,
-        test: Dataset = None,
-        name: str = "corpus",
-        sample_missing_splits: Union[bool, str] = True,
+            self,
+            train: Dataset = None,
+            dev: Dataset = None,
+            test: Dataset = None,
+            name: str = "corpus",
+            sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1280,11 +1294,11 @@ class Corpus:
         return self._test
 
     def downsample(
-        self,
-        percentage: float = 0.1,
-        downsample_train=True,
-        downsample_dev=True,
-        downsample_test=True,
+            self,
+            percentage: float = 0.1,
+            downsample_train=True,
+            downsample_dev=True,
+            downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:
@@ -1492,11 +1506,11 @@ class Corpus:
         for sentence in Tqdm.tqdm(_iter_dataset(data)):
 
             # check for labels of words
-            if isinstance(sentence, Sentence):
-                for token in sentence.tokens:
-                    all_label_types.update(token.annotation_layers.keys())
-                    for label in token.get_labels(label_type):
-                        label_occurrence[label.value] += 1
+            # if isinstance(sentence, Sentence):
+            #     for token in sentence.tokens:
+            #         all_label_types.update(token.annotation_layers.keys())
+            #         for label in token.get_labels(label_type):
+            #             label_occurrence[label.value] += 1
 
             # check if sentence itself has labels
             labels = sentence.get_labels(label_type)
