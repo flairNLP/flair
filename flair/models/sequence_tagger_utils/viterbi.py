@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import torch
 import torch.nn
@@ -26,7 +28,7 @@ class ViterbiLoss(torch.nn.Module):
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
-    def forward(self, features_tuple: tuple, targets: torch.tensor) -> torch.tensor:
+    def forward(self, features_tuple: tuple, targets: torch.Tensor) -> torch.Tensor:
         """
         Forward propagation of Viterbi Loss
 
@@ -46,18 +48,18 @@ class ViterbiLoss(torch.nn.Module):
         # scores_at_targets[range(features.shape[0]), lengths.values -1]
         # Squeeze crf scores matrices in 1-dim shape and gather scores at targets by matrix indices
         scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets_matrix_indices)
-        scores_at_targets = pack_padded_sequence(scores_at_targets, lengths.values, batch_first=True)[0]
+        scores_at_targets = pack_padded_sequence(scores_at_targets, lengths, batch_first=True)[0]
         transitions_to_stop = transitions[
             np.repeat(self.stop_tag, features.shape[0]),
-            [target[length - 1] for target, length in zip(targets, lengths.values)],
+            [target[length - 1] for target, length in zip(targets, lengths)],
         ]
         gold_score = scores_at_targets.sum() + transitions_to_stop.sum()
 
         scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device)
 
-        for t in range(max(lengths.values)):
+        for t in range(max(lengths)):
             batch_size_t = sum(
-                [l > t for l in lengths.values]
+                [l > t for l in lengths]
             )  # since batch is ordered, we can save computation time by reducing our effective batch_size
 
             if t == 0:
@@ -91,7 +93,7 @@ class ViterbiLoss(torch.nn.Module):
         m_expanded = m.unsqueeze(dim).expand_as(tensor)
         return m + torch.log(torch.sum(torch.exp(tensor - m_expanded), dim))
 
-    def _format_targets(self, targets: torch.tensor, lengths: torch.tensor):
+    def _format_targets(self, targets: torch.Tensor, lengths: torch.IntTensor):
         """
         Formats targets into matrix indices.
         CRF scores contain per sentence, per token a (tagset_size x tagset_size) matrix, containing emission score for
@@ -106,12 +108,12 @@ class ViterbiLoss(torch.nn.Module):
         targets_per_sentence = []
 
         targets_list = targets.tolist()
-        for cut in lengths.values:
+        for cut in lengths:
             targets_per_sentence.append(targets_list[:cut])
             targets_list = targets_list[cut:]
 
         for t in targets_per_sentence:
-            t += [self.tag_dictionary.get_idx_for_item(STOP_TAG)] * (max(lengths.values) - len(t))
+            t += [self.tag_dictionary.get_idx_for_item(STOP_TAG)] * (int(lengths.max().item()) - len(t))
 
         matrix_indices = list(
             map(
@@ -138,7 +140,7 @@ class ViterbiDecoder:
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
-    def decode(self, features_tuple: tuple, probabilities_for_all_classes: bool) -> (List, List):
+    def decode(self, features_tuple: tuple, probabilities_for_all_classes: bool) -> Tuple[List, List]:
         """
         Decoding function returning the most likely sequence of tags.
         :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
@@ -219,14 +221,14 @@ class ViterbiDecoder:
 
         return tags, all_tags
 
-    def _all_scores_for_token(self, scores: torch.tensor, lengths: torch.tensor):
+    def _all_scores_for_token(self, scores: torch.Tensor, lengths: torch.IntTensor):
         """
         Returns all scores for each tag in tag dictionary.
         :param scores: Scores for current sentence.
         """
         scores = scores.numpy()
         prob_tags_per_sentence = []
-        for scores_sentence, length in zip(scores, lengths.values):
+        for scores_sentence, length in zip(scores, lengths):
             scores_sentence = scores_sentence[:length]
             prob_tags_per_sentence.append([[Label(self.tag_dictionary.get_item_for_index(score_id), score)
                                        for score_id, score in enumerate(score_dist)]

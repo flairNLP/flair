@@ -607,7 +607,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 progress_bar.set_description("Batch inference")
                 dataloader = progress_bar
 
-            overall_loss = 0
+            overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
             for batch in dataloader:
                 # stop if all sentences are empty
