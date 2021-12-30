@@ -5,7 +5,7 @@ import warnings
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, Set
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import torch.nn
 from torch.nn.modules.loss import _Loss
@@ -44,14 +44,14 @@ class Model(torch.nn.Module, typing.Generic[DT]):
 
     @abstractmethod
     def evaluate(
-            self,
-            data_points: Union[List[DT], Dataset],
-            gold_label_type: str,
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
-            mini_batch_size: int = 32,
-            num_workers: Optional[int] = 8,
-            **kwargs,
+        self,
+        data_points: Union[List[DT], Dataset],
+        gold_label_type: str,
+        out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
+        mini_batch_size: int = 32,
+        num_workers: Optional[int] = 8,
+        **kwargs,
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
@@ -188,17 +188,17 @@ class Classifier(Model[DT], typing.Generic[DT]):
     evaluation routines and compute the same numbers."""
 
     def evaluate(
-            self,
-            data_points: Union[List[DT], Dataset],
-            gold_label_type: str,
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
-            mini_batch_size: int = 32,
-            num_workers: Optional[int] = 8,
-            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-            exclude_labels: List[str] = [],
-            gold_label_dictionary: Optional[Dictionary] = None,
-            **kwargs,
+        self,
+        data_points: Union[List[DT], Dataset],
+        gold_label_type: str,
+        out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
+        mini_batch_size: int = 32,
+        num_workers: Optional[int] = 8,
+        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        exclude_labels: List[str] = [],
+        gold_label_dictionary: Optional[Dictionary] = None,
+        **kwargs,
     ) -> Result:
         import numpy as np
         import sklearn
@@ -288,7 +288,8 @@ class Classifier(Model[DT], typing.Generic[DT]):
             for span in all_spans:
                 true_values_span_aligned.append(all_true_values[span] if span in all_true_values else ["O"])
                 predicted_values_span_aligned.append(
-                    all_predicted_values[span] if span in all_predicted_values else ["O"])
+                    all_predicted_values[span] if span in all_predicted_values else ["O"]
+                )
 
             # write all_predicted_values to out_file if set
             if out_path:
@@ -332,10 +333,14 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 y_pred.append(y_pred_instance.tolist())
         else:
             # single-label problems can do with a single index for each true and predicted label
-            y_true = [evaluation_label_dictionary.get_idx_for_item(true_instance[0]) for true_instance in
-                      true_values_span_aligned]
-            y_pred = [evaluation_label_dictionary.get_idx_for_item(predicted_instance[0]) for predicted_instance in
-                      predicted_values_span_aligned]
+            y_true = [
+                evaluation_label_dictionary.get_idx_for_item(true_instance[0])
+                for true_instance in true_values_span_aligned
+            ]
+            y_pred = [
+                evaluation_label_dictionary.get_idx_for_item(predicted_instance[0])
+                for predicted_instance in predicted_values_span_aligned
+            ]
 
         # now, calculate evaluation numbers
         target_names = []
@@ -404,11 +409,11 @@ class Classifier(Model[DT], typing.Generic[DT]):
             classification_report_dict = {}
 
         detailed_result = (
-                "\nResults:"
-                f"\n- F-score (micro) {micro_f_score}"
-                f"\n- F-score (macro) {macro_f_score}"
-                f"\n- Accuracy {accuracy_score}"
-                "\n\nBy class:\n" + classification_report
+            "\nResults:"
+            f"\n- F-score (micro) {micro_f_score}"
+            f"\n- F-score (macro) {macro_f_score}"
+            f"\n- Accuracy {accuracy_score}"
+            "\n\nBy class:\n" + classification_report
         )
 
         # line for log file
@@ -430,14 +435,14 @@ class Classifier(Model[DT], typing.Generic[DT]):
         return result
 
     def predict(
-            self,
-            sentences: Union[List[DT], DT],
-            mini_batch_size: int = 32,
-            return_probabilities_for_all_classes: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
+        self,
+        sentences: Union[List[DT], DT],
+        mini_batch_size: int = 32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
@@ -481,9 +486,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     """
 
     def forward_pass(
-            self,
-            sentences: Union[List[DT], DT],
-            return_label_candidates: bool = False,
+        self,
+        sentences: Union[List[DT], DT],
+        return_label_candidates: bool = False,
     ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]]]:
         """This method does a forward pass through the model given a list of data
         points as input.
@@ -498,11 +503,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         raise NotImplementedError
 
     def __init__(
-            self,
-            label_dictionary: Dictionary,
-            multi_label: bool = False,
-            multi_label_threshold: float = 0.5,
-            loss_weights: Dict[str, float] = None,
+        self,
+        label_dictionary: Dictionary,
+        multi_label: bool = False,
+        multi_label_threshold: float = 0.5,
+        loss_weights: Dict[str, float] = None,
     ):
 
         super().__init__()
@@ -596,14 +601,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         return typing.cast(List[DT], reordered_sentences)
 
     def predict(
-            self,
-            sentences: Union[List[DT], DT],
-            mini_batch_size: int = 32,
-            return_probabilities_for_all_classes: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
+        self,
+        sentences: Union[List[DT], DT],
+        mini_batch_size: int = 32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
@@ -713,7 +718,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
     def __str__(self):
         return (
-                super(flair.nn.Model, self).__str__().rstrip(")")
-                + f"  (weights): {self.weight_dict}\n"
-                + f"  (weight_tensor) {self.loss_weights}\n)"
+            super(flair.nn.Model, self).__str__().rstrip(")")
+            + f"  (weights): {self.weight_dict}\n"
+            + f"  (weight_tensor) {self.loss_weights}\n)"
         )

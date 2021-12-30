@@ -162,7 +162,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
             pooling_operation=state["pooling_operation"],
-            loss_weights=state["loss_weights"] if "loss_weights" in state else {'<unk>': 0.3},
+            loss_weights=state["loss_weights"] if "loss_weights" in state else {"<unk>": 0.3},
         )
 
         model.load_state_dict(state["state_dict"])

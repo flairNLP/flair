@@ -291,10 +291,10 @@ class RelationLabel(Label):
 
     def __eq__(self, other):
         return (
-                self.value == other.value
-                and self.score == other.score
-                and self.head.id_text == other.head.id_text
-                and self.tail.id_text == other.tail.id_text
+            self.value == other.value
+            and self.score == other.score
+            and self.head.id_text == other.head.id_text
+            and self.tail.id_text == other.tail.id_text
         )
 
     @property
@@ -404,12 +404,12 @@ class Token(DataPoint):
     """
 
     def __init__(
-            self,
-            text: str,
-            idx: int = None,
-            head_id: int = None,
-            whitespace_after: bool = True,
-            start_position: int = None,
+        self,
+        text: str,
+        idx: int = None,
+        head_id: int = None,
+        whitespace_after: bool = True,
+        start_position: int = None,
     ):
         super().__init__()
 
@@ -611,11 +611,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-            self,
-            text: Union[str, List[str]] = [],
-            use_tokenizer: Union[bool, Tokenizer, Callable] = True,
-            language_code: str = None,
-            start_position: int = None,
+        self,
+        text: Union[str, List[str]] = [],
+        use_tokenizer: Union[bool, Tokenizer, Callable] = True,
+        language_code: str = None,
+        start_position: int = None,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -748,9 +748,10 @@ class Sentence(DataPoint):
                 if span_score > min_score:
                     span = Span(current_span)
                     value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
-                    self.add_complex_label(typename=label_type,
-                                           label=SpanLabel(span=span, value=value, score=span_score),
-                                           )
+                    self.add_complex_label(
+                        typename=label_type,
+                        label=SpanLabel(span=span, value=value, score=span_score),
+                    )
 
                 current_span = []
                 tags = defaultdict(lambda: 0.0)
@@ -769,9 +770,10 @@ class Sentence(DataPoint):
             if span_score > min_score:
                 span = Span(current_span)
                 value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
-                self.add_complex_label(typename=label_type,
-                                       label=SpanLabel(span=span, value=value, score=span_score),
-                                       )
+                self.add_complex_label(
+                    typename=label_type,
+                    label=SpanLabel(span=span, value=value, score=span_score),
+                )
 
     # def _add_spans_internal(self, spans: List[Span], label_type: str, min_score):
     #
@@ -1234,12 +1236,12 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-            self,
-            train: Dataset = None,
-            dev: Dataset = None,
-            test: Dataset = None,
-            name: str = "corpus",
-            sample_missing_splits: Union[bool, str] = True,
+        self,
+        train: Dataset = None,
+        dev: Dataset = None,
+        test: Dataset = None,
+        name: str = "corpus",
+        sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1278,11 +1280,11 @@ class Corpus:
         return self._test
 
     def downsample(
-            self,
-            percentage: float = 0.1,
-            downsample_train=True,
-            downsample_dev=True,
-            downsample_test=True,
+        self,
+        percentage: float = 0.1,
+        downsample_train=True,
+        downsample_dev=True,
+        downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:

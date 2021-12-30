@@ -16,6 +16,7 @@ from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import store_embeddings
+
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
 
@@ -24,25 +25,25 @@ log = logging.getLogger("flair")
 
 class SequenceTagger(flair.nn.Classifier[Sentence]):
     def __init__(
-            self,
-            embeddings: TokenEmbeddings,
-            tag_dictionary: Dictionary,
-            tag_type: str,
-            use_rnn: bool = True,
-            rnn: Optional[torch.nn.Module] = None,
-            rnn_type: str = "LSTM",
-            tag_format: str = "BIOES",
-            hidden_size: int = 256,
-            rnn_layers: int = 1,
-            bidirectional: bool = True,
-            use_crf: bool = True,
-            reproject_embeddings: bool = True,
-            dropout: float = 0.0,
-            word_dropout: float = 0.05,
-            locked_dropout: float = 0.5,
-            train_initial_hidden_state: bool = False,
-            loss_weights: Dict[str, float] = None,
-            init_from_state_dict: bool = False,
+        self,
+        embeddings: TokenEmbeddings,
+        tag_dictionary: Dictionary,
+        tag_type: str,
+        use_rnn: bool = True,
+        rnn: Optional[torch.nn.Module] = None,
+        rnn_type: str = "LSTM",
+        tag_format: str = "BIOES",
+        hidden_size: int = 256,
+        rnn_layers: int = 1,
+        bidirectional: bool = True,
+        use_crf: bool = True,
+        reproject_embeddings: bool = True,
+        dropout: float = 0.0,
+        word_dropout: float = 0.05,
+        locked_dropout: float = 0.5,
+        train_initial_hidden_state: bool = False,
+        loss_weights: Dict[str, float] = None,
+        init_from_state_dict: bool = False,
     ):
         """
         Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
@@ -81,16 +82,17 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if tag_dictionary.span_labels:
                 self.label_dictionary = Dictionary()
                 for label in tag_dictionary.get_items():
-                    if label == '<unk>': continue
-                    self.label_dictionary.add_item('O')
-                    if tag_format == 'BIOES':
-                        self.label_dictionary.add_item('B-' + label)
-                        self.label_dictionary.add_item('I-' + label)
-                        self.label_dictionary.add_item('E-' + label)
-                        self.label_dictionary.add_item('S-' + label)
-                    if tag_format == 'BIO':
-                        self.label_dictionary.add_item('B-' + label)
-                        self.label_dictionary.add_item('I-' + label)
+                    if label == "<unk>":
+                        continue
+                    self.label_dictionary.add_item("O")
+                    if tag_format == "BIOES":
+                        self.label_dictionary.add_item("B-" + label)
+                        self.label_dictionary.add_item("I-" + label)
+                        self.label_dictionary.add_item("E-" + label)
+                        self.label_dictionary.add_item("S-" + label)
+                    if tag_format == "BIO":
+                        self.label_dictionary.add_item("B-" + label)
+                        self.label_dictionary.add_item("I-" + label)
             else:
                 self.label_dictionary = tag_dictionary
 
@@ -222,11 +224,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     @staticmethod
     def RNN(
-            rnn_type: str,
-            rnn_layers: int,
-            hidden_size: int,
-            bidirectional: bool,
-            rnn_input_dim: int,
+        rnn_type: str,
+        rnn_layers: int,
+        hidden_size: int,
+        bidirectional: bool,
+        rnn_input_dim: int,
     ) -> torch.nn.Module:
         """
         Static wrapper function returning an RNN instance from PyTorch
@@ -254,7 +256,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
-            return torch.tensor(0., dtype=torch.float, device=flair.device, requires_grad=True), 0
+            return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
         # forward pass to get scores
         scores, gold_labels = self.forward(sentences)  # type: ignore
@@ -383,12 +385,12 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         for sentence in sentences:
             for label in sentence.get_labels(self.label_type):
                 if len(label.span) == 1:
-                    label.span[0].set_label(self.label_type, 'S-' + label.value)
+                    label.span[0].set_label(self.label_type, "S-" + label.value)
                 else:
-                    label.span[0].set_label(self.label_type, 'B-' + label.value)
-                    label.span[-1].set_label(self.label_type, 'E-' + label.value)
-                    for token in label.span[1: -1]:
-                        token.set_label(self.label_type, 'I-' + label.value)
+                    label.span[0].set_label(self.label_type, "B-" + label.value)
+                    label.span[-1].set_label(self.label_type, "E-" + label.value)
+                    for token in label.span[1:-1]:
+                        token.set_label(self.label_type, "I-" + label.value)
 
         labels = [[token.get_tag(self.label_type, "O").value] for sentence in sentences for token in sentence]
 
@@ -399,14 +401,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return labels
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size: int = 32,
-            return_probabilities_for_all_classes: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size: int = 32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
     ):
         """
         Predicts labels for current batch with CRF or Softmax.
@@ -481,8 +483,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 if self.use_crf:
                     predictions, all_tags = self.viterbi_decoder.decode(features, return_probabilities_for_all_classes)
                 else:
-                    predictions, all_tags = self._standard_inference(features, batch,
-                                                                     return_probabilities_for_all_classes)
+                    predictions, all_tags = self._standard_inference(
+                        features, batch, return_probabilities_for_all_classes
+                    )
 
                 for sentence, labels in zip(batch, predictions):
                     for token, label in zip(sentence.tokens, labels):
@@ -525,8 +528,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     for token, score, prediction in zip(sentence, scores, predictions_for_sentence)
                 ]
             )
-            scores_batch = scores_batch[len(sentence):]
-            prediction_batch = prediction_batch[len(sentence):]
+            scores_batch = scores_batch[len(sentence) :]
+            prediction_batch = prediction_batch[len(sentence) :]
 
         if probabilities_for_all_classes:
             lengths = [len(sentence) for sentence in batch]
@@ -540,14 +543,18 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         :param scores: Scores for current sentence.
         """
         scores = scores.numpy()
-        prob_all_tags = [[Label(self.label_dictionary.get_item_for_index(score_id), score)
-                          for score_id, score in enumerate(score_dist)]
-                         for score_dist in scores]
+        prob_all_tags = [
+            [
+                Label(self.label_dictionary.get_item_for_index(score_id), score)
+                for score_id, score in enumerate(score_dist)
+            ]
+            for score_dist in scores
+        ]
 
         prob_tags_per_sentence = []
         previous = 0
         for length in lengths:
-            prob_tags_per_sentence.append(prob_all_tags[previous:previous + length])
+            prob_tags_per_sentence.append(prob_all_tags[previous : previous + length])
             previous = length
         return prob_tags_per_sentence
 
@@ -953,10 +960,10 @@ class MultiTagger:
         self.name_to_tagger = name_to_tagger
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            return_loss: bool = False,
-            mini_batch_size: int = 32,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_loss: bool = False,
+        mini_batch_size: int = 32,
     ):
         """
         Predict sequence tags for Named Entity Recognition task
