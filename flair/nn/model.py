@@ -614,8 +614,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 if not batch:
                     continue
 
-                scores, gold_labels, data_points, label_candidates = self.forward_pass(
-                    batch, return_label_candidates=True  # type: ignore
+                scores, gold_labels, data_points, label_candidates = self.forward_pass(  # type: ignore
+                    batch, return_label_candidates=True
                 )
                 # remove previously predicted labels of this type
                 for sentence in data_points:
