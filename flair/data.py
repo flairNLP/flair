@@ -1339,7 +1339,7 @@ class Corpus:
         empty_sentence_indices = []
         non_empty_sentence_indices = []
 
-        for index, sentence in enumerate(_iter_dataset(dataset)):
+        for index, sentence in Tqdm.tqdm(enumerate(_iter_dataset(dataset))):
             if len(sentence.to_plain_string()) > max_charlength:
                 empty_sentence_indices.append(index)
             else:
