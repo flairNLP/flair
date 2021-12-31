@@ -246,19 +246,24 @@ class ColumnDataset(FlairDataset):
             if skip_first_line:
                 file.readline()
 
-            sentence = self._convert_lines_to_sentence(self._read_next_sentence(file),
-                                                       word_level_tag_columns=column_name_map)
-            # go through all annotations
-            for column in column_name_map:
-                if column == self.text_column:
-                    continue
-                layer = column_name_map[column]
-                for token in sentence:
-                    if token.get_tag(layer).value[0:2] not in ['O', 'B-', 'I-', 'E-', 'S-']:
-                        self.word_level_tag_columns[column] = layer
-                        break
-                if column not in self.word_level_tag_columns:
-                    self.span_level_tag_columns[column] = layer
+            sentence_1 = self._convert_lines_to_sentence(self._read_next_sentence(file),
+                                                         word_level_tag_columns=column_name_map)
+            # sentence_2 = self._convert_lines_to_sentence(self._read_next_sentence(file),
+            #                                              word_level_tag_columns=column_name_map)
+
+            for sentence in [sentence_1]:
+                # go through all annotations
+                for column in column_name_map:
+                    if column == self.text_column:
+                        continue
+                    layer = column_name_map[column]
+                    for token in sentence:
+                        if token.get_tag(layer, "O").value != "O" and\
+                                token.get_tag(layer).value[0:2] not in ['B-', 'I-', 'E-', 'S-']:
+                            self.word_level_tag_columns[column] = layer
+                            break
+            if column not in self.word_level_tag_columns:
+                self.span_level_tag_columns[column] = layer
 
         # now load all sentences
         with open(str(self.path_to_column_file), encoding=self.encoding) as file:
