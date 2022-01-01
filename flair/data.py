@@ -254,6 +254,9 @@ class SpanLabel(Label):
     def spawn(self, value: str, score: float = 1.0):
         return SpanLabel(self.span, value, score)
 
+    def to_dict(self):
+        return {"span": self.span, "value": self.value, "confidence": self.score}
+
     def __str__(self):
         return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
 
@@ -498,7 +501,7 @@ class Span(DataPoint):
 
     @property
     def end_pos(self) -> int:
-        return self.tokens[1].end_position
+        return self.tokens[-1].end_position
 
     @property
     def text(self) -> str:
@@ -528,14 +531,6 @@ class Span(DataPoint):
             if token.whitespace_after:
                 plain += " "
         return plain.rstrip()
-
-    def to_dict(self):
-        return {
-            "text": self.to_original_text(),
-            "start_pos": self.start_pos,
-            "end_pos": self.end_pos,
-            "labels": self.labels,
-        }
 
     def __str__(self) -> str:
         ids = ",".join([str(t.idx) for t in self.tokens])
@@ -846,24 +841,24 @@ class Sentence(DataPoint):
     #
     #     return spans
 
-    # def get_spans(self, label_type: Optional[str] = None, min_score=-1) -> List[Span]:
-    #
-    #     spans: List[Span] = []
-    #
-    #     # if label type is explicitly specified, get spans for this label type
-    #     if label_type is not None:
-    #         return self._add_spans_internal(spans, label_type, min_score)
-    #
-    #     # else determine all label types in sentence and get all spans
-    #     label_types = []
-    #     for token in self:
-    #         for annotation in token.annotation_layers.keys():
-    #             if annotation not in label_types:
-    #                 label_types.append(annotation)
-    #
-    #     for label_type in label_types:
-    #         self._add_spans_internal(spans, label_type, min_score)
-    #     return spans
+    def get_spans(self, label_type: Optional[str] = None, min_score=-1) -> List[Span]:
+
+        spans: List[Span] = []
+
+        # if label type is explicitly specified, get spans for this label type
+        if label_type is not None:
+            return self._add_spans_internal(spans, label_type, min_score)
+
+        # else determine all label types in sentence and get all spans
+        label_types = []
+        for token in self:
+            for annotation in token.annotation_layers.keys():
+                if annotation not in label_types:
+                    label_types.append(annotation)
+
+        for label_type in label_types:
+            self._add_spans_internal(spans, label_type, min_score)
+        return spans
 
     @property
     def embedding(self):
@@ -971,19 +966,6 @@ class Sentence(DataPoint):
                 plain += " "
         return plain.rstrip()
 
-    def convert_tag_scheme(self, tag_type: str = "ner", target_scheme: str = "iob"):
-
-        tags: List[Label] = []
-        for token in self.tokens:
-            tags.append(token.get_tag(tag_type))
-
-        if target_scheme == "iob":
-            iob2(tags)
-
-        if target_scheme == "iobes":
-            iob2(tags)
-            iob_iobes(tags)
-
     def infer_space_after(self):
         """
         Heuristics in case you wish to infer whitespace_after values for tokenized text. This is useful for some old NLP
@@ -1033,14 +1015,15 @@ class Sentence(DataPoint):
 
     def to_dict(self, tag_type: str = None):
         labels = []
-        entities = []
 
         if tag_type:
-            entities = [span.to_dict() for span in self.get_spans(tag_type)]
+            labels = [label.to_dict() for label in self.get_labels(tag_type)]
+            return {"text": self.to_original_text(), tag_type: labels}
+
         if self.labels:
             labels = [label.to_dict() for label in self.labels]
 
-        return {"text": self.to_original_text(), "labels": labels, "entities": entities}
+        return {"text": self.to_original_text(), "all labels": labels}
 
     def __getitem__(self, idx: int) -> Token:
         return self.tokens[idx]

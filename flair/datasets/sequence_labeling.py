@@ -362,7 +362,8 @@ class ColumnDataset(FlairDataset):
                             label=SpanLabel(span=span, value=value, score=predicted_span[1]),
                         )
                 except:
-                    log.warning(f"--\nUnparseable sentence: {''.join(lines)}--\n")
+                    pass
+                    # log.warning(f"--\nUnparseable sentence: {''.join(lines)}--\n")
 
         if len(sentence) > 0:
             return sentence

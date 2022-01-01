@@ -26,6 +26,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         label_dictionary: Dictionary,
         pooling_operation: str = "average",
         label_type: str = "nel",
+        dropout: float = 0.5,
         skip_unk_probability: Optional[float] = None,
         **classifierargs,
     ):
@@ -47,6 +48,12 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         self.skip_unk_probability = skip_unk_probability
         if self.skip_unk_probability:
             self.known_entities = label_dictionary.get_items()
+
+        # ----- Dropout parameters -----
+        # dropouts
+        self.use_dropout: float = dropout
+        if dropout > 0.0:
+            self.dropout = torch.nn.Dropout(dropout)
 
         # if we concatenate the embeddings we need double input size in our linear layer
         if self.pooling_operation == "first&last":
@@ -149,6 +156,10 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
             if len(embedding_list) > 0:
                 embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
+
+                if self.use_dropout:
+                    embedding_tensor = self.dropout(embedding_tensor)
+
                 scores = self.decoder(embedding_tensor)
             else:
                 scores = None
