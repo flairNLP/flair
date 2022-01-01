@@ -1,5 +1,6 @@
 import logging
-from typing import List, Union
+import random
+from typing import List, Union, Optional
 
 import torch
 import torch.nn as nn
@@ -25,6 +26,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         label_dictionary: Dictionary,
         pooling_operation: str = "average",
         label_type: str = "nel",
+        skip_unk_probability: Optional[float] = None,
         **classifierargs,
     ):
         """
@@ -42,6 +44,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
         self._label_type = label_type
+        self.skip_unk_probability = skip_unk_probability
+        if self.skip_unk_probability:
+            self.known_entities = label_dictionary.get_items()
 
         # if we concatenate the embeddings we need double input size in our linear layer
         if self.pooling_operation == "first&last":
@@ -116,6 +121,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                 entities = sentence.get_labels(self.label_type)
 
                 for entity in entities:
+
+                    if self.skip_unk_probability and self.training and entity.value not in self.known_entities:
+                        sample = random.uniform(0, 1)
+                        if sample < self.skip_unk_probability:
+                            continue
+
+                    span_labels.append([entity.value])
+
                     mention_emb = torch.Tensor(0, self.word_embeddings.embedding_length).to(flair.device)
 
                     for token in entity.span.tokens:
@@ -129,15 +142,16 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
                     embedding_list.append(self.aggregated_embedding(mention_emb).unsqueeze(0))
 
-                    span_labels.append([entity.value])
-
                     if return_label_candidates:
                         sentences_to_spans.append(sentence)
                         candidate = SpanLabel(span=entity.span, value=None, score=0.0)
                         empty_label_candidates.append(candidate)
 
-            embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
-            scores = self.decoder(embedding_tensor)
+            if len(embedding_list) > 0:
+                embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
+                scores = self.decoder(embedding_tensor)
+            else:
+                scores = None
 
         if return_label_candidates:
             return scores, span_labels, sentences_to_spans, empty_label_candidates
