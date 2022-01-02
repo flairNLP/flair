@@ -1,4 +1,4 @@
-from torch import Tensor
+from torch import tensor
 
 from flair.models.clustering.birch import distance_max, branching_factor_leaf
 from flair.models.clustering.birch.model.cfNode import CfNode
@@ -23,7 +23,7 @@ class LeafNode(CfNode):
     def can_add_new_cf(self):
         return self.cfs.__len__() < branching_factor_leaf
 
-    def get_closest_cf(self, vector: Tensor) -> ClusteringFeature:
+    def get_closest_cf(self, vector: tensor) -> ClusteringFeature:
         min_distance = distance_max
         cf_result = None
 

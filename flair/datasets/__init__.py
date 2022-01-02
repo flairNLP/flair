@@ -141,7 +141,12 @@ from .entity_linking import (
 )
 
 # Expose all relation extraction datasets
-from .relation_extraction import RE_ENGLISH_CONLL04, RE_ENGLISH_DRUGPROT, RE_ENGLISH_SEMEVAL2010, RE_ENGLISH_TACRED
+from .relation_extraction import (
+    RE_ENGLISH_CONLL04,
+    RE_ENGLISH_DRUGPROT,
+    RE_ENGLISH_SEMEVAL2010,
+    RE_ENGLISH_TACRED,
+)
 
 # universal proposition banks
 # keyphrase detection datasets

@@ -57,7 +57,12 @@ class UniversalDependenciesCorpus(Corpus):
 
 
 class UniversalDependenciesDataset(FlairDataset):
-    def __init__(self, path_to_conll_file: Union[str, Path], in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        path_to_conll_file: Union[str, Path],
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
         """
         Instantiates a column dataset in CoNLL-U format.
 
@@ -224,7 +229,12 @@ class UniversalDependenciesDataset(FlairDataset):
 
 
 class UD_ENGLISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -246,7 +256,12 @@ class UD_ENGLISH(UniversalDependenciesCorpus):
 
 
 class UD_GALICIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -267,7 +282,12 @@ class UD_GALICIAN(UniversalDependenciesCorpus):
 
 
 class UD_ANCIENT_GREEK(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -289,7 +309,12 @@ class UD_ANCIENT_GREEK(UniversalDependenciesCorpus):
 
 
 class UD_KAZAKH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -310,7 +335,12 @@ class UD_KAZAKH(UniversalDependenciesCorpus):
 
 
 class UD_OLD_CHURCH_SLAVONIC(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -334,7 +364,12 @@ class UD_OLD_CHURCH_SLAVONIC(UniversalDependenciesCorpus):
 
 
 class UD_ARMENIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -356,7 +391,12 @@ class UD_ARMENIAN(UniversalDependenciesCorpus):
 
 
 class UD_ESTONIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -378,7 +418,12 @@ class UD_ESTONIAN(UniversalDependenciesCorpus):
 
 
 class UD_GERMAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -400,7 +445,12 @@ class UD_GERMAN(UniversalDependenciesCorpus):
 
 
 class UD_GERMAN_HDT(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = False,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -441,7 +491,12 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
 
 
 class UD_DUTCH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -468,7 +523,12 @@ class UD_FAROESE(UniversalDependenciesCorpus):
 
     Faronese is a small Western Scandinavian language with 60.000-100.000, related to Icelandic and Old Norse"""
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -490,7 +550,12 @@ class UD_FAROESE(UniversalDependenciesCorpus):
 
 
 class UD_FRENCH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -511,7 +576,12 @@ class UD_FRENCH(UniversalDependenciesCorpus):
 
 
 class UD_ITALIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -532,7 +602,12 @@ class UD_ITALIAN(UniversalDependenciesCorpus):
 
 
 class UD_LATIN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -554,7 +629,12 @@ class UD_LATIN(UniversalDependenciesCorpus):
 
 
 class UD_SPANISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -575,7 +655,12 @@ class UD_SPANISH(UniversalDependenciesCorpus):
 
 
 class UD_PORTUGUESE(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -596,7 +681,12 @@ class UD_PORTUGUESE(UniversalDependenciesCorpus):
 
 
 class UD_ROMANIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -617,7 +707,12 @@ class UD_ROMANIAN(UniversalDependenciesCorpus):
 
 
 class UD_CATALAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -638,7 +733,12 @@ class UD_CATALAN(UniversalDependenciesCorpus):
 
 
 class UD_POLISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -660,7 +760,12 @@ class UD_POLISH(UniversalDependenciesCorpus):
 
 
 class UD_CZECH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = False,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -676,10 +781,22 @@ class UD_CZECH(UniversalDependenciesCorpus):
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Czech-PDT/master"
         cached_path(f"{ud_path}/cs_pdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/cs_pdt-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(f"{ud_path}/cs_pdt-ud-train-c.conllu", Path("datasets") / dataset_name / "original")
-        cached_path(f"{ud_path}/cs_pdt-ud-train-l.conllu", Path("datasets") / dataset_name / "original")
-        cached_path(f"{ud_path}/cs_pdt-ud-train-m.conllu", Path("datasets") / dataset_name / "original")
-        cached_path(f"{ud_path}/cs_pdt-ud-train-v.conllu", Path("datasets") / dataset_name / "original")
+        cached_path(
+            f"{ud_path}/cs_pdt-ud-train-c.conllu",
+            Path("datasets") / dataset_name / "original",
+        )
+        cached_path(
+            f"{ud_path}/cs_pdt-ud-train-l.conllu",
+            Path("datasets") / dataset_name / "original",
+        )
+        cached_path(
+            f"{ud_path}/cs_pdt-ud-train-m.conllu",
+            Path("datasets") / dataset_name / "original",
+        )
+        cached_path(
+            f"{ud_path}/cs_pdt-ud-train-v.conllu",
+            Path("datasets") / dataset_name / "original",
+        )
         data_path = flair.cache_root / "datasets" / dataset_name
 
         train_filenames = [
@@ -700,7 +817,12 @@ class UD_CZECH(UniversalDependenciesCorpus):
 
 
 class UD_SLOVAK(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -722,7 +844,12 @@ class UD_SLOVAK(UniversalDependenciesCorpus):
 
 
 class UD_SWEDISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -744,7 +871,12 @@ class UD_SWEDISH(UniversalDependenciesCorpus):
 
 
 class UD_DANISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -766,7 +898,12 @@ class UD_DANISH(UniversalDependenciesCorpus):
 
 
 class UD_NORWEGIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -788,7 +925,12 @@ class UD_NORWEGIAN(UniversalDependenciesCorpus):
 
 
 class UD_FINNISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -810,7 +952,12 @@ class UD_FINNISH(UniversalDependenciesCorpus):
 
 
 class UD_SLOVENIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -832,7 +979,12 @@ class UD_SLOVENIAN(UniversalDependenciesCorpus):
 
 
 class UD_CROATIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -854,7 +1006,12 @@ class UD_CROATIAN(UniversalDependenciesCorpus):
 
 
 class UD_SERBIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -876,7 +1033,12 @@ class UD_SERBIAN(UniversalDependenciesCorpus):
 
 
 class UD_BULGARIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -898,7 +1060,12 @@ class UD_BULGARIAN(UniversalDependenciesCorpus):
 
 
 class UD_ARABIC(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -919,7 +1086,12 @@ class UD_ARABIC(UniversalDependenciesCorpus):
 
 
 class UD_HEBREW(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -940,7 +1112,12 @@ class UD_HEBREW(UniversalDependenciesCorpus):
 
 
 class UD_TURKISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -965,7 +1142,12 @@ class UD_TURKISH(UniversalDependenciesCorpus):
 
 
 class UD_PERSIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -990,7 +1172,12 @@ class UD_PERSIAN(UniversalDependenciesCorpus):
 
 
 class UD_RUSSIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1012,7 +1199,12 @@ class UD_RUSSIAN(UniversalDependenciesCorpus):
 
 
 class UD_HINDI(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1034,7 +1226,12 @@ class UD_HINDI(UniversalDependenciesCorpus):
 
 
 class UD_INDONESIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1056,7 +1253,12 @@ class UD_INDONESIAN(UniversalDependenciesCorpus):
 
 
 class UD_JAPANESE(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1078,7 +1280,12 @@ class UD_JAPANESE(UniversalDependenciesCorpus):
 
 
 class UD_CHINESE(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1100,7 +1307,12 @@ class UD_CHINESE(UniversalDependenciesCorpus):
 
 
 class UD_KOREAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1122,7 +1334,12 @@ class UD_KOREAN(UniversalDependenciesCorpus):
 
 
 class UD_BASQUE(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1144,7 +1361,12 @@ class UD_BASQUE(UniversalDependenciesCorpus):
 
 
 class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1166,7 +1388,12 @@ class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
 
 
 class UD_GREEK(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1188,7 +1415,12 @@ class UD_GREEK(UniversalDependenciesCorpus):
 
 
 class UD_NAIJA(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1210,7 +1442,12 @@ class UD_NAIJA(UniversalDependenciesCorpus):
 
 
 class UD_LIVVI(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1231,7 +1468,12 @@ class UD_LIVVI(UniversalDependenciesCorpus):
 
 
 class UD_BURYAT(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1252,7 +1494,12 @@ class UD_BURYAT(UniversalDependenciesCorpus):
 
 
 class UD_NORTH_SAMI(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1273,7 +1520,12 @@ class UD_NORTH_SAMI(UniversalDependenciesCorpus):
 
 
 class UD_MARATHI(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1295,7 +1547,12 @@ class UD_MARATHI(UniversalDependenciesCorpus):
 
 
 class UD_MALTESE(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1315,7 +1572,12 @@ class UD_MALTESE(UniversalDependenciesCorpus):
 
 
 class UD_AFRIKAANS(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1335,7 +1597,12 @@ class UD_AFRIKAANS(UniversalDependenciesCorpus):
 
 
 class UD_GOTHIC(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1357,7 +1624,12 @@ class UD_GOTHIC(UniversalDependenciesCorpus):
 
 
 class UD_OLD_FRENCH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1379,7 +1651,12 @@ class UD_OLD_FRENCH(UniversalDependenciesCorpus):
 
 
 class UD_WOLOF(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1399,7 +1676,12 @@ class UD_WOLOF(UniversalDependenciesCorpus):
 
 
 class UD_BELARUSIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1421,7 +1703,12 @@ class UD_BELARUSIAN(UniversalDependenciesCorpus):
 
 
 class UD_COPTIC(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1436,14 +1723,25 @@ class UD_COPTIC(UniversalDependenciesCorpus):
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Coptic-Scriptorium/master"
         cached_path(f"{web_path}/cop_scriptorium-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(f"{web_path}/cop_scriptorium-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(f"{web_path}/cop_scriptorium-ud-train.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{web_path}/cop_scriptorium-ud-test.conllu",
+            Path("datasets") / dataset_name,
+        )
+        cached_path(
+            f"{web_path}/cop_scriptorium-ud-train.conllu",
+            Path("datasets") / dataset_name,
+        )
 
         super(UD_COPTIC, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_IRISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1465,7 +1763,12 @@ class UD_IRISH(UniversalDependenciesCorpus):
 
 
 class UD_LATVIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
@@ -1487,7 +1790,12 @@ class UD_LATVIAN(UniversalDependenciesCorpus):
 
 
 class UD_LITHUANIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+    ):
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
         else:

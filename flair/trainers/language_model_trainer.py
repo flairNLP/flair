@@ -87,7 +87,8 @@ class TextDataset(Dataset):
                     self.dictionary.add_item(char)
 
         ids = torch.tensor(
-            [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars], dtype=torch.long
+            [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars],
+            dtype=torch.long,
         )
         if not self.forward:
             ids = ids.flip(0)
@@ -254,7 +255,13 @@ class LanguageModelTrainer:
                 # through corpus one
                 if epoch > 0:
                     training_generator = DataLoader(self.corpus.train, shuffle=True, num_workers=num_workers)
-                    self.model.save_checkpoint(base_path / f"epoch_{epoch}.pt", optimizer, epoch, 0, best_val_loss)
+                    self.model.save_checkpoint(
+                        base_path / f"epoch_{epoch}.pt",
+                        optimizer,
+                        epoch,
+                        0,
+                        best_val_loss,
+                    )
 
                 # iterate through training data, starting at
                 # self.split (for checkpointing)
@@ -358,7 +365,11 @@ class LanguageModelTrainer:
 
                     if checkpoint:
                         self.model.save_checkpoint(
-                            base_path / "checkpoint.pt", optimizer, epoch, curr_split, best_val_loss
+                            base_path / "checkpoint.pt",
+                            optimizer,
+                            epoch,
+                            curr_split,
+                            best_val_loss,
                         )
 
                     # Save the model if the validation loss is the best we've
@@ -462,7 +473,11 @@ class LanguageModelTrainer:
         return tuple(v.clone().detach() for v in h)
 
     @staticmethod
-    def load_checkpoint(checkpoint_file: Union[str, Path], corpus: TextCorpus, optimizer: Type[Optimizer] = SGD):
+    def load_checkpoint(
+        checkpoint_file: Union[str, Path],
+        corpus: TextCorpus,
+        optimizer: Type[Optimizer] = SGD,
+    ):
         if type(checkpoint_file) is str:
             checkpoint_file = Path(checkpoint_file)
 

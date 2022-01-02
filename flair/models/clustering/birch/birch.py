@@ -1,3 +1,5 @@
+import logging
+
 from flair.datasets import DataLoader
 
 from flair.embeddings import DocumentEmbeddings
@@ -5,6 +7,9 @@ from flair.models.clustering.clustering import Clustering
 from flair.models.clustering.birch.model.cfTree import CfTree
 from flair.models.clustering.birch.model.clusteringFeature import ClusteringFeature
 from flair.models.clustering.kmeans.k_Means import KMeans
+
+# TODO: go though every path for inserts and add TODOs
+log = logging.getLogger("flair")
 
 
 class Birch(Clustering):
@@ -19,7 +24,7 @@ class Birch(Clustering):
         self.k = clusters
 
     def cluster(self, vectors: list, batch_size: int = 64):
-        print("Starting BIRCH clustering with threshold: " + str(Birch.threshold) + " with Branchingfactor: " + str(
+        log.debug("Starting BIRCH clustering with threshold: " + str(Birch.threshold) + " with Branchingfactor: " + str(
             Birch.branching_factor_leaf))
         self.predict = [0] * len(vectors)
 

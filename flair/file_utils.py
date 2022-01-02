@@ -247,7 +247,10 @@ def get_from_cache(url: str, cache_dir: Path) -> Path:
 
 
 def open_inside_zip(
-    archive_path: str, cache_dir: Union[str, Path], member_path: Optional[str] = None, encoding: str = "utf8"
+    archive_path: str,
+    cache_dir: Union[str, Path],
+    member_path: Optional[str] = None,
+    encoding: str = "utf8",
 ) -> typing.Iterable:
     cached_archive_path = cached_path(archive_path, cache_dir=Path(cache_dir))
     archive = zipfile.ZipFile(cached_archive_path, "r")
@@ -264,7 +267,10 @@ def get_the_only_file_in_the_archive(members_list: Sequence[str], archive_path: 
         raise ValueError(
             "The archive %s contains multiple files, so you must select "
             "one of the files inside providing a uri of the type: %s"
-            % (archive_path, format_embeddings_file_uri("path_or_url_to_archive", "path_inside_archive"))
+            % (
+                archive_path,
+                format_embeddings_file_uri("path_or_url_to_archive", "path_inside_archive"),
+            )
         )
     return members_list[0]
 

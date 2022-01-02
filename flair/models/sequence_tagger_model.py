@@ -122,7 +122,15 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         if use_rnn:
             # If shared RNN provided, else create one for model
             self.rnn = (
-                rnn if rnn else self.RNN(rnn_type, rnn_layers, hidden_size, bidirectional, rnn_input_dim=embedding_dim)
+                rnn
+                if rnn
+                else self.RNN(
+                    rnn_type,
+                    rnn_layers,
+                    hidden_size,
+                    bidirectional,
+                    rnn_input_dim=embedding_dim,
+                )
             )
 
             num_directions = 2 if self.bidirectional else 1
@@ -131,9 +139,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             # Whether to train initial hidden state
             self.train_initial_hidden_state = train_initial_hidden_state
             if self.train_initial_hidden_state:
-                (self.hs_initializer, self.lstm_init_h, self.lstm_init_c) = self._init_initial_hidden_state(
-                    num_directions
-                )
+                (
+                    self.hs_initializer,
+                    self.lstm_init_h,
+                    self.lstm_init_c,
+                ) = self._init_initial_hidden_state(num_directions)
 
             # final linear map to tag space
             self.linear = torch.nn.Linear(hidden_output_dim, len(tag_dictionary))
@@ -142,7 +152,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # ----- CRF / Linear layer -----
         if use_crf:
-            self.crf = CRF(self.tag_dictionary, self.tagset_size, init_from_state_dict)
+            self.crf = CRF(
+                self.tag_dictionary,
+                self.tagset_size,
+                init_from_state_dict,
+            )
             self.loss_function = ViterbiLoss(tag_dictionary)
             self.viterbi_decoder = ViterbiDecoder(tag_dictionary)
         else:
@@ -174,17 +188,23 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         """
         hs_initializer = torch.nn.init.xavier_normal_
         lstm_init_h = torch.nn.Parameter(
-            torch.randn(self.nlayers * num_directions, self.hidden_size), requires_grad=True
+            torch.randn(self.nlayers * num_directions, self.hidden_size),
+            requires_grad=True,
         )
         lstm_init_c = torch.nn.Parameter(
-            torch.randn(self.nlayers * num_directions, self.hidden_size), requires_grad=True
+            torch.randn(self.nlayers * num_directions, self.hidden_size),
+            requires_grad=True,
         )
 
         return hs_initializer, lstm_init_h, lstm_init_c
 
     @staticmethod
     def RNN(
-        rnn_type: str, rnn_layers: int, hidden_size: int, bidirectional: bool, rnn_input_dim: int
+        rnn_type: str,
+        rnn_layers: int,
+        hidden_size: int,
+        bidirectional: bool,
+        rnn_input_dim: int,
     ) -> torch.nn.Module:
         """
         Static wrapper function returning an RNN instance from PyTorch
@@ -212,7 +232,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
-            return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
+            return torch.tensor(0., dtype=torch.float, device=flair.device, requires_grad=True), 0
 
         # forward pass to get scores
         scores, gold_labels = self.forward(sentences)  # type: ignore
@@ -296,7 +316,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         longest_token_sequence_in_batch: int = max(lengths)
         pre_allocated_zero_tensor = torch.zeros(
-            self.embeddings.embedding_length * longest_token_sequence_in_batch, dtype=torch.float, device=flair.device
+            self.embeddings.embedding_length * longest_token_sequence_in_batch,
+            dtype=torch.float,
+            device=flair.device,
         )
         all_embs = list()
         for sentence in sentences:
@@ -307,7 +329,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
         sentence_tensor = torch.cat(all_embs).view(
-            [len(sentences), longest_token_sequence_in_batch, self.embeddings.embedding_length]
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.embeddings.embedding_length,
+            ]
         )
         lengths: torch.Tensor = torch.tensor(lengths, dtype=torch.long)
         return lengths, sentence_tensor
@@ -378,7 +404,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if len(reordered_sentences) == 0:
                 return sentences
 
-            dataloader = DataLoader(dataset=FlairDatapointDataset(reordered_sentences), batch_size=mini_batch_size)
+            dataloader = DataLoader(
+                dataset=FlairDatapointDataset(reordered_sentences),
+                batch_size=mini_batch_size,
+            )
             # progress bar for verbosity
             if verbose:
                 dataloader = tqdm(dataloader)
@@ -418,9 +447,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 if self.use_crf:
                     predictions, all_tags = self.viterbi_decoder.decode(features, return_probabilities_for_all_classes)
                 else:
-                    predictions, all_tags = self._standard_inference(
-                        features, batch, return_probabilities_for_all_classes
-                    )
+                    predictions, all_tags = self._standard_inference(features, batch, return_probabilities_for_all_classes)
 
                 for sentence, labels in zip(batch, predictions):
                     for token, label in zip(sentence.tokens, labels):
@@ -472,20 +499,17 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         :param scores: Scores for current sentence.
         """
         scores = scores.numpy()
-        prob_all_tags = [
-            [
-                Label(self.tag_dictionary.get_item_for_index(score_id), score)
-                for score_id, score in enumerate(score_dist)
-            ]
-            for score_dist in scores
-        ]
+        prob_all_tags = [[Label(self.tag_dictionary.get_item_for_index(score_id), score)
+                         for score_id, score in enumerate(score_dist)]
+                         for score_dist in scores]
 
         prob_tags_per_sentence = []
         previous = 0
         for length in lengths:
-            prob_tags_per_sentence.append(prob_all_tags[previous : previous + length])
+            prob_tags_per_sentence.append(prob_all_tags[previous:previous+length])
             previous = length
         return prob_tags_per_sentence
+
 
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""
@@ -635,38 +659,89 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "ml-pos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt",
             "ml-upos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt",
             # Portuguese models
-            "pt-pos-clinical": "/".join([hu_path, "pt-pos-clinical", "pucpr-flair-clinical-pos-tagging-best-model.pt"]),
+            "pt-pos-clinical": "/".join(
+                [
+                    hu_path,
+                    "pt-pos-clinical",
+                    "pucpr-flair-clinical-pos-tagging-best-model.pt",
+                ]
+            ),
             # Keyphase models
             "keyphrase": "/".join([hu_path, "keyphrase", "keyphrase-en-scibert.pt"]),
             "negation-speculation": "/".join([hu_path, "negation-speculation", "negation-speculation-model.pt"]),
             # Biomedical models
             "hunflair-paper-cellline": "/".join(
-                [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_smallish_models",
+                    "cellline",
+                    "hunflair-celline-v1.0.pt",
+                ]
             ),
             "hunflair-paper-chemical": "/".join(
-                [hu_path, "hunflair_smallish_models", "chemical", "hunflair-chemical-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_smallish_models",
+                    "chemical",
+                    "hunflair-chemical-v1.0.pt",
+                ]
             ),
             "hunflair-paper-disease": "/".join(
-                [hu_path, "hunflair_smallish_models", "disease", "hunflair-disease-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_smallish_models",
+                    "disease",
+                    "hunflair-disease-v1.0.pt",
+                ]
             ),
             "hunflair-paper-gene": "/".join([hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]),
             "hunflair-paper-species": "/".join(
-                [hu_path, "hunflair_smallish_models", "species", "hunflair-species-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_smallish_models",
+                    "species",
+                    "hunflair-species-v1.0.pt",
+                ]
             ),
             "hunflair-cellline": "/".join(
-                [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_smallish_models",
+                    "cellline",
+                    "hunflair-celline-v1.0.pt",
+                ]
             ),
             "hunflair-chemical": "/".join(
-                [hu_path, "hunflair_allcorpus_models", "huner-chemical", "hunflair-chemical-full-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_allcorpus_models",
+                    "huner-chemical",
+                    "hunflair-chemical-full-v1.0.pt",
+                ]
             ),
             "hunflair-disease": "/".join(
-                [hu_path, "hunflair_allcorpus_models", "huner-disease", "hunflair-disease-full-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_allcorpus_models",
+                    "huner-disease",
+                    "hunflair-disease-full-v1.0.pt",
+                ]
             ),
             "hunflair-gene": "/".join(
-                [hu_path, "hunflair_allcorpus_models", "huner-gene", "hunflair-gene-full-v1.0.pt"]
+                [
+                    hu_path,
+                    "hunflair_allcorpus_models",
+                    "huner-gene",
+                    "hunflair-gene-full-v1.0.pt",
+                ]
             ),
             "hunflair-species": "/".join(
-                [hu_path, "hunflair_allcorpus_models", "huner-species", "hunflair-species-full-v1.1.pt"]
+                [
+                    hu_path,
+                    "hunflair_allcorpus_models",
+                    "huner-species",
+                    "hunflair-species-full-v1.1.pt",
+                ]
             ),
         }
 
@@ -696,29 +771,53 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         elif model_name == "de-historic-indirect":
             model_file = flair.cache_root / cache_dir / "indirect" / "final-model.pt"
             if not model_file.exists():
-                cached_path("http://www.redewiedergabe.de/models/indirect.zip", cache_dir=cache_dir)
-                unzip_file(flair.cache_root / cache_dir / "indirect.zip", flair.cache_root / cache_dir)
+                cached_path(
+                    "http://www.redewiedergabe.de/models/indirect.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    flair.cache_root / cache_dir / "indirect.zip",
+                    flair.cache_root / cache_dir,
+                )
             model_path = str(flair.cache_root / cache_dir / "indirect" / "final-model.pt")
 
         elif model_name == "de-historic-direct":
             model_file = flair.cache_root / cache_dir / "direct" / "final-model.pt"
             if not model_file.exists():
-                cached_path("http://www.redewiedergabe.de/models/direct.zip", cache_dir=cache_dir)
-                unzip_file(flair.cache_root / cache_dir / "direct.zip", flair.cache_root / cache_dir)
+                cached_path(
+                    "http://www.redewiedergabe.de/models/direct.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    flair.cache_root / cache_dir / "direct.zip",
+                    flair.cache_root / cache_dir,
+                )
             model_path = str(flair.cache_root / cache_dir / "direct" / "final-model.pt")
 
         elif model_name == "de-historic-reported":
             model_file = flair.cache_root / cache_dir / "reported" / "final-model.pt"
             if not model_file.exists():
-                cached_path("http://www.redewiedergabe.de/models/reported.zip", cache_dir=cache_dir)
-                unzip_file(flair.cache_root / cache_dir / "reported.zip", flair.cache_root / cache_dir)
+                cached_path(
+                    "http://www.redewiedergabe.de/models/reported.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    flair.cache_root / cache_dir / "reported.zip",
+                    flair.cache_root / cache_dir,
+                )
             model_path = str(flair.cache_root / cache_dir / "reported" / "final-model.pt")
 
         elif model_name == "de-historic-free-indirect":
             model_file = flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt"
             if not model_file.exists():
-                cached_path("http://www.redewiedergabe.de/models/freeIndirect.zip", cache_dir=cache_dir)
-                unzip_file(flair.cache_root / cache_dir / "freeIndirect.zip", flair.cache_root / cache_dir)
+                cached_path(
+                    "http://www.redewiedergabe.de/models/freeIndirect.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    flair.cache_root / cache_dir / "freeIndirect.zip",
+                    flair.cache_root / cache_dir,
+                )
             model_path = str(flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt")
 
         # for all other cases (not local file or special download location), use HF model hub
@@ -813,7 +912,11 @@ class MultiTagger:
         super().__init__()
         self.name_to_tagger = name_to_tagger
 
-    def predict(self, sentences: Union[List[Sentence], Sentence], return_loss: bool = False):
+    def predict(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_loss: bool = False,
+    ):
         """
         Predict sequence tags for Named Entity Recognition task
         :param sentences: a Sentence or a List of Sentence
@@ -836,7 +939,12 @@ class MultiTagger:
         if isinstance(sentences, Sentence):
             sentences = [sentences]
         for name, tagger in self.name_to_tagger.items():
-            tagger.predict(sentences=sentences, label_name=name, return_loss=return_loss, embedding_storage_mode="cpu")
+            tagger.predict(
+                sentences=sentences,
+                label_name=name,
+                return_loss=return_loss,
+                embedding_storage_mode="cpu",
+            )
 
         # clear embeddings after predicting
         for sentence in sentences:

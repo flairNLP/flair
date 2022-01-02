@@ -5,7 +5,13 @@ import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
 from torch.nn import RNNBase
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from transformers import CONFIG_MAPPING, AutoConfig, AutoModel, AutoTokenizer, PreTrainedTokenizer
+from transformers import (
+    CONFIG_MAPPING,
+    AutoConfig,
+    AutoModel,
+    AutoTokenizer,
+    PreTrainedTokenizer,
+)
 
 import flair
 from flair.data import Sentence
@@ -139,8 +145,16 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             longest_sequence_in_batch: int = len(max(subtokenized_sentences, key=len))
 
             # initialize batch tensors and mask
-            input_ids = torch.zeros([len(sentences), longest_sequence_in_batch], dtype=torch.long, device=flair.device)
-            mask = torch.zeros([len(sentences), longest_sequence_in_batch], dtype=torch.long, device=flair.device)
+            input_ids = torch.zeros(
+                [len(sentences), longest_sequence_in_batch],
+                dtype=torch.long,
+                device=flair.device,
+            )
+            mask = torch.zeros(
+                [len(sentences), longest_sequence_in_batch],
+                dtype=torch.long,
+                device=flair.device,
+            )
             for s_id, sentence_embedding in enumerate(subtokenized_sentences):
                 sequence_length = len(sentence_embedding)
                 input_ids[s_id][:sequence_length] = sentence_embedding
@@ -165,7 +179,10 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
                 elif self.pooling == "mean":
                     mean_embeddings_all_layers: List[torch.Tensor] = [
-                        torch.mean(hidden_states[layer][sentence_idx][: len(subtokens), :], dim=0)
+                        torch.mean(
+                            hidden_states[layer][sentence_idx][: len(subtokens), :],
+                            dim=0,
+                        )
                         for layer in self.layer_indexes
                     ]
 
@@ -173,7 +190,10 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
                 elif self.pooling == "max":
                     max_embeddings_all_layers: List[torch.Tensor] = [
-                        torch.max(hidden_states[layer][sentence_idx][: len(subtokens), :], dim=0)[0]
+                        torch.max(
+                            hidden_states[layer][sentence_idx][: len(subtokens), :],
+                            dim=0,
+                        )[0]
                         for layer in self.layer_indexes
                     ]
 
@@ -267,7 +287,12 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
 
 class DocumentPoolEmbeddings(DocumentEmbeddings):
-    def __init__(self, embeddings: List[TokenEmbeddings], fine_tune_mode: str = "none", pooling: str = "mean"):
+    def __init__(
+        self,
+        embeddings: List[TokenEmbeddings],
+        fine_tune_mode: str = "none",
+        pooling: str = "mean",
+    ):
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
         :param fine_tune_mode: if set to "linear" a trainable layer is added, if set to
@@ -343,7 +368,11 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
 
 class DocumentTFIDFEmbeddings(DocumentEmbeddings):
-    def __init__(self, train_dataset, **vectorizer_params):
+    def __init__(
+        self,
+        train_dataset,
+        **vectorizer_params,
+    ):
         """The constructor for DocumentTFIDFEmbeddings.
         :param train_dataset: the train dataset which will be used to construct vectorizer
         :param vectorizer_params: parameters given to Scikit-learn's TfidfVectorizer constructor
@@ -491,7 +520,9 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         longest_token_sequence_in_batch: int = max(lengths)
 
         pre_allocated_zero_tensor = torch.zeros(
-            self.embeddings.embedding_length * longest_token_sequence_in_batch, dtype=torch.float, device=flair.device
+            self.embeddings.embedding_length * longest_token_sequence_in_batch,
+            dtype=torch.float,
+            device=flair.device,
         )
 
         all_embs: List[torch.Tensor] = list()
@@ -504,7 +535,11 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
                 all_embs.append(t)
 
         sentence_tensor = torch.cat(all_embs).view(
-            [len(sentences), longest_token_sequence_in_batch, self.embeddings.embedding_length]
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.embeddings.embedding_length,
+            ]
         )
 
         # before-RNN dropout
@@ -653,7 +688,10 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
 
                 # if its a forward LM, take last state
                 if embedding.is_forward_lm:
-                    sentence.set_embedding(embedding.name, sentence[len(sentence) - 1]._embeddings[embedding.name])
+                    sentence.set_embedding(
+                        embedding.name,
+                        sentence[len(sentence) - 1]._embeddings[embedding.name],
+                    )
                 else:
                     sentence.set_embedding(embedding.name, sentence[0]._embeddings[embedding.name])
 
@@ -661,7 +699,12 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
 
 
 class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
-    def __init__(self, model: str = "bert-base-nli-mean-tokens", batch_size: int = 1, convert_to_numpy: bool = False):
+    def __init__(
+        self,
+        model: str = "bert-base-nli-mean-tokens",
+        batch_size: int = 1,
+        convert_to_numpy: bool = False,
+    ):
         """
         :param model: string name of models from SentencesTransformer Class
         :param name: string name of embedding type which will be set to Sentence object
@@ -800,7 +843,9 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         longest_token_sequence_in_batch: int = max(lengths)
 
         pre_allocated_zero_tensor = torch.zeros(
-            self.embeddings.embedding_length * longest_token_sequence_in_batch, dtype=torch.float, device=flair.device
+            self.embeddings.embedding_length * longest_token_sequence_in_batch,
+            dtype=torch.float,
+            device=flair.device,
         )
 
         all_embs: List[torch.Tensor] = list()
@@ -813,7 +858,11 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
                 all_embs.append(t)
 
         sentence_tensor = torch.cat(all_embs).view(
-            [len(sentences), longest_token_sequence_in_batch, self.embeddings.embedding_length]
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.embeddings.embedding_length,
+            ]
         )
 
         # before-RNN dropout

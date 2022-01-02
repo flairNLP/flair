@@ -475,7 +475,11 @@ class MultiCoNer(MultiFileColumnCorpus):
 
 class CONLL_03(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the CoNLL-03 corpus. This is only possible if you've manually downloaded it to your machine.
@@ -523,7 +527,11 @@ class CONLL_03(ColumnCorpus):
 
 class CONLL_03_GERMAN(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the CoNLL-03 corpus for German. This is only possible if you've manually downloaded it to your machine.
@@ -570,7 +578,11 @@ class CONLL_03_GERMAN(ColumnCorpus):
 
 class CONLL_03_DUTCH(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the CoNLL-03 corpus for Dutch. The first time you call this constructor it will automatically
@@ -636,7 +648,11 @@ class CONLL_03_DUTCH(ColumnCorpus):
 
 class CONLL_03_SPANISH(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the CoNLL-03 corpus for Spanish. The first time you call this constructor it will automatically
@@ -667,13 +683,22 @@ class CONLL_03_SPANISH(ColumnCorpus):
         cached_path(f"{conll_02_path}esp.train", Path("datasets") / dataset_name)
 
         super(CONLL_03_SPANISH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, encoding="latin-1", in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            encoding="latin-1",
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 
 class CONLL_2000(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "np", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "np",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the CoNLL-2000 corpus for English chunking.
@@ -705,21 +730,38 @@ class CONLL_2000(ColumnCorpus):
             import gzip
             import shutil
 
-            with gzip.open(flair.cache_root / "datasets" / dataset_name / "train.txt.gz", "rb") as f_in:
-                with open(flair.cache_root / "datasets" / dataset_name / "train.txt", "wb") as f_out:
+            with gzip.open(
+                flair.cache_root / "datasets" / dataset_name / "train.txt.gz",
+                "rb",
+            ) as f_in:
+                with open(
+                    flair.cache_root / "datasets" / dataset_name / "train.txt",
+                    "wb",
+                ) as f_out:
                     shutil.copyfileobj(f_in, f_out)
             with gzip.open(flair.cache_root / "datasets" / dataset_name / "test.txt.gz", "rb") as f_in:
-                with open(flair.cache_root / "datasets" / dataset_name / "test.txt", "wb") as f_out:
+                with open(
+                    flair.cache_root / "datasets" / dataset_name / "test.txt",
+                    "wb",
+                ) as f_out:
                     shutil.copyfileobj(f_in, f_out)
 
         super(CONLL_2000, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 
 class WNUT_17(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -741,12 +783,21 @@ class WNUT_17(ColumnCorpus):
         cached_path(f"{wnut_path}emerging.test.annotated", Path("datasets") / dataset_name)
 
         super(WNUT_17, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 
 class BIOSCOPE(ColumnCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, **corpusargs):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ):
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -766,7 +817,13 @@ class BIOSCOPE(ColumnCorpus):
         )
         cached_path(f"{bioscope_path}output.txt", Path("datasets") / dataset_name)
 
-        super(BIOSCOPE, self).__init__(data_folder, columns, in_memory=in_memory, train_file="output.txt", **corpusargs)
+        super(BIOSCOPE, self).__init__(
+            data_folder,
+            columns,
+            in_memory=in_memory,
+            train_file="output.txt",
+            **corpusargs,
+        )
 
 
 class NER_ARABIC_ANER(ColumnCorpus):
@@ -884,7 +941,11 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
 
 class NER_BASQUE(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -908,14 +969,24 @@ class NER_BASQUE(ColumnCorpus):
             import shutil
             import tarfile
 
-            with tarfile.open(flair.cache_root / "datasets" / dataset_name / "eiec_v1.0.tgz", "r:gz") as f_in:
-                corpus_files = ("eiec_v1.0/named_ent_eu.train", "eiec_v1.0/named_ent_eu.test")
+            with tarfile.open(
+                flair.cache_root / "datasets" / dataset_name / "eiec_v1.0.tgz",
+                "r:gz",
+            ) as f_in:
+                corpus_files = (
+                    "eiec_v1.0/named_ent_eu.train",
+                    "eiec_v1.0/named_ent_eu.test",
+                )
                 for corpus_file in corpus_files:
                     f_in.extract(corpus_file, data_path)
                     shutil.move(f"{data_path}/{corpus_file}", data_path)
 
         super(NER_BASQUE, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 
@@ -953,9 +1024,18 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
 
         # download data if necessary
         weiboNER_conll_path = "https://raw.githubusercontent.com/87302380/WEIBO_NER/main/data/"
-        cached_path(f"{weiboNER_conll_path}weiboNER_2nd_conll_format.train", Path("datasets") / dataset_name)
-        cached_path(f"{weiboNER_conll_path}weiboNER_2nd_conll_format.test", Path("datasets") / dataset_name)
-        cached_path(f"{weiboNER_conll_path}weiboNER_2nd_conll_format.dev", Path("datasets") / dataset_name)
+        cached_path(
+            f"{weiboNER_conll_path}weiboNER_2nd_conll_format.train",
+            Path("datasets") / dataset_name,
+        )
+        cached_path(
+            f"{weiboNER_conll_path}weiboNER_2nd_conll_format.test",
+            Path("datasets") / dataset_name,
+        )
+        cached_path(
+            f"{weiboNER_conll_path}weiboNER_2nd_conll_format.dev",
+            Path("datasets") / dataset_name,
+        )
 
         super(NER_CHINESE_WEIBO, self).__init__(
             data_folder,
@@ -973,7 +1053,11 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
 
 class NER_DANISH_DANE(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -993,7 +1077,8 @@ class NER_DANISH_DANE(ColumnCorpus):
         train_data_file = data_path / "ddt.train.conllu"
         if not train_data_file.is_file():
             temp_file = cached_path(
-                "https://danlp.alexandra.dk/304bd159d5de/datasets/ddt.zip", Path("datasets") / dataset_name
+                "https://danlp.alexandra.dk/304bd159d5de/datasets/ddt.zip",
+                Path("datasets") / dataset_name,
             )
             from zipfile import ZipFile
 
@@ -1016,13 +1101,22 @@ class NER_DANISH_DANE(ColumnCorpus):
                 print(data_path / data_file)
 
         super(NER_DANISH_DANE, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, comment_symbol="#", **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            comment_symbol="#",
+            **corpusargs,
         )
 
 
 class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the eng corpus of the MIT Movie Corpus (it has simpler queries compared to the trivia10k13 corpus)
@@ -1066,7 +1160,11 @@ class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
 
 class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the trivia10k13 corpus of the MIT Movie Corpus (it has more complex queries compared to the eng corpus)
@@ -1120,7 +1218,11 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
 
         if not base_path:
@@ -1156,7 +1258,11 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
 
 class NER_ENGLISH_RESTAURANT(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the experimental MIT Restaurant corpus available on https://groups.csail.mit.edu/sls/downloads/restaurant/.
@@ -1187,13 +1293,22 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
         cached_path(f"{mit_restaurants_path}train.txt", Path("datasets") / dataset_name)
 
         super(NER_ENGLISH_RESTAURANT, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, encoding="latin-1", in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            encoding="latin-1",
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 
 class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the STACKOVERFLOW_NER corpus. The first time you call this constructor it will automatically
@@ -1286,7 +1401,11 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
 
 class NER_ENGLISH_TWITTER(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize a dataset called twitter_ner which can be found on the following page:
@@ -1332,7 +1451,11 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
 
 
 class NER_ENGLISH_PERSON(ColumnCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+    ):
         """
         Initialize the PERSON_NER corpus for person names. The first time you call this constructor it will automatically
         download the dataset.
@@ -1383,7 +1506,11 @@ class NER_ENGLISH_PERSON(ColumnCorpus):
 
 class NER_ENGLISH_WEBPAGES(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the WEBPAGES_NER corpus introduced in the paper "Design Challenges and Misconceptions in Named Entity
@@ -1430,7 +1557,11 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
                 ff = os.listdir(outputfile / data_folder / f[-1])
                 for i, file in enumerate(ff):
                     if file.endswith(".gold"):
-                        with open(outputfile / data_folder / f[-1] / file, "r+", errors="replace") as infile:
+                        with open(
+                            outputfile / data_folder / f[-1] / file,
+                            "r+",
+                            errors="replace",
+                        ) as infile:
                             content = infile.read()
                         outfile.write(content)
                 break
@@ -1562,7 +1693,11 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
 
 class NER_FINNISH(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -1589,7 +1724,12 @@ class NER_FINNISH(ColumnCorpus):
         self._remove_lines_without_annotations(data_file=Path(data_folder / "digitoday.2015.test.csv"))
 
         super(NER_FINNISH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, skip_first_line=True, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            skip_first_line=True,
+            **corpusargs,
         )
 
     def _remove_lines_without_annotations(self, data_file: Union[str, Path]):
@@ -1603,7 +1743,11 @@ class NER_FINNISH(ColumnCorpus):
 
 class NER_GERMAN_BIOFID(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -1625,13 +1769,21 @@ class NER_GERMAN_BIOFID(ColumnCorpus):
         cached_path(f"{biofid_path}test.conll", Path("datasets") / dataset_name)
 
         super(NER_GERMAN_BIOFID, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 
 class NER_GERMAN_EUROPARL(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the EUROPARL_NER_GERMAN corpus. The first time you call this constructor it will automatically
@@ -1658,11 +1810,25 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
 
         # download data if necessary
         europarl_ner_german_path = "https://nlpado.de/~sebastian/software/ner/"
-        cached_path(f"{europarl_ner_german_path}ep-96-04-15.conll", Path("datasets") / dataset_name)
-        cached_path(f"{europarl_ner_german_path}ep-96-04-16.conll", Path("datasets") / dataset_name)
+        cached_path(
+            f"{europarl_ner_german_path}ep-96-04-15.conll",
+            Path("datasets") / dataset_name,
+        )
+        cached_path(
+            f"{europarl_ner_german_path}ep-96-04-16.conll",
+            Path("datasets") / dataset_name,
+        )
 
-        self._add_IOB_tags(data_file=Path(data_folder / "ep-96-04-15.conll"), encoding="latin-1", ner_column=4)
-        self._add_IOB_tags(data_file=Path(data_folder / "ep-96-04-16.conll"), encoding="latin-1", ner_column=4)
+        self._add_IOB_tags(
+            data_file=Path(data_folder / "ep-96-04-15.conll"),
+            encoding="latin-1",
+            ner_column=4,
+        )
+        self._add_IOB_tags(
+            data_file=Path(data_folder / "ep-96-04-16.conll"),
+            encoding="latin-1",
+            ner_column=4,
+        )
 
         super(NER_GERMAN_EUROPARL, self).__init__(
             data_folder,
@@ -1737,7 +1903,11 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
 
 class NER_GERMAN_LEGAL(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the LER_GERMAN (Legal Entity Recognition) corpus. The first time you call this constructor it will automatically
@@ -1766,13 +1936,22 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
         cached_path(f"{ler_path}ler.conll", Path("datasets") / dataset_name)
 
         super(NER_GERMAN_LEGAL, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, train_file="ler.conll", **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            train_file="ler.conll",
+            **corpusargs,
         )
 
 
 class NER_GERMAN_GERMEVAL(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the GermEval NER corpus for German. This is only possible if you've manually downloaded it to your
@@ -1817,7 +1996,12 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
             )
 
         super(NER_GERMAN_GERMEVAL, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, comment_symbol="#", in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            comment_symbol="#",
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 
@@ -1998,7 +2182,11 @@ class NER_HUNGARIAN(ColumnCorpus):
 
 class NER_ICELANDIC(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the ICELANDIC_NER corpus. The first time you call this constructor it will automatically
@@ -2056,7 +2244,11 @@ class NER_ICELANDIC(ColumnCorpus):
 
 class NER_JAPANESE(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the Hironsan/IOB2 corpus for Japanese. The first time you call this constructor it will automatically
@@ -2093,7 +2285,12 @@ class NER_JAPANESE(ColumnCorpus):
             self.__prepare_jap_wikipedia_corpus(data_folder / "raw" / "ja.wikipedia.conll", data_folder / "train.txt")
 
         super(NER_JAPANESE, self).__init__(
-            data_folder, columns, train_file="train.txt", tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            train_file="train.txt",
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
         )
 
     @staticmethod
@@ -2209,7 +2406,10 @@ class NER_MASAKHANE(MultiCorpus):
             )
             corpora.append(corp)
 
-        super(NER_MASAKHANE, self).__init__(corpora, name="masakhane-" + "-".join(languages))
+        super(NER_MASAKHANE, self).__init__(
+            corpora,
+            name="masakhane-" + "-".join(languages),
+        )
 
 
 class NER_MULTI_WIKIANN(MultiCorpus):
@@ -2317,7 +2517,10 @@ class NER_MULTI_WIKIANN(MultiCorpus):
             corpora.append(corp)
             log.info("...done.")
 
-        super(NER_MULTI_WIKIANN, self).__init__(corpora, name="wikiann")
+        super(NER_MULTI_WIKIANN, self).__init__(
+            corpora,
+            name="wikiann",
+        )
 
     def _silver_standard_to_simple_ner_annotation(self, data_file: Union[str, Path]):
         with open(data_file, "r", encoding="utf-8") as f_read, open(
@@ -2747,7 +2950,10 @@ class NER_MULTI_XTREME(MultiCorpus):
                 os.makedirs(language_folder)
 
                 # download from HU Server
-                temp_file = cached_path(hu_path + "/" + file_name, Path("datasets") / dataset_name / language)
+                temp_file = cached_path(
+                    hu_path + "/" + file_name,
+                    Path("datasets") / dataset_name / language,
+                )
 
                 # unzip
                 log.info("Extracting data...")
@@ -2776,7 +2982,10 @@ class NER_MULTI_XTREME(MultiCorpus):
             )
             corpora.append(corp)
 
-        super(NER_MULTI_XTREME, self).__init__(corpora, name="xtreme")
+        super(NER_MULTI_XTREME, self).__init__(
+            corpora,
+            name="xtreme",
+        )
 
     def _xtreme_to_simple_ner_annotation(self, data_file: Union[str, Path]):
         with open(data_file, "r", encoding="utf-8") as f:
@@ -2834,7 +3043,10 @@ class NER_MULTI_WIKINER(MultiCorpus):
             )
             corpora.append(corp)
 
-        super(NER_MULTI_WIKINER, self).__init__(corpora, name="wikiner")
+        super(NER_MULTI_WIKINER, self).__init__(
+            corpora,
+            name="wikiner",
+        )
 
     def _download_wikiner(self, language_code: str, dataset_name: str):
         # download data if necessary
@@ -2844,13 +3056,21 @@ class NER_MULTI_WIKINER(MultiCorpus):
         data_file = flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.train"
         if not data_file.is_file():
 
-            cached_path(f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2", Path("datasets") / dataset_name)
+            cached_path(
+                f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2",
+                Path("datasets") / dataset_name,
+            )
             import bz2
 
             # unpack and write out in CoNLL column-like format
-            bz_file = bz2.BZ2File(flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.bz2", "rb")
+            bz_file = bz2.BZ2File(
+                flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.bz2",
+                "rb",
+            )
             with bz_file as f, open(
-                flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.train", "w", encoding="utf-8"
+                flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.train",
+                "w",
+                encoding="utf-8",
             ) as out:
                 for lineb in f:
                     line = lineb.decode("utf-8")
@@ -2861,7 +3081,11 @@ class NER_MULTI_WIKINER(MultiCorpus):
 
 class NER_SWEDISH(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the NER_SWEDISH corpus for Swedish. The first time you call this constructor it will automatically
@@ -2895,7 +3119,11 @@ class NER_SWEDISH(ColumnCorpus):
         self._add_IOB2_tags(data_file=Path(data_folder / "train_corpus.txt"))
 
         super(NER_SWEDISH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
         )
 
     def _add_IOB2_tags(self, data_file: Union[str, Path], encoding: str = "utf8"):
@@ -2944,7 +3172,11 @@ class NER_SWEDISH(ColumnCorpus):
 
 class NER_TURKU(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "ner", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        **corpusargs,
     ):
         """
         Initialize the Finnish TurkuNER corpus. The first time you call this constructor it will automatically
@@ -2995,7 +3227,11 @@ class NER_TURKU(ColumnCorpus):
 
 class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "keyword", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "keyword",
+        in_memory: bool = True,
+        **corpusargs,
     ):
 
         if not base_path:
@@ -3017,13 +3253,21 @@ class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
         cached_path(f"{semeval2017_path}/dev.txt", Path("datasets") / dataset_name)
 
         super(KEYPHRASE_SEMEVAL2017, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 
 class KEYPHRASE_INSPEC(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "keyword", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "keyword",
+        in_memory: bool = True,
+        **corpusargs,
     ):
 
         if not base_path:
@@ -3048,13 +3292,21 @@ class KEYPHRASE_INSPEC(ColumnCorpus):
             os.rename(data_folder / "valid.txt", data_folder / "dev.txt")
 
         super(KEYPHRASE_INSPEC, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 
 class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
     def __init__(
-        self, base_path: Union[str, Path] = None, tag_to_bioes: str = "keyword", in_memory: bool = True, **corpusargs
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "keyword",
+        in_memory: bool = True,
+        **corpusargs,
     ):
 
         if not base_path:
@@ -3075,7 +3327,11 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
         cached_path(f"{semeval2010_path}/test.txt", Path("datasets") / dataset_name)
 
         super(KEYPHRASE_SEMEVAL2010, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 

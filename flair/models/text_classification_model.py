@@ -22,7 +22,12 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
     class data sets.
     """
 
-    def __init__(self, document_embeddings: flair.embeddings.DocumentEmbeddings, label_type: str, **classifierargs):
+    def __init__(
+        self,
+        document_embeddings: flair.embeddings.DocumentEmbeddings,
+        label_type: str,
+        **classifierargs,
+    ):
         """
         Initializes a TextClassifier
         :param document_embeddings: embeddings used to embed each data point
@@ -48,8 +53,13 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         self.to(flair.device)
 
     def forward_pass(
-        self, sentences: Union[List[Sentence], Sentence], return_label_candidates: bool = False
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[Sentence], List[Label]]]:
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
+    ) -> Union[
+        Tuple[torch.Tensor, List[List[str]]],
+        Tuple[torch.Tensor, List[List[str]], List[Sentence], List[Label]],
+    ]:
         if not isinstance(sentences, list):
             sentences = [sentences]
 
@@ -116,10 +126,18 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         # English sentiment models
         model_map["sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_4.pt"]
+            [
+                hu_path,
+                "sentiment-curated-distilbert",
+                "sentiment-en-mix-distillbert_4.pt",
+            ]
         )
         model_map["en-sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_4.pt"]
+            [
+                hu_path,
+                "sentiment-curated-distilbert",
+                "sentiment-en-mix-distillbert_4.pt",
+            ]
         )
         model_map["sentiment-fast"] = "/".join(
             [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn_v8.pt"]

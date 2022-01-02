@@ -402,7 +402,12 @@ class Token(DataPoint):
     """
 
     def __init__(
-        self, text: str, idx: int = None, head_id: int = None, whitespace_after: bool = True, start_position: int = None
+        self,
+        text: str,
+        idx: int = None,
+        head_id: int = None,
+        whitespace_after: bool = True,
+        start_position: int = None,
     ):
         super().__init__()
 
@@ -960,7 +965,11 @@ class Sentence(DataPoint):
         for token in self.tokens:
             nt = Token(token.text)
             for tag_type in token.tags:
-                nt.add_label(tag_type, token.get_tag(tag_type).value, token.get_tag(tag_type).score)
+                nt.add_label(
+                    tag_type,
+                    token.get_tag(tag_type).value,
+                    token.get_tag(tag_type).score,
+                )
 
             s.add_token(nt)
         return s
@@ -1174,7 +1183,13 @@ class Corpus:
     def test(self) -> Optional[Dataset]:
         return self._test
 
-    def downsample(self, percentage: float = 0.1, downsample_train=True, downsample_dev=True, downsample_test=True):
+    def downsample(
+        self,
+        percentage: float = 0.1,
+        downsample_train=True,
+        downsample_dev=True,
+        downsample_test=True,
+    ):
 
         if downsample_train and self._train is not None:
             self._train = self._downsample_to_proportion(self._train, percentage)

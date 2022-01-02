@@ -43,7 +43,11 @@ log = logging.getLogger("flair")
 
 
 class ModelTrainer:
-    def __init__(self, model: flair.nn.Model, corpus: Corpus):
+    def __init__(
+        self,
+        model: flair.nn.Model,
+        corpus: Corpus,
+    ):
         """
         Initialize a model trainer
         :param model: The model that you want to train. The model should inherit from flair.nn.Model  # noqa: E501
@@ -168,7 +172,10 @@ class ModelTrainer:
         """
 
         # create a model card for this model with Flair and PyTorch version
-        model_card: Dict[str, Any] = {"flair_version": flair.__version__, "pytorch_version": torch.__version__}
+        model_card: Dict[str, Any] = {
+            "flair_version": flair.__version__,
+            "pytorch_version": torch.__version__,
+        }
 
         # also record Transformers version if library is loaded
         try:
@@ -296,7 +303,9 @@ class ModelTrainer:
                 num_warmup_steps = int(num_train_steps * warmup_fraction)
 
                 scheduler = LinearSchedulerWithWarmup(
-                    optimizer, num_train_steps=num_train_steps, num_warmup_steps=num_warmup_steps
+                    optimizer,
+                    num_train_steps=num_train_steps,
+                    num_warmup_steps=num_warmup_steps,
                 )
             else:
                 scheduler = scheduler(
@@ -612,7 +621,10 @@ class ModelTrainer:
                     if use_tensorboard:
                         writer.add_scalar("dev_loss", dev_eval_result.loss, epoch)
                         writer.add_scalar("dev_score", dev_eval_result.main_score, epoch)
-                        for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
+                        for (
+                            metric_class_avg_type,
+                            metric_type,
+                        ) in metrics_for_tensorboard:
                             writer.add_scalar(
                                 f"dev_{metric_class_avg_type}_{metric_type}",
                                 dev_eval_result.classification_report[metric_class_avg_type][metric_type],
@@ -646,7 +658,10 @@ class ModelTrainer:
                     if use_tensorboard:
                         writer.add_scalar("test_loss", test_eval_result.loss, epoch)
                         writer.add_scalar("test_score", test_eval_result.main_score, epoch)
-                        for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
+                        for (
+                            metric_class_avg_type,
+                            metric_type,
+                        ) in metrics_for_tensorboard:
                             writer.add_scalar(
                                 f"test_{metric_class_avg_type}_{metric_type}",
                                 test_eval_result.classification_report[metric_class_avg_type][metric_type],
@@ -799,7 +814,11 @@ class ModelTrainer:
             "dev_loss_history": dev_loss_history,
         }
 
-    def resume(self, model: Model, **trainer_args):
+    def resume(
+        self,
+        model: Model,
+        **trainer_args,
+    ):
 
         assert model.model_card is not None
         self.model = model

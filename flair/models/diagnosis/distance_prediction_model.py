@@ -19,7 +19,13 @@ log = logging.getLogger("flair")
 
 
 class WeightedMSELoss(_Loss):
-    def __init__(self, regr_loss_step: float, size_average=None, reduce=None, reduction: str = "mean") -> None:
+    def __init__(
+        self,
+        regr_loss_step: float,
+        size_average=None,
+        reduce=None,
+        reduction: str = "mean",
+    ) -> None:
         super(WeightedMSELoss, self).__init__(size_average, reduce, reduction)
         self.regr_loss_step = regr_loss_step
 
@@ -233,15 +239,22 @@ class DistancePredictor(flair.nn.Model[Sentence]):
 
         if self.regression:
             return self.evaluate_regression(
-                sentences=data_points, out_path=out_path, embedding_storage_mode=embedding_storage_mode
+                sentences=data_points,
+                out_path=out_path,
+                embedding_storage_mode=embedding_storage_mode,
             )
 
         return self.evaluate_classification(
-            sentences=data_points, out_path=out_path, embedding_storage_mode=embedding_storage_mode
+            sentences=data_points,
+            out_path=out_path,
+            embedding_storage_mode=embedding_storage_mode,
         )
 
     def evaluate_regression(
-        self, sentences: List[Sentence], out_path: Union[str, Path] = None, embedding_storage_mode: str = "none"
+        self,
+        sentences: List[Sentence],
+        out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
     ) -> Result:
 
         with torch.no_grad():
@@ -352,7 +365,10 @@ class DistancePredictor(flair.nn.Model[Sentence]):
             return result
 
     def evaluate_classification(
-        self, sentences: List[Sentence], out_path: Union[str, Path] = None, embedding_storage_mode: str = "none"
+        self,
+        sentences: List[Sentence],
+        out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
     ) -> Result:
 
         # use scikit-learn to evaluate
@@ -419,11 +435,13 @@ class DistancePredictor(flair.nn.Model[Sentence]):
 
             # get scores
             micro_f_score = round(
-                metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="micro", zero_division=0), 4
+                metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="micro", zero_division=0),
+                4,
             )
             accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
             macro_f_score = round(
-                metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="macro", zero_division=0), 4
+                metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="macro", zero_division=0),
+                4,
             )
             # precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
             # recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)

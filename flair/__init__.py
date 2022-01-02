@@ -18,7 +18,13 @@ else:
 embedding_storage_mode = "default"
 
 
-from . import data, models, nn, trainers, visual  # noqa: E402 import after setting device
+from . import (  # noqa: E402 import after setting device
+    data,
+    models,
+    nn,
+    trainers,
+    visual,
+)
 
 __version__ = "0.10"
 

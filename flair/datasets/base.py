@@ -210,7 +210,9 @@ class MongoDataset(FlairDataset):
         if self.in_memory:
             for document in self.__cursor.find(filter=query, skip=start, limit=0):
                 sentence = self._parse_document_to_sentence(
-                    document[self.text], [document[_] if _ in document else "" for _ in self.categories], tokenizer
+                    document[self.text],
+                    [document[_] if _ in document else "" for _ in self.categories],
+                    tokenizer,
                 )
                 if sentence is not None and len(sentence.tokens) > 0:
                     self.sentences.append(sentence)
@@ -220,7 +222,10 @@ class MongoDataset(FlairDataset):
             self.total_sentence_count = self.__cursor.count_documents()
 
     def _parse_document_to_sentence(
-        self, text: str, labels: List[str], tokenizer: Union[Callable[[str], List[Token]], Tokenizer]
+        self,
+        text: str,
+        labels: List[str],
+        tokenizer: Union[Callable[[str], List[Token]], Tokenizer],
     ):
         if self.max_chars_per_doc > 0:
             text = text[: self.max_chars_per_doc]
@@ -248,7 +253,9 @@ class MongoDataset(FlairDataset):
         else:
             document = self.__cursor.find_one({"_id": index})
             sentence = self._parse_document_to_sentence(
-                document[self.text], [document[_] if _ in document else "" for _ in self.categories], self.tokenizer
+                document[self.text],
+                [document[_] if _ in document else "" for _ in self.categories],
+                self.tokenizer,
             )
             return sentence
 

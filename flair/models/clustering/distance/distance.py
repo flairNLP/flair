@@ -1,10 +1,10 @@
 import torch
-from torch import Tensor
+from torch import tensor
 
 
-def get_cosine_distance(vector1: Tensor, vector2: Tensor) -> Tensor:
-    cos = torch.nn.CosineSimilarity(dim=0, eps=1e-6)
-    return 1 - cos(vector1, vector2)
+def get_cosine_distance(vector1: tensor, vector2: tensor) -> tensor:
+    cos = torch.nn.functional.cosine_similarity(vector1, vector2, dim=0)
+    return 1 - cos
 
 
 def get_furthest_2_points(cfs: list) -> list:

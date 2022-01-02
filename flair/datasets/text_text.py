@@ -240,7 +240,11 @@ class DataPairCorpus(Corpus):
 
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(
-            data_folder, dev_file, test_file, train_file, autofind_splits=autofind_splits
+            data_folder,
+            dev_file,
+            test_file,
+            train_file,
+            autofind_splits=autofind_splits,
         )
 
         # create DataPairDataset for train, test and dev file, if they are given
@@ -297,7 +301,11 @@ class DataPairCorpus(Corpus):
         )
 
         super(DataPairCorpus, self).__init__(
-            train, dev, test, sample_missing_splits=sample_missing_splits, name=str(data_folder)
+            train,
+            dev,
+            test,
+            sample_missing_splits=sample_missing_splits,
+            name=str(data_folder),
         )
 
 
@@ -427,7 +435,11 @@ class DataPairDataset(FlairDataset):
         if self.in_memory:
             return self.data_pairs[index]
         elif self.label:
-            return self._make_data_pair(self.first_elements[index], self.second_elements[index], self.labels[index])
+            return self._make_data_pair(
+                self.first_elements[index],
+                self.second_elements[index],
+                self.labels[index],
+            )
         else:
             return self._make_data_pair(self.first_elements[index], self.second_elements[index])
 
@@ -464,13 +476,17 @@ class GLUE_RTE(DataPairCorpus):
         if not data_file.is_file():
             # get the zip file
             zipped_data_path = cached_path(
-                "https://dl.fbaipublicfiles.com/glue/data/RTE.zip", Path("datasets") / dataset_name
+                "https://dl.fbaipublicfiles.com/glue/data/RTE.zip",
+                Path("datasets") / dataset_name,
             )
 
             unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
 
             # rename test file to eval_dataset, since it has no labels
-            os.rename(str(data_folder / "RTE/test.tsv"), str(data_folder / "RTE/eval_dataset.tsv"))
+            os.rename(
+                str(data_folder / "RTE/test.tsv"),
+                str(data_folder / "RTE/eval_dataset.tsv"),
+            )
 
         super(GLUE_RTE, self).__init__(
             data_folder / "RTE",
@@ -546,7 +562,8 @@ class GLUE_MNLI(DataPairCorpus):
         if not data_file.is_file():
             # get the zip file
             zipped_data_path = cached_path(
-                "https://dl.fbaipublicfiles.com/glue/data/MNLI.zip", Path("datasets") / dataset_name
+                "https://dl.fbaipublicfiles.com/glue/data/MNLI.zip",
+                Path("datasets") / dataset_name,
             )
 
             unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
@@ -556,7 +573,10 @@ class GLUE_MNLI(DataPairCorpus):
             for dev_filename in ["dev_matched.tsv", "dev_mismatched.tsv"]:
 
                 temp_file = str("temp_" + dev_filename)
-                os.rename(str(data_folder / "MNLI" / dev_filename), str(data_folder / "MNLI" / temp_file))
+                os.rename(
+                    str(data_folder / "MNLI" / dev_filename),
+                    str(data_folder / "MNLI" / temp_file),
+                )
 
                 with open(data_folder / "MNLI" / dev_filename, "a") as out_file, open(
                     data_folder / "MNLI" / temp_file
@@ -569,9 +589,13 @@ class GLUE_MNLI(DataPairCorpus):
                 os.remove(str(data_folder / "MNLI" / temp_file))
 
             # rename test file to eval_dataset, since it has no labels
-            os.rename(str(data_folder / "MNLI/test_matched.tsv"), str(data_folder / "MNLI/eval_dataset_matched.tsv"))
             os.rename(
-                str(data_folder / "MNLI/test_mismatched.tsv"), str(data_folder / "MNLI/eval_dataset_mismatched.tsv")
+                str(data_folder / "MNLI/test_matched.tsv"),
+                str(data_folder / "MNLI/eval_dataset_matched.tsv"),
+            )
+            os.rename(
+                str(data_folder / "MNLI/test_mismatched.tsv"),
+                str(data_folder / "MNLI/eval_dataset_mismatched.tsv"),
             )
 
         matched_suffix = "matched" if evaluate_on_matched else "mismatched"
@@ -662,10 +686,19 @@ class GLUE_MRPC(DataPairCorpus):
         if not data_file.is_file():
             for original_filename in original_filenames:
                 # get test and dev sets
-                cached_path(f"{mrpc_path}{original_filename}", Path("datasets") / dataset_name / "MRPC")
+                cached_path(
+                    f"{mrpc_path}{original_filename}",
+                    Path("datasets") / dataset_name / "MRPC",
+                )
 
-            os.rename(str(data_folder / "MRPC/msr_paraphrase_train.txt"), str(data_folder / "MRPC/train.tsv"))
-            os.rename(str(data_folder / "MRPC/msr_paraphrase_test.txt"), str(data_folder / "MRPC/test.tsv"))
+            os.rename(
+                str(data_folder / "MRPC/msr_paraphrase_train.txt"),
+                str(data_folder / "MRPC/train.tsv"),
+            )
+            os.rename(
+                str(data_folder / "MRPC/msr_paraphrase_test.txt"),
+                str(data_folder / "MRPC/test.tsv"),
+            )
 
         super(GLUE_MRPC, self).__init__(
             data_folder / "MRPC",
@@ -732,13 +765,17 @@ class GLUE_QNLI(DataPairCorpus):
         if not data_file.is_file():
             # get the zip file
             zipped_data_path = cached_path(
-                "https://dl.fbaipublicfiles.com/glue/data/QNLIv2.zip", Path("datasets") / dataset_name
+                "https://dl.fbaipublicfiles.com/glue/data/QNLIv2.zip",
+                Path("datasets") / dataset_name,
             )
 
             unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
 
             # rename test file to eval_dataset, since it has no labels
-            os.rename(str(data_folder / "QNLI/test.tsv"), str(data_folder / "QNLI/eval_dataset.tsv"))
+            os.rename(
+                str(data_folder / "QNLI/test.tsv"),
+                str(data_folder / "QNLI/eval_dataset.tsv"),
+            )
 
         super(GLUE_QNLI, self).__init__(
             data_folder / "QNLI",
@@ -815,13 +852,17 @@ class GLUE_QQP(DataPairCorpus):
         if not data_file.is_file():
             # get the zip file
             zipped_data_path = cached_path(
-                "https://dl.fbaipublicfiles.com/glue/data/QQP-clean.zip", Path("datasets") / dataset_name
+                "https://dl.fbaipublicfiles.com/glue/data/QQP-clean.zip",
+                Path("datasets") / dataset_name,
             )
 
             unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
 
             # rename test file to eval_dataset, since it has no labels
-            os.rename(str(data_folder / "QQP/test.tsv"), str(data_folder / "QQP/eval_dataset.tsv"))
+            os.rename(
+                str(data_folder / "QQP/test.tsv"),
+                str(data_folder / "QQP/eval_dataset.tsv"),
+            )
 
         super(GLUE_QQP, self).__init__(
             data_folder / "QQP",
@@ -898,13 +939,17 @@ class GLUE_WNLI(DataPairCorpus):
         if not data_file.is_file():
             # get the zip file
             zipped_data_path = cached_path(
-                "https://dl.fbaipublicfiles.com/glue/data/WNLI.zip", Path("datasets") / dataset_name
+                "https://dl.fbaipublicfiles.com/glue/data/WNLI.zip",
+                Path("datasets") / dataset_name,
             )
 
             unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
 
             # rename test file to eval_dataset, since it has no labels
-            os.rename(str(data_folder / "WNLI/test.tsv"), str(data_folder / "WNLI/eval_dataset.tsv"))
+            os.rename(
+                str(data_folder / "WNLI/test.tsv"),
+                str(data_folder / "WNLI/eval_dataset.tsv"),
+            )
 
         super(GLUE_WNLI, self).__init__(
             data_folder / "WNLI",
@@ -978,7 +1023,8 @@ class SUPERGLUE_RTE(DataPairCorpus):
         if not data_file.is_file():
             # get the zip file
             zipped_data_path = cached_path(
-                "https://dl.fbaipublicfiles.com/glue/superglue/data/v2/RTE.zip", Path("datasets") / dataset_name
+                "https://dl.fbaipublicfiles.com/glue/superglue/data/v2/RTE.zip",
+                Path("datasets") / dataset_name,
             )
 
             unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
@@ -989,7 +1035,10 @@ class SUPERGLUE_RTE(DataPairCorpus):
             rte_jsonl_to_tsv(data_folder / "RTE/val.jsonl", remove=True)
 
             os.rename(str(data_folder / "RTE/val.tsv"), str(data_folder / "RTE/dev.tsv"))
-            os.rename(str(data_folder / "RTE/test.tsv"), str(data_folder / "RTE/eval_dataset.tsv"))
+            os.rename(
+                str(data_folder / "RTE/test.tsv"),
+                str(data_folder / "RTE/eval_dataset.tsv"),
+            )
 
         super(SUPERGLUE_RTE, self).__init__(
             data_folder / "RTE",
@@ -1026,12 +1075,20 @@ class SUPERGLUE_RTE(DataPairCorpus):
         with open(folder_path, mode="w") as jsonl_file:
             datapoint: DataPair
             for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
-                entry = {"idx": index, "label": datapoint.get_labels("textual_entailment")[0].value}
+                entry = {
+                    "idx": index,
+                    "label": datapoint.get_labels("textual_entailment")[0].value,
+                }
                 jsonl_file.write(str(entry) + "\n")
 
 
 # Function to transform JSON file to tsv for Recognizing Textual Entailment Data
-def rte_jsonl_to_tsv(file_path: Union[str, Path], label: bool = True, remove: bool = False, encoding="utf-8"):
+def rte_jsonl_to_tsv(
+    file_path: Union[str, Path],
+    label: bool = True,
+    remove: bool = False,
+    encoding="utf-8",
+):
     import json
 
     tsv_file = os.path.splitext(file_path)[0] + ".tsv"

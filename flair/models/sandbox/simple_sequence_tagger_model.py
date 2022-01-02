@@ -25,7 +25,13 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
     As a result, only poor results can be expected.
     """
 
-    def __init__(self, embeddings: TokenEmbeddings, tag_dictionary: Dictionary, tag_type: str, **classifierargs):
+    def __init__(
+        self,
+        embeddings: TokenEmbeddings,
+        tag_dictionary: Dictionary,
+        tag_type: str,
+        **classifierargs,
+    ):
         """
         Initializes a SimpleSequenceTagger
         :param embeddings: word embeddings used in tagger
@@ -60,12 +66,18 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
     @staticmethod
     def _init_model_with_state_dict(state):
         model = SimpleSequenceTagger(
-            embeddings=state["embeddings"], tag_dictionary=state["tag_dictionary"], tag_type=state["tag_type"]
+            embeddings=state["embeddings"],
+            tag_dictionary=state["tag_dictionary"],
+            tag_type=state["tag_type"],
         )
         model.load_state_dict(state["state_dict"])
         return model
 
-    def forward_pass(self, sentences: Union[List[Sentence], Sentence], return_label_candidates: bool = False):
+    def forward_pass(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
+    ):
         if not isinstance(sentences, list):
             sentences = [sentences]
 

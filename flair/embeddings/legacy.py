@@ -49,7 +49,13 @@ class CharLMEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
     @deprecated(version="0.4", reason="Use 'FlairEmbeddings' instead.")
-    def __init__(self, model: str, detach: bool = True, use_cache: bool = False, cache_directory: Path = None):
+    def __init__(
+        self,
+        model: str,
+        detach: bool = True,
+        use_cache: bool = False,
+        cache_directory: Path = None,
+    ):
         """
         initializes contextual string embeddings using a character-level language model.
         :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
@@ -345,7 +351,10 @@ class CharLMEmbeddings(TokenEmbeddings):
 
 
 class TransformerXLEmbeddings(TokenEmbeddings):
-    @deprecated(version="0.4.5", reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings")
+    @deprecated(
+        version="0.4.5",
+        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
+    )
     def __init__(
         self,
         pretrained_model_name_or_path: str = "transfo-xl-wt103",
@@ -361,7 +370,8 @@ class TransformerXLEmbeddings(TokenEmbeddings):
 
         self.tokenizer = TransfoXLTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = TransfoXLModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -402,7 +412,10 @@ class TransformerXLEmbeddings(TokenEmbeddings):
 
 
 class XLNetEmbeddings(TokenEmbeddings):
-    @deprecated(version="0.4.5", reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings")
+    @deprecated(
+        version="0.4.5",
+        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
+    )
     def __init__(
         self,
         pretrained_model_name_or_path: str = "xlnet-large-cased",
@@ -420,7 +433,8 @@ class XLNetEmbeddings(TokenEmbeddings):
 
         self.tokenizer = XLNetTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = XLNetModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -463,7 +477,10 @@ class XLNetEmbeddings(TokenEmbeddings):
 
 
 class XLMEmbeddings(TokenEmbeddings):
-    @deprecated(version="0.4.5", reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings")
+    @deprecated(
+        version="0.4.5",
+        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
+    )
     def __init__(
         self,
         pretrained_model_name_or_path: str = "xlm-mlm-en-2048",
@@ -482,7 +499,8 @@ class XLMEmbeddings(TokenEmbeddings):
 
         self.tokenizer = XLMTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = XLMModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -525,7 +543,10 @@ class XLMEmbeddings(TokenEmbeddings):
 
 
 class OpenAIGPTEmbeddings(TokenEmbeddings):
-    @deprecated(version="0.4.5", reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings")
+    @deprecated(
+        version="0.4.5",
+        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
+    )
     def __init__(
         self,
         pretrained_model_name_or_path: str = "openai-gpt",
@@ -543,7 +564,8 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
 
         self.tokenizer = OpenAIGPTTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = OpenAIGPTModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -584,7 +606,10 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
 
 
 class OpenAIGPT2Embeddings(TokenEmbeddings):
-    @deprecated(version="0.4.5", reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings")
+    @deprecated(
+        version="0.4.5",
+        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
+    )
     def __init__(
         self,
         pretrained_model_name_or_path: str = "gpt2-medium",
@@ -602,7 +627,8 @@ class OpenAIGPT2Embeddings(TokenEmbeddings):
 
         self.tokenizer = GPT2Tokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = GPT2Model.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -639,7 +665,10 @@ class OpenAIGPT2Embeddings(TokenEmbeddings):
 
 
 class RoBERTaEmbeddings(TokenEmbeddings):
-    @deprecated(version="0.4.5", reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings")
+    @deprecated(
+        version="0.4.5",
+        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
+    )
     def __init__(
         self,
         pretrained_model_name_or_path: str = "roberta-base",
@@ -657,7 +686,8 @@ class RoBERTaEmbeddings(TokenEmbeddings):
 
         self.tokenizer = RobertaTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = RobertaModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -694,7 +724,10 @@ class RoBERTaEmbeddings(TokenEmbeddings):
 
 
 class CamembertEmbeddings(TokenEmbeddings):
-    @deprecated(version="0.4.5", reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings")
+    @deprecated(
+        version="0.4.5",
+        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
+    )
     def __init__(
         self,
         pretrained_model_name_or_path: str = "camembert-base",
@@ -712,7 +745,8 @@ class CamembertEmbeddings(TokenEmbeddings):
 
         self.tokenizer = CamembertTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = CamembertModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -763,7 +797,10 @@ class CamembertEmbeddings(TokenEmbeddings):
 
 
 class XLMRobertaEmbeddings(TokenEmbeddings):
-    @deprecated(version="0.4.5", reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings")
+    @deprecated(
+        version="0.4.5",
+        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
+    )
     def __init__(
         self,
         pretrained_model_name_or_path: str = "xlm-roberta-large",
@@ -781,7 +818,8 @@ class XLMRobertaEmbeddings(TokenEmbeddings):
 
         self.tokenizer = XLMRobertaTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = XLMRobertaModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -958,13 +996,15 @@ def _get_transformer_sentence_embeddings(
             token_subwords_mapping: Dict[int, int] = {}
 
             if ("gpt2" in name or "roberta" in name) and "xlm" not in name:
-                (token_subwords_mapping, tokenized_string) = _build_token_subwords_mapping_gpt2(
-                    sentence=sentence, tokenizer=tokenizer
-                )
+                (
+                    token_subwords_mapping,
+                    tokenized_string,
+                ) = _build_token_subwords_mapping_gpt2(sentence=sentence, tokenizer=tokenizer)
             else:
-                (token_subwords_mapping, tokenized_string) = _build_token_subwords_mapping(
-                    sentence=sentence, tokenizer=tokenizer
-                )
+                (
+                    token_subwords_mapping,
+                    tokenized_string,
+                ) = _build_token_subwords_mapping(sentence=sentence, tokenizer=tokenizer)
 
             subwords = tokenizer.tokenize(tokenized_string)
 
@@ -1004,7 +1044,10 @@ def _get_transformer_sentence_embeddings(
 
 
 class BertEmbeddings(TokenEmbeddings):
-    @deprecated(version="0.4.5", reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings")
+    @deprecated(
+        version="0.4.5",
+        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
+    )
     def __init__(
         self,
         bert_model_or_path: str = "bert-base-uncased",
@@ -1033,17 +1076,20 @@ class BertEmbeddings(TokenEmbeddings):
 
             self.tokenizer = DistilBertTokenizer.from_pretrained(bert_model_or_path)
             self.model = DistilBertModel.from_pretrained(
-                pretrained_model_name_or_path=bert_model_or_path, output_hidden_states=True
+                pretrained_model_name_or_path=bert_model_or_path,
+                output_hidden_states=True,
             )
         elif "albert" in bert_model_or_path:
             self.tokenizer = AlbertTokenizer.from_pretrained(bert_model_or_path)
             self.model = AlbertModel.from_pretrained(
-                pretrained_model_name_or_path=bert_model_or_path, output_hidden_states=True
+                pretrained_model_name_or_path=bert_model_or_path,
+                output_hidden_states=True,
             )
         else:
             self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
             self.model = BertModel.from_pretrained(
-                pretrained_model_name_or_path=bert_model_or_path, output_hidden_states=True
+                pretrained_model_name_or_path=bert_model_or_path,
+                output_hidden_states=True,
             )
         self.layer_indexes = [int(x) for x in layers.split(",")]
         self.pooling_operation = pooling_operation
@@ -1054,7 +1100,15 @@ class BertEmbeddings(TokenEmbeddings):
     class BertInputFeatures(object):
         """Private helper class for holding BERT-formatted features"""
 
-        def __init__(self, unique_id, tokens, input_ids, input_mask, input_type_ids, token_subtoken_count):
+        def __init__(
+            self,
+            unique_id,
+            tokens,
+            input_ids,
+            input_mask,
+            input_type_ids,
+            token_subtoken_count,
+        ):
             self.unique_id = unique_id
             self.tokens = tokens
             self.input_ids = input_ids
@@ -1120,7 +1174,10 @@ class BertEmbeddings(TokenEmbeddings):
 
         # first, find longest sentence in batch
         longest_sentence_in_batch: int = len(
-            max([self.tokenizer.tokenize(sentence.to_tokenized_string()) for sentence in sentences], key=len)
+            max(
+                [self.tokenizer.tokenize(sentence.to_tokenized_string()) for sentence in sentences],
+                key=len,
+            )
         )
 
         # prepare id maps for BERT model
@@ -1188,7 +1245,10 @@ class BertEmbeddings(TokenEmbeddings):
 
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
-    @deprecated(version="0.3.1", reason="The functionality of this class is moved to 'DocumentPoolEmbeddings'")
+    @deprecated(
+        version="0.3.1",
+        reason="The functionality of this class is moved to 'DocumentPoolEmbeddings'",
+    )
     def __init__(self, token_embeddings: List[TokenEmbeddings]):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
@@ -1238,7 +1298,10 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
 
 class DocumentLSTMEmbeddings(DocumentEmbeddings):
-    @deprecated(version="0.4", reason="The functionality of this class is moved to 'DocumentRNNEmbeddings'")
+    @deprecated(
+        version="0.4",
+        reason="The functionality of this class is moved to 'DocumentRNNEmbeddings'",
+    )
     def __init__(
         self,
         embeddings: List[TokenEmbeddings],
@@ -1287,7 +1350,10 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # bidirectional LSTM on top of embedding layer
         self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings, self.embeddings_dimension)
         self.rnn = torch.nn.GRU(
-            self.embeddings_dimension, hidden_size, num_layers=rnn_layers, bidirectional=self.bidirectional
+            self.embeddings_dimension,
+            hidden_size,
+            num_layers=rnn_layers,
+            bidirectional=self.bidirectional,
         )
 
         # dropouts
@@ -1399,13 +1465,16 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
     """Contextual word embeddings using word-level Transformer-based LM, as proposed in Peters et al., 2018."""
 
     @deprecated(
-        version="0.4.2", reason="Not possible to load or save ELMo Transformer models. @stefan-it is working on it."
+        version="0.4.2",
+        reason="Not possible to load or save ELMo Transformer models. @stefan-it is working on it.",
     )
     def __init__(self, model_file: str):
         super().__init__()
 
         try:
-            from allennlp.data.token_indexers.elmo_indexer import ELMoTokenCharactersIndexer
+            from allennlp.data.token_indexers.elmo_indexer import (
+                ELMoTokenCharactersIndexer,
+            )
             from allennlp.modules.token_embedders.bidirectional_language_model_token_embedder import (
                 BidirectionalLanguageModelTokenEmbedder,
             )

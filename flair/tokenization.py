@@ -137,7 +137,13 @@ class SpaceTokenizer(Tokenizer):
             if char == " ":
                 if len(word) > 0:
                     start_position = index - len(word)
-                    tokens.append(Token(text=word, start_position=start_position, whitespace_after=True))
+                    tokens.append(
+                        Token(
+                            text=word,
+                            start_position=start_position,
+                            whitespace_after=True,
+                        )
+                    )
 
                 word = ""
             else:
@@ -305,7 +311,10 @@ class SciSpacyTokenizer(Tokenizer):
         prefix_re = spacy.util.compile_prefix_regex(combined_rule_prefixes())
         infix_re = spacy.util.compile_infix_regex(infixes)
 
-        self.model = spacy.load("en_core_sci_sm", disable=["tagger", "ner", "parser", "textcat", "lemmatizer"])
+        self.model = spacy.load(
+            "en_core_sci_sm",
+            disable=["tagger", "ner", "parser", "textcat", "lemmatizer"],
+        )
         self.model.tokenizer.prefix_search = prefix_re.search
         self.model.tokenizer.infix_finditer = infix_re.finditer
 
@@ -388,7 +397,13 @@ class SegtokSentenceSplitter(SentenceSplitter):
                     f"Can't find the sentence offset for sentence {repr(sentence)} "
                     f"starting from position {repr(sentence_offset)}"
                 ) from error
-            sentences.append(Sentence(text=sentence, use_tokenizer=self._tokenizer, start_position=sentence_offset))
+            sentences.append(
+                Sentence(
+                    text=sentence,
+                    use_tokenizer=self._tokenizer,
+                    start_position=sentence_offset,
+                )
+            )
 
             sentence_offset += len(sentence)
 
@@ -442,7 +457,11 @@ class SpacySentenceSplitter(SentenceSplitter):
         document = self.model(text)
 
         sentences = [
-            Sentence(text=str(spacy_sent), use_tokenizer=self._tokenizer, start_position=spacy_sent.start_char)
+            Sentence(
+                text=str(spacy_sent),
+                use_tokenizer=self._tokenizer,
+                start_position=spacy_sent.start_char,
+            )
             for spacy_sent in document.sents
             if len(str(spacy_sent)) > 0
         ]
@@ -501,7 +520,13 @@ class TagSentenceSplitter(SentenceSplitter):
             if len(sentence.strip()) == 0:
                 continue
 
-            sentences += [Sentence(text=sentence, use_tokenizer=self._tokenizer, start_position=last_offset)]
+            sentences += [
+                Sentence(
+                    text=sentence,
+                    use_tokenizer=self._tokenizer,
+                    start_position=last_offset,
+                )
+            ]
 
             last_offset += len(sentence) + len(self.tag)
 

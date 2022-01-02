@@ -228,7 +228,12 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
             if self.store_path.exists() and self.store_path.is_dir():
                 # open the database in read mode
                 try:
-                    self.env = lmdb.open(str(self.store_path), readonly=True, max_readers=2048, max_spare_txns=4)
+                    self.env = lmdb.open(
+                        str(self.store_path),
+                        readonly=True,
+                        max_readers=2048,
+                        max_spare_txns=4,
+                    )
                     if self.env:
                         # we need to set self.k
                         with self.env.begin() as txn:
@@ -279,7 +284,13 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
             # mdb_txn_begin: MDB_BAD_RSLOT: Invalid reuse of reader locktable slot
             # when opening new transaction !
             self.env.close()
-            self.env = lmdb.open(self.store_path, readonly=True, max_readers=2048, max_spare_txns=2, lock=False)
+            self.env = lmdb.open(
+                self.store_path,
+                readonly=True,
+                max_readers=2048,
+                max_spare_txns=2,
+                lock=False,
+            )
             return self._get_vector(word)
         except ModuleNotFoundError:
             logger.warning("-" * 100)

@@ -310,7 +310,12 @@ def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNer
                     while document_text[start:end].endswith(" "):
                         end -= 1
 
-                    entities_per_document[document_id].append(Entity(char_span=(start, end), entity_type=ent_type))
+                    entities_per_document[document_id].append(
+                        Entity(
+                            char_span=(start, end),
+                            entity_type=ent_type,
+                        )
+                    )
 
                     assert document_text[start:end].strip() == fields[2].strip()
 
@@ -325,7 +330,10 @@ class CoNLLWriter:
     :class:`InternalBioNerDataset`.
     """
 
-    def __init__(self, sentence_splitter: SentenceSplitter):
+    def __init__(
+        self,
+        sentence_splitter: SentenceSplitter,
+    ):
         """
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which
         segments the text into sentences and tokens
@@ -343,7 +351,9 @@ class CoNLLWriter:
 
         with output_file.open("w", encoding="utf8") as f:
             for document_id in Tqdm.tqdm(
-                dataset.documents.keys(), total=len(dataset.documents), desc="Converting to CoNLL"
+                dataset.documents.keys(),
+                total=len(dataset.documents),
+                desc="Converting to CoNLL",
             ):
                 document_text = ftfy.fix_text(dataset.documents[document_id])
                 document_text = re.sub(r"[\u2000-\u200B]", " ", document_text)  # replace unicode space characters!
@@ -351,7 +361,8 @@ class CoNLLWriter:
 
                 entities = deque(
                     sorted(
-                        dataset.entities_per_document[document_id], key=attrgetter("char_span.start", "char_span.stop")
+                        dataset.entities_per_document[document_id],
+                        key=attrgetter("char_span.start", "char_span.stop"),
                     )
                 )
                 current_entity = entities.popleft() if entities else None
@@ -428,7 +439,10 @@ class HunerDataset(ColumnCorpus, ABC):
         return None
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -515,7 +529,11 @@ class BIO_INFER(ColumnCorpus):
        https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-8-50
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+    ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -576,7 +594,10 @@ class BIO_INFER(ColumnCorpus):
                     token_id_to_span[token_id] = (0, len(token_text))
                     sentence_text = token_text
                 else:
-                    token_id_to_span[token_id] = (len(sentence_text) + 1, len(token_text) + len(sentence_text) + 1)
+                    token_id_to_span[token_id] = (
+                        len(sentence_text) + 1,
+                        len(token_text) + len(sentence_text) + 1,
+                    )
                     sentence_text += " " + token_text
             documents[sentence_id] = sentence_text
 
@@ -606,7 +627,8 @@ class BIO_INFER(ColumnCorpus):
                         if not (entity_token[0] - 1) == last_entity_token[0]:
                             entities_per_document[sentence_id].append(
                                 Entity(
-                                    char_span=(start_token[1], last_entity_token[2]), entity_type=entity.attrib["type"]
+                                    char_span=(start_token[1], last_entity_token[2]),
+                                    entity_type=entity.attrib["type"],
                                 )
                             )
                             start_token = entity_token
@@ -615,7 +637,10 @@ class BIO_INFER(ColumnCorpus):
 
                     if start_token:
                         entities_per_document[sentence_id].append(
-                            Entity(char_span=(start_token[1], last_entity_token[2]), entity_type=entity.attrib["type"])
+                            Entity(
+                                char_span=(start_token[1], last_entity_token[2]),
+                                entity_type=entity.attrib["type"],
+                            )
                         )
 
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
@@ -696,7 +721,13 @@ class JNLPBA(ColumnCorpus):
             test_file = download_dir / "Genia4EReval2.iob2"
             shutil.copy(test_file, data_folder / "test.conll")
 
-        super(JNLPBA, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory, comment_symbol="#")
+        super(JNLPBA, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes="ner",
+            in_memory=in_memory,
+            comment_symbol="#",
+        )
 
 
 class HunerJNLPBA(object):
@@ -856,7 +887,10 @@ class CELL_FINDER(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -917,7 +951,10 @@ class CELL_FINDER(ColumnCorpus):
                         continue
                     ent_type, char_start, char_end = fields[1].split()
                     entities_per_document[document_id].append(
-                        Entity(char_span=(int(char_start), int(char_end)), entity_type=ent_type)
+                        Entity(
+                            char_span=(int(char_start), int(char_end)),
+                            entity_type=ent_type,
+                        )
                     )
 
                     assert document_text[int(char_start) : int(char_end)] == fields[2]
@@ -992,7 +1029,10 @@ class MIRNA(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -1077,7 +1117,13 @@ class MIRNA(ColumnCorpus):
                 for entity in sentence.xpath(".//entity"):
                     start, end = entity.get("charOffset").split("-")
                     entities.append(
-                        Entity((sentence_offset + int(start), sentence_offset + int(end) + 1), entity.get("type"))
+                        Entity(
+                            (
+                                sentence_offset + int(start),
+                                sentence_offset + int(end) + 1,
+                            ),
+                            entity.get("type"),
+                        )
                     )
 
             documents[document_id] = document_text
@@ -1301,7 +1347,12 @@ class KaewphanCorpusHelper:
                             entity_type = tag[2:]
 
                         elif tag == "O" and entity_type is not None and entity_start is not None:
-                            entities.append(Entity((entity_start, len(document_text)), entity_type))
+                            entities.append(
+                                Entity(
+                                    (entity_start, len(document_text)),
+                                    entity_type,
+                                )
+                            )
                             entity_type = None
 
                         document_text = document_text + " " + token if document_text else token
@@ -1473,7 +1524,10 @@ class LOCTEXT(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -1518,7 +1572,11 @@ class LOCTEXT(ColumnCorpus):
     def parse_dataset(data_dir: Path) -> InternalBioNerDataset:
         loctext_json_folder = data_dir / "LocText"
 
-        entity_type_mapping = {"go": "protein", "uniprot": "protein", "taxonomy": "species"}
+        entity_type_mapping = {
+            "go": "protein",
+            "uniprot": "protein",
+            "taxonomy": "species",
+        }
 
         documents = {}
         entities_per_document = {}
@@ -1598,7 +1656,10 @@ class CHEMDNER(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -1699,7 +1760,12 @@ class IEPA(ColumnCorpus):
       https://www.ncbi.nlm.nih.gov/pubmed/11928487
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, tokenizer: Tokenizer = None):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Tokenizer = None,
+    ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -1780,7 +1846,12 @@ class LINNEAUS(ColumnCorpus):
          https://www.ncbi.nlm.nih.gov/pubmed/20149233
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, tokenizer: Tokenizer = None):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Tokenizer = None,
+    ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -1880,7 +1951,10 @@ class CDR(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -1992,7 +2066,10 @@ class VARIOME(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -2069,7 +2146,10 @@ class VARIOME(ColumnCorpus):
             cleaned_documents[id] = document_text
             cleaned_entities_per_document[id] = entities
 
-        return InternalBioNerDataset(documents=cleaned_documents, entities_per_document=cleaned_entities_per_document)
+        return InternalBioNerDataset(
+            documents=cleaned_documents,
+            entities_per_document=cleaned_entities_per_document,
+        )
 
 
 class HUNER_GENE_VARIOME(HunerDataset):
@@ -2145,7 +2225,10 @@ class NCBI_DISEASE(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -2295,7 +2378,10 @@ class ScaiCorpus(ColumnCorpus):
     """Base class to support the SCAI chemicals and disease corpora"""
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -2625,7 +2711,10 @@ class S800(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -2723,7 +2812,10 @@ class GPRO(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -2865,7 +2957,10 @@ class DECA(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -3065,7 +3160,11 @@ class FSU(ColumnCorpus):
                         start = word_to_id[span.split("..")[0]]
                         end = word_to_id[span.split("..")[-1]]
                         pre_entities[word_pos[start][0]] += [
-                            (word_pos[start][1], word_pos[end][1] + len(words[end]), protein.get("proteins"))
+                            (
+                                word_pos[start][1],
+                                word_pos[end][1] + len(words[end]),
+                                protein.get("proteins"),
+                            )
                         ]
 
                 sentence_texts = [" ".join(sentence) for sentence in sentences]
@@ -3075,7 +3174,10 @@ class FSU(ColumnCorpus):
                 sent_offset = 0
                 for sent, sent_entities in zip(sentence_texts, pre_entities):
                     entities += [
-                        Entity((start + sent_offset, end + sent_offset), ent_type)
+                        Entity(
+                            (start + sent_offset, end + sent_offset),
+                            ent_type,
+                        )
                         for (start, end, ent_type) in sent_entities
                     ]
                     sent_offset += len(sent) + len(sentence_separator)
@@ -3130,7 +3232,10 @@ class CRAFT(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -3196,7 +3301,11 @@ class CRAFT(ColumnCorpus):
             entities = []
 
             for annotation_dir in annotation_dirs:
-                with open(annotation_dir / (doc.name + ".annotations.xml"), "r", encoding="utf8") as f_ann:
+                with open(
+                    annotation_dir / (doc.name + ".annotations.xml"),
+                    "r",
+                    encoding="utf8",
+                ) as f_ann:
                     ann_tree = etree.parse(f_ann)
                 for annotation in ann_tree.xpath("//annotation"):
                     for span in annotation.xpath("span"):
@@ -3219,7 +3328,10 @@ class BIOSEMANTICS(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -3349,7 +3461,10 @@ class BC2GM(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -3466,7 +3581,10 @@ class HUNER_GENE_BC2GM(HunerDataset):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
     @staticmethod
     def split_url() -> str:
@@ -3489,7 +3607,10 @@ class CEMP(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -3622,7 +3743,15 @@ class HUNER_CHEMICAL_CEMP(HunerDataset):
         dataset = merge_datasets([train_data, dev_data])
         entity_type_mapping = {
             x: CHEMICAL_TAG
-            for x in ["ABBREVIATION", "FAMILY", "FORMULA", "IDENTIFIERS", "MULTIPLE", "SYSTEMATIC", "TRIVIAL"]
+            for x in [
+                "ABBREVIATION",
+                "FAMILY",
+                "FORMULA",
+                "IDENTIFIERS",
+                "MULTIPLE",
+                "SYSTEMATIC",
+                "TRIVIAL",
+            ]
         }
         return filter_and_map_entities(dataset, entity_type_mapping)
 
@@ -3706,11 +3835,19 @@ class CHEBI(ColumnCorpus):
 
         for abstract_id in abstract_ids:
             abstract_id_output = abstract_id + "_A"
-            with open(abstract_folder / annotation_dirs[0] / f"{abstract_id}.txt", "r", encoding="utf8") as f:
+            with open(
+                abstract_folder / annotation_dirs[0] / f"{abstract_id}.txt",
+                "r",
+                encoding="utf8",
+            ) as f:
                 documents[abstract_id_output] = f.read()
 
             for annotation_dir in annotation_dirs:
-                with open(abstract_folder / annotation_dir / f"{abstract_id}.ann", "r", encoding="utf8") as f:
+                with open(
+                    abstract_folder / annotation_dir / f"{abstract_id}.ann",
+                    "r",
+                    encoding="utf8",
+                ) as f:
                     entities = CHEBI.get_entities(f)
             entities_per_document[abstract_id_output] = entities
 
@@ -3807,7 +3944,10 @@ class BioNLPCorpus(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -3899,9 +4039,21 @@ class BIONLP2013_PC(BioNLPCorpus):
         cached_path(dev_url, download_folder)
         cached_path(test_url, download_folder)
 
-        unpack_file(download_folder / "BioNLP-ST_2013_PC_training_data.tar.gz", download_folder, keep=False)
-        unpack_file(download_folder / "BioNLP-ST_2013_PC_development_data.tar.gz", download_folder, keep=False)
-        unpack_file(download_folder / "BioNLP-ST_2013_PC_test_data.tar.gz", download_folder, keep=False)
+        unpack_file(
+            download_folder / "BioNLP-ST_2013_PC_training_data.tar.gz",
+            download_folder,
+            keep=False,
+        )
+        unpack_file(
+            download_folder / "BioNLP-ST_2013_PC_development_data.tar.gz",
+            download_folder,
+            keep=False,
+        )
+        unpack_file(
+            download_folder / "BioNLP-ST_2013_PC_test_data.tar.gz",
+            download_folder,
+            keep=False,
+        )
 
         train_folder = download_folder / "BioNLP-ST_2013_PC_training_data"
         dev_folder = download_folder / "BioNLP-ST_2013_PC_development_data"
@@ -3931,9 +4083,21 @@ class BIONLP2013_CG(BioNLPCorpus):
         cached_path(dev_url, download_folder)
         cached_path(test_url, download_folder)
 
-        unpack_file(download_folder / "BioNLP-ST_2013_CG_training_data.tar.gz", download_folder, keep=False)
-        unpack_file(download_folder / "BioNLP-ST_2013_CG_development_data.tar.gz", download_folder, keep=False)
-        unpack_file(download_folder / "BioNLP-ST_2013_CG_test_data.tar.gz", download_folder, keep=False)
+        unpack_file(
+            download_folder / "BioNLP-ST_2013_CG_training_data.tar.gz",
+            download_folder,
+            keep=False,
+        )
+        unpack_file(
+            download_folder / "BioNLP-ST_2013_CG_development_data.tar.gz",
+            download_folder,
+            keep=False,
+        )
+        unpack_file(
+            download_folder / "BioNLP-ST_2013_CG_test_data.tar.gz",
+            download_folder,
+            keep=False,
+        )
 
         train_folder = download_folder / "BioNLP-ST_2013_CG_training_data"
         dev_folder = download_folder / "BioNLP-ST_2013_CG_development_data"
@@ -3952,7 +4116,12 @@ class ANAT_EM(ColumnCorpus):
       http://nactem.ac.uk/anatomytagger/#AnatEM
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, tokenizer: Tokenizer = None):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Tokenizer = None,
+    ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -4001,7 +4170,12 @@ class ANAT_EM(ColumnCorpus):
         corpus_url = "http://nactem.ac.uk/anatomytagger/AnatEM-1.0.2.tar.gz"
         corpus_archive = cached_path(corpus_url, data_folder)
 
-        unpack_file(corpus_archive, data_folder, keep=True, mode="targz")
+        unpack_file(
+            corpus_archive,
+            data_folder,
+            keep=True,
+            mode="targz",
+        )
 
         return data_folder / "AnatEM-1.0.2"
 
@@ -4077,7 +4251,9 @@ class BioBertHelper(ColumnCorpus):
         from google_drive_downloader import GoogleDriveDownloader as gdd
 
         gdd.download_file_from_google_drive(
-            file_id="1OletxmPYNkz2ltOr9pyT0b0iBtUWxslh", dest_path=str(download_dir / "NERdata.zip"), unzip=True
+            file_id="1OletxmPYNkz2ltOr9pyT0b0iBtUWxslh",
+            dest_path=str(download_dir / "NERdata.zip"),
+            unzip=True,
         )
 
     @staticmethod
@@ -4402,7 +4578,10 @@ class CRAFT_V4(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -4547,7 +4726,10 @@ class HUNER_CHEMICAL_CRAFT_V4(HunerDataset):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
     @staticmethod
     def split_url() -> str:
@@ -4567,7 +4749,10 @@ class HUNER_GENE_CRAFT_V4(HunerDataset):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
     @staticmethod
     def split_url() -> str:
@@ -4587,7 +4772,10 @@ class HUNER_SPECIES_CRAFT_V4(HunerDataset):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
     @staticmethod
     def split_url() -> str:
@@ -4603,7 +4791,10 @@ class HUNER_SPECIES_CRAFT_V4(HunerDataset):
 
 class HUNER_CHEMICAL_BIONLP2013_CG(HunerDataset):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
     @staticmethod
     def split_url() -> str:
@@ -4622,7 +4813,10 @@ class HUNER_CHEMICAL_BIONLP2013_CG(HunerDataset):
 
 class HUNER_DISEASE_BIONLP2013_CG(HunerDataset):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
     @staticmethod
     def split_url() -> str:
@@ -4641,7 +4835,10 @@ class HUNER_DISEASE_BIONLP2013_CG(HunerDataset):
 
 class HUNER_GENE_BIONLP2013_CG(HunerDataset):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
     @staticmethod
     def split_url() -> str:
@@ -4660,7 +4857,10 @@ class HUNER_GENE_BIONLP2013_CG(HunerDataset):
 
 class HUNER_SPECIES_BIONLP2013_CG(HunerDataset):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
     @staticmethod
     def split_url() -> str:
@@ -4685,7 +4885,12 @@ class AZDZ(ColumnCorpus):
        http://diego.asu.edu/index.php
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, tokenizer: Tokenizer = None):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Tokenizer = None,
+    ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -4792,7 +4997,10 @@ class PDR(ColumnCorpus):
     """
 
     def __init__(
-        self, base_path: Union[str, Path] = None, in_memory: bool = True, sentence_splitter: SentenceSplitter = None
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine

@@ -3,7 +3,7 @@ from sklearn.metrics import accuracy_score, normalized_mutual_info_score
 
 
 def get_stackoverflow_labels():
-    with open("evaluation/StackOverflow/title_StackOverflow.txt", "r", encoding="utf8") as myfile:
+    with open("evaluation/StackOverflow/label_StackOverflow.txt", "r", encoding="utf8") as myfile:
         data = myfile.readlines()
         return data
 

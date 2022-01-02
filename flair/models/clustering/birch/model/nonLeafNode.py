@@ -1,5 +1,4 @@
 import torch
-from torch import Tensor
 
 from flair.models.clustering.birch import branching_factor_non_leaf, distance_max
 from flair.models.clustering.birch.model.cfNode import CfNode

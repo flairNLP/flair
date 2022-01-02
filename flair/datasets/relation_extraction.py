@@ -23,13 +23,23 @@ log = logging.getLogger("flair")
 
 def convert_ptb_token(token: str) -> str:
     """Convert PTB tokens to normal tokens"""
-    return {"-lrb-": "(", "-rrb-": ")", "-lsb-": "[", "-rsb-": "]", "-lcb-": "{", "-rcb-": "}"}.get(
-        token.lower(), token
-    )
+    return {
+        "-lrb-": "(",
+        "-rrb-": ")",
+        "-lsb-": "[",
+        "-rsb-": "]",
+        "-lcb-": "{",
+        "-rcb-": "}",
+    }.get(token.lower(), token)
 
 
 class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, augment_train: bool = False):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        augment_train: bool = False,
+    ):
         """
         SemEval-2010 Task 8 on Multi-Way Classification of Semantic Relations Between Pairs of
         Nominals: https://aclanthology.org/S10-1006.pdf
@@ -61,7 +71,9 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
             os.makedirs(source_data_folder, exist_ok=True)
             gdown.download(semeval_2010_task_8_url, str(source_data_file))
             self.extract_and_convert_to_conllu(
-                data_file=source_data_file, data_folder=data_folder, augment_train=augment_train
+                data_file=source_data_file,
+                data_folder=data_folder,
+                augment_train=augment_train,
             )
 
         super(RE_ENGLISH_SEMEVAL2010, self).__init__(
@@ -98,7 +110,8 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
 
                             if not line:
                                 token_list = self._semeval_lines_to_token_list(
-                                    raw_lines, augment_relations=augment_train if "train" in target_filename else False
+                                    raw_lines,
+                                    augment_relations=augment_train if "train" in target_filename else False,
                                 )
                                 target_file.write(token_list.serialize())
 
@@ -159,14 +172,28 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
             subj_end = tokens.index("</e1>")
             tokens.pop(subj_end)
 
-        relation = ";".join([str(subj_start + 1), str(subj_end), str(obj_start + 1), str(obj_end), label])
+        relation = ";".join(
+            [
+                str(subj_start + 1),
+                str(subj_end),
+                str(obj_start + 1),
+                str(obj_end),
+                label,
+            ]
+        )
 
         if augment_relations:
             label_inverted = label.replace("e1", "e3")
             label_inverted = label_inverted.replace("e2", "e1")
             label_inverted = label_inverted.replace("e3", "e2")
             relation_inverted = ";".join(
-                [str(obj_start + 1), str(obj_end), str(subj_start + 1), str(subj_end), label_inverted]
+                [
+                    str(obj_start + 1),
+                    str(obj_end),
+                    str(subj_start + 1),
+                    str(subj_end),
+                    label_inverted,
+                ]
             )
 
         metadata = {
@@ -187,7 +214,13 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
                 prefix = "B-" if idx == obj_start else "I-"
                 tag = "E2"
 
-            token_dicts.append({"id": str(idx + 1), "form": token, "ner": prefix + tag})
+            token_dicts.append(
+                {
+                    "id": str(idx + 1),
+                    "form": token,
+                    "ner": prefix + tag,
+                }
+            )
 
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
 
@@ -216,15 +249,30 @@ class RE_ENGLISH_TACRED(CoNLLUCorpus):
             source_data_folder = data_folder / "original"
             source_data_file = source_data_folder / "TACRED_LDC.zip"
             os.makedirs(source_data_folder, exist_ok=True)
-            self.extract_and_convert_to_conllu(data_file=source_data_file, data_folder=data_folder)
+            self.extract_and_convert_to_conllu(
+                data_file=source_data_file,
+                data_folder=data_folder,
+            )
 
-        super(RE_ENGLISH_TACRED, self).__init__(data_folder, token_annotation_fields=["ner"], in_memory=in_memory)
+        super(RE_ENGLISH_TACRED, self).__init__(
+            data_folder,
+            token_annotation_fields=["ner"],
+            in_memory=in_memory,
+        )
 
     def extract_and_convert_to_conllu(self, data_file, data_folder):
         import zipfile
 
-        source_file_paths = ["tacred/data/json/train.json", "tacred/data/json/dev.json", "tacred/data/json/test.json"]
-        target_filenames = ["tacred-train.conllu", "tacred-dev.conllu", "tacred-test.conllu"]
+        source_file_paths = [
+            "tacred/data/json/train.json",
+            "tacred/data/json/dev.json",
+            "tacred/data/json/test.json",
+        ]
+        target_filenames = [
+            "tacred-train.conllu",
+            "tacred-dev.conllu",
+            "tacred-test.conllu",
+        ]
 
         with zipfile.ZipFile(data_file) as zip_file:
 
@@ -259,7 +307,13 @@ class RE_ENGLISH_TACRED(CoNLLUCorpus):
             "text": " ".join(tokens),
             "sentence_id": str(id_),
             "relations": ";".join(
-                [str(subj_start + 1), str(subj_end + 1), str(obj_start + 1), str(obj_end + 1), label]
+                [
+                    str(subj_start + 1),
+                    str(subj_end + 1),
+                    str(obj_start + 1),
+                    str(obj_end + 1),
+                    label,
+                ]
             ),
         }
 
@@ -281,7 +335,15 @@ class RE_ENGLISH_TACRED(CoNLLUCorpus):
 
             prev_tag = tag
 
-            token_dicts.append(Token({"id": str(idx + 1), "form": convert_ptb_token(token), "ner": prefix + tag}))
+            token_dicts.append(
+                Token(
+                    {
+                        "id": str(idx + 1),
+                        "form": convert_ptb_token(token),
+                        "ner": prefix + tag,
+                    }
+                )
+            )
 
         return conllu.TokenList(tokens=token_dicts, metadata=Metadata(metadata))
 
@@ -311,9 +373,16 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
             cached_path(f"{conll04_url}dev.txt", source_data_folder)
             cached_path(f"{conll04_url}test.txt", source_data_folder)
 
-            self.convert_to_conllu(source_data_folder=source_data_folder, data_folder=data_folder)
+            self.convert_to_conllu(
+                source_data_folder=source_data_folder,
+                data_folder=data_folder,
+            )
 
-        super(RE_ENGLISH_CONLL04, self).__init__(data_folder, token_annotation_fields=["ner"], in_memory=in_memory)
+        super(RE_ENGLISH_CONLL04, self).__init__(
+            data_folder,
+            token_annotation_fields=["ner"],
+            in_memory=in_memory,
+        )
 
     def _parse_incr(self, source_file) -> Iterable[conllu.TokenList]:
         fields = ["id", "form", "ner", "relations", "relation_heads"]
@@ -328,7 +397,10 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
             if index > 0 and line.startswith("#"):
                 source_str = "".join(lines)
                 src_token_list = conllu.parse(
-                    source_str, fields=fields, field_parsers=field_parsers, metadata_parsers=metadata_parsers
+                    source_str,
+                    fields=fields,
+                    field_parsers=field_parsers,
+                    metadata_parsers=metadata_parsers,
                 )
                 lines = []
                 yield src_token_list[0]
@@ -337,13 +409,24 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
 
         source_str = "".join(lines)
         src_token_list = conllu.parse(
-            source_str, fields=fields, field_parsers=field_parsers, metadata_parsers=metadata_parsers
+            source_str,
+            fields=fields,
+            field_parsers=field_parsers,
+            metadata_parsers=metadata_parsers,
         )
         yield src_token_list[0]
 
     def convert_to_conllu(self, source_data_folder, data_folder):
-        source_filenames = ["train.txt", "dev.txt", "test.txt"]
-        target_filenames = ["conll04-train.conllu", "conll04-dev.conllu", "conll04-test.conllu"]
+        source_filenames = [
+            "train.txt",
+            "dev.txt",
+            "test.txt",
+        ]
+        target_filenames = [
+            "conll04-train.conllu",
+            "conll04-dev.conllu",
+            "conll04-test.conllu",
+        ]
 
         for source_filename, target_filename in zip(source_filenames, target_filenames):
             with open(source_data_folder / source_filename, mode="r") as source_file:
@@ -400,7 +483,13 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
             tokens.append(text)
             ner_tags.append(ner_tag)
 
-            token_dicts.append({"id": str(index), "form": text, "ner": ner_tag})
+            token_dicts.append(
+                {
+                    "id": str(index),
+                    "form": text,
+                    "ner": ner_tag,
+                }
+            )
 
         span_end_to_span = {end: (start, end) for start, end in self._bio_tags_to_spans(ner_tags)}
 
@@ -421,7 +510,15 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
             "sentence_id": doc_id,
             "relations": "|".join(
                 [
-                    ";".join([str(subj_start + 1), str(subj_end + 1), str(obj_start + 1), str(obj_end + 1), relation])
+                    ";".join(
+                        [
+                            str(subj_start + 1),
+                            str(subj_end + 1),
+                            str(obj_start + 1),
+                            str(obj_end + 1),
+                            relation,
+                        ]
+                    )
                     for subj_start, subj_end, obj_start, obj_end, relation in relations
                 ]
             ),
@@ -465,7 +562,10 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
             )
 
         super(RE_ENGLISH_DRUGPROT, self).__init__(
-            data_folder, in_memory=in_memory, token_annotation_fields=["ner", "ner-2"], sample_missing_splits=False
+            data_folder,
+            in_memory=in_memory,
+            token_annotation_fields=["ner", "ner-2"],
+            sample_missing_splits=False,
         )
 
     def extract_and_convert_to_conllu(self, data_file, data_folder):
@@ -485,7 +585,12 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                     for line in io.TextIOWrapper(entites_file, encoding="utf-8"):
                         fields = line.strip().split("\t")
                         pmid, ent_id, ent_type, start, end, mention = fields
-                        pmid_to_entities[pmid][ent_id] = (ent_type, int(start), int(end), mention)
+                        pmid_to_entities[pmid][ent_id] = (
+                            ent_type,
+                            int(start),
+                            int(end),
+                            mention,
+                        )
 
                 with zip_file.open(
                     f"drugprot-gs-training-development/{split}/drugprot_{split}_relations.tsv"
@@ -567,7 +672,10 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
     ) -> List[conllu.TokenList]:
         tokenlists: List[conllu.TokenList] = []
         sentence_id = 1
-        for offset, sents in [(0, title_sentences), (abstract_offset, abstract_sentences)]:
+        for offset, sents in [
+            (0, title_sentences),
+            (abstract_offset, abstract_sentences),
+        ]:
             for sent in sents:
                 assert sent.start_pos is not None
                 assert sent.end_pos is not None
@@ -582,7 +690,10 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                 entity_char_spans = [(entities[entity_id][1], entities[entity_id][2]) for entity_id in entities_in_sent]
 
                 token_offsets = [
-                    (sent.start_pos + (token.start_pos or 0) + offset, sent.start_pos + (token.end_pos or 0) + offset)
+                    (
+                        sent.start_pos + (token.start_pos or 0) + offset,
+                        sent.start_pos + (token.end_pos or 0) + offset,
+                    )
                     for token in sent.tokens
                 ]
                 entity_token_spans = self.char_spans_to_token_spans(entity_char_spans, token_offsets)
@@ -592,7 +703,9 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                 entity_id_to_token_idx = {}
 
                 ordered_entities = sorted(
-                    zip(entities_in_sent, entity_token_spans), key=lambda x: x[1][1] - x[1][0], reverse=True
+                    zip(entities_in_sent, entity_token_spans),
+                    key=lambda x: x[1][1] - x[1][0],
+                    reverse=True,
                 )
 
                 for entity_id, entity_span in ordered_entities:
@@ -627,7 +740,16 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                     tag_2 = tag_2.replace("GENE-N", "GENE")
                     tag_2 = tag_2.replace("GENE-Y", "GENE")
 
-                    token_dicts.append(Token({"id": str(i + 1), "form": token.text, "ner": tag_1, "ner-2": tag_2}))
+                    token_dicts.append(
+                        Token(
+                            {
+                                "id": str(i + 1),
+                                "form": token.text,
+                                "ner": tag_1,
+                                "ner-2": tag_2,
+                            }
+                        )
+                    )
 
                 relations_in_sent = []
                 for relation, ent1, ent2 in [r for r in relations if {r[1], r[2]} <= entities_in_sent]:
@@ -643,7 +765,15 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                     "sentence_id": str(sentence_id),
                     "relations": "|".join(
                         [
-                            ";".join([str(subj_start + 1), str(subj_end), str(obj_start + 1), str(obj_end), relation])
+                            ";".join(
+                                [
+                                    str(subj_start + 1),
+                                    str(subj_end),
+                                    str(obj_start + 1),
+                                    str(obj_end),
+                                    relation,
+                                ]
+                            )
                             for subj_start, subj_end, obj_start, obj_end, relation in relations_in_sent
                         ]
                     ),

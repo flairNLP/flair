@@ -72,14 +72,35 @@ class DependencyParser(flair.nn.Model):
             dropout=self.lstm_dropout,
         )
 
-        self.mlp_arc_h = MLP(n_in=self.lstm_hidden_size * 2, n_hidden=self.mlp_arc_units, dropout=self.mlp_dropout)
-        self.mlp_arc_d = MLP(n_in=self.lstm_hidden_size * 2, n_hidden=self.mlp_arc_units, dropout=self.mlp_dropout)
-        self.mlp_rel_h = MLP(n_in=self.lstm_hidden_size * 2, n_hidden=self.mlp_rel_units, dropout=self.mlp_dropout)
-        self.mlp_rel_d = MLP(n_in=self.lstm_hidden_size * 2, n_hidden=self.mlp_rel_units, dropout=self.mlp_dropout)
+        self.mlp_arc_h = MLP(
+            n_in=self.lstm_hidden_size * 2,
+            n_hidden=self.mlp_arc_units,
+            dropout=self.mlp_dropout,
+        )
+        self.mlp_arc_d = MLP(
+            n_in=self.lstm_hidden_size * 2,
+            n_hidden=self.mlp_arc_units,
+            dropout=self.mlp_dropout,
+        )
+        self.mlp_rel_h = MLP(
+            n_in=self.lstm_hidden_size * 2,
+            n_hidden=self.mlp_rel_units,
+            dropout=self.mlp_dropout,
+        )
+        self.mlp_rel_d = MLP(
+            n_in=self.lstm_hidden_size * 2,
+            n_hidden=self.mlp_rel_units,
+            dropout=self.mlp_dropout,
+        )
 
         self.arc_attn = Biaffine(n_in=self.mlp_arc_units, bias_x=True, bias_y=False)
 
-        self.rel_attn = Biaffine(n_in=self.mlp_rel_units, n_out=len(relations_dictionary), bias_x=True, bias_y=True)
+        self.rel_attn = Biaffine(
+            n_in=self.mlp_rel_units,
+            n_out=len(relations_dictionary),
+            bias_x=True,
+            bias_y=True,
+        )
 
         self.to(flair.device)
 
@@ -91,7 +112,9 @@ class DependencyParser(flair.nn.Model):
         seq_len: int = max(lengths)
 
         pre_allocated_zero_tensor = torch.zeros(
-            self.token_embeddings.embedding_length * seq_len, dtype=torch.float, device=flair.device
+            self.token_embeddings.embedding_length * seq_len,
+            dtype=torch.float,
+            device=flair.device,
         )
 
         # embed sentences
@@ -104,7 +127,13 @@ class DependencyParser(flair.nn.Model):
                 t = pre_allocated_zero_tensor[: self.token_embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
 
-        sentence_tensor = torch.cat(all_embs).view([batch_size, seq_len, self.token_embeddings.embedding_length])
+        sentence_tensor = torch.cat(all_embs).view(
+            [
+                batch_size,
+                seq_len,
+                self.token_embeddings.embedding_length,
+            ]
+        )
 
         # Main model implementation drops words and tags (independently), instead, we use word dropout!
         if self.use_word_dropout:
@@ -138,7 +167,10 @@ class DependencyParser(flair.nn.Model):
         return main_loss
 
     def _calculate_loss(
-        self, score_arc: torch.Tensor, score_relation: torch.Tensor, data_points: List[Sentence]
+        self,
+        score_arc: torch.Tensor,
+        score_relation: torch.Tensor,
+        data_points: List[Sentence],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
 
         lengths: List[int] = [len(sentence.tokens) for sentence in data_points]
@@ -255,7 +287,11 @@ class DependencyParser(flair.nn.Model):
 
                     # append both to file for evaluation
                     eval_line = "{} {} {} {} {}\n".format(
-                        token.text, token.get_tag(gold_label_type).value, str(token.head_id), tag, str(int(arc))
+                        token.text,
+                        token.get_tag(gold_label_type).value,
+                        str(token.head_id),
+                        tag,
+                        str(int(arc)),
                     )
                     lines.append(eval_line)
                 lines.append("\n")
@@ -367,7 +403,13 @@ class DependencyParser(flair.nn.Model):
 
 
 class BiLSTM(torch.nn.Module):
-    def __init__(self, input_size: int, hidden_size: int, num_layers: int = 1, dropout: float = 0.0):
+    def __init__(
+        self,
+        input_size: int,
+        hidden_size: int,
+        num_layers: int = 1,
+        dropout: float = 0.0,
+    ):
         """
         Initializes a VariationalBiLSTM
 
@@ -461,10 +503,17 @@ class BiLSTM(torch.nn.Module):
                 mask = x[0].new_empty(x[0].shape).bernoulli_(1 - self.dropout) / (1 - self.dropout)
                 x = [i * mask[: len(i)] for i in x]
             x_f, (h_f, c_f) = self.layer_forward(
-                x=x, hx=(h[i, 0], c[i, 0]), cell=self.f_cells[i], batch_sizes=batch_sizes
+                x=x,
+                hx=(h[i, 0], c[i, 0]),
+                cell=self.f_cells[i],
+                batch_sizes=batch_sizes,
             )
             x_b, (h_b, c_b) = self.layer_forward(
-                x=x, hx=(h[i, 1], c[i, 1]), cell=self.b_cells[i], batch_sizes=batch_sizes, reverse=True
+                x=x,
+                hx=(h[i, 1], c[i, 1]),
+                cell=self.b_cells[i],
+                batch_sizes=batch_sizes,
+                reverse=True,
             )
             x = torch.cat((x_f, x_b), -1)
             h_n.append(torch.stack((h_f, h_b)))
@@ -513,7 +562,12 @@ class Biaffine(torch.nn.Module):
 
 
 class MLP(torch.nn.Module):
-    def __init__(self, n_in: int, n_hidden: int, dropout: float = 0.0):
+    def __init__(
+        self,
+        n_in: int,
+        n_hidden: int,
+        dropout: float = 0.0,
+    ):
         super(MLP, self).__init__()
 
         self.linear = torch.nn.Linear(n_in, n_hidden)

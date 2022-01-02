@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import torch
 from flair.datasets import DataLoader
@@ -6,6 +8,8 @@ from torch import logsumexp, Tensor
 from torch.distributions import MultivariateNormal
 
 from flair.models.clustering.clustering import Clustering
+
+log = logging.getLogger("flair")
 
 
 class EM_Clustering(Clustering):
@@ -22,7 +26,7 @@ class EM_Clustering(Clustering):
             for batch in DataLoader(vectors, batch_size=batch_size):
                 self.embeddings.embed(batch)
         except RuntimeError as e:
-            print("Please lower the batchsize of the cluster method.")
+            log.error("Please lower the batchsize of the cluster method.")
 
         self.datapoints = vectors.__len__()
         self.dimension = vectors[0].embedding.__len__()
@@ -43,13 +47,13 @@ class EM_Clustering(Clustering):
             current_lls = self.lower_bound(data, self.z)
 
             if prev_lls and torch.abs((current_lls - prev_lls) / prev_lls) < rtol:
-                print("Finished the EM Clustering with: " + str(i) + " iterations. ")
+                log.debug("Finished the EM Clustering with: " + str(i) + " iterations. ")
                 return self.z
 
             prev_lls = current_lls
             self.lls.append(current_lls)
 
-        print("Finished the EM Clustering with maxItertation: " + str(self.max_iteration))
+        log.debug("Finished the EM Clustering with maxItertation: " + str(self.max_iteration))
         return self.z
 
     def e_step(self, data: Tensor):
