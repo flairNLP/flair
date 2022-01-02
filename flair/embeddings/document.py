@@ -5,17 +5,10 @@ import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
 from torch.nn import RNNBase
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from transformers import (
-    CONFIG_MAPPING,
-    AutoConfig,
-    AutoModel,
-    AutoTokenizer,
-    PreTrainedTokenizer,
-)
 
 import flair
 from flair.data import Sentence
-from flair.embeddings.base import Embeddings, ScalarMix
+from flair.embeddings.base import Embeddings, TransformerEmbedding
 from flair.embeddings.token import FlairEmbeddings, StackedEmbeddings, TokenEmbeddings
 from flair.nn import LockedDropout, WordDropout
 
@@ -30,268 +23,39 @@ class DocumentEmbeddings(Embeddings[Sentence]):
         return "sentence-level"
 
 
-class TransformerDocumentEmbeddings(DocumentEmbeddings):
+class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbedding):
     def __init__(
         self,
-        model: Union[str, dict] = "bert-base-uncased",
-        fine_tune: bool = True,
+        model: str = "bert-base-uncased",  # set parameters with different default values
         layers: str = "-1",
         layer_mean: bool = False,
-        pooling: str = "cls",
+        is_token_embedding: bool = False,
         **kwargs,
     ):
         """
         Bidirectional transformer embeddings of words from various transformer architectures.
         :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
         options)
-        :param fine_tune: If True, allows transformers to be fine-tuned during training
-        :param batch_size: How many sentence to push through transformer at once. Set to 1 by default since transformer
-        models tend to be huge.
         :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
+        :param cls_pooling: Pooling strategy for combining token level embeddings. options are 'cls', 'max', 'mean'.
         :param layer_mean: If True, uses a scalar mix of layers as embedding
-        :param pooling: Pooling strategy for combining token level embeddings. options are 'cls', 'max', 'mean'.
+        :param fine_tune: If True, allows transformers to be fine-tuned during training
         """
-        super().__init__()
-
-        if pooling not in ["cls", "max", "mean"]:
-            raise ValueError(f"Pooling operation `{pooling}` is not defined for TransformerDocumentEmbeddings")
-
-        # temporary fix to disable tokenizer parallelism warning
-        # (see https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning)
-        import os
-
-        os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-        # do not print transformer warnings as these are confusing in this case
-        from transformers import logging
-
-        logging.set_verbosity_error()
-
-        # load tokenizer and transformer model
-        if type(model) == str:
-            self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
-            if self.tokenizer.model_max_length > 1000000000:
-                self.tokenizer.model_max_length = 512
-                log.info(
-                "No model_max_length in Tokenizer's config.json - setting it to 512. "
-                "Specify desired model_max_length by passing it as attribute to embedding instance."
-            )
-            if "config" not in kwargs:
-                config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
-                self.model = AutoModel.from_pretrained(model, config=config)
-            else:
-                self.model = AutoModel.from_pretrained(None, **kwargs)
-        elif type(model) == dict:
-            self.tokenizer = model["tokenizer"]
-            self.model = model["model"]
-
-        logging.set_verbosity_warning()
-
-        # model name
-        if type(model) == str:
-            self.name = 'transformer-document-' + str(model)
-            self.base_model = str(model)
-        elif type(model) == dict:
-            self.name = "transformer-document-" + str(model["model"].name_or_path)
-            self.base_model = str(model["model"].name_or_path)
-
-        # when initializing, embeddings are in eval mode by default
-        self.model.eval()
-        self.model.to(flair.device)
-
-        # embedding parameters
-        if layers == "all":
-            # send mini-token through to check how many layers the model has
-            hidden_states = self.model(torch.tensor([1], device=flair.device).unsqueeze(0))[-1]
-            self.layer_indexes = [int(x) for x in range(len(hidden_states))]
-        else:
-            self.layer_indexes = [int(x) for x in layers.split(",")]
-
-        self.layer_mean = layer_mean
-        self.fine_tune = fine_tune
-        self.static_embeddings = not self.fine_tune
-        self.pooling = pooling
-
-        # check whether CLS is at beginning or end
-        self.initial_cls_token: bool = self._has_initial_cls_token(tokenizer=self.tokenizer)
-
-    @staticmethod
-    def _has_initial_cls_token(tokenizer: PreTrainedTokenizer) -> bool:
-        # most models have CLS token as last token (GPT-1, GPT-2, TransfoXL, XLNet, XLM), but BERT is initial
-        tokens = tokenizer.encode("a")
-        initial_cls_token: bool = False
-        if tokens[0] == tokenizer.cls_token_id:
-            initial_cls_token = True
-        return initial_cls_token
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        """Add embeddings to all words in a list of sentences."""
-
-        # gradients are enabled if fine-tuning is enabled
-        gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
-
-        with gradient_context:
-
-            # first, subtokenize each sentence and find out into how many subtokens each token was divided
-            subtokenized_sentences = []
-
-            # subtokenize sentences
-            for sentence in sentences:
-                # tokenize and truncate to max subtokens (TODO: check better truncation strategies)
-                subtokenized_sentence = self.tokenizer.encode(
-                    sentence.to_tokenized_string(),
-                    add_special_tokens=True,
-                    max_length=self.tokenizer.model_max_length,
-                    truncation=True,
-                )
-
-                subtokenized_sentences.append(
-                    torch.tensor(subtokenized_sentence, dtype=torch.long, device=flair.device)
-                )
-
-            # find longest sentence in batch
-            longest_sequence_in_batch: int = len(max(subtokenized_sentences, key=len))
-
-            # initialize batch tensors and mask
-            input_ids = torch.zeros(
-                [len(sentences), longest_sequence_in_batch],
-                dtype=torch.long,
-                device=flair.device,
-            )
-            mask = torch.zeros(
-                [len(sentences), longest_sequence_in_batch],
-                dtype=torch.long,
-                device=flair.device,
-            )
-            for s_id, sentence_embedding in enumerate(subtokenized_sentences):
-                sequence_length = len(sentence_embedding)
-                input_ids[s_id][:sequence_length] = sentence_embedding
-                mask[s_id][:sequence_length] = torch.ones(sequence_length)
-
-            # put encoded batch through transformer model to get all hidden states of all encoder layers
-            hidden_states = (
-                self.model(input_ids, attention_mask=mask)[-1] if len(sentences) > 1 else self.model(input_ids)[-1]
-            )
-
-            # iterate over all subtokenized sentences
-            for sentence_idx, (sentence, subtokens) in enumerate(zip(sentences, subtokenized_sentences)):
-
-                if self.pooling == "cls":
-                    index_of_CLS_token = 0 if self.initial_cls_token else len(subtokens) - 1
-
-                    cls_embeddings_all_layers: List[torch.Tensor] = [
-                        hidden_states[layer][sentence_idx][index_of_CLS_token] for layer in self.layer_indexes
-                    ]
-
-                    embeddings_all_layers = cls_embeddings_all_layers
-
-                elif self.pooling == "mean":
-                    mean_embeddings_all_layers: List[torch.Tensor] = [
-                        torch.mean(
-                            hidden_states[layer][sentence_idx][: len(subtokens), :],
-                            dim=0,
-                        )
-                        for layer in self.layer_indexes
-                    ]
-
-                    embeddings_all_layers = mean_embeddings_all_layers
-
-                elif self.pooling == "max":
-                    max_embeddings_all_layers: List[torch.Tensor] = [
-                        torch.max(
-                            hidden_states[layer][sentence_idx][: len(subtokens), :],
-                            dim=0,
-                        )[0]
-                        for layer in self.layer_indexes
-                    ]
-
-                    embeddings_all_layers = max_embeddings_all_layers
-
-                # use scalar mix of embeddings if so selected
-                if self.layer_mean:
-                    sm = ScalarMix(mixture_size=len(embeddings_all_layers))
-                    sm_embeddings = sm(embeddings_all_layers)
-
-                    embeddings_all_layers = [sm_embeddings]
-
-                # set the extracted embedding for the token
-                sentence.set_embedding(self.name, torch.cat(embeddings_all_layers))
-
-        return sentences
-
-    @property
-    def embedding_length(self) -> int:
-        """Returns the length of the embedding vector."""
-        return (
-            len(self.layer_indexes) * self.model.config.hidden_size
-            if not self.layer_mean
-            else self.model.config.hidden_size
+        TransformerEmbedding.__init__(
+            self,
+            model=model,
+            layers=layers,
+            layer_mean=layer_mean,
+            is_token_embedding=is_token_embedding,
+            is_document_embedding=True,
+            **kwargs,
         )
 
-    def __getstate__(self):
-        # special handling for serializing transformer models
-        config_state_dict = self.model.config.__dict__
-        model_state_dict = self.model.state_dict()
-
-        if not hasattr(self, "base_model_name"):
-            self.base_model_name = self.name.split("transformer-document-")[-1]
-
-        # serialize the transformer models and the constructor arguments (but nothing else)
-        model_state = {
-            "config_state_dict": config_state_dict,
-            "model_state_dict": model_state_dict,
-            "embedding_length_internal": self.embedding_length,
-            "base_model_name": self.base_model_name,
-            "fine_tune": self.fine_tune,
-            "layer_indexes": self.layer_indexes,
-            "layer_mean": self.layer_mean,
-            "pooling": self.pooling,
-        }
-
-        return model_state
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-
-        # necessary for reverse compatibility with Flair <= 0.7
-        if "use_scalar_mix" in self.__dict__.keys():
-            self.__dict__["layer_mean"] = d["use_scalar_mix"]
-
-        # special handling for deserializing transformer models
-        if "config_state_dict" in d:
-
-            # load transformer model
-            model_type = d["config_state_dict"]["model_type"] if "model_type" in d["config_state_dict"] else "bert"
-            config_class = CONFIG_MAPPING[model_type]
-            loaded_config = config_class.from_dict(d["config_state_dict"])
-
-            # constructor arguments
-            layers = ",".join([str(idx) for idx in self.__dict__["layer_indexes"]])
-
-            # re-initialize transformer word embeddings with constructor arguments
-            embedding = TransformerDocumentEmbeddings(
-                model=self.__dict__["base_model_name"],
-                fine_tune=self.__dict__["fine_tune"],
-                layers=layers,
-                layer_mean=self.__dict__["layer_mean"],
-                config=loaded_config,
-                state_dict=d["model_state_dict"],
-                pooling=self.__dict__["pooling"] if "pooling" in self.__dict__ else "cls",
-                # for backward compatibility with previous models
-            )
-
-            # I have no idea why this is necessary, but otherwise it doesn't work
-            for key in embedding.__dict__.keys():
-                self.__dict__[key] = embedding.__dict__[key]
-
-        else:
-            model_name = self.__dict__["name"].split("transformer-document-")[-1]
-            # reload tokenizer to get around serialization issues
-            try:
-                tokenizer = AutoTokenizer.from_pretrained(model_name)
-            except:  # noqa: E722 TODO: figure out possible exceptions
-                pass
-            self.tokenizer = tokenizer
+    @classmethod
+    def create_from_state(cls, **state):
+        # this parameter is fixed
+        del state["is_document_embedding"]
+        return cls(**state)
 
 
 class DocumentPoolEmbeddings(DocumentEmbeddings):
