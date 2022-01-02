@@ -153,10 +153,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
             if len(embedding_list) > 0:
                 embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
 
-                print(embedding_tensor.size())
-                print(embedding_tensor)
-                asd
-
                 if self.use_dropout:
                     embedding_tensor = self.dropout(embedding_tensor)
 
