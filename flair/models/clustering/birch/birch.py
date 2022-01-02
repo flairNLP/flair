@@ -9,13 +9,9 @@ from flair.models.clustering.kmeans.k_Means import KMeans
 
 class Birch(Clustering):
     def __init__(self, thresholds: float, embeddings: DocumentEmbeddings, b: int, l: int, clusters: int):
-        global threshold
-        threshold = thresholds
-        global branching_factor_leaf
-        branching_factor_leaf = l
-        global branching_factor_non_leaf
-        branching_factor_non_leaf = b
-        global distance_max
+        Birch.threshold = thresholds
+        Birch.branching_factor_leaf = l
+        Birch.branching_factor_non_leaf = b
 
         self.embeddings = embeddings
         self.cf_tree = CfTree()
@@ -23,7 +19,8 @@ class Birch(Clustering):
         self.k = clusters
 
     def cluster(self, vectors: list, batch_size: int = 64):
-        print("Starting BIRCH clustering with threshold: " + str(threshold))
+        print("Starting BIRCH clustering with threshold: " + str(Birch.threshold) + " with Branchingfactor: " + str(
+            Birch.branching_factor_leaf))
         self.predict = [0] * len(vectors)
 
         for batch in DataLoader(vectors, batch_size=batch_size):
