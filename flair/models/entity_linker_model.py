@@ -21,14 +21,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
 
     def __init__(
-        self,
-        word_embeddings: flair.embeddings.TokenEmbeddings,
-        label_dictionary: Dictionary,
-        pooling_operation: str = "average",
-        label_type: str = "nel",
-        dropout: float = 0.5,
-        skip_unk_probability: Optional[float] = None,
-        **classifierargs,
+            self,
+            word_embeddings: flair.embeddings.TokenEmbeddings,
+            label_dictionary: Dictionary,
+            pooling_operation: str = "first&last",
+            label_type: str = "nel",
+            dropout: float = 0.5,
+            skip_unk_probability: Optional[float] = None,
+            **classifierargs,
     ):
         """
         Initializes an EntityLinker
@@ -92,9 +92,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         return torch.mean(arg, 0)
 
     def forward_pass(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            return_label_candidates: bool = False,
     ):
 
         if not isinstance(sentences, list):
@@ -136,18 +136,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
                     span_labels.append([entity.value])
 
-                    mention_emb = torch.Tensor(0, self.word_embeddings.embedding_length).to(flair.device)
-
-                    for token in entity.span.tokens:
+                    if self.pooling_operation == "first&last":
                         mention_emb = torch.cat(
-                            (
-                                mention_emb,
-                                token.get_embedding(embedding_names).unsqueeze(0),
-                            ),
+                            (entity.span.tokens[0].get_embedding(embedding_names),
+                             entity.span.tokens[-1].get_embedding(embedding_names),
+                             ),
                             0,
                         )
-
-                    embedding_list.append(self.aggregated_embedding(mention_emb).unsqueeze(0))
+                    embedding_list.append(mention_emb.unsqueeze(0))
 
                     if return_label_candidates:
                         sentences_to_spans.append(sentence)
@@ -156,6 +152,10 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
             if len(embedding_list) > 0:
                 embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
+
+                print(embedding_tensor.size())
+                print(embedding_tensor)
+                asd
 
                 if self.use_dropout:
                     embedding_tensor = self.dropout(embedding_tensor)
