@@ -66,7 +66,7 @@ class LearnedPrototypesTagger(Classifier):
 
         if use_radius:
             self.prototype_radii = torch.nn.Parameter(
-                torch.ones(len(self.prototype_labels)), required_grad=True)
+                torch.ones(len(self.prototype_labels)), requires_grad=True)
         else:
             self.prototype_radii = None
 
