@@ -31,6 +31,7 @@ class MultiFileColumnCorpus(Corpus):
         in_memory: bool = True,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
+        default_whitespace_after: bool = True,
         **corpusargs,
     ):
         """
@@ -67,6 +68,7 @@ class MultiFileColumnCorpus(Corpus):
                         document_separator_token=document_separator_token,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
+                        default_whitespace_after=default_whitespace_after,
                     )
                     for train_file in train_files
                 ]
@@ -91,6 +93,7 @@ class MultiFileColumnCorpus(Corpus):
                         document_separator_token=document_separator_token,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
+                        default_whitespace_after=default_whitespace_after,
                     )
                     for test_file in test_files
                 ]
@@ -115,6 +118,7 @@ class MultiFileColumnCorpus(Corpus):
                         document_separator_token=document_separator_token,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
+                        default_whitespace_after=default_whitespace_after,
                     )
                     for dev_file in dev_files
                 ]
@@ -188,6 +192,7 @@ class ColumnDataset(FlairDataset):
         encoding: str = "utf-8",
         skip_first_line: bool = False,
         label_name_map: Dict[str, str] = None,
+        default_whitespace_after: bool = True,
     ):
         """
         Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
@@ -214,6 +219,7 @@ class ColumnDataset(FlairDataset):
         self.document_separator_token = document_separator_token
         self.label_name_map = label_name_map
         self.banned_sentences = banned_sentences
+        self.default_whitespace_after = default_whitespace_after
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -299,6 +305,7 @@ class ColumnDataset(FlairDataset):
     def _convert_lines_to_sentence(self, lines):
 
         sentence: Sentence = Sentence()
+        token = None
         for line in lines:
             # skip comments
             if self.comment_symbol is not None and line.startswith(self.comment_symbol):
@@ -316,7 +323,7 @@ class ColumnDataset(FlairDataset):
 
             # otherwise, this line is a token. parse and add to sentence
             else:
-                token = self._parse_token(line)
+                token = self._parse_token(line, token)
                 sentence.add_token(token)
 
         # check if this sentence is a document boundary
@@ -329,9 +336,9 @@ class ColumnDataset(FlairDataset):
         if len(sentence) > 0:
             return sentence
 
-    def _parse_token(self, line: str) -> Token:
+    def _parse_token(self, line: str, last_token: Optional[Token] = None) -> Token:
         fields: List[str] = re.split(self.column_delimiter, line.rstrip())
-        token = Token(fields[self.text_column])
+        token = Token(fields[self.text_column], whitespace_after=self.default_whitespace_after)
         for column in self.column_name_map:
             if len(fields) > column:
                 if column != self.text_column and self.column_name_map[column] != self.SPACE_AFTER_KEY:
@@ -353,6 +360,14 @@ class ColumnDataset(FlairDataset):
                     token.add_label(task, tag)
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == "-":
                     token.whitespace_after = False
+        if last_token is None:
+            start = 0
+        else:
+            start = last_token.end_pos
+            if last_token.whitespace_after:
+                start += 1
+        token.start_pos = start
+        token.end_pos = token.start_pos + len(token.text)
         return token
 
     def __line_completes_sentence(self, line: str) -> bool:
@@ -2290,6 +2305,7 @@ class NER_JAPANESE(ColumnCorpus):
             train_file="train.txt",
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
+            default_whitespace_after=False,
             **corpusargs,
         )
 
@@ -2317,7 +2333,7 @@ class NER_JAPANESE(ColumnCorpus):
                 if sp_line[0] == "\n":
                     f.write("\n")
                 else:
-                    f.write(sp_line[0] + "\t" + sp_line[len(sp_line) - 1])
+                    f.write(sp_line[0] + "\t" + sp_line[-1])
 
 
 class NER_MASAKHANE(MultiCorpus):
