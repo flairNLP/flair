@@ -35,8 +35,11 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         super(FewshotClassifier, self).__init__()
 
     def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence]
+        self, data_points: Union[List[Sentence], Sentence], task: str = ""
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
+
+        if task:
+            self.switch_to_task(task)
 
         if not isinstance(data_points, list):
             data_points = [data_points]
