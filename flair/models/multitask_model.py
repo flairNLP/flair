@@ -107,7 +107,8 @@ class MultitaskModel(flair.nn.Model):
                                                      num_workers=num_workers,
                                                      main_evaluation_metric=main_evaluation_metric,
                                                      exclude_labels=exclude_labels,
-                                                     gold_label_dictionary=gold_label_dictionary)
+                                                     gold_label_dictionary=gold_label_dictionary,
+                                                     task=task)
 
             log.info(f"{task} - {self.__getattr__(task)._get_name()} - "
                      f"{self.__getattr__(task).corpus_name} - {self.label_type.get(task)} - "

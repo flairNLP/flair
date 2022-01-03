@@ -35,11 +35,12 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         super(FewshotClassifier, self).__init__()
 
     def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence], task: str = ""
+        self, data_points: Union[List[Sentence], Sentence], task: str = "",
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
 
         if task:
             self.switch_to_task(task)
+            self._compute_label_similarity_for_current_epoch()
 
         if not isinstance(data_points, list):
             data_points = [data_points]
@@ -484,6 +485,7 @@ class TARSTagger(FewshotClassifier):
         return_loss=False,
         embedding_storage_mode="none",
         most_probable_first: bool = True,
+        task: str = "",
     ):
         # return
         """
@@ -500,6 +502,9 @@ class TARSTagger(FewshotClassifier):
         you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         'gpu' to store embeddings in GPU memory.
         """
+        if task:
+            self.switch_to_task(task)
+
         if label_name is None:
             label_name = self.get_current_label_type()
 
