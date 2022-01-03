@@ -200,7 +200,7 @@ class LearnedPrototypesTagger(Classifier):
         distance = self.distance(encoded, prot)
 
         if radii is not None:
-            distance /= self.radius_bound + torch.softplus(radii)
+            distance /= self.radius_bound + torch.nn.functional.softplus(radii)
 
         # if unlabeled distance is set, mask out loss to unlabeled class prototype
         if self.unlabeled_distance:
