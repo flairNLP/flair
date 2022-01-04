@@ -8,6 +8,8 @@ def get_cosine_distance(vector1: tensor, vector2: tensor) -> tensor:
 
 
 def get_furthest_2_points(cfs: list) -> list:
+    if len(cfs) == 2:
+        return [0, 1]
     candidates = []
 
     for index, cf in enumerate(cfs):

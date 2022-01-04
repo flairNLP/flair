@@ -21,7 +21,7 @@ class LeafNode(CfNode):
         self.cfs.append(cf)
 
     def can_add_new_cf(self):
-        return self.cfs.__len__() < branching_factor_leaf
+        return len(self.cfs) <= branching_factor_leaf
 
     def get_closest_cf(self, vector: tensor) -> ClusteringFeature:
         min_distance = distance_max

@@ -72,8 +72,7 @@ class KMeans(Clustering):
         return cluster
 
     def assign(self, vector: tensor):
-        distance_to_centroid = get_cosine_distance(vector.repeat([self.k, 1]).t(),
-                                                   torch.stack(self.k_points).t())
+        distance_to_centroid = get_cosine_distance(vector.repeat([self.k, 1]).t(), torch.stack(self.k_points).t())
         index = torch.argmin(distance_to_centroid)
 
         return int(index)

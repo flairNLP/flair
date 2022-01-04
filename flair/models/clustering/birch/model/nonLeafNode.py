@@ -15,7 +15,7 @@ class NonLeafNode(CfNode):
         self.cfs = [ClusteringFeature()]
 
     def can_add_node(self) -> bool:
-        return self.entries.__len__() < branching_factor_non_leaf
+        return len(self.entries) <= branching_factor_non_leaf
 
     def add_node(self, cf_node: CfNode):
         cf_node.parent = self

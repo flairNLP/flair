@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 from flair.models.clustering.birch.model.cfNode import CfNode
@@ -5,6 +7,8 @@ from flair.models.clustering.birch.model.clusteringFeature import ClusteringFeat
 from flair.models.clustering.birch.model.leafNode import LeafNode
 from flair.models.clustering.birch.model.nonLeafNode import NonLeafNode
 from flair.models.clustering.distance import distance
+
+log = logging.getLogger("flair")
 
 
 class CfTree:
@@ -14,17 +18,20 @@ class CfTree:
 
     def insert_cf(self, cf: ClusteringFeature):
         leaf = self.get_closest_leaf(cf, self.root)
-        cf_node = leaf.get_closest_cf(cf)
+        cf_entry = leaf.get_closest_cf(cf)
 
-        if cf_node.can_absorb_cf(cf):
-            cf_node.absorb_cf(cf)
+        if cf_entry.can_absorb_cf(cf):
+            print("Absorb the cf")
+            cf_entry.absorb_cf(cf)
             self.update_path_simple(leaf)
             return
 
         if leaf.can_add_new_cf():
+            log.debug("Added cf to leaf")
             leaf.add_cf(cf)
             self.update_path_simple(leaf)
         else:
+            log.debug("Split the leaf")
             new_leaf = self.split_leaf(leaf, cf)
             self.update_path_with_new_leaf(new_leaf)
 
@@ -46,8 +53,12 @@ class CfTree:
         leaf.parent.cfs[index] = leaf.sum_all_cfs()
 
         new_leaf = LeafNode(new_cf, parent=leaf.parent)
-        leaf.next = new_leaf
-        new_leaf.prev = new_leaf
+        neighbor_leaf = leaf
+        while neighbor_leaf.next is not None:
+            neighbor_leaf = neighbor_leaf.next
+
+        neighbor_leaf.next = new_leaf
+        new_leaf.prev = neighbor_leaf
 
         return new_leaf
 
@@ -61,11 +72,12 @@ class CfTree:
             parent = parent.parent
 
     def update_path_with_new_leaf(self, new_leaf: LeafNode):
-        # TODO: update the whole path in a loop
         if new_leaf.parent.can_add_node():
             new_leaf.parent.add_node(new_leaf)
+            self.update_path_simple(new_leaf)
         else:
             self.split_non_leaf_node(new_leaf)
+            self.update_path_simple(new_leaf)
 
     def split_non_leaf_node(self, node: CfNode):
 
@@ -116,6 +128,17 @@ class CfTree:
                 print("split again ")
                 self.split_non_leaf_node(non_leaf_node.parent)
 
+    def validate(self, vectors: list):
+
+        # check all the leafs
+        cfs = self.get_leaf_cfs()
+        test = [cf.N for cf in cfs]
+
+        if sum(test) != len(vectors):
+            log.error(
+                "Error found N: " + str(sum(test)) + " entries in all Leafs but got: " + str(len(vectors)) + " vectors."
+            )
+
     def get_closest_leaf(self, cf: ClusteringFeature, non_leaf_node: NonLeafNode) -> LeafNode:
         cf_node = non_leaf_node.get_closest_child(cf)
         if cf_node is None:
@@ -126,37 +149,10 @@ class CfTree:
         else:
             return self.get_closest_leaf(cf, cf_node)
 
-    def validate(self):
-        self.validateNode(self.root)
-
-    def validateNode(self, nonLeafNode: NonLeafNode) -> bool:
-        n = 0
-        # TODO: fix
-        # for idx, node in enumerate(nonLeafNode.entries):
-        #     n = self.calculateCfs(node)
-        #     nNonLeaf = nonLeafNode.cfs[idx].N
-        #     if n != nNonLeaf:
-        #         print(False, idx)
-        #         return False
-
-        return True
-
-    def calculate_cfs(self, non_leaf_node: NonLeafNode) -> int:
-        if non_leaf_node.isLeaf:
-            return non_leaf_node.sum_all_cfs().N
-        else:
-            n = 0
-            for idx, node in enumerate(non_leaf_node.entries):
-                n = self.validateNode(node)
-                n_non_leaf = non_leaf_node.cfs[idx].N
-                if n != n_non_leaf:
-                    print(False, n, n_non_leaf)
-
     def get_leafs(self) -> list:
         next = self.first_child
         leafs = [next]
         while next.next is not None:
-            print("next")
             next = next.next
             leafs.append(next)
 

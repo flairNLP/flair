@@ -8,7 +8,6 @@ from flair.models.clustering.birch.model.cfTree import CfTree
 from flair.models.clustering.birch.model.clusteringFeature import ClusteringFeature
 from flair.models.clustering.kmeans.k_Means import KMeans
 
-# TODO: go though every path for inserts and add TODOs
 log = logging.getLogger("flair")
 
 
@@ -24,8 +23,12 @@ class Birch(Clustering):
         self.k = clusters
 
     def cluster(self, vectors: list, batch_size: int = 64):
-        log.debug("Starting BIRCH clustering with threshold: " + str(Birch.threshold) + " with Branchingfactor: " + str(
-            Birch.branching_factor_leaf))
+        log.debug(
+            "Starting BIRCH clustering with threshold: "
+            + str(Birch.threshold)
+            + " with Branchingfactor: "
+            + str(Birch.branching_factor_leaf)
+        )
         self.predict = [0] * len(vectors)
 
         for batch in DataLoader(vectors, batch_size=batch_size):
@@ -34,6 +37,7 @@ class Birch(Clustering):
         for idx, vector in enumerate(vectors):
             self.cf_tree.insert_cf(ClusteringFeature(vector.embedding, idx=idx))
 
+        self.cf_tree.validate(vectors)
         cfs = self.cf_tree.get_leaf_cfs()
         cf_vectors = self.cf_tree.get_vectors_from_cf(cfs)
 
