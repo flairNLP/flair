@@ -142,7 +142,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
             "label_type": self.label_type,
             "multi_label": self.multi_label,
             "multi_label_threshold": self.multi_label_threshold,
-            "loss_weights": self.loss_weights,
+            "weight_dict": self.weight_dict,
             "embed_separately": self.embed_separately,
         }
         return model_state
@@ -158,7 +158,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
             multi_label_threshold=0.5
             if "multi_label_threshold" not in state.keys()
             else state["multi_label_threshold"],
-            loss_weights=state["loss_weights"],
+            loss_weights=state["weight_dict"],
             embed_separately=state["embed_separately"],
         )
         model.load_state_dict(state["state_dict"])
