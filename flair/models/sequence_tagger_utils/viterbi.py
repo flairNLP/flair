@@ -228,7 +228,13 @@ class ViterbiDecoder:
         prob_tags_per_sentence = []
         for scores_sentence, length in zip(scores, lengths.values):
             scores_sentence = scores_sentence[:length]
-            prob_tags_per_sentence.append([[Label(self.tag_dictionary.get_item_for_index(score_id), score)
-                                       for score_id, score in enumerate(score_dist)]
-                                       for score_dist in scores_sentence])
+            prob_tags_per_sentence.append(
+                [
+                    [
+                        Label(self.tag_dictionary.get_item_for_index(score_id), score)
+                        for score_id, score in enumerate(score_dist)
+                    ]
+                    for score_dist in scores_sentence
+                ]
+            )
         return prob_tags_per_sentence
