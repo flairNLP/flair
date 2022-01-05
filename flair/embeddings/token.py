@@ -889,7 +889,7 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbedding):
         self,
         model: str = "bert-base-uncased",
         is_document_embedding: bool = False,
-        allow_long_sequences: bool = True,
+        allow_long_sentences: bool = True,
         **kwargs,
     ):
         """
@@ -907,7 +907,7 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbedding):
             model=model,
             is_token_embedding=True,
             is_document_embedding=is_document_embedding,
-            allow_long_sequences=allow_long_sequences,
+            allow_long_sentences=allow_long_sentences,
             **kwargs,
         )
 
