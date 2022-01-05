@@ -393,7 +393,7 @@ class TARSTagger(FewshotClassifier):
 
         if task_name and label_dictionary and label_type:
             # Store task specific labels since TARS can handle multiple tasks
-            self.add_and_switch_to_new_task(task_name, label_dictionary, label_type, num_negative_labels_to_sample)
+            self.add_and_switch_to_new_task(task_name, label_dictionary, label_type, num_negative_labels_to_sample=num_negative_labels_to_sample)
         else:
             log.info(
                 "TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
