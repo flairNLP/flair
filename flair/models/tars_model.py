@@ -514,8 +514,8 @@ class TARSTagger(FewshotClassifier):
         """
         if "task" in kwargs.keys():
             task = kwargs.get("task")
-        elif set([x.multitask_annotations[0].task_id for x in data_points]):
-            task = set([x.multitask_annotations[0].task_id for x in data_points]).pop()
+        elif set([x.multitask_annotations[0].task_id for x in sentences]):
+            task = set([x.multitask_annotations[0].task_id for x in sentences]).pop()
         else:
             raise ValueError
         self.switch_to_task(task)
