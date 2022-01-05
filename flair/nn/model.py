@@ -238,6 +238,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                     mini_batch_size=mini_batch_size,
                     label_name="predicted",
                     return_loss=True,
+                    **kwargs
                 )
 
                 if isinstance(loss_and_count, tuple):

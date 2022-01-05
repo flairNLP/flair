@@ -35,10 +35,15 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         super(FewshotClassifier, self).__init__()
 
     def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence]
+        self, data_points: Union[List[Sentence], Sentence], **kwargs
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
 
-        task = set([x.multitask_annotations[0].task_id for x in data_points]).pop()
+        if "task" in kwargs.keys():
+            task = kwargs.get("task")
+        elif set([x.multitask_annotations[0].task_id for x in data_points]):
+            task = set([x.multitask_annotations[0].task_id for x in data_points]).pop()
+        else:
+            raise ValueError
         self.switch_to_task(task_name=task)
 
         if not isinstance(data_points, list):
@@ -489,7 +494,8 @@ class TARSTagger(FewshotClassifier):
         label_name: Optional[str] = None,
         return_loss=False,
         embedding_storage_mode="none",
-        most_probable_first: bool = True
+        most_probable_first: bool = True,
+        **kwargs
     ):
         # return
         """
@@ -506,7 +512,12 @@ class TARSTagger(FewshotClassifier):
         you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         'gpu' to store embeddings in GPU memory.
         """
-        task = set([x.multitask_annotations[0].task_id for x in sentences]).pop()
+        if "task" in kwargs.keys():
+            task = kwargs.get("task")
+        elif set([x.multitask_annotations[0].task_id for x in data_points]):
+            task = set([x.multitask_annotations[0].task_id for x in data_points]).pop()
+        else:
+            raise ValueError
         self.switch_to_task(task)
 
         if label_name is None:
