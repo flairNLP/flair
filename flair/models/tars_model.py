@@ -29,18 +29,17 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
     def __init__(self):
         self._current_task = None
         self._task_specific_attributes = {}
-        self.label_nearest_map = None
+        self.label_nearest_map = {}
         self.tars_model: flair.nn.Classifier[Sentence]
 
         super(FewshotClassifier, self).__init__()
 
     def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence], task: str = "",
+        self, data_points: Union[List[Sentence], Sentence]
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
 
-        if task:
-            self.switch_to_task(task)
-            self._compute_label_similarity_for_current_epoch()
+        task = set([x.multitask_annotations[0].task_id for x in data_points]).pop()
+        self.switch_to_task(task_name=task)
 
         if not isinstance(data_points, list):
             data_points = [data_points]
@@ -63,7 +62,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
         for sentence in sentences:
             label_text_pairs_for_sentence = []
-            if self.training and self.num_negative_labels_to_sample is not None:
+            if self.training and self.get_current_num_negative_samples() is not None:
 
                 positive_labels = list(
                     OrderedDict.fromkeys([label.value for label in sentence.get_labels(self.label_type)])
@@ -90,7 +89,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
             tags = self.get_current_label_dictionary().get_items()
             import random
 
-            sample = random.sample(tags, k=self.num_negative_labels_to_sample)
+            sample = random.sample(tags, k=self.get_current_num_negative_samples())
             return sample
 
         already_sampled_negative_labels = set()
@@ -100,12 +99,12 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
 
             plausible_labels = []
             plausible_label_probabilities = []
-            for plausible_label in self.label_nearest_map[label]:
+            for plausible_label in self.label_nearest_map[self._current_task][label]:
                 if plausible_label in already_sampled_negative_labels or plausible_label in labels:
                     continue
                 else:
                     plausible_labels.append(plausible_label)
-                    plausible_label_probabilities.append(self.label_nearest_map[label][plausible_label])
+                    plausible_label_probabilities.append(self.label_nearest_map[self._current_task][label][plausible_label])
 
             # make sure the probabilities always sum up to 1
             plausible_label_probabilities = np.array(plausible_label_probabilities, dtype="float64")
@@ -113,7 +112,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
             plausible_label_probabilities /= np.sum(plausible_label_probabilities)
 
             if len(plausible_labels) > 0:
-                num_samples = min(self.num_negative_labels_to_sample, len(plausible_labels))
+                num_samples = min(self.get_current_num_negative_samples(), len(plausible_labels))
                 sampled_negative_labels = np.random.choice(
                     plausible_labels,
                     num_samples,
@@ -141,39 +140,43 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         """
         Compute the similarity between all labels for better sampling of negatives
         """
+        for task_name in self._task_specific_attributes.keys():
+            # get and embed all labels by making a Sentence object that contains only the label text
+            all_labels = [label.decode("utf-8") for label in self._task_specific_attributes[task_name]['label_dictionary'].idx2item]
+            label_sentences = [Sentence(label) for label in all_labels]
 
-        # get and embed all labels by making a Sentence object that contains only the label text
-        all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
-        label_sentences = [Sentence(label) for label in all_labels]
+            self.tars_embeddings.eval()  # TODO: check if this is necessary
+            self.tars_embeddings.embed(label_sentences)
+            self.tars_embeddings.train()
 
-        self.tars_embeddings.eval()  # TODO: check if this is necessary
-        self.tars_embeddings.embed(label_sentences)
-        self.tars_embeddings.train()
+            # get each label embedding and scale between 0 and 1
+            if isinstance(self.tars_embeddings, TokenEmbeddings):
+                encodings_np = [sentence[0].get_embedding().cpu().detach().numpy() for sentence in label_sentences]
+            else:
+                encodings_np = [sentence.get_embedding().cpu().detach().numpy() for sentence in label_sentences]
 
-        # get each label embedding and scale between 0 and 1
-        if isinstance(self.tars_embeddings, TokenEmbeddings):
-            encodings_np = [sentence[0].get_embedding().cpu().detach().numpy() for sentence in label_sentences]
-        else:
-            encodings_np = [sentence.get_embedding().cpu().detach().numpy() for sentence in label_sentences]
+            normalized_encoding = minmax_scale(encodings_np)
 
-        normalized_encoding = minmax_scale(encodings_np)
+            # compute similarity matrix
+            similarity_matrix = cosine_similarity(normalized_encoding)
 
-        # compute similarity matrix
-        similarity_matrix = cosine_similarity(normalized_encoding)
-
-        # the higher the similarity, the greater the chance that a label is
-        # sampled as negative example
-        negative_label_probabilities = {}
-        for row_index, label in enumerate(all_labels):
-            negative_label_probabilities[label] = {}
-            for column_index, other_label in enumerate(all_labels):
-                if label != other_label:
-                    negative_label_probabilities[label][other_label] = similarity_matrix[row_index][column_index]
-        self.label_nearest_map = negative_label_probabilities
+            # the higher the similarity, the greater the chance that a label is
+            # sampled as negative example
+            negative_label_probabilities = {}
+            for row_index, label in enumerate(all_labels):
+                negative_label_probabilities[label] = {}
+                for column_index, other_label in enumerate(all_labels):
+                    if label != other_label:
+                        negative_label_probabilities[label][other_label] = similarity_matrix[row_index][column_index]
+            self.label_nearest_map[task_name] = negative_label_probabilities
 
     def get_current_label_dictionary(self):
         label_dictionary = self._task_specific_attributes[self._current_task]["label_dictionary"]
         return label_dictionary
+
+    def get_current_num_negative_samples(self):
+        num_negative_samples = self._task_specific_attributes[self._current_task]["num_negative_samples"]
+        return num_negative_samples
 
     def get_current_label_type(self):
         return self._task_specific_attributes[self._current_task]["label_type"]
@@ -188,6 +191,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         label_type: str,
         multi_label: bool = True,
         force_switch: bool = False,
+        num_negative_labels_to_sample: int = 2
     ):
         """
         Adds a new task to an existing TARS model. Sets necessary attributes and finally 'switches'
@@ -223,6 +227,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
                 "label_dictionary": tag_dictionary,
                 "label_type": label_type,
                 "multi_label": multi_label,
+                "num_negative_samples": num_negative_labels_to_sample
             }
 
         self.switch_to_task(task_name)
@@ -388,7 +393,7 @@ class TARSTagger(FewshotClassifier):
 
         if task_name and label_dictionary and label_type:
             # Store task specific labels since TARS can handle multiple tasks
-            self.add_and_switch_to_new_task(task_name, label_dictionary, label_type)
+            self.add_and_switch_to_new_task(task_name, label_dictionary, label_type, num_negative_labels_to_sample)
         else:
             log.info(
                 "TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
@@ -484,8 +489,7 @@ class TARSTagger(FewshotClassifier):
         label_name: Optional[str] = None,
         return_loss=False,
         embedding_storage_mode="none",
-        most_probable_first: bool = True,
-        task: str = "",
+        most_probable_first: bool = True
     ):
         # return
         """
@@ -502,8 +506,8 @@ class TARSTagger(FewshotClassifier):
         you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         'gpu' to store embeddings in GPU memory.
         """
-        if task:
-            self.switch_to_task(task)
+        task = set([x.multitask_annotations[0].task_id for x in sentences]).pop()
+        self.switch_to_task(task)
 
         if label_name is None:
             label_name = self.get_current_label_type()
