@@ -232,7 +232,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
-            return torch.tensor(0., dtype=torch.float, device=flair.device, requires_grad=True), 0
+            return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
         # forward pass to get scores
         scores, gold_labels = self.forward(sentences)  # type: ignore
@@ -447,7 +447,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 if self.use_crf:
                     predictions, all_tags = self.viterbi_decoder.decode(features, return_probabilities_for_all_classes)
                 else:
-                    predictions, all_tags = self._standard_inference(features, batch, return_probabilities_for_all_classes)
+                    predictions, all_tags = self._standard_inference(
+                        features, batch, return_probabilities_for_all_classes
+                    )
 
                 for sentence, labels in zip(batch, predictions):
                     for token, label in zip(sentence.tokens, labels):
@@ -499,17 +501,20 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         :param scores: Scores for current sentence.
         """
         scores = scores.numpy()
-        prob_all_tags = [[Label(self.tag_dictionary.get_item_for_index(score_id), score)
-                         for score_id, score in enumerate(score_dist)]
-                         for score_dist in scores]
+        prob_all_tags = [
+            [
+                Label(self.tag_dictionary.get_item_for_index(score_id), score)
+                for score_id, score in enumerate(score_dist)
+            ]
+            for score_dist in scores
+        ]
 
         prob_tags_per_sentence = []
         previous = 0
         for length in lengths:
-            prob_tags_per_sentence.append(prob_all_tags[previous:previous+length])
+            prob_tags_per_sentence.append(prob_all_tags[previous : previous + length])
             previous = length
         return prob_tags_per_sentence
-
 
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""
