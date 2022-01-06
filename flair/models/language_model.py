@@ -433,6 +433,8 @@ class LanguageModel(nn.Module):
             self.eval()
 
         else:
+            if "recurrent_type" not in d:
+                d["recurrent_type"] = "lstm"
             super().__setstate__(d)
 
     def _apply(self, fn):
