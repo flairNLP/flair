@@ -1179,7 +1179,7 @@ class WSD_UFSAC(MultiCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         cut_multisense: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         banned_sentences: List[str] = None,
         sample_missing_splits_in_multicorpus: Union[bool, str] = True,
@@ -1204,7 +1204,7 @@ class WSD_UFSAC(MultiCorpus):
                                multiple possible senses. If True only the first listed sense will be used and the
                                suffix '_cut' will be added to the name of the CoNLL file. Otherwise the whole list of
                                senses will be detected as one new sense. The default is True.
-        :param columns: Columns to consider when loading the dataset. You can add 1: "lemma" or 2: "pos" to the default dict {0: "text", 3: "wn30_key"}
+        :param columns: Columns to consider when loading the dataset. You can add 1: "lemma" or 2: "pos" to the default dict {0: "text", 3: "sense"}
             if you want to use additional pos and/or lemma for the words.
         :param tag_to_bioes: whether to convert to BIOES tagging scheme
         :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
@@ -1326,7 +1326,7 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
@@ -1393,7 +1393,7 @@ class WSD_SEMCOR(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
@@ -1472,7 +1472,7 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
@@ -1548,7 +1548,7 @@ class WSD_MASC(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
@@ -1628,7 +1628,7 @@ class WSD_OMSTI(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
@@ -1709,7 +1709,7 @@ class WSD_TRAINOMATIC(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
