@@ -18,14 +18,24 @@ maxDocuments = 400
 categories = ["rec.motorcycles", "rec.sport.baseball", "comp.graphics", "sci.space", "talk.politics.mideast"]
 
 
-def get_20news_data():
+def get_20news_data_smaller():
     ng5 = fetch_20newsgroups(categories=categories)
     return ng5.data[1:maxDocuments]
 
 
-def get_20_news_label():
+def get_20_news_label_smaller():
     ng5 = fetch_20newsgroups(categories=categories)
     return ng5.target[1:maxDocuments]
+
+
+def get_20news_data():
+    ng5 = fetch_20newsgroups()
+    return ng5.data
+
+
+def get_20_news_label():
+    ng5 = fetch_20newsgroups()
+    return ng5.target
 
 
 def evaluate(labels: list, predict_labels: list):
