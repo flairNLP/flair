@@ -1529,7 +1529,7 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
 
         super(WSD_WORDNET_GLOSS_TAGGED, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             test_file=test_file,
             in_memory=in_memory,

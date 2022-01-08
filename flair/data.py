@@ -1146,11 +1146,11 @@ class Sentence(DataPoint):
 
         # otherwise check if the label exists on the token-level
         # in this case, create span-labels and return those
-        if label_type in self[0].annotation_layers:
-            return [SpanLabel(Span([token]), token.get_tag(label_type).value, token.get_tag(label_type).score)
+        if label_type in set().union(*(token.annotation_layers.keys() for token in self)):
+            return [SpanLabel(Span([token]), token.get_tag(label_type, "O").value, token.get_tag(label_type, "O").score)
                     for token in self]
 
-        # return empty list if none of the ebove
+        # return empty list if none of the above
         return []
 
 
