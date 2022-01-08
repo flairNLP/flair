@@ -96,3 +96,15 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
     @property
     def label_type(self):
         return self.tag_type
+
+    def _print_predictions(self, batch, gold_label_type):
+        lines = []
+        for datapoint in batch:
+            # now print labels in CoNLL format
+            for token in datapoint:
+                eval_line = (
+                    f"{token.text} " f"{token.get_tag(gold_label_type, 'O').value} " f"{token.get_tag('predicted', 'O').value}\n"
+                )
+                lines.append(eval_line)
+            lines.append("\n")
+        return lines
