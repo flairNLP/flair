@@ -402,8 +402,9 @@ class TARSTagger(FewshotClassifier):
         tars_sentence = Sentence(label_text_pair, use_tokenizer=False)
 
         for entity_label in sentence.get_labels(self.label_type):
-            new_span = [tars_sentence.get_token(token.idx + label_length) for token in entity_label.span]
-            tars_sentence.add_complex_label(self.static_label_type, SpanLabel(Span(new_span), value=entity_label.value))
+            if entity_label.value == label:
+                new_span = [tars_sentence.get_token(token.idx + label_length) for token in entity_label.span]
+                tars_sentence.add_complex_label(self.static_label_type, SpanLabel(Span(new_span), value="entity"))
 
         return tars_sentence
 
@@ -529,6 +530,7 @@ class TARSTagger(FewshotClassifier):
                             label_name=label_name,
                             return_loss=True,
                         )
+
                         overall_loss += loss_and_count[0].item()
                         overall_count += loss_and_count[1]
 
