@@ -1,17 +1,67 @@
-Clustering in flair
+Text Clustering in flair
 ----------
 
-kMeans
+In this package text clustering is implemented. This module has the following
+clustering algorithms implemented:
+- k-Means
+- BIRCH
+- Expectation Maximization
+
+Each of the implemented algorithm needs to have an instanced DocumentEmbedding. This embedding will 
+transform each text/document to a vector. With these vectors the clustering algorithm can be performed.
+
+---------------------------
+
+k-Means
 ------
+k-Means is a classical and well known clustering algorithm. k-Means is a partitioning-based Clustering algorithm. 
+The user defines with the parameter *k* how many clusters the given data has. 
+So the choice of *k* is very important. 
 
------------------
+    embedding = SentenceTransformerDocumentEmbeddings("bert-base-nli-mean-tokens")
 
-BIRCH()
+    kMeans = KMeans(20, embedding)
+    result = kMeans.cluster(sentences)
+
+BIRCH
 ---------
+BIRCH (Balanced Iterative Reducing and Clustering using Hierarchies) is a hierarchical clustering algorithm. 
+BIRCH is specialized to handle large amounts of data. BIRCH scans the data a single time and builds an internal data 
+structure. This data structure contains the data but in a compressed way
 
-------------------------
+
+    embedding = SentenceTransformerDocumentEmbeddings("bert-base-nli-mean-tokens")
+
+    birch = Birch(0.005, embedding, 4, 3, 5)
+    result = birch.cluster(sentences)
+
 
 Expectation Maximization
 --------------------------
+Expectation Maximization (EM) is a different class of clustering algorithms called soft clustering algorithms. 
+Here each point isn't directly assigned to a cluster by a hard decision. 
+Each data point has a probability to which cluster the data point belongs. The Expectation Maximization (EM) 
+algorithm is a soft clustering algorithm.
 
---------------------------------
+
+    embedding = SentenceTransformerDocumentEmbeddings("bert-base-nli-mean-tokens")
+
+    em = EM_Clustering(15, embedding)
+    result = em.cluster(sentences, batch_size=1)
+
+---------------------------
+
+Evaluation
+---------
+The result of the clustering can be evaluated. For this we will use the
+[NMI](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.normalized_mutual_info_score.html).
+(Normalized Mutual Info) score.
+
+The result of the evaluation can be seen below with the SentenceTransformerDocumentEmbeddings:
+
+
+| Clustering Algorithm     |    Dataset    | NMI |
+|--------------------------|:-------------:|----:|
+| k Means                  | StackOverflow |   / |
+| BIRCH                    | StackOverflow |   / |
+| Expectation Maximization | 20News group  |   / |
