@@ -80,16 +80,16 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         else:
             # span-labels need special encoding (BIO or BIOES)
             if tag_dictionary.span_labels:
-                self.label_dictionary = Dictionary()
+                self.label_dictionary = Dictionary(add_unk=False)
                 for label in tag_dictionary.get_items():
                     if label == "<unk>":
                         continue
                     self.label_dictionary.add_item("O")
                     if tag_format == "BIOES":
-                        self.label_dictionary.add_item("B-" + label)
-                        self.label_dictionary.add_item("I-" + label)
-                        self.label_dictionary.add_item("E-" + label)
                         self.label_dictionary.add_item("S-" + label)
+                        self.label_dictionary.add_item("B-" + label)
+                        self.label_dictionary.add_item("E-" + label)
+                        self.label_dictionary.add_item("I-" + label)
                     if tag_format == "BIO":
                         self.label_dictionary.add_item("B-" + label)
                         self.label_dictionary.add_item("I-" + label)
