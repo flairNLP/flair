@@ -1,3 +1,5 @@
-from .model import Clustering
+from .kmeans import KMeans
+from .birch import Birch
+from em import ExpectationMaximization
 
-__all__ = ["Clustering"]
+__all__ = ["KMeans", "Birch", "ExpectationMaximization"]

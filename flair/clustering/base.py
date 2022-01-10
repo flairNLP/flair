@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 
-class Clustering:
+class ClusteringModel:
     @abstractmethod
     def fit(self, vectors: list) -> list:
         pass

@@ -5,14 +5,14 @@ import torch
 from torch import logsumexp, Tensor
 from torch.distributions import MultivariateNormal
 
-import flair.clustering
+from .base import ClusteringModel
 from flair.datasets import DataLoader
 from flair.embeddings import DocumentEmbeddings
 
 log = logging.getLogger("flair")
 
 
-class ExpectationMaximization(flair.clustering.Clustering):
+class ExpectationMaximization(ClusteringModel):
     def __init__(self, k: int, embeddings: DocumentEmbeddings):
         self.models = []
         self.lower_log_bounds = []

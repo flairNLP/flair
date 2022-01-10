@@ -1,6 +1,6 @@
 import logging
 
-import flair.clustering
+from ..base import ClusteringModel
 from flair.datasets import DataLoader
 
 from flair.embeddings import DocumentEmbeddings
@@ -8,7 +8,7 @@ from flair.embeddings import DocumentEmbeddings
 log = logging.getLogger("flair")
 
 
-class Birch(flair.clustering.Clustering):
+class Birch(ClusteringModel):
     def __init__(self, thresholds: float, embeddings: DocumentEmbeddings, b: int, l: int, clusters: int):
         Birch.threshold = thresholds
         Birch.branching_factor_leaf = l
