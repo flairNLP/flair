@@ -1,9 +1,9 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 
-class Clustering(ABC):
+class Clustering:
     @abstractmethod
-    def cluster(self, vectors: list) -> list:
+    def fit(self, vectors: list) -> list:
         pass
 
     def get_label_list(self, sentences) -> list:

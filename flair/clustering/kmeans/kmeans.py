@@ -3,10 +3,10 @@ import logging
 
 from torch import tensor
 
-import flair
 import numpy as np
 import torch
 
+import flair.clustering
 from flair.datasets import DataLoader
 from flair.models.clustering.clustering import Clustering
 from flair.models.clustering.distance.distance import get_cosine_distance
@@ -14,7 +14,7 @@ from flair.models.clustering.distance.distance import get_cosine_distance
 log = logging.getLogger("flair")
 
 
-class KMeans(Clustering):
+class KMeans(flair.clustering.Clustering):
     def __init__(self, k, embeddings: flair.embeddings.DocumentEmbeddings = None):
         self.k = k
         self.embeddings = embeddings

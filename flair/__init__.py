@@ -24,6 +24,7 @@ from . import (  # noqa: E402 import after setting device
     nn,
     trainers,
     visual,
+    clustering
 )
 
 __version__ = "0.10"
