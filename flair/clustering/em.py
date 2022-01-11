@@ -1,35 +1,39 @@
 import logging
+from typing import Union, List
 
 import numpy as np
 import torch
 from torch import logsumexp, Tensor
 from torch.distributions import MultivariateNormal
+from tqdm import tqdm
 
-from .base import ClusteringModel
 from flair.datasets import DataLoader
 from flair.embeddings import DocumentEmbeddings
+
+from .base import ClusteringModel
+from flair.data import Sentence, Corpus
 
 log = logging.getLogger("flair")
 
 
 class ExpectationMaximization(ClusteringModel):
-    def __init__(self, k: int, embeddings: DocumentEmbeddings):
+
+    def __init__(self, k: int, embeddings: DocumentEmbeddings, corpus: Corpus):
+        self.embeddings = embeddings
+        self.corpus = corpus
+
         self.models = []
         self.lower_log_bounds = []
         self.k = k
-        self.embeddings = embeddings
         self.data_points = 0
         self.dimension = 0
         self.pi = []
         self.probabilities = []
 
-    def cluster(self, vectors: list, batch_size: int = 64, r_tol=1e-3, max_iteration=100):
+    def fit(self, max_iter: int = 100, batch_size: int = 64, r_tol: float = 1e-3):
 
-        try:
-            for batch in DataLoader(vectors, batch_size=batch_size):
-                self.embeddings.embed(batch)
-        except RuntimeError as e:
-            log.error("Please lower the batchsize of the cluster method.")
+        self._embed(self.corpus.train, batch_size=batch_size)
+        vectors = torch.stack([sentence.embedding for sentence in self.corpus.train])
 
         self.init_params_random(vectors)
         prev_lls = None
@@ -50,6 +54,11 @@ class ExpectationMaximization(ClusteringModel):
 
         log.debug("Finished the EM Clustering with maxItertation: " + str(max_iteration))
         return self.probabilities
+
+    def _embed(self, sentences: Union[List[Sentence], Sentence], batch_size: int):
+        log.info("Embed sentences...")
+        for batch in tqdm(DataLoader(sentences, batch_size=batch_size)):
+            self.embeddings.embed(batch)
 
     def init_params_random(self, vectors: list):
         self.data_points = len(vectors)

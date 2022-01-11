@@ -17,14 +17,13 @@ log = logging.getLogger("flair")
 
 class KMeans(ClusteringModel):
 
-    def __init__(self, n_clusters: int, embeddings: DocumentEmbeddings, corpus: Corpus, max_iter: int = 100, centroids: torch.tensor = None):
+    def __init__(self, n_clusters: int, embeddings: DocumentEmbeddings, corpus: Corpus, centroids: torch.tensor = None):
         self.n_clusters = n_clusters
         self.centroids = centroids
         self.embeddings = embeddings
         self.corpus = corpus
-        self.max_iter = max_iter
 
-    def fit(self, batch_size: int = 64, p_norm: int = 2) -> list:
+    def fit(self, max_iter: int = 100, batch_size: int = 64, p_norm: int = 2):
         log.info("k-means clustering started with n_clusters: " + str(self.n_clusters))
 
         self._embed(self.corpus.train, batch_size=batch_size)
@@ -32,7 +31,7 @@ class KMeans(ClusteringModel):
         vectors = torch.stack([sentence.embedding for sentence in self.corpus.train])
         self.centroids = self._init_centroids(vectors)
 
-        for iter in range(self.max_iter):
+        for iter in range(max_iter):
             assignments = torch.argmin(torch.cdist(vectors, self.centroids, p=p_norm), dim=1)
             self._adjust_centroids(vectors=vectors, assignments=assignments)
             if iter > 0 and all(assignments == previous_assignments):
