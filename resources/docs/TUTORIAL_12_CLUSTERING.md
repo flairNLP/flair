@@ -19,20 +19,25 @@ The user defines with the parameter *k* how many clusters the given data has.
 So the choice of *k* is very important. 
 
 ```
-from flair.data import Corpus
-from flair.datasets import TREC_6, DataLoader
+from flair.models import ClusteringModel
+from flair.datasets import TREC_6
 from flair.embeddings import SentenceTransformerDocumentEmbeddings
-from flair.clustering import KMeans
+from sklearn.cluster import KMeans
 
 embeddings = SentenceTransformerDocumentEmbeddings()
 
-corpus: Corpus = TREC_6().downsample(0.05)
+corpus = TREC_6().downsample(0.05)
 
-model = KMeans(n_clusters=6, embeddings=embeddings, corpus=corpus)
+model = KMeans(n_clusters=6)
 
-model.fit(batch_size=32)
+clustering_model = ClusteringModel(
+    model=model,
+    corpus=corpus,
+    label_type="question_class",
+    embeddings=embeddings
+)
 
-preds = model.predict(corpus.test)
+clustering_model.fit()
 ```
 
 BIRCH
