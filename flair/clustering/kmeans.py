@@ -1,20 +1,16 @@
-import copy
 import logging
 
 from torch import tensor
-
-import numpy as np
-import torch
+from flair.embeddings import DocumentEmbeddings
 
 from .base import ClusteringModel
-from flair.datasets import DataLoader
-from flair.models.clustering.distance.distance import get_cosine_distance
+from .distance import get_cosine_distance
 
 log = logging.getLogger("flair")
 
 
 class KMeans(ClusteringModel):
-    def __init__(self, k, embeddings: flair.embeddings.DocumentEmbeddings = None):
+    def __init__(self, k, embeddings: DocumentEmbeddings = None):
         self.k = k
         self.embeddings = embeddings
         self.k_points = []
