@@ -18,10 +18,27 @@ k-Means is a classical and well known clustering algorithm. k-Means is a partiti
 The user defines with the parameter *k* how many clusters the given data has. 
 So the choice of *k* is very important. 
 
-    embedding = SentenceTransformerDocumentEmbeddings("bert-base-nli-mean-tokens")
+```
+from flair.models import ClusteringModel
+from flair.datasets import TREC_6
+from flair.embeddings import SentenceTransformerDocumentEmbeddings
+from sklearn.cluster import KMeans
 
-    kMeans = KMeans(20, embedding)
-    result = kMeans.cluster(sentences)
+embeddings = SentenceTransformerDocumentEmbeddings()
+
+corpus = TREC_6().downsample(0.05)
+
+model = KMeans(n_clusters=6)
+
+clustering_model = ClusteringModel(
+    model=model,
+    corpus=corpus,
+    label_type="question_class",
+    embeddings=embeddings
+)
+
+clustering_model.fit()
+```
 
 BIRCH
 ---------
