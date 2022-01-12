@@ -35,7 +35,8 @@ class ClusteringModel:
         """
         Predict labels given a list of sentences and returns the respective class indices.
         """
-        raise NotImplementedError
+        X = [sentence.embedding.cpu().detach().numpy() for sentence in sentences]
+        return self.model.predict(X)
 
     def save(self):
         """

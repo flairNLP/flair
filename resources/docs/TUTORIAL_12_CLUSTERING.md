@@ -17,6 +17,8 @@ k-Means
 k-Means is a classical and well known clustering algorithm. k-Means is a partitioning-based Clustering algorithm. 
 The user defines with the parameter *k* how many clusters the given data has. 
 So the choice of *k* is very important. 
+More about k-Means can be read on the official [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html).
+
 
 ```
 from flair.models import ClusteringModel
@@ -44,13 +46,31 @@ BIRCH
 ---------
 BIRCH (Balanced Iterative Reducing and Clustering using Hierarchies) is a hierarchical clustering algorithm. 
 BIRCH is specialized to handle large amounts of data. BIRCH scans the data a single time and builds an internal data 
-structure. This data structure contains the data but in a compressed way
+structure. This data structure contains the data but in a compressed way.
+More about BIRCH can be read on the official [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.Birch.html).
 
 
-    embedding = SentenceTransformerDocumentEmbeddings("bert-base-nli-mean-tokens")
 
-    birch = Birch(0.005, embedding, 4, 3, 5)
-    result = birch.cluster(sentences)
+    from sklearn.cluster import Birch
+    from flair.datasets import TREC_6
+    from flair.embeddings import SentenceTransformerDocumentEmbeddings
+    from flair.models import ClusteringModel
+
+    embeddings = SentenceTransformerDocumentEmbeddings()
+
+    corpus = TREC_6().downsample(0.05)
+
+    model = Birch(n_clusters=6)
+
+    clustering_model = ClusteringModel(
+        model=model,
+        corpus=corpus,
+        label_type="question_class",
+        embeddings=embeddings
+    )
+
+    clustering_model.fit()
+
 
 
 Expectation Maximization
@@ -59,12 +79,30 @@ Expectation Maximization (EM) is a different class of clustering algorithms call
 Here each point isn't directly assigned to a cluster by a hard decision. 
 Each data point has a probability to which cluster the data point belongs. The Expectation Maximization (EM) 
 algorithm is a soft clustering algorithm.
+More about EM can be read on the official [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture.html).
 
 
-    embedding = SentenceTransformerDocumentEmbeddings("bert-base-nli-mean-tokens")
 
-    em = EM_Clustering(15, embedding)
-    result = em.cluster(sentences, batch_size=1)
+    from sklearn.mixture import GaussianMixture
+    from flair.datasets import TREC_6
+    from flair.embeddings import SentenceTransformerDocumentEmbeddings
+    from flair.models import ClusteringModel
+    
+    embeddings = SentenceTransformerDocumentEmbeddings()
+
+    corpus = TREC_6().downsample(0.05)
+
+    model = GaussianMixture(n_components=6)
+
+    clustering_model = ClusteringModel(
+        model=model,
+        corpus=corpus,
+        label_type="question_class",
+        embeddings=embeddings
+    )
+
+    clustering_model.fit()
+
 
 ---------------------------
 
