@@ -24,6 +24,7 @@ Therefore, you can use all
 
 ```python
 from hyperopt import hp
+from flair.embeddings import FlairEmbeddings, WordEmbeddings
 from flair.hyperparameter.param_selection import SearchSpace, Parameter
 
 # define your search space
@@ -62,9 +63,13 @@ The final evaluation score will be the average over all those runs.
 ```python
 from flair.hyperparameter.param_selection import TextClassifierParamSelector, OptimizationValue
 
+# what label do we want to predict?
+label_type = 'question_class'
+
 # create the parameter selector
 param_selector = TextClassifierParamSelector(
-    corpus, 
+    corpus,
+    label_type, 
     False, 
     'resources/results', 
     'lstm',
@@ -94,7 +99,7 @@ explodes as the learning rate becomes too big. With such a plot, the optimal lea
 picking the highest one from the optimal phase.
 
 In order to run such an experiment start with your initialized `ModelTrainer` and call `find_learning_rate()` with the
-`base_path` and the file name in which to records the learning rates and losses. Then plot the generated results via the
+`base_path` and the optimizer (in our case `torch.optim.adam.Adam`). Then plot the generated results via the
 `Plotter`'s `plot_learning_rate()` function and have a look at the `learning_rate.png` image to select the optimal
 learning rate:
 
@@ -103,6 +108,7 @@ from flair.datasets import WNUT_17
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from flair.trainers import ModelTrainer
 from typing import List
+from torch.optim.adam import Adam
 
 # 1. get the corpus
 corpus = WNUT_17().downsample(0.1)
@@ -135,8 +141,7 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 # 7. find learning rate
-learning_rate_tsv = trainer.find_learning_rate('resources/taggers/example-ner',
-                                                    'learning_rate.tsv')
+learning_rate_tsv = trainer.find_learning_rate('resources/taggers/example-ner', Adam)
 
 # 8. plot the learning rate finder curve
 from flair.visual.training_curves import Plotter
@@ -144,22 +149,7 @@ plotter = Plotter()
 plotter.plot_learning_rate(learning_rate_tsv)
 ```
 
-## Custom Optimizers
-
-You can now use any of PyTorch's optimizers for training when initializing a `ModelTrainer`. To give the optimizer any
-extra options just specify it as shown with the `weight_decay` example:
-
-```python
-from torch.optim.adam import Adam
-
-trainer = ModelTrainer(tagger, corpus,
-                       optimizer=Adam)
-                                     
-trainer.train(
-    "resources/taggers/example",
-    weight_decay=1e-4
-)
-```
+The learning rates and losses will be written to `learning_rate.tsv`.
 
 ## Next
 

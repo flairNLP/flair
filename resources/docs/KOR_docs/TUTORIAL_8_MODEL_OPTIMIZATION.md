@@ -20,6 +20,7 @@ corpus = TREC_6()
 
 ```python
 from hyperopt import hp
+from flair.embeddings import FlairEmbeddings, WordEmbeddings
 from flair.hyperparameter.param_selection import SearchSpace, Parameter
 # 검색 공간을 정의하세요.
 search_space = SearchSpace()
@@ -54,8 +55,12 @@ hyperopt가 수행해야 하는 최대 평가 실행 횟수를 정의할 수 있
 ```python
 from flair.hyperparameter.param_selection import TextClassifierParamSelector, OptimizationValue
 # 매개변수 선택기 생성
+
+label_type = 'question_class'
+
 param_selector = TextClassifierParamSelector(
-    corpus, 
+    corpus,
+    label_type,
     False, 
     'resources/results', 
     'lstm',
@@ -90,6 +95,7 @@ from flair.datasets import WNUT_17
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from flair.trainers import ModelTrainer
 from typing import List
+from torch.optim.adam import Adam
 # 1. 말뭉치 가져오기
 corpus = WNUT_17().downsample(0.1)
 print(corpus)
@@ -113,27 +119,11 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
 # 6. 트레이너 초기화하기
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 # 7. 학습률 찾기
-learning_rate_tsv = trainer.find_learning_rate('resources/taggers/example-ner',
-                                                    'learning_rate.tsv')
+learning_rate_tsv = trainer.find_learning_rate('resources/taggers/example-ner', Adam)
 # 8. 학습률 찾기 곡선 그리기
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
 plotter.plot_learning_rate(learning_rate_tsv)
-```
-
-## Custom Optimizers
-
-이제 'ModelTrainer'를 초기화할 때 PyTorch의 최적화 프로그램을 훈련에 사용할 수 있습니다. 옵티마이저에 추가 옵션을 제공하려면 `weight_decay` 예제와 같이 지정하기만 하면 됩니다:
-
-```python
-from torch.optim.adam import Adam
-trainer = ModelTrainer(tagger, corpus,
-                       optimizer=Adam)
-                                     
-trainer.train(
-    "resources/taggers/example",
-    weight_decay=1e-4
-)
 ```
 
 ## Next
