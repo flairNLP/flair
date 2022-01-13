@@ -15,7 +15,6 @@ from flair.hyperparameter.parameter import (
     SEQUENCE_TAGGER_PARAMETERS,
     TRAINING_PARAMETERS,
     DOCUMENT_EMBEDDING_PARAMETERS,
-    MODEL_TRAINER_PARAMETERS,
 )
 from flair.models import SequenceTagger, TextClassifier
 from flair.trainers import ModelTrainer
@@ -97,13 +96,8 @@ class ParamSelector(object):
             training_params = {
                 key: params[key] for key in params if key in TRAINING_PARAMETERS
             }
-            model_trainer_parameters = {
-                key: params[key] for key in params if key in MODEL_TRAINER_PARAMETERS
-            }
 
-            trainer: ModelTrainer = ModelTrainer(
-                model, self.corpus, **model_trainer_parameters
-            )
+            trainer: ModelTrainer = ModelTrainer(model, self.corpus)
 
             result = trainer.train(
                 self.base_path,
@@ -226,6 +220,7 @@ class TextClassifierParamSelector(ParamSelector):
     def __init__(
         self,
         corpus: Corpus,
+        label_type: str,
         multi_label: bool,
         base_path: Union[str, Path],
         document_embedding_type: str,
@@ -236,6 +231,7 @@ class TextClassifierParamSelector(ParamSelector):
     ):
         """
         :param corpus: the corpus
+        :param label_type: string to identify the label type ('question_class', 'sentiment', etc.)
         :param multi_label: true, if the dataset is multi label, false otherwise
         :param base_path: the path to the result folder (results will be written to that folder)
         :param document_embedding_type: either 'lstm', 'mean', 'min', or 'max'
@@ -254,9 +250,10 @@ class TextClassifierParamSelector(ParamSelector):
         )
 
         self.multi_label = multi_label
+        self.label_type = label_type
         self.document_embedding_type = document_embedding_type
 
-        self.label_dictionary = self.corpus.make_label_dictionary()
+        self.label_dictionary = self.corpus.make_label_dictionary(self.label_type)
 
     def _set_up_model(self, params: dict):
         embdding_params = {
@@ -264,13 +261,14 @@ class TextClassifierParamSelector(ParamSelector):
         }
 
         if self.document_embedding_type == "lstm":
-            document_embedding = DocumentRNNEmbeddings(**embdding_params)
+            document_embedding = DocumentRNNEmbeddings(rnn_type="LSTM", **embdding_params)
         else:
             document_embedding = DocumentPoolEmbeddings(**embdding_params)
 
         text_classifier: TextClassifier = TextClassifier(
             label_dictionary=self.label_dictionary,
             multi_label=self.multi_label,
+            label_type=self.label_type,
             document_embeddings=document_embedding,
         )
 

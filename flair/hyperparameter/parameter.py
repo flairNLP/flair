@@ -31,6 +31,7 @@ class Parameter(Enum):
 TRAINING_PARAMETERS = [
     Parameter.LEARNING_RATE.value,
     Parameter.MINI_BATCH_SIZE.value,
+    Parameter.OPTIMIZER.value,
     Parameter.ANNEAL_FACTOR.value,
     Parameter.PATIENCE.value,
     Parameter.ANNEAL_WITH_RESTARTS.value,
@@ -52,7 +53,6 @@ SEQUENCE_TAGGER_PARAMETERS = [
     Parameter.LOCKED_DROPOUT.value,
     Parameter.WORD_DROPOUT.value,
 ]
-MODEL_TRAINER_PARAMETERS = [Parameter.OPTIMIZER.value]
 DOCUMENT_EMBEDDING_PARAMETERS = [
     Parameter.EMBEDDINGS.value,
     Parameter.HIDDEN_SIZE.value,
