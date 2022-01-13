@@ -40,7 +40,12 @@ class ClusteringModel:
         Predict labels given a list of sentences and returns the respective class indices.
         """
         X = [sentence.embedding.cpu().detach().numpy() for sentence in sentences]
-        return self.model.predict(X)
+        predict = self.model.predict(X)
+
+        for idx, sentence in enumerate(sentences):
+            sentence.set_label("cluster", str(predict[idx]))
+
+        return predict
 
     def save(self, model_file: Union[str, Path]):
         """
