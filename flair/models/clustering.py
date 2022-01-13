@@ -1,5 +1,8 @@
+import pickle
+from pathlib import Path
 from typing import Union, List
 
+import torch
 from tqdm import tqdm
 from collections import OrderedDict
 
@@ -16,8 +19,9 @@ log = logging.getLogger("flair")
 
 
 class ClusteringModel:
-
-    def __init__(self, model: Union[ClusterMixin, BaseEstimator], corpus: Corpus, label_type: str, embeddings: DocumentEmbeddings):
+    def __init__(
+        self, model: Union[ClusterMixin, BaseEstimator], corpus: Corpus, label_type: str, embeddings: DocumentEmbeddings
+    ):
         self.model = model
         self.corpus = corpus
         self.label_type = label_type
@@ -38,18 +42,23 @@ class ClusteringModel:
         X = [sentence.embedding.cpu().detach().numpy() for sentence in sentences]
         return self.model.predict(X)
 
-    def save(self):
+    def save(self, model_file: Union[str, Path]):
         """
         Saves current model.
         """
-        raise NotImplementedError
+        binary_result = pickle.dumps(self.model)
+        torch.save(binary_result, str(model_file), pickle_protocol=4)
 
-    def load(self):
+        log.info("Saved model to: " + str(model_file))
+
+    def load(self, model_file: Union[str, Path]):
         """
         Loads a model.
         """
-        raise NotImplementedError
+        state = torch.load(model_file)
+        self.model = pickle.loads(state)
 
+        log.info("loaded model from: " + str(model_file))
 
     def _convert_dataset(self, batch_size: int = 32, return_label_dict: bool = False):
         """

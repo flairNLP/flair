@@ -22,5 +22,5 @@ __all__ = [
     "TARSClassifier",
     "TARSTagger",
     "TextClassifier",
-    "ClusteringModel"
+    "ClusteringModel",
 ]
