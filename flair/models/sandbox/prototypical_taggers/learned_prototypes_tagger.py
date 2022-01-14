@@ -333,6 +333,7 @@ class LearnedPrototypesTagger(Classifier):
             "distance_function": self._distance_function,
             "prototype_labels": self.prototype_labels,
             "prototype_vectors": self.prototype_vectors,
+            "prototype_radii": self.prototype_radii,
             "unlabeled_distance": self.unlabeled_distance,
             "prototype_size": self.prototype_size,
             "learning_mode": self.learning_mode
@@ -353,10 +354,12 @@ class LearnedPrototypesTagger(Classifier):
             prototype_size=state["prototype_size"],
             unlabeled_distance=state["unlabeled_distance"],
             learning_mode=state.get("learning_mode", None),
+            use_radius=state.get("prototype_radii", None) is not None,
         )
         model.load_state_dict(state["state_dict"])
         model.prototype_labels = state["prototype_labels"]
         model.prototype_vectors = state["prototype_vectors"]
+        model.prototype_radii = state.get("prototype_radii", None)
 
         if 'metric_space_decoder' in state:
             model.metric_space_decoder = state['metric_space_decoder']
