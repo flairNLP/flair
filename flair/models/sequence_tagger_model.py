@@ -392,11 +392,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 sentence_labels = ['O'] * len(sentence)
                 for label in sentence.get_labels(self.label_type):
                     if len(label.span) == 1:
-                        sentence_labels[label.span[0].idx -1] = "S-" + label.value
+                        sentence_labels[label.span[0].idx - 1] = "S-" + label.value
                     else:
-                        sentence_labels[label.span[0].idx-1] = "B-" + label.value
-                        sentence_labels[label.span[-1].idx-1] = "E-" + label.value
-                        for i in range(label.span[0].idx, label.span[-1].idx -1):
+                        sentence_labels[label.span[0].idx - 1] = "B-" + label.value
+                        sentence_labels[label.span[-1].idx - 1] = "E-" + label.value
+                        for i in range(label.span[0].idx, label.span[-1].idx - 1):
                             sentence_labels[i] = "I-" + label.value
                 all_sentence_labels.extend(sentence_labels)
             labels = [[label] for label in all_sentence_labels]
@@ -504,7 +504,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                         sentence_scores = [label.score for label in sentence_predictions]
                         predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
                         for predicted_span in predicted_spans:
-                            span = Span(sentence[predicted_span[0][0]:predicted_span[0][-1]+1])
+                            span = Span(sentence[predicted_span[0][0]:predicted_span[0][-1] + 1])
                             sentence.add_complex_label(
                                 typename=label_name,
                                 label=SpanLabel(span=span, value=predicted_span[2], score=predicted_span[1]),
