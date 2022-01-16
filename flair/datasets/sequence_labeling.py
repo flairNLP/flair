@@ -334,10 +334,13 @@ class ColumnDataset(FlairDataset):
 
         sentence: Sentence = Sentence()
         token = None
+        filtered_lines = []
         for line in lines:
             # skip comments
             if self.comment_symbol is not None and line.startswith(self.comment_symbol):
                 continue
+
+            filtered_lines.append(line)
 
             # otherwise, this line is a token. parse and add to sentence
             token: Token = self._parse_token(line, word_level_tag_columns, token)
@@ -352,7 +355,7 @@ class ColumnDataset(FlairDataset):
             for span_column in span_level_tag_columns:
                 try:
                     bioes_tags = [re.split(self.column_delimiter, line.rstrip())[span_column]
-                                  for line in lines]
+                                  for line in filtered_lines]
                     predicted_spans = get_spans_from_bio(bioes_tags)
                     for predicted_span in predicted_spans:
                         span = Span(sentence[predicted_span[0][0]:predicted_span[0][-1] + 1])
