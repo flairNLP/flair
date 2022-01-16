@@ -59,7 +59,7 @@ def test_sequence_tagger_no_crf(results_base_path, tasks_base_path):
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.text for span in sentence.get_spans("ner")]
+    entities = [span.span.text for span in sentence.get_labels("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data
@@ -109,7 +109,7 @@ def test_sequence_tagger_with_crf(results_base_path, tasks_base_path):
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.text for span in sentence.get_spans("ner")]
+    entities = [span.span.text for span in sentence.get_labels("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data
@@ -159,7 +159,7 @@ def test_sequence_tagger_stacked(results_base_path, tasks_base_path):
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.text for span in sentence.get_spans("ner")]
+    entities = [span.span.text for span in sentence.get_labels("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data
@@ -211,7 +211,7 @@ def test_sequence_tagger_transformer_finetune(results_base_path, tasks_base_path
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.text for span in sentence.get_spans("ner")]
+    entities = [span.span.text for span in sentence.get_labels("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data

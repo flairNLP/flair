@@ -309,7 +309,7 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         True,
     ]
 
-    assert len(sent1.get_spans("Number")) == 4
+    assert len(sent1.get_labels("Number")) == 4
     assert sent1[1].get_labels("Number")[0].value == "Plur"
     assert sent1[1].get_labels("Person")[0].value == "3"
     assert sent1[1].get_labels("Tense")[0].value == "Pres"
