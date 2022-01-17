@@ -81,15 +81,15 @@ class ParamSelector(object):
             log.info(f"\t{k}: {str(v)}")
         log_line(log)
 
-        for sent in self.corpus.get_all_sentences():
-            sent.clear_embeddings()
-
         scores = []
         vars = []
 
         for i in range(0, self.training_runs):
             log_line(log)
             log.info(f"Training run: {i + 1}")
+
+            for sent in self.corpus.get_all_sentences():
+                sent.clear_embeddings()
 
             model = self._set_up_model(params)
 
