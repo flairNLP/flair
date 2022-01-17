@@ -4,23 +4,21 @@ import pytest
 from hyperopt import hp
 from torch.optim import SGD
 
-from flair.embeddings import WordEmbeddings, StackedEmbeddings, FlairEmbeddings
+import flair.datasets
+from flair.embeddings import StackedEmbeddings, WordEmbeddings
 from flair.hyperparameter import (
-    SearchSpace,
     Parameter,
+    SearchSpace,
     SequenceTaggerParamSelector,
     TextClassifierParamSelector,
 )
-import flair.datasets
 
 glove_embedding: WordEmbeddings = WordEmbeddings("glove")
 
 
-@pytest.mark.skip
+@pytest.mark.integration
 def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
-    )
+    corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
 
     # define search space
     search_space = SearchSpace()
@@ -49,9 +47,7 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
     search_space.add(Parameter.WEIGHT_DECAY, hp.uniform, low=0.01, high=1)
 
     # find best parameter settings
-    optimizer = SequenceTaggerParamSelector(
-        corpus, "ner", results_base_path, max_epochs=2
-    )
+    optimizer = SequenceTaggerParamSelector(corpus, "ner", results_base_path, max_epochs=2)
     optimizer.optimize(search_space, max_evals=2)
 
     # clean up results directory
@@ -59,9 +55,10 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
     del optimizer, search_space
 
 
-@pytest.mark.skip
+@pytest.mark.integration
 def test_text_classifier_param_selector(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
+    label_type = "sentiment"
 
     search_space = SearchSpace()
 
@@ -83,7 +80,7 @@ def test_text_classifier_param_selector(results_base_path, tasks_base_path):
     search_space.add(Parameter.PATIENCE, hp.choice, options=[3, 5])
 
     param_selector = TextClassifierParamSelector(
-        corpus, False, results_base_path, document_embedding_type="lstm", max_epochs=2
+        corpus, label_type, False, results_base_path, document_embedding_type="lstm", max_epochs=2
     )
     param_selector.optimize(search_space, max_evals=2)
 
