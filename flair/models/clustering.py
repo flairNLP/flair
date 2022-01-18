@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Union, List
 
 import torch
+from sklearn.metrics import normalized_mutual_info_score, silhouette_samples
 from tqdm import tqdm
 from collections import OrderedDict
 
@@ -19,9 +20,20 @@ log = logging.getLogger("flair")
 
 
 class ClusteringModel:
+    """
+    A wrapper class for the sklearn clustering models. With this class clustering with the library 'flair' can be done.
+    """
+
     def __init__(
         self, model: Union[ClusterMixin, BaseEstimator], corpus: Corpus, label_type: str, embeddings: DocumentEmbeddings
     ):
+        """
+          :param model: the clustering algortihm from sklearn this wrapper will use.
+          :param corpus: the flair corpus this wrapper will use for clustering.
+          :param label_type: the label from the sentence will be used for the evaluation.
+          :param embeddings: the flair DocumentEmbedding this wrapper uses to calculate a vector for each sentence.
+        """
+
         self.model = model
         self.corpus = corpus
         self.label_type = label_type
@@ -51,8 +63,8 @@ class ClusteringModel:
         """
         Saves current model.
         """
-        binary_result = pickle.dumps(self.model)
-        torch.save(binary_result, str(model_file), pickle_protocol=4)
+        dump = pickle.dumps(self.model)
+        torch.save(dump, str(model_file), pickle_protocol=4)
 
         log.info("Saved model to: " + str(model_file))
 
@@ -85,3 +97,16 @@ class ClusteringModel:
             return X, y, label_dict
 
         return X, y
+
+    def evaluate(self):
+        """
+        This method calculates some evaluation metrics for the clustering.
+        Also, the result of the evaluation is logged.
+        """
+        sentences = self.corpus.get_all_sentences()
+        X = [sentence.embedding.cpu().detach().numpy() for sentence in sentences]
+        labels = [sentence.get_labels(self.label_type)[0].value for sentence in sentences]
+
+        predict = self.model.predict(X)
+
+        log.info("NMI - Score: " + str(normalized_mutual_info_score(predict, labels)))

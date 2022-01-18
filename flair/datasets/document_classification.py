@@ -980,7 +980,7 @@ class STACKOVERFLOW(ClassificationCorpus):
 
             # handle data file
             with open(data_path / "original" / "title_StackOverflow.txt", "r", encoding="latin1") as open_fp:
-                with open(data_folder / "test.txt", "wt", encoding="utf-8") as write_fp:
+                with open(data_folder / "train.txt", "wt", encoding="utf-8") as write_fp:
                     for idx, line in enumerate(open_fp):
                         line = line.rstrip()
 

@@ -28,7 +28,8 @@ from sklearn.cluster import KMeans
 
 embeddings = SentenceTransformerDocumentEmbeddings()
 
-corpus = TREC_6().downsample(0.05)
+# store all embeddings in memory which is required to perform clustering
+corpus = TREC_6(memory_mode='full').downsample(0.05)
 
 model = KMeans(n_clusters=6)
 
@@ -57,8 +58,9 @@ More about BIRCH can be read on the official [sklearn](https://scikit-learn.org/
     from flair.models import ClusteringModel
 
     embeddings = SentenceTransformerDocumentEmbeddings()
-
-    corpus = TREC_6().downsample(0.05)
+    
+    # store all embeddings in memory which is required to perform clustering
+    corpus = TREC_6(memory_mode='full').downsample(0.05)
 
     model = Birch(n_clusters=6)
 
@@ -90,7 +92,8 @@ More about EM can be read on the official [sklearn](https://scikit-learn.org/sta
     
     embeddings = SentenceTransformerDocumentEmbeddings()
 
-    corpus = TREC_6().downsample(0.05)
+    # store all embeddings in memory which is required to perform clustering
+    corpus = TREC_6(memory_mode='full').downsample(0.05)
 
     model = GaussianMixture(n_components=6)
 
@@ -111,6 +114,10 @@ Evaluation
 The result of the clustering can be evaluated. For this we will use the
 [NMI](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.normalized_mutual_info_score.html).
 (Normalized Mutual Info) score.
+
+    clustering_model.fit()
+    clustering_model.evaluate()
+
 
 The result of the evaluation can be seen below with the SentenceTransformerDocumentEmbeddings:
 
