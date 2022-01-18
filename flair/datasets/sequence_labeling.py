@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Union
 from torch.utils.data import ConcatDataset, Dataset
 
 import flair
-from flair.data import Corpus, FlairDataset, MultiCorpus, Sentence, Token, Span, SpanLabel
+from flair.data import Corpus, FlairDataset, MultiCorpus, Sentence, Token, Span, SpanLabel, RelationLabel
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file
 from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
@@ -228,42 +228,18 @@ class ColumnDataset(FlairDataset):
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
         self.text_column: int = 0
+        self.head_id_column: Optional[int] = None
         for column in column_name_map:
             if column_name_map[column] == "text":
                 self.text_column = column
+            if column_name_map[column] == "head_id":
+                self.head_id_column = column
 
         # determine encoding of text file
         self.encoding = encoding
 
-        # we make a distinction between word-level tags and span-level tags
-        self.span_level_tag_columns = {}
-        self.word_level_tag_columns = {self.text_column: "text"}
-
-        # read first sentence to determine which columns are span-labels
-        with open(str(self.path_to_column_file), encoding=self.encoding) as file:
-
-            # skip first line if to selected
-            if skip_first_line:
-                file.readline()
-
-            sentence_1 = self._convert_lines_to_sentence(self._read_next_sentence(file),
-                                                         word_level_tag_columns=column_name_map)
-            # sentence_2 = self._convert_lines_to_sentence(self._read_next_sentence(file),
-            #                                              word_level_tag_columns=column_name_map)
-
-            for sentence in [sentence_1]:
-                # go through all annotations
-                for column in column_name_map:
-                    if column == self.text_column:
-                        continue
-                    layer = column_name_map[column]
-                    for token in sentence:
-                        if token.get_tag(layer, "O").value != "O" and\
-                                token.get_tag(layer).value[0:2] not in ['B-', 'I-', 'E-', 'S-']:
-                            self.word_level_tag_columns[column] = layer
-                            break
-            if column not in self.word_level_tag_columns:
-                self.span_level_tag_columns[column] = layer
+        # identify which columns are spans and which are word-level
+        self._identify_span_columns(column_name_map, skip_first_line)
 
         # now load all sentences
         with open(str(self.path_to_column_file), encoding=self.encoding) as file:
@@ -279,23 +255,30 @@ class ColumnDataset(FlairDataset):
                 # pointer to previous
                 previous_sentence = None
                 while True:
+                    # parse next sentence
                     sentence = self._convert_lines_to_sentence(self._read_next_sentence(file),
                                                                word_level_tag_columns=self.word_level_tag_columns,
                                                                span_level_tag_columns=self.span_level_tag_columns,
                                                                )
+                    # quit if last sentence reached
                     if not sentence:
                         break
+
+                    # skip banned sentences
                     if self.banned_sentences is not None and any(
                             [d in sentence.to_plain_string() for d in self.banned_sentences]
                     ):
                         continue
+
+                    # set previous and next sentence for context
                     sentence._previous_sentence = previous_sentence
                     sentence._next_sentence = None
-
                     if previous_sentence:
                         previous_sentence._next_sentence = sentence
 
+                    # append parsed sentence to list in memory
                     self.sentences.append(sentence)
+
                     previous_sentence = sentence
 
                 self.total_sentence_count = len(self.sentences)
@@ -305,13 +288,57 @@ class ColumnDataset(FlairDataset):
                 self.sentences_raw: List[List[str]] = []
 
                 while True:
+
+                    # read lines for next sentence, but don't parse
                     sentence_raw = self._read_next_sentence(file)
+
+                    # quit if last sentence reached
                     if not sentence_raw:
                         break
 
+                    # append raw lines for each sentence
                     self.sentences_raw.append(sentence_raw)
 
                 self.total_sentence_count = len(self.sentences_raw)
+
+    def _identify_span_columns(self, column_name_map, skip_first_line):
+        # we make a distinction between word-level tags and span-level tags
+        self.span_level_tag_columns = {}
+        self.word_level_tag_columns = {self.text_column: "text"}
+        # read first sentence to determine which columns are span-labels
+        with open(str(self.path_to_column_file), encoding=self.encoding) as file:
+
+            # skip first line if to selected
+            if skip_first_line:
+                file.readline()
+
+            sentence_1 = self._convert_lines_to_sentence(self._read_next_sentence(file),
+                                                         word_level_tag_columns=column_name_map)
+            # sentence_2 = self._convert_lines_to_sentence(self._read_next_sentence(file),
+            #                                              word_level_tag_columns=column_name_map)
+
+            for sentence in [sentence_1]:
+                # go through all annotations
+                for column in column_name_map:
+                    if column == self.text_column or column == self.head_id_column:
+                        continue
+
+                    layer = column_name_map[column]
+
+                    if layer == "feats":
+                        self.word_level_tag_columns[column] = layer
+                        continue
+
+                    for token in sentence:
+                        if token.get_tag(layer, "O").value != "O" and \
+                                token.get_tag(layer).value[0:2] not in ['B-', 'I-', 'E-', 'S-']:
+                            self.word_level_tag_columns[column] = layer
+                            break
+                    if column not in self.word_level_tag_columns:
+                        self.span_level_tag_columns[column] = layer
+
+            for column in self.span_level_tag_columns:
+                log.info(f"Column {column} ({self.span_level_tag_columns[column]}) is a span-level column.")
 
     def _read_next_sentence(self, file):
         lines = []
@@ -335,9 +362,11 @@ class ColumnDataset(FlairDataset):
         sentence: Sentence = Sentence()
         token = None
         filtered_lines = []
+        comments = []
         for line in lines:
-            # skip comments
+            # parse comments if possible
             if self.comment_symbol is not None and line.startswith(self.comment_symbol):
+                comments.append(line)
                 continue
 
             filtered_lines.append(line)
@@ -368,23 +397,59 @@ class ColumnDataset(FlairDataset):
                     pass
                     # log.warning(f"--\nUnparseable sentence: {''.join(lines)}--\n")
 
+        for comment in comments:
+            # parse relations if they are set
+            if comment.startswith("# relations = "):
+                relations_string = comment.strip().split("# relations = ")[1]
+                for relation in relations_string.split("|"):
+                    indices = relation.split(";")
+                    head_start = int(indices[0])
+                    head_end = int(indices[1])
+                    tail_start = int(indices[2])
+                    tail_end = int(indices[3])
+                    label = indices[4]
+                    # head and tail span indices are 1-indexed and end index is inclusive
+                    head = Span(sentence.tokens[head_start - 1: head_end])
+                    tail = Span(sentence.tokens[tail_start - 1: tail_end])
+
+                    sentence.add_complex_label("relation",
+                                               RelationLabel(value=label, head=head, tail=tail))
+
         if len(sentence) > 0:
             return sentence
 
     def _parse_token(self, line: str, column_name_map: Dict[int, str], last_token: Optional[Token] = None) -> Token:
+
+        # get fields from line
         fields: List[str] = re.split(self.column_delimiter, line.rstrip())
-        token = Token(fields[self.text_column], whitespace_after=self.default_whitespace_after)
+
+        # get head_id if exists (only in dependency parses)
+        head_id = fields[self.head_id_column] if self.head_id_column else None
+
+        # initialize token
+        token = Token(fields[self.text_column], head_id=head_id, whitespace_after=self.default_whitespace_after)
+
+        # go through all columns
         for column in column_name_map:
             if len(fields) > column:
-                if column != self.text_column and column_name_map[column] != self.SPACE_AFTER_KEY:
-                    # get the task name (e.g. 'ner')
-                    label_name = column_name_map[column]
+                if column != self.text_column and column != self.head_id_column \
+                        and column_name_map[column] != self.SPACE_AFTER_KEY:
 
-                    # get the label value
-                    label_value = self._remap_label(fields[column])
+                    # 'feats' column should be split into different fields
+                    if column_name_map[column] == 'feats':
+                        if '=' in fields[column]:
+                            for feature in fields[column].split("|"):
+                                label_name = feature.split("=")[0]
+                                label_value = self._remap_label(feature.split("=")[1])
+                                token.add_label(label_name, label_value)
 
-                    # add label
-                    token.add_label(label_name, label_value)
+                    else:
+                        # get the task name (e.g. 'ner')
+                        label_name = column_name_map[column]
+                        # get the label value
+                        label_value = self._remap_label(fields[column])
+                        # add label
+                        token.add_label(label_name, label_value)
 
                 if column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == "-":
                     token.whitespace_after = False
@@ -431,96 +496,6 @@ class ColumnDataset(FlairDataset):
             sentence._position_in_dataset = (self, index)
 
         return sentence
-
-
-class MultiCoNer(MultiFileColumnCorpus):
-    def __init__(
-            self,
-            task: str = "multi",
-            base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
-            in_memory: bool = True,
-            use_dev_as_test: bool = True,
-            **corpusargs,
-    ):
-        """
-        Initialize the MultiCoNer corpus. This is only possible if you've applied and downloaded it to your machine.
-        Apply for the corpus from here https://multiconer.github.io/dataset and unpack the .zip file's content into
-        a folder called 'multiconer'. Then set the base_path parameter in the constructor to the path to the
-        parent directory where the multiconer folder resides. You can also create the multiconer in
-        the {FLAIR_CACHE_ROOT}/datasets folder to leave the path empty.
-        :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
-        POS tags or chunks respectively
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
-        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
-        """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
-
-        folders = {
-            "bn": "BN-Bangla",
-            "de": "DE-German",
-            "en": "EN-English",
-            "es": "ES-Espanish",
-            "fa": "FA-Farsi",
-            "hi": "HI-Hindi",
-            "ko": "KO-Korean",
-            "nl": "NL-Dutch",
-            "ru": "RU-Russian",
-            "tr": "TR-Turkish",
-            "zh": "ZH-Chinese",
-        }
-
-        possible_tasks = ["multi", "code-switch"] + list(folders.keys())
-        task = task.lower()
-
-        if task not in possible_tasks:
-            raise ValueError(f"task has to be one of {possible_tasks}, but is '{task}'")
-
-        # column format
-        columns = {0: "text", 3: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        data_folder = base_path / dataset_name
-
-        # check if data there
-        if not data_folder.exists():
-            log.warning("-" * 100)
-            log.warning(f'WARNING: MultiCoNer dataset not found at "{data_folder}".')
-            log.warning('Instructions for obtaining the data can be found here: https://multiconer.github.io/dataset"')
-            log.warning("-" * 100)
-
-        if task in ["multi", "code-switch"]:
-            # code-switch uses the same training data than multi but provides a different test set.
-            # as the test set is not published, those two tasks are the same.
-            train_files = list(data_folder.rglob("*_train.conll"))
-            dev_files = list(data_folder.rglob("*_dev.conll"))
-        else:
-            train_files = [data_folder / folders[task] / f"{task}_train.conll"]
-            dev_files = [data_folder / folders[task] / f"{task}_dev.conll"]
-
-        if use_dev_as_test:
-            test_files = dev_files
-            dev_files = []
-        else:
-            test_files = []
-
-        super(MultiCoNer, self).__init__(
-            train_files=train_files,
-            dev_files=dev_files,
-            test_files=test_files,
-            column_format=columns,
-            tag_to_bioes=tag_to_bioes,
-            comment_symbol="# id ",
-            in_memory=in_memory,
-            **corpusargs,
-        )
 
 
 class CONLL_03(ColumnCorpus):
@@ -2458,6 +2433,96 @@ class NER_MASAKHANE(MultiCorpus):
         super(NER_MASAKHANE, self).__init__(
             corpora,
             name="masakhane-" + "-".join(languages),
+        )
+
+
+class NER_MULTI_CONER(MultiFileColumnCorpus):
+    def __init__(
+            self,
+            task: str = "multi",
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            use_dev_as_test: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the MultiCoNer corpus. This is only possible if you've applied and downloaded it to your machine.
+        Apply for the corpus from here https://multiconer.github.io/dataset and unpack the .zip file's content into
+        a folder called 'multiconer'. Then set the base_path parameter in the constructor to the path to the
+        parent directory where the multiconer folder resides. You can also create the multiconer in
+        the {FLAIR_CACHE_ROOT}/datasets folder to leave the path empty.
+        :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
+        POS tags or chunks respectively
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
+        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
+        """
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        folders = {
+            "bn": "BN-Bangla",
+            "de": "DE-German",
+            "en": "EN-English",
+            "es": "ES-Espanish",
+            "fa": "FA-Farsi",
+            "hi": "HI-Hindi",
+            "ko": "KO-Korean",
+            "nl": "NL-Dutch",
+            "ru": "RU-Russian",
+            "tr": "TR-Turkish",
+            "zh": "ZH-Chinese",
+        }
+
+        possible_tasks = ["multi", "code-switch"] + list(folders.keys())
+        task = task.lower()
+
+        if task not in possible_tasks:
+            raise ValueError(f"task has to be one of {possible_tasks}, but is '{task}'")
+
+        # column format
+        columns = {0: "text", 3: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # check if data there
+        if not data_folder.exists():
+            log.warning("-" * 100)
+            log.warning(f'WARNING: MultiCoNer dataset not found at "{data_folder}".')
+            log.warning('Instructions for obtaining the data can be found here: https://multiconer.github.io/dataset"')
+            log.warning("-" * 100)
+
+        if task in ["multi", "code-switch"]:
+            # code-switch uses the same training data than multi but provides a different test set.
+            # as the test set is not published, those two tasks are the same.
+            train_files = list(data_folder.rglob("*_train.conll"))
+            dev_files = list(data_folder.rglob("*_dev.conll"))
+        else:
+            train_files = [data_folder / folders[task] / f"{task}_train.conll"]
+            dev_files = [data_folder / folders[task] / f"{task}_dev.conll"]
+
+        if use_dev_as_test:
+            test_files = dev_files
+            dev_files = []
+        else:
+            test_files = []
+
+        super(NER_MULTI_CONER, self).__init__(
+            train_files=train_files,
+            dev_files=dev_files,
+            test_files=test_files,
+            column_format=columns,
+            tag_to_bioes=tag_to_bioes,
+            comment_symbol="# id ",
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 

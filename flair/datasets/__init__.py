@@ -203,7 +203,7 @@ from .sequence_labeling import (
     WNUT_17,
     ColumnCorpus,
     ColumnDataset,
-    MultiCoNer,
+    NER_MULTI_CONER,
 )
 
 # Expose all text-image datasets
@@ -464,7 +464,7 @@ __all__ = [
     "WNUT_17",
     "ColumnCorpus",
     "ColumnDataset",
-    "MultiCoNer",
+    "NER_MULTI_CONER",
     "FeideggerCorpus",
     "FeideggerDataset",
     "GLUE_MNLI",

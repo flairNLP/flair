@@ -47,7 +47,7 @@ DEFAULT_METADATA_PARSERS: Dict[str, conllu._MetadataParserType] = {
 
 
 def parse_relation_tuple_list(
-    key: str, value: Optional[str] = None, list_sep: str = "|", value_sep: str = ";"
+        key: str, value: Optional[str] = None, list_sep: str = "|", value_sep: str = ";"
 ) -> Optional[Tuple[str, List[Tuple[int, int, int, int, str]]]]:
     if value is None:
         return value
@@ -64,17 +64,17 @@ class CoNLLUCorpus(Corpus):
 
     # noinspection PyProtectedMember
     def __init__(
-        self,
-        data_folder: Union[str, Path],
-        train_file=None,
-        test_file=None,
-        dev_file=None,
-        in_memory: bool = True,
-        fields: Optional[Sequence[str]] = None,
-        token_annotation_fields: Optional[Sequence[str]] = None,
-        field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
-        metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
-        sample_missing_splits: bool = True,
+            self,
+            data_folder: Union[str, Path],
+            train_file=None,
+            test_file=None,
+            dev_file=None,
+            in_memory: bool = True,
+            fields: Optional[Sequence[str]] = None,
+            token_annotation_fields: Optional[Sequence[str]] = None,
+            field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
+            metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
+            sample_missing_splits: bool = True,
     ):
         """
         Instantiates a Corpus from CoNLL-U (Plus) column-formatted task data
@@ -146,13 +146,13 @@ class CoNLLUDataset(FlairDataset):
 
     # noinspection PyProtectedMember
     def __init__(
-        self,
-        path_to_conllu_file: Union[str, Path],
-        in_memory: bool = True,
-        fields: Optional[Sequence[str]] = None,
-        token_annotation_fields: Optional[Sequence[str]] = None,
-        field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
-        metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
+            self,
+            path_to_conllu_file: Union[str, Path],
+            in_memory: bool = True,
+            fields: Optional[Sequence[str]] = None,
+            token_annotation_fields: Optional[Sequence[str]] = None,
+            field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
+            metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
     ):
         """
         Instantiates a column dataset in CoNLL-U (Plus) format.
@@ -293,15 +293,15 @@ class CoNLLUDataset(FlairDataset):
 
         if "relations" in token_list.metadata:
             for (
-                head_start,
-                head_end,
-                tail_start,
-                tail_end,
-                label,
+                    head_start,
+                    head_end,
+                    tail_start,
+                    tail_end,
+                    label,
             ) in token_list.metadata["relations"]:
                 # head and tail span indices are 1-indexed and end index is inclusive
-                head = Span(sentence.tokens[head_start - 1 : head_end])
-                tail = Span(sentence.tokens[tail_start - 1 : tail_end])
+                head = Span(sentence.tokens[head_start - 1: head_end])
+                tail = Span(sentence.tokens[tail_start - 1: tail_end])
 
                 sentence.add_complex_label("relation", RelationLabel(value=label, head=head, tail=tail))
 
