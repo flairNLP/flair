@@ -110,7 +110,7 @@ class ScalarMix(torch.nn.Module):
     https://github.com/allenai/allennlp/blob/master/allennlp/modules/scalar_mix.py.
     """
 
-    def __init__(self, mixture_size: int, trainable: bool = False) -> None:
+    def __init__(self, mixture_size: int, epochs_to_train: int = 3) -> None:
         """
         Inits scalar mix implementation.
         ``mixture = gamma * sum(s_k * tensor_k)`` where ``s = softmax(w)``, with ``w`` and ``gamma`` scalar parameters.
@@ -118,6 +118,7 @@ class ScalarMix(torch.nn.Module):
         """
         super(ScalarMix, self).__init__()
         self.mixture_size = mixture_size
+        self.epochs_to_train = epochs_to_train + 1
 
         initial_scalar_parameters = [0.0] * mixture_size
 
@@ -129,21 +130,13 @@ class ScalarMix(torch.nn.Module):
                         dtype=torch.float,
                         device=flair.device,
                     ),
-                    requires_grad=trainable,
+                    requires_grad=True,
                 )
                 for i in range(mixture_size)
             ]
         )
-        self.gamma = Parameter(
-            torch.tensor(
-                [1.0],
-                dtype=torch.float,
-                device=flair.device,
-            ),
-            requires_grad=trainable,
-        )
 
-    def forward(self, tensors: List[torch.Tensor]) -> torch.Tensor:
+    def forward(self, tensors: torch.Tensor) -> torch.Tensor:
         """
         Computes a weighted average of the ``tensors``.  The input tensors an be any shape
         with at least two dimensions, but must all be the same shape.
@@ -160,12 +153,23 @@ class ScalarMix(torch.nn.Module):
         normed_weights = torch.nn.functional.softmax(
             torch.cat([parameter for parameter in self.scalar_parameters]), dim=0
         )
-        normed_weights = torch.split(normed_weights, split_size_or_sections=1)
 
-        pieces = []
-        for weight, tensor in zip(normed_weights, tensors):
-            pieces.append(weight * tensor)
-        return self.gamma * sum(pieces)
+        # do a matrix multiplication to get weighted average
+        attention_output = torch.matmul(normed_weights, tensors)
+        if self.epochs_to_train <= 0:
+            attention_output = attention_output.detach()
+        return attention_output
+
+    def train(self, mode=True):
+        super().train(mode=mode)
+        if mode:
+            self.epochs_to_train = max(0, self.epochs_to_train - 1)
+            # print current weights
+            normed_weights = torch.nn.functional.softmax(
+                torch.cat([parameter for parameter in self.scalar_parameters]), dim=0
+            )
+            log.info("Weighted mean of layers:" + str(normed_weights))
+            log.info(f"Epochs left to train: {self.epochs_to_train}")
 
 
 class TransformerEmbedding(Embeddings[Sentence]):
@@ -175,7 +179,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
         model: str = "bert-base-uncased",
         fine_tune: bool = True,
         layers: str = "all",
-        layer_mean: bool = True,
+        layer_mean: Union[bool, int] = True,
         subtoken_pooling: str = "first",
         cls_pooling: str = "cls",
         is_token_embedding: bool = True,
@@ -267,11 +271,15 @@ class TransformerEmbedding(Embeddings[Sentence]):
         else:
             self.layer_indexes = list(map(int, layers.split(",")))
 
+        self.fine_tune = fine_tune
+        self.static_embeddings = not self.fine_tune
+
+        # pooling methods
         self.cls_pooling = cls_pooling
         self.subtoken_pooling = subtoken_pooling
         self.layer_mean = layer_mean
-        self.fine_tune = fine_tune
-        self.static_embeddings = not self.fine_tune
+        if type(layer_mean) == int:
+            self.mix = ScalarMix(mixture_size=len(self.layer_indexes), epochs_to_train=layer_mean)
 
         # return length
         self.embedding_length_internal = self._calculate_embedding_length()
@@ -612,7 +620,9 @@ class TransformerEmbedding(Embeddings[Sentence]):
             and self.initial_cls_token
         ):
             embeddings_all_document_layers = hidden_states[:, :, 0]
-            if self.layer_mean:
+            if self.layer_mean == "scalar":
+                document_embs = self.mix(embeddings_all_document_layers)
+            elif self.layer_mean:
                 document_embs = torch.mean(embeddings_all_document_layers, dim=0)
             else:
                 document_embs = torch.flatten(embeddings_all_document_layers.permute((1, 0, 2)), 1)
@@ -662,6 +672,11 @@ class TransformerEmbedding(Embeddings[Sentence]):
                     final_embedding = current_embeddings.mean(dim=1)
                 else:
                     raise ValueError(f"subtoken pooling method: `{self.subtoken_pooling}` is not implemented")
+
+                if type(self.layer_mean) == int:
+                    final_embedding = self.mix(final_embedding).unsqueeze(0)
+                elif self.layer_mean:
+                    final_embedding = final_embedding.mean(dim=0)
 
                 if self.layer_mean:
                     final_embedding = final_embedding.mean(dim=0)
@@ -717,11 +732,11 @@ class TransformerEmbedding(Embeddings[Sentence]):
                 for (subtoken_length, sentence_hidden_state) in zip(subtoken_lengths, sentence_hidden_states)
             ]
 
-            if self.document_embedding:
-                self._extract_document_embeddings(sentence_hidden_states, sentences)
+        if self.document_embedding:
+            self._extract_document_embeddings(sentence_hidden_states, sentences)
 
-            if self.token_embedding:
-                self._extract_token_embeddings(sentence_hidden_states, sentences, all_token_subtoken_lengths)
+        if self.token_embedding:
+            self._extract_token_embeddings(sentence_hidden_states, sentences, all_token_subtoken_lengths)
 
     def _expand_sentence_with_context(self, sentence):
         expand_context = not self.training or random.randint(1, 100) > (self.context_dropout * 100)
