@@ -35,12 +35,15 @@ model = KMeans(n_clusters=6)
 
 clustering_model = ClusteringModel(
     model=model,
-    corpus=corpus,
     label_type="question_class",
     embeddings=embeddings
 )
 
-clustering_model.fit()
+# fit the model on a corpus
+clustering_model.fit(corpus)
+
+# evaluate the model on a corpus
+clustering_model.evaluate(corpus)
 ```
 
 BIRCH
@@ -50,29 +53,31 @@ BIRCH is specialized to handle large amounts of data. BIRCH scans the data a sin
 structure. This data structure contains the data but in a compressed way.
 More about BIRCH can be read on the official [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.Birch.html).
 
+```
+from sklearn.cluster import Birch
+from flair.datasets import TREC_6
+from flair.embeddings import SentenceTransformerDocumentEmbeddings
+from flair.models import ClusteringModel
 
+embeddings = SentenceTransformerDocumentEmbeddings()
 
-    from sklearn.cluster import Birch
-    from flair.datasets import TREC_6
-    from flair.embeddings import SentenceTransformerDocumentEmbeddings
-    from flair.models import ClusteringModel
+# store all embeddings in memory which is required to perform clustering
+corpus = TREC_6(memory_mode='full').downsample(0.05)
 
-    embeddings = SentenceTransformerDocumentEmbeddings()
-    
-    # store all embeddings in memory which is required to perform clustering
-    corpus = TREC_6(memory_mode='full').downsample(0.05)
+model = Birch(n_clusters=6)
 
-    model = Birch(n_clusters=6)
+clustering_model = ClusteringModel(
+    model=model,
+    label_type="question_class",
+    embeddings=embeddings
+)
 
-    clustering_model = ClusteringModel(
-        model=model,
-        corpus=corpus,
-        label_type="question_class",
-        embeddings=embeddings
-    )
+# fit the model on a corpus
+clustering_model.fit(corpus)
 
-    clustering_model.fit()
-
+# evaluate the model on a corpus
+clustering_model.evaluate(corpus)
+```
 
 
 Expectation Maximization
@@ -84,30 +89,81 @@ algorithm is a soft clustering algorithm.
 More about EM can be read on the official [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture.html).
 
 
+```
+from sklearn.mixture import GaussianMixture
+from flair.datasets import TREC_6
+from flair.embeddings import SentenceTransformerDocumentEmbeddings
+from flair.models import ClusteringModel
 
-    from sklearn.mixture import GaussianMixture
-    from flair.datasets import TREC_6
-    from flair.embeddings import SentenceTransformerDocumentEmbeddings
-    from flair.models import ClusteringModel
-    
-    embeddings = SentenceTransformerDocumentEmbeddings()
+embeddings = SentenceTransformerDocumentEmbeddings()
 
-    # store all embeddings in memory which is required to perform clustering
-    corpus = TREC_6(memory_mode='full').downsample(0.05)
+# store all embeddings in memory which is required to perform clustering
+corpus = TREC_6(memory_mode='full').downsample(0.05)
 
-    model = GaussianMixture(n_components=6)
+model = GaussianMixture(n_components=6)
 
-    clustering_model = ClusteringModel(
-        model=model,
-        corpus=corpus,
-        label_type="question_class",
-        embeddings=embeddings
-    )
+clustering_model = ClusteringModel(
+    model=model,
+    label_type="question_class",
+    embeddings=embeddings
+)
 
-    clustering_model.fit()
+# fit the model on a corpus
+clustering_model.fit(corpus)
 
+# evaluate the model on a corpus
+clustering_model.evaluate(corpus)
+```
 
 ---------------------------
+
+Loading/Saving the model
+-----------
+
+The model can be saved and loaded. The code below shows how to save a model.
+```
+from flair.models import ClusteringModel
+from flair.datasets import TREC_6
+from flair.embeddings import SentenceTransformerDocumentEmbeddings
+from sklearn.cluster import KMeans
+
+embeddings = SentenceTransformerDocumentEmbeddings()
+
+# store all embeddings in memory which is required to perform clustering
+corpus = TREC_6(memory_mode='full').downsample(0.05)
+
+model = KMeans(n_clusters=6)
+
+clustering_model = ClusteringModel(
+    model=model,
+    label_type="question_class",
+    embeddings=embeddings
+)
+
+# fit the model on a corpus
+clustering_model.fit(corpus)
+
+# save the model
+clustering_model.save(model_file="clustering_model.pt")
+```
+
+The code for loading a model.
+
+````
+# load saved clustering model
+model = ClusteringModel.load(model_file="clustering_model.pt")
+
+# make example sentence
+sentence = Sentence('Getting error in manage categories - not found for attribute "navigation _ column"')
+
+# predict for sentence
+model.predict(sentence)
+
+# print sentence with prediction
+print(sentence)
+````
+
+---------------------
 
 Evaluation
 ---------
