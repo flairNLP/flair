@@ -4,7 +4,7 @@ from typing import List
 import pytest
 
 import flair
-from flair.data import Corpus, Dictionary, Label, Sentence, Span, Token, SpanLabel
+from flair.data import Corpus, Dictionary, Label, Sentence, Token, SpanLabel
 from flair.tokenization import (
     JapaneseTokenizer,
     NewlineSentenceSplitter,
@@ -365,25 +365,25 @@ def test_sentence_to_real_string(tasks_base_path):
     sentence = corpus.train[0]
     sentence.infer_space_after()
     assert (
-        'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in '
-        "einer Weise aufgetreten , "
-        'die alles andere als überzeugend war " .' == sentence.to_tokenized_string()
+            'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in '
+            "einer Weise aufgetreten , "
+            'die alles andere als überzeugend war " .' == sentence.to_tokenized_string()
     )
     assert (
-        'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer '
-        "Weise aufgetreten, die "
-        'alles andere als überzeugend war".' == sentence.to_plain_string()
+            'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer '
+            "Weise aufgetreten, die "
+            'alles andere als überzeugend war".' == sentence.to_plain_string()
     )
 
     sentence = corpus.train[1]
     sentence.infer_space_after()
     assert (
-        "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
-        "Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ." == sentence.to_tokenized_string()
+            "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
+            "Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ." == sentence.to_tokenized_string()
     )
     assert (
-        "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
-        "Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf." == sentence.to_plain_string()
+            "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
+            "Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf." == sentence.to_plain_string()
     )
 
 
@@ -717,7 +717,6 @@ def test_classification_corpus_multi_labels_with_negative_examples(tasks_base_pa
 
 
 def test_spans():
-
     # bioes tags
     sentence = Sentence("Zalando Research is located in Berlin .")
     sentence[0].add_tag("ner", "B-ORG")

@@ -141,6 +141,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
             dev_file=None,
             autofind_splits: bool = True,
             name: Optional[str] = None,
+            comment_symbol="# ",
             **corpusargs,
     ):
         """
@@ -172,6 +173,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
             train_files=[train_file] if train_file else [],
             test_files=[test_file] if test_file else [],
             name=name if data_folder is None else str(data_folder),
+            comment_symbol=comment_symbol,
             **corpusargs,
         )
 
@@ -325,6 +327,11 @@ class ColumnDataset(FlairDataset):
 
                     layer = column_name_map[column]
 
+                    # the space after key is always word-levels
+                    if column_name_map[column] == self.SPACE_AFTER_KEY:
+                        self.word_level_tag_columns[column] = layer
+                        continue
+
                     if layer == "feats":
                         self.word_level_tag_columns[column] = layer
                         continue
@@ -339,6 +346,9 @@ class ColumnDataset(FlairDataset):
 
             for column in self.span_level_tag_columns:
                 log.info(f"Column {column} ({self.span_level_tag_columns[column]}) is a span-level column.")
+
+            # for column in self.word_level_tag_columns:
+            #     log.info(f"Column {column} ({self.word_level_tag_columns[column]}) is a word-level column.")
 
     def _read_next_sentence(self, file):
         lines = []

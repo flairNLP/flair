@@ -15,7 +15,6 @@ from conllu.models import Metadata, Token
 import flair
 from flair.data import Sentence
 from flair.datasets.sequence_labeling import ColumnCorpus
-from flair.datasets.conllu import CoNLLUCorpus
 from flair.file_utils import cached_path
 from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
 

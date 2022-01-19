@@ -3,7 +3,7 @@ import shutil
 import flair
 import flair.datasets
 from flair.data import MultiCorpus, Sentence
-from flair.datasets.conllu import CoNLLUCorpus
+from flair.datasets import ColumnCorpus
 
 
 def test_load_imdb_data(tasks_base_path):
@@ -167,16 +167,9 @@ def test_download_load_data(tasks_base_path):
 
 def _assert_conllu_dataset(dataset):
     sent1 = dataset[0]
-    assert [token.get_tag("ner").value for token in sent1.tokens] == [
-        "B-PER",
-        "I-PER",
-        "O",
-        "B-PER",
-        "I-PER",
-        "O",
-        "B-ORG",
-        "O",
-    ]
+
+    assert [entity.span.text for entity in sent1.get_labels('ner')] == ['Larry Page', 'Sergey Brin', 'Google']
+    assert [entity.value for entity in sent1.get_labels('ner')] == ['PER', 'PER', 'ORG']
 
     assert [token.get_tag("upos").value for token in sent1.tokens] == [
         "PROPN",
@@ -228,14 +221,13 @@ def _assert_conllu_dataset(dataset):
 
 
 def test_load_conllu_corpus(tasks_base_path):
-    corpus = CoNLLUCorpus(
+    corpus = ColumnCorpus(
         tasks_base_path / "conllu",
-        fields=["id", "form", "upos", "ner", "misc"],
         train_file="train.conllu",
         dev_file="train.conllu",
         test_file="train.conllu",
-        token_annotation_fields=["upos", "ner"],
         in_memory=False,
+        column_format={1: 'text', 2: 'upos', 3: 'ner'},
     )
 
     assert len(corpus.train) == 4
@@ -246,13 +238,12 @@ def test_load_conllu_corpus(tasks_base_path):
 
 
 def test_load_conllu_corpus_in_memory(tasks_base_path):
-    corpus = CoNLLUCorpus(
+    corpus = ColumnCorpus(
         tasks_base_path / "conllu",
-        fields=["id", "form", "upos", "ner", "misc"],
         train_file="train.conllu",
         dev_file="train.conllu",
         test_file="train.conllu",
-        token_annotation_fields=["upos", "ner"],
+        column_format={1: 'text', 2: 'upos', 3: 'ner'},
         in_memory=True,
     )
 
@@ -264,12 +255,12 @@ def test_load_conllu_corpus_in_memory(tasks_base_path):
 
 
 def test_load_conllu_plus_corpus(tasks_base_path):
-    corpus = CoNLLUCorpus(
+    corpus = ColumnCorpus(
         tasks_base_path / "conllu",
         train_file="train.conllup",
         dev_file="train.conllup",
         test_file="train.conllup",
-        token_annotation_fields=["upos", "ner"],
+        column_format={1: 'text', 2: 'upos', 3: 'ner'},
         in_memory=False,
     )
 
@@ -281,12 +272,12 @@ def test_load_conllu_plus_corpus(tasks_base_path):
 
 
 def test_load_conllu_corpus_plus_in_memory(tasks_base_path):
-    corpus = CoNLLUCorpus(
+    corpus = ColumnCorpus(
         tasks_base_path / "conllu",
         train_file="train.conllup",
         dev_file="train.conllup",
         test_file="train.conllup",
-        token_annotation_fields=["upos", "ner"],
+        column_format={1: 'text', 2: 'upos', 3: 'ner'},
         in_memory=True,
     )
 
@@ -341,11 +332,12 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
     """
 
     # Here, we use the default token annotation fields.
-    corpus = CoNLLUCorpus(
+    corpus = ColumnCorpus(
         tasks_base_path / "conllu",
         train_file="universal_dependencies.conllu",
         dev_file="universal_dependencies.conllu",
         test_file="universal_dependencies.conllu",
+        column_format={1: 'text', 2: 'pos', 3: 'ner'},
     )
 
     assert len(corpus.train) == 1
