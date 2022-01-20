@@ -1,20 +1,17 @@
+import logging
 import pickle
-from pathlib import Path
-from typing import Union, List
-
-import torch
-from sklearn.metrics import normalized_mutual_info_score, silhouette_samples
-from tqdm import tqdm
 from collections import OrderedDict
+from pathlib import Path
+from typing import Union
 
+import joblib
 from sklearn.base import ClusterMixin, BaseEstimator
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import normalized_mutual_info_score
+from tqdm import tqdm
 
-from flair.data import Corpus, Sentence
+from flair.data import Corpus
 from flair.datasets import DataLoader
 from flair.embeddings import DocumentEmbeddings
-
-import logging
 
 log = logging.getLogger("flair")
 
@@ -24,14 +21,12 @@ class ClusteringModel:
     A wrapper class for the sklearn clustering models. With this class clustering with the library 'flair' can be done.
     """
 
-    def __init__(self, model: Union[ClusterMixin, BaseEstimator], label_type: str, embeddings: DocumentEmbeddings):
+    def __init__(self, model: Union[ClusterMixin, BaseEstimator], embeddings: DocumentEmbeddings):
         """
           :param model: the clustering algortihm from sklearn this wrapper will use.
-          :param label_type: the label from the sentence will be used for the evaluation.
           :param embeddings: the flair DocumentEmbedding this wrapper uses to calculate a vector for each sentence.
         """
         self.model = model
-        self.label_type = label_type
         self.embeddings = embeddings
 
     def fit(self, corpus: Corpus, **kwargs):
@@ -39,7 +34,7 @@ class ClusteringModel:
         Trains the model.
         :param corpus: the flair corpus this wrapper will use for fitting the model.
         """
-        X, y = self._convert_dataset(corpus)
+        X = self._convert_dataset(corpus)
 
         log.info("Start clustering " + str(self.model) + " with " + str(len(X)) + " Datapoints.")
         self.model.fit(X, **kwargs)
@@ -48,42 +43,46 @@ class ClusteringModel:
     def predict(self, corpus: Corpus):
         """
         Predict labels given a list of sentences and returns the respective class indices.
+
         :param corpus: the flair corpus this wrapper will use for predicting the labels.
         """
-        X = [sentence.embedding.cpu().detach().numpy() for sentence in corpus.get_all_sentences()]
+
+        X = self._convert_dataset(corpus)
+        log.info("Start the prediction " + str(self.model) + " with " + str(len(X)) + " Datapoints.")
         predict = self.model.predict(X)
 
         for idx, sentence in enumerate(corpus.get_all_sentences()):
             sentence.set_label("cluster", str(predict[idx]))
 
+        log.info("Finished prediction and labeled all sentences.")
         return predict
 
     def save(self, model_file: Union[str, Path]):
         """
         Saves current model.
-        """
-        dump = pickle.dumps(self.model)
-        torch.save(dump, str(model_file), pickle_protocol=4)
 
-        log.info("Saved model to: " + str(model_file))
+        :param model_file: path where to save the model.
+        """
+        joblib.dump(pickle.dumps(self), str(model_file))
+
+        log.info("Saved the model to: " + str(model_file))
 
     @staticmethod
     def load(model_file: Union[str, Path]):
         """
-        Loads a model.
+        Loads a model from a given path.
+
+        :param model_file: path to the file where the model is saved.
         """
-        log.info("loaded model from: " + str(model_file))
+        log.info("Loading model from: " + str(model_file))
+        return pickle.loads(joblib.load(str(model_file)))
 
-        state = torch.load(model_file)
-        embedding = torch.load(model_file + "emb")
-        clustering = ClusteringModel(state, "s", embedding)
-
-        return clustering
-
-    def _convert_dataset(self, corpus, batch_size: int = 32, return_label_dict: bool = False):
+    def _convert_dataset(self, corpus, label_type: str = None, batch_size: int = 32, return_label_dict: bool = False):
         """
         Turns the corpora into X, y datasets as required for most sklearn clustering models.
         Ref.: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.cluster
+
+        :param label_type: the label from sentences will be extracted. If the value is none this will be skipped.
         """
         sentences = corpus.get_all_sentences()
 
@@ -92,7 +91,11 @@ class ClusteringModel:
             self.embeddings.embed(batch)
 
         X = [sentence.embedding.cpu().detach().numpy() for sentence in sentences]
-        labels = [sentence.get_labels(self.label_type)[0].value for sentence in sentences]
+
+        if label_type is None:
+            return X
+
+        labels = [sentence.get_labels(label_type)[0].value for sentence in sentences]
         label_dict = {v: k for k, v in enumerate(OrderedDict.fromkeys(labels))}
         y = [label_dict.get(label) for label in labels]
 
@@ -101,17 +104,14 @@ class ClusteringModel:
 
         return X, y
 
-    def evaluate(self, corpus: Corpus):
+    def evaluate(self, corpus: Corpus, label_type: str):
         """
         This method calculates some evaluation metrics for the clustering.
         Also, the result of the evaluation is logged.
 
         :param corpus: the flair corpus this wrapper will use for evaluation.
+        :param label_type: the label from the sentence will be used for the evaluation.
         """
-        sentences = corpus.get_all_sentences()
-        X = [sentence.embedding.cpu().detach().numpy() for sentence in sentences]
-        labels = [sentence.get_labels(self.label_type)[0].value for sentence in sentences]
-
+        X, Y = self._convert_dataset(corpus, label_type=label_type)
         predict = self.model.predict(X)
-
-        log.info("NMI - Score: " + str(normalized_mutual_info_score(predict, labels)))
+        log.info("NMI - Score: " + str(normalized_mutual_info_score(predict, Y)))

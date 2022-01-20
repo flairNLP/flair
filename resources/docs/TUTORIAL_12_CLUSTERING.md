@@ -35,15 +35,14 @@ model = KMeans(n_clusters=6)
 
 clustering_model = ClusteringModel(
     model=model,
-    label_type="question_class",
     embeddings=embeddings
 )
 
 # fit the model on a corpus
 clustering_model.fit(corpus)
 
-# evaluate the model on a corpus
-clustering_model.evaluate(corpus)
+# evaluate the model on a corpus with the given label
+clustering_model.evaluate(corpus, label_type="question_class")
 ```
 
 BIRCH
@@ -68,15 +67,14 @@ model = Birch(n_clusters=6)
 
 clustering_model = ClusteringModel(
     model=model,
-    label_type="question_class",
     embeddings=embeddings
 )
 
 # fit the model on a corpus
 clustering_model.fit(corpus)
 
-# evaluate the model on a corpus
-clustering_model.evaluate(corpus)
+# evaluate the model on a corpus with the given label
+clustering_model.evaluate(corpus, label_type="question_class")
 ```
 
 
@@ -104,15 +102,14 @@ model = GaussianMixture(n_components=6)
 
 clustering_model = ClusteringModel(
     model=model,
-    label_type="question_class",
     embeddings=embeddings
 )
 
 # fit the model on a corpus
 clustering_model.fit(corpus)
 
-# evaluate the model on a corpus
-clustering_model.evaluate(corpus)
+# evaluate the model on a corpus with the given label
+clustering_model.evaluate(corpus, label_type="question_class")
 ```
 
 ---------------------------
@@ -136,7 +133,6 @@ model = KMeans(n_clusters=6)
 
 clustering_model = ClusteringModel(
     model=model,
-    label_type="question_class",
     embeddings=embeddings
 )
 
@@ -171,9 +167,11 @@ The result of the clustering can be evaluated. For this we will use the
 [NMI](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.normalized_mutual_info_score.html).
 (Normalized Mutual Info) score.
 
-    clustering_model.fit()
-    clustering_model.evaluate()
-
+````
+# need to fit() the model first
+# evaluate the model on a corpus with the given label
+clustering_model.evaluate(corpus, label_type="question_class")
+````
 
 The result of the evaluation  can be seen below with the SentenceTransformerDocumentEmbeddings:
 
