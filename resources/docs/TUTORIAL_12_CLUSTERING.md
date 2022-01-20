@@ -175,11 +175,11 @@ The result of the clustering can be evaluated. For this we will use the
     clustering_model.evaluate()
 
 
-The result of the evaluation can be seen below with the SentenceTransformerDocumentEmbeddings:
+The result of the evaluation  can be seen below with the SentenceTransformerDocumentEmbeddings:
 
 
-| Clustering Algorithm     |    Dataset    | NMI |
-|--------------------------|:-------------:|----:|
-| k Means                  | StackOverflow |   / |
-| BIRCH                    | StackOverflow |   / |
-| Expectation Maximization | 20News group  |   / |
+| Clustering Algorithm     |    Dataset    |     NMI |
+|--------------------------|:-------------:|--------:|
+| k Means                  | StackOverflow | ~0.2122 |
+| BIRCH                    | StackOverflow | ~0,2424 | 
+| Expectation Maximization | 20News group  | ~0,2222 |  

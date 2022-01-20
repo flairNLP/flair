@@ -24,9 +24,7 @@ class ClusteringModel:
     A wrapper class for the sklearn clustering models. With this class clustering with the library 'flair' can be done.
     """
 
-    def __init__(
-        self, model: Union[ClusterMixin, BaseEstimator], label_type: str, embeddings: DocumentEmbeddings
-    ):
+    def __init__(self, model: Union[ClusterMixin, BaseEstimator], label_type: str, embeddings: DocumentEmbeddings):
         """
           :param model: the clustering algortihm from sklearn this wrapper will use.
           :param label_type: the label from the sentence will be used for the evaluation.
@@ -42,8 +40,10 @@ class ClusteringModel:
         :param corpus: the flair corpus this wrapper will use for fitting the model.
         """
         X, y = self._convert_dataset(corpus)
-        X_train, X_test, y_train, y_test = train_test_split(X, y)
-        self.model.fit(X_train, **kwargs)
+
+        log.info("Start clustering " + str(self.model) + " with " + str(len(X)) + " Datapoints.")
+        self.model.fit(X, **kwargs)
+        log.info("Finished clustering.")
 
     def predict(self, corpus: Corpus):
         """
@@ -76,7 +76,7 @@ class ClusteringModel:
 
         state = torch.load(model_file)
         embedding = torch.load(model_file + "emb")
-        clustering = ClusteringModel(state,'s' ,embedding)
+        clustering = ClusteringModel(state, "s", embedding)
 
         return clustering
 

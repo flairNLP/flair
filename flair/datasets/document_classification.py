@@ -972,11 +972,33 @@ class STACKOVERFLOW(ClassificationCorpus):
             cached_path(stackoverflow_path_label, Path("datasets") / dataset_name / "original")
 
             label_list = []
+            labels = [
+                "wordpress",
+                "oracle",
+                "svn",
+                "apache",
+                "excel",
+                "matlab",
+                "visual-studio",
+                "cocoa",
+                "osx",
+                "bash",
+                "spring",
+                "hibernate",
+                "scala",
+                "sharepoint",
+                "ajax",
+                "qt",
+                "drupal",
+                "linq",
+                "haskell",
+                "magento",
+            ]
             # handle labels file
             with open(data_path / "original" / "label_StackOverflow.txt", "r", encoding="latin1") as open_fp:
                 for line in open_fp:
                     line = line.rstrip()
-                    label_list.append(line)
+                    label_list.append(labels[int(line) - 1])
 
             # handle data file
             with open(data_path / "original" / "title_StackOverflow.txt", "r", encoding="latin1") as open_fp:
