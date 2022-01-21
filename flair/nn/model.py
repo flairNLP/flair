@@ -434,6 +434,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
         return result
 
+    @abstractmethod
     def predict(
         self,
         sentences: Union[List[DT], DT],
