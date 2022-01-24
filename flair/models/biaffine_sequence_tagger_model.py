@@ -1,0 +1,700 @@
+import logging
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+from urllib.error import HTTPError
+
+import torch
+import torch.nn
+import torch.nn.functional as F
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from tqdm import tqdm
+
+import flair.nn
+from flair.data import DataPoint, Dictionary, Label, Sentence, SpanLabel
+from flair.datasets import DataLoader, FlairDatapointDataset
+from flair.embeddings import StackedEmbeddings, TokenEmbeddings
+from flair.file_utils import cached_path, unzip_file
+from flair.training_utils import store_embeddings
+
+from .sequence_tagger_utils.crf import CRF
+from .sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
+from .sequence_tagger_utils.biaffine import Biaffine
+
+log = logging.getLogger("flair")
+
+
+class BiaffineTager(flair.nn.Classifier[Sentence]):
+    def __init__(
+            self,
+            embeddings: TokenEmbeddings,
+            tag_dictionary: Dictionary,
+            tag_type: str,
+            use_rnn: bool = True,
+            rnn: Optional[torch.nn.Module] = None,
+            rnn_type: str = "LSTM",
+            hidden_size: int = 256,
+            ffnn_size: int = 150,
+            rnn_layers: int = 1,
+            bidirectional: bool = True,
+            use_crf: bool = True,
+            use_biaffine: bool = False,
+            reproject_embeddings: bool = True,
+            dropout: float = 0.0,
+            word_dropout: float = 0.05,
+            locked_dropout: float = 0.5,
+            ffnn_dropout: float = 0.2,
+            train_initial_hidden_state: bool = False,
+            loss_weights: Dict[str, float] = None,
+            init_from_state_dict: bool = False,
+    ):
+        """
+        Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
+        In case of multitask learning, pass shared embeddings or shared rnn into respective attributes.
+        :param embeddings: Embeddings to use during training and prediction
+        :param tag_dictionary: Dictionary containing all tags from corpus which can be predicted
+        :param tag_type: type of tag which is going to be predicted in case a corpus has multiple annotations
+        :param use_rnn: If true, use a RNN, else Linear layer.
+        :param rnn: (Optional) Takes a torch.nn.Module as parameter by which you can pass a shared RNN between
+            different tasks.
+        :param rnn_type: Specifies the RNN type to use, default is 'LSTM', can choose between 'GRU' and 'RNN' as well.
+        :param hidden_size: Hidden size of RNN layer
+        :param rnn_layers: number of RNN layers
+        :param bidirectional: If True, RNN becomes bidirectional
+        :param use_crf: If True, use a Conditional Random Field for prediction, else linear map to tag space.
+        :param reproject_embeddings: If True, add a linear layer on top of embeddings, if you want to imitate
+            fine tune non-trainable embeddings.
+        :param dropout: If > 0, then use dropout.
+        :param word_dropout: If > 0, then use word dropout.
+        :param locked_dropout: If > 0, then use locked dropout.
+        :param train_initial_hidden_state: if True, trains initial hidden state of RNN
+        :param loss_weights: Dictionary of weights for labels for the loss function
+            (if any label's weight is unspecified it will default to 1.0)
+        :param init_from_state_dict: Indicator whether we are loading a model from state dict
+            since we need to transform previous models' weights into CRF instance weights
+        """
+        super(BiaffineTager, self).__init__()
+
+        # ----- Embedding specific parameters -----
+        self.embeddings = embeddings
+        embedding_dim: int = embeddings.embedding_length
+        self.tag_dictionary = tag_dictionary
+        self.tagset_size = len(tag_dictionary)
+        self.tag_type = tag_type
+        self.label_dictionary = tag_dictionary
+
+        # ----- Initial loss weights parameters -----
+        self.weight_dict = loss_weights
+        self.loss_weights = self._init_loss_weights(loss_weights) if loss_weights else None
+
+        # ----- RNN specific parameters -----
+        self.use_rnn = use_rnn
+        self.rnn_type = rnn_type if not rnn else rnn._get_name()
+        self.hidden_size = hidden_size if not rnn else rnn.hidden_size
+        self.rnn_layers = rnn_layers if not rnn else rnn.num_layers
+        self.bidirectional = bidirectional if not rnn else rnn.bidirectional
+
+        # ----- Conditional Random Field parameters -----
+        self.use_crf = use_crf
+        # Previously trained models have been trained without an explicit CRF, thus it is required to check
+        # whether we are loading a model from state dict in order to skip or add START and STOP token
+        if use_crf and not init_from_state_dict and not self.tag_dictionary.start_stop_tags_are_set():
+            self.tag_dictionary.set_start_stop_tags()
+            self.tagset_size += 2
+
+        # ----- Biaffine  parameters-----
+        self.use_biaffine = use_biaffine
+        if use_biaffine:
+            self.ffnn_size = ffnn_size
+            self.ffnn_dropout = ffnn_dropout
+
+        # ----- Dropout parameters -----
+        # dropouts
+        self.use_dropout: float = dropout
+        self.use_word_dropout: float = word_dropout
+        self.use_locked_dropout: float = locked_dropout
+
+        if dropout > 0.0:
+            self.dropout = torch.nn.Dropout(dropout)
+
+        if word_dropout > 0.0:
+            self.word_dropout = flair.nn.WordDropout(word_dropout)
+
+        if locked_dropout > 0.0:
+            self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
+
+        # ----- Model layers -----
+        self.reproject_embeddings = reproject_embeddings
+        if self.reproject_embeddings:
+            self.embedding2nn = torch.nn.Linear(embedding_dim, embedding_dim)
+
+        # ----- RNN layer -----
+        if use_rnn:
+            # If shared RNN provided, else create one for model
+            self.rnn = (
+                rnn
+                if rnn
+                else self.RNN(
+                    rnn_type,
+                    rnn_layers,
+                    hidden_size,
+                    bidirectional,
+                    rnn_input_dim=embedding_dim,
+                )
+            )
+
+            num_directions = 2 if self.bidirectional else 1
+            hidden_output_dim = self.rnn.hidden_size * num_directions
+
+            # Whether to train initial hidden state
+            self.train_initial_hidden_state = train_initial_hidden_state
+            if self.train_initial_hidden_state:
+                (
+                    self.hs_initializer,
+                    self.lstm_init_h,
+                    self.lstm_init_c,
+                ) = self._init_initial_hidden_state(num_directions)
+
+            # final linear map to tag space
+            self.linear = torch.nn.Linear(hidden_output_dim, len(tag_dictionary))
+        else:
+            self.linear = torch.nn.Linear(embedding_dim, len(tag_dictionary))
+
+        # ----- CRF / Linear layer -----
+        if use_crf:
+            self.crf = CRF(
+                self.tag_dictionary,
+                self.tagset_size,
+                init_from_state_dict,
+            )
+            self.loss_function = ViterbiLoss(tag_dictionary)
+            self.viterbi_decoder = ViterbiDecoder(tag_dictionary)
+        elif use_biaffine:
+            self.biaffine = Biaffine(embedding_dim, ffnn_size, ffnn_dropout, len(tag_dictionary), init_from_state_dict)
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+        else:
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+
+        self.to(flair.device)
+
+    @property
+    def label_type(self):
+        return self.tag_type
+
+    def _init_loss_weights(self, loss_weights: dict) -> torch.tensor:
+        """
+        Intializes the loss weights based on given dictionary:
+        :param loss_weights: dictionary - contains loss weights
+        """
+        n_classes = len(self.label_dictionary)
+        weight_list = [1.0 for _ in range(n_classes)]
+        for i, tag in enumerate(self.label_dictionary.get_items()):
+            if tag in loss_weights.keys():
+                weight_list[i] = loss_weights[tag]
+
+        return torch.tensor(weight_list).to(flair.device)
+
+    def _init_initial_hidden_state(self, num_directions: int):
+        """
+        Intializes hidden states given the number of directions in RNN.
+        :param num_directions: Number of directions in RNN.
+        """
+        hs_initializer = torch.nn.init.xavier_normal_
+        lstm_init_h = torch.nn.Parameter(
+            torch.randn(self.nlayers * num_directions, self.hidden_size),
+            requires_grad=True,
+        )
+        lstm_init_c = torch.nn.Parameter(
+            torch.randn(self.nlayers * num_directions, self.hidden_size),
+            requires_grad=True,
+        )
+
+        return hs_initializer, lstm_init_h, lstm_init_c
+
+    @staticmethod
+    def RNN(
+            rnn_type: str,
+            rnn_layers: int,
+            hidden_size: int,
+            bidirectional: bool,
+            rnn_input_dim: int,
+    ) -> torch.nn.Module:
+        """
+        Static wrapper function returning an RNN instance from PyTorch
+        :param rnn_type: Type of RNN from torch.nn
+        :param rnn_layers: number of layers to include
+        :param hidden_size: hidden size of RNN cell
+        :param bidirectional: If True, RNN cell is bidirectional
+        :param rnn_input_dim: Input dimension to RNN cell
+        """
+        if rnn_type in ["LSTM", "GRU", "RNN"]:
+            RNN = getattr(torch.nn, rnn_type)(
+                rnn_input_dim,
+                hidden_size,
+                num_layers=rnn_layers,
+                dropout=0.0 if rnn_layers == 1 else 0.5,
+                bidirectional=bidirectional,
+                batch_first=True,
+            )
+        else:
+            raise Exception(f"Unknown RNN type: {rnn_type}. Please use either LSTM, GRU or RNN.")
+
+        return RNN
+
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
+
+        # if there are no sentences, there is no loss
+        if len(sentences) == 0:
+            return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
+
+        # forward pass to get scores
+        scores, gold_labels = self.forward(sentences)  # type: ignore
+
+        # calculate loss given scores and labels
+        return self._calculate_loss(scores, gold_labels)
+
+    def forward(self, sentences: Union[List[Sentence], Sentence]):
+        """
+        Forward propagation through network. Returns gold labels of batch in addition.
+        :param sentences: Batch of current sentences
+        """
+        self.embeddings.embed(sentences)
+        # make a zero-padded tensor for the whole sentence
+        lengths, sentence_tensor = self._make_padded_tensor_for_batch(sentences)
+        # sort tensor in decreasing order based on lengths of sentences in batch
+        lengths = lengths.sort(dim=0, descending=True)
+        sentences = [sentences[i] for i in lengths.indices]
+        sentence_tensor = sentence_tensor[lengths.indices]
+
+        # ----- Forward Propagation -----
+        if self.use_dropout:
+            sentence_tensor = self.dropout(sentence_tensor)
+        if self.use_word_dropout:
+            sentence_tensor = self.word_dropout(sentence_tensor)
+        if self.use_locked_dropout:
+            sentence_tensor = self.locked_dropout(sentence_tensor)
+
+        if self.reproject_embeddings:
+            sentence_tensor = self.embedding2nn(sentence_tensor)
+
+        if self.use_rnn:
+            packed = pack_padded_sequence(sentence_tensor, lengths.values, batch_first=True, enforce_sorted=False)
+            rnn_output, hidden = self.rnn(packed)
+            sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
+
+        if self.use_dropout:
+            sentence_tensor = self.dropout(sentence_tensor)
+        if self.use_locked_dropout:
+            sentence_tensor = self.locked_dropout(sentence_tensor)
+
+        # linear map to tag space
+        features = self.linear(sentence_tensor)
+
+        # Depending on whether we are using CRF or a linear layer, scores is either:
+        # -- A tensor of shape (batch size, sequence length, tagset size, tagset size) for CRF
+        # -- A tensor of shape (aggregated sequence length for all sentences in batch, tagset size) for linear layer
+        if self.use_crf:
+            features = self.crf(features)
+            scores = (features, lengths, self.crf.transitions)
+            gold_labels = self._get_gold_labels(sentences)
+        elif self.use_biaffine:
+            candidate = self.biaffine(sentence_tensor)
+            scores, gold_labels = self._get_useful4biaffine(sentences, lengths, candidate)
+        else:
+            scores = self._get_scores_from_features(features, lengths)
+            gold_labels = self._get_gold_labels(sentences)
+        # get the gold labels
+
+        return scores, gold_labels
+
+    def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
+
+        if not any(labels):
+            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+
+        if not self.use_biaffine:
+            labels = torch.tensor(
+                [
+                    self.label_dictionary.get_idx_for_item(label[0])
+                    if len(label) > 0
+                    else self.label_dictionary.get_idx_for_item("O")
+                    for label in labels
+                ],
+                dtype=torch.long,
+                device=flair.device,
+            )
+
+        return self.loss_function(scores, labels), len(labels)
+
+    def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, torch.Tensor]:
+        names = self.embeddings.get_names()
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        longest_token_sequence_in_batch: int = max(lengths)
+        pre_allocated_zero_tensor = torch.zeros(
+            self.embeddings.embedding_length * longest_token_sequence_in_batch,
+            dtype=torch.float,
+            device=flair.device,
+            )
+        all_embs = list()
+        for sentence in sentences:
+            all_embs += [emb for token in sentence for emb in token.get_each_embedding(names)]
+            nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
+
+            if nb_padding_tokens > 0:
+                t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
+                all_embs.append(t)
+        sentence_tensor = torch.cat(all_embs).view(
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.embeddings.embedding_length,
+            ]
+        )
+        lengths: torch.Tensor = torch.tensor(lengths, dtype=torch.long)
+        return lengths, sentence_tensor
+
+    @staticmethod
+    def _get_scores_from_features(features: torch.tensor, lengths: torch.tensor):
+        """
+        Trims current batch tensor in shape (batch size, sequence length, tagset size) in such a way that all
+        pads are going to be removed.
+        :param features: torch.tensor containing all features from forward propagation
+        :param lengths: length from each sentence in batch in order to trim padding tokens
+        """
+        features_formatted = []
+        for feat, length in zip(features, lengths.values):
+            features_formatted.append(feat[:length])
+        scores = torch.cat(features_formatted)
+
+        return scores
+
+    def _get_gold_labels(self, sentences: Union[List[DataPoint], DataPoint]):
+        """
+        Extracts gold labels from each sentence.
+        :param sentences: List of sentences in batch
+        """
+        tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
+        labels = [[[token.get_tag(self.label_type).value] for token in sentence] for sentence in tokens_per_sentence]
+        labels = [token for sentence in labels for token in sentence]
+
+        return labels
+
+    def _get_labels4biaffine(self, sentences: Union[List[DataPoint], DataPoint], lengths: List[int]):
+
+        longest_token_sequence_in_batch: int = max(lengths.values).item()
+
+        all_lables = list()
+        for sentence in sentences:
+            for token in sentence:
+                pre_allocated_zero_tensor = torch.zeros(
+                    1 * longest_token_sequence_in_batch,
+                    dtype=torch.long,
+                    device=flair.device,
+                    )
+                pre_allocated_zero_tensor[token.idx-1] = self.tag_dictionary.get_idx_for_item(token.get_tag('ner').value)
+
+                all_lables.append(pre_allocated_zero_tensor)
+
+            nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
+            if nb_padding_tokens > 0:
+                t = torch.zeros(
+                    nb_padding_tokens , longest_token_sequence_in_batch,
+                    dtype=torch.long,
+                    device=flair.device,
+                ).view(-1)
+                all_lables.append(t)
+
+
+        targe_lable_tensor = torch.cat(all_lables).view(
+            [
+                -1,
+                longest_token_sequence_in_batch,
+                longest_token_sequence_in_batch,
+            ]
+        )
+
+        return targe_lable_tensor
+
+    def _get_useful4biaffine(self, sentences, lengths, candidate):
+
+        targe_lable_tensor = self._get_labels4biaffine(sentences, lengths)
+
+        # generate mask
+        lengths = lengths.values
+        longest_token_sequence_in_batch = max(lengths)
+        mask = [[1] * lengths[i] + [0] * (longest_token_sequence_in_batch - lengths[i]) for i in range(len(lengths))]
+        mask = torch.tensor(mask)
+        mask = mask.unsqueeze(1).expand(-1, mask.shape[-1], -1)
+        mask = torch.triu(mask)
+        mask = mask.reshape(-1)
+
+        tmp_candidate = candidate.reshape(-1, candidate.shape[-1])
+        tmp_label = targe_lable_tensor.reshape(-1)
+        indices = mask.nonzero(as_tuple=False).squeeze(-1).long().to(flair.device)
+        scores = tmp_candidate.index_select(0, indices)
+        labels = tmp_label.index_select(0, indices)
+
+        return scores, labels
+
+    def predict(
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
+    ):
+        """
+        Predicts labels for current batch with CRF or Softmax.
+        :param sentences: List of sentences in batch
+        :param mini_batch_size: batch size for test data
+        :param return_probabilities_for_all_classes: Whether to return probabilites for all classes
+        :param verbose: whether to use progress bar
+        :param label_name: which label to predict
+        :param return_loss: whether to return loss value
+        :param embedding_storage_mode: determines where to store embeddings - can be "gpu", "cpu" or None.
+        """
+        if label_name is None:
+            label_name = self.tag_type
+
+        with torch.no_grad():
+            if not sentences:
+                return sentences
+
+            # make sure its a list
+            if not isinstance(sentences, list) and not isinstance(sentences, flair.data.Dataset):
+                sentences = [sentences]
+
+            # filter empty sentences
+            sentences = [sentence for sentence in sentences if len(sentence) > 0]
+
+            # reverse sort all sequences by their length
+            reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
+
+            if len(reordered_sentences) == 0:
+                return sentences
+
+            dataloader = DataLoader(
+                dataset=FlairDatapointDataset(reordered_sentences),
+                batch_size=mini_batch_size,
+            )
+            # progress bar for verbosity
+            if verbose:
+                dataloader = tqdm(dataloader)
+
+            overall_loss = 0
+            batch_no = 0
+            label_count = 0
+            for batch in dataloader:
+
+                batch_no += 1
+
+                if verbose:
+                    dataloader.set_description(f"Inferencing on batch {batch_no}")
+
+                # stop if all sentences are empty
+                if not batch:
+                    continue
+
+                # get features from forward propagation
+                features, gold_labels = self.forward(batch)
+
+                # remove previously predicted labels of this type
+                for sentence in batch:
+                    sentence.remove_labels(label_name)
+
+                # if return_loss, get loss value
+                if return_loss:
+                    loss = self._calculate_loss(features, gold_labels)
+                    overall_loss += loss[0]
+                    label_count += loss[1]
+
+                # Sort batch in same way as forward propagation
+                lengths = torch.LongTensor([len(sentence) for sentence in batch])
+                lengths = lengths.sort(dim=0, descending=True)
+                batch = [batch[i] for i in lengths.indices]
+
+                if self.use_crf:
+                    predictions, all_tags = self.viterbi_decoder.decode(features, return_probabilities_for_all_classes)
+                elif self.use_biaffine:
+                    print(123)
+                else:
+                    predictions, all_tags = self._standard_inference(
+                        features, batch, return_probabilities_for_all_classes
+                    )
+
+                for sentence, labels in zip(batch, predictions):
+                    for token, label in zip(sentence.tokens, labels):
+                        token.add_tag_label(label_name, label)
+
+                # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
+                for (sentence, sent_all_tags) in zip(batch, all_tags):
+                    for (token, token_all_tags) in zip(sentence.tokens, sent_all_tags):
+                        token.add_tags_proba_dist(label_name, token_all_tags)
+
+            store_embeddings(sentences, storage_mode=embedding_storage_mode)
+
+            if return_loss:
+                return overall_loss, label_count
+
+    def _standard_inference(self, features: torch.tensor, batch: list, probabilities_for_all_classes: bool):
+        """
+        Softmax over emission scores from forward propagation.
+        :param features: sentence tensor from forward propagation
+        :param batch: list of sentence
+        :param probabilities_for_all_classes: whether to return score for each tag in tag dictionary
+        """
+        softmax_batch = F.softmax(features, dim=1).cpu()
+        scores_batch, prediction_batch = torch.max(softmax_batch, dim=1)
+        predictions = []
+        all_tags = []
+
+        for sentence in batch:
+            scores = scores_batch[: len(sentence)]
+            predictions_for_sentence = prediction_batch[: len(sentence)]
+            predictions.append(
+                [
+                    Label(self.tag_dictionary.get_item_for_index(prediction), score.item())
+                    for token, score, prediction in zip(sentence, scores, predictions_for_sentence)
+                ]
+            )
+            scores_batch = scores_batch[len(sentence) :]
+            prediction_batch = prediction_batch[len(sentence) :]
+
+        if probabilities_for_all_classes:
+            lengths = [len(sentence) for sentence in batch]
+            all_tags = self._all_scores_for_token(softmax_batch, lengths)
+
+        return predictions, all_tags
+
+    def _all_scores_for_token(self, scores: torch.tensor, lengths: list):
+        """
+        Returns all scores for each tag in tag dictionary.
+        :param scores: Scores for current sentence.
+        """
+        scores = scores.numpy()
+        prob_all_tags = [
+            [
+                Label(self.tag_dictionary.get_item_for_index(score_id), score)
+                for score_id, score in enumerate(score_dist)
+            ]
+            for score_dist in scores
+        ]
+
+        prob_tags_per_sentence = []
+        previous = 0
+        for length in lengths:
+            prob_tags_per_sentence.append(prob_all_tags[previous : previous + length])
+            previous = length
+        return prob_tags_per_sentence
+
+    def _get_state_dict(self):
+        """Returns the state dictionary for this model."""
+        model_state = {
+            "state_dict": self.state_dict(),
+            "embeddings": self.embeddings,
+            "hidden_size": self.hidden_size,
+            "ffnn_size": self.ffnn_size,
+            "tag_dictionary": self.tag_dictionary,
+            "tag_type": self.tag_type,
+            "use_crf": self.use_crf,
+            "use_biaffine": self.use_biaffine,
+            "use_rnn": self.use_rnn,
+            "rnn_layers": self.rnn_layers,
+            "use_dropout": self.use_dropout,
+            "use_word_dropout": self.use_word_dropout,
+            "use_locked_dropout": self.use_locked_dropout,
+            "ffnn_dropout": self.ffnn_dropout,
+            "rnn_type": self.rnn_type,
+            "reproject_embeddings": self.reproject_embeddings,
+            "weight_dict": self.weight_dict,
+        }
+
+        return model_state
+
+    @staticmethod
+    def _init_model_with_state_dict(state):
+        """Initialize the model from a state dictionary."""
+        rnn_type = "LSTM" if "rnn_type" not in state.keys() else state["rnn_type"]
+        use_dropout = 0.0 if "use_dropout" not in state.keys() else state["use_dropout"]
+        use_word_dropout = 0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
+        use_locked_dropout = 0.0 if "use_locked_dropout" not in state.keys() else state["use_locked_dropout"]
+        reproject_embeddings = True if "reproject_embeddings" not in state.keys() else state["reproject_embeddings"]
+        weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
+
+        if state["use_crf"]:
+            if "transitions" in state["state_dict"]:
+                state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"]
+                del state["state_dict"]["transitions"]
+
+        model = BiaffineTager(
+            embeddings=state["embeddings"],
+            tag_dictionary=state["tag_dictionary"],
+            tag_type=state["tag_type"],
+            use_crf=state["use_crf"],
+            use_biaffine=state["use_biaffine"],
+            use_rnn=state["use_rnn"],
+            rnn_layers=state["rnn_layers"],
+            hidden_size=state["hidden_size"],
+            ffnn_size=state["ffnn_size"],
+            ffnn_dropout=state["ffnn_dropout"],
+            dropout=use_dropout,
+            word_dropout=use_word_dropout,
+            locked_dropout=use_locked_dropout,
+            rnn_type=rnn_type,
+            reproject_embeddings=reproject_embeddings,
+            loss_weights=weights,
+            init_from_state_dict=True,
+        )
+
+        model.load_state_dict(state["state_dict"])
+        return model
+
+    # @staticmethod
+    # def _fetch_model(model_name) -> str:
+
+
+
+    # @staticmethod
+    # def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+    #     filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+    #     if len(sentences) != len(filtered_sentences):
+    #         log.warning(f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens.")
+    #     return filtered_sentences
+
+    def _print_predictions(self, batch, gold_label_type):
+        lines = []
+        for datapoint in batch:
+            # all labels default to "O"
+            for token in datapoint:
+                token.set_label("gold_bio", "O")
+                token.set_label("predicted_bio", "O")
+
+            # set gold token-level
+            for gold_label in datapoint.get_labels(gold_label_type):
+                gold_label: SpanLabel = gold_label
+                prefix = "B-"
+                for token in gold_label.span:
+                    token.set_label("gold_bio", prefix + gold_label.value)
+                    prefix = "I-"
+
+            # set predicted token-level
+            for predicted_label in datapoint.get_labels("predicted"):
+                predicted_label: SpanLabel = predicted_label
+                prefix = "B-"
+                for token in predicted_label.span:
+                    token.set_label("predicted_bio", prefix + predicted_label.value)
+                    prefix = "I-"
+
+            # now print labels in CoNLL format
+            for token in datapoint:
+                eval_line = (
+                    f"{token.text} " f"{token.get_tag('gold_bio').value} " f"{token.get_tag('predicted_bio').value}\n"
+                )
+                lines.append(eval_line)
+            lines.append("\n")
+        return lines
+
+
