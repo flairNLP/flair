@@ -181,6 +181,10 @@ class ColumnCorpus(MultiFileColumnCorpus):
 class ColumnDataset(FlairDataset):
     # special key for space after
     SPACE_AFTER_KEY = "space-after"
+    # special key for feature columns
+    FEATS = ["feats", "misc"]
+    # special key for dependency head id
+    HEAD = ["head", "head_id"]
 
     def __init__(
             self,
@@ -234,7 +238,7 @@ class ColumnDataset(FlairDataset):
         for column in column_name_map:
             if column_name_map[column] == "text":
                 self.text_column = column
-            if column_name_map[column] == "head_id":
+            if column_name_map[column] in self.HEAD:
                 self.head_id_column = column
 
         # determine encoding of text file
@@ -332,7 +336,7 @@ class ColumnDataset(FlairDataset):
                         self.word_level_tag_columns[column] = layer
                         continue
 
-                    if layer == "feats":
+                    if layer in self.FEATS:
                         self.word_level_tag_columns[column] = layer
                         continue
 
@@ -445,10 +449,17 @@ class ColumnDataset(FlairDataset):
                 if column != self.text_column and column != self.head_id_column \
                         and column_name_map[column] != self.SPACE_AFTER_KEY:
 
-                    # 'feats' column should be split into different fields
-                    if column_name_map[column] == 'feats':
-                        if '=' in fields[column]:
-                            for feature in fields[column].split("|"):
+                    # 'feats' and 'misc' column should be split into different fields
+                    if column_name_map[column] in self.FEATS:
+                        for feature in fields[column].split("|"):
+
+                            # special handling for whitespace after
+                            if feature == "SpaceAfter=No":
+                                token.whitespace_after = False
+                                continue
+
+                            if '=' in feature:
+                                # add each other feature as label-value pair
                                 label_name = feature.split("=")[0]
                                 label_value = self._remap_label(feature.split("=")[1])
                                 token.add_label(label_name, label_value)

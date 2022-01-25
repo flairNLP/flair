@@ -584,6 +584,10 @@ class Span(DataPoint):
     def clear_embeddings(self, embedding_names: List[str] = None):
         pass
 
+    def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
+        self.tokens[0].sentence.add_complex_label(tag_type,
+                                                  SpanLabel(self, value=tag_value, score=confidence))
+
 
 class Tokenizer(ABC):
     r"""An abstract class representing a :class:`Tokenizer`.
@@ -958,8 +962,11 @@ class Sentence(DataPoint):
 
         return {"text": self.to_original_text(), "all labels": labels}
 
-    def __getitem__(self, idx: int) -> Token:
-        return self.tokens[idx]
+    def __getitem__(self, subscript: int) -> Union[Token, Span]:
+        if isinstance(subscript, slice):
+            return Span(self.tokens[subscript])
+        else:
+            return self.tokens[subscript]
 
     def __iter__(self):
         return iter(self.tokens)
@@ -1080,8 +1087,10 @@ class Sentence(DataPoint):
         # otherwise check if the label exists on the token-level
         # in this case, create span-labels and return those
         if label_type in set().union(*(token.annotation_layers.keys() for token in self)):
-            return [SpanLabel(Span([token]), token.get_tag(label_type, "O").value, token.get_tag(label_type, "O").score)
-                    for token in self]
+            return [SpanLabel(Span([token]), token.get_tag(label_type).value, token.get_tag(label_type).score)
+                    for token in self if label_type in token.annotation_layers]
+            # return [SpanLabel(Span([token]), token.get_tag(label_type, "O").value, token.get_tag(label_type, "O").score)
+            #         for token in self]
 
         # return empty list if none of the above
         return []
