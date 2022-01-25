@@ -563,7 +563,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         scores = scores.numpy()
         prob_all_tags = [
             [
+<<<<<<< HEAD
                 Label(self.label_dictionary.get_item_for_index(score_id), score)
+=======
+                Label(self.tag_dictionary.get_item_for_index(score_id), score)
+>>>>>>> master
                 for score_id, score in enumerate(score_dist)
             ]
             for score_dist in scores
