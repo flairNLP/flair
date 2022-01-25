@@ -47,7 +47,7 @@ def get_spans_from_bio(bioes_tags, bioes_scores=None):
 
         if in_span:
             current_span.append(idx)
-            current_span_scores.append(bioes_scores[idx] if bioes_scores else 1.)
+            current_span_scores.append(bioes_scores[idx] if bioes_scores else 1.0)
             weight = 1.1 if starts_new_span else 1.0
             current_tag_weights[bioes_tag[2:]] += weight
 

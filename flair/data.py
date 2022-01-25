@@ -297,10 +297,10 @@ class RelationLabel(Label):
 
     def __eq__(self, other):
         return (
-                self.value == other.value
-                and self.score == other.score
-                and self.head.id_text == other.head.id_text
-                and self.tail.id_text == other.tail.id_text
+            self.value == other.value
+            and self.score == other.score
+            and self.head.id_text == other.head.id_text
+            and self.tail.id_text == other.tail.id_text
         )
 
     @property
@@ -410,12 +410,12 @@ class Token(DataPoint):
     """
 
     def __init__(
-            self,
-            text: str,
-            idx: int = None,
-            head_id: int = None,
-            whitespace_after: bool = True,
-            start_position: int = None,
+        self,
+        text: str,
+        idx: int = None,
+        head_id: int = None,
+        whitespace_after: bool = True,
+        start_position: int = None,
     ):
         super().__init__()
 
@@ -585,8 +585,7 @@ class Span(DataPoint):
         pass
 
     def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
-        self.tokens[0].sentence.add_complex_label(tag_type,
-                                                  SpanLabel(self, value=tag_value, score=confidence))
+        self.tokens[0].sentence.add_complex_label(tag_type, SpanLabel(self, value=tag_value, score=confidence))
 
 
 class Tokenizer(ABC):
@@ -614,11 +613,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-            self,
-            text: Union[str, List[str]] = [],
-            use_tokenizer: Union[bool, Tokenizer, Callable] = True,
-            language_code: str = None,
-            start_position: int = None,
+        self,
+        text: Union[str, List[str]] = [],
+        use_tokenizer: Union[bool, Tokenizer, Callable] = True,
+        language_code: str = None,
+        start_position: int = None,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -1087,14 +1086,16 @@ class Sentence(DataPoint):
         # otherwise check if the label exists on the token-level
         # in this case, create span-labels and return those
         if label_type in set().union(*(token.annotation_layers.keys() for token in self)):
-            return [SpanLabel(Span([token]), token.get_tag(label_type).value, token.get_tag(label_type).score)
-                    for token in self if label_type in token.annotation_layers]
+            return [
+                SpanLabel(Span([token]), token.get_tag(label_type).value, token.get_tag(label_type).score)
+                for token in self
+                if label_type in token.annotation_layers
+            ]
             # return [SpanLabel(Span([token]), token.get_tag(label_type, "O").value, token.get_tag(label_type, "O").score)
             #         for token in self]
 
         # return empty list if none of the above
         return []
-
 
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):
@@ -1175,12 +1176,12 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-            self,
-            train: Dataset = None,
-            dev: Dataset = None,
-            test: Dataset = None,
-            name: str = "corpus",
-            sample_missing_splits: Union[bool, str] = True,
+        self,
+        train: Dataset = None,
+        dev: Dataset = None,
+        test: Dataset = None,
+        name: str = "corpus",
+        sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1219,11 +1220,11 @@ class Corpus:
         return self._test
 
     def downsample(
-            self,
-            percentage: float = 0.1,
-            downsample_train=True,
-            downsample_dev=True,
-            downsample_test=True,
+        self,
+        percentage: float = 0.1,
+        downsample_train=True,
+        downsample_dev=True,
+        downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:

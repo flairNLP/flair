@@ -1,6 +1,6 @@
 import logging
 import random
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -21,14 +21,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
 
     def __init__(
-            self,
-            word_embeddings: flair.embeddings.TokenEmbeddings,
-            label_dictionary: Dictionary,
-            pooling_operation: str = "first&last",
-            label_type: str = "nel",
-            dropout: float = 0.5,
-            skip_unk_probability: Optional[float] = None,
-            **classifierargs,
+        self,
+        word_embeddings: flair.embeddings.TokenEmbeddings,
+        label_dictionary: Dictionary,
+        pooling_operation: str = "first&last",
+        label_type: str = "nel",
+        dropout: float = 0.5,
+        skip_unk_probability: Optional[float] = None,
+        **classifierargs,
     ):
         """
         Initializes an EntityLinker
@@ -92,9 +92,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         return torch.mean(arg, 0)
 
     def forward_pass(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            return_label_candidates: bool = False,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
     ):
 
         if not isinstance(sentences, list):
@@ -138,9 +138,10 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
                     if self.pooling_operation == "first&last":
                         mention_emb = torch.cat(
-                            (entity.span.tokens[0].get_embedding(embedding_names),
-                             entity.span.tokens[-1].get_embedding(embedding_names),
-                             ),
+                            (
+                                entity.span.tokens[0].get_embedding(embedding_names),
+                                entity.span.tokens[-1].get_embedding(embedding_names),
+                            ),
                             0,
                         )
                     embedding_list.append(mention_emb.unsqueeze(0))

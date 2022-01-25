@@ -10,7 +10,7 @@ from sklearn.preprocessing import minmax_scale
 from tqdm import tqdm
 
 import flair
-from flair.data import Dictionary, Sentence, SpanLabel, Span
+from flair.data import Dictionary, Sentence, Span, SpanLabel
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import (
     TokenEmbeddings,
@@ -35,7 +35,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         super(FewshotClassifier, self).__init__()
 
     def forward_loss(
-            self, data_points: Union[List[Sentence], Sentence]
+        self, data_points: Union[List[Sentence], Sentence]
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
 
         if not isinstance(data_points, list):
@@ -178,12 +178,12 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         return self._task_specific_attributes[self._current_task]["multi_label"]
 
     def add_and_switch_to_new_task(
-            self,
-            task_name,
-            label_dictionary: Union[List, Set, Dictionary, str],
-            label_type: str,
-            multi_label: bool = True,
-            force_switch: bool = False,
+        self,
+        task_name,
+        label_dictionary: Union[List, Set, Dictionary, str],
+        label_type: str,
+        multi_label: bool = True,
+        force_switch: bool = False,
     ):
         """
         Adds a new task to an existing TARS model. Sets necessary attributes and finally 'switches'
@@ -265,10 +265,10 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         return self.get_current_label_type()
 
     def predict_zero_shot(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            candidate_label_set: Union[List[str], Set[str], str],
-            multi_label: bool = True,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        candidate_label_set: Union[List[str], Set[str], str],
+        multi_label: bool = True,
     ):
         """
         Method to make zero shot predictions from the TARS model
@@ -324,14 +324,14 @@ class TARSTagger(FewshotClassifier):
     static_label_type = "tars_label"
 
     def __init__(
-            self,
-            task_name: Optional[str] = None,
-            label_dictionary: Optional[Dictionary] = None,
-            label_type: Optional[str] = None,
-            embeddings: Union[TransformerWordEmbeddings, str] = "bert-base-uncased",
-            num_negative_labels_to_sample: int = 2,
-            prefix: bool = True,
-            **tagger_args,
+        self,
+        task_name: Optional[str] = None,
+        label_dictionary: Optional[Dictionary] = None,
+        label_type: Optional[str] = None,
+        embeddings: Union[TransformerWordEmbeddings, str] = "bert-base-uncased",
+        num_negative_labels_to_sample: int = 2,
+        prefix: bool = True,
+        **tagger_args,
     ):
         """
         Initializes a TextClassifier
@@ -457,15 +457,15 @@ class TARSTagger(FewshotClassifier):
         return self.tars_model.embeddings
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size=32,
-            return_probabilities_for_all_classes: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
-            most_probable_first: bool = True,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size=32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
+        most_probable_first: bool = True,
     ):
         # return
         """
@@ -568,10 +568,10 @@ class TARSTagger(FewshotClassifier):
                             if tag_this:
                                 already_set_indices.extend(token.idx for token in label.span)
                                 predicted_span = [sentence.get_token(token.idx - label_length) for token in label.span]
-                                sentence.add_complex_label(label_name,
-                                                           label=SpanLabel(Span(predicted_span),
-                                                                           value=label.value,
-                                                                           score=label.score))
+                                sentence.add_complex_label(
+                                    label_name,
+                                    label=SpanLabel(Span(predicted_span), value=label.value, score=label.score),
+                                )
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
@@ -593,14 +593,14 @@ class TARSClassifier(FewshotClassifier):
     LABEL_NO_MATCH = "NO"
 
     def __init__(
-            self,
-            task_name: Optional[str] = None,
-            label_dictionary: Optional[Dictionary] = None,
-            label_type: Optional[str] = None,
-            embeddings: Union[TransformerDocumentEmbeddings, str] = "bert-base-uncased",
-            num_negative_labels_to_sample: int = 2,
-            prefix: bool = True,
-            **tagger_args,
+        self,
+        task_name: Optional[str] = None,
+        label_dictionary: Optional[Dictionary] = None,
+        label_type: Optional[str] = None,
+        embeddings: Union[TransformerDocumentEmbeddings, str] = "bert-base-uncased",
+        num_negative_labels_to_sample: int = 2,
+        prefix: bool = True,
+        **tagger_args,
     ):
         """
         Initializes a TextClassifier
@@ -736,16 +736,16 @@ class TARSClassifier(FewshotClassifier):
         return self.tars_model.document_embeddings
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size=32,
-            return_probabilities_for_all_classes: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
-            label_threshold: float = 0.5,
-            multi_label: Optional[bool] = None,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size=32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
+        label_threshold: float = 0.5,
+        multi_label: Optional[bool] = None,
     ):
         """
         Predict sequence tags for Named Entity Recognition task
@@ -836,8 +836,8 @@ class TARSClassifier(FewshotClassifier):
                         # add all labels that according to TARS match the text and are above threshold
                         for predicted_tars_label in tars_sentence.get_labels(label_name):
                             if (
-                                    predicted_tars_label.value == self.LABEL_MATCH
-                                    and predicted_tars_label.score > label_threshold
+                                predicted_tars_label.value == self.LABEL_MATCH
+                                and predicted_tars_label.score > label_threshold
                             ):
                                 # do not add labels below confidence threshold
                                 sentence.add_label(label_name, label, predicted_tars_label.score)

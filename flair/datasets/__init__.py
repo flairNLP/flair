@@ -187,6 +187,7 @@ from .sequence_labeling import (
     NER_ICELANDIC,
     NER_JAPANESE,
     NER_MASAKHANE,
+    NER_MULTI_CONER,
     NER_MULTI_WIKIANN,
     NER_MULTI_WIKINER,
     NER_MULTI_XTREME,
@@ -203,7 +204,6 @@ from .sequence_labeling import (
     WNUT_17,
     ColumnCorpus,
     ColumnDataset,
-    NER_MULTI_CONER,
 )
 
 # Expose all text-image datasets

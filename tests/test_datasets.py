@@ -168,8 +168,8 @@ def test_download_load_data(tasks_base_path):
 def _assert_conllu_dataset(dataset):
     sent1 = dataset[0]
 
-    assert [entity.span.text for entity in sent1.get_labels('ner')] == ['Larry Page', 'Sergey Brin', 'Google']
-    assert [entity.value for entity in sent1.get_labels('ner')] == ['PER', 'PER', 'ORG']
+    assert [entity.span.text for entity in sent1.get_labels("ner")] == ["Larry Page", "Sergey Brin", "Google"]
+    assert [entity.value for entity in sent1.get_labels("ner")] == ["PER", "PER", "ORG"]
 
     assert [token.get_tag("upos").value for token in sent1.tokens] == [
         "PROPN",
@@ -227,7 +227,7 @@ def test_load_conllu_corpus(tasks_base_path):
         dev_file="train.conllu",
         test_file="train.conllu",
         in_memory=False,
-        column_format={1: 'text', 2: 'upos', 3: 'ner', 4: 'feats'},
+        column_format={1: "text", 2: "upos", 3: "ner", 4: "feats"},
     )
 
     assert len(corpus.train) == 4
@@ -243,7 +243,7 @@ def test_load_conllu_corpus_in_memory(tasks_base_path):
         train_file="train.conllu",
         dev_file="train.conllu",
         test_file="train.conllu",
-        column_format={1: 'text', 2: 'upos', 3: 'ner', 4: 'feats'},
+        column_format={1: "text", 2: "upos", 3: "ner", 4: "feats"},
         in_memory=True,
     )
 
@@ -260,7 +260,7 @@ def test_load_conllu_plus_corpus(tasks_base_path):
         train_file="train.conllup",
         dev_file="train.conllup",
         test_file="train.conllup",
-        column_format={1: 'text', 2: 'upos', 3: 'ner', 4: 'feats'},
+        column_format={1: "text", 2: "upos", 3: "ner", 4: "feats"},
         in_memory=False,
     )
 
@@ -277,7 +277,7 @@ def test_load_conllu_corpus_plus_in_memory(tasks_base_path):
         train_file="train.conllup",
         dev_file="train.conllup",
         test_file="train.conllup",
-        column_format={1: 'text', 2: 'upos', 3: 'ner', 4: 'feats'},
+        column_format={1: "text", 2: "upos", 3: "ner", 4: "feats"},
         in_memory=True,
     )
 
@@ -337,16 +337,17 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
         train_file="universal_dependencies.conllu",
         dev_file="universal_dependencies.conllu",
         test_file="universal_dependencies.conllu",
-        column_format={1: "text",
-                       2: "lemma",
-                       3: "upos",
-                       4: "pos",
-                       5: "feats",
-                       6: "head",
-                       7: "deprel",
-                       8: "deps",
-                       9: "misc",
-                       },
+        column_format={
+            1: "text",
+            2: "lemma",
+            3: "upos",
+            4: "pos",
+            5: "feats",
+            6: "head",
+            7: "deprel",
+            8: "deps",
+            9: "misc",
+        },
     )
 
     assert len(corpus.train) == 1

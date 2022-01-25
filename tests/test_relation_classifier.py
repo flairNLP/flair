@@ -12,7 +12,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
         train_file="train.conllup",
         dev_file="train.conllup",
         test_file="train.conllup",
-        column_format={1: 'text', 2: 'pos', 3: 'ner'},
+        column_format={1: "text", 2: "pos", 3: "ner"},
     )
 
     relation_label_dict = corpus.make_label_dictionary(label_type="relation")

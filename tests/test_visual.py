@@ -1,6 +1,4 @@
-from unittest.mock import MagicMock
-
-from flair.data import Sentence, Span, Token, SpanLabel
+from flair.data import Sentence, Span, Token
 from flair.embeddings import FlairEmbeddings
 from flair.visual import Highlighter
 from flair.visual.ner_html import HTML_PAGE, PARAGRAPH, TAGGED_ENTITY, render_ner_html
@@ -52,9 +50,9 @@ def test_html_rendering():
     )
     sentence = Sentence(text)
 
-    print(sentence[0:2].add_tag('ner', 'PER'))
-    print(sentence[6:7].add_tag('ner', 'MISC'))
-    print(sentence[19].add_tag('ner', 'LOC'))
+    print(sentence[0:2].add_tag("ner", "PER"))
+    print(sentence[6:7].add_tag("ner", "MISC"))
+    print(sentence[19:20].add_tag("ner", "LOC"))
     colors = {
         "PER": "#F7FF53",
         "ORG": "#E8902E",

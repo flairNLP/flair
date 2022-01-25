@@ -80,7 +80,7 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
             data_folder,
             train_file=train_file_name,
             test_file="semeval2010-task8-test.conllu",
-            column_format={1: 'text', 2: 'ner'},
+            column_format={1: "text", 2: "ner"},
             comment_symbol="# ",
             in_memory=in_memory,
         )
@@ -257,7 +257,7 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
 
         super(RE_ENGLISH_TACRED, self).__init__(
             data_folder,
-            column_format={1: 'text', 2: 'ner'},
+            column_format={1: "text", 2: "ner"},
             comment_symbol="# ",
             in_memory=in_memory,
         )
@@ -383,7 +383,7 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
         super(RE_ENGLISH_CONLL04, self).__init__(
             data_folder,
             in_memory=in_memory,
-            column_format={1: 'text', 2: 'ner'},
+            column_format={1: "text", 2: "ner"},
             comment_symbol="# ",
         )
 
@@ -568,7 +568,7 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
             data_folder,
             in_memory=in_memory,
             sample_missing_splits=False,
-            column_format={1: 'text', 2: 'ner', 3: 'ner'},
+            column_format={1: "text", 2: "ner", 3: "ner"},
             comment_symbol="# ",
         )
 
