@@ -45,6 +45,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         train_initial_hidden_state: bool = False,
         loss_weights: Dict[str, float] = None,
         init_from_state_dict: bool = False,
+        allow_unk_predictions: bool = False,
     ):
         """
         Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
@@ -81,7 +82,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         else:
             # span-labels need special encoding (BIO or BIOES)
             if tag_dictionary.span_labels:
-                self.label_dictionary = Dictionary(add_unk=False)
+                # the big question is whether the label dictionary should contain an UNK or not
+                # without UNK, we cannot evaluate on data that contains labels not seen in test
+                # with UNK, the model learns less well if there are no UNK examples
+                self.label_dictionary = Dictionary(add_unk=allow_unk_predictions)
                 for label in tag_dictionary.get_items():
                     if label == "<unk>":
                         continue
