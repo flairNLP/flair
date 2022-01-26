@@ -8,6 +8,7 @@ from .sequence_tagger_model import MultiTagger, SequenceTagger
 from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier
 from .clustering import ClusteringModel
+from .word_tagger_model import WordTagger
 
 __all__ = [
     "DependencyParser",
@@ -18,6 +19,7 @@ __all__ = [
     "RelationExtractor",
     "MultiTagger",
     "SequenceTagger",
+    "WordTagger",
     "FewshotClassifier",
     "TARSClassifier",
     "TARSTagger",

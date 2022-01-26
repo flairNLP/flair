@@ -1,5 +1,6 @@
 import logging
-from typing import List, Union
+import random
+from typing import List, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -23,8 +24,10 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         self,
         word_embeddings: flair.embeddings.TokenEmbeddings,
         label_dictionary: Dictionary,
-        pooling_operation: str = "average",
+        pooling_operation: str = "first&last",
         label_type: str = "nel",
+        dropout: float = 0.5,
+        skip_unk_probability: Optional[float] = None,
         **classifierargs,
     ):
         """
@@ -42,6 +45,15 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
         self._label_type = label_type
+        self.skip_unk_probability = skip_unk_probability
+        if self.skip_unk_probability:
+            self.known_entities = label_dictionary.get_items()
+
+        # ----- Dropout parameters -----
+        # dropouts
+        self.use_dropout: float = dropout
+        if dropout > 0.0:
+            self.dropout = torch.nn.Dropout(dropout)
 
         # if we concatenate the embeddings we need double input size in our linear layer
         if self.pooling_operation == "first&last":
@@ -113,31 +125,41 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
             embedding_list = []
             # get the embeddings of the entity mentions
             for sentence in filtered_sentences:
-                spans = sentence.get_spans(self.label_type)
+                entities = sentence.get_labels(self.label_type)
 
-                for span in spans:
-                    mention_emb = torch.Tensor(0, self.word_embeddings.embedding_length).to(flair.device)
+                for entity in entities:
 
-                    for token in span.tokens:
+                    if self.skip_unk_probability and self.training and entity.value not in self.known_entities:
+                        sample = random.uniform(0, 1)
+                        if sample < self.skip_unk_probability:
+                            continue
+
+                    span_labels.append([entity.value])
+
+                    if self.pooling_operation == "first&last":
                         mention_emb = torch.cat(
                             (
-                                mention_emb,
-                                token.get_embedding(embedding_names).unsqueeze(0),
+                                entity.span.tokens[0].get_embedding(embedding_names),
+                                entity.span.tokens[-1].get_embedding(embedding_names),
                             ),
                             0,
                         )
-
-                    embedding_list.append(self.aggregated_embedding(mention_emb).unsqueeze(0))
-
-                    span_labels.append([label.value for label in span.get_labels(typename=self.label_type)])
+                    embedding_list.append(mention_emb.unsqueeze(0))
 
                     if return_label_candidates:
                         sentences_to_spans.append(sentence)
-                        candidate = SpanLabel(span=span, value=None, score=0.0)
+                        candidate = SpanLabel(span=entity.span, value=None, score=0.0)
                         empty_label_candidates.append(candidate)
 
-            embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
-            scores = self.decoder(embedding_tensor)
+            if len(embedding_list) > 0:
+                embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
+
+                if self.use_dropout:
+                    embedding_tensor = self.dropout(embedding_tensor)
+
+                scores = self.decoder(embedding_tensor)
+            else:
+                scores = None
 
         if return_label_candidates:
             return scores, span_labels, sentences_to_spans, empty_label_candidates
@@ -151,6 +173,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
             "label_type": self.label_type,
             "label_dictionary": self.label_dictionary,
             "pooling_operation": self.pooling_operation,
+            "loss_weights": self.weight_dict,
         }
         return model_state
 
@@ -161,6 +184,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
             pooling_operation=state["pooling_operation"],
+            loss_weights=state["loss_weights"] if "loss_weights" in state else {"<unk>": 0.3},
         )
 
         model.load_state_dict(state["state_dict"])
