@@ -269,7 +269,7 @@ def test_text_classifier(results_base_path, tasks_base_path):
 
     # check if loaded model successfully fit the training data
     result: Result = loaded_model.evaluate(corpus.test, gold_label_type="city")
-    assert result.classification_report["micro avg"]["f1-score"] == 1.0
+    assert result.classification_report["macro avg"]["f1-score"] == 1.0
 
     del loaded_model
 
@@ -329,7 +329,7 @@ def test_text_classifier_transformer_finetune(results_base_path, tasks_base_path
 
     # check if loaded model successfully fit the training data
     result: Result = loaded_model.evaluate(corpus.test, gold_label_type="city")
-    assert result.classification_report["micro avg"]["f1-score"] == 1.0
+    assert result.classification_report["macro avg"]["f1-score"] == 1.0
 
     del loaded_model
 

@@ -380,6 +380,10 @@ class Classifier(Model[DT], typing.Generic[DT]):
             accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
             macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
 
+            # if there is only one label, then "micro avg" = "macro avg"
+            if len(target_names) == 1:
+                classification_report_dict["micro avg"] = classification_report_dict["macro avg"]
+
             if "micro avg" in classification_report_dict:
                 # micro average is only computed if zero-label exists (for instance "O")
                 precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
