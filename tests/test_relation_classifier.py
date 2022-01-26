@@ -1,5 +1,5 @@
 from flair.data import Sentence
-from flair.datasets.relation_extraction import CoNLLUCorpus
+from flair.datasets import ColumnCorpus
 from flair.embeddings import TransformerWordEmbeddings
 from flair.models import RelationExtractor
 from flair.trainers import ModelTrainer
@@ -7,12 +7,12 @@ from flair.trainers import ModelTrainer
 
 # @pytest.mark.integration
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
-    corpus = CoNLLUCorpus(
+    corpus = ColumnCorpus(
         data_folder=tasks_base_path / "conllu",
         train_file="train.conllup",
         dev_file="train.conllup",
         test_file="train.conllup",
-        token_annotation_fields=["ner"],
+        column_format={1: "text", 2: "pos", 3: "ner"},
     )
 
     relation_label_dict = corpus.make_label_dictionary(label_type="relation")

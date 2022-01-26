@@ -47,6 +47,7 @@ class Dictionary:
         self.idx2item: List[bytes] = []
         self.add_unk = add_unk
         self.multi_label = False
+        self.span_labels = False
         # in order to deal with unknown tokens, add <unk>
         if add_unk:
             self.add_item("<unk>")
@@ -253,11 +254,17 @@ class SpanLabel(Label):
     def spawn(self, value: str, score: float = 1.0):
         return SpanLabel(self.span, value, score)
 
+    def to_dict(self):
+        return {"span": self.span, "value": self.value, "confidence": self.score}
+
     def __str__(self):
         return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
 
     def __repr__(self):
         return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
+
+    def __hash__(self):
+        return hash(self.__repr__())
 
     def __len__(self):
         return len(self.span)
@@ -433,9 +440,9 @@ class Token(DataPoint):
     def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
         self.set_label(tag_type, tag_value, confidence)
 
-    def get_tag(self, label_type):
+    def get_tag(self, label_type, zero_tag_value=""):
         if len(self.get_labels(label_type)) == 0:
-            return Label("")
+            return Label(zero_tag_value)
         return self.get_labels(label_type)[0]
 
     def get_tags_proba_dist(self, tag_type: str) -> List[Label]:
@@ -487,16 +494,17 @@ class Span(DataPoint):
     """
 
     def __init__(self, tokens: List[Token]):
-
         super().__init__()
 
         self.tokens = tokens
-        self.start_pos = None
-        self.end_pos = None
 
-        if tokens:
-            self.start_pos = tokens[0].start_position
-            self.end_pos = tokens[len(tokens) - 1].end_position
+    @property
+    def start_pos(self) -> int:
+        return self.tokens[0].start_position
+
+    @property
+    def end_pos(self) -> int:
+        return self.tokens[-1].end_position
 
     @property
     def text(self) -> str:
@@ -526,14 +534,6 @@ class Span(DataPoint):
             if token.whitespace_after:
                 plain += " "
         return plain.rstrip()
-
-    def to_dict(self):
-        return {
-            "text": self.to_original_text(),
-            "start_pos": self.start_pos,
-            "end_pos": self.end_pos,
-            "labels": self.labels,
-        }
 
     def __str__(self) -> str:
         ids = ",".join([str(t.idx) for t in self.tokens])
@@ -583,6 +583,9 @@ class Span(DataPoint):
 
     def clear_embeddings(self, embedding_names: List[str] = None):
         pass
+
+    def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
+        self.tokens[0].sentence.add_complex_label(tag_type, SpanLabel(self, value=tag_value, score=confidence))
 
 
 class Tokenizer(ABC):
@@ -709,8 +712,7 @@ class Sentence(DataPoint):
             label_names.append(label.value)
         return label_names
 
-    def _add_spans_internal(self, spans: List[Span], label_type: str, min_score):
-
+    def _convert_span_labels(self, label_type: str, min_score=-1):
         current_span: List[Token] = []
 
         tags: Dict[str, float] = defaultdict(lambda: 0.0)
@@ -747,12 +749,11 @@ class Sentence(DataPoint):
                 span_score = sum(scores) / len(scores)
                 if span_score > min_score:
                     span = Span(current_span)
-                    span.add_label(
+                    value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
+                    self.add_complex_label(
                         typename=label_type,
-                        value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
-                        score=span_score,
+                        label=SpanLabel(span=span, value=value, score=span_score),
                     )
-                    spans.append(span)
 
                 current_span = []
                 tags = defaultdict(lambda: 0.0)
@@ -770,33 +771,11 @@ class Sentence(DataPoint):
             span_score = sum(scores) / len(scores)
             if span_score > min_score:
                 span = Span(current_span)
-                span.add_label(
+                value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
+                self.add_complex_label(
                     typename=label_type,
-                    value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
-                    score=span_score,
+                    label=SpanLabel(span=span, value=value, score=span_score),
                 )
-                spans.append(span)
-
-        return spans
-
-    def get_spans(self, label_type: Optional[str] = None, min_score=-1) -> List[Span]:
-
-        spans: List[Span] = []
-
-        # if label type is explicitly specified, get spans for this label type
-        if label_type is not None:
-            return self._add_spans_internal(spans, label_type, min_score)
-
-        # else determine all label types in sentence and get all spans
-        label_types = []
-        for token in self:
-            for annotation in token.annotation_layers.keys():
-                if annotation not in label_types:
-                    label_types.append(annotation)
-
-        for label_type in label_types:
-            self._add_spans_internal(spans, label_type, min_score)
-        return spans
 
     @property
     def embedding(self):
@@ -904,19 +883,6 @@ class Sentence(DataPoint):
                 plain += " "
         return plain.rstrip()
 
-    def convert_tag_scheme(self, tag_type: str = "ner", target_scheme: str = "iob"):
-
-        tags: List[Label] = []
-        for token in self.tokens:
-            tags.append(token.get_tag(tag_type))
-
-        if target_scheme == "iob":
-            iob2(tags)
-
-        if target_scheme == "iobes":
-            iob2(tags)
-            iob_iobes(tags)
-
     def infer_space_after(self):
         """
         Heuristics in case you wish to infer whitespace_after values for tokenized text. This is useful for some old NLP
@@ -966,17 +932,21 @@ class Sentence(DataPoint):
 
     def to_dict(self, tag_type: str = None):
         labels = []
-        entities = []
 
         if tag_type:
-            entities = [span.to_dict() for span in self.get_spans(tag_type)]
+            labels = [label.to_dict() for label in self.get_labels(tag_type)]
+            return {"text": self.to_original_text(), tag_type: labels}
+
         if self.labels:
             labels = [label.to_dict() for label in self.labels]
 
-        return {"text": self.to_original_text(), "labels": labels, "entities": entities}
+        return {"text": self.to_original_text(), "all labels": labels}
 
-    def __getitem__(self, idx: int) -> Token:
-        return self.tokens[idx]
+    def __getitem__(self, subscript: int) -> Union[Token, Span]:
+        if isinstance(subscript, slice):
+            return Span(self.tokens[subscript])
+        else:
+            return self.tokens[subscript]
 
     def __iter__(self):
         return iter(self.tokens)
@@ -1086,16 +1056,25 @@ class Sentence(DataPoint):
 
     def get_labels(self, label_type: str = None):
 
-        # TODO: crude hack - replace with something better
-        if label_type:
-            spans = self.get_spans(label_type)
-            for span in spans:
-                self.add_complex_label(label_type, label=SpanLabel(span, span.tag, span.score))
-
+        # if no label if specified, return all labels
         if label_type is None:
             return self.labels
 
-        return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
+        # if the label type exists in the Sentence, return it
+        if label_type in self.annotation_layers:
+            return self.annotation_layers[label_type]
+
+        # otherwise check if the label exists on the token-level
+        # in this case, create span-labels and return those
+        if label_type in set().union(*(token.annotation_layers.keys() for token in self)):
+            return [
+                SpanLabel(Span([token]), token.get_tag(label_type).value, token.get_tag(label_type).score)
+                for token in self
+                if label_type in token.annotation_layers
+            ]
+
+        # return empty list if none of the above
+        return []
 
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):
@@ -1265,7 +1244,7 @@ class Corpus:
         empty_sentence_indices = []
         non_empty_sentence_indices = []
 
-        for index, sentence in enumerate(_iter_dataset(dataset)):
+        for index, sentence in Tqdm.tqdm(enumerate(_iter_dataset(dataset))):
             if len(sentence.to_plain_string()) > max_charlength:
                 empty_sentence_indices.append(index)
             else:
@@ -1411,12 +1390,13 @@ class Corpus:
             _len_dataset(self.test) if self.test else 0,
         )
 
-    def make_label_dictionary(self, label_type: str) -> Dictionary:
+    def make_label_dictionary(self, label_type: str, min_count: int = -1) -> Dictionary:
         """
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
         """
         label_dictionary: Dictionary = Dictionary(add_unk=True)
+        label_dictionary.span_labels = False
 
         assert self.train
         datasets = [self.train]
@@ -1425,38 +1405,36 @@ class Corpus:
 
         log.info("Computing label dictionary. Progress:")
 
-        # if there are token labels of provided type, use these. Otherwise use sentence labels
-        token_labels_exist = False
-
         all_label_types: typing.Counter[str] = Counter()
+        label_occurrence: typing.Counter[str] = Counter()
         all_sentence_labels: List[str] = []
         for sentence in Tqdm.tqdm(_iter_dataset(data)):
-            # check for labels of words
-            if isinstance(sentence, Sentence):
-                for token in sentence.tokens:
-                    all_label_types.update(token.annotation_layers.keys())
-                    for label in token.get_labels(label_type):
-                        label_dictionary.add_item(label.value)
-                        token_labels_exist = True
 
-            # if we are looking for sentence-level labels
-            if not token_labels_exist:
-                # check if sentence itself has labels
-                labels = sentence.get_labels(label_type)
-                all_label_types.update(sentence.annotation_layers.keys())
+            # check if sentence itself has labels
+            labels = sentence.get_labels(label_type)
+            all_label_types.update(sentence.annotation_layers.keys())
 
-                for label in labels:
-                    if label.value not in all_sentence_labels:
-                        all_sentence_labels.append(label.value)
+            # go through all labels and increment count
+            for label in labels:
+                if label.value not in all_sentence_labels:
+                    label_occurrence[label.value] += 1
 
-                if not label_dictionary.multi_label:
-                    if len(labels) > 1:
-                        label_dictionary.multi_label = True
+                # check if there are any span labels
+                if type(label) == SpanLabel and len(label.span) > 1:
+                    label_dictionary.span_labels = True
 
-        # if this is not a token-level prediction problem, add sentence-level labels to dictionary
-        if not token_labels_exist:
-            for label in all_sentence_labels:
+            if not label_dictionary.multi_label:
+                if len(labels) > 1:
+                    label_dictionary.multi_label = True
+
+        erfasst_count = 0
+        unked_count = 0
+        for label, count in label_occurrence.most_common():
+            if count >= min_count:
                 label_dictionary.add_item(label)
+                erfasst_count += count
+            else:
+                unked_count += count
 
         if len(label_dictionary.idx2item) == 0:
             log.error(
@@ -1469,6 +1447,8 @@ class Corpus:
         log.info(
             f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}"
         )
+        log.info(f"{erfasst_count} instances in dict, {unked_count} instances are UNK'ed")
+        log.info(f"Most commonly observed '{label_type}'-labels are {label_occurrence.most_common(20)}")
         log.info(f"Created (for label '{label_type}') {label_dictionary}")
 
         return label_dictionary

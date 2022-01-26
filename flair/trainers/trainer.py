@@ -443,7 +443,7 @@ class ModelTrainer:
                     train_data,
                     batch_size=mini_batch_size,
                     shuffle=shuffle if epoch > 1 else False,  # never shuffle the first epoch
-                    num_workers=num_workers,
+                    num_workers=0 if num_workers is None else num_workers,
                     sampler=sampler,
                 )
 
