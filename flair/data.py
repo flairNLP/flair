@@ -1091,8 +1091,6 @@ class Sentence(DataPoint):
                 for token in self
                 if label_type in token.annotation_layers
             ]
-            # return [SpanLabel(Span([token]), token.get_tag(label_type, "O").value, token.get_tag(label_type, "O").score)
-            #         for token in self]
 
         # return empty list if none of the above
         return []
