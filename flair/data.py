@@ -1410,13 +1410,6 @@ class Corpus:
         all_sentence_labels: List[str] = []
         for sentence in Tqdm.tqdm(_iter_dataset(data)):
 
-            # check for labels of words
-            # if isinstance(sentence, Sentence):
-            #     for token in sentence.tokens:
-            #         all_label_types.update(token.annotation_layers.keys())
-            #         for label in token.get_labels(label_type):
-            #             label_occurrence[label.value] += 1
-
             # check if sentence itself has labels
             labels = sentence.get_labels(label_type)
             all_label_types.update(sentence.annotation_layers.keys())
