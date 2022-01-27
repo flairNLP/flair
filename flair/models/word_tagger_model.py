@@ -11,18 +11,9 @@ from flair.embeddings import TokenEmbeddings
 log = logging.getLogger("flair")
 
 
-class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
+class WordTagger(flair.nn.DefaultClassifier[Sentence]):
     """
-    This class is a simple version of the SequenceTagger class.
-    The purpose of this class is to demonstrate the basic hierarchy of a
-    sequence tagger (this could be helpful for new developers).
-    It only uses the given embeddings and maps them with a linear layer to
-    the tag_dictionary dimension.
-    Thus, this class misses following functionalities from the SequenceTagger:
-    - CRF,
-    - RNN,
-    - Reprojection.
-    As a result, only poor results can be expected.
+    This is a simple class of models that tags individual words in text.
     """
 
     def __init__(
@@ -33,7 +24,7 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
         **classifierargs,
     ):
         """
-        Initializes a SimpleSequenceTagger
+        Initializes a WordTagger
         :param embeddings: word embeddings used in tagger
         :param tag_dictionary: dictionary of tags you want to predict
         :param tag_type: string identifier for tag type
@@ -65,7 +56,7 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
 
     @staticmethod
     def _init_model_with_state_dict(state):
-        model = SimpleSequenceTagger(
+        model = WordTagger(
             embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
             tag_type=state["tag_type"],
@@ -105,3 +96,17 @@ class SimpleSequenceTagger(flair.nn.DefaultClassifier[Sentence]):
     @property
     def label_type(self):
         return self.tag_type
+
+    def _print_predictions(self, batch, gold_label_type):
+        lines = []
+        for datapoint in batch:
+            # now print labels in CoNLL format
+            for token in datapoint:
+                eval_line = (
+                    f"{token.text} "
+                    f"{token.get_tag(gold_label_type, 'O').value} "
+                    f"{token.get_tag('predicted', 'O').value}\n"
+                )
+                lines.append(eval_line)
+            lines.append("\n")
+        return lines

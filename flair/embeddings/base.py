@@ -174,7 +174,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
         self,
         model: str = "bert-base-uncased",
         fine_tune: bool = True,
-        layers: str = "all",
+        layers: str = "-1",
         layer_mean: bool = True,
         subtoken_pooling: str = "first",
         cls_pooling: str = "cls",
