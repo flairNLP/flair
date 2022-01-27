@@ -3,7 +3,6 @@ import random
 from typing import List, Optional, Union
 
 import torch
-import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
@@ -21,14 +20,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
 
     def __init__(
-        self,
-        word_embeddings: flair.embeddings.TokenEmbeddings,
-        label_dictionary: Dictionary,
-        pooling_operation: str = "first&last",
-        label_type: str = "nel",
-        dropout: float = 0.5,
-        skip_unk_probability: Optional[float] = None,
-        **classifierargs,
+            self,
+            word_embeddings: flair.embeddings.TokenEmbeddings,
+            label_dictionary: Dictionary,
+            pooling_operation: str = "first&last",
+            label_type: str = "nel",
+            dropout: float = 0.5,
+            skip_unk_probability: Optional[float] = None,
+            **classifierargs,
     ):
         """
         Initializes an EntityLinker
@@ -40,7 +39,11 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         :param label_type: name of the label you use.
         """
 
-        super(EntityLinker, self).__init__(label_dictionary, **classifierargs)
+        super(EntityLinker, self).__init__(
+            label_dictionary=label_dictionary,
+            final_embedding_size=word_embeddings.embedding_length * 2 if pooling_operation == "first&last"
+            else word_embeddings.embedding_length,
+            **classifierargs)
 
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
@@ -54,16 +57,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         self.use_dropout: float = dropout
         if dropout > 0.0:
             self.dropout = torch.nn.Dropout(dropout)
-
-        # if we concatenate the embeddings we need double input size in our linear layer
-        if self.pooling_operation == "first&last":
-            self.decoder = nn.Linear(2 * self.word_embeddings.embedding_length, len(self.label_dictionary)).to(
-                flair.device
-            )
-        else:
-            self.decoder = nn.Linear(self.word_embeddings.embedding_length, len(self.label_dictionary)).to(flair.device)
-
-        nn.init.xavier_uniform_(self.decoder.weight)
 
         cases = {
             "average": self.emb_mean,
@@ -92,9 +85,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         return torch.mean(arg, 0)
 
     def forward_pass(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            return_label_candidates: bool = False,
     ):
 
         if not isinstance(sentences, list):
@@ -152,19 +145,18 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                         empty_label_candidates.append(candidate)
 
             if len(embedding_list) > 0:
-                embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
+                logits = torch.cat(embedding_list, 0)
 
                 if self.use_dropout:
-                    embedding_tensor = self.dropout(embedding_tensor)
+                    logits = self.dropout(logits)
 
-                scores = self.decoder(embedding_tensor)
             else:
-                scores = None
+                logits = None
 
         if return_label_candidates:
-            return scores, span_labels, sentences_to_spans, empty_label_candidates
+            return logits, span_labels, sentences_to_spans, empty_label_candidates
 
-        return scores, span_labels
+        return logits, span_labels
 
     def _get_state_dict(self):
         model_state = {

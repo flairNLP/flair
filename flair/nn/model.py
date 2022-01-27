@@ -510,6 +510,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     def __init__(
         self,
         label_dictionary: Dictionary,
+        final_embedding_size: int,
         multi_label: bool = False,
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
@@ -519,6 +520,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
+
+        # initialize the decoder
+        self.decoder = torch.nn.Linear(final_embedding_size, len(self.label_dictionary))
+        torch.nn.init.xavier_uniform_(self.decoder.weight)
 
         # set up multi-label logic
         self.multi_label = multi_label
@@ -557,7 +562,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             self._multi_label_threshold = {"default": x}
 
     def forward_loss(self, sentences: Union[List[DT], DT]) -> Tuple[torch.Tensor, int]:
-        scores, labels = self.forward_pass(sentences)  # type: ignore
+
+        # make a forward pass to produce logits and labels
+        logits, labels = self.forward_pass(sentences)  # type: ignore
+
+        # push logits through decoder to get the scores
+        scores = self.decoder(logits)
+
+        # calculate the loss
         return self._calculate_loss(scores, labels)
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
@@ -661,9 +673,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 if not batch:
                     continue
 
-                scores, gold_labels, data_points, label_candidates = self.forward_pass(
+                logits, gold_labels, data_points, label_candidates = self.forward_pass(
                     batch, return_label_candidates=True  # type: ignore
                 )
+                scores = self.decoder(logits)
+
                 # remove previously predicted labels of this type
                 for sentence in data_points:
                     sentence.remove_labels(label_name)

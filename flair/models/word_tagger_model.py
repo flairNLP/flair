@@ -17,11 +17,11 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
     """
 
     def __init__(
-        self,
-        embeddings: TokenEmbeddings,
-        tag_dictionary: Dictionary,
-        tag_type: str,
-        **classifierargs,
+            self,
+            embeddings: TokenEmbeddings,
+            tag_dictionary: Dictionary,
+            tag_type: str,
+            **classifierargs,
     ):
         """
         Initializes a WordTagger
@@ -30,17 +30,15 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
         :param tag_type: string identifier for tag type
         :param beta: Parameter for F-beta score for evaluation and training annealing
         """
-        super().__init__(label_dictionary=tag_dictionary, **classifierargs)
+        super().__init__(label_dictionary=tag_dictionary,
+                         final_embedding_size=embeddings.embedding_length,
+                         **classifierargs)
 
         # embeddings
         self.embeddings = embeddings
 
         # dictionaries
         self.tag_type: str = tag_type
-        self.tagset_size: int = len(tag_dictionary)
-
-        # linear layer
-        self.linear = torch.nn.Linear(self.embeddings.embedding_length, len(tag_dictionary))
 
         # all parameters will be pushed internally to the specified device
         self.to(flair.device)
@@ -65,9 +63,9 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
         return model
 
     def forward_pass(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            return_label_candidates: bool = False,
     ):
         if not isinstance(sentences, list):
             sentences = [sentences]
@@ -81,17 +79,15 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
 
         all_embeddings = [token.get_embedding(names) for token in all_tokens]
 
-        embedding_tensor = torch.stack(all_embeddings)
-
-        scores = self.linear(embedding_tensor)
+        logits = torch.stack(all_embeddings)
 
         labels = [[token.get_tag(self.label_type).value] for token in all_tokens]
 
         if return_label_candidates:
             empty_label_candidates = [Label(value=None, score=0.0) for token in all_tokens]
-            return scores, labels, all_tokens, empty_label_candidates
+            return logits, labels, all_tokens, empty_label_candidates
 
-        return scores, labels
+        return logits, labels
 
     @property
     def label_type(self):
