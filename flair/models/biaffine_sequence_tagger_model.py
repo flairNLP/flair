@@ -11,15 +11,16 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Label, Sentence, SpanLabel
+from flair.data import DataPoint, Dictionary, Label, Sentence, Span, SpanLabel
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import store_embeddings
 
+from .sequence_tagger_utils.bioes import get_spans_from_bio
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
-from .sequence_tagger_utils.biaffine import Biaffine
+from .sequence_tagger_utils.biaffine import Biaffine, BiaffineDecoder
 
 log = logging.getLogger("flair")
 
@@ -33,6 +34,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             use_rnn: bool = True,
             rnn: Optional[torch.nn.Module] = None,
             rnn_type: str = "LSTM",
+            tag_format: str = "BIOES",
             hidden_size: int = 256,
             ffnn_size: int = 150,
             rnn_layers: int = 1,
@@ -47,6 +49,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             train_initial_hidden_state: bool = False,
             loss_weights: Dict[str, float] = None,
             init_from_state_dict: bool = False,
+            allow_unk_predictions: bool = False,
     ):
         """
         Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
@@ -75,13 +78,42 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
         """
         super(BiaffineTager, self).__init__()
 
-        # ----- Embedding specific parameters -----
+        # ----- Create the internal tag dictionary -----
+        self.tag_type = tag_type
+        self.tag_format = tag_format.upper()
+        if init_from_state_dict:
+            self.label_dictionary = tag_dictionary
+        else:
+            # span-labels need special encoding (BIO or BIOES)
+            if tag_dictionary.span_labels:
+                # the big question is whether the label dictionary should contain an UNK or not
+                # without UNK, we cannot evaluate on data that contains labels not seen in test
+                # with UNK, the model learns less well if there are no UNK examples
+                self.label_dictionary = Dictionary(add_unk=allow_unk_predictions)
+                for label in tag_dictionary.get_items():
+                    if label == "<unk>":
+                        continue
+                    self.label_dictionary.add_item("O")
+                    if tag_format == "BIOES":
+                        self.label_dictionary.add_item("S-" + label)
+                        self.label_dictionary.add_item("B-" + label)
+                        self.label_dictionary.add_item("E-" + label)
+                        self.label_dictionary.add_item("I-" + label)
+                    if tag_format == "BIO":
+                        self.label_dictionary.add_item("B-" + label)
+                        self.label_dictionary.add_item("I-" + label)
+            else:
+                self.label_dictionary = tag_dictionary
+
+        # is this a span prediction problem?
+        self.predict_spans = self._determine_if_span_prediction_problem(self.label_dictionary)
+
+        self.tagset_size = len(self.label_dictionary)
+        log.info(f"SequenceTagger predicts: {self.label_dictionary}")
+
+        # ----- Embeddings -----
         self.embeddings = embeddings
         embedding_dim: int = embeddings.embedding_length
-        self.tag_dictionary = tag_dictionary
-        self.tagset_size = len(tag_dictionary)
-        self.tag_type = tag_type
-        self.label_dictionary = tag_dictionary
 
         # ----- Initial loss weights parameters -----
         self.weight_dict = loss_weights
@@ -98,8 +130,8 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
         self.use_crf = use_crf
         # Previously trained models have been trained without an explicit CRF, thus it is required to check
         # whether we are loading a model from state dict in order to skip or add START and STOP token
-        if use_crf and not init_from_state_dict and not self.tag_dictionary.start_stop_tags_are_set():
-            self.tag_dictionary.set_start_stop_tags()
+        if use_crf and not init_from_state_dict and not self.label_dictionary.start_stop_tags_are_set():
+            self.label_dictionary.set_start_stop_tags()
             self.tagset_size += 2
 
         # ----- Biaffine  parameters-----
@@ -156,21 +188,22 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
                 ) = self._init_initial_hidden_state(num_directions)
 
             # final linear map to tag space
-            self.linear = torch.nn.Linear(hidden_output_dim, len(tag_dictionary))
+            self.linear = torch.nn.Linear(hidden_output_dim, len(self.label_dictionary))
         else:
-            self.linear = torch.nn.Linear(embedding_dim, len(tag_dictionary))
+            self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary))
 
         # ----- CRF / Linear layer -----
         if use_crf:
             self.crf = CRF(
-                self.tag_dictionary,
+                self.label_dictionary,
                 self.tagset_size,
                 init_from_state_dict,
             )
-            self.loss_function = ViterbiLoss(tag_dictionary)
-            self.viterbi_decoder = ViterbiDecoder(tag_dictionary)
+            self.loss_function = ViterbiLoss(self.label_dictionary)
+            self.viterbi_decoder = ViterbiDecoder(self.label_dictionary)
         elif use_biaffine:
             self.biaffine = Biaffine(embedding_dim, ffnn_size, ffnn_dropout, len(tag_dictionary), init_from_state_dict)
+            self.biaffine_decoder = BiaffineDecoder(self.label_dictionary)
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
@@ -213,11 +246,11 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
 
     @staticmethod
     def RNN(
-            rnn_type: str,
-            rnn_layers: int,
-            hidden_size: int,
-            bidirectional: bool,
-            rnn_input_dim: int,
+        rnn_type: str,
+        rnn_layers: int,
+        hidden_size: int,
+        bidirectional: bool,
+        rnn_input_dim: int,
     ) -> torch.nn.Module:
         """
         Static wrapper function returning an RNN instance from PyTorch
@@ -259,8 +292,10 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
         :param sentences: Batch of current sentences
         """
         self.embeddings.embed(sentences)
+
         # make a zero-padded tensor for the whole sentence
         lengths, sentence_tensor = self._make_padded_tensor_for_batch(sentences)
+
         # sort tensor in decreasing order based on lengths of sentences in batch
         lengths = lengths.sort(dim=0, descending=True)
         sentences = [sentences[i] for i in lengths.indices]
@@ -299,7 +334,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             gold_labels = self._get_gold_labels(sentences)
         elif self.use_biaffine:
             candidate = self.biaffine(sentence_tensor)
-            scores, gold_labels = self._get_useful4biaffine(sentences, lengths, candidate)
+            scores, gold_labels = self.biaffine_decoder.get_useful4biaffine(sentences, lengths, candidate)
         else:
             scores = self._get_scores_from_features(features, lengths)
             gold_labels = self._get_gold_labels(sentences)
@@ -334,7 +369,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             self.embeddings.embedding_length * longest_token_sequence_in_batch,
             dtype=torch.float,
             device=flair.device,
-            )
+        )
         all_embs = list()
         for sentence in sentences:
             all_embs += [emb for token in sentence for emb in token.get_each_embedding(names)]
@@ -373,78 +408,37 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
         Extracts gold labels from each sentence.
         :param sentences: List of sentences in batch
         """
-        tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
-        labels = [[[token.get_tag(self.label_type).value] for token in sentence] for sentence in tokens_per_sentence]
-        labels = [token for sentence in labels for token in sentence]
+        # spans need to be encoded as token-level predictions
+        if self.predict_spans:
+            all_sentence_labels = []
+            for sentence in sentences:
+                sentence_labels = ["O"] * len(sentence)
+                for label in sentence.get_labels(self.label_type):
+                    if len(label.span) == 1:
+                        sentence_labels[label.span[0].idx - 1] = "S-" + label.value
+                    else:
+                        sentence_labels[label.span[0].idx - 1] = "B-" + label.value
+                        sentence_labels[label.span[-1].idx - 1] = "E-" + label.value
+                        for i in range(label.span[0].idx, label.span[-1].idx - 1):
+                            sentence_labels[i] = "I-" + label.value
+                all_sentence_labels.extend(sentence_labels)
+            labels = [[label] for label in all_sentence_labels]
+
+        # all others are regular labels for each token
+        else:
+            labels = [[token.get_tag(self.label_type, "O").value] for sentence in sentences for token in sentence]
 
         return labels
 
-    def _get_labels4biaffine(self, sentences: Union[List[DataPoint], DataPoint], lengths: List[int]):
-
-        longest_token_sequence_in_batch: int = max(lengths.values).item()
-
-        all_lables = list()
-        for sentence in sentences:
-            for token in sentence:
-                pre_allocated_zero_tensor = torch.zeros(
-                    1 * longest_token_sequence_in_batch,
-                    dtype=torch.long,
-                    device=flair.device,
-                    )
-                pre_allocated_zero_tensor[token.idx-1] = self.tag_dictionary.get_idx_for_item(token.get_tag('ner').value)
-
-                all_lables.append(pre_allocated_zero_tensor)
-
-            nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
-            if nb_padding_tokens > 0:
-                t = torch.zeros(
-                    nb_padding_tokens , longest_token_sequence_in_batch,
-                    dtype=torch.long,
-                    device=flair.device,
-                ).view(-1)
-                all_lables.append(t)
-
-
-        targe_lable_tensor = torch.cat(all_lables).view(
-            [
-                -1,
-                longest_token_sequence_in_batch,
-                longest_token_sequence_in_batch,
-            ]
-        )
-
-        return targe_lable_tensor
-
-    def _get_useful4biaffine(self, sentences, lengths, candidate):
-
-        targe_lable_tensor = self._get_labels4biaffine(sentences, lengths)
-
-        # generate mask
-        lengths = lengths.values
-        longest_token_sequence_in_batch = max(lengths)
-        mask = [[1] * lengths[i] + [0] * (longest_token_sequence_in_batch - lengths[i]) for i in range(len(lengths))]
-        mask = torch.tensor(mask)
-        mask = mask.unsqueeze(1).expand(-1, mask.shape[-1], -1)
-        mask = torch.triu(mask)
-        mask = mask.reshape(-1)
-
-        tmp_candidate = candidate.reshape(-1, candidate.shape[-1])
-        tmp_label = targe_lable_tensor.reshape(-1)
-        indices = mask.nonzero(as_tuple=False).squeeze(-1).long().to(flair.device)
-        scores = tmp_candidate.index_select(0, indices)
-        labels = tmp_label.index_select(0, indices)
-
-        return scores, labels
-
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size: int = 32,
-            return_probabilities_for_all_classes: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size: int = 32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
     ):
         """
         Predicts labels for current batch with CRF or Softmax.
@@ -516,6 +510,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
                 lengths = lengths.sort(dim=0, descending=True)
                 batch = [batch[i] for i in lengths.indices]
 
+                # make predictions
                 if self.use_crf:
                     predictions, all_tags = self.viterbi_decoder.decode(features, return_probabilities_for_all_classes)
                 elif self.use_biaffine:
@@ -525,9 +520,24 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
                         features, batch, return_probabilities_for_all_classes
                     )
 
-                for sentence, labels in zip(batch, predictions):
-                    for token, label in zip(sentence.tokens, labels):
-                        token.add_tag_label(label_name, label)
+                # add predictions to Sentence
+                for sentence, sentence_predictions in zip(batch, predictions):
+
+                    # BIOES-labels need to be converted to spans
+                    if self.predict_spans:
+                        sentence_tags = [label.value for label in sentence_predictions]
+                        sentence_scores = [label.score for label in sentence_predictions]
+                        predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
+                        for predicted_span in predicted_spans:
+                            span = Span(sentence[predicted_span[0][0] : predicted_span[0][-1] + 1])
+                            sentence.add_complex_label(
+                                typename=label_name,
+                                label=SpanLabel(span=span, value=predicted_span[2], score=predicted_span[1]),
+                            )
+                    # token-labels can be added directly
+                    else:
+                        for token, label in zip(sentence.tokens, sentence_predictions):
+                            token.add_tag_label(label_name, label)
 
                 # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
                 for (sentence, sent_all_tags) in zip(batch, all_tags):
@@ -556,7 +566,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             predictions_for_sentence = prediction_batch[: len(sentence)]
             predictions.append(
                 [
-                    Label(self.tag_dictionary.get_item_for_index(prediction), score.item())
+                    Label(self.label_dictionary.get_item_for_index(prediction), score.item())
                     for token, score, prediction in zip(sentence, scores, predictions_for_sentence)
                 ]
             )
@@ -577,7 +587,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
         scores = scores.numpy()
         prob_all_tags = [
             [
-                Label(self.tag_dictionary.get_item_for_index(score_id), score)
+                Label(self.label_dictionary.get_item_for_index(score_id), score)
                 for score_id, score in enumerate(score_dist)
             ]
             for score_dist in scores
@@ -597,7 +607,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             "embeddings": self.embeddings,
             "hidden_size": self.hidden_size,
             "ffnn_size": self.ffnn_size,
-            "tag_dictionary": self.tag_dictionary,
+            "tag_dictionary": self.label_dictionary,
             "tag_type": self.tag_type,
             "use_crf": self.use_crf,
             "use_biaffine": self.use_biaffine,
@@ -654,15 +664,21 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
 
     # @staticmethod
     # def _fetch_model(model_name) -> str:
-
-
-
+    #
+    #
+    #
     # @staticmethod
     # def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
     #     filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
     #     if len(sentences) != len(filtered_sentences):
     #         log.warning(f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens.")
     #     return filtered_sentences
+
+    def _determine_if_span_prediction_problem(self, dictionary: Dictionary) -> bool:
+        for item in dictionary.get_items():
+            if item.startswith("B-") or item.startswith("S-") or item.startswith("I-"):
+                return True
+        return False
 
     def _print_predictions(self, batch, gold_label_type):
         lines = []

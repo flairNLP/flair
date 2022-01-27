@@ -1,6 +1,7 @@
 import torch
 import flair
-
+from flair.data import Dictionary, DataPoint
+from typing import List, Union
 class Biaffine(torch.nn.Module):
 
     def __init__(self, embedding_dim: int, ffnn_size: int, ffnn_dropout: int, tag_dictionary_lenght: int, init_from_state_dict: bool):
@@ -40,6 +41,14 @@ class Biaffine(torch.nn.Module):
 
         return candidate
 
+
+
+class BiaffineDecoder:
+
+    def __init__(self, tag_dictionary: Dictionary):
+
+        self.label_dictionary = tag_dictionary
+
     def decode(self, sentences, span_scores, is_flat_ner):
         candidates = []
         for sid,sent in enumerate(sentences):
@@ -69,3 +78,53 @@ class Biaffine(torch.nn.Module):
         pred_mentions = set((sid,s,e,t) for sid, spr in enumerate(sent_pred_mentions) for s,e,t in spr)
 
         return pred_mentions
+
+    def get_labels4biaffine(self, sentences: Union[List[DataPoint], DataPoint], lengths: List[int]):
+
+        longest_token_sequence_in_batch: int = max(lengths.values).item()
+
+        all_lables = list()
+        for sentence in sentences:
+            pre_allocated_zero_tensor = torch.zeros(
+                1 * longest_token_sequence_in_batch,
+                1 * longest_token_sequence_in_batch,
+                dtype=torch.long,
+                device=flair.device,
+                )
+            for label in sentence.get_labels("ner"):
+                span_beging = label.span[0].idx
+                span_end = label.span[-1].idx
+                pre_allocated_zero_tensor[span_beging-1][span_end-1] = self.label_dictionary.get_idx_for_item(label.value)
+
+            all_lables.append(pre_allocated_zero_tensor)
+
+        targe_lable_tensor = torch.cat(all_lables).view(
+            [
+                -1,
+                longest_token_sequence_in_batch,
+                longest_token_sequence_in_batch,
+            ]
+        )
+
+        return targe_lable_tensor
+
+    def get_useful4biaffine(self, sentences, lengths, candidate):
+
+        targe_lable_tensor = self.get_labels4biaffine(sentences, lengths)
+
+        # generate mask
+        lengths = lengths.values
+        longest_token_sequence_in_batch = max(lengths)
+        mask = [[1] * lengths[i] + [0] * (longest_token_sequence_in_batch - lengths[i]) for i in range(len(lengths))]
+        mask = torch.tensor(mask)
+        mask = mask.unsqueeze(1).expand(-1, mask.shape[-1], -1)
+        mask = torch.triu(mask)
+        mask = mask.reshape(-1)
+
+        tmp_candidate = candidate.reshape(-1, candidate.shape[-1])
+        tmp_label = targe_lable_tensor.reshape(-1)
+        indices = mask.nonzero(as_tuple=False).squeeze(-1).long().to(flair.device)
+        scores = tmp_candidate.index_select(0, indices)
+        labels = tmp_label.index_select(0, indices)
+
+        return scores, labels
