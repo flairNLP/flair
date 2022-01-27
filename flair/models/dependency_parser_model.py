@@ -300,8 +300,8 @@ class DependencyParser(flair.nn.Model):
                 lines.append("\n")
 
             for sentence in batch:
-                gold_tags = [token.get_tag(gold_label_type).value for token in sentence.tokens]
-                predicted_tags = [tag.tag for tag in sentence.get_spans("predicted")]
+                gold_tags = [token.get_tag(gold_label_type).value for token in sentence]
+                predicted_tags = [token.get_tag("predicted").value for token in sentence]
 
                 y_pred += [self.relations_dictionary.get_idx_for_item(tag) for tag in predicted_tags]
                 y_true += [self.relations_dictionary.get_idx_for_item(tag) for tag in gold_tags]

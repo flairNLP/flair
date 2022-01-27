@@ -140,6 +140,7 @@ def test_train_load_use_tagger_disjunct_tags(results_base_path, tasks_base_path)
         tag_dictionary=tag_dictionary,
         tag_type="ner",
         use_crf=False,
+        allow_unk_predictions=True,
     )
 
     # initialize trainer
@@ -280,6 +281,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
         tag_dictionary=tag_dictionary,
         tag_type="ner",
         use_crf=False,
+        allow_unk_predictions=True,
     )
 
     # initialize trainer
