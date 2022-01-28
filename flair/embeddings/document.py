@@ -73,6 +73,9 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
+        if isinstance(embeddings, TokenEmbeddings):
+            embeddings = [embeddings]
+
         self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
         self.__embedding_length = self.embeddings.embedding_length
 
