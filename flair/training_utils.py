@@ -5,7 +5,7 @@ from enum import Enum
 from functools import reduce
 from math import inf
 from pathlib import Path
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Optional, Union
 
 from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -365,9 +365,9 @@ def add_file_handler(log, output_file):
     return fh
 
 
-def store_embeddings(data_points: Union[List[DataPoint], Dataset],
-                     storage_mode: str,
-                     dynamic_embeddings: Optional[List[str]] = None):
+def store_embeddings(
+    data_points: Union[List[DataPoint], Dataset], storage_mode: str, dynamic_embeddings: Optional[List[str]] = None
+):
 
     if isinstance(data_points, Dataset):
         data_points = list(_iter_dataset(data_points))

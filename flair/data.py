@@ -297,10 +297,10 @@ class RelationLabel(Label):
 
     def __eq__(self, other):
         return (
-                self.value == other.value
-                and self.score == other.score
-                and self.head.id_text == other.head.id_text
-                and self.tail.id_text == other.tail.id_text
+            self.value == other.value
+            and self.score == other.score
+            and self.head.id_text == other.head.id_text
+            and self.tail.id_text == other.tail.id_text
         )
 
     @property
@@ -415,12 +415,12 @@ class Token(DataPoint):
     """
 
     def __init__(
-            self,
-            text: str,
-            idx: int = None,
-            head_id: int = None,
-            whitespace_after: bool = True,
-            start_position: int = None,
+        self,
+        text: str,
+        idx: int = None,
+        head_id: int = None,
+        whitespace_after: bool = True,
+        start_position: int = None,
     ):
         super().__init__()
 
@@ -602,11 +602,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-            self,
-            text: Union[str, List[str]] = [],
-            use_tokenizer: Union[bool, Tokenizer, Callable] = True,
-            language_code: str = None,
-            start_position: int = None,
+        self,
+        text: Union[str, List[str]] = [],
+        use_tokenizer: Union[bool, Tokenizer, Callable] = True,
+        language_code: str = None,
+        start_position: int = None,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -634,11 +634,13 @@ class Sentence(DataPoint):
 
         elif callable(use_tokenizer):
             from flair.tokenization import TokenizerWrapper
+
             tokenizer = TokenizerWrapper(use_tokenizer)
 
         elif type(use_tokenizer) == bool:
 
             from flair.tokenization import SegtokTokenizer, SpaceTokenizer
+
             tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
 
         else:
@@ -669,7 +671,7 @@ class Sentence(DataPoint):
         self._position_in_dataset: Optional[typing.Tuple[Dataset, int]] = None
 
     def get_span(self, from_id: int, to_id: int) -> Span:
-        return self.tokens[from_id:to_id + 1]
+        return self.tokens[from_id : to_id + 1]
 
     def get_token(self, token_id: int) -> Optional[Token]:
         for token in self.tokens:
@@ -1118,12 +1120,12 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-            self,
-            train: Dataset = None,
-            dev: Dataset = None,
-            test: Dataset = None,
-            name: str = "corpus",
-            sample_missing_splits: Union[bool, str] = True,
+        self,
+        train: Dataset = None,
+        dev: Dataset = None,
+        test: Dataset = None,
+        name: str = "corpus",
+        sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1162,11 +1164,11 @@ class Corpus:
         return self._test
 
     def downsample(
-            self,
-            percentage: float = 0.1,
-            downsample_train=True,
-            downsample_dev=True,
-            downsample_test=True,
+        self,
+        percentage: float = 0.1,
+        downsample_train=True,
+        downsample_dev=True,
+        downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:

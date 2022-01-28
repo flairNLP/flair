@@ -34,9 +34,10 @@ from flair.training_utils import (
     AnnealOnPlateau,
     WeightExtractor,
     add_file_handler,
+    identify_dynamic_embeddings,
     init_output_file,
     log_line,
-    store_embeddings, identify_dynamic_embeddings,
+    store_embeddings,
 )
 
 log = logging.getLogger("flair")

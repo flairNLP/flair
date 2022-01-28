@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
