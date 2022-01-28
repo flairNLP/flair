@@ -763,10 +763,6 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
-                    # only clone if optimization mode is 'gpu'
-                    if flair.embedding_storage_mode == "gpu":
-                        embedding = embedding.clone()
-
                     token.set_embedding(self.name, embedding)
 
             del all_hidden_states_in_lm

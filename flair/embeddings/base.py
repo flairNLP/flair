@@ -21,7 +21,7 @@ from transformers import (
     TransfoXLModel,
     XLNetModel,
 )
-from transformers.tokenization_utils_base import TruncationStrategy, LARGE_INTEGER
+from transformers.tokenization_utils_base import LARGE_INTEGER, TruncationStrategy
 
 import flair
 from flair.data import DT, Sentence, Token
@@ -169,7 +169,6 @@ class ScalarMix(torch.nn.Module):
 
 
 class TransformerEmbedding(Embeddings[Sentence]):
-
     def __init__(
         self,
         model: str = "bert-base-uncased",
