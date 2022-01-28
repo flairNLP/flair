@@ -342,7 +342,6 @@ class LanguageModelTrainer:
                             total_loss = torch.zeros(1, device=flair.device)
                             start_time = time.time()
 
-
                     ##########################################################
                     self.model.eval()
 

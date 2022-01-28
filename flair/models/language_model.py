@@ -42,7 +42,9 @@ class LanguageModel(nn.Module):
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(len(dictionary), embedding_size)
 
-        self.rnn = create_recurrent_layer(recurrent_type, embedding_size, hidden_size, nlayers, dropout)
+        self.rnn, self.state_count = create_recurrent_layer(
+            recurrent_type, embedding_size, hidden_size, nlayers, dropout
+        )
         self.recurrent_type = recurrent_type
         self.hidden = None
 
@@ -76,7 +78,11 @@ class LanguageModel(nn.Module):
         if hasattr(self.rnn, "flatten_parameters"):
             self.rnn.flatten_parameters()
 
-        output, hidden = self.rnn(emb, hidden)
+        if len(hidden) == 1:
+            output, h = self.rnn(emb, hidden[0])
+            hidden = (h,)
+        else:
+            output, hidden = self.rnn(emb, hidden)
 
         if self.proj is not None:
             output = self.proj(output)
@@ -93,9 +99,9 @@ class LanguageModel(nn.Module):
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).detach()
-        w1 = weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach()
-        w2 = weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach()
-        return w1, w2
+        return tuple(
+            weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach() for _ in range(self.state_count)
+        )
 
     def get_representation(
         self,
@@ -435,6 +441,8 @@ class LanguageModel(nn.Module):
         else:
             if "recurrent_type" not in d:
                 d["recurrent_type"] = "lstm"
+            if "state_count" not in d:
+                d["state_count"] = 2
             super().__setstate__(d)
 
     def _apply(self, fn):
