@@ -297,10 +297,10 @@ class RelationLabel(Label):
 
     def __eq__(self, other):
         return (
-            self.value == other.value
-            and self.score == other.score
-            and self.head.id_text == other.head.id_text
-            and self.tail.id_text == other.tail.id_text
+                self.value == other.value
+                and self.score == other.score
+                and self.head.id_text == other.head.id_text
+                and self.tail.id_text == other.tail.id_text
         )
 
     @property
@@ -325,9 +325,33 @@ class DataPoint:
     def embedding(self):
         pass
 
-    @abstractmethod
+    def set_embedding(self, name: str, vector: torch.Tensor):
+        self._embeddings[name] = vector
+
+    def get_embedding(self, names: Optional[List[str]] = None) -> torch.Tensor:
+        embeddings = self.get_each_embedding(names)
+
+        if embeddings:
+            return torch.cat(embeddings, dim=0)
+
+        return torch.tensor([], device=flair.device)
+
+    def get_each_embedding(self, embedding_names: Optional[List[str]] = None) -> List[torch.Tensor]:
+        embeddings = []
+        for embed_name in sorted(self._embeddings.keys()):
+            if embedding_names and embed_name not in embedding_names:
+                continue
+            embed = self._embeddings[embed_name].to(flair.device)
+            embeddings.append(embed)
+        return embeddings
+
     def to(self, device: str, pin_memory: bool = False):
-        pass
+        for name, vector in self._embeddings.items():
+            if str(vector.device) != str(device):
+                if pin_memory:
+                    self._embeddings[name] = vector.to(device, non_blocking=True).pin_memory()
+                else:
+                    self._embeddings[name] = vector.to(device, non_blocking=True)
 
     def clear_embeddings(self, embedding_names: List[str] = None):
         if embedding_names is None:
@@ -379,25 +403,6 @@ class DataPoint:
             all_labels.extend(self.annotation_layers[key])
         return all_labels
 
-    def get_embedding(self, names: Optional[List[str]] = None) -> torch.Tensor:
-        embeddings = self.get_each_embedding(names)
-
-        if embeddings:
-            return torch.cat(embeddings, dim=0)
-
-        return torch.tensor([], device=flair.device)
-
-    def get_each_embedding(self, embedding_names: Optional[List[str]] = None) -> List[torch.Tensor]:
-        embeddings = []
-        for embed_name in sorted(self._embeddings.keys()):
-            if embedding_names and embed_name not in embedding_names:
-                continue
-            embed = self._embeddings[embed_name].to(flair.device)
-            if (flair.embedding_storage_mode == "cpu") and embed.device != flair.device:
-                embed = embed.to(flair.device)
-            embeddings.append(embed)
-        return embeddings
-
 
 DT = typing.TypeVar("DT", bound=DataPoint)
 DT2 = typing.TypeVar("DT2", bound=DataPoint)
@@ -410,12 +415,12 @@ class Token(DataPoint):
     """
 
     def __init__(
-        self,
-        text: str,
-        idx: int = None,
-        head_id: int = None,
-        whitespace_after: bool = True,
-        start_position: int = None,
+            self,
+            text: str,
+            idx: int = None,
+            head_id: int = None,
+            whitespace_after: bool = True,
+            start_position: int = None,
     ):
         super().__init__()
 
@@ -452,22 +457,6 @@ class Token(DataPoint):
 
     def get_head(self):
         return self.sentence.get_token(self.head_id)
-
-    def set_embedding(self, name: str, vector: torch.Tensor):
-        device = flair.device
-        if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
-            device = next(iter(self._embeddings.values())).device
-        if device != vector.device:
-            vector = vector.to(device)
-        self._embeddings[name] = vector
-
-    def to(self, device: str, pin_memory: bool = False):
-        for name, vector in self._embeddings.items():
-            if str(vector.device) != str(device):
-                if pin_memory:
-                    self._embeddings[name] = vector.to(device, non_blocking=True).pin_memory()
-                else:
-                    self._embeddings[name] = vector.to(device, non_blocking=True)
 
     @property
     def start_position(self) -> Optional[int]:
@@ -613,11 +602,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-        self,
-        text: Union[str, List[str]] = [],
-        use_tokenizer: Union[bool, Tokenizer, Callable] = True,
-        language_code: str = None,
-        start_position: int = None,
+            self,
+            text: Union[str, List[str]] = [],
+            use_tokenizer: Union[bool, Tokenizer, Callable] = True,
+            language_code: str = None,
+            start_position: int = None,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -634,23 +623,24 @@ class Sentence(DataPoint):
 
         self.tokens: List[Token] = []
 
-        self._embeddings: Dict = {}
-
         self.language_code: Optional[str] = language_code
 
         self.start_pos = start_position
         self.end_pos = start_position + len(text) if start_position is not None else None
 
+        # the tokenizer used for this sentence
         if isinstance(use_tokenizer, Tokenizer):
             tokenizer = use_tokenizer
+
         elif callable(use_tokenizer):
             from flair.tokenization import TokenizerWrapper
-
             tokenizer = TokenizerWrapper(use_tokenizer)
-        elif type(use_tokenizer) == bool:
-            from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 
+        elif type(use_tokenizer) == bool:
+
+            from flair.tokenization import SegtokTokenizer, SpaceTokenizer
             tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
+
         else:
             raise AssertionError(
                 "Unexpected type of parameter 'use_tokenizer'. "
@@ -673,10 +663,13 @@ class Sentence(DataPoint):
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
+        # internal variables to denote position inside dataset
         self._previous_sentence: Optional[Sentence] = None
         self._next_sentence: Optional[Sentence] = None
-
         self._position_in_dataset: Optional[typing.Tuple[Dataset, int]] = None
+
+    def get_span(self, from_id: int, to_id: int) -> Span:
+        return self.tokens[from_id:to_id + 1]
 
     def get_token(self, token_id: int) -> Optional[Token]:
         for token in self.tokens:
@@ -781,25 +774,12 @@ class Sentence(DataPoint):
     def embedding(self):
         return self.get_embedding()
 
-    def set_embedding(self, name: str, vector: torch.Tensor):
-        device = flair.device
-        if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
-            device = next(iter(self._embeddings.values())).device
-        if device != vector.device:
-            vector = vector.to(device)
-        self._embeddings[name] = vector
-
     def to(self, device: str, pin_memory: bool = False):
 
         # move sentence embeddings to device
-        for name, vector in self._embeddings.items():
-            if str(vector.device) != str(device):
-                if pin_memory:
-                    self._embeddings[name] = vector.to(device, non_blocking=True).pin_memory()
-                else:
-                    self._embeddings[name] = vector.to(device, non_blocking=True)
+        super().to(device=device, pin_memory=pin_memory)
 
-        # move token embeddings to device
+        # also move token embeddings to device
         for token in self:
             token.to(device, pin_memory)
 
@@ -1124,27 +1104,10 @@ class Image(DataPoint):
         return self.get_embedding()
 
     def __str__(self):
-
         image_repr = self.data.size() if self.data else ""
         image_url = self.imageURL if self.imageURL else ""
 
         return f"Image: {image_repr} {image_url}"
-
-    def set_embedding(self, name: str, vector: torch.Tensor):
-        device = flair.device
-        if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
-            device = next(iter(self._embeddings.values())).device
-        if device != vector.device:
-            vector = vector.to(device)
-        self._embeddings[name] = vector
-
-    def to(self, device: str, pin_memory: bool = False):
-        for name, vector in self._embeddings.items():
-            if str(vector.device) != str(device):
-                if pin_memory:
-                    self._embeddings[name] = vector.to(device, non_blocking=True).pin_memory()
-                else:
-                    self._embeddings[name] = vector.to(device, non_blocking=True)
 
 
 class FlairDataset(Dataset):
@@ -1155,12 +1118,12 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-        self,
-        train: Dataset = None,
-        dev: Dataset = None,
-        test: Dataset = None,
-        name: str = "corpus",
-        sample_missing_splits: Union[bool, str] = True,
+            self,
+            train: Dataset = None,
+            dev: Dataset = None,
+            test: Dataset = None,
+            name: str = "corpus",
+            sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1199,11 +1162,11 @@ class Corpus:
         return self._test
 
     def downsample(
-        self,
-        percentage: float = 0.1,
-        downsample_train=True,
-        downsample_dev=True,
-        downsample_test=True,
+            self,
+            percentage: float = 0.1,
+            downsample_train=True,
+            downsample_dev=True,
+            downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:

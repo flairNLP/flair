@@ -39,9 +39,12 @@ class TokenEmbeddings(Embeddings[Sentence]):
 class StackedEmbeddings(TokenEmbeddings):
     """A stack of embeddings, used if you need to combine several different embedding types."""
 
-    def __init__(self, embeddings: List[TokenEmbeddings]):
+    def __init__(self, embeddings: Union[TokenEmbeddings, List[TokenEmbeddings]]):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
+
+        if isinstance(embeddings, TokenEmbeddings):
+            embeddings = [embeddings]
 
         self.embeddings = embeddings
 
@@ -762,10 +765,6 @@ class FlairEmbeddings(TokenEmbeddings):
                         offset_backward -= 1
 
                     offset_backward -= len(token.text)
-
-                    # only clone if optimization mode is 'gpu'
-                    if flair.embedding_storage_mode == "gpu":
-                        embedding = embedding.clone()
 
                     token.set_embedding(self.name, embedding)
 

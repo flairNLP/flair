@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union
+from typing import List, Union, Optional
 
 import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -61,7 +61,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbedding):
 class DocumentPoolEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
-        embeddings: List[TokenEmbeddings],
+        embeddings: Union[TokenEmbeddings, List[TokenEmbeddings]],
         fine_tune_mode: str = "none",
         pooling: str = "mean",
     ):
