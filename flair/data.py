@@ -673,9 +673,6 @@ class Sentence(DataPoint):
         self._next_sentence: Optional[Sentence] = None
         self._position_in_dataset: Optional[typing.Tuple[Dataset, int]] = None
 
-    def get_span(self, from_id: int, to_id: int) -> Span:
-        return self.tokens[from_id : to_id + 1]
-
     def get_token(self, token_id: int) -> Optional[Token]:
         for token in self.tokens:
             if token.idx == token_id:
@@ -927,7 +924,15 @@ class Sentence(DataPoint):
 
         return {"text": self.to_original_text(), "all labels": labels}
 
-    def __getitem__(self, subscript: Union[int, slice]) -> Union[Token, Span]:
+    @typing.overload
+    def __getitem__(self, idx: int) -> Token:
+        ...
+
+    @typing.overload
+    def __getitem__(self, s: slice) -> Span:
+        ...
+
+    def __getitem__(self, subscript):
         if isinstance(subscript, slice):
             return Span(self.tokens[subscript])
         else:
