@@ -362,6 +362,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if nb_padding_tokens > 0:
                 t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
+
         sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
