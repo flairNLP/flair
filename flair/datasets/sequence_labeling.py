@@ -415,8 +415,8 @@ class ColumnDataset(FlairDataset):
                         re.split(self.column_delimiter, line.rstrip())[span_column] for line in filtered_lines
                     ]
                     predicted_spans = get_spans_from_bio(bioes_tags)
-                    for (start_idx, end_idx), score, label in predicted_spans:
-                        span = sentence[start_idx : end_idx + 1]
+                    for span_indices, score, label in predicted_spans:
+                        span = sentence[span_indices[0] : span_indices[-1] + 1]
                         value = self._remap_label(label)
                         sentence.add_complex_label(
                             typename=span_level_tag_columns[span_column],
