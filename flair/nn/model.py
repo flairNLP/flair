@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DT, Dictionary, Label, Sentence, _iter_dataset
+from flair.data import DT, Dictionary, Label, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.file_utils import Tqdm
 from flair.training_utils import Result, store_embeddings
@@ -642,7 +642,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 return sentences
 
             if len(sentences) > mini_batch_size:
-                batches = DataLoader(
+                batches: Union[DataLoader, List[List[DT]]] = DataLoader(
                     dataset=FlairDatapointDataset(reordered_sentences),
                     batch_size=mini_batch_size,
                 )

@@ -388,7 +388,7 @@ class ColumnDataset(FlairDataset):
     ):
 
         sentence: Sentence = Sentence()
-        token = None
+        token: Optional[Token] = None
         filtered_lines = []
         comments = []
         for line in lines:
@@ -400,7 +400,7 @@ class ColumnDataset(FlairDataset):
             filtered_lines.append(line)
 
             # otherwise, this line is a token. parse and add to sentence
-            token: Token = self._parse_token(line, word_level_tag_columns, token)
+            token = self._parse_token(line, word_level_tag_columns, token)
             sentence.add_token(token)
 
         # check if this sentence is a document boundary
@@ -415,14 +415,14 @@ class ColumnDataset(FlairDataset):
                         re.split(self.column_delimiter, line.rstrip())[span_column] for line in filtered_lines
                     ]
                     predicted_spans = get_spans_from_bio(bioes_tags)
-                    for predicted_span in predicted_spans:
-                        span = Span(sentence[predicted_span[0][0] : predicted_span[0][-1] + 1])
-                        value = self._remap_label(predicted_span[2])
+                    for (start_idx, end_idx), score, label in predicted_spans:
+                        span = sentence[start_idx : end_idx + 1]
+                        value = self._remap_label(label)
                         sentence.add_complex_label(
                             typename=span_level_tag_columns[span_column],
-                            label=SpanLabel(span=span, value=value, score=predicted_span[1]),
+                            label=SpanLabel(span=span, value=value, score=score),
                         )
-                except:
+                except Exception:
                     pass
                     # log.warning(f"--\nUnparseable sentence: {''.join(lines)}--\n")
 
@@ -452,7 +452,7 @@ class ColumnDataset(FlairDataset):
         fields: List[str] = re.split(self.column_delimiter, line.rstrip())
 
         # get head_id if exists (only in dependency parses)
-        head_id = fields[self.head_id_column] if self.head_id_column else None
+        head_id = int(fields[self.head_id_column]) if self.head_id_column else None
 
         # initialize token
         token = Token(fields[self.text_column], head_id=head_id, whitespace_after=self.default_whitespace_after)

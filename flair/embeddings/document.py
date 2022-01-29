@@ -270,7 +270,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: Union[List[Sentence], Sentence]):
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
         only if embeddings are non-static."""
 
@@ -279,9 +279,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             self.locked_dropout = None
         if not hasattr(self, "word_dropout"):
             self.word_dropout = None
-
-        if type(sentences) is Sentence:
-            sentences = [sentences]
 
         self.rnn.zero_grad()
 
@@ -593,7 +590,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: Union[List[Sentence], Sentence]):
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
         only if embeddings are non-static."""
 
@@ -602,9 +599,6 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
             self.locked_dropout = None
         if not hasattr(self, "word_dropout"):
             self.word_dropout = None
-
-        if type(sentences) is Sentence:
-            sentences = [sentences]
 
         self.zero_grad()  # is it necessary?
 

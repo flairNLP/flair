@@ -500,10 +500,12 @@ class Span(DataPoint):
 
     @property
     def start_pos(self) -> int:
+        assert self.tokens[0].start_position is not None
         return self.tokens[0].start_position
 
     @property
     def end_pos(self) -> int:
+        assert self.tokens[-1].end_position is not None
         return self.tokens[-1].end_position
 
     @property
@@ -585,6 +587,7 @@ class Span(DataPoint):
         pass
 
     def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
+        assert self.tokens[0].sentence is not None
         self.tokens[0].sentence.add_complex_label(tag_type, SpanLabel(self, value=tag_value, score=confidence))
 
 
@@ -942,7 +945,7 @@ class Sentence(DataPoint):
 
         return {"text": self.to_original_text(), "all labels": labels}
 
-    def __getitem__(self, subscript: int) -> Union[Token, Span]:
+    def __getitem__(self, subscript: Union[int, slice]) -> Union[Token, Span]:
         if isinstance(subscript, slice):
             return Span(self.tokens[subscript])
         else:
