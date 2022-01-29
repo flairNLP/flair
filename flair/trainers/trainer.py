@@ -518,9 +518,6 @@ class ModelTrainer:
 
                     seen_batches += 1
 
-                    # depending on memory mode, embeddings are moved to CPU, GPU
-                    # or deleted
-
                     batch_time += time.time() - start_time
                     if seen_batches % modulo == 0:
                         momentum_info = f" - momentum: {momentum:.4f}" if cycle_momentum else ""
