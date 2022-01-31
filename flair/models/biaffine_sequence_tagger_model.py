@@ -530,9 +530,12 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
 
                     # BIOES-labels need to be converted to spans
                     if self.predict_spans:
-                        sentence_tags = [label.value for label in sentence_predictions]
-                        sentence_scores = [label.score for label in sentence_predictions]
-                        predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
+                        if self.use_biaffine:
+                            predicted_spans = sentence_predictions
+                        else:
+                            sentence_tags = [label.value for label in sentence_predictions]
+                            sentence_scores = [label.score for label in sentence_predictions]
+                            predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
                         for predicted_span in predicted_spans:
                             span = Span(sentence[predicted_span[0][0] : predicted_span[0][-1] + 1])
                             sentence.add_complex_label(
