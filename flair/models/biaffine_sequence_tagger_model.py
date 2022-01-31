@@ -46,6 +46,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             word_dropout: float = 0.05,
             locked_dropout: float = 0.5,
             ffnn_dropout: float = 0.2,
+            is_flat_ner: bool = False,
             train_initial_hidden_state: bool = False,
             loss_weights: Dict[str, float] = None,
             init_from_state_dict: bool = False,
@@ -81,7 +82,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
         # ----- Create the internal tag dictionary -----
         self.tag_type = tag_type
         self.tag_format = tag_format.upper()
-        if init_from_state_dict:
+        if init_from_state_dict or use_biaffine:
             self.label_dictionary = tag_dictionary
         else:
             # span-labels need special encoding (BIO or BIOES)
@@ -136,9 +137,11 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
 
         # ----- Biaffine  parameters-----
         self.use_biaffine = use_biaffine
+        self.ffnn_size = ffnn_size
+        self.ffnn_dropout = ffnn_dropout
+        self.is_flat_ner = is_flat_ner
         if use_biaffine:
-            self.ffnn_size = ffnn_size
-            self.ffnn_dropout = ffnn_dropout
+            self.predict_spans = True
 
         # ----- Dropout parameters -----
         # dropouts
@@ -514,7 +517,9 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
                 if self.use_crf:
                     predictions, all_tags = self.viterbi_decoder.decode(features, return_probabilities_for_all_classes)
                 elif self.use_biaffine:
-                    print(123)
+                    predictions, all_tags = self.biaffine_decoder.decode(
+                        features, batch, self.is_flat_ner, return_probabilities_for_all_classes,
+                    )
                 else:
                     predictions, all_tags = self._standard_inference(
                         features, batch, return_probabilities_for_all_classes
@@ -617,6 +622,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             "use_word_dropout": self.use_word_dropout,
             "use_locked_dropout": self.use_locked_dropout,
             "ffnn_dropout": self.ffnn_dropout,
+            "is_flat_ner": self.is_flat_ner,
             "rnn_type": self.rnn_type,
             "reproject_embeddings": self.reproject_embeddings,
             "weight_dict": self.weight_dict,
@@ -649,10 +655,11 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             rnn_layers=state["rnn_layers"],
             hidden_size=state["hidden_size"],
             ffnn_size=state["ffnn_size"],
-            ffnn_dropout=state["ffnn_dropout"],
             dropout=use_dropout,
             word_dropout=use_word_dropout,
             locked_dropout=use_locked_dropout,
+            ffnn_dropout=state["ffnn_dropout"],
+            is_flat_ner=state["is_ner_flat"],
             rnn_type=rnn_type,
             reproject_embeddings=reproject_embeddings,
             loss_weights=weights,

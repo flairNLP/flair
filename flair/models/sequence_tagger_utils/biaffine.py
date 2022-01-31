@@ -49,24 +49,25 @@ class BiaffineDecoder:
 
         self.label_dictionary = tag_dictionary
 
-    def decode(self, sentences, span_scores, is_flat_ner):
+    def decode(self, features, batch, is_flat_ner, return_probabilities_for_all_classes):
+        all_tags = []
         candidates = []
-        for sid,sent in enumerate(sentences):
+        for sid,sent in enumerate(batch):
             for s in range(len(sent)):
                 for e in range(s,len(sent)):
                     candidates.append((sid,s,e))
 
-        top_spans = [[] for _ in range(len(sentences))]
-        for i, ner in enumerate(span_scores.argmax(axis=1)):
+        top_spans = [[] for _ in range(len(batch))]
+        for i, ner in enumerate(features.argmax(axis=1)):
             if ner > 0:
                 sid, s,e = candidates[i]
-                top_spans[sid].append((s,e,ner,span_scores[i,ner]))
+                top_spans[sid].append((s, e, ner, features[i, ner]))
 
         top_spans = [sorted(top_span,reverse=True,key=lambda x:x[3]) for top_span in top_spans]
-        sent_pred_mentions = [[] for _ in range(len(sentences))]
+        sent_pred_mentions = [[] for _ in range(len(batch))]
         for sid, top_span in enumerate(top_spans):
-            for ns,ne,t,_ in top_span:
-                for ts,te,_ in sent_pred_mentions[sid]:
+            for ns, ne, tag, score in top_span:
+                for ts, te, _, _ in sent_pred_mentions[sid]:
                     if ns < ts <= ne < te or ts < ns <= te < ne:
                         #for both nested and flat ner no clash is allowed
                         break
@@ -74,10 +75,19 @@ class BiaffineDecoder:
                         #for flat ner nested mentions are not allowed
                         break
                 else:
-                    sent_pred_mentions[sid].append((ns,ne,t))
-        pred_mentions = set((sid,s,e,t) for sid, spr in enumerate(sent_pred_mentions) for s,e,t in spr)
+                    sent_pred_mentions[sid].append((ns, ne, tag, score))
 
-        return pred_mentions
+        predictions = []
+        for spr in sent_pred_mentions:
+            spans = []
+            for ns, ne, ner, score in spr:
+                if ns < ne:
+                    spans.append(([ns+1, ne+1], score.item(), self.label_dictionary.get_item_for_index(ner.item())))
+                else:
+                    spans.append(([ns+1], score.item(), self.label_dictionary.get_item_for_index(ner.item())))
+            predictions.append(spans)
+
+        return predictions, all_tags
 
     def get_labels4biaffine(self, sentences: Union[List[DataPoint], DataPoint], lengths: List[int]):
 
