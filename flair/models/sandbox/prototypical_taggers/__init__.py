@@ -1,2 +1,1 @@
-from .prototypical_sequence_tagger import PrototypicalSequenceTagger
 from .learned_prototypes_tagger import LearnedPrototypesTagger

@@ -19,7 +19,9 @@ Source: https://github.com/asappresearch/dynamic-classification/blob/55beb5a4840
 
 from .euclidean import EuclideanDistance, EuclideanMean
 from .hyperbolic import HyperbolicDistance, HyperbolicMean
-from .cosine import CosineDistance, LogitCosineDistance
-from .euclidean import EuclideanMean as CosineMean
+from .cosine import CosineDistance, LogitCosineDistance, NegativeScaledDotProduct
 
-__all__ = ['EuclideanDistance', 'EuclideanMean', 'HyperbolicDistance', 'HyperbolicMean', 'CosineDistance', 'LogitCosineDistance', 'CosineMean']
+__all__ = [
+    'EuclideanDistance', 'EuclideanMean',
+    'HyperbolicDistance', 'HyperbolicMean',
+    'CosineDistance', 'LogitCosineDistance', 'NegativeScaledDotProduct']

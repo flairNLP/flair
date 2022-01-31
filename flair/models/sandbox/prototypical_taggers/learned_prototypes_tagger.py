@@ -10,7 +10,7 @@ from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import TokenEmbeddings
 from flair.nn import Classifier
 from flair.training_utils import store_embeddings
-from .distance import EuclideanDistance, HyperbolicDistance, CosineDistance, LogitCosineDistance
+from .distance import EuclideanDistance, HyperbolicDistance, CosineDistance, LogitCosineDistance, NegativeScaledDotProduct
 
 
 class LearnedPrototypesTagger(Classifier):
@@ -89,6 +89,8 @@ class LearnedPrototypesTagger(Classifier):
             self.distance = LogitCosineDistance()
         elif distance_function.lower() == 'euclidean':
             self.distance = EuclideanDistance()
+        elif distance_function.lower() == 'dot_product':
+            self.distance_function = NegativeScaledDotProduct()
         else:
             raise KeyError(f'Distance function {distance_function} not found.')
 
@@ -99,7 +101,7 @@ class LearnedPrototypesTagger(Classifier):
 
     def calculate_prototypes(self, dataset: FlairDataset, mini_batch_size=32):
         """
-        Function that calclues a prototype for each class based on the average embedding over the whole dataset
+        Function that calclues a prototype for each class based on the euclidean average embedding over the whole dataset
         :param dataset: dataset for which to calculate prototypes
         :param mini_batch_size: number of sentences to embed at same time
         :return:
