@@ -515,6 +515,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         multi_label: bool = False,
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
+        decoder: Optional[torch.nn.Module] = None,
     ):
 
         super().__init__()
@@ -522,9 +523,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
 
-        # initialize the decoder
-        self.decoder = torch.nn.Linear(final_embedding_size, len(self.label_dictionary))
-        torch.nn.init.xavier_uniform_(self.decoder.weight)
+        if decoder is not None:
+            self.decoder = decoder
+            self._custom_decoder = True
+        else:
+            # initialize the decoder
+            self.decoder = torch.nn.Linear(final_embedding_size, len(self.label_dictionary))
+            torch.nn.init.xavier_uniform_(self.decoder.weight)
+            self._custom_decoder = False
 
         # set up multi-label logic
         self.multi_label = multi_label
@@ -742,3 +748,20 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             + f"  (weights): {self.weight_dict}\n"
             + f"  (weight_tensor) {self.loss_weights}\n)"
         )
+
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        if 'decoder' not in kwargs and 'decoder' in state:
+            kwargs['decoder'] = state['decoder']
+
+        return super(Classifier, cls)._init_model_with_state_dict(
+            state, **kwargs
+        )
+
+    def _get_state_dict(self):
+        model_state = super()._get_state_dict()
+
+        if self._custom_decoder:
+            state_dict['decoder'] = self.decoder
+
+        return model_state
