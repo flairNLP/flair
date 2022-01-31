@@ -4,20 +4,20 @@ from flair.data import Dictionary, DataPoint
 from typing import List, Union
 class Biaffine(torch.nn.Module):
 
-    def __init__(self, embedding_dim: int, ffnn_size: int, ffnn_dropout: int, tag_dictionary_lenght: int, init_from_state_dict: bool):
+    def __init__(self, ffnn_input_size: int, ffnn_output_size: int, ffnn_dropout: int, tag_dictionary_lenght: int, init_from_state_dict: bool):
         super(Biaffine, self).__init__()
 
         self.ffnn_start = torch.nn.Sequential(
-            torch.nn.Linear(embedding_dim, ffnn_size),
+            torch.nn.Linear(ffnn_input_size, ffnn_output_size),
             torch.nn.ReLU(),
             torch.nn.Dropout(ffnn_dropout))
 
         self.ffnn_end = torch.nn.Sequential(
-            torch.nn.Linear(embedding_dim, ffnn_size),
+            torch.nn.Linear(ffnn_input_size, ffnn_output_size),
             torch.nn.ReLU(),
             torch.nn.Dropout(ffnn_dropout))
 
-        self.weight = torch.nn.Parameter(torch.Tensor(tag_dictionary_lenght, ffnn_size + 1, ffnn_size + 1))
+        self.weight = torch.nn.Parameter(torch.Tensor(tag_dictionary_lenght, ffnn_output_size + 1, ffnn_output_size + 1))
         if not init_from_state_dict:
             torch.nn.init.zeros_(self.weight)
 

@@ -36,7 +36,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             rnn_type: str = "LSTM",
             tag_format: str = "BIOES",
             hidden_size: int = 256,
-            ffnn_size: int = 150,
+            ffnn_output_size: int = 150,
             rnn_layers: int = 1,
             bidirectional: bool = True,
             use_crf: bool = True,
@@ -137,7 +137,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
 
         # ----- Biaffine  parameters-----
         self.use_biaffine = use_biaffine
-        self.ffnn_size = ffnn_size
+        self.ffnn_size = ffnn_output_size
         self.ffnn_dropout = ffnn_dropout
         self.is_flat_ner = is_flat_ner
         if use_biaffine:
@@ -192,8 +192,10 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
 
             # final linear map to tag space
             self.linear = torch.nn.Linear(hidden_output_dim, len(self.label_dictionary))
+            ffnn_input_size = hidden_output_dim
         else:
             self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary))
+            ffnn_input_size = embedding_dim
 
         # ----- CRF / Linear layer -----
         if use_crf:
@@ -205,7 +207,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             self.loss_function = ViterbiLoss(self.label_dictionary)
             self.viterbi_decoder = ViterbiDecoder(self.label_dictionary)
         elif use_biaffine:
-            self.biaffine = Biaffine(embedding_dim, ffnn_size, ffnn_dropout, len(tag_dictionary), init_from_state_dict)
+            self.biaffine = Biaffine(ffnn_input_size, ffnn_output_size, ffnn_dropout, len(tag_dictionary), init_from_state_dict)
             self.biaffine_decoder = BiaffineDecoder(self.label_dictionary)
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
         else:
@@ -657,12 +659,12 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             use_rnn=state["use_rnn"],
             rnn_layers=state["rnn_layers"],
             hidden_size=state["hidden_size"],
-            ffnn_size=state["ffnn_size"],
+            ffnn_output_size=state["ffnn_size"],
             dropout=use_dropout,
             word_dropout=use_word_dropout,
             locked_dropout=use_locked_dropout,
             ffnn_dropout=state["ffnn_dropout"],
-            is_flat_ner=state["is_ner_flat"],
+            is_flat_ner=state["is_flat_ner"],
             rnn_type=rnn_type,
             reproject_embeddings=reproject_embeddings,
             loss_weights=weights,
