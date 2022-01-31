@@ -44,23 +44,23 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
         self.to(flair.device)
 
     def _get_state_dict(self):
-        model_state = {
-            "state_dict": self.state_dict(),
+        model_state = super()._get_state_dict()
+
+        model_state.update({
             "embeddings": self.embeddings,
             "tag_dictionary": self.label_dictionary,
             "tag_type": self.tag_type,
-        }
+        })
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
-        model = WordTagger(
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        return super(DefaultClassifier, cls)._init_model_with_state_dict(
+            state,
             embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
             tag_type=state["tag_type"],
         )
-        model.load_state_dict(state["state_dict"])
-        return model
 
     def forward_pass(
             self,

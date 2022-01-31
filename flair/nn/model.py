@@ -62,20 +62,21 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         """
         raise NotImplementedError
 
-    @abstractmethod
     def _get_state_dict(self):
-        """Returns the state dictionary for this model.
-        Implementing this enables the save() and save_checkpoint()
-        functionality."""
-        raise NotImplementedError
+        """Returns the state dictionary for this model."""
+        state_dict = {"state_dict": self.state_dict()}
 
-    @staticmethod
-    @abstractmethod
-    def _init_model_with_state_dict(state):
-        """Initialize the model from a state dictionary.
-        Implementing this enables the load() and load_checkpoint()
-        functionality."""
-        raise NotImplementedError
+        return state_dict
+
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        """Initialize the model from a state dictionary."""
+        model = cls(
+            **kwargs
+        )
+
+        model.load_state_dict(state["state_dict"])
+        return model
 
     @staticmethod
     def _fetch_model(model_name) -> str:
