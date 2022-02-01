@@ -140,8 +140,10 @@ class PrototypicalDecoder(torch.nn.Module):
 
         decoder = self
 
-        def patched_train( mode: bool = True):
-            super(encoder.__class__, encoder).train(mode=mode)
+        unpatched_train = encoder.train
+
+        def patched_train(mode: bool = True):
+            unpatched_train(mode=mode)
             if mode:
                 logger.info("recalculating prototypes")
                 with torch.no_grad():
