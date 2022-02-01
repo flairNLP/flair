@@ -55,6 +55,7 @@ from .token import (
     StackedEmbeddings,
     TokenEmbeddings,
     TransformerWordEmbeddings,
+    GazetteerEmbeddings,
     WordEmbeddings,
 )
 
@@ -101,5 +102,6 @@ __all__ = [
     "StackedEmbeddings",
     "TokenEmbeddings",
     "TransformerWordEmbeddings",
+    "GazetteerEmbeddings",
     "WordEmbeddings",
 ]

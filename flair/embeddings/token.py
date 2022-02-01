@@ -107,12 +107,12 @@ class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
     def __init__(
-        self,
-        embeddings: str,
-        field: str = None,
-        fine_tune: bool = False,
-        force_cpu: bool = True,
-        stable: bool = False,
+            self,
+            embeddings: str,
+            field: str = None,
+            fine_tune: bool = False,
+            force_cpu: bool = True,
+            stable: bool = False,
     ):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
@@ -365,10 +365,10 @@ class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
     def __init__(
-        self,
-        path_to_char_dict: str = None,
-        char_embedding_dim: int = 25,
-        hidden_size_char: int = 25,
+            self,
+            path_to_char_dict: str = None,
+            char_embedding_dim: int = 25,
+            hidden_size_char: int = 25,
     ):
         """Uses the default character dictionary if none provided."""
 
@@ -464,13 +464,13 @@ class FlairEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
     def __init__(
-        self,
-        model,
-        fine_tune: bool = False,
-        chars_per_chunk: int = 512,
-        with_whitespace: bool = True,
-        tokenized_lm: bool = True,
-        is_lower: bool = False,
+            self,
+            model,
+            fine_tune: bool = False,
+            chars_per_chunk: int = 512,
+            with_whitespace: bool = True,
+            tokenized_lm: bool = True,
+            is_lower: bool = False,
     ):
         """
         initializes contextual string embeddings using a character-level language model.
@@ -775,11 +775,11 @@ class FlairEmbeddings(TokenEmbeddings):
 
 class PooledFlairEmbeddings(TokenEmbeddings):
     def __init__(
-        self,
-        contextual_embeddings: Union[str, FlairEmbeddings],
-        pooling: str = "min",
-        only_capitalized: bool = False,
-        **kwargs,
+            self,
+            contextual_embeddings: Union[str, FlairEmbeddings],
+            pooling: str = "min",
+            only_capitalized: bool = False,
+            **kwargs,
     ):
 
         super().__init__()
@@ -880,13 +880,27 @@ class PooledFlairEmbeddings(TokenEmbeddings):
                 self.word_embeddings[key] = self.word_embeddings[key].cpu()
 
 
+class GazetteerEmbeddings(TokenEmbeddings):
+    def __init__(self, gazetteers: List, full_mathing: bool = True, partial_matching: bool = True):
+        super().__init__()
+
+        self.gazetteer_list = gazetteers
+
+        self.matching_methods = []
+
+        if full_mathing:
+            self.matching_methods.append('full_match')
+        if partial_matching:
+            self.matching_methods.append('partial_match')
+
+
 class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbedding):
     def __init__(
-        self,
-        model: str = "bert-base-uncased",
-        is_document_embedding: bool = False,
-        allow_long_sentences: bool = True,
-        **kwargs,
+            self,
+            model: str = "bert-base-uncased",
+            is_document_embedding: bool = False,
+            allow_long_sentences: bool = True,
+            **kwargs,
     ):
         """
         Bidirectional transformer embeddings of words from various transformer architectures.
@@ -994,11 +1008,11 @@ class OneHotEmbeddings(TokenEmbeddings):
     """One-hot encoded embeddings."""
 
     def __init__(
-        self,
-        vocab_dictionary: Dictionary,
-        field: str = "text",
-        embedding_length: int = 300,
-        stable: bool = False,
+            self,
+            vocab_dictionary: Dictionary,
+            field: str = "text",
+            embedding_length: int = 300,
+            stable: bool = False,
     ):
         """
         Initializes one-hot encoded word embeddings and a trainable embedding layer
@@ -1133,7 +1147,7 @@ class HashEmbeddings(TokenEmbeddings):
 
 class MuseCrosslingualEmbeddings(TokenEmbeddings):
     def __init__(
-        self,
+            self,
     ):
         self.name: str = "muse-crosslingual"
         self.static_embeddings = True
@@ -1259,14 +1273,14 @@ class BPEmbSerializable(BPEmb):
 
 class BytePairEmbeddings(TokenEmbeddings):
     def __init__(
-        self,
-        language: str = None,
-        dim: int = 50,
-        syllables: int = 100000,
-        cache_dir=None,
-        model_file_path: Path = None,
-        embedding_file_path: Path = None,
-        **kwargs,
+            self,
+            language: str = None,
+            dim: int = 50,
+            syllables: int = 100000,
+            cache_dir=None,
+            model_file_path: Path = None,
+            embedding_file_path: Path = None,
+            **kwargs,
     ):
         """
         Initializes BP embeddings. Constructor downloads required files if not there.
@@ -1279,7 +1293,7 @@ class BytePairEmbeddings(TokenEmbeddings):
             self.name: str = f"bpe-{language}-{syllables}-{dim}"
         else:
             assert (
-                model_file_path is not None and embedding_file_path is not None
+                    model_file_path is not None and embedding_file_path is not None
             ), "Need to specify model_file_path and embedding_file_path if no language is given in BytePairEmbeddings(...)"
             dim = None  # type: ignore
 
@@ -1339,11 +1353,11 @@ class ELMoEmbeddings(TokenEmbeddings):
     Default is to concatene the top 3 layers in the LM."""
 
     def __init__(
-        self,
-        model: str = "original",
-        options_file: str = None,
-        weight_file: str = None,
-        embedding_mode: str = "all",
+            self,
+            model: str = "original",
+            options_file: str = None,
+            weight_file: str = None,
+            embedding_mode: str = "all",
     ):
         super().__init__()
 
