@@ -759,9 +759,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         )
 
     def _get_state_dict(self):
-        model_state = super()._get_state_dict()
+        state = super()._get_state_dict()
 
         if self._custom_decoder:
-            state_dict['decoder'] = self.decoder
+            state['decoder'] = self.decoder
 
-        return model_state
+        return state
