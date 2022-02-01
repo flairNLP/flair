@@ -328,7 +328,8 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             sentence_tensor = self.locked_dropout(sentence_tensor)
 
         # linear map to tag space
-        features = self.linear(sentence_tensor)
+        if not self.use_biaffine:
+            features = self.linear(sentence_tensor)
 
         # Depending on whether we are using CRF or a linear layer, scores is either:
         # -- A tensor of shape (batch size, sequence length, tagset size, tagset size) for CRF
@@ -339,7 +340,8 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             gold_labels = self._get_gold_labels(sentences)
         elif self.use_biaffine:
             candidate = self.biaffine(sentence_tensor)
-            scores, gold_labels = self.biaffine_decoder.get_useful4biaffine(sentences, lengths, candidate)
+            gold_labels = self.biaffine_decoder.get_labels4biaffine(sentences)
+            scores = self.biaffine_decoder.get_useful4biaffine(lengths, candidate)
         else:
             scores = self._get_scores_from_features(features, lengths)
             gold_labels = self._get_gold_labels(sentences)
@@ -352,17 +354,17 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
         if not any(labels):
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
-        if not self.use_biaffine:
-            labels = torch.tensor(
-                [
-                    self.label_dictionary.get_idx_for_item(label[0])
-                    if len(label) > 0
-                    else self.label_dictionary.get_idx_for_item("O")
-                    for label in labels
-                ],
-                dtype=torch.long,
-                device=flair.device,
-            )
+
+        labels = torch.tensor(
+            [
+                self.label_dictionary.get_idx_for_item(label[0])
+                if len(label) > 0
+                else self.label_dictionary.get_idx_for_item("O")
+                for label in labels
+            ],
+            dtype=torch.long,
+            device=flair.device,
+        )
 
         return self.loss_function(scores, labels), len(labels)
 

@@ -89,38 +89,18 @@ class BiaffineDecoder:
 
         return predictions, all_tags
 
-    def get_labels4biaffine(self, sentences: Union[List[DataPoint], DataPoint], lengths: List[int]):
+    def get_labels4biaffine(self, sentences: Union[List[DataPoint], DataPoint]):
 
-        longest_token_sequence_in_batch: int = max(lengths.values).item()
-
-        all_lables = list()
+        gold_labels = []
         for sentence in sentences:
-            pre_allocated_zero_tensor = torch.zeros(
-                1 * longest_token_sequence_in_batch,
-                1 * longest_token_sequence_in_batch,
-                dtype=torch.long,
-                device=flair.device,
-                )
-            for label in sentence.get_labels("ner"):
-                span_beging = label.span[0].idx
-                span_end = label.span[-1].idx
-                pre_allocated_zero_tensor[span_beging-1][span_end-1] = self.label_dictionary.get_idx_for_item(label.value)
+            ner = {(label.span[0].idx-1, label.span[0].idx-1):label.value for label in sentence.get_labels("ner")}
+            for s in range(0, len(sentence)):
+                for e in range(s,len(sentence)):
+                    gold_labels.append([ner.get((s,e),"0")])
 
-            all_lables.append(pre_allocated_zero_tensor)
+        return gold_labels
 
-        targe_lable_tensor = torch.cat(all_lables).view(
-            [
-                -1,
-                longest_token_sequence_in_batch,
-                longest_token_sequence_in_batch,
-            ]
-        )
-
-        return targe_lable_tensor
-
-    def get_useful4biaffine(self, sentences, lengths, candidate):
-
-        targe_lable_tensor = self.get_labels4biaffine(sentences, lengths)
+    def get_useful4biaffine(self, lengths, candidate):
 
         # generate mask
         lengths = lengths.values
@@ -132,9 +112,7 @@ class BiaffineDecoder:
         mask = mask.reshape(-1)
 
         tmp_candidate = candidate.reshape(-1, candidate.shape[-1])
-        tmp_label = targe_lable_tensor.reshape(-1)
         indices = mask.nonzero(as_tuple=False).squeeze(-1).long().to(flair.device)
         scores = tmp_candidate.index_select(0, indices)
-        labels = tmp_label.index_select(0, indices)
 
-        return scores, labels
+        return scores
