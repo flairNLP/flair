@@ -8,9 +8,19 @@ from typing import Dict, List, Optional, Union
 from torch.utils.data import ConcatDataset, Dataset
 
 import flair
-from flair.data import Corpus, FlairDataset, MultiCorpus, Sentence, Token
+from flair.data import (
+    Corpus,
+    FlairDataset,
+    MultiCorpus,
+    RelationLabel,
+    Sentence,
+    Span,
+    SpanLabel,
+    Token,
+)
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file
+from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
 
 log = logging.getLogger("flair")
 
@@ -140,6 +150,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
         dev_file=None,
         autofind_splits: bool = True,
         name: Optional[str] = None,
+        comment_symbol="# ",
         **corpusargs,
     ):
         """
@@ -171,6 +182,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
             train_files=[train_file] if train_file else [],
             test_files=[test_file] if test_file else [],
             name=name if data_folder is None else str(data_folder),
+            comment_symbol=comment_symbol,
             **corpusargs,
         )
 
@@ -178,6 +190,10 @@ class ColumnCorpus(MultiFileColumnCorpus):
 class ColumnDataset(FlairDataset):
     # special key for space after
     SPACE_AFTER_KEY = "space-after"
+    # special key for feature columns
+    FEATS = ["feats", "misc"]
+    # special key for dependency head id
+    HEAD = ["head", "head_id"]
 
     def __init__(
         self,
@@ -213,7 +229,6 @@ class ColumnDataset(FlairDataset):
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
         self.tag_to_bioes = tag_to_bioes
-        self.column_name_map = column_name_map
         self.column_delimiter = column_delimiter
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
@@ -228,65 +243,131 @@ class ColumnDataset(FlairDataset):
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
         self.text_column: int = 0
-        for column in self.column_name_map:
+        self.head_id_column: Optional[int] = None
+        for column in column_name_map:
             if column_name_map[column] == "text":
                 self.text_column = column
+            if column_name_map[column] in self.HEAD:
+                self.head_id_column = column
 
         # determine encoding of text file
         self.encoding = encoding
 
+        # identify which columns are spans and which are word-level
+        self._identify_span_columns(column_name_map, skip_first_line)
+
+        # now load all sentences
         with open(str(self.path_to_column_file), encoding=self.encoding) as file:
 
             # skip first line if to selected
             if skip_first_line:
                 file.readline()
 
-            # option 1: read only sentence boundaries as offset positions
-            if not self.in_memory:
-                self.indices: List[int] = []
-
-                line = file.readline()
-                position = 0
-                sentence_started = False
-                while line:
-                    if sentence_started and self.__line_completes_sentence(line):
-                        self.indices.append(position)
-                        position = file.tell()
-                        sentence_started = False
-
-                    elif not line.isspace():
-                        sentence_started = True
-                    line = file.readline()
-
-                if sentence_started:
-                    self.indices.append(position)
-
-                self.total_sentence_count = len(self.indices)
-
-            # option 2: keep everything in memory
+            # option 1: keep Sentence objects in memory
             if self.in_memory:
                 self.sentences: List[Sentence] = []
 
                 # pointer to previous
                 previous_sentence = None
                 while True:
-                    sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
+                    # parse next sentence
+                    sentence = self._convert_lines_to_sentence(
+                        self._read_next_sentence(file),
+                        word_level_tag_columns=self.word_level_tag_columns,
+                        span_level_tag_columns=self.span_level_tag_columns,
+                    )
+                    # quit if last sentence reached
                     if not sentence:
                         break
+
+                    # skip banned sentences
                     if self.banned_sentences is not None and any(
                         [d in sentence.to_plain_string() for d in self.banned_sentences]
                     ):
                         continue
+
+                    # set previous and next sentence for context
                     sentence._previous_sentence = previous_sentence
                     sentence._next_sentence = None
-
                     if previous_sentence:
                         previous_sentence._next_sentence = sentence
 
+                    # append parsed sentence to list in memory
                     self.sentences.append(sentence)
+
                     previous_sentence = sentence
 
                 self.total_sentence_count = len(self.sentences)
+
+            # option 2: keep source data in memory
+            if not self.in_memory:
+                self.sentences_raw: List[List[str]] = []
+
+                while True:
+
+                    # read lines for next sentence, but don't parse
+                    sentence_raw = self._read_next_sentence(file)
+
+                    # quit if last sentence reached
+                    if not sentence_raw:
+                        break
+
+                    # append raw lines for each sentence
+                    self.sentences_raw.append(sentence_raw)
+
+                self.total_sentence_count = len(self.sentences_raw)
+
+    def _identify_span_columns(self, column_name_map, skip_first_line):
+        # we make a distinction between word-level tags and span-level tags
+        self.span_level_tag_columns = {}
+        self.word_level_tag_columns = {self.text_column: "text"}
+        # read first sentence to determine which columns are span-labels
+        with open(str(self.path_to_column_file), encoding=self.encoding) as file:
+
+            # skip first line if to selected
+            if skip_first_line:
+                file.readline()
+
+            sentence_1 = self._convert_lines_to_sentence(
+                self._read_next_sentence(file), word_level_tag_columns=column_name_map
+            )
+            # sentence_2 = self._convert_lines_to_sentence(self._read_next_sentence(file),
+            #                                              word_level_tag_columns=column_name_map)
+
+            for sentence in [sentence_1]:
+                # go through all annotations
+                for column in column_name_map:
+                    if column == self.text_column or column == self.head_id_column:
+                        continue
+
+                    layer = column_name_map[column]
+
+                    # the space after key is always word-levels
+                    if column_name_map[column] == self.SPACE_AFTER_KEY:
+                        self.word_level_tag_columns[column] = layer
+                        continue
+
+                    if layer in self.FEATS:
+                        self.word_level_tag_columns[column] = layer
+                        continue
+
+                    for token in sentence:
+                        if token.get_tag(layer, "O").value != "O" and token.get_tag(layer).value[0:2] not in [
+                            "B-",
+                            "I-",
+                            "E-",
+                            "S-",
+                        ]:
+                            self.word_level_tag_columns[column] = layer
+                            break
+                    if column not in self.word_level_tag_columns:
+                        self.span_level_tag_columns[column] = layer
+
+            for column in self.span_level_tag_columns:
+                log.info(f"Column {column} ({self.span_level_tag_columns[column]}) is a span-level column.")
+
+            # for column in self.word_level_tag_columns:
+            #     log.info(f"Column {column} ({self.word_level_tag_columns[column]}) is a word-level column.")
 
     def _read_next_sentence(self, file):
         lines = []
@@ -302,63 +383,113 @@ class ColumnDataset(FlairDataset):
             line = file.readline()
         return lines
 
-    def _convert_lines_to_sentence(self, lines):
+    def _convert_lines_to_sentence(
+        self, lines, word_level_tag_columns: Dict[int, str], span_level_tag_columns: Optional[Dict[int, str]] = None
+    ):
 
         sentence: Sentence = Sentence()
         token = None
+        filtered_lines = []
+        comments = []
         for line in lines:
-            # skip comments
+            # parse comments if possible
             if self.comment_symbol is not None and line.startswith(self.comment_symbol):
+                comments.append(line)
                 continue
 
-            # if sentence ends, convert and return
-            if self.__line_completes_sentence(line):
-                if len(sentence) > 0:
-                    if self.tag_to_bioes is not None:
-                        sentence.convert_tag_scheme(tag_type=self.tag_to_bioes, target_scheme="iobes")
-                    # check if this sentence is a document boundary
-                    if sentence.to_original_text() == self.document_separator_token:
-                        sentence.is_document_boundary = True
-                    return sentence
+            filtered_lines.append(line)
 
             # otherwise, this line is a token. parse and add to sentence
-            else:
-                token = self._parse_token(line, token)
-                sentence.add_token(token)
+            token: Token = self._parse_token(line, word_level_tag_columns, token)
+            sentence.add_token(token)
 
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token:
             sentence.is_document_boundary = True
 
-        if self.tag_to_bioes is not None:
-            sentence.convert_tag_scheme(tag_type=self.tag_to_bioes, target_scheme="iobes")
+        # add span labels
+        if span_level_tag_columns:
+            for span_column in span_level_tag_columns:
+                try:
+                    bioes_tags = [
+                        re.split(self.column_delimiter, line.rstrip())[span_column] for line in filtered_lines
+                    ]
+                    predicted_spans = get_spans_from_bio(bioes_tags)
+                    for predicted_span in predicted_spans:
+                        span = Span(sentence[predicted_span[0][0] : predicted_span[0][-1] + 1])
+                        value = self._remap_label(predicted_span[2])
+                        sentence.add_complex_label(
+                            typename=span_level_tag_columns[span_column],
+                            label=SpanLabel(span=span, value=value, score=predicted_span[1]),
+                        )
+                except:
+                    pass
+                    # log.warning(f"--\nUnparseable sentence: {''.join(lines)}--\n")
+
+        for comment in comments:
+            # parse relations if they are set
+            if comment.startswith("# relations = "):
+                relations_string = comment.strip().split("# relations = ")[1]
+                for relation in relations_string.split("|"):
+                    indices = relation.split(";")
+                    head_start = int(indices[0])
+                    head_end = int(indices[1])
+                    tail_start = int(indices[2])
+                    tail_end = int(indices[3])
+                    label = indices[4]
+                    # head and tail span indices are 1-indexed and end index is inclusive
+                    head = Span(sentence.tokens[head_start - 1 : head_end])
+                    tail = Span(sentence.tokens[tail_start - 1 : tail_end])
+
+                    sentence.add_complex_label("relation", RelationLabel(value=label, head=head, tail=tail))
 
         if len(sentence) > 0:
             return sentence
 
-    def _parse_token(self, line: str, last_token: Optional[Token] = None) -> Token:
-        fields: List[str] = re.split(self.column_delimiter, line.rstrip())
-        token = Token(fields[self.text_column], whitespace_after=self.default_whitespace_after)
-        for column in self.column_name_map:
-            if len(fields) > column:
-                if column != self.text_column and self.column_name_map[column] != self.SPACE_AFTER_KEY:
-                    task = self.column_name_map[column]  # for example 'pos'
-                    tag = fields[column]
-                    if tag.count("-") >= 1:  # tag with prefix, for example tag='B-OBJ'
-                        split_at_first_hyphen = tag.split("-", 1)
-                        tagging_format_prefix = split_at_first_hyphen[0]
-                        tag_without_tagging_format = split_at_first_hyphen[1]
-                        if self.label_name_map and tag_without_tagging_format in self.label_name_map.keys():
-                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format]
-                            # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
-                            if self.label_name_map[tag_without_tagging_format] == "O":
-                                tag = "O"
-                    else:  # tag without prefix, for example tag='PPER'
-                        if self.label_name_map and tag in self.label_name_map.keys():
-                            tag = self.label_name_map[tag]  # for example, transforming 'PPER' to 'person'
+    def _parse_token(self, line: str, column_name_map: Dict[int, str], last_token: Optional[Token] = None) -> Token:
 
-                    token.add_label(task, tag)
-                if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == "-":
+        # get fields from line
+        fields: List[str] = re.split(self.column_delimiter, line.rstrip())
+
+        # get head_id if exists (only in dependency parses)
+        head_id = fields[self.head_id_column] if self.head_id_column else None
+
+        # initialize token
+        token = Token(fields[self.text_column], head_id=head_id, whitespace_after=self.default_whitespace_after)
+
+        # go through all columns
+        for column in column_name_map:
+            if len(fields) > column:
+                if (
+                    column != self.text_column
+                    and column != self.head_id_column
+                    and column_name_map[column] != self.SPACE_AFTER_KEY
+                ):
+
+                    # 'feats' and 'misc' column should be split into different fields
+                    if column_name_map[column] in self.FEATS:
+                        for feature in fields[column].split("|"):
+
+                            # special handling for whitespace after
+                            if feature == "SpaceAfter=No":
+                                token.whitespace_after = False
+                                continue
+
+                            if "=" in feature:
+                                # add each other feature as label-value pair
+                                label_name = feature.split("=")[0]
+                                label_value = self._remap_label(feature.split("=")[1])
+                                token.add_label(label_name, label_value)
+
+                    else:
+                        # get the task name (e.g. 'ner')
+                        label_name = column_name_map[column]
+                        # get the label value
+                        label_value = self._remap_label(fields[column])
+                        # add label
+                        token.add_label(label_name, label_value)
+
+                if column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == "-":
                     token.whitespace_after = False
         if last_token is None:
             start = 0
@@ -369,6 +500,12 @@ class ColumnDataset(FlairDataset):
         token.start_pos = start
         token.end_pos = token.start_pos + len(token.text)
         return token
+
+    def _remap_label(self, tag):
+        # remap regular tag names
+        if self.label_name_map and tag in self.label_name_map.keys():
+            tag = self.label_name_map[tag]  # for example, transforming 'PER' to 'person'
+        return tag
 
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace() or line == ""
@@ -388,104 +525,16 @@ class ColumnDataset(FlairDataset):
 
         # else skip to position in file where sentence begins
         else:
-            with open(str(self.path_to_column_file), encoding=self.encoding) as file:
-                file.seek(self.indices[index])
-                sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
+            sentence = self._convert_lines_to_sentence(
+                self.sentences_raw[index],
+                word_level_tag_columns=self.word_level_tag_columns,
+                span_level_tag_columns=self.span_level_tag_columns,
+            )
 
-            # set sentence context using partials
+            # set sentence context using partials TODO: pointer to dataset is really inefficient
             sentence._position_in_dataset = (self, index)
 
         return sentence
-
-
-class MultiCoNer(MultiFileColumnCorpus):
-    def __init__(
-        self,
-        task: str = "multi",
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = True,
-        use_dev_as_test: bool = True,
-        **corpusargs,
-    ):
-        """
-        Initialize the MultiCoNer corpus. This is only possible if you've applied and downloaded it to your machine.
-        Apply for the corpus from here https://multiconer.github.io/dataset and unpack the .zip file's content into
-        a folder called 'multiconer'. Then set the base_path parameter in the constructor to the path to the
-        parent directory where the multiconer folder resides. You can also create the multiconer in
-        the {FLAIR_CACHE_ROOT}/datasets folder to leave the path empty.
-        :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
-        POS tags or chunks respectively
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
-        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
-        """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
-
-        folders = {
-            "bn": "BN-Bangla",
-            "de": "DE-German",
-            "en": "EN-English",
-            "es": "ES-Espanish",
-            "fa": "FA-Farsi",
-            "hi": "HI-Hindi",
-            "ko": "KO-Korean",
-            "nl": "NL-Dutch",
-            "ru": "RU-Russian",
-            "tr": "TR-Turkish",
-            "zh": "ZH-Chinese",
-        }
-
-        possible_tasks = ["multi", "code-switch"] + list(folders.keys())
-        task = task.lower()
-
-        if task not in possible_tasks:
-            raise ValueError(f"task has to be one of {possible_tasks}, but is '{task}'")
-
-        # column format
-        columns = {0: "text", 3: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        data_folder = base_path / dataset_name
-
-        # check if data there
-        if not data_folder.exists():
-            log.warning("-" * 100)
-            log.warning(f'WARNING: MultiCoNer dataset not found at "{data_folder}".')
-            log.warning('Instructions for obtaining the data can be found here: https://multiconer.github.io/dataset"')
-            log.warning("-" * 100)
-
-        if task in ["multi", "code-switch"]:
-            # code-switch uses the same training data than multi but provides a different test set.
-            # as the test set is not published, those two tasks are the same.
-            train_files = list(data_folder.rglob("*_train.conll"))
-            dev_files = list(data_folder.rglob("*_dev.conll"))
-        else:
-            train_files = [data_folder / folders[task] / f"{task}_train.conll"]
-            dev_files = [data_folder / folders[task] / f"{task}_dev.conll"]
-
-        if use_dev_as_test:
-            test_files = dev_files
-            dev_files = []
-        else:
-            test_files = []
-
-        super(MultiCoNer, self).__init__(
-            train_files=train_files,
-            dev_files=dev_files,
-            test_files=test_files,
-            column_format=columns,
-            tag_to_bioes=tag_to_bioes,
-            comment_symbol="# id ",
-            in_memory=in_memory,
-            **corpusargs,
-        )
 
 
 class CONLL_03(ColumnCorpus):
@@ -493,6 +542,7 @@ class CONLL_03(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         tag_to_bioes: str = "ner",
+        column_format={0: "text", 1: "pos", 3: "ner"},
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -513,9 +563,6 @@ class CONLL_03(ColumnCorpus):
         else:
             base_path = Path(base_path)
 
-        # column format
-        columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
-
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -532,7 +579,7 @@ class CONLL_03(ColumnCorpus):
 
         super(CONLL_03, self).__init__(
             data_folder,
-            columns,
+            column_format=column_format,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
@@ -2425,6 +2472,96 @@ class NER_MASAKHANE(MultiCorpus):
         super(NER_MASAKHANE, self).__init__(
             corpora,
             name="masakhane-" + "-".join(languages),
+        )
+
+
+class NER_MULTI_CONER(MultiFileColumnCorpus):
+    def __init__(
+        self,
+        task: str = "multi",
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        use_dev_as_test: bool = True,
+        **corpusargs,
+    ):
+        """
+        Initialize the MultiCoNer corpus. This is only possible if you've applied and downloaded it to your machine.
+        Apply for the corpus from here https://multiconer.github.io/dataset and unpack the .zip file's content into
+        a folder called 'multiconer'. Then set the base_path parameter in the constructor to the path to the
+        parent directory where the multiconer folder resides. You can also create the multiconer in
+        the {FLAIR_CACHE_ROOT}/datasets folder to leave the path empty.
+        :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
+        POS tags or chunks respectively
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
+        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
+        """
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        folders = {
+            "bn": "BN-Bangla",
+            "de": "DE-German",
+            "en": "EN-English",
+            "es": "ES-Espanish",
+            "fa": "FA-Farsi",
+            "hi": "HI-Hindi",
+            "ko": "KO-Korean",
+            "nl": "NL-Dutch",
+            "ru": "RU-Russian",
+            "tr": "TR-Turkish",
+            "zh": "ZH-Chinese",
+        }
+
+        possible_tasks = ["multi", "code-switch"] + list(folders.keys())
+        task = task.lower()
+
+        if task not in possible_tasks:
+            raise ValueError(f"task has to be one of {possible_tasks}, but is '{task}'")
+
+        # column format
+        columns = {0: "text", 3: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # check if data there
+        if not data_folder.exists():
+            log.warning("-" * 100)
+            log.warning(f'WARNING: MultiCoNer dataset not found at "{data_folder}".')
+            log.warning('Instructions for obtaining the data can be found here: https://multiconer.github.io/dataset"')
+            log.warning("-" * 100)
+
+        if task in ["multi", "code-switch"]:
+            # code-switch uses the same training data than multi but provides a different test set.
+            # as the test set is not published, those two tasks are the same.
+            train_files = list(data_folder.rglob("*_train.conll"))
+            dev_files = list(data_folder.rglob("*_dev.conll"))
+        else:
+            train_files = [data_folder / folders[task] / f"{task}_train.conll"]
+            dev_files = [data_folder / folders[task] / f"{task}_dev.conll"]
+
+        if use_dev_as_test:
+            test_files = dev_files
+            dev_files = []
+        else:
+            test_files = []
+
+        super(NER_MULTI_CONER, self).__init__(
+            train_files=train_files,
+            dev_files=dev_files,
+            test_files=test_files,
+            column_format=columns,
+            tag_to_bioes=tag_to_bioes,
+            comment_symbol="# id ",
+            in_memory=in_memory,
+            **corpusargs,
         )
 
 

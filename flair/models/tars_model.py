@@ -10,7 +10,7 @@ from sklearn.preprocessing import minmax_scale
 from tqdm import tqdm
 
 import flair
-from flair.data import Dictionary, Sentence
+from flair.data import Dictionary, Sentence, Span, SpanLabel
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import (
     TokenEmbeddings,
@@ -356,11 +356,8 @@ class TARSTagger(FewshotClassifier):
 
         # prepare TARS dictionary
         tars_dictionary = Dictionary(add_unk=False)
-        tars_dictionary.add_item("O")
-        tars_dictionary.add_item("S-")
-        tars_dictionary.add_item("B-")
-        tars_dictionary.add_item("E-")
-        tars_dictionary.add_item("I-")
+        tars_dictionary.add_item("entity")
+        tars_dictionary.span_labels = True
 
         # initialize a bare-bones sequence tagger
         self.tars_model: SequenceTagger = SequenceTagger(
@@ -403,23 +400,11 @@ class TARSTagger(FewshotClassifier):
 
         # make a tars sentence where all labels are O by default
         tars_sentence = Sentence(label_text_pair, use_tokenizer=False)
-        for token in tars_sentence:
-            token.add_tag(self.static_label_type, "O")
 
-        # overwrite O labels with tags
-        for token in sentence:
-            tag = token.get_tag(self.get_current_label_type()).value
-
-            if tag == "O" or tag == "":
-                tars_tag = "O"
-            elif tag == label:
-                tars_tag = "S-"
-            elif tag[1] == "-" and tag[2:] == label:
-                tars_tag = tag.split("-")[0] + "-"
-            else:
-                tars_tag = "O"
-
-            tars_sentence.get_token(token.idx + label_length).add_tag(self.static_label_type, tars_tag)
+        for entity_label in sentence.get_labels(self.label_type):
+            if entity_label.value == label:
+                new_span = [tars_sentence.get_token(token.idx + label_length) for token in entity_label.span]
+                tars_sentence.add_complex_label(self.static_label_type, SpanLabel(Span(new_span), value="entity"))
 
         return tars_sentence
 
@@ -532,8 +517,7 @@ class TARSTagger(FewshotClassifier):
                 for sentence in batch:
 
                     # always remove tags first
-                    for token in sentence:
-                        token.remove_labels(label_name)
+                    sentence.remove_labels(label_name)
 
                     all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
 
@@ -541,74 +525,53 @@ class TARSTagger(FewshotClassifier):
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
 
-                        label_length = 0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
-
                         loss_and_count = self.tars_model.predict(
                             tars_sentence,
                             label_name=label_name,
                             return_loss=True,
                         )
+
                         overall_loss += loss_and_count[0].item()
                         overall_count += loss_and_count[1]
 
-                        for span in tars_sentence.get_spans(label_name):
-                            span.set_label("tars_temp_label", label)
-                            all_detected[span] = span.score
-
-                        if not most_probable_first:
-                            for span in tars_sentence.get_spans(label_name):
-                                for token in span:
-                                    corresponding_token = sentence.get_token(token.idx - label_length)
-                                    if corresponding_token is None:
-                                        continue
-                                    if (
-                                        corresponding_token.get_tag(label_name).value != ""
-                                        and corresponding_token.get_tag(label_name).score
-                                        > token.get_tag(label_name).score
-                                    ):
-                                        continue
-                                    corresponding_token.add_tag(
-                                        label_name,
-                                        token.get_tag(label_name).value + label,
-                                        token.get_tag(label_name).score,
-                                    )
+                        for predicted in tars_sentence.get_labels(label_name):
+                            predicted.value = label
+                            all_detected[predicted] = predicted.score
 
                     if most_probable_first:
                         import operator
+
+                        already_set_indices = []
 
                         sorted_x = sorted(all_detected.items(), key=operator.itemgetter(1))
                         sorted_x.reverse()
                         for tuple in sorted_x:
                             # get the span and its label
-                            span = tuple[0]
-                            label = span.get_labels("tars_temp_label")[0].value
+                            label = tuple[0]
+                            # label = span.get_labels("tars_temp_label")[0].value
                             label_length = (
-                                0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
+                                0 if not self.prefix else len(label.value.split(" ")) + len(self.separator.split(" "))
                             )
 
                             # determine whether tokens in this span already have a label
                             tag_this = True
-                            for token in span:
+                            for token in label.span:
                                 corresponding_token = sentence.get_token(token.idx - label_length)
                                 if corresponding_token is None:
                                     tag_this = False
                                     continue
-                                if (
-                                    corresponding_token.get_tag(label_name).value != ""
-                                    and corresponding_token.get_tag(label_name).score > token.get_tag(label_name).score
-                                ):
+                                if token.idx in already_set_indices:
                                     tag_this = False
                                     continue
 
                             # only add if all tokens have no label
                             if tag_this:
-                                for token in span:
-                                    corresponding_token = sentence.get_token(token.idx - label_length)
-                                    corresponding_token.add_tag(
-                                        label_name,
-                                        token.get_tag(label_name).value + label,
-                                        token.get_tag(label_name).score,
-                                    )
+                                already_set_indices.extend(token.idx for token in label.span)
+                                predicted_span = [sentence.get_token(token.idx - label_length) for token in label.span]
+                                sentence.add_complex_label(
+                                    label_name,
+                                    label=SpanLabel(Span(predicted_span), value=label.value, score=label.score),
+                                )
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)

@@ -108,7 +108,7 @@ def test_transformer_word_embeddings_forward_language_ids():
     sent_en = Sentence(["This", "is", "a", "sentence"], language_code="en")
     sent_de = Sentence(["Das", "ist", "ein", "Satz"], language_code="de")
 
-    embeddings = TransformerWordEmbeddings("xlm-mlm-ende-1024", allow_long_sentences=False)
+    embeddings = TransformerWordEmbeddings("xlm-mlm-ende-1024", layers="all", allow_long_sentences=False)
 
     embeddings.embed([sent_de, sent_en])
     expected_similarities = [

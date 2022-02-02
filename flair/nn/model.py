@@ -5,7 +5,7 @@ import warnings
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import torch.nn
 from torch.nn.modules.loss import _Loss
@@ -14,8 +14,9 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DT, Dictionary, Label, Sentence
+from flair.data import DT, Dictionary, Label, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
+from flair.file_utils import Tqdm
 from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
@@ -205,7 +206,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
-        data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
 
         with torch.no_grad():
 
@@ -217,12 +217,14 @@ class Classifier(Model[DT], typing.Generic[DT]):
             lines: List[str] = []
 
             # variables for computing scores
-            all_spans: List[str] = []
+            all_spans: Set[str] = set()
             all_true_values = {}
             all_predicted_values = {}
 
+            loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=0)
+
             sentence_id = 0
-            for batch in data_loader:
+            for batch in Tqdm.tqdm(loader):
 
                 # remove any previously predicted labels
                 for datapoint in batch:
@@ -258,7 +260,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                             all_true_values[representation].append(value)
 
                         if representation not in all_spans:
-                            all_spans.append(representation)
+                            all_spans.add(representation)
 
                     for predicted_span in datapoint.get_labels("predicted"):
                         representation = str(sentence_id) + ": " + predicted_span.identifier
@@ -270,7 +272,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                             all_predicted_values[representation].append(predicted_span.value)
 
                         if representation not in all_spans:
-                            all_spans.append(representation)
+                            all_spans.add(representation)
 
                     sentence_id += 1
 
@@ -279,6 +281,15 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 # make printout lines
                 if out_path:
                     lines.extend(self._print_predictions(batch, gold_label_type))
+
+            # convert true and predicted values to two span-aligned lists
+            true_values_span_aligned = []
+            predicted_values_span_aligned = []
+            for span in all_spans:
+                true_values_span_aligned.append(all_true_values[span] if span in all_true_values else ["O"])
+                predicted_values_span_aligned.append(
+                    all_predicted_values[span] if span in all_predicted_values else ["O"]
+                )
 
             # write all_predicted_values to out_file if set
             if out_path:
@@ -295,24 +306,41 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 for label in predicted_values:
                     evaluation_label_dictionary.add_item(label)
 
-            # finally, compute numbers
-            y_true = []
-            y_pred = []
+        # check if this is a multi-label problem
+        multi_label = False
+        for true_instance, predicted_instance in zip(true_values_span_aligned, predicted_values_span_aligned):
+            if len(true_instance) > 1 or len(predicted_instance) > 1:
+                multi_label = True
+                break
 
-            for span in all_spans:
+        log.info(f"Evaluating as a multi-label problem: {multi_label}")
 
-                true_values = all_true_values[span] if span in all_true_values else ["O"]
-                predicted_values = all_predicted_values[span] if span in all_predicted_values else ["O"]
-
+        # compute numbers by formatting true and predicted such that Scikit-Learn can use them
+        y_true = []
+        y_pred = []
+        if multi_label:
+            # multi-label problems require a multi-hot vector for each true and predicted label
+            for true_instance in true_values_span_aligned:
                 y_true_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
-                for true_value in true_values:
+                for true_value in true_instance:
                     y_true_instance[evaluation_label_dictionary.get_idx_for_item(true_value)] = 1
                 y_true.append(y_true_instance.tolist())
 
+            for predicted_values in predicted_values_span_aligned:
                 y_pred_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
                 for predicted_value in predicted_values:
                     y_pred_instance[evaluation_label_dictionary.get_idx_for_item(predicted_value)] = 1
                 y_pred.append(y_pred_instance.tolist())
+        else:
+            # single-label problems can do with a single index for each true and predicted label
+            y_true = [
+                evaluation_label_dictionary.get_idx_for_item(true_instance[0])
+                for true_instance in true_values_span_aligned
+            ]
+            y_pred = [
+                evaluation_label_dictionary.get_idx_for_item(predicted_instance[0])
+                for predicted_instance in predicted_values_span_aligned
+            ]
 
         # now, calculate evaluation numbers
         target_names = []
@@ -350,13 +378,28 @@ class Classifier(Model[DT], typing.Generic[DT]):
             )
 
             accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
-
-            precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
-            recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
-            micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
             macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
 
-            main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
+            # if there is only one label, then "micro avg" = "macro avg"
+            if len(target_names) == 1:
+                classification_report_dict["micro avg"] = classification_report_dict["macro avg"]
+
+            if "micro avg" in classification_report_dict:
+                # micro average is only computed if zero-label exists (for instance "O")
+                precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
+                recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
+                micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
+            else:
+                # if no zero-label exists (such as in POS tagging) micro average is equal to accuracy
+                precision_score = round(classification_report_dict["accuracy"], 4)
+                recall_score = round(classification_report_dict["accuracy"], 4)
+                micro_f_score = round(classification_report_dict["accuracy"], 4)
+
+            # same for the main score
+            if "micro avg" not in classification_report_dict and main_evaluation_metric[0] == "micro avg":
+                main_score = classification_report_dict["accuracy"]
+            else:
+                main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
 
         else:
             # issue error and default all evaluation numbers to 0.
@@ -395,6 +438,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
         return result
 
+    @abstractmethod
     def predict(
         self,
         sentences: Union[List[DT], DT],
@@ -597,19 +641,22 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             if len(reordered_sentences) == 0:
                 return sentences
 
-            dataloader = DataLoader(
-                dataset=FlairDatapointDataset(reordered_sentences),
-                batch_size=mini_batch_size,
-            )
-            # progress bar for verbosity
-            if verbose:
-                progress_bar = tqdm(dataloader)
-                progress_bar.set_description("Batch inference")
-                dataloader = progress_bar
+            if len(sentences) > mini_batch_size:
+                batches = DataLoader(
+                    dataset=FlairDatapointDataset(reordered_sentences),
+                    batch_size=mini_batch_size,
+                )
+                # progress bar for verbosity
+                if verbose:
+                    progress_bar = tqdm(batches)
+                    progress_bar.set_description("Batch inference")
+                    batches = progress_bar
+            else:
+                batches = [reordered_sentences]
 
             overall_loss = 0
             label_count = 0
-            for batch in dataloader:
+            for batch in batches:
                 # stop if all sentences are empty
                 if not batch:
                     continue

@@ -4,7 +4,7 @@ charming _ _ O
 Arlésienne _ _ B-NamedPerson
 to _ _ O
 the _ _ O
-shepherdess _ _ O
+shepherdess _ _ B-NominalProduct
 in _ _ O
 a _ _ O
 fairy _ _ O
@@ -24,7 +24,7 @@ embroidery _ _ B-ProductPart
 lace _ _ B-ProductPart
 , _ _ O
 the _ _ O
-repertoire _ _ O
+repertoire _ _ B-ProductDesign
 is _ _ O
 inexhaustible _ _ O
 . _ _ O
@@ -83,7 +83,7 @@ project _ _ O
 , _ _ O
 after _ _ O
 its _ _ O
-debut _ _ O
+debut _ _ S-Occasion
 in _ _ O
 Miami _ _ B-NamedLocation
 a _ _ O
