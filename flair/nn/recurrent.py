@@ -1,6 +1,5 @@
 from torch import nn
 
-
 rnn_layers = {"lstm": (nn.LSTM, 2), "gru": (nn.GRU, 1)}
 
 
