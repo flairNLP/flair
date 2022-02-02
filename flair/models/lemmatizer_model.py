@@ -397,8 +397,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
             is set to True
         :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
             you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
-        :param return_loss: whether or not to compute and return loss. Setting it to True only makes sense if labels are
-            provided
+        :param return_loss: whether or not to compute and return loss. Setting it to True only makes sense if labels
+            are provided
         :param verbose: If True, lemmatized sentences will be printed in the console.
         """
         if isinstance(sentences, Sentence):
