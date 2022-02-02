@@ -494,6 +494,13 @@ class ModelTrainer:
                             loss.backward()
                         train_loss += loss.item()
 
+                        # identify dynamic embeddings (always deleted) on first sentence
+                        if not dynamic_embeddings:
+                            dynamic_embeddings = identify_dynamic_embeddings(batch[0])
+
+                        # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                        store_embeddings(batch, embeddings_storage_mode, dynamic_embeddings)
+
                     # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
@@ -510,13 +517,6 @@ class ModelTrainer:
                                 momentum, _ = group["betas"]
 
                     seen_batches += 1
-
-                    # identify dynamic embeddings (always deleted) on first sentence
-                    if not dynamic_embeddings:
-                        dynamic_embeddings = identify_dynamic_embeddings(batch[0])
-
-                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
-                    store_embeddings(batch, embeddings_storage_mode, dynamic_embeddings)
 
                     batch_time += time.time() - start_time
                     if seen_batches % modulo == 0:

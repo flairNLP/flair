@@ -13,7 +13,7 @@ from torch.optim import Optimizer
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import DataPoint, Dictionary, Sentence, _iter_dataset
+from flair.data import DT, DataPoint, Dictionary, Sentence, _iter_dataset
 
 
 class Result(object):
@@ -366,7 +366,7 @@ def add_file_handler(log, output_file):
 
 
 def store_embeddings(
-    data_points: Union[List[DataPoint], Dataset], storage_mode: str, dynamic_embeddings: Optional[List[str]] = None
+    data_points: Union[List[DT], Dataset], storage_mode: str, dynamic_embeddings: Optional[List[str]] = None
 ):
 
     if isinstance(data_points, Dataset):

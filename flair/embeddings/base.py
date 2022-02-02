@@ -18,10 +18,8 @@ from transformers import (
     AutoTokenizer,
     PretrainedConfig,
     PreTrainedTokenizer,
-    TransfoXLModel,
-    XLNetModel,
 )
-from transformers.tokenization_utils_base import LARGE_INTEGER, TruncationStrategy
+from transformers.tokenization_utils_base import LARGE_INTEGER
 
 import flair
 from flair.data import DT, Sentence, Token

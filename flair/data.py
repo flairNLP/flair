@@ -489,10 +489,12 @@ class Span(DataPoint):
 
     @property
     def start_pos(self) -> int:
+        assert self.tokens[0].start_position is not None
         return self.tokens[0].start_position
 
     @property
     def end_pos(self) -> int:
+        assert self.tokens[-1].end_position is not None
         return self.tokens[-1].end_position
 
     @property
@@ -574,6 +576,7 @@ class Span(DataPoint):
         pass
 
     def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
+        assert self.tokens[0].sentence is not None
         self.tokens[0].sentence.add_complex_label(tag_type, SpanLabel(self, value=tag_value, score=confidence))
 
 
@@ -669,9 +672,6 @@ class Sentence(DataPoint):
         self._previous_sentence: Optional[Sentence] = None
         self._next_sentence: Optional[Sentence] = None
         self._position_in_dataset: Optional[typing.Tuple[Dataset, int]] = None
-
-    def get_span(self, from_id: int, to_id: int) -> Span:
-        return self.tokens[from_id : to_id + 1]
 
     def get_token(self, token_id: int) -> Optional[Token]:
         for token in self.tokens:
@@ -924,7 +924,15 @@ class Sentence(DataPoint):
 
         return {"text": self.to_original_text(), "all labels": labels}
 
-    def __getitem__(self, subscript: int) -> Union[Token, Span]:
+    @typing.overload
+    def __getitem__(self, idx: int) -> Token:
+        ...
+
+    @typing.overload
+    def __getitem__(self, s: slice) -> Span:
+        ...
+
+    def __getitem__(self, subscript):
         if isinstance(subscript, slice):
             return Span(self.tokens[subscript])
         else:
