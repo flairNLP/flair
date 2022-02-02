@@ -9,10 +9,6 @@ from .sequence_tagger_model import MultiTagger, SequenceTagger
 from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier
 from .word_tagger_model import WordTagger
-from .sequence_tagger_utils import bioes
-from .sequence_tagger_utils import crf
-from .sequence_tagger_utils import viterbi
-from .diagnosis import distance_prediction_model
 
 __all__ = [
     "DependencyParser",
