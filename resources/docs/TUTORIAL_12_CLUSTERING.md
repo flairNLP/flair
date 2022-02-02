@@ -149,14 +149,11 @@ The code for loading a model.
 # load saved clustering model
 model = ClusteringModel.load(model_file="clustering_model.pt")
 
-# make example sentence
-sentence = Sentence('Getting error in manage categories - not found for attribute "navigation _ column"')
+# load a corpus 
+corpus = TREC_6(memory_mode='full').downsample(0.05)
 
-# predict for sentence
-model.predict(sentence)
-
-# print sentence with prediction
-print(sentence)
+# predict the corpus
+model.predict(corpus)
 ````
 
 ---------------------
