@@ -80,7 +80,7 @@ def get_flair_corpus(data_args):
     if data_args.dataset_arguments:
         dataset_args = json.loads(data_args.dataset_arguments)
 
-    if not dataset_name in ner_task_mapping:
+    if dataset_name not in ner_task_mapping:
         raise ValueError(f"Dataset name {dataset_name} is not a valid Flair datasets name!")
 
     return ner_task_mapping[dataset_name](**dataset_args)

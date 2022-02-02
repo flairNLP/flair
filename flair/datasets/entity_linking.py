@@ -1375,7 +1375,7 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
 
         super(WSD_RAGANATO_ALL, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
@@ -1453,7 +1453,7 @@ class WSD_SEMCOR(ColumnCorpus):
 
         super(WSD_SEMCOR, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             test_file=test_file,
             in_memory=in_memory,
@@ -1609,7 +1609,7 @@ class WSD_MASC(ColumnCorpus):
 
         super(WSD_MASC, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             test_file=test_file,
             in_memory=in_memory,
@@ -1690,7 +1690,7 @@ class WSD_OMSTI(ColumnCorpus):
 
         super(WSD_OMSTI, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             test_file=test_file,
             in_memory=in_memory,
@@ -1768,7 +1768,7 @@ class WSD_TRAINOMATIC(ColumnCorpus):
 
         super(WSD_TRAINOMATIC, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             test_file=test_file,
             in_memory=in_memory,
