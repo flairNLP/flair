@@ -4,22 +4,26 @@ from flair.data import Dictionary, DataPoint
 from typing import List, Union
 class Biaffine(torch.nn.Module):
 
-    def __init__(self, ffnn_input_size: int, ffnn_output_size: int, ffnn_dropout: int, tag_dictionary_lenght: int, init_from_state_dict: bool):
+    def __init__(self, ffnn_input_size: int, ffnn_output_size: int, ffnn_dropout: int, output_size: int, init_from_state_dict: bool):
         super(Biaffine, self).__init__()
 
         self.ffnn_start = torch.nn.Sequential(
             torch.nn.Linear(ffnn_input_size, ffnn_output_size),
             torch.nn.ReLU(),
+            torch.nn.Dropout(ffnn_dropout),
+            torch.nn.Linear(ffnn_output_size, ffnn_output_size),
             torch.nn.Dropout(ffnn_dropout))
 
         self.ffnn_end = torch.nn.Sequential(
             torch.nn.Linear(ffnn_input_size, ffnn_output_size),
             torch.nn.ReLU(),
+            torch.nn.Dropout(ffnn_dropout),
+            torch.nn.Linear(ffnn_output_size, ffnn_output_size),
             torch.nn.Dropout(ffnn_dropout))
 
-        self.weight = torch.nn.Parameter(torch.Tensor(tag_dictionary_lenght, ffnn_output_size + 1, ffnn_output_size + 1))
+        self.bilinear_map = torch.nn.Parameter(torch.Tensor(output_size, ffnn_output_size + 1, ffnn_output_size + 1))
         if not init_from_state_dict:
-            torch.nn.init.zeros_(self.weight)
+            torch.nn.init.zeros_(self.bilinear_map)
 
         self.to(flair.device)
 
@@ -34,7 +38,7 @@ class Biaffine(torch.nn.Module):
         x.unsqueeze_(1)
         y.unsqueeze_(1)
 
-        output = x.matmul(self.weight).matmul(y.transpose(-1, -2))
+        output = x.matmul(self.bilinear_map).matmul(y.transpose(-1, -2))
         output.squeeze_(1)
 
         candidate = output.permute(0, 2, 3, 1).contiguous()
@@ -52,6 +56,7 @@ class BiaffineDecoder:
     def decode(self, features, batch, is_flat_ner, return_probabilities_for_all_classes):
         all_tags = []
         candidates = []
+        outside = self.label_dictionary.get_idx_for_item('O')
         for sid,sent in enumerate(batch):
             for s in range(len(sent)):
                 for e in range(s,len(sent)):
@@ -59,7 +64,7 @@ class BiaffineDecoder:
 
         top_spans = [[] for _ in range(len(batch))]
         for i, ner in enumerate(features.argmax(axis=1)):
-            if ner > 0:
+            if ner != 0 and ner != outside:
                 sid, s,e = candidates[i]
                 top_spans[sid].append((s, e, ner, features[i, ner]))
 
@@ -116,3 +121,6 @@ class BiaffineDecoder:
         scores = tmp_candidate.index_select(0, indices)
 
         return scores
+
+    # def get_label_weight(self, sentences: Union[List[DataPoint], DataPoint]):
+    #     all_label = self.get_labels4biaffine(sentences)

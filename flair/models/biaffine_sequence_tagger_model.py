@@ -140,8 +140,6 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
         self.ffnn_size = ffnn_output_size
         self.ffnn_dropout = ffnn_dropout
         self.is_flat_ner = is_flat_ner
-        if use_biaffine:
-            self.predict_spans = True
 
         # ----- Dropout parameters -----
         # dropouts
@@ -210,6 +208,8 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             self.biaffine = Biaffine(ffnn_input_size, ffnn_output_size, ffnn_dropout, len(tag_dictionary), init_from_state_dict)
             self.biaffine_decoder = BiaffineDecoder(self.label_dictionary)
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+            self.predict_spans = True
+
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
 
