@@ -79,7 +79,7 @@ class DependencyParser(flair.nn.Model):
             mlp_input_dim = self.lstm_hidden_size * 2
 
             if use_rnn == "Variational":
-                self.lstm = BiLSTM(
+                self.lstm: torch.nn.Module = BiLSTM(
                     input_size=self.lstm_input_dim,
                     hidden_size=self.lstm_hidden_size,
                     num_layers=self.lstm_layers,
@@ -142,10 +142,10 @@ class DependencyParser(flair.nn.Model):
             sentence_tensor = self.word_dropout(sentence_tensor)
 
         if self.use_rnn:
-            sentence_tensor = pack_padded_sequence(sentence_tensor, lengths, True, False)
+            sentence_sequence = pack_padded_sequence(sentence_tensor, torch.IntTensor(lengths), True, False)
 
-            sentence_tensor, _ = self.lstm(sentence_tensor)
-            sentence_tensor, _ = pad_packed_sequence(sentence_tensor, True, total_length=seq_len)
+            sentence_sequence, _ = self.lstm(sentence_sequence)
+            sentence_tensor, _ = pad_packed_sequence(sentence_sequence, True, total_length=seq_len)
 
         # apply MLPs for arc and relations to the BiLSTM output states
         arc_h = self.mlp_arc_h(sentence_tensor)

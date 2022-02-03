@@ -11,7 +11,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Label, Sentence, Span, SpanLabel
+from flair.data import Dictionary, Label, Sentence, Span, SpanLabel
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
@@ -31,7 +31,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         tag_dictionary: Dictionary,
         tag_type: str,
         use_rnn: bool = True,
-        rnn: Optional[torch.nn.Module] = None,
+        rnn: Optional[torch.nn.RNN] = None,
         rnn_type: str = "LSTM",
         tag_format: str = "BIOES",
         hidden_size: int = 256,
@@ -153,7 +153,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # ----- RNN layer -----
         if use_rnn:
             # If shared RNN provided, else create one for model
-            self.rnn = (
+            self.rnn: torch.nn.RNN = (
                 rnn
                 if rnn
                 else self.RNN(
@@ -200,7 +200,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def label_type(self):
         return self.tag_type
 
-    def _init_loss_weights(self, loss_weights: dict) -> torch.tensor:
+    def _init_loss_weights(self, loss_weights: Dict[str, float]) -> torch.Tensor:
         """
         Intializes the loss weights based on given dictionary:
         :param loss_weights: dictionary - contains loss weights
@@ -220,11 +220,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         """
         hs_initializer = torch.nn.init.xavier_normal_
         lstm_init_h = torch.nn.Parameter(
-            torch.randn(self.nlayers * num_directions, self.hidden_size),
+            torch.randn(self.rnn.num_layers * num_directions, self.hidden_size),
             requires_grad=True,
         )
         lstm_init_c = torch.nn.Parameter(
-            torch.randn(self.nlayers * num_directions, self.hidden_size),
+            torch.randn(self.rnn.num_layers * num_directions, self.hidden_size),
             requires_grad=True,
         )
 
@@ -237,7 +237,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         hidden_size: int,
         bidirectional: bool,
         rnn_input_dim: int,
-    ) -> torch.nn.Module:
+    ) -> torch.nn.RNN:
         """
         Static wrapper function returning an RNN instance from PyTorch
         :param rnn_type: Type of RNN from torch.nn
@@ -277,15 +277,17 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         Forward propagation through network. Returns gold labels of batch in addition.
         :param sentences: Batch of current sentences
         """
+        if not isinstance(sentences, list):
+            sentences = [sentences]
         self.embeddings.embed(sentences)
 
         # make a zero-padded tensor for the whole sentence
         lengths, sentence_tensor = self._make_padded_tensor_for_batch(sentences)
 
         # sort tensor in decreasing order based on lengths of sentences in batch
-        lengths = lengths.sort(dim=0, descending=True)
-        sentences = [sentences[i] for i in lengths.indices]
-        sentence_tensor = sentence_tensor[lengths.indices]
+        sorted_lengths, length_indices = lengths.sort(dim=0, descending=True)
+        sentences = [sentences[i] for i in length_indices]
+        sentence_tensor = sentence_tensor[length_indices]
 
         # ----- Forward Propagation -----
         if self.use_dropout:
@@ -299,7 +301,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = pack_padded_sequence(sentence_tensor, lengths.values, batch_first=True, enforce_sorted=False)
+            packed = pack_padded_sequence(sentence_tensor, sorted_lengths, batch_first=True, enforce_sorted=False)
             rnn_output, hidden = self.rnn(packed)
             sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
 
@@ -316,9 +318,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # -- A tensor of shape (aggregated sequence length for all sentences in batch, tagset size) for linear layer
         if self.use_crf:
             features = self.crf(features)
-            scores = (features, lengths, self.crf.transitions)
+            scores = (features, sorted_lengths, self.crf.transitions)
         else:
-            scores = self._get_scores_from_features(features, lengths)
+            scores = self._get_scores_from_features(features, sorted_lengths)
 
         # get the gold labels
         gold_labels = self._get_gold_labels(sentences)
@@ -360,6 +362,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if nb_padding_tokens > 0:
                 t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
+
         sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
@@ -367,11 +370,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 self.embeddings.embedding_length,
             ]
         )
-        lengths: torch.Tensor = torch.tensor(lengths, dtype=torch.long)
-        return lengths, sentence_tensor
+        return torch.tensor(lengths, dtype=torch.long), sentence_tensor
 
     @staticmethod
-    def _get_scores_from_features(features: torch.tensor, lengths: torch.tensor):
+    def _get_scores_from_features(features: torch.Tensor, lengths: torch.Tensor):
         """
         Trims current batch tensor in shape (batch size, sequence length, tagset size) in such a way that all
         pads are going to be removed.
@@ -379,13 +381,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         :param lengths: length from each sentence in batch in order to trim padding tokens
         """
         features_formatted = []
-        for feat, length in zip(features, lengths.values):
+        for feat, length in zip(features, lengths):
             features_formatted.append(feat[:length])
         scores = torch.cat(features_formatted)
 
         return scores
 
-    def _get_gold_labels(self, sentences: Union[List[DataPoint], DataPoint]):
+    def _get_gold_labels(self, sentences: Union[List[Sentence], Sentence]):
         """
         Extracts gold labels from each sentence.
         :param sentences: List of sentences in batch
@@ -458,17 +460,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             )
             # progress bar for verbosity
             if verbose:
-                dataloader = tqdm(dataloader)
+                dataloader = tqdm(dataloader, desc="Batch inference")
 
-            overall_loss = 0
+            overall_loss = torch.zeros(1, device=flair.device)
             batch_no = 0
             label_count = 0
             for batch in dataloader:
 
                 batch_no += 1
-
-                if verbose:
-                    dataloader.set_description(f"Inferencing on batch {batch_no}")
 
                 # stop if all sentences are empty
                 if not batch:
@@ -489,8 +488,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
                 # Sort batch in same way as forward propagation
                 lengths = torch.LongTensor([len(sentence) for sentence in batch])
-                lengths = lengths.sort(dim=0, descending=True)
-                batch = [batch[i] for i in lengths.indices]
+                _, sort_indices = lengths.sort(dim=0, descending=True)
+                batch = [batch[i] for i in sort_indices]
 
                 # make predictions
                 if self.use_crf:
@@ -529,7 +528,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if return_loss:
                 return overall_loss, label_count
 
-    def _standard_inference(self, features: torch.tensor, batch: list, probabilities_for_all_classes: bool):
+    def _standard_inference(self, features: torch.Tensor, batch: List[Sentence], probabilities_for_all_classes: bool):
         """
         Softmax over emission scores from forward propagation.
         :param features: sentence tensor from forward propagation
@@ -559,7 +558,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return predictions, all_tags
 
-    def _all_scores_for_token(self, scores: torch.tensor, lengths: list):
+    def _all_scores_for_token(self, scores: torch.Tensor, lengths: List[int]):
         """
         Returns all scores for each tag in tag dictionary.
         :param scores: Scores for current sentence.
@@ -921,15 +920,15 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     library_version=flair.__version__,
                     cache_dir=flair.cache_root / "models" / model_folder,
                 )
-            except HTTPError as e:
+            except HTTPError:
                 # output information
                 log.error("-" * 80)
                 log.error(
                     f"ACHTUNG: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
                 )
                 # log.error(f" - Error message: {e}")
-                log.error(f" -> Please check https://huggingface.co/models?filter=flair for all available models.")
-                log.error(f" -> Alternatively, point to a model file on your local drive.")
+                log.error(" -> Please check https://huggingface.co/models?filter=flair for all available models.")
+                log.error(" -> Alternatively, point to a model file on your local drive.")
                 log.error("-" * 80)
                 Path(flair.cache_root / "models" / model_folder).rmdir()  # remove folder again if not valid
 
@@ -1049,7 +1048,7 @@ class MultiTagger:
             model_names = [model_names]
 
         taggers = {}
-        models = []
+        models: List[SequenceTagger] = []
 
         # load each model
         for model_name in model_names:
