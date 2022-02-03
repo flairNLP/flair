@@ -1010,7 +1010,9 @@ class STACKOVERFLOW(ClassificationCorpus):
                         label = label_list[idx]
                         write_fp.write(f"__label__{label} {line}\n")
 
-        super(STACKOVERFLOW, self).__init__(data_folder, label_type='class', tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs)
+        super(STACKOVERFLOW, self).__init__(
+            data_folder, label_type="class", tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs
+        )
 
 
 class SENTIMENT_140(ClassificationCorpus):

@@ -84,11 +84,12 @@ class ClusteringModel:
 
         :param label_type: the label from sentences will be extracted. If the value is none this will be skipped.
         """
-        sentences = corpus.get_all_sentences()
 
         log.info("Embed sentences...")
-        for batch in tqdm(DataLoader(sentences, batch_size=batch_size)):
+        sentences = []
+        for batch in tqdm(DataLoader(corpus.get_all_sentences(), batch_size=batch_size)):
             self.embeddings.embed(batch)
+            sentences.extend(batch)
 
         X = [sentence.embedding.cpu().detach().numpy() for sentence in sentences]
 
