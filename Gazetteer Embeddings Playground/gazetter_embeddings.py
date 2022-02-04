@@ -31,8 +31,6 @@ sentence = Sentence('The grass is green .')
 # # init embedding with gazetteer
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(gazetteers=["test"])
 
-print(gazetteer_embedding.matching_methods)
-#
 gazetteer_embedding.embed(sentence)
 
 for token in sentence:
