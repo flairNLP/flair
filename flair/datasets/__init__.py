@@ -108,6 +108,7 @@ from .document_classification import (
     SENTEVAL_SST_GRANULAR,
     SENTEVAL_SUBJ,
     SENTIMENT_140,
+    STACKOVERFLOW,
     TREC_6,
     TREC_50,
     WASSA_ANGER,
@@ -119,7 +120,6 @@ from .document_classification import (
     ClassificationDataset,
     CSVClassificationCorpus,
     CSVClassificationDataset,
-    STACKOVERFLOW,
 )
 
 # word sense disambiguation

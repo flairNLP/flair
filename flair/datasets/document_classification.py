@@ -6,7 +6,15 @@ from pathlib import Path
 from typing import Callable, Dict, List, Union
 
 import flair
-from flair.data import Corpus, DataPair, FlairDataset, Sentence, Token, Tokenizer, _iter_dataset
+from flair.data import (
+    Corpus,
+    DataPair,
+    FlairDataset,
+    Sentence,
+    Token,
+    Tokenizer,
+    _iter_dataset,
+)
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file, unzip_file
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
