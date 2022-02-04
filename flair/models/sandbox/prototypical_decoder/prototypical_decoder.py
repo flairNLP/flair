@@ -81,7 +81,7 @@ class PrototypicalDecoder(torch.nn.Module):
         elif distance_function.lower() == 'euclidean':
             self.distance = EuclideanDistance()
         elif distance_function.lower() == 'dot_product':
-            self.distance_function = NegativeScaledDotProduct()
+            self.distance = NegativeScaledDotProduct()
         else:
             raise KeyError(f'Distance function {distance_function} not found.')
 
