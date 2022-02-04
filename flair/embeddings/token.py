@@ -883,9 +883,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 class GazetteerEmbeddings(TokenEmbeddings):
     def __init__(self, gazetteers: List, full_mathing: bool = True, partial_matching: bool = True):
         super().__init__()
-
         self.gazetteer_list = gazetteers
-
         self.matching_methods = []
 
         if full_mathing:
