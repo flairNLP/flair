@@ -49,7 +49,7 @@ class Biaffine(torch.nn.Module):
         # n: tokens (size of bucket)
         # r: labels (output size), e.g. 1 if unlabeled or number of edge labels.
         # # [b, n, v1] -> [b*n, v1]
-        vector_set_1 = vector_set_1.view(-1, vector_set_1_size,)
+        vector_set_1 = vector_set_1.view(-1, vector_set_1_size)
 
         # [v1, r, v2] -> [v1, r*v2]
         bilinear_mapping = self.bilinear_map.view(vector_set_1_size, -1)
@@ -58,7 +58,7 @@ class Biaffine(torch.nn.Module):
         bilinear_mapping = vector_set_1.matmul(bilinear_mapping)
 
         # [b*n, r*v2] -> [b, n*r, v2]
-        bilinear_mapping = bilinear_mapping.view(batch_size, batch_size*longest_token_sequence_in_batch, vector_set_2_size)
+        bilinear_mapping = bilinear_mapping.view(batch_size, longest_token_sequence_in_batch*output_size, vector_set_2_size)
 
         # [b, n*r, v2] x [b, n, v2]T -> [b, n*r, n]
         vector_set_2_size = torch.conj(vector_set_2).transpose(2, 1)
