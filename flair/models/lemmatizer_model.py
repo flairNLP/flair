@@ -564,7 +564,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
                         # reshape to vector of size (batch_size, beam_size*beam_size),
                         # each row contains beam_size*beam_size scores of the new possible hypothesis
-                        hypothesis_scores_per_token = hypothesis_scores.view(number_tokens, self.beam_size ** 2)
+                        hypothesis_scores_per_token = hypothesis_scores.view(number_tokens, self.beam_size**2)
                         # print(hypothesis_scores_per_token)
 
                         # choose beam_size best for each token - size (batch_size, beam_size)
