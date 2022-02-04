@@ -2,7 +2,7 @@ from flair.datasets import CONLL_03
 
 corpus = CONLL_03('D:\\flair\\resources')
 
-tag_dictionary = corpus.make_tag_dictionary(tag_type='ner')
+tag_dictionary = corpus.make_label_dictionary('ner')
 
 # from flair.embeddings import TransformerWordEmbeddings
 #
@@ -26,9 +26,9 @@ tagger = BiaffineTager(
     use_crf=False,
     use_rnn=False,
     use_biaffine=True,
-    reproject_embeddings=False,
+    reproject_embeddings=False
 )
-BiaffineTager.load()
+
 from torch.optim.lr_scheduler import OneCycleLR
 
 trainer = ModelTrainer(tagger, corpus)

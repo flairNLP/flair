@@ -76,12 +76,16 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             (if any label's weight is unspecified it will default to 1.0)
         :param init_from_state_dict: Indicator whether we are loading a model from state dict
             since we need to transform previous models' weights into CRF instance weights
+        :param ffnn_output_size: size of feedforward neural network output, use for biaffine for prediction.
+        :param ffnn_dropout: If > 0, then in feedforward neural network in  biaffine model, use  dropout.
+        :param is_flat_ner: The biaffine decoder use different strategies according to whether it is a flat ner or not when decoding.
         """
         super(BiaffineTager, self).__init__()
 
         # ----- Create the internal tag dictionary -----
         self.tag_type = tag_type
         self.tag_format = tag_format.upper()
+        # Biaffine model uses span to predict, but without BIOES and BIO encoding.
         if init_from_state_dict or use_biaffine:
             self.label_dictionary = tag_dictionary
         else:
@@ -208,8 +212,8 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             self.biaffine = Biaffine(ffnn_input_size, ffnn_output_size, ffnn_dropout, len(tag_dictionary), init_from_state_dict)
             self.biaffine_decoder = BiaffineDecoder(self.label_dictionary)
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+            # Biaffine is a span prediction problem, but does not meet the conditions of _determine_if_span_prediction_problem.
             self.predict_spans = True
-
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
 
