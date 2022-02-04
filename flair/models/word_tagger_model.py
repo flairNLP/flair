@@ -55,7 +55,7 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-        return super(DefaultClassifier, cls)._init_model_with_state_dict(
+        return super()._init_model_with_state_dict(
             state,
             embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
