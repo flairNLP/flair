@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Union
 
 import joblib
-from sklearn.base import ClusterMixin, BaseEstimator
+from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.metrics import normalized_mutual_info_score
 from tqdm import tqdm
 
@@ -23,8 +23,8 @@ class ClusteringModel:
 
     def __init__(self, model: Union[ClusterMixin, BaseEstimator], embeddings: DocumentEmbeddings):
         """
-          :param model: the clustering algortihm from sklearn this wrapper will use.
-          :param embeddings: the flair DocumentEmbedding this wrapper uses to calculate a vector for each sentence.
+        :param model: the clustering algortihm from sklearn this wrapper will use.
+        :param embeddings: the flair DocumentEmbedding this wrapper uses to calculate a vector for each sentence.
         """
         self.model = model
         self.embeddings = embeddings
