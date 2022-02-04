@@ -1,3 +1,4 @@
+from .clustering import ClusteringModel
 from .dependency_parser_model import DependencyParser
 from .entity_linker_model import EntityLinker
 from .language_model import LanguageModel
@@ -25,4 +26,5 @@ __all__ = [
     "TARSClassifier",
     "TARSTagger",
     "TextClassifier",
+    "ClusteringModel",
 ]

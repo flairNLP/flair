@@ -18,7 +18,7 @@ corpus = flair.datasets.UD_ENGLISH()
 ```
 
 The first time you call this snippet, it triggers a download of the Universal Dependency Treebank for English onto your
-hard drive. It then reads the train, test and dev splits into the `Corpus` corpus which it returns. Check the length of 
+hard drive. It then reads the train, test and dev splits into the `Corpus` which it returns. Check the length of 
 the three splits to see how many Sentences are there:
 
 ```python
