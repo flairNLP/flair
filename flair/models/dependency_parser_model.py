@@ -372,7 +372,7 @@ class DependencyParser(flair.nn.Model):
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "token_embeddings": self.token_embeddings,
             "use_rnn": self.use_rnn,
             "lstm_hidden_size": self.lstm_hidden_size,
@@ -385,10 +385,10 @@ class DependencyParser(flair.nn.Model):
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
-
-        model = DependencyParser(
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        return super()._init_model_with_state_dict(
+            state,
             token_embeddings=state["token_embeddings"],
             relations_dictionary=state["relations_dictionary"],
             use_rnn=state["use_rnn"],
@@ -398,9 +398,8 @@ class DependencyParser(flair.nn.Model):
             lstm_layers=state["lstm_layers"],
             mlp_dropout=state["mlp_dropout"],
             lstm_dropout=state["lstm_dropout"],
+            **kwargs
         )
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @property
     def label_type(self):
