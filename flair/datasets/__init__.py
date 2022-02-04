@@ -119,6 +119,7 @@ from .document_classification import (
     ClassificationDataset,
     CSVClassificationCorpus,
     CSVClassificationDataset,
+    STACKOVERFLOW,
 )
 
 # word sense disambiguation
@@ -378,6 +379,7 @@ __all__ = [
     "GO_EMOTIONS",
     "IMDB",
     "NEWSGROUPS",
+    "STACKOVERFLOW",
     "SENTEVAL_CR",
     "SENTEVAL_MPQA",
     "SENTEVAL_MR",

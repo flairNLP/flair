@@ -20,7 +20,7 @@ from . import (  # noqa: E402 import after setting device
     models,
     nn,
     trainers,
-    visual,
+    visual
 )
 
 __version__ = "0.10"
