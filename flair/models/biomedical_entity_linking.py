@@ -439,8 +439,7 @@ class HunNen(object):
     def __init__(self):
         super().__init__()
 
-# : Union[str, Path]
-    def load(self, model_name, dictionary_path):
+    def load(self, model_name, dictionary_path:  Union[str, Path]):
         self.use_cuda = torch.cuda.is_available()
         # load biosyn model
         self.biosyn = BioSyn(max_length=25, use_cuda=self.use_cuda)
@@ -449,12 +448,12 @@ class HunNen(object):
 
         # cache or load dictionary
         self.dictionary, self.dict_sparse_embeds, self.dict_dense_embeds = self.cache_or_load_dictionary(
-            self.biosyn, model_name, dictionary_path
+            self.biosyn, model_name, str(dictionary_path)
         )
         return self;
 
 
-    def predict(self, sentence: Union[List[Sentence], Sentence], entity_type):
+    def predict(self, sentence: Sentence, entity_type, topk = 10):
         for entity in sentence.get_labels(entity_type):
             # preprocess mention
             mention = TextPreprocess().run(entity.span.text)
@@ -479,7 +478,7 @@ class HunNen(object):
             sparse_weight = self.biosyn.get_sparse_weight().item()
             hybrid_score_matrix = sparse_weight * sparse_score_matrix + dense_score_matrix
             hybrid_candidate_idxs = self.biosyn.retrieve_candidate(
-                score_matrix=hybrid_score_matrix, topk=5
+                score_matrix=hybrid_score_matrix, topk=topk
             )
 
             # get predictions from dictionary
@@ -490,8 +489,9 @@ class HunNen(object):
                 predicted_name = prediction[0]
                 predicted_id = prediction[1]
                 output["predictions"].append({"name": predicted_name, "id": predicted_id})
+                sentence.add_complex_label(typename="entity_type" + "_nen", label=SpanLabel(span=entity.span, value= f"{predicted_name} {predicted_id}"))
 
-            print(output)
+
 
     def cache_or_load_dictionary(self, biosyn, model_name_or_path, dictionary_path):
         dictionary_name = os.path.splitext(os.path.basename(dictionary_path))[0]
