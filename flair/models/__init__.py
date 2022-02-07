@@ -9,6 +9,7 @@ from .sequence_tagger_model import MultiTagger, SequenceTagger
 from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier
 from .word_tagger_model import WordTagger
+from .biomedical_entity_linking import HunNen
 
 __all__ = [
     "DependencyParser",
@@ -25,4 +26,5 @@ __all__ = [
     "TARSClassifier",
     "TARSTagger",
     "TextClassifier",
+    "HunNen"
 ]
