@@ -431,24 +431,6 @@ class BioSyn(object):
 
         return dense_embeds
 
-
-def marginal_nll(score, target):
-    """
-    sum all scores among positive samples
-    """
-    predict = F.softmax(score, dim=-1)
-    loss = predict * target
-    loss = loss.sum(dim=-1)  # sum all positive scores
-    loss = loss[loss > 0]  # filter sets with at least one positives
-    loss = torch.clamp(loss, min=1e-9, max=1)  # for numerical stability
-    loss = -torch.log(loss)  # for negative log likelihood
-    if len(loss) == 0:
-        loss = loss.sum()  # will return zero loss
-    else:
-        loss = loss.mean()
-    return loss
-
-
 def parse_args():
     """
     Parse input arguments
