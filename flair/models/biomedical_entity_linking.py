@@ -1,25 +1,19 @@
-import argparse
 import os
-import time
-import pdb
 import re
-import glob
 import pickle
 import logging
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 from torch.utils.data.dataloader import DataLoader
-from torch.utils.data import Dataset
 from sklearn.feature_extraction.text import TfidfVectorizer
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModel, default_data_collator
 from huggingface_hub import hf_hub_url, cached_download
 from string import punctuation
-from flair.data import Dictionary, Label, Sentence, Span, SpanLabel
-from typing import Dict, List, Optional, Tuple, Union
+from flair.data import Sentence, SpanLabel
+from typing import List, Union
 from pathlib import Path
 
 log = logging.getLogger("flair")
@@ -453,43 +447,48 @@ class HunNen(object):
         return self;
 
 
-    def predict(self, sentence: Sentence, entity_type, topk = 10):
-        for entity in sentence.get_labels(entity_type):
-            # preprocess mention
-            mention = TextPreprocess().run(entity.span.text)
+    def predict(self, sentences: Union[List[Sentence], Sentence], entity_type, topk = 10):
+        # make sure its a list of sentences
+        if not isinstance(sentences, list):
+            sentences = [sentences]
+        
+        for sentence in sentences:
+            for entity in sentence.get_labels(entity_type):
+                # preprocess mention
+                mention = TextPreprocess().run(entity.span.text)
 
-            # embed mention
-            mention_sparse_embeds = self.biosyn.embed_sparse(names=[mention])
-            mention_dense_embeds = self.biosyn.embed_dense(names=[mention])
+                # embed mention
+                mention_sparse_embeds = self.biosyn.embed_sparse(names=[mention])
+                mention_dense_embeds = self.biosyn.embed_dense(names=[mention])
 
-            output = {
-                "mention": mention,
-                "mention_sparse_embeds": mention_sparse_embeds.squeeze(0),
-                "mention_dense_embeds": mention_dense_embeds.squeeze(0),
-            }
+                output = {
+                    "mention": mention,
+                    "mention_sparse_embeds": mention_sparse_embeds.squeeze(0),
+                    "mention_dense_embeds": mention_dense_embeds.squeeze(0),
+                }
 
-            # calcuate score matrix and get top 5
-            sparse_score_matrix = self.biosyn.get_score_matrix(
-                query_embeds=mention_sparse_embeds, dict_embeds=self.dict_sparse_embeds
-            )
-            dense_score_matrix = self.biosyn.get_score_matrix(
-                query_embeds=mention_dense_embeds, dict_embeds=self.dict_dense_embeds
-            )
-            sparse_weight = self.biosyn.get_sparse_weight().item()
-            hybrid_score_matrix = sparse_weight * sparse_score_matrix + dense_score_matrix
-            hybrid_candidate_idxs = self.biosyn.retrieve_candidate(
-                score_matrix=hybrid_score_matrix, topk=topk
-            )
+                # calcuate score matrix and get top 5
+                sparse_score_matrix = self.biosyn.get_score_matrix(
+                    query_embeds=mention_sparse_embeds, dict_embeds=self.dict_sparse_embeds
+                )
+                dense_score_matrix = self.biosyn.get_score_matrix(
+                    query_embeds=mention_dense_embeds, dict_embeds=self.dict_dense_embeds
+                )
+                sparse_weight = self.biosyn.get_sparse_weight().item()
+                hybrid_score_matrix = sparse_weight * sparse_score_matrix + dense_score_matrix
+                hybrid_candidate_idxs = self.biosyn.retrieve_candidate(
+                    score_matrix=hybrid_score_matrix, topk=topk
+                )
 
-            # get predictions from dictionary
-            predictions = self.dictionary[hybrid_candidate_idxs].squeeze(0)
-            output["predictions"] = []
+                # get predictions from dictionary
+                predictions = self.dictionary[hybrid_candidate_idxs].squeeze(0)
+                output["predictions"] = []
 
-            for prediction in predictions:
-                predicted_name = prediction[0]
-                predicted_id = prediction[1]
-                output["predictions"].append({"name": predicted_name, "id": predicted_id})
-                sentence.add_complex_label(typename="entity_type" + "_nen", label=SpanLabel(span=entity.span, value= f"{predicted_name} {predicted_id}"))
+                for prediction in predictions:
+                    predicted_name = prediction[0]
+                    predicted_id = prediction[1]
+                    output["predictions"].append({"name": predicted_name, "id": predicted_id})
+                    sentence.add_complex_label(typename="entity_type" + "_nen", label=SpanLabel(span=entity.span, value= f"{predicted_name} {predicted_id}"))
 
 
 
