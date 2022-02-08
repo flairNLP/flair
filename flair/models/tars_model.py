@@ -694,7 +694,7 @@ class TARSClassifier(FewshotClassifier):
         }
         return model_state
 
-    @@classmethod
+    @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
         # init new TARS classifier
         label_dictionary = state["label_dictionary"]
