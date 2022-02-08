@@ -14,7 +14,7 @@ from flair.embeddings import (
     TransformerWordEmbeddings,
     WordEmbeddings,
 )
-from flair.models import LanguageModel
+from flair.models import LanguageModel, SequenceTagger
 
 glove: TokenEmbeddings = WordEmbeddings("turian")
 flair_embedding: TokenEmbeddings = FlairEmbeddings("news-forward-fast")
@@ -319,3 +319,17 @@ def test_document_cnn_embeddings():
 
     assert len(sentence.get_embedding()) == 0
     del embeddings
+
+
+def test_transformers_keep_tokenizer_when_saving(results_base_path):
+    embeddings = TransformerWordEmbeddings("sentence-transformers/paraphrase-albert-small-v2")
+    results_base_path.mkdir(exist_ok=True, parents=True)
+    initial_tagger_path = results_base_path / "initial_tokenizer.pk"
+    reloaded_tagger_path = results_base_path / "reloaded_tokenizer.pk"
+
+    initial_tagger = SequenceTagger(embeddings, Dictionary(), "ner")
+
+    initial_tagger.save(initial_tagger_path)
+    reloaded_tagger = SequenceTagger.load(initial_tagger_path)
+
+    reloaded_tagger.save(reloaded_tagger_path)
