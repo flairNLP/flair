@@ -1,14 +1,28 @@
+import flair.datasets
 from flair.datasets import CONLL_03
 from flair.embeddings import WordEmbeddings, TransformerWordEmbeddings, StackedEmbeddings, GazetteerEmbeddings
 from flair.data import Sentence
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
+from datasets import list_datasets, load_dataset, list_metrics, load_metric
 
 # corpus = CONLL_03()
-# label_type = 'ner'
-# label_dict = corpus.make_label_dictionary(label_type=label_type)
+# print(corpus)
+
+label_dict = {'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-ORG': 3, 'I-ORG': 4, 'B-LOC': 5, 'I-LOC': 6, 'B-MISC': 7, 'I-MISC': 8}
+dataset = load_dataset("conll2003")
+print(dataset['train'][0])
+
 
 sentence = Sentence('The grass is green .')
+# glove_embedding = WordEmbeddings('glove')
+#
+# glove_embedding.embed(sentence)
+#
+# # now check out the embedded tokens.
+# for token in sentence:
+#     print(token)
+#     print(token.embedding)
 #
 # transformer_embeddings = TransformerWordEmbeddings(model='xlm-roberta-large',
 #                                                    layers="-1",
@@ -28,8 +42,11 @@ sentence = Sentence('The grass is green .')
 # # somehow load a gazetteer
 # loaded_gazetteer = load(...)
 #
-# # init embedding with gazetteer
-gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(gazetteers=["test"])
+# init embedding with gazetteer
+gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/gazetteers",
+                                                               label_dict=label_dict)
+
+print(gazetteer_embedding.embedding_length)
 
 gazetteer_embedding.embed(sentence)
 

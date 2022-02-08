@@ -881,15 +881,37 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
 
 class GazetteerEmbeddings(TokenEmbeddings):
-    def __init__(self, gazetteers: List, full_mathing: bool = True, partial_matching: bool = True):
+    def __init__(
+            self,
+            path_to_gazetteers: str,
+            label_dict: dict,
+            full_mathing: bool = True,
+            partial_matching: bool = True
+    ):
         super().__init__()
-        self.gazetteer_list = gazetteers
+        self.gazetteer_path = path_to_gazetteers
         self.matching_methods = []
 
         if full_mathing:
             self.matching_methods.append('full_match')
         if partial_matching:
             self.matching_methods.append('partial_match')
+
+        # Dummy to get tags used by gazetteers
+        self.__embedding_length = len(label_dict)
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
+        tokens = [token for sentence in sentences for token in sentence.tokens]
+        print(tokens)
+        # Dummy embedding with onse-vector
+        for token in tokens:
+            token.set_embedding(self.name, torch.ones(1, 5))
+
+        return sentences
 
 
 class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbedding):
