@@ -541,7 +541,7 @@ class TARSTagger(FewshotClassifier):
                     if most_probable_first:
                         import operator
 
-                        already_set_indices = []
+                        already_set_indices: List[int] = []
 
                         sorted_x = sorted(all_detected.items(), key=operator.itemgetter(1))
                         sorted_x.reverse()
