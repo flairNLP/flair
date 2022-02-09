@@ -682,18 +682,18 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 embedded_data_points, gold_labels, data_points, label_candidates = self.forward_pass(  # type: ignore
                     batch, return_label_candidates=True
                 )
-                scores = self.decoder(embedded_data_points)
-
-                # remove previously predicted labels of this type
-                for sentence in data_points:
-                    sentence.remove_labels(label_name)
-
-                if return_loss:
-                    overall_loss += self._calculate_loss(scores, gold_labels)[0]
-                    label_count += len(label_candidates)
-
                 # if anything could possibly be predicted
                 if len(label_candidates) > 0:
+                    scores = self.decoder(embedded_data_points)
+
+                    # remove previously predicted labels of this type
+                    for sentence in data_points:
+                        sentence.remove_labels(label_name)
+
+                    if return_loss:
+                        overall_loss += self._calculate_loss(scores, gold_labels)[0]
+                        label_count += len(label_candidates)
+
                     if self.multi_label:
                         sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
                         n_labels = sigmoided.size(1)
