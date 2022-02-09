@@ -182,17 +182,17 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         else:
             self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary))
 
-        # ----- CRF / Linear layer -----
+        # the loss function is Viterbi if using CRF, else regular Cross Entropy Loss
+        self.loss_function = (
+            ViterbiLoss(self.label_dictionary)
+            if use_crf
+            else torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+        )
+
+        # if using CRF, we also require a CRF and a Viterbi decoder
         if use_crf:
-            self.crf = CRF(
-                self.label_dictionary,
-                self.tagset_size,
-                init_from_state_dict,
-            )
-            self.loss_function = ViterbiLoss(self.label_dictionary)
+            self.crf = CRF(self.label_dictionary, self.tagset_size, init_from_state_dict)
             self.viterbi_decoder = ViterbiDecoder(self.label_dictionary)
-        else:
-            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
 
         self.to(flair.device)
 
