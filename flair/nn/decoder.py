@@ -187,16 +187,17 @@ class PrototypicalDecoder(torch.nn.Module):
 
                 logits, labels = encoder.forward_pass(batch)  # type: ignore
 
-                # decode embeddings into prototype space
-                if self.metric_space_decoder is not None:
-                    logits = self.metric_space_decoder(logits)
+                if len(labels) > 0:
+                    # decode embeddings into prototype space
+                    if self.metric_space_decoder is not None:
+                        logits = self.metric_space_decoder(logits)
 
-                for logit, label in zip(logits, labels):
-                    counter.update(label)
+                    for logit, label in zip(logits, labels):
+                        counter.update(label)
 
-                    idx = encoder.label_dictionary.get_idx_for_item(label[0])
+                        idx = encoder.label_dictionary.get_idx_for_item(label[0])
 
-                    new_prototypes[idx] += logit
+                        new_prototypes[idx] += logit
 
                 # embeddings need to be removed so that memory doesn't fill up
                 store_embeddings(batch, storage_mode="none")
