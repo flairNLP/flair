@@ -2,6 +2,7 @@ import torch
 
 # Source: https://github.com/UKPLab/sentence-transformers/blob/master/sentence_transformers/util.py#L23
 
+
 def dot_product(a: torch.Tensor, b: torch.Tensor, normalize=False):
     """
     Computes dot product for pairs of vectors.
@@ -20,13 +21,16 @@ def dot_product(a: torch.Tensor, b: torch.Tensor, normalize=False):
 
     return torch.mm(a, b.transpose(0, 1))
 
+
 class CosineDistance(torch.nn.Module):
     def forward(self, a, b):
         return -dot_product(a, b, normalize=True)
 
+
 class LogitCosineDistance(torch.nn.Module):
     def forward(self, a, b):
-        return torch.logit(0.5 - 0.5*dot_product(a, b, normalize=True))
+        return torch.logit(0.5 - 0.5 * dot_product(a, b, normalize=True))
+
 
 class NegativeScaledDotProduct(torch.nn.Module):
     def forward(self, a, b):

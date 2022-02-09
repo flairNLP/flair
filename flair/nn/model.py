@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DT, Dictionary, Label, Sentence, _iter_dataset
+from flair.data import DT, Dictionary, Label, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.file_utils import Tqdm
 from flair.training_utils import Result, store_embeddings
@@ -71,9 +71,7 @@ class Model(torch.nn.Module, typing.Generic[DT]):
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
         """Initialize the model from a state dictionary."""
-        model = cls(
-            **kwargs
-        )
+        model = cls(**kwargs)
 
         model.load_state_dict(state["state_dict"])
         return model
@@ -570,11 +568,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
     def forward_loss(self, sentences: Union[List[DT], DT]) -> Tuple[torch.Tensor, int]:
 
-        # make a forward pass to produce logits and labels
-        logits, labels = self.forward_pass(sentences)  # type: ignore
+        # make a forward pass to produce embedded data points and labels
+        embedded_data_points, labels = self.forward_pass(sentences)  # type: ignore
 
-        # push logits through decoder to get the scores
-        scores = self.decoder(logits)
+        # push embedded_data_points through decoder to get the scores
+        scores = self.decoder(embedded_data_points)
 
         # calculate the loss
         return self._calculate_loss(scores, labels)
@@ -661,7 +659,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 return sentences
 
             if len(sentences) > mini_batch_size:
-                batches = DataLoader(
+                batches: Union[DataLoader, List[List[DT]]] = DataLoader(
                     dataset=FlairDatapointDataset(reordered_sentences),
                     batch_size=mini_batch_size,
                 )
@@ -673,17 +671,17 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             else:
                 batches = [reordered_sentences]
 
-            overall_loss = 0
+            overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
             for batch in batches:
                 # stop if all sentences are empty
                 if not batch:
                     continue
 
-                logits, gold_labels, data_points, label_candidates = self.forward_pass(
+                embedded_data_points, gold_labels, data_points, label_candidates = self.forward_pass(
                     batch, return_label_candidates=True  # type: ignore
                 )
-                scores = self.decoder(logits)
+                scores = self.decoder(embedded_data_points)
 
                 # remove previously predicted labels of this type
                 for sentence in data_points:
@@ -751,17 +749,15 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-        if 'decoder' not in kwargs and 'decoder' in state:
-            kwargs['decoder'] = state['decoder']
+        if "decoder" not in kwargs and "decoder" in state:
+            kwargs["decoder"] = state["decoder"]
 
-        return super(Classifier, cls)._init_model_with_state_dict(
-            state, **kwargs
-        )
+        return super(Classifier, cls)._init_model_with_state_dict(state, **kwargs)
 
     def _get_state_dict(self):
         state = super()._get_state_dict()
 
         if self._custom_decoder:
-            state['decoder'] = self.decoder
+            state["decoder"] = self.decoder
 
         return state

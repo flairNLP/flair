@@ -14,9 +14,6 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-# global variable: embedding_storage_mode
-embedding_storage_mode = "default"
-
 
 from . import (  # noqa: E402 import after setting device
     data,
@@ -58,7 +55,6 @@ __all__ = [
     "__version__",
     "logger",
     "set_seed",
-    "embedding_storage_mode",
     "data",
     "models",
     "nn",

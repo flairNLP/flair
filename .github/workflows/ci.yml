@@ -14,12 +14,10 @@ jobs:
         with:
           python-version: 3.6
       - name: Install Flair dependencies
-        run: |
-          pip install -e .
+        run: pip install -e .
       - name: Install unittest dependencies
         run: pip install -r requirements-dev.txt
+      - name: Show installed dependencies
+        run: pip freeze
       - name: Run tests
-        run: |
-          cd tests
-          pip freeze
-          pytest --runintegration -vv
+        run: pytest --runintegration -vv

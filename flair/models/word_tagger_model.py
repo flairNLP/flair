@@ -17,11 +17,11 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
     """
 
     def __init__(
-            self,
-            embeddings: TokenEmbeddings,
-            tag_dictionary: Dictionary,
-            tag_type: str,
-            **classifierargs,
+        self,
+        embeddings: TokenEmbeddings,
+        tag_dictionary: Dictionary,
+        tag_type: str,
+        **classifierargs,
     ):
         """
         Initializes a WordTagger
@@ -30,9 +30,9 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
         :param tag_type: string identifier for tag type
         :param beta: Parameter for F-beta score for evaluation and training annealing
         """
-        super().__init__(label_dictionary=tag_dictionary,
-                         final_embedding_size=embeddings.embedding_length,
-                         **classifierargs)
+        super().__init__(
+            label_dictionary=tag_dictionary, final_embedding_size=embeddings.embedding_length, **classifierargs
+        )
 
         # embeddings
         self.embeddings = embeddings
@@ -63,9 +63,9 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
         )
 
     def forward_pass(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            return_label_candidates: bool = False,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
     ):
         if not isinstance(sentences, list):
             sentences = [sentences]
@@ -79,15 +79,15 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
 
         all_embeddings = [token.get_embedding(names) for token in all_tokens]
 
-        logits = torch.stack(all_embeddings)
+        embedded_tokens = torch.stack(all_embeddings)
 
         labels = [[token.get_tag(self.label_type).value] for token in all_tokens]
 
         if return_label_candidates:
             empty_label_candidates = [Label(value=None, score=0.0) for token in all_tokens]
-            return logits, labels, all_tokens, empty_label_candidates
+            return embedded_tokens, labels, all_tokens, empty_label_candidates
 
-        return logits, labels
+        return embedded_tokens, labels
 
     @property
     def label_type(self):

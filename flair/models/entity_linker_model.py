@@ -20,14 +20,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
 
     def __init__(
-            self,
-            word_embeddings: flair.embeddings.TokenEmbeddings,
-            label_dictionary: Dictionary,
-            pooling_operation: str = "first&last",
-            label_type: str = "nel",
-            dropout: float = 0.5,
-            skip_unk_probability: Optional[float] = None,
-            **classifierargs,
+        self,
+        word_embeddings: flair.embeddings.TokenEmbeddings,
+        label_dictionary: Dictionary,
+        pooling_operation: str = "first&last",
+        label_type: str = "nel",
+        dropout: float = 0.5,
+        skip_unk_probability: Optional[float] = None,
+        **classifierargs,
     ):
         """
         Initializes an EntityLinker
@@ -41,9 +41,11 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
         super(EntityLinker, self).__init__(
             label_dictionary=label_dictionary,
-            final_embedding_size=word_embeddings.embedding_length * 2 if pooling_operation == "first&last"
+            final_embedding_size=word_embeddings.embedding_length * 2
+            if pooling_operation == "first&last"
             else word_embeddings.embedding_length,
-            **classifierargs)
+            **classifierargs,
+        )
 
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
@@ -85,9 +87,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         return torch.mean(arg, 0)
 
     def forward_pass(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            return_label_candidates: bool = False,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
     ):
 
         if not isinstance(sentences, list):
@@ -145,18 +147,18 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                         empty_label_candidates.append(candidate)
 
             if len(embedding_list) > 0:
-                logits = torch.cat(embedding_list, 0)
+                embedded_entity_pairs = torch.cat(embedding_list, 0)
 
                 if self.use_dropout:
-                    logits = self.dropout(logits)
+                    embedded_entity_pairs = self.dropout(embedded_entity_pairs)
 
             else:
-                logits = None
+                embedded_entity_pairs = None
 
         if return_label_candidates:
-            return logits, span_labels, sentences_to_spans, empty_label_candidates
+            return embedded_entity_pairs, span_labels, sentences_to_spans, empty_label_candidates
 
-        return logits, span_labels
+        return embedded_entity_pairs, span_labels
 
     def _get_state_dict(self):
         model_state = {

@@ -20,7 +20,6 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-
 EPSILON = 1e-5
 
 
@@ -69,13 +68,11 @@ def exp_map(x, y):
 
 def loss(x, y):
     """Get the loss for the optimizer."""
-    return torch.sum(dist(x, y)**2)
+    return torch.sum(dist(x, y) ** 2)
 
 
 class HyperbolicDistance(nn.Module):
-    """Implement a HyperbolicDistance object.
-
-    """
+    """Implement a HyperbolicDistance object."""
 
     def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:  # type: ignore
         """Returns the squared euclidean distance between each
