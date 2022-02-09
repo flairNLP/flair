@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import List, Tuple, Union
 
 import torch
-import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
