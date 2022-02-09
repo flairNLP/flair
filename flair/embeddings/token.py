@@ -1,10 +1,11 @@
 import hashlib
 import logging
-import os
+import glob, os
 import re
 from collections import Counter
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
+from io import open
 
 import gensim
 import numpy as np
@@ -890,26 +891,32 @@ class GazetteerEmbeddings(TokenEmbeddings):
     ):
         super().__init__()
         self.gazetteer_path = path_to_gazetteers
+        self.labels = label_dict
         self.matching_methods = []
-
         if full_mathing:
             self.matching_methods.append('full_match')
         if partial_matching:
             self.matching_methods.append('partial_match')
 
-        # Dummy to get tags used by gazetteers
+        self.gazetteer_file_list = self._process_gazetteers()
         self.__embedding_length = len(label_dict)
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
-        tokens = [token for sentence in sentences for token in sentence.tokens]
-        print(tokens)
-        # Dummy embedding with onse-vector
-        for token in tokens:
-            token.set_embedding(self.name, torch.ones(1, 5))
+    def _process_gazetteers(self):
+        gazetteer_files = []
+        for key in self.labels.keys():
+            if key != "O":
+                pattern = f'.*-?{key}-.*[.]txt'
+                gazetteer_files.extend([f for f in os.listdir(self.gazetteer_path + '/') if re.match(pattern, f)])
+        return gazetteer_files
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        for sentence in sentences:
+            for token in sentence.tokens:
+                token.set_embedding(self.name, torch.ones(1, 5))
 
         return sentences
 

@@ -8,13 +8,16 @@ from datasets import list_datasets, load_dataset, list_metrics, load_metric
 
 # corpus = CONLL_03()
 # print(corpus)
-
-label_dict = {'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-ORG': 3, 'I-ORG': 4, 'B-LOC': 5, 'I-LOC': 6, 'B-MISC': 7, 'I-MISC': 8}
+#
+# label_dict = {'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-ORG': 3, 'I-ORG': 4, 'B-LOC': 5, 'I-LOC': 6, 'B-MISC': 7, 'I-MISC': 8}
+label_dict = {'O': 0, 'PER': 1, 'ORG': 2, 'LOC': 3, 'MISC': 4}
 dataset = load_dataset("conll2003")
 print(dataset['train'][0])
 
 
 sentence = Sentence('The grass is green .')
+sentence1 = Sentence('I love Paris !')
+sentence_list = [sentence, sentence1]
 # glove_embedding = WordEmbeddings('glove')
 #
 # glove_embedding.embed(sentence)
@@ -43,16 +46,21 @@ sentence = Sentence('The grass is green .')
 # loaded_gazetteer = load(...)
 #
 # init embedding with gazetteer
-gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/gazetteers",
+gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/home/danielc/PycharmProjects"
+                                                                                  "/flair"
+                                                                                  "/gazetteer_embeddings_playground"
+                                                                                  "/gazetteers",
                                                                label_dict=label_dict)
+print(gazetteer_embedding.gazetteer_file_list)
 
 print(gazetteer_embedding.embedding_length)
 
-gazetteer_embedding.embed(sentence)
+gazetteer_embedding.embed(sentence_list)
 
-for token in sentence:
-    print(token)
-    print(token.embedding)
+for sentence in sentence_list:
+    for token in sentence:
+        print(token)
+        print(token.embedding)
 
 # embeddings_list = [gazetteer_embedding, transformer_embeddings]
 #
