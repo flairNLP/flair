@@ -489,23 +489,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     forward_pass() method to implement this base class.
     """
 
-    def forward_pass(
-        self,
-        sentences: Union[List[DT], DT],
-        return_label_candidates: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]]]:
-        """This method does a forward pass through the model given a list of data
-        points as input.
-        Returns the tuple (scores, labels) if return_label_candidates = False,
-        where scores are a tensor of logits produced by the decoder and labels
-        are the string labels for each data point. Returns the tuple (scores,
-        labels, data_points, candidate_labels) if return_label_candidates = True,
-        where data_points are the data points to which labels are added (commonly
-        either Sentence or Token objects) and candidate_labels are empty Label
-        objects for each prediction (depending on the task Label, SpanLabel or
-        RelationLabel)."""
-        raise NotImplementedError
-
     def __init__(
         self,
         label_dictionary: Dictionary,
@@ -551,6 +534,23 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
+
+    def forward_pass(
+        self,
+        sentences: Union[List[DT], DT],
+        return_label_candidates: bool = False,
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]]]:
+        """This method does a forward pass through the model given a list of data
+        points as input.
+        Returns the tuple (scores, labels) if return_label_candidates = False,
+        where scores are a tensor of logits produced by the decoder and labels
+        are the string labels for each data point. Returns the tuple (scores,
+        labels, data_points, candidate_labels) if return_label_candidates = True,
+        where data_points are the data points to which labels are added (commonly
+        either Sentence or Token objects) and candidate_labels are empty Label
+        objects for each prediction (depending on the task Label, SpanLabel or
+        RelationLabel)."""
+        raise NotImplementedError
 
     @property
     def multi_label_threshold(self):
@@ -678,7 +678,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 if not batch:
                     continue
 
-                embedded_data_points, gold_labels, data_points, label_candidates = self.forward_pass( # type: ignore
+                embedded_data_points, gold_labels, data_points, label_candidates = self.forward_pass(  # type: ignore
                     batch, return_label_candidates=True
                 )
                 scores = self.decoder(embedded_data_points)

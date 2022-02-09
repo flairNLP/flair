@@ -33,7 +33,12 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
         :param loss_weights: Dictionary of weights for labels for the loss function
         (if any label's weight is unspecified it will default to 1.0)
         """
-        super().__init__(**classifierargs)
+        super().__init__(
+            **classifierargs,
+            final_embedding_size=2 * document_embeddings.embedding_length
+            if embed_separately
+            else document_embeddings.embedding_length,
+        )
 
         self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
 
@@ -41,20 +46,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
 
         self.embed_separately = embed_separately
 
-        # if embed_separately == True the linear layer needs twice the length of the embeddings as input size
-        # since we concatenate the embeddings of the two DataPoints in the DataPairs
-        if self.embed_separately:
-            self.decoder = torch.nn.Linear(
-                2 * self.document_embeddings.embedding_length,
-                len(self.label_dictionary),
-            ).to(flair.device)
-
-            torch.nn.init.xavier_uniform_(self.decoder.weight)
-
-        else:
-            # representation for both sentences
-            self.decoder = torch.nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
-
+        if not self.embed_separately:
             # set separator to concatenate two sentences
             self.sep = " "
             if isinstance(
@@ -65,8 +57,6 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
                     self.sep = " " + str(self.document_embeddings.tokenizer.sep_token) + " "
                 else:
                     self.sep = " [SEP] "
-
-        torch.nn.init.xavier_uniform_(self.decoder.weight)
 
         # auto-spawn on GPU if available
         self.to(flair.device)

@@ -155,7 +155,7 @@ class PrototypicalDecoder(torch.nn.Module):
                     )
 
         # Monkey-patching is problematic for mypy (https://github.com/python/mypy/issues/2427)
-        encoder.train = patched_train # type: ignore
+        encoder.train = patched_train  # type: ignore
 
     def calculate_prototypes(
         self,
@@ -185,7 +185,7 @@ class PrototypicalDecoder(torch.nn.Module):
 
             for batch in tqdm(dataloader):
 
-                logits, labels = encoder.forward_pass(batch) # type: ignore
+                logits, labels = encoder.forward_pass(batch)  # type: ignore
 
                 # decode embeddings into prototype space
                 if self.metric_space_decoder is not None:

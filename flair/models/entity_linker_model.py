@@ -20,14 +20,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
 
     def __init__(
-            self,
-            word_embeddings: flair.embeddings.TokenEmbeddings,
-            label_dictionary: Dictionary,
-            pooling_operation: str = "first&last",
-            label_type: str = "nel",
-            dropout: float = 0.5,
-            skip_unk_probability: Optional[float] = None,
-            **classifierargs,
+        self,
+        word_embeddings: flair.embeddings.TokenEmbeddings,
+        label_dictionary: Dictionary,
+        pooling_operation: str = "first&last",
+        label_type: str = "nel",
+        dropout: float = 0.5,
+        skip_unk_probability: Optional[float] = None,
+        **classifierargs,
     ):
         """
         Initializes an EntityLinker
@@ -87,9 +87,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         return torch.mean(arg, 0)
 
     def forward_pass(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            return_label_candidates: bool = False,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
     ):
 
         if not isinstance(sentences, list):

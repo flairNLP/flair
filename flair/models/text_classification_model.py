@@ -40,14 +40,13 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         (if any label's weight is unspecified it will default to 1.0)
         """
 
-        super(TextClassifier, self).__init__(**classifierargs)
+        super(TextClassifier, self).__init__(
+            **classifierargs, final_embedding_size=document_embeddings.embedding_length
+        )
 
         self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
 
         self._label_type = label_type
-
-        self.decoder = nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
-        nn.init.xavier_uniform_(self.decoder.weight)
 
         # auto-spawn on GPU if available
         self.to(flair.device)
@@ -71,18 +70,15 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
-        # send through decoder to get logits
-        scores = self.decoder(text_embedding_tensor)
-
         labels = []
         for sentence in sentences:
             labels.append([label.value for label in sentence.get_labels(self.label_type)])
 
         if return_label_candidates:
             label_candidates = [Label(value="<None>") for sentence in sentences]
-            return scores, labels, sentences, label_candidates
+            return text_embedding_tensor, labels, sentences, label_candidates
 
-        return scores, labels
+        return text_embedding_tensor, labels
 
     def _get_state_dict(self):
         model_state = {
