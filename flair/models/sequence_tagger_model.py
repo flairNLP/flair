@@ -632,7 +632,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             reproject_embeddings=reproject_embeddings,
             loss_weights=weights,
             init_from_state_dict=True,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod

@@ -112,7 +112,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
             if "multi_label_threshold" not in state.keys()
             else state["multi_label_threshold"],
             loss_weights=weights,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod

@@ -59,7 +59,7 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
             embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
             tag_type=state["tag_type"],
-            **kwargs
+            **kwargs,
         )
 
     def forward_pass(

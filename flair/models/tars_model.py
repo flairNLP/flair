@@ -444,7 +444,7 @@ class TARSTagger(FewshotClassifier):
             embeddings=state["tars_model"].embeddings,
             num_negative_labels_to_sample=state["num_negative_labels_to_sample"],
             prefix=state["prefix"],
-            **kwargs
+            **kwargs,
         )
         # set all task information
         model._task_specific_attributes = state["task_specific_attributes"]
@@ -707,7 +707,7 @@ class TARSClassifier(FewshotClassifier):
             label_type=label_type,
             embeddings=state["tars_model"].document_embeddings,
             num_negative_labels_to_sample=state["num_negative_labels_to_sample"],
-            **kwargs
+            **kwargs,
         )
 
         # set all task information

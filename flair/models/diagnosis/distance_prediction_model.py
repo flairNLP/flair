@@ -170,7 +170,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
             loss_max_weight=weight,
             regression=state["regression"],
             regr_loss_step=state["regr_loss_step"],
-            **kwargs
+            **kwargs,
         )
 
     # So far only one sentence allowed

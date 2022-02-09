@@ -678,7 +678,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
             start_symbol_for_encoding=state["start_symbol"],
             end_symbol_for_encoding=state["end_symbol"],
             bidirectional_encoding=state["bidirectional_encoding"],
-            **kwargs
+            **kwargs,
         )
 
     def _print_predictions(self, batch, gold_label_type):

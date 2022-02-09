@@ -398,7 +398,7 @@ class DependencyParser(flair.nn.Model):
             lstm_layers=state["lstm_layers"],
             mlp_dropout=state["mlp_dropout"],
             lstm_dropout=state["lstm_dropout"],
-            **kwargs
+            **kwargs,
         )
 
     @property

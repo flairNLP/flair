@@ -364,5 +364,5 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
             eval_device=state["eval_device"],
             recall_at_points=state["recall_at_points"],
             recall_at_points_weights=state["recall_at_points_weights"],
-            **kwargs
+            **kwargs,
         )

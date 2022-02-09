@@ -284,7 +284,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
             word_dropout_value=state["word_dropout_value"],
             entity_pair_filters=state["entity_pair_filters"],
             non_linear_decoder=state["non_linear_decoder"],
-            **kwargs
+            **kwargs,
         )
 
     @property
