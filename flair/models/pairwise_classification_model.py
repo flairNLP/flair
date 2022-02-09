@@ -150,4 +150,5 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
             else state["multi_label_threshold"],
             loss_weights=state["weight_dict"],
             embed_separately=state["embed_separately"],
+            **kwargs
         )
