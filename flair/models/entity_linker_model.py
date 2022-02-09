@@ -20,14 +20,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
 
     def __init__(
-        self,
-        word_embeddings: flair.embeddings.TokenEmbeddings,
-        label_dictionary: Dictionary,
-        pooling_operation: str = "first&last",
-        label_type: str = "nel",
-        dropout: float = 0.5,
-        skip_unk_probability: Optional[float] = None,
-        **classifierargs,
+            self,
+            word_embeddings: flair.embeddings.TokenEmbeddings,
+            label_dictionary: Dictionary,
+            pooling_operation: str = "first&last",
+            label_type: str = "nel",
+            dropout: float = 0.5,
+            skip_unk_probability: Optional[float] = None,
+            **classifierargs,
     ):
         """
         Initializes an EntityLinker
@@ -87,9 +87,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         return torch.mean(arg, 0)
 
     def forward_pass(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            return_label_candidates: bool = False,
     ):
 
         if not isinstance(sentences, list):
@@ -105,13 +105,10 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         span_labels = []
         sentences_to_spans = []
         empty_label_candidates = []
+        embedded_entity_pairs = None
 
-        # if the entire batch has no sentence with candidates, return empty
-        if len(filtered_sentences) == 0:
-            scores = None
-
-        # otherwise, embed sentence and send through prediction head
-        else:
+        # embed sentences and send through prediction head
+        if len(filtered_sentences) > 0:
             # embed all tokens
             self.word_embeddings.embed(filtered_sentences)
 
@@ -151,9 +148,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
                 if self.use_dropout:
                     embedded_entity_pairs = self.dropout(embedded_entity_pairs)
-
-            else:
-                embedded_entity_pairs = None
 
         if return_label_candidates:
             return embedded_entity_pairs, span_labels, sentences_to_spans, empty_label_candidates

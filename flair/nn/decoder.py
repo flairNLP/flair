@@ -27,7 +27,7 @@ class PrototypicalDecoder(torch.nn.Module):
         num_prototypes: int,
         embeddings_size: int,
         prototype_size: Optional[int] = None,
-        distance_function: Optional[str] = "euclidean",
+        distance_function: str = "euclidean",
         use_radius: Optional[bool] = False,
         min_radius: Optional[int] = 0,
         unlabeled_distance: Optional[float] = None,
@@ -43,24 +43,23 @@ class PrototypicalDecoder(torch.nn.Module):
 
         self.prototype_size = prototype_size
 
+        # optional metric space decoder if prototypes have different length than embedding
+        self.metric_space_decoder: Optional[torch.nn.Linear] = None
         if prototype_size != embeddings_size:
             self.metric_space_decoder = torch.nn.Linear(embeddings_size, prototype_size)
             torch.nn.init.xavier_uniform_(self.metric_space_decoder.weight)
-        else:
-            self.metric_space_decoder = None
 
-        # create initial prototypes for all classes
-        # (all initial prototypes are a vector of all 1s)
+        # create initial prototypes for all classes (all initial prototypes are a vector of all 1s)
         self.prototype_vectors = torch.nn.Parameter(torch.ones(num_prototypes, prototype_size), requires_grad=True)
-
-        if use_radius:
-            self.prototype_radii = torch.nn.Parameter(torch.ones(num_prototypes), requires_grad=True)
-        else:
-            self.prototype_radii = None
 
         # if set, create initial prototypes from normal distribution
         if normal_distributed_initial_prototypes:
             self.prototype_vectors = torch.nn.Parameter(torch.normal(torch.zeros(num_prototypes, prototype_size)))
+
+        # if set, use a radius
+        self.prototype_radii: Optional[torch.nn.Parameter] = None
+        if use_radius:
+            self.prototype_radii = torch.nn.Parameter(torch.ones(num_prototypes), requires_grad=True)
 
         self.min_radius = min_radius
         self.learning_mode = learning_mode
@@ -74,6 +73,7 @@ class PrototypicalDecoder(torch.nn.Module):
 
         self._distance_function = distance_function
 
+        self.distance: Optional[torch.nn.Module] = None
         if distance_function.lower() == "hyperbolic":
             self.distance = HyperbolicDistance()
         elif distance_function.lower() == "cosine":
@@ -133,7 +133,7 @@ class PrototypicalDecoder(torch.nn.Module):
         self,
         data: FlairDataset,
         encoder: DefaultClassifier,
-        exempt_labels: Optional[List[str]] = [],
+        exempt_labels: List[str] = [],
         mini_batch_size: int = 8,
     ):
         """Applies monkey-patch to train method (which sets the train flag).
@@ -154,18 +154,21 @@ class PrototypicalDecoder(torch.nn.Module):
                         data=data, encoder=encoder, exempt_labels=exempt_labels, mini_batch_size=mini_batch_size
                     )
 
-        encoder.train = patched_train
+        # Monkey-patching is problematic for mypy (https://github.com/python/mypy/issues/2427)
+        encoder.train = patched_train # type: ignore
 
     def calculate_prototypes(
         self,
         data: FlairDataset,
         encoder: DefaultClassifier,
-        exempt_labels: Optional[List[str]] = [],
+        exempt_labels: List[str] = [],
         mini_batch_size=32,
     ):
         """
         Function that calclues a prototype for each class based on the euclidean average embedding over the whole dataset
-        :param dataset: dataset for which to calculate prototypes
+        :param data: dataset for which to calculate prototypes
+        :param encoder: encoder to use
+        :param exempt_labels: labels to exclude
         :param mini_batch_size: number of sentences to embed at same time
         :return:
         """
@@ -178,11 +181,11 @@ class PrototypicalDecoder(torch.nn.Module):
             # reset prototypes for all classes
             new_prototypes = torch.zeros(self.num_prototypes, self.prototype_size, device=flair.device)
 
-            counter = Counter()
+            counter: Counter = Counter()
 
             for batch in tqdm(dataloader):
 
-                logits, labels = encoder.forward_pass(batch)
+                logits, labels = encoder.forward_pass(batch) # type: ignore
 
                 # decode embeddings into prototype space
                 if self.metric_space_decoder is not None:

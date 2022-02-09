@@ -678,8 +678,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 if not batch:
                     continue
 
-                embedded_data_points, gold_labels, data_points, label_candidates = self.forward_pass(
-                    batch, return_label_candidates=True  # type: ignore
+                embedded_data_points, gold_labels, data_points, label_candidates = self.forward_pass( # type: ignore
+                    batch, return_label_candidates=True
                 )
                 scores = self.decoder(embedded_data_points)
 
