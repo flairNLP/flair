@@ -136,7 +136,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "document_embeddings": self.document_embeddings,
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
@@ -147,10 +147,10 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
-
-        model = TextPairClassifier(
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        return super()._init_model_with_state_dict(
+            state,
             document_embeddings=state["document_embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
@@ -160,6 +160,5 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
             else state["multi_label_threshold"],
             loss_weights=state["weight_dict"],
             embed_separately=state["embed_separately"],
+            **kargs,
         )
-        model.load_state_dict(state["state_dict"])
-        return model

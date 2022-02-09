@@ -254,7 +254,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "embeddings": self.embeddings,
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
@@ -269,9 +269,10 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
-        model = RelationExtractor(
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        return super()._init_model_with_state_dict(
+            state,
             embeddings=state["embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
@@ -283,9 +284,8 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
             word_dropout_value=state["word_dropout_value"],
             entity_pair_filters=state["entity_pair_filters"],
             non_linear_decoder=state["non_linear_decoder"],
+            **kwargs
         )
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @property
     def label_type(self):

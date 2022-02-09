@@ -86,7 +86,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "document_embeddings": self.document_embeddings,
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
@@ -96,12 +96,14 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
         label_type = None if "label_type" not in state.keys() else state["label_type"]
 
-        model = TextClassifier(
+        return super()._init_model_with_state_dict(
+            state,
             document_embeddings=state["document_embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=label_type,
@@ -110,9 +112,8 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
             if "multi_label_threshold" not in state.keys()
             else state["multi_label_threshold"],
             loss_weights=weights,
+            **kwargs
         )
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @staticmethod
     def _fetch_model(model_name) -> str:
