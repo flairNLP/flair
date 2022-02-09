@@ -17,11 +17,11 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
     """
 
     def __init__(
-            self,
-            embeddings: TokenEmbeddings,
-            tag_dictionary: Dictionary,
-            tag_type: str,
-            **classifierargs,
+        self,
+        embeddings: TokenEmbeddings,
+        tag_dictionary: Dictionary,
+        tag_type: str,
+        **classifierargs,
     ):
         """
         Initializes a WordTagger
@@ -30,9 +30,9 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
         :param tag_type: string identifier for tag type
         :param beta: Parameter for F-beta score for evaluation and training annealing
         """
-        super().__init__(label_dictionary=tag_dictionary,
-                         final_embedding_size=embeddings.embedding_length,
-                         **classifierargs)
+        super().__init__(
+            label_dictionary=tag_dictionary, final_embedding_size=embeddings.embedding_length, **classifierargs
+        )
 
         # embeddings
         self.embeddings = embeddings
@@ -46,11 +46,13 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
     def _get_state_dict(self):
         model_state = super()._get_state_dict()
 
-        model_state.update({
-            "embeddings": self.embeddings,
-            "tag_dictionary": self.label_dictionary,
-            "tag_type": self.tag_type,
-        })
+        model_state.update(
+            {
+                "embeddings": self.embeddings,
+                "tag_dictionary": self.label_dictionary,
+                "tag_type": self.tag_type,
+            }
+        )
         return model_state
 
     @classmethod
@@ -63,9 +65,9 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
         )
 
     def forward_pass(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            return_label_candidates: bool = False,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        return_label_candidates: bool = False,
     ):
         if not isinstance(sentences, list):
             sentences = [sentences]

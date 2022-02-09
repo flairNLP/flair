@@ -71,9 +71,7 @@ class Model(torch.nn.Module, typing.Generic[DT]):
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
         """Initialize the model from a state dictionary."""
-        model = cls(
-            **kwargs
-        )
+        model = cls(**kwargs)
 
         model.load_state_dict(state["state_dict"])
         return model
@@ -751,17 +749,15 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-        if 'decoder' not in kwargs and 'decoder' in state:
-            kwargs['decoder'] = state['decoder']
+        if "decoder" not in kwargs and "decoder" in state:
+            kwargs["decoder"] = state["decoder"]
 
-        return super(Classifier, cls)._init_model_with_state_dict(
-            state, **kwargs
-        )
+        return super(Classifier, cls)._init_model_with_state_dict(state, **kwargs)
 
     def _get_state_dict(self):
         state = super()._get_state_dict()
 
         if self._custom_decoder:
-            state['decoder'] = self.decoder
+            state["decoder"] = self.decoder
 
         return state
