@@ -571,6 +571,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         # make a forward pass to produce embedded data points and labels
         embedded_data_points, labels = self.forward_pass(sentences)  # type: ignore
 
+        # no loss can be calculated if there are no labels
+        if not any(labels):
+            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+
         # push embedded_data_points through decoder to get the scores
         scores = self.decoder(embedded_data_points)
 
@@ -578,9 +582,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         return self._calculate_loss(scores, labels)
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
-
-        if not any(labels):
-            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
         if self.multi_label:
             labels = torch.tensor(
