@@ -568,11 +568,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
     def forward_loss(self, sentences: Union[List[DT], DT]) -> Tuple[torch.Tensor, int]:
 
-        # make a forward pass to produce logits and labels
-        logits, labels = self.forward_pass(sentences)  # type: ignore
+        # make a forward pass to produce embedded data points and labels
+        embedded_data_points, labels = self.forward_pass(sentences)  # type: ignore
 
-        # push logits through decoder to get the scores
-        scores = self.decoder(logits)
+        # push embedded_data_points through decoder to get the scores
+        scores = self.decoder(embedded_data_points)
 
         # calculate the loss
         return self._calculate_loss(scores, labels)
@@ -678,10 +678,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 if not batch:
                     continue
 
-                logits, gold_labels, data_points, label_candidates = self.forward_pass(
+                embedded_data_points, gold_labels, data_points, label_candidates = self.forward_pass(
                     batch, return_label_candidates=True  # type: ignore
                 )
-                scores = self.decoder(logits)
+                scores = self.decoder(embedded_data_points)
 
                 # remove previously predicted labels of this type
                 for sentence in data_points:

@@ -196,7 +196,7 @@ class PrototypicalDecoder(torch.nn.Module):
                     new_prototypes[idx] += logit
 
                 # embeddings need to be removed so that memory doesn't fill up
-                store_embeddings(batch, storage_mode='none')
+                store_embeddings(batch, storage_mode="none")
 
             # TODO: changes required
             for label, count in counter.most_common():

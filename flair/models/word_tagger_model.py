@@ -81,15 +81,15 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
 
         all_embeddings = [token.get_embedding(names) for token in all_tokens]
 
-        logits = torch.stack(all_embeddings)
+        embedded_tokens = torch.stack(all_embeddings)
 
         labels = [[token.get_tag(self.label_type).value] for token in all_tokens]
 
         if return_label_candidates:
             empty_label_candidates = [Label(value=None, score=0.0) for token in all_tokens]
-            return logits, labels, all_tokens, empty_label_candidates
+            return embedded_tokens, labels, all_tokens, empty_label_candidates
 
-        return logits, labels
+        return embedded_tokens, labels
 
     @property
     def label_type(self):

@@ -147,18 +147,18 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                         empty_label_candidates.append(candidate)
 
             if len(embedding_list) > 0:
-                logits = torch.cat(embedding_list, 0)
+                embedded_entity_pairs = torch.cat(embedding_list, 0)
 
                 if self.use_dropout:
-                    logits = self.dropout(logits)
+                    embedded_entity_pairs = self.dropout(embedded_entity_pairs)
 
             else:
-                logits = None
+                embedded_entity_pairs = None
 
         if return_label_candidates:
-            return logits, span_labels, sentences_to_spans, empty_label_candidates
+            return embedded_entity_pairs, span_labels, sentences_to_spans, empty_label_candidates
 
-        return logits, span_labels
+        return embedded_entity_pairs, span_labels
 
     def _get_state_dict(self):
         model_state = {
