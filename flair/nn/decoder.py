@@ -16,6 +16,7 @@ from flair.nn.distance import (
     NegativeScaledDotProduct,
 )
 from flair.nn.model import DefaultClassifier
+from flair.training_utils import store_embeddings
 
 logger = logging.getLogger("flair")
 
@@ -169,35 +170,41 @@ class PrototypicalDecoder(torch.nn.Module):
         :return:
         """
 
-        dataloader = DataLoader(data, batch_size=mini_batch_size)
+        # gradients are not required for prototype computation
+        with torch.no_grad():
 
-        # reset prototypes for all classes
-        new_prototypes = torch.zeros(self.num_prototypes, self.prototype_size, device=flair.device)
+            dataloader = DataLoader(data, batch_size=mini_batch_size)
 
-        counter = Counter()
+            # reset prototypes for all classes
+            new_prototypes = torch.zeros(self.num_prototypes, self.prototype_size, device=flair.device)
 
-        for batch in tqdm(dataloader):
+            counter = Counter()
 
-            logits, labels = encoder.forward_pass(batch)
+            for batch in tqdm(dataloader):
 
-            # decode embeddings into prototype space
-            if self.metric_space_decoder is not None:
-                logits = self.metric_space_decoder(logits)
+                logits, labels = encoder.forward_pass(batch)
 
-            for logit, label in zip(logits, labels):
-                counter.update(label)
+                # decode embeddings into prototype space
+                if self.metric_space_decoder is not None:
+                    logits = self.metric_space_decoder(logits)
 
-                idx = encoder.label_dictionary.get_idx_for_item(label[0])
+                for logit, label in zip(logits, labels):
+                    counter.update(label)
 
-                new_prototypes[idx] += logit
+                    idx = encoder.label_dictionary.get_idx_for_item(label[0])
 
-        # TODO: changes required
-        for label, count in counter.most_common():
-            average_prototype = new_prototypes[encoder.label_dictionary.get_idx_for_item(label)] / count
-            new_prototypes[encoder.label_dictionary.get_idx_for_item(label)] = average_prototype
+                    new_prototypes[idx] += logit
 
-        for label in exempt_labels:
-            label_idx = encoder.label_dictionary.get_idx_for_item(label)
-            new_prototypes[label_idx] = self.prototype_vectors[label_idx]
+                # embeddings need to be removed so that memory doesn't fill up
+                store_embeddings(batch, storage_mode='none')
 
-        self.prototype_vectors.data = new_prototypes.detach().to(flair.device)
+            # TODO: changes required
+            for label, count in counter.most_common():
+                average_prototype = new_prototypes[encoder.label_dictionary.get_idx_for_item(label)] / count
+                new_prototypes[encoder.label_dictionary.get_idx_for_item(label)] = average_prototype
+
+            for label in exempt_labels:
+                label_idx = encoder.label_dictionary.get_idx_for_item(label)
+                new_prototypes[label_idx] = self.prototype_vectors[label_idx]
+
+            self.prototype_vectors.data = new_prototypes.to(flair.device)
