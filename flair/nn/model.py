@@ -62,20 +62,19 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         """
         raise NotImplementedError
 
-    @abstractmethod
     def _get_state_dict(self):
-        """Returns the state dictionary for this model.
-        Implementing this enables the save() and save_checkpoint()
-        functionality."""
-        raise NotImplementedError
+        """Returns the state dictionary for this model."""
+        state_dict = {"state_dict": self.state_dict()}
 
-    @staticmethod
-    @abstractmethod
-    def _init_model_with_state_dict(state):
-        """Initialize the model from a state dictionary.
-        Implementing this enables the load() and load_checkpoint()
-        functionality."""
-        raise NotImplementedError
+        return state_dict
+
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        """Initialize the model from a state dictionary."""
+        model = cls(**kwargs)
+
+        model.load_state_dict(state["state_dict"])
+        return model
 
     @staticmethod
     def _fetch_model(model_name) -> str:
@@ -490,35 +489,29 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     forward_pass() method to implement this base class.
     """
 
-    def forward_pass(
-        self,
-        sentences: Union[List[DT], DT],
-        return_label_candidates: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]]]:
-        """This method does a forward pass through the model given a list of data
-        points as input.
-        Returns the tuple (scores, labels) if return_label_candidates = False,
-        where scores are a tensor of logits produced by the decoder and labels
-        are the string labels for each data point. Returns the tuple (scores,
-        labels, data_points, candidate_labels) if return_label_candidates = True,
-        where data_points are the data points to which labels are added (commonly
-        either Sentence or Token objects) and candidate_labels are empty Label
-        objects for each prediction (depending on the task Label, SpanLabel or
-        RelationLabel)."""
-        raise NotImplementedError
-
     def __init__(
         self,
         label_dictionary: Dictionary,
+        final_embedding_size: int,
         multi_label: bool = False,
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
+        decoder: Optional[torch.nn.Module] = None,
     ):
 
         super().__init__()
 
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
+
+        if decoder is not None:
+            self.decoder = decoder
+            self._custom_decoder = True
+        else:
+            # initialize the decoder
+            self.decoder = torch.nn.Linear(final_embedding_size, len(self.label_dictionary))
+            torch.nn.init.xavier_uniform_(self.decoder.weight)
+            self._custom_decoder = False
 
         # set up multi-label logic
         self.multi_label = multi_label
@@ -542,6 +535,23 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
+    def forward_pass(
+        self,
+        sentences: Union[List[DT], DT],
+        return_label_candidates: bool = False,
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]]]:
+        """This method does a forward pass through the model given a list of data
+        points as input.
+        Returns the tuple (scores, labels) if return_label_candidates = False,
+        where scores are a tensor of logits produced by the decoder and labels
+        are the string labels for each data point. Returns the tuple (scores,
+        labels, data_points, candidate_labels) if return_label_candidates = True,
+        where data_points are the data points to which labels are added (commonly
+        either Sentence or Token objects) and candidate_labels are empty Label
+        objects for each prediction (depending on the task Label, SpanLabel or
+        RelationLabel)."""
+        raise NotImplementedError
+
     @property
     def multi_label_threshold(self):
         return self._multi_label_threshold
@@ -557,13 +567,21 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             self._multi_label_threshold = {"default": x}
 
     def forward_loss(self, sentences: Union[List[DT], DT]) -> Tuple[torch.Tensor, int]:
-        scores, labels = self.forward_pass(sentences)  # type: ignore
+
+        # make a forward pass to produce embedded data points and labels
+        embedded_data_points, labels = self.forward_pass(sentences)  # type: ignore
+
+        # no loss can be calculated if there are no labels
+        if not any(labels):
+            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+
+        # push embedded_data_points through decoder to get the scores
+        scores = self.decoder(embedded_data_points)
+
+        # calculate the loss
         return self._calculate_loss(scores, labels)
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
-
-        if not any(labels):
-            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
         if self.multi_label:
             labels = torch.tensor(
@@ -661,19 +679,21 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 if not batch:
                     continue
 
-                scores, gold_labels, data_points, label_candidates = self.forward_pass(  # type: ignore
+                embedded_data_points, gold_labels, data_points, label_candidates = self.forward_pass(  # type: ignore
                     batch, return_label_candidates=True
                 )
-                # remove previously predicted labels of this type
-                for sentence in data_points:
-                    sentence.remove_labels(label_name)
-
-                if return_loss:
-                    overall_loss += self._calculate_loss(scores, gold_labels)[0]
-                    label_count += len(label_candidates)
-
                 # if anything could possibly be predicted
                 if len(label_candidates) > 0:
+                    scores = self.decoder(embedded_data_points)
+
+                    # remove previously predicted labels of this type
+                    for sentence in data_points:
+                        sentence.remove_labels(label_name)
+
+                    if return_loss:
+                        overall_loss += self._calculate_loss(scores, gold_labels)[0]
+                        label_count += len(label_candidates)
+
                     if self.multi_label:
                         sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
                         n_labels = sigmoided.size(1)
@@ -727,3 +747,18 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             + f"  (weights): {self.weight_dict}\n"
             + f"  (weight_tensor) {self.loss_weights}\n)"
         )
+
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        if "decoder" not in kwargs and "decoder" in state:
+            kwargs["decoder"] = state["decoder"]
+
+        return super(Classifier, cls)._init_model_with_state_dict(state, **kwargs)
+
+    def _get_state_dict(self):
+        state = super()._get_state_dict()
+
+        if self._custom_decoder:
+            state["decoder"] = self.decoder
+
+        return state

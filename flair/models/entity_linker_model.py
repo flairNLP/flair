@@ -3,7 +3,6 @@ import random
 from typing import List, Optional, Union
 
 import torch
-import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
@@ -40,7 +39,13 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         :param label_type: name of the label you use.
         """
 
-        super(EntityLinker, self).__init__(label_dictionary, **classifierargs)
+        super(EntityLinker, self).__init__(
+            label_dictionary=label_dictionary,
+            final_embedding_size=word_embeddings.embedding_length * 2
+            if pooling_operation == "first&last"
+            else word_embeddings.embedding_length,
+            **classifierargs,
+        )
 
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
@@ -54,16 +59,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         self.use_dropout: float = dropout
         if dropout > 0.0:
             self.dropout = torch.nn.Dropout(dropout)
-
-        # if we concatenate the embeddings we need double input size in our linear layer
-        if self.pooling_operation == "first&last":
-            self.decoder = nn.Linear(2 * self.word_embeddings.embedding_length, len(self.label_dictionary)).to(
-                flair.device
-            )
-        else:
-            self.decoder = nn.Linear(self.word_embeddings.embedding_length, len(self.label_dictionary)).to(flair.device)
-
-        nn.init.xavier_uniform_(self.decoder.weight)
 
         cases = {
             "average": self.emb_mean,
@@ -110,13 +105,10 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         span_labels = []
         sentences_to_spans = []
         empty_label_candidates = []
+        embedded_entity_pairs = None
 
-        # if the entire batch has no sentence with candidates, return empty
-        if len(filtered_sentences) == 0:
-            scores = None
-
-        # otherwise, embed sentence and send through prediction head
-        else:
+        # embed sentences and send through prediction head
+        if len(filtered_sentences) > 0:
             # embed all tokens
             self.word_embeddings.embed(filtered_sentences)
 
@@ -152,23 +144,19 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                         empty_label_candidates.append(candidate)
 
             if len(embedding_list) > 0:
-                embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
+                embedded_entity_pairs = torch.cat(embedding_list, 0)
 
                 if self.use_dropout:
-                    embedding_tensor = self.dropout(embedding_tensor)
-
-                scores = self.decoder(embedding_tensor)
-            else:
-                scores = None
+                    embedded_entity_pairs = self.dropout(embedded_entity_pairs)
 
         if return_label_candidates:
-            return scores, span_labels, sentences_to_spans, empty_label_candidates
+            return embedded_entity_pairs, span_labels, sentences_to_spans, empty_label_candidates
 
-        return scores, span_labels
+        return embedded_entity_pairs, span_labels
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "word_embeddings": self.word_embeddings,
             "label_type": self.label_type,
             "label_dictionary": self.label_dictionary,
@@ -177,18 +165,17 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
-        model = EntityLinker(
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        return super()._init_model_with_state_dict(
+            state,
             word_embeddings=state["word_embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
             pooling_operation=state["pooling_operation"],
             loss_weights=state["loss_weights"] if "loss_weights" in state else {"<unk>": 0.3},
+            **kwargs,
         )
-
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @property
     def label_type(self):

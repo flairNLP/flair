@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import List, Optional, Set, Tuple, Union
 
 import torch
-import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
@@ -25,7 +24,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
         dropout_value: float = 0.0,
         locked_dropout_value: float = 0.1,
         word_dropout_value: float = 0.0,
-        non_linear_decoder: Optional[int] = 2048,
         **classifierargs,
     ):
         """
@@ -36,7 +34,14 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
         :param loss_weights: Dictionary of weights for labels for the loss function
         (if any label's weight is unspecified it will default to 1.0)
         """
-        super(RelationExtractor, self).__init__(**classifierargs)
+
+        # pooling operation to get embeddings for entites
+        self.pooling_operation = pooling_operation
+        relation_representation_length = 2 * embeddings.embedding_length
+        if self.pooling_operation == "first_last":
+            relation_representation_length *= 2
+
+        super(RelationExtractor, self).__init__(**classifierargs, final_embedding_size=relation_representation_length)
 
         # set embeddings
         self.embeddings: flair.embeddings.TokenEmbeddings = embeddings
@@ -59,29 +64,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
         self.locked_dropout = flair.nn.LockedDropout(locked_dropout_value)
         self.word_dropout_value = word_dropout_value
         self.word_dropout = flair.nn.WordDropout(word_dropout_value)
-
-        # pooling operation to get embeddings for entites
-        self.pooling_operation = pooling_operation
-        relation_representation_length = 2 * embeddings.embedding_length
-        if self.pooling_operation == "first_last":
-            relation_representation_length *= 2
-        if type(self.embeddings) == flair.embeddings.TransformerDocumentEmbeddings:
-            relation_representation_length = embeddings.embedding_length
-
-        # entity pairs could also be no relation at all, add default value for this case to dictionary
-        self.label_dictionary.add_item("O")
-
-        # decoder can be linear or nonlinear
-        self.non_linear_decoder = non_linear_decoder
-        if non_linear_decoder is not None:
-            self.decoder_1 = nn.Linear(relation_representation_length, non_linear_decoder)
-            self.nonlinearity = torch.nn.ReLU()
-            self.decoder_2 = nn.Linear(non_linear_decoder, len(self.label_dictionary))
-            nn.init.xavier_uniform_(self.decoder_1.weight)
-            nn.init.xavier_uniform_(self.decoder_2.weight)
-        else:
-            self.decoder = nn.Linear(relation_representation_length, len(self.label_dictionary))
-            nn.init.xavier_uniform_(self.decoder.weight)
 
         self.to(flair.device)
 
@@ -215,46 +197,35 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
                         ]
                     )
                 else:
-                    embedding = torch.cat(
-                        [
-                            span_1.tokens[0].get_embedding(),
-                            span_2.tokens[0].get_embedding(),
-                        ]
-                    )
+                    embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
 
                 relation_embeddings.append(embedding)
 
             # stack and drop out (squeeze and unsqueeze)
-            all_relations = torch.stack(relation_embeddings).unsqueeze(1)
+            embedded_entity_pairs = torch.stack(relation_embeddings).unsqueeze(1)
 
-            all_relations = self.dropout(all_relations)
-            all_relations = self.locked_dropout(all_relations)
-            all_relations = self.word_dropout(all_relations)
+            embedded_entity_pairs = self.dropout(embedded_entity_pairs)
+            embedded_entity_pairs = self.locked_dropout(embedded_entity_pairs)
+            embedded_entity_pairs = self.word_dropout(embedded_entity_pairs)
 
-            all_relations = all_relations.squeeze(1)
-
-            # send through decoder
-            if self.non_linear_decoder:
-                sentence_relation_scores = self.decoder_2(self.nonlinearity(self.decoder_1(all_relations)))
-            else:
-                sentence_relation_scores = self.decoder(all_relations)
+            embedded_entity_pairs = embedded_entity_pairs.squeeze(1)
 
         else:
-            sentence_relation_scores = None
+            embedded_entity_pairs = None
 
         if return_label_candidates:
             return (
-                sentence_relation_scores,
+                embedded_entity_pairs,
                 labels,
                 sentences_to_label,
                 empty_label_candidates,
             )
 
-        return sentence_relation_scores, labels
+        return embedded_entity_pairs, labels
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "embeddings": self.embeddings,
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
@@ -265,13 +236,14 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
             "locked_dropout_value": self.locked_dropout_value,
             "word_dropout_value": self.word_dropout_value,
             "entity_pair_filters": self.entity_pair_filters,
-            "non_linear_decoder": self.non_linear_decoder,
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
-        model = RelationExtractor(
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+
+        return super()._init_model_with_state_dict(
+            state,
             embeddings=state["embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
@@ -282,10 +254,8 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
             locked_dropout_value=state["locked_dropout_value"],
             word_dropout_value=state["word_dropout_value"],
             entity_pair_filters=state["entity_pair_filters"],
-            non_linear_decoder=state["non_linear_decoder"],
+            **kwargs,
         )
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @property
     def label_type(self):
