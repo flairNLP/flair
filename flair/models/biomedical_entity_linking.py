@@ -54,12 +54,12 @@ class SparseEncoder(object):
     def save_encoder(self, path):
         with open(path, "wb") as fout:
             pickle.dump(self.encoder, fout)
-            logging.info("Sparse encoder saved in {}".format(path))
+            log.info("Sparse encoder saved in {}".format(path))
 
     def load_encoder(self, path):
         with open(path, "rb") as fin:
             self.encoder = pickle.load(fin)
-            logging.info("Sparse encoder loaded from {}".format(path))
+            log.info("Sparse encoder loaded from {}".format(path))
 
         return self
 
@@ -242,7 +242,7 @@ class BioSyn(object):
 
         sparse_weight_file = os.path.join(path, "sparse_weight.pt")
         torch.save(self.sparse_weight, sparse_weight_file)
-        logging.info("Sparse weight saved in {}".format(sparse_weight_file))
+        log.info("Sparse weight saved in {}".format(sparse_weight_file))
 
     def load_model(self, model_name_or_path):
         self.load_dense_encoder(model_name_or_path)
@@ -267,7 +267,9 @@ class BioSyn(object):
             sparse_encoder_url = hf_hub_url(
                 model_name_or_path, filename="sparse_encoder.pk"
             )
-            sparse_encoder_path = cached_download(sparse_encoder_url)
+            sparse_encoder_path = cached_download(
+                url=sparse_encoder_url,
+                cache_dir=flair.cache_root / "models" / model_name_or_path)
 
         self.sparse_encoder = SparseEncoder().load_encoder(path=sparse_encoder_path)
 
@@ -281,7 +283,10 @@ class BioSyn(object):
             sparse_weight_url = hf_hub_url(
                 model_name_or_path, filename="sparse_weight.pt"
             )
-            sparse_weight_path = cached_download(sparse_weight_url)
+            sparse_weight_path = cached_download(
+                url=sparse_weight_url,
+                cache_dir=flair.cache_root / "models" / model_name_or_path
+            )
 
         self.sparse_weight = torch.load(sparse_weight_path)
 
@@ -300,7 +305,7 @@ class BioSyn(object):
 
     def retrieve_candidate(self, score_matrix, topk):
         """
-        Return sorted topk idxes (descending order)
+        Return sorted topk indxes (descending order)
         :param score_matrix np.array: 2d numpy array of scores
         :param topk int: The number of candidates
         :returns topk_idxs np.array: 2d numpy array of scores [# of query , # of dict]
@@ -415,7 +420,7 @@ class HunNen(object):
         """
         Load a model for biomedical named entity normalization using BioSyn on sentences annotated with 
         biomedical entity mentions
-        :param model_name: Name of pretrained model to use. Currently possible values are: 
+        :param model_name: Name of pretrained model to use. Currently possible values for pretrained models are: 
         sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease, 
         biobert-ncbi-disease, biobert-bc5cdr-chemical
         :param dictionary_path: Path to a file with each line in the format: cui||name, with one line for each
@@ -424,16 +429,13 @@ class HunNen(object):
         # load biosyn
         biosyn = BioSyn(max_length=25, use_cuda=torch.cuda.is_available())
 
-        # Load model with its name on hugging face
+        # modify name if it's a huggingface model
         if model_name in ["sapbert-bc5cdr-disease", "sapbert-ncbi-disease", "sapbert-bc5cdr-chemical", 
         "biobert-bc5cdr-disease", "biobert-ncbi-disease", "biobert-bc5cdr-chemical"]:
-            biosyn.load_model(model_name_or_path="dmis-lab/biosyn-" + model_name)
-        else:
-            raise Exception(
-                "could not find specified model. Please use one of the following: "
-                "sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, "
-                "biobert-bc5cdr-disease, biobert-ncbi-disease, biobert-bc5cdr-chemical"
-            )
+            model_name = "dmis-lab/biosyn-" + model_name
+
+        biosyn.load_model(model_name_or_path=model_name)
+        
 
         # cache or load dictionary
         dictionary, dict_sparse_embeds, dict_dense_embeds = cls._cache_or_load_dictionary(
@@ -499,7 +501,7 @@ class HunNen(object):
         if os.path.exists(cached_dictionary_path):
             with open(cached_dictionary_path, "rb") as fin:
                 cached_dictionary = pickle.load(fin)
-            print("Loaded dictionary from cached file {}".format(cached_dictionary_path))
+            log.info("Loaded dictionary from cached file {}".format(cached_dictionary_path))
 
             dictionary, dict_sparse_embeds, dict_dense_embeds = (
                 cached_dictionary["dictionary"],
