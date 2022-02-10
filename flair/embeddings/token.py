@@ -12,6 +12,7 @@ import numpy as np
 import torch
 from bpemb import BPEmb
 from gensim.models import KeyedVectors
+from mypy.plugins import ctypes
 from torch import nn
 
 import flair
@@ -898,20 +899,65 @@ class GazetteerEmbeddings(TokenEmbeddings):
         if partial_matching:
             self.matching_methods.append('partial_match')
 
-        self.gazetteer_file_list = self._process_gazetteers()
+        self.gazetteer_file_list = self._get_gazetteers()
+        self.gazetteers_dicts = self._process_gazetteers()
         self.__embedding_length = len(label_dict)
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _process_gazetteers(self):
+    def _get_gazetteers(self):
         gazetteer_files = []
         for key in self.labels.keys():
-            if key != "O":
-                pattern = f'.*-?{key}-.*[.]txt'
+            if key != 'O' and key[0:2] != 'I-':
+                if key[0:2] == 'B-':
+                    pattern = f'.*-?{key[2:]}-.*[.]txt'
+                else:
+                    pattern = f'.*-?{key}-.*[.]txt'
                 gazetteer_files.extend([f for f in os.listdir(self.gazetteer_path + '/') if re.match(pattern, f)])
         return gazetteer_files
+
+    def _filter_gazetteer_line(self, line_list):
+        line_list_filtered = []
+        for w in line_list:
+            w = w.rstrip("\n")
+            if w.isalpha():
+                line_list_filtered.append(w)
+            elif len(w) > 1:
+                line_list_filtered.append(w)
+        return line_list_filtered
+
+    def _process_gazetteers(self):
+        def get_hash_of_string(text):
+            h = hashlib.new('sha256')
+            h.update(bytes(str(text), "utf-8"))
+            return str(h.hexdigest())
+        if 'partial_match' in self.matching_methods:
+            partial_matching_dict_list = []
+            for gazetteer_file in self.gazetteer_file_list:
+                gazetteer_tag_dict_list = []
+                with open(f'{self.gazetteer_path}/{gazetteer_file}', 'r', encoding='utf-8', errors='strict') as src:
+                    for line in src:
+                        if len(line) == 0:
+                            break
+                        else:
+                            line_list = re.split(" ", line)
+                            line_list_filtered = self._filter_gazetteer_line(line_list)
+                            for word in line_list_filtered:
+                                word_hash = get_hash_of_string(word)
+                                word_index = line_list_filtered.index(word)
+                                try:
+                                    gazetteer_tag_dict_list[word_index][word_hash] = word
+                                except IndexError:
+                                    temp_dict = {word_hash: word}
+                                    gazetteer_tag_dict_list.insert(word_index, temp_dict)
+                partial_matching_dict_list.append(gazetteer_tag_dict_list)
+        if 'full_match' in self.matching_methods:
+            # TODO implement full matching conversion
+            pass
+        return partial_matching_dict_list
+
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         for sentence in sentences:
