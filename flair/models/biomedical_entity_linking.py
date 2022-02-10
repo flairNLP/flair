@@ -431,22 +431,26 @@ class BioSyn(object):
 
 
 class HunNen(object):
-    def __init__(self):
+    def __init__(self, model, dictionary, dict_sparse_embeds, dict_dense_embeds):
         super().__init__()
-
-    def load(self, model_name, dictionary_path:  Union[str, Path]):
+        self.biosyn = model
+        self.dictionary = dictionary
+        self.dict_sparse_embeds = dict_sparse_embeds
+        self.dict_dense_embeds = dict_dense_embeds
+        
+    @classmethod
+    def load(cls, model_name, dictionary_path:  Union[str, Path]):
         """
         possible values for model_name: sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, 
                                         biobert-bc5cdr-disease, biobert-ncbi-disease, biobert-bc5cdr-chemical
         """
 
-        self.use_cuda = torch.cuda.is_available()
         # load biosyn model
-        self.biosyn = BioSyn(max_length=25, use_cuda=self.use_cuda)
+        biosyn = BioSyn(max_length=25, use_cuda=torch.cuda.is_available())
 
         if model_name in ["sapbert-bc5cdr-disease", "sapbert-ncbi-disease", "sapbert-bc5cdr-chemical", 
         "biobert-bc5cdr-disease", "biobert-ncbi-disease", "biobert-bc5cdr-chemical"]:
-            self.biosyn.load_model(model_name_or_path="dmis-lab/biosyn-" + model_name)
+            biosyn.load_model(model_name_or_path="dmis-lab/biosyn-" + model_name)
         else:
             raise Exception(
                 "could not find specified model. Please use one of the following: "
@@ -454,12 +458,12 @@ class HunNen(object):
                 "biobert-bc5cdr-disease, biobert-ncbi-disease, biobert-bc5cdr-chemical"
             )
 
-
         # cache or load dictionary
-        self.dictionary, self.dict_sparse_embeds, self.dict_dense_embeds = self.cache_or_load_dictionary(
-            self.biosyn, model_name, str(dictionary_path)
+        dictionary, dict_sparse_embeds, dict_dense_embeds = cls._cache_or_load_dictionary(
+            biosyn, model_name, str(dictionary_path)
         )
-        return self;
+
+        return cls(biosyn, dictionary, dict_sparse_embeds, dict_dense_embeds);
 
 
     def predict(self, sentences: Union[List[Sentence], Sentence], entity_type, topk = 10):
@@ -506,8 +510,8 @@ class HunNen(object):
                     sentence.add_complex_label(typename="entity_type" + "_nen", label=SpanLabel(span=entity.span, value= f"{predicted_name} {predicted_id}"))
 
 
-
-    def cache_or_load_dictionary(self, biosyn, model_name_or_path, dictionary_path):
+    @staticmethod
+    def _cache_or_load_dictionary(biosyn, model_name_or_path, dictionary_path):
         dictionary_name = os.path.splitext(os.path.basename(dictionary_path))[0]
 
         cache_folder = os.path.join(flair.cache_root, "datasets")
