@@ -435,11 +435,25 @@ class HunNen(object):
         super().__init__()
 
     def load(self, model_name, dictionary_path:  Union[str, Path]):
+        """
+        possible values for model_name: sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, 
+                                        biobert-bc5cdr-disease, biobert-ncbi-disease, biobert-bc5cdr-chemical
+        """
+
         self.use_cuda = torch.cuda.is_available()
         # load biosyn model
         self.biosyn = BioSyn(max_length=25, use_cuda=self.use_cuda)
 
-        self.biosyn.load_model(model_name_or_path=model_name)
+        if model_name in ["sapbert-bc5cdr-disease", "sapbert-ncbi-disease", "sapbert-bc5cdr-chemical", 
+        "biobert-bc5cdr-disease", "biobert-ncbi-disease", "biobert-bc5cdr-chemical"]:
+            self.biosyn.load_model(model_name_or_path="dmis-lab/biosyn-" + model_name)
+        else:
+            raise Exception(
+                "could not find specified model. Please use one of the following: "
+                "sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, "
+                "biobert-bc5cdr-disease, biobert-ncbi-disease, biobert-bc5cdr-chemical"
+            )
+
 
         # cache or load dictionary
         self.dictionary, self.dict_sparse_embeds, self.dict_dense_embeds = self.cache_or_load_dictionary(
