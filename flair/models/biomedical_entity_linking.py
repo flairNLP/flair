@@ -145,7 +145,9 @@ class NamesDataset(torch.utils.data.Dataset):
         self.encodings = encodings
 
     def __getitem__(self, idx):
-        return {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+        return {key: val[idx].clone().detach() for key, val in self.encodings.items()}
+        # This gave a warning
+        # return {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
 
     def __len__(self):
         return len(self.encodings.input_ids)
