@@ -12,6 +12,7 @@ from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModel, default_data_collator
 from huggingface_hub import hf_hub_url, cached_download
 from string import punctuation
+import flair
 from flair.data import Sentence, SpanLabel
 from typing import List, Union
 from pathlib import Path
@@ -495,8 +496,9 @@ class HunNen(object):
     def cache_or_load_dictionary(self, biosyn, model_name_or_path, dictionary_path):
         dictionary_name = os.path.splitext(os.path.basename(dictionary_path))[0]
 
+        cache_folder = os.path.join(flair.cache_root, "datasets")
         cached_dictionary_path = os.path.join(
-            "./tmp", f"cached_{model_name_or_path.split('/')[-1]}_{dictionary_name}.pk"
+            cache_folder, f"cached_{model_name_or_path.split('/')[-1]}_{dictionary_name}.pk"
         )
 
         # If exist, load the cached dictionary
@@ -526,8 +528,8 @@ class HunNen(object):
                 "dict_dense_embeds": dict_dense_embeds,
             }
 
-            if not os.path.exists("./tmp"):
-                os.mkdir("./tmp")
+            if not os.path.exists(cache_folder):
+                os.mkdir(cache_folder)
             with open(cached_dictionary_path, "wb") as fin:
                 pickle.dump(cached_dictionary, fin)
             print("Saving dictionary into cached file {}".format(cached_dictionary_path))
