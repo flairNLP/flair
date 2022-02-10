@@ -78,10 +78,7 @@ class TextPreprocess:
         typo_path=None,
     ):
         """
-        Parameters
-        ==========
-        typo_path : str
-            path of known typo dictionary
+        :param typo_path str: path of known typo dictionary
         """
         self.lowercase = lowercase
         self.typo_path = typo_path
@@ -161,18 +158,12 @@ class DictionaryDataset:
 
     def __init__(self, dictionary_path):
         """
-        Parameters
-        ----------
-        dictionary_path : str
-            The path of the dictionary
-        draft : bool
-            use only small subset
+        :param dictionary_path str: The path of the dictionary
         """
-        log.info("DictionaryDataset! dictionary_path={}".format(dictionary_path))
+        log.info("Loading Dictionary from {}".format(dictionary_path))
         self.data = self.load_data(dictionary_path)
 
     def load_data(self, dictionary_path):
-        name_cui_map = {}
         data = []
         with open(dictionary_path, mode="r", encoding="utf-8") as f:
             lines = f.readlines()
@@ -206,10 +197,7 @@ class BioSyn(object):
 
     def init_sparse_weight(self, initial_sparse_weight):
         """
-        Parameters
-        ----------
-        initial_sparse_weight : float
-            initial sparse weight
+        :param initial_sparse_weight float: initial sparse weight
         """
         if self.use_cuda:
             self.sparse_weight = nn.Parameter(torch.empty(1).cuda())
@@ -302,16 +290,9 @@ class BioSyn(object):
     def get_score_matrix(self, query_embeds, dict_embeds):
         """
         Return score matrix
-        Parameters
-        ----------
-        query_embeds : np.array
-            2d numpy array of query embeddings
-        dict_embeds : np.array
-            2d numpy array of query embeddings
-        Returns
-        -------
-        score_matrix : np.array
-            2d numpy array of scores
+        :param query_embeds np.array: 2d numpy array of query embeddings
+        :param dict_embeds np.array: 2d numpy array of query embeddings
+        :returns score_matrix np.array: 2d numpy array of scores
         """
         score_matrix = np.matmul(query_embeds, dict_embeds.T)
 
@@ -320,16 +301,9 @@ class BioSyn(object):
     def retrieve_candidate(self, score_matrix, topk):
         """
         Return sorted topk idxes (descending order)
-        Parameters
-        ----------
-        score_matrix : np.array
-            2d numpy array of scores
-        topk : int
-            The number of candidates
-        Returns
-        -------
-        topk_idxs : np.array
-            2d numpy array of scores [# of query , # of dict]
+        :param score_matrix np.array: 2d numpy array of scores
+        :param topk int: The number of candidates
+        :returns topk_idxs np.array: 2d numpy array of scores [# of query , # of dict]
         """
 
         def indexing_2d(arr, cols):
@@ -351,14 +325,8 @@ class BioSyn(object):
     def embed_sparse(self, names, show_progress=False):
         """
         Embedding data into sparse representations
-        Parameters
-        ----------
-        names : np.array
-            An array of names
-        Returns
-        -------
-        sparse_embeds : np.array
-            A list of sparse embeddings
+        :param names np.array: An array of names
+        :returns sparse_embeds np.array: A list of sparse embeddings
         """
         batch_size = 1024
         sparse_embeds = []
@@ -381,16 +349,8 @@ class BioSyn(object):
     def embed_dense(self, names, show_progress=False):
         """
         Embedding data into dense representations
-
-        Parameters
-        ----------
-        names : np.array or list
-            An array of names
-
-        Returns
-        -------
-        dense_embeds : list
-            A list of dense embeddings
+        :param names np.array or list: An array of names
+        :returns dense_embeds list: A list of dense embeddings
         """
         self.encoder.eval()  # prevent dropout
 
@@ -431,7 +391,19 @@ class BioSyn(object):
 
 
 class HunNen(object):
-    def __init__(self, model, dictionary, dict_sparse_embeds, dict_dense_embeds):
+    """
+    Biomedical Entity Linker for HunFlair
+    Can predict top k entities on sentences annotated with biomedical entity mentions using BioSyn.
+    """
+
+    def __init__(self, model, dictionary: DictionaryDataset, dict_sparse_embeds, dict_dense_embeds):
+        """
+        Initalize HunNen class, called by classmethod load
+        :param model: BioSyn object containing the dense and sparse encoders
+        :param dictionary: numpy array containing all concept names and their cui
+        :param dict_sparse_embeds: sparse embeddings of dictionary
+        :param dict_dense_embeds: dense embeddings of dictionary
+        """
         super().__init__()
         self.biosyn = model
         self.dictionary = dictionary
@@ -441,13 +413,18 @@ class HunNen(object):
     @classmethod
     def load(cls, model_name, dictionary_path:  Union[str, Path]):
         """
-        possible values for model_name: sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, 
-                                        biobert-bc5cdr-disease, biobert-ncbi-disease, biobert-bc5cdr-chemical
+        Load a model for biomedical named entity normalization using BioSyn on sentences annotated with 
+        biomedical entity mentions
+        :param model_name: Name of pretrained model to use. Currently possible values are: 
+        sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease, 
+        biobert-ncbi-disease, biobert-bc5cdr-chemical
+        :param dictionary_path: Path to a file with each line in the format: cui||name, with one line for each
+        name of a concept
         """
-
-        # load biosyn model
+        # load biosyn
         biosyn = BioSyn(max_length=25, use_cuda=torch.cuda.is_available())
 
+        # Load model with its name on hugging face
         if model_name in ["sapbert-bc5cdr-disease", "sapbert-ncbi-disease", "sapbert-bc5cdr-chemical", 
         "biobert-bc5cdr-disease", "biobert-ncbi-disease", "biobert-bc5cdr-chemical"]:
             biosyn.load_model(model_name_or_path="dmis-lab/biosyn-" + model_name)
@@ -465,8 +442,14 @@ class HunNen(object):
 
         return cls(biosyn, dictionary, dict_sparse_embeds, dict_dense_embeds);
 
-
     def predict(self, sentences: Union[List[Sentence], Sentence], entity_type, topk = 10):
+        """
+        On one or more senteces, predict the cui on all named entites annotated with a tag of type entity_type. 
+        Annotates the top k predictions.
+        :param sentences: one or more sentences to run the predictions on
+        :param entity_type: only entities with this tag will be annotated
+        :param topk: number of predicted cui candidates to add to annotation
+        """
         # make sure its a list of sentences
         if not isinstance(sentences, list):
             sentences = [sentences]
@@ -479,12 +462,6 @@ class HunNen(object):
                 # embed mention
                 mention_sparse_embeds = self.biosyn.embed_sparse(names=[mention])
                 mention_dense_embeds = self.biosyn.embed_dense(names=[mention])
-
-                output = {
-                    "mention": mention,
-                    "mention_sparse_embeds": mention_sparse_embeds.squeeze(0),
-                    "mention_dense_embeds": mention_dense_embeds.squeeze(0),
-                }
 
                 # calcuate score matrix and get top 5
                 sparse_score_matrix = self.biosyn.get_score_matrix(
@@ -501,13 +478,12 @@ class HunNen(object):
 
                 # get predictions from dictionary
                 predictions = self.dictionary[hybrid_candidate_idxs].squeeze(0)
-                output["predictions"] = []
 
                 for prediction in predictions:
                     predicted_name = prediction[0]
                     predicted_id = prediction[1]
-                    output["predictions"].append({"name": predicted_name, "id": predicted_id})
-                    sentence.add_complex_label(typename="entity_type" + "_nen", label=SpanLabel(span=entity.span, value= f"{predicted_name} {predicted_id}"))
+                    sentence.add_complex_label(typename="entity_type" + "_nen", 
+                        label=SpanLabel(span=entity.span, value= f"{predicted_name} {predicted_id}"))
 
 
     @staticmethod
