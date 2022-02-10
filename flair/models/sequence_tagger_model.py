@@ -582,7 +582,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "embeddings": self.embeddings,
             "hidden_size": self.hidden_size,
             "tag_dictionary": self.label_dictionary,
@@ -600,8 +600,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+
         """Initialize the model from a state dictionary."""
         rnn_type = "LSTM" if "rnn_type" not in state.keys() else state["rnn_type"]
         use_dropout = 0.0 if "use_dropout" not in state.keys() else state["use_dropout"]
@@ -615,7 +616,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"]
                 del state["state_dict"]["transitions"]
 
-        model = SequenceTagger(
+        return super()._init_model_with_state_dict(
+            state,
             embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
             tag_type=state["tag_type"],
@@ -630,10 +632,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             reproject_embeddings=reproject_embeddings,
             loss_weights=weights,
             init_from_state_dict=True,
+            **kwargs,
         )
-
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @staticmethod
     def _fetch_model(model_name) -> str:
