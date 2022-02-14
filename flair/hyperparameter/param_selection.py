@@ -2,28 +2,23 @@ import logging
 from abc import abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import Tuple, Union
-import numpy as np
+from typing import Union
 
-from hyperopt import hp, fmin, tpe
+import numpy as np
+from hyperopt import fmin, hp, tpe
 
 import flair.nn
 from flair.data import Corpus
 from flair.embeddings import DocumentPoolEmbeddings, DocumentRNNEmbeddings
-from flair.hyperparameter import Parameter
 from flair.hyperparameter.parameter import (
+    DOCUMENT_EMBEDDING_PARAMETERS,
     SEQUENCE_TAGGER_PARAMETERS,
     TRAINING_PARAMETERS,
-    DOCUMENT_EMBEDDING_PARAMETERS,
+    Parameter,
 )
 from flair.models import SequenceTagger, TextClassifier
 from flair.trainers import ModelTrainer
-from flair.training_utils import (
-    EvaluationMetric,
-    log_line,
-    init_output_file,
-    add_file_handler,
-)
+from flair.training_utils import EvaluationMetric, init_output_file, log_line
 
 log = logging.getLogger("flair")
 
@@ -74,9 +69,9 @@ class ParamSelector(object):
     def _objective(self, params: dict):
         log_line(log)
         log.info(f"Evaluation run: {self.run}")
-        log.info(f"Evaluating parameter combination:")
+        log.info("Evaluating parameter combination:")
         for k, v in params.items():
-            if isinstance(v, Tuple):
+            if isinstance(v, tuple):
                 v = ",".join([str(x) for x in v])
             log.info(f"\t{k}: {str(v)}")
         log_line(log)
@@ -88,14 +83,12 @@ class ParamSelector(object):
             log_line(log)
             log.info(f"Training run: {i + 1}")
 
-            for sent in self.corpus.get_all_sentences():
+            for sent in self.corpus.get_all_sentences():  # type: ignore
                 sent.clear_embeddings()
 
             model = self._set_up_model(params)
 
-            training_params = {
-                key: params[key] for key in params if key in TRAINING_PARAMETERS
-            }
+            training_params = {key: params[key] for key in params if key in TRAINING_PARAMETERS}
 
             trainer: ModelTrainer = ModelTrainer(model, self.corpus)
 
@@ -110,9 +103,7 @@ class ParamSelector(object):
             if self.optimization_value == OptimizationValue.DEV_LOSS:
                 curr_scores = result["dev_loss_history"][-3:]
             else:
-                curr_scores = list(
-                    map(lambda s: 1 - s, result["dev_score_history"][-3:])
-                )
+                curr_scores = list(map(lambda s: 1 - s, result["dev_score_history"][-3:]))
 
             score = sum(curr_scores) / float(len(curr_scores))
             var = np.var(curr_scores)
@@ -125,9 +116,9 @@ class ParamSelector(object):
 
         test_score = result["test_score"]
         log_line(log)
-        log.info(f"Done evaluating parameter combination:")
+        log.info("Done evaluating parameter combination:")
         for k, v in params.items():
-            if isinstance(v, Tuple):
+            if isinstance(v, tuple):
                 v = ",".join([str(x) for x in v])
             log.info(f"\t{k}: {v}")
         log.info(f"{self.optimization_value.value}: {final_score}")
@@ -138,7 +129,7 @@ class ParamSelector(object):
         with open(self.param_selection_file, "a") as f:
             f.write(f"evaluation run {self.run}\n")
             for k, v in params.items():
-                if isinstance(v, Tuple):
+                if isinstance(v, tuple):
                     v = ",".join([str(x) for x in v])
                 f.write(f"\t{k}: {str(v)}\n")
             f.write(f"{self.optimization_value.value}: {final_score}\n")
@@ -152,9 +143,7 @@ class ParamSelector(object):
 
     def optimize(self, space: SearchSpace, max_evals=100):
         search_space = space.search_space
-        best = fmin(
-            self._objective, search_space, algo=tpe.suggest, max_evals=max_evals
-        )
+        best = fmin(self._objective, search_space, algo=tpe.suggest, max_evals=max_evals)
 
         log_line(log)
         log.info("Optimizing parameter configuration done.")
@@ -166,7 +155,7 @@ class ParamSelector(object):
         with open(self.param_selection_file, "a") as f:
             f.write("best parameter combination\n")
             for k, v in best.items():
-                if isinstance(v, Tuple):
+                if isinstance(v, tuple):
                     v = ",".join([str(x) for x in v])
                 f.write(f"\t{k}: {str(v)}\n")
 
@@ -204,9 +193,7 @@ class SequenceTaggerParamSelector(ParamSelector):
         self.tag_dictionary = self.corpus.make_label_dictionary(self.tag_type)
 
     def _set_up_model(self, params: dict):
-        sequence_tagger_params = {
-            key: params[key] for key in params if key in SEQUENCE_TAGGER_PARAMETERS
-        }
+        sequence_tagger_params = {key: params[key] for key in params if key in SEQUENCE_TAGGER_PARAMETERS}
 
         tagger: SequenceTagger = SequenceTagger(
             tag_dictionary=self.tag_dictionary,
@@ -256,14 +243,12 @@ class TextClassifierParamSelector(ParamSelector):
         self.label_dictionary = self.corpus.make_label_dictionary(self.label_type)
 
     def _set_up_model(self, params: dict):
-        embdding_params = {
-            key: params[key] for key in params if key in DOCUMENT_EMBEDDING_PARAMETERS
-        }
+        embdding_params = {key: params[key] for key in params if key in DOCUMENT_EMBEDDING_PARAMETERS}
 
         if self.document_embedding_type == "lstm":
             document_embedding = DocumentRNNEmbeddings(rnn_type="LSTM", **embdding_params)
         else:
-            document_embedding = DocumentPoolEmbeddings(**embdding_params)
+            document_embedding = DocumentPoolEmbeddings(**embdding_params)  # type: ignore
 
         text_classifier: TextClassifier = TextClassifier(
             label_dictionary=self.label_dictionary,
