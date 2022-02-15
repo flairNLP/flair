@@ -3,7 +3,7 @@ import typing
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Union
 
-from flair.data import Sentence, Span, SpanLabel, Token
+from flair.data import Sentence, Span, Token
 
 
 @dataclass

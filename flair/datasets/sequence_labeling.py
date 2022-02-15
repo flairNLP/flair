@@ -12,10 +12,8 @@ from flair.data import (
     Corpus,
     FlairDataset,
     MultiCorpus,
-    RelationLabel,
     Sentence,
     Span,
-    SpanLabel,
     Token,
 )
 from flair.datasets.base import find_train_dev_test_files
@@ -352,7 +350,7 @@ class ColumnDataset(FlairDataset):
                         continue
 
                     for token in sentence:
-                        if token.get_tag(layer, "O").value != "O" and token.get_tag(layer).value[0:2] not in [
+                        if token.get_label(layer, "O").value != "O" and token.get_label(layer).value[0:2] not in [
                             "B-",
                             "I-",
                             "E-",
@@ -387,7 +385,7 @@ class ColumnDataset(FlairDataset):
         self, lines, word_level_tag_columns: Dict[int, str], span_level_tag_columns: Optional[Dict[int, str]] = None
     ):
 
-        sentence: Sentence = Sentence()
+        sentence: Sentence = Sentence(text=[])
         token: Optional[Token] = None
         filtered_lines = []
         comments = []
@@ -418,13 +416,9 @@ class ColumnDataset(FlairDataset):
                     for span_indices, score, label in predicted_spans:
                         span = sentence[span_indices[0] : span_indices[-1] + 1]
                         value = self._remap_label(label)
-                        sentence.add_complex_label(
-                            typename=span_level_tag_columns[span_column],
-                            label=SpanLabel(span=span, value=value, score=score),
-                        )
+                        span.add_label(span_level_tag_columns[span_column], value=value, score=score)
                 except Exception:
                     pass
-                    # log.warning(f"--\nUnparseable sentence: {''.join(lines)}--\n")
 
         for comment in comments:
             # parse relations if they are set

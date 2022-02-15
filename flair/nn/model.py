@@ -247,6 +247,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 for datapoint in batch:
 
                     for gold_label in datapoint.get_labels(gold_label_type):
+                        print(gold_label)
                         representation = str(sentence_id) + ": " + gold_label.identifier
 
                         value = gold_label.value

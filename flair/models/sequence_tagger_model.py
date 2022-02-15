@@ -11,7 +11,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import Dictionary, Label, Sentence, Span, SpanLabel
+from flair.data import Dictionary, Label, Sentence, Span
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
@@ -398,12 +398,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             for sentence in sentences:
                 sentence_labels = ["O"] * len(sentence)
                 for label in sentence.get_labels(self.label_type):
-                    if len(label.span) == 1:
-                        sentence_labels[label.span[0].idx - 1] = "S-" + label.value
+                    span: Span = label.data_point
+                    if len(span) == 1:
+                        sentence_labels[span[0].idx - 1] = "S-" + label.value
                     else:
-                        sentence_labels[label.span[0].idx - 1] = "B-" + label.value
-                        sentence_labels[label.span[-1].idx - 1] = "E-" + label.value
-                        for i in range(label.span[0].idx, label.span[-1].idx - 1):
+                        sentence_labels[span[0].idx - 1] = "B-" + label.value
+                        sentence_labels[span[-1].idx - 1] = "E-" + label.value
+                        for i in range(span[0].idx, span[-1].idx - 1):
                             sentence_labels[i] = "I-" + label.value
                 all_sentence_labels.extend(sentence_labels)
             labels = [[label] for label in all_sentence_labels]
@@ -504,15 +505,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
                     # BIOES-labels need to be converted to spans
                     if self.predict_spans:
-                        sentence_tags = [label.value for label in sentence_predictions]
-                        sentence_scores = [label.score for label in sentence_predictions]
+                        sentence_tags = [label[0] for label in sentence_predictions]
+                        sentence_scores = [label[1] for label in sentence_predictions]
                         predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
                         for predicted_span in predicted_spans:
-                            span = Span(sentence[predicted_span[0][0] : predicted_span[0][-1] + 1])
-                            sentence.add_complex_label(
-                                typename=label_name,
-                                label=SpanLabel(span=span, value=predicted_span[2], score=predicted_span[1]),
-                            )
+                            span: Span = sentence[predicted_span[0][0] : predicted_span[0][-1] + 1]
+                            span.add_label(label_name, value=predicted_span[2], score=predicted_span[1])
+
                     # token-labels can be added directly
                     else:
                         for token, label in zip(sentence.tokens, sentence_predictions):
@@ -545,7 +544,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             predictions_for_sentence = prediction_batch[: len(sentence)]
             predictions.append(
                 [
-                    Label(self.label_dictionary.get_item_for_index(prediction), score.item())
+                    (self.label_dictionary.get_item_for_index(prediction), score.item())
                     for token, score, prediction in zip(sentence, scores, predictions_for_sentence)
                 ]
             )
@@ -948,36 +947,38 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return False
 
     def _print_predictions(self, batch, gold_label_type):
+
         lines = []
-        for datapoint in batch:
-            # all labels default to "O"
-            for token in datapoint:
-                token.set_label("gold_bio", "O")
-                token.set_label("predicted_bio", "O")
+        if self.predict_spans:
+            for datapoint in batch:
+                # all labels default to "O"
+                for token in datapoint:
+                    token.set_label("gold_bio", "O")
+                    token.set_label("predicted_bio", "O")
 
-            # set gold token-level
-            for gold_label in datapoint.get_labels(gold_label_type):
-                gold_label: SpanLabel = gold_label
-                prefix = "B-"
-                for token in gold_label.span:
-                    token.set_label("gold_bio", prefix + gold_label.value)
-                    prefix = "I-"
+                # set gold token-level
+                for gold_label in datapoint.get_labels(gold_label_type):
+                    gold_span: Span = gold_label.data_point
+                    prefix = "B-"
+                    for token in gold_span:
+                        token.set_label("gold_bio", prefix + gold_label.value)
+                        prefix = "I-"
 
-            # set predicted token-level
-            for predicted_label in datapoint.get_labels("predicted"):
-                predicted_label: SpanLabel = predicted_label
-                prefix = "B-"
-                for token in predicted_label.span:
-                    token.set_label("predicted_bio", prefix + predicted_label.value)
-                    prefix = "I-"
+                # set predicted token-level
+                for predicted_label in datapoint.get_labels("predicted"):
+                    predicted_span: Span = predicted_label.data_point
+                    prefix = "B-"
+                    for token in predicted_span:
+                        token.set_label("predicted_bio", prefix + predicted_label.value)
+                        prefix = "I-"
 
-            # now print labels in CoNLL format
-            for token in datapoint:
-                eval_line = (
-                    f"{token.text} " f"{token.get_tag('gold_bio').value} " f"{token.get_tag('predicted_bio').value}\n"
-                )
-                lines.append(eval_line)
-            lines.append("\n")
+                # now print labels in CoNLL format
+                for token in datapoint:
+                    eval_line = (
+                        f"{token.text} " f"{token.get_label('gold_bio').value} " f"{token.get_label('predicted_bio').value}\n"
+                    )
+                    lines.append(eval_line)
+                lines.append("\n")
         return lines
 
 

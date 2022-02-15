@@ -671,8 +671,7 @@ class FlairEmbeddings(TokenEmbeddings):
         self.chars_per_chunk: int = chars_per_chunk
 
         # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence("hello")
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0][0].get_embedding())
 

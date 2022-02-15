@@ -6,7 +6,7 @@ import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import RelationLabel, Sentence, Span
+from flair.data import Sentence, Span
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -279,4 +279,4 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
 
 def create_position_string(head: Span, tail: Span) -> str:
-    return f"{head.id_text} -> {tail.id_text}"
+    return f"{head.identifier} -> {tail.identifier}"
