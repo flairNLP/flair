@@ -52,7 +52,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                       'I-MISC': 8}
         full_match_hash_dict = [
             {'ORG': {
-                '168c89854b772f3726f19e45754762043dcb3aa261bb7d7b7ce5cbd01e28e241': ' Land Tenure Reform Association',
+                '612424833745b97d86760e766eeaf5ca8fca3887433975bf7b636bbd8e467ac3': 'Land Tenure Reform Association',
                 '9859410a534a38b200bf2833ce4a0b1bd3dd7d72e402a27ac2220f5569b07859': '!Bang!',
                 '3db42605fbecf1bc958dd3b49214dab0b212f98faa6c2f554003010edf2fc371': '!Xunkhwesa Combined School',
                 '506daaf36bfba905fd3b9a1e4812e2f337928f51bee1b93759817348834701f6': '""Onderzoek - en Documentatiecentrum Beweging van Mensen met Laag Inkomen en Kinderen"',
