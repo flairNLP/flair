@@ -899,7 +899,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
         if partial_matching:
             self.matching_methods.append('partial_match')
 
-        self.gazetteer_file_list = self._get_gazetteers()
+        self.gazetteer_file_dict_list = self._get_gazetteers()
         self.gazetteers_dicts = self._process_gazetteers()
         self.__embedding_length = len(label_dict)
 
@@ -910,12 +910,15 @@ class GazetteerEmbeddings(TokenEmbeddings):
     def _get_gazetteers(self):
         gazetteer_files = []
         for key in self.labels.keys():
+            dict_with_label_and_files = {}
             if key != 'O' and key[0:2] != 'I-':
                 if key[0:2] == 'B-':
-                    pattern = f'.*-?{key[2:]}-.*[.]txt'
-                else:
-                    pattern = f'.*-?{key}-.*[.]txt'
-                gazetteer_files.extend([f for f in os.listdir(self.gazetteer_path + '/') if re.match(pattern, f)])
+                    key = key[2:]
+                pattern = f'.*-?{key}-.*[.]txt'
+                temp_list = []
+                temp_list.extend([f for f in os.listdir(self.gazetteer_path + '/') if re.match(pattern, f)])
+                dict_with_label_and_files[key] = temp_list
+                gazetteer_files.append(dict_with_label_and_files)
         return gazetteer_files
 
     def _filter_gazetteer_line(self, line_list):
@@ -933,31 +936,47 @@ class GazetteerEmbeddings(TokenEmbeddings):
             h = hashlib.new('sha256')
             h.update(bytes(str(text), "utf-8"))
             return str(h.hexdigest())
-        if 'partial_match' in self.matching_methods:
-            partial_matching_dict_list = []
-            for gazetteer_file in self.gazetteer_file_list:
-                gazetteer_tag_dict_list = []
-                with open(f'{self.gazetteer_path}/{gazetteer_file}', 'r', encoding='utf-8', errors='strict') as src:
-                    for line in src:
-                        if len(line) == 0:
-                            break
-                        else:
-                            line_list = re.split(" ", line)
-                            line_list_filtered = self._filter_gazetteer_line(line_list)
-                            for word in line_list_filtered:
-                                word_hash = get_hash_of_string(word)
-                                word_index = line_list_filtered.index(word)
-                                try:
-                                    gazetteer_tag_dict_list[word_index][word_hash] = word
-                                except IndexError:
-                                    temp_dict = {word_hash: word}
-                                    gazetteer_tag_dict_list.insert(word_index, temp_dict)
-                partial_matching_dict_list.append(gazetteer_tag_dict_list)
-        if 'full_match' in self.matching_methods:
-            # TODO implement full matching conversion
-            pass
-        return partial_matching_dict_list
 
+        partial_matching_dict_list = []
+        full_matching_dict_list = []
+
+        for gazetteer_dict in self.gazetteer_file_dict_list:
+            tag_key = list(gazetteer_dict.keys())[0]
+            gazetteer_files = gazetteer_dict[tag_key]
+            if len(gazetteer_files) > 0:
+                for gazetteer_file in gazetteer_files:
+                    gazetteer_tag_dict_list_partial = []
+                    gazetteer_tag_dict_dict_full = {}
+
+                    with open(f'{self.gazetteer_path}/{gazetteer_file}', 'r', encoding='utf-8', errors='strict') as src:
+                        for line in src:
+                            if len(line) == 0:
+                                break
+                            else:
+
+                                if 'partial_match' in self.matching_methods:
+                                    line_list = re.split(" ", line)
+                                    line_list_filtered = self._filter_gazetteer_line(line_list)
+                                    for word in line_list_filtered:
+                                        word_hash = get_hash_of_string(word)
+                                        word_index = line_list_filtered.index(word)
+                                        try:
+                                            gazetteer_tag_dict_list_partial[word_index][word_hash] = word
+                                        except IndexError:
+                                            temp_dict = {word_hash: word}
+                                            gazetteer_tag_dict_list_partial.insert(word_index, temp_dict)
+
+                                if 'full_match' in self.matching_methods:
+                                    line = line.rstrip("\n")
+                                    line_hash = get_hash_of_string(line)
+                                    gazetteer_tag_dict_dict_full[line_hash] = line
+
+                        if len(gazetteer_tag_dict_list_partial) != 0:
+                            partial_matching_dict_list.append({tag_key: gazetteer_tag_dict_list_partial})
+                        if len(gazetteer_tag_dict_dict_full) != 0:
+                            full_matching_dict_list.append({tag_key: gazetteer_tag_dict_dict_full})
+
+        return {'partial_match': partial_matching_dict_list, 'full_match': full_matching_dict_list}
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         for sentence in sentences:
