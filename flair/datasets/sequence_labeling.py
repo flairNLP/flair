@@ -271,14 +271,20 @@ class ColumnDataset(FlairDataset):
                 previous_sentence = None
                 while True:
                     # parse next sentence
+                    next_sentence = self._read_next_sentence(file)
+
+                    # quit if last sentence reached
+                    if len(next_sentence) == 0:
+                        break
+
                     sentence = self._convert_lines_to_sentence(
-                        self._read_next_sentence(file),
+                        next_sentence,
                         word_level_tag_columns=self.word_level_tag_columns,
                         span_level_tag_columns=self.span_level_tag_columns,
                     )
-                    # quit if last sentence reached
+
                     if not sentence:
-                        break
+                        continue
 
                     # skip banned sentences
                     if self.banned_sentences is not None and any(
@@ -309,7 +315,7 @@ class ColumnDataset(FlairDataset):
                     sentence_raw = self._read_next_sentence(file)
 
                     # quit if last sentence reached
-                    if not sentence_raw:
+                    if len(sentence_raw) == 0:
                         break
 
                     # append raw lines for each sentence
