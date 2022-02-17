@@ -1,31 +1,30 @@
-from abc import abstractmethod
+import logging
 from typing import List
 
 import torch
 import torch.nn.functional as F
-from torch.nn import Parameter
+from torch.nn import (
+    AdaptiveAvgPool2d,
+    AdaptiveMaxPool2d,
+    Conv2d,
+    Dropout2d,
+    Linear,
+    MaxPool2d,
+    Parameter,
+    ReLU,
+    Sequential,
+    TransformerEncoder,
+    TransformerEncoderLayer,
+)
 
 import flair
 from flair.data import Image
 from flair.embeddings.base import Embeddings
 
-import logging
-
-from torch.nn import Sequential, Linear, Conv2d, ReLU, MaxPool2d, Dropout2d
-from torch.nn import AdaptiveAvgPool2d, AdaptiveMaxPool2d
-from torch.nn import TransformerEncoderLayer, TransformerEncoder
-
-
 log = logging.getLogger("flair")
 
 
-class ImageEmbeddings(Embeddings):
-    @property
-    @abstractmethod
-    def embedding_length(self) -> int:
-        """Returns the length of the embedding vector."""
-        pass
-
+class ImageEmbeddings(Embeddings[Image]):
     @property
     def embedding_type(self) -> str:
         return "image-level"
@@ -42,7 +41,7 @@ class IdentityImageEmbeddings(ImageEmbeddings):
         self.static_embeddings = True
         super().__init__()
 
-    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+    def _add_embeddings_internal(self, images: List[Image]):
         for image in images:
             image_data = self.PIL.Image.open(image.imageURL)
             image_data.load()
@@ -64,14 +63,12 @@ class PrecomputedImageEmbeddings(ImageEmbeddings):
         self.static_embeddings = True
         super().__init__()
 
-    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+    def _add_embeddings_internal(self, images: List[Image]):
         for image in images:
             if image.imageURL in self.url2tensor_dict:
                 image.set_embedding(self.name, self.url2tensor_dict[image.imageURL])
             else:
-                image.set_embedding(
-                    self.name, torch.zeros(self.__embedding_length, device=flair.device)
-                )
+                image.set_embedding(self.name, torch.zeros(self.__embedding_length, device=flair.device))
 
     @property
     def embedding_length(self) -> int:
@@ -90,9 +87,7 @@ class NetworkImageEmbeddings(ImageEmbeddings):
         except ModuleNotFoundError:
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "torchvision" is not installed!')
-            log.warning(
-                'To use convnets pretraned on ImageNet, please first install with "pip install torchvision"'
-            )
+            log.warning('To use convnets pretraned on ImageNet, please first install with "pip install torchvision"')
             log.warning("-" * 100)
             pass
 
@@ -110,9 +105,7 @@ class NetworkImageEmbeddings(ImageEmbeddings):
         if pretrained:
             imagenet_mean = [0.485, 0.456, 0.406]
             imagenet_std = [0.229, 0.224, 0.225]
-            transforms += [
-                torchvision.transforms.Normalize(mean=imagenet_mean, std=imagenet_std)
-            ]
+            transforms += [torchvision.transforms.Normalize(mean=imagenet_mean, std=imagenet_std)]
         self.transforms = torchvision.transforms.Compose(transforms)
 
         if name in model_info:
@@ -130,18 +123,14 @@ class NetworkImageEmbeddings(ImageEmbeddings):
         else:
             raise Exception(f"Image embeddings {name} not available.")
 
-    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+    def _add_embeddings_internal(self, images: List[Image]):
         image_tensor = torch.stack([self.transforms(image.data) for image in images])
         image_embeddings = self.features(image_tensor)
         image_embeddings = (
-            image_embeddings.view(image_embeddings.shape[:2])
-            if image_embeddings.dim() == 4
-            else image_embeddings
+            image_embeddings.view(image_embeddings.shape[:2]) if image_embeddings.dim() == 4 else image_embeddings
         )
         if image_embeddings.dim() != 2:
-            raise Exception(
-                f"Unknown embedding shape of length {image_embeddings.dim()}"
-            )
+            raise Exception(f"Unknown embedding shape of length {image_embeddings.dim()}")
         for image_id, image in enumerate(images):
             image.set_embedding(self.name, image_embeddings[image_id])
 
@@ -159,11 +148,7 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
 
         adaptive_pool_func_map = {"max": AdaptiveMaxPool2d, "avg": AdaptiveAvgPool2d}
 
-        convnet_arch = (
-            []
-            if convnet_parms["dropout"][0] <= 0
-            else [Dropout2d(convnet_parms["dropout"][0])]
-        )
+        convnet_arch = [] if convnet_parms["dropout"][0] <= 0 else [Dropout2d(convnet_parms["dropout"][0])]
         convnet_arch.extend(
             [
                 Conv2d(
@@ -178,9 +163,7 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
             ]
         )
         if "0" in convnet_parms["pool_layers_map"]:
-            convnet_arch.append(
-                MaxPool2d(kernel_size=convnet_parms["pool_layers_map"]["0"])
-            )
+            convnet_arch.append(MaxPool2d(kernel_size=convnet_parms["pool_layers_map"]["0"]))
         for layer_id, (kernel_size, n_in, n_out, groups, stride, dropout) in enumerate(
             zip(
                 convnet_parms["kernel_sizes"][1:],
@@ -205,15 +188,9 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
             )
             convnet_arch.append(ReLU())
             if str(layer_id + 1) in convnet_parms["pool_layers_map"]:
-                convnet_arch.append(
-                    MaxPool2d(
-                        kernel_size=convnet_parms["pool_layers_map"][str(layer_id + 1)]
-                    )
-                )
+                convnet_arch.append(MaxPool2d(kernel_size=convnet_parms["pool_layers_map"][str(layer_id + 1)]))
         convnet_arch.append(
-            adaptive_pool_func_map[convnet_parms["adaptive_pool_func"]](
-                output_size=convnet_parms["output_size"]
-            )
+            adaptive_pool_func_map[convnet_parms["adaptive_pool_func"]](output_size=convnet_parms["output_size"])
         )
         self.conv_features = Sequential(*convnet_arch)
         conv_feat_dim = convnet_parms["n_feats_out"][-1]
@@ -231,19 +208,13 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
             transformer_layer = TransformerEncoderLayer(
                 d_model=conv_feat_dim, **transformer_parms["transformer_encoder_parms"]
             )
-            self.transformer = TransformerEncoder(
-                transformer_layer, num_layers=transformer_parms["n_blocks"]
-            )
+            self.transformer = TransformerEncoder(transformer_layer, num_layers=transformer_parms["n_blocks"])
             # <cls> token initially set to 1/D, so it attends to all image features equally
             self.cls_token = Parameter(torch.ones(conv_feat_dim, 1) / conv_feat_dim)
             self._feat_dim = conv_feat_dim
         else:
             self.use_transformer = False
-            self._feat_dim = (
-                convnet_parms["output_size"][0]
-                * convnet_parms["output_size"][1]
-                * conv_feat_dim
-            )
+            self._feat_dim = convnet_parms["output_size"][0] * convnet_parms["output_size"][1] * conv_feat_dim
 
     def forward(self, x):
         x = self.conv_features(x)  # [b, d, h, w]
@@ -258,9 +229,7 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
             )  # [2, h, w
             y = y.view([2, h * w]).transpose(1, 0)  # [h*w, 2]
             y = y.type(torch.float32).to(flair.device)
-            y = (
-                self.position_features(y).transpose(1, 0).view([d, h, w])
-            )  # [h*w, d] => [d, h, w]
+            y = self.position_features(y).transpose(1, 0).view([d, h, w])  # [h*w, d] => [d, h, w]
             y = y.unsqueeze(dim=0)  # [1, d, h, w]
             x = x + y  # [b, d, h, w] + [1, d, h, w] => [b, d, h, w]
             # reshape the pixels into the sequence
@@ -268,9 +237,7 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
             # layer norm after convolution and positional encodings
             x = F.layer_norm(x.permute([0, 2, 1]), (d,)).permute([0, 2, 1])
             # add <cls> token
-            x = torch.cat(
-                [x, torch.stack([self.cls_token] * b)], dim=2
-            )  # [b, d, h*w+1]
+            x = torch.cat([x, torch.stack([self.cls_token] * b)], dim=2)  # [b, d, h*w+1]
             # transformer requires input in the shape [h*w+1, b, d]
             x = (
                 x.view([b * d, h * w + 1]).transpose(1, 0).view([h * w + 1, b, d])
@@ -284,7 +251,7 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
 
         return x
 
-    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+    def _add_embeddings_internal(self, images: List[Image]):
         image_tensor = torch.stack([image.data for image in images])
         image_embeddings = self.forward(image_tensor)
         for image_id, image in enumerate(images):

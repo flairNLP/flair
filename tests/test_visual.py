@@ -1,9 +1,7 @@
-from unittest.mock import MagicMock
-
 from flair.data import Sentence, Span, Token
 from flair.embeddings import FlairEmbeddings
-from flair.visual import *
-from flair.visual.ner_html import render_ner_html, HTML_PAGE, TAGGED_ENTITY, PARAGRAPH
+from flair.visual import Highlighter
+from flair.visual.ner_html import HTML_PAGE, PARAGRAPH, TAGGED_ENTITY, render_ner_html
 from flair.visual.training_curves import Plotter
 
 
@@ -37,7 +35,7 @@ def test_plotting_training_curves_and_weights(resources_path):
 
 
 def mock_ner_span(text, tag, start, end):
-    span = Span([]).set_label('class', tag)
+    span = Span([]).set_label("class", tag)
     span.start_pos = start
     span.end_pos = end
     span.tokens = [Token(text[start:end])]
@@ -46,18 +44,15 @@ def mock_ner_span(text, tag, start, end):
 
 def test_html_rendering():
     text = (
-        "Boris Johnson has been elected new Conservative leader in a ballot of party members and will become the "
+        "Boris Johnson has been elected new Conservative leader in "
+        "a ballot of party members and will become the "
         "next UK prime minister. &"
     )
-    sent = Sentence()
-    sent.get_spans = MagicMock()
-    sent.get_spans.return_value = [
-        mock_ner_span(text, "PER", 0, 13),
-        mock_ner_span(text, "MISC", 35, 47),
-        mock_ner_span(text, "LOC", 109, 111),
-    ]
-    sent.to_original_text = MagicMock()
-    sent.to_original_text.return_value = text
+    sentence = Sentence(text)
+
+    print(sentence[0:2].add_tag("ner", "PER"))
+    print(sentence[6:7].add_tag("ner", "MISC"))
+    print(sentence[19:20].add_tag("ner", "LOC"))
     colors = {
         "PER": "#F7FF53",
         "ORG": "#E8902E",
@@ -65,13 +60,11 @@ def test_html_rendering():
         "MISC": "#4647EB",
         "O": "#ddd",
     }
-    actual = render_ner_html([sent], colors=colors)
+    actual = render_ner_html([sentence], colors=colors)
 
     expected_res = HTML_PAGE.format(
         text=PARAGRAPH.format(
-            sentence=TAGGED_ENTITY.format(
-                color="#F7FF53", entity="Boris Johnson", label="PER"
-            )
+            sentence=TAGGED_ENTITY.format(color="#F7FF53", entity="Boris Johnson", label="PER")
             + " has been elected new "
             + TAGGED_ENTITY.format(color="#4647EB", entity="Conservative", label="MISC")
             + " leader in a ballot of party members and will become the next "

@@ -36,9 +36,7 @@ class Highlighter(object):
 
         step_size = (max(activation) - min(activation)) / len(self.color_map)
 
-        lookup = numpy.array(
-            list(numpy.arange(min(activation), max(activation), step_size))
-        )
+        lookup = numpy.array(list(numpy.arange(min(activation), max(activation), step_size)))
 
         colors = []
 
@@ -59,9 +57,7 @@ class Highlighter(object):
 
         return str_
 
-    def highlight_selection(
-        self, activations, text, file_="resources/data/highlight.html", n=10
-    ):
+    def highlight_selection(self, activations, text, file_="resources/data/highlight.html", n=10):
 
         ix = numpy.random.choice(activations.shape[1], size=n)
 

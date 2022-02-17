@@ -1,8 +1,8 @@
-import pytest
 from typing import Tuple
+
 import flair.datasets
-from flair.data import Dictionary, Corpus
-from flair.embeddings import WordEmbeddings, DocumentRNNEmbeddings
+from flair.data import Corpus
+from flair.embeddings import DocumentRNNEmbeddings, WordEmbeddings
 from flair.models.text_regression_model import TextRegressor
 
 # from flair.trainers.trainer_regression import RegressorTrainer
@@ -10,7 +10,7 @@ from flair.trainers import ModelTrainer
 
 
 def init(tasks_base_path) -> Tuple[Corpus, TextRegressor, ModelTrainer]:
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / 'regression')
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "regression")
 
     glove_embedding: WordEmbeddings = WordEmbeddings("glove")
     document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(

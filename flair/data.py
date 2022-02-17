@@ -1,13 +1,15 @@
 import logging
 import re
-from abc import abstractmethod, ABC
-from collections import Counter
-from collections import defaultdict
+import typing
+from abc import ABC, abstractmethod
+from collections import Counter, defaultdict
+from functools import lru_cache
 from operator import itemgetter
-from typing import List, Dict, Union, Optional
+from pathlib import Path
+from typing import Callable, Dict, List, Optional, Union, cast
 
-from deprecated import deprecated
 import torch
+from deprecated import deprecated
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
@@ -17,6 +19,23 @@ from flair.file_utils import Tqdm
 log = logging.getLogger("flair")
 
 
+def _iter_dataset(dataset: Optional[Dataset]) -> typing.Iterable:
+    if dataset is None:
+        return []
+    from flair.datasets import DataLoader
+
+    return map(lambda x: x[0], DataLoader(dataset, batch_size=1, num_workers=0))
+
+
+def _len_dataset(dataset: Optional[Dataset]) -> int:
+    if dataset is None:
+        return 0
+    from flair.datasets import DataLoader
+
+    loader = DataLoader(dataset, batch_size=1, num_workers=0)
+    return len(loader)
+
+
 class Dictionary:
     """
     This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings.
@@ -24,19 +43,21 @@ class Dictionary:
 
     def __init__(self, add_unk=True):
         # init dictionaries
-        self.item2idx: Dict[str, int] = {}
-        self.idx2item: List[str] = []
+        self.item2idx: Dict[bytes, int] = {}
+        self.idx2item: List[bytes] = []
         self.add_unk = add_unk
+        self.multi_label = False
+        self.span_labels = False
         # in order to deal with unknown tokens, add <unk>
         if add_unk:
             self.add_item("<unk>")
 
     def remove_item(self, item: str):
 
-        item = item.encode("utf-8")
-        if item in self.item2idx:
-            self.idx2item.remove(item)
-            del self.item2idx[item]
+        bytes_item = item.encode("utf-8")
+        if bytes_item in self.item2idx:
+            self.idx2item.remove(bytes_item)
+            del self.item2idx[bytes_item]
 
     def add_item(self, item: str) -> int:
         """
@@ -44,11 +65,11 @@ class Dictionary:
         :param item: a string for which to assign an id.
         :return: ID of string
         """
-        item = item.encode("utf-8")
-        if item not in self.item2idx:
-            self.idx2item.append(item)
-            self.item2idx[item] = len(self.idx2item) - 1
-        return self.item2idx[item]
+        bytes_item = item.encode("utf-8")
+        if bytes_item not in self.item2idx:
+            self.idx2item.append(bytes_item)
+            self.item2idx[bytes_item] = len(self.idx2item) - 1
+        return self.item2idx[bytes_item]
 
     def get_idx_for_item(self, item: str) -> int:
         """
@@ -64,7 +85,8 @@ class Dictionary:
         else:
             log.error(f"The string '{item}' is not in dictionary! Dictionary contains only: {self.get_items()}")
             log.error(
-                "You can create a Dictionary that handles unknown items with an <unk>-key by setting add_unk = True in the construction.")
+                "You can create a Dictionary that handles unknown items with an <unk>-key by setting add_unk = True in the construction."
+            )
             raise IndexError
 
     def get_idx_for_items(self, items: List[str]) -> List[int]:
@@ -74,9 +96,7 @@ class Dictionary:
         :return: List of ID of strings
         """
         if not hasattr(self, "item2idx_not_encoded"):
-            d = dict(
-                [(key.decode("UTF-8"), value) for key, value in self.item2idx.items()]
-            )
+            d = dict([(key.decode("UTF-8"), value) for key, value in self.item2idx.items()])
             self.item2idx_not_encoded = defaultdict(int, d)
 
         if not items:
@@ -98,6 +118,16 @@ class Dictionary:
     def get_item_for_index(self, idx):
         return self.idx2item[idx].decode("UTF-8")
 
+    def set_start_stop_tags(self):
+        self.add_item("<START>")
+        self.add_item("<STOP>")
+
+    def start_stop_tags_are_set(self):
+        if {"<START>".encode(), "<STOP>".encode()}.issubset(self.item2idx.keys()):
+            return True
+        else:
+            return False
+
     def save(self, savefile):
         import pickle
 
@@ -108,11 +138,11 @@ class Dictionary:
     def __setstate__(self, d):
         self.__dict__ = d
         # set 'add_unk' if the dictionary was created with a version of Flair older than 0.9
-        if 'add_unk' not in self.__dict__.keys():
-            self.__dict__['add_unk'] = True if b'<unk>' in self.__dict__['idx2item'] else False
+        if "add_unk" not in self.__dict__.keys():
+            self.__dict__["add_unk"] = True if b"<unk>" in self.__dict__["idx2item"] else False
 
     @classmethod
-    def load_from_file(cls, filename: str):
+    def load_from_file(cls, filename: Union[str, Path]):
         import pickle
 
         f = open(filename, "rb")
@@ -122,7 +152,7 @@ class Dictionary:
         f.close()
 
         # set 'add_unk' depending on whether <unk> is a key
-        add_unk = True if b'<unk>' in idx2item else False
+        add_unk = True if b"<unk>" in idx2item else False
 
         dictionary: Dictionary = Dictionary(add_unk=add_unk)
         dictionary.item2idx = item2idx
@@ -132,6 +162,7 @@ class Dictionary:
     @classmethod
     def load(cls, name: str):
         from flair.file_utils import cached_path
+
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/characters"
         if name == "chars" or name == "common-chars":
             char_dict = cached_path(f"{hu_path}/common_characters", cache_dir="datasets")
@@ -145,10 +176,19 @@ class Dictionary:
             char_dict = cached_path(f"{hu_path}/common_characters_xl", cache_dir="datasets")
             return Dictionary.load_from_file(char_dict)
 
+        if name == "chars-lemmatizer" or name == "common-chars-lemmatizer":
+            char_dict = cached_path(f"{hu_path}/common_characters_lemmatizer", cache_dir="datasets")
+            return Dictionary.load_from_file(char_dict)
+
         return Dictionary.load_from_file(name)
 
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, Dictionary):
+            return False
+        return self.item2idx == o.item2idx and self.idx2item == o.idx2item and self.add_unk == o.add_unk
+
     def __str__(self):
-        tags = ', '.join(self.get_item_for_index(i) for i in range(min(len(self), 50)))
+        tags = ", ".join(self.get_item_for_index(i) for i in range(min(len(self), 50)))
         return f"Dictionary with {len(self)} tags: {tags}"
 
 
@@ -158,7 +198,7 @@ class Label:
     score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
-    def __init__(self, value: str, score: float = 1.0):
+    def __init__(self, value: Optional[str], score: float = 1.0):
         self._value = value
         self._score = score
         super().__init__()
@@ -177,9 +217,7 @@ class Label:
     @value.setter
     def value(self, value):
         if not value and value != "":
-            raise ValueError(
-                "Incorrect label value provided. Label value needs to be set."
-            )
+            raise ValueError("Incorrect label value provided. Label value needs to be set.")
         else:
             self._value = value
 
@@ -209,18 +247,24 @@ class Label:
 
 
 class SpanLabel(Label):
-    def __init__(self, span, value: str, score: float = 1.0):
+    def __init__(self, span, value: Optional[str], score: float = 1.0):
         super().__init__(value, score)
         self.span = span
 
     def spawn(self, value: str, score: float = 1.0):
         return SpanLabel(self.span, value, score)
 
+    def to_dict(self):
+        return {"span": self.span, "value": self.value, "confidence": self.score}
+
     def __str__(self):
         return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
 
     def __repr__(self):
         return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
+
+    def __hash__(self):
+        return hash(self.__repr__())
 
     def __len__(self):
         return len(self.span)
@@ -234,7 +278,7 @@ class SpanLabel(Label):
 
 
 class RelationLabel(Label):
-    def __init__(self, head, tail, value: str, score: float = 1.0):
+    def __init__(self, head, tail, value: Optional[str], score: float = 1.0):
         super().__init__(value, score)
         self.head = head
         self.tail = tail
@@ -252,10 +296,12 @@ class RelationLabel(Label):
         return len(self.head) + len(self.tail)
 
     def __eq__(self, other):
-        return self.value == other.value \
-               and self.score == other.score \
-               and self.head.id_text == other.head.id_text \
-               and self.tail.id_text == other.tail.id_text
+        return (
+            self.value == other.value
+            and self.score == other.score
+            and self.head.id_text == other.head.id_text
+            and self.tail.id_text == other.tail.id_text
+        )
 
     @property
     def identifier(self):
@@ -272,21 +318,50 @@ class DataPoint:
 
     def __init__(self):
         self.annotation_layers = {}
+        self._embeddings: Dict[str, torch.Tensor] = {}
 
     @property
     @abstractmethod
     def embedding(self):
         pass
 
-    @abstractmethod
+    def set_embedding(self, name: str, vector: torch.Tensor):
+        self._embeddings[name] = vector
+
+    def get_embedding(self, names: Optional[List[str]] = None) -> torch.Tensor:
+        embeddings = self.get_each_embedding(names)
+
+        if embeddings:
+            return torch.cat(embeddings, dim=0)
+
+        return torch.tensor([], device=flair.device)
+
+    def get_each_embedding(self, embedding_names: Optional[List[str]] = None) -> List[torch.Tensor]:
+        embeddings = []
+        for embed_name in sorted(self._embeddings.keys()):
+            if embedding_names and embed_name not in embedding_names:
+                continue
+            embed = self._embeddings[embed_name].to(flair.device)
+            embeddings.append(embed)
+        return embeddings
+
     def to(self, device: str, pin_memory: bool = False):
-        pass
+        for name, vector in self._embeddings.items():
+            if str(vector.device) != str(device):
+                if pin_memory:
+                    self._embeddings[name] = vector.to(device, non_blocking=True).pin_memory()
+                else:
+                    self._embeddings[name] = vector.to(device, non_blocking=True)
 
-    @abstractmethod
     def clear_embeddings(self, embedding_names: List[str] = None):
-        pass
+        if embedding_names is None:
+            self._embeddings = {}
+        else:
+            for name in embedding_names:
+                if name in self._embeddings.keys():
+                    del self._embeddings[name]
 
-    def add_label(self, typename: str, value: str, score: float = 1.):
+    def add_label(self, typename: str, value: str, score: float = 1.0):
 
         if typename not in self.annotation_layers:
             self.annotation_layers[typename] = [Label(value, score)]
@@ -307,7 +382,7 @@ class DataPoint:
 
         return self
 
-    def set_label(self, typename: str, value: str, score: float = 1.):
+    def set_label(self, typename: str, value: str, score: float = 1.0):
         self.annotation_layers[typename] = [Label(value, score)]
         return self
 
@@ -329,35 +404,8 @@ class DataPoint:
         return all_labels
 
 
-class DataPair(DataPoint):
-    def __init__(self, first: DataPoint, second: DataPoint):
-        super().__init__()
-        self.first = first
-        self.second = second
-
-    def to(self, device: str, pin_memory: bool = False):
-        self.first.to(device, pin_memory)
-        self.second.to(device, pin_memory)
-
-    def clear_embeddings(self, embedding_names: List[str] = None):
-        self.first.clear_embeddings(embedding_names)
-        self.second.clear_embeddings(embedding_names)
-
-    @property
-    def embedding(self):
-        return torch.cat([self.first.embedding, self.second.embedding])
-
-    def __str__(self):
-        return f"DataPair:\n − First {self.first}\n − Second {self.second}\n − Labels: {self.labels}"
-
-    def to_plain_string(self):
-        return f"DataPair: First {self.first}  ||  Second {self.second}"
-
-    def to_original_text(self):
-        return f"{self.first.to_original_text()} || {self.second.to_original_text()}"
-
-    def __len__(self):
-        return len(self.first) + len(self.second)
+DT = typing.TypeVar("DT", bound=DataPoint)
+DT2 = typing.TypeVar("DT2", bound=DataPoint)
 
 
 class Token(DataPoint):
@@ -367,26 +415,24 @@ class Token(DataPoint):
     """
 
     def __init__(
-            self,
-            text: str,
-            idx: int = None,
-            head_id: int = None,
-            whitespace_after: bool = True,
-            start_position: int = None,
+        self,
+        text: str,
+        idx: int = None,
+        head_id: int = None,
+        whitespace_after: bool = True,
+        start_position: int = None,
     ):
         super().__init__()
 
         self.text: str = text
-        self.idx: int = idx
-        self.head_id: int = head_id
+        self.idx: Optional[int] = idx
+        self.head_id: Optional[int] = head_id
         self.whitespace_after: bool = whitespace_after
 
         self.start_pos = start_position
-        self.end_pos = (
-            start_position + len(text) if start_position is not None else None
-        )
+        self.end_pos = start_position + len(text) if start_position is not None else None
 
-        self.sentence: Sentence = None
+        self.sentence: Optional[Sentence] = None
         self._embeddings: Dict = {}
         self.tags_proba_dist: Dict[str, List[Label]] = {}
 
@@ -399,8 +445,9 @@ class Token(DataPoint):
     def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
         self.set_label(tag_type, tag_value, confidence)
 
-    def get_tag(self, label_type):
-        if len(self.get_labels(label_type)) == 0: return Label('')
+    def get_tag(self, label_type, zero_tag_value=""):
+        if len(self.get_labels(label_type)) == 0:
+            return Label(zero_tag_value)
         return self.get_labels(label_type)[0]
 
     def get_tags_proba_dist(self, tag_type: str) -> List[Label]:
@@ -411,56 +458,12 @@ class Token(DataPoint):
     def get_head(self):
         return self.sentence.get_token(self.head_id)
 
-    def set_embedding(self, name: str, vector: torch.tensor):
-        device = flair.device
-        if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
-            device = next(iter(self._embeddings.values())).device
-        if device != vector.device:
-            vector = vector.to(device)
-        self._embeddings[name] = vector
-
-    def to(self, device: str, pin_memory: bool = False):
-        for name, vector in self._embeddings.items():
-            if str(vector.device) != str(device):
-                if pin_memory:
-                    self._embeddings[name] = vector.to(
-                        device, non_blocking=True
-                    ).pin_memory()
-                else:
-                    self._embeddings[name] = vector.to(device, non_blocking=True)
-
-    def clear_embeddings(self, embedding_names: List[str] = None):
-        if embedding_names is None:
-            self._embeddings: Dict = {}
-        else:
-            for name in embedding_names:
-                if name in self._embeddings.keys():
-                    del self._embeddings[name]
-
-    def get_each_embedding(self, embedding_names: Optional[List[str]] = None) -> torch.tensor:
-        embeddings = []
-        for embed in sorted(self._embeddings.keys()):
-            if embedding_names and embed not in embedding_names: continue
-            embed = self._embeddings[embed].to(flair.device)
-            if (flair.embedding_storage_mode == "cpu") and embed.device != flair.device:
-                embed = embed.to(flair.device)
-            embeddings.append(embed)
-        return embeddings
-
-    def get_embedding(self, names: Optional[List[str]] = None) -> torch.tensor:
-        embeddings = self.get_each_embedding(names)
-
-        if embeddings:
-            return torch.cat(embeddings, dim=0)
-
-        return torch.tensor([], device=flair.device)
-
     @property
-    def start_position(self) -> int:
+    def start_position(self) -> Optional[int]:
         return self.start_pos
 
     @property
-    def end_position(self) -> int:
+    def end_position(self) -> Optional[int]:
         return self.end_pos
 
     @property
@@ -468,18 +471,10 @@ class Token(DataPoint):
         return self.get_embedding()
 
     def __str__(self) -> str:
-        return (
-            "Token: {} {}".format(self.idx, self.text)
-            if self.idx is not None
-            else "Token: {}".format(self.text)
-        )
+        return "Token: {} {}".format(self.idx, self.text) if self.idx is not None else "Token: {}".format(self.text)
 
     def __repr__(self) -> str:
-        return (
-            "Token: {} {}".format(self.idx, self.text)
-            if self.idx is not None
-            else "Token: {}".format(self.text)
-        )
+        return "Token: {} {}".format(self.idx, self.text) if self.idx is not None else "Token: {}".format(self.text)
 
 
 class Span(DataPoint):
@@ -488,16 +483,19 @@ class Span(DataPoint):
     """
 
     def __init__(self, tokens: List[Token]):
-
         super().__init__()
 
         self.tokens = tokens
-        self.start_pos = None
-        self.end_pos = None
 
-        if tokens:
-            self.start_pos = tokens[0].start_position
-            self.end_pos = tokens[len(tokens) - 1].end_position
+    @property
+    def start_pos(self) -> int:
+        assert self.tokens[0].start_position is not None
+        return self.tokens[0].start_position
+
+    @property
+    def end_pos(self) -> int:
+        assert self.tokens[-1].end_position is not None
+        return self.tokens[-1].end_position
 
     @property
     def text(self) -> str:
@@ -509,6 +507,8 @@ class Span(DataPoint):
             return " ".join([t.text for t in self.tokens])
         str = ""
         for t in self.tokens:
+            if t.start_pos is None:
+                return " ".join([t.text for t in self.tokens])
             while t.start_pos > pos:
                 str += " "
                 pos += 1
@@ -526,21 +526,11 @@ class Span(DataPoint):
                 plain += " "
         return plain.rstrip()
 
-    def to_dict(self):
-        return {
-            "text": self.to_original_text(),
-            "start_pos": self.start_pos,
-            "end_pos": self.end_pos,
-            "labels": self.labels,
-        }
-
     def __str__(self) -> str:
         ids = ",".join([str(t.idx) for t in self.tokens])
         label_string = " ".join([str(label) for label in self.labels])
-        labels = f'   [− Labels: {label_string}]' if self.labels else ""
-        return (
-            'Span [{}]: "{}"{}'.format(ids, self.text, labels)
-        )
+        labels = f"   [− Labels: {label_string}]" if self.labels else ""
+        return 'Span [{}]: "{}"{}'.format(ids, self.text, labels)
 
     @property
     def id_text(self) -> str:
@@ -573,7 +563,21 @@ class Span(DataPoint):
 
     @property
     def position_string(self):
-        return '-'.join([str(token.idx) for token in self])
+        return "-".join([str(token.idx) for token in self])
+
+    @property
+    def embedding(self):
+        return torch.empty()
+
+    def to(self, device: str, pin_memory: bool = False):
+        pass
+
+    def clear_embeddings(self, embedding_names: List[str] = None):
+        pass
+
+    def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
+        assert self.tokens[0].sentence is not None
+        self.tokens[0].sentence.add_complex_label(tag_type, SpanLabel(self, value=tag_value, score=confidence))
 
 
 class Tokenizer(ABC):
@@ -597,15 +601,15 @@ class Tokenizer(ABC):
 
 class Sentence(DataPoint):
     """
-       A Sentence is a list of tokens and is used to represent a sentence or text fragment.
+    A Sentence is a list of tokens and is used to represent a sentence or text fragment.
     """
 
     def __init__(
-            self,
-            text: Union[str, List[str]] = None,
-            use_tokenizer: Union[bool, Tokenizer] = True,
-            language_code: str = None,
-            start_position: int = None
+        self,
+        text: Union[str, List[str]] = [],
+        use_tokenizer: Union[bool, Tokenizer, Callable] = True,
+        language_code: str = None,
+        start_position: int = None,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -622,64 +626,72 @@ class Sentence(DataPoint):
 
         self.tokens: List[Token] = []
 
-        self._embeddings: Dict = {}
-
-        self.language_code: str = language_code
+        self.language_code: Optional[str] = language_code
 
         self.start_pos = start_position
-        self.end_pos = (
-            start_position + len(text) if start_position is not None else None
-        )
+        self.end_pos = start_position + len(text) if start_position is not None else None
 
+        # the tokenizer used for this sentence
         if isinstance(use_tokenizer, Tokenizer):
             tokenizer = use_tokenizer
-        elif hasattr(use_tokenizer, "__call__"):
+
+        elif callable(use_tokenizer):
             from flair.tokenization import TokenizerWrapper
+
             tokenizer = TokenizerWrapper(use_tokenizer)
+
         elif type(use_tokenizer) == bool:
+
             from flair.tokenization import SegtokTokenizer, SpaceTokenizer
+
             tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
+
         else:
-            raise AssertionError("Unexpected type of parameter 'use_tokenizer'. " +
-                                 "Parameter should be bool, Callable[[str], List[Token]] (deprecated), Tokenizer")
+            raise AssertionError(
+                "Unexpected type of parameter 'use_tokenizer'. "
+                + "Parameter should be bool, Callable[[str], List[Token]] (deprecated), Tokenizer"
+            )
 
         # if text is passed, instantiate sentence with tokens (words)
-        if text is not None:
-            if isinstance(text, (list, tuple)):
-                [self.add_token(self._restore_windows_1252_characters(token))
-                 for token in text]
-            else:
-                text = self._restore_windows_1252_characters(text)
-                [self.add_token(token) for token in tokenizer.tokenize(text)]
+        if isinstance(text, (list, tuple)):
+            [self.add_token(self._restore_windows_1252_characters(token)) for token in text]
+        else:
+            text = self._restore_windows_1252_characters(text)
+            [self.add_token(token) for token in tokenizer.tokenize(text)]
 
         # log a warning if the dataset is empty
         if text == "":
-            log.warning(
-                "Warning: An empty Sentence was created! Are there empty strings in your dataset?"
-            )
+            log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
 
-        self.tokenized = None
+        self.tokenized: Optional[str] = None
 
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
-    def get_token(self, token_id: int) -> Token:
+        # internal variables to denote position inside dataset
+        self._previous_sentence: Optional[Sentence] = None
+        self._next_sentence: Optional[Sentence] = None
+        self._position_in_dataset: Optional[typing.Tuple[Dataset, int]] = None
+
+    def get_token(self, token_id: int) -> Optional[Token]:
         for token in self.tokens:
             if token.idx == token_id:
                 return token
+        return None
 
     def add_token(self, token: Union[Token, str]):
 
         if type(token) is str:
             token = Token(token)
+        token = cast(Token, token)
 
-        token.text = token.text.replace('\u200c', '')
-        token.text = token.text.replace('\u200b', '')
-        token.text = token.text.replace('\ufe0f', '')
-        token.text = token.text.replace('\ufeff', '')
+        token.text = token.text.replace("\u200c", "")
+        token.text = token.text.replace("\u200b", "")
+        token.text = token.text.replace("\ufe0f", "")
+        token.text = token.text.replace("\ufeff", "")
 
         # data with zero-width characters cannot be handled
-        if token.text == '':
+        if token.text == "":
             return
 
         self.tokens.append(token)
@@ -695,11 +707,10 @@ class Sentence(DataPoint):
             label_names.append(label.value)
         return label_names
 
-    def _add_spans_internal(self, spans: List[Span], label_type: str, min_score):
+    def _convert_span_labels(self, label_type: str, min_score=-1):
+        current_span: List[Token] = []
 
-        current_span = []
-
-        tags = defaultdict(lambda: 0.0)
+        tags: Dict[str, float] = defaultdict(lambda: 0.0)
 
         previous_tag_value: str = "O"
         for token in self:
@@ -725,11 +736,7 @@ class Sentence(DataPoint):
             if tag_value[0:2] in ["B-", "S-"]:
                 starts_new_span = True
 
-            if (
-                    previous_tag_value[0:2] in ["S-"]
-                    and previous_tag_value[2:] != tag_value[2:]
-                    and in_span
-            ):
+            if previous_tag_value[0:2] in ["S-"] and previous_tag_value[2:] != tag_value[2:] and in_span:
                 starts_new_span = True
 
             if (starts_new_span or not in_span) and len(current_span) > 0:
@@ -737,11 +744,11 @@ class Sentence(DataPoint):
                 span_score = sum(scores) / len(scores)
                 if span_score > min_score:
                     span = Span(current_span)
-                    span.add_label(
+                    value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
+                    self.add_complex_label(
                         typename=label_type,
-                        value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
-                        score=span_score)
-                    spans.append(span)
+                        label=SpanLabel(span=span, value=value, score=span_score),
+                    )
 
                 current_span = []
                 tags = defaultdict(lambda: 0.0)
@@ -759,85 +766,67 @@ class Sentence(DataPoint):
             span_score = sum(scores) / len(scores)
             if span_score > min_score:
                 span = Span(current_span)
-                span.add_label(
+                value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
+                self.add_complex_label(
                     typename=label_type,
-                    value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
-                    score=span_score)
-                spans.append(span)
-
-        return spans
-
-    def get_spans(self, label_type: Optional[str] = None, min_score=-1) -> List[Span]:
-
-        spans: List[Span] = []
-
-        # if label type is explicitly specified, get spans for this label type
-        if label_type:
-            return self._add_spans_internal(spans, label_type, min_score)
-
-        # else determine all label types in sentence and get all spans
-        label_types = []
-        for token in self:
-            for annotation in token.annotation_layers.keys():
-                if annotation not in label_types: label_types.append(annotation)
-
-        for label_type in label_types:
-            self._add_spans_internal(spans, label_type, min_score)
-        return spans
+                    label=SpanLabel(span=span, value=value, score=span_score),
+                )
 
     @property
     def embedding(self):
         return self.get_embedding()
 
-    def set_embedding(self, name: str, vector: torch.tensor):
-        device = flair.device
-        if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
-            device = next(iter(self._embeddings.values())).device
-        if device != vector.device:
-            vector = vector.to(device)
-        self._embeddings[name] = vector
-
-    def get_embedding(self, names: Optional[List[str]] = None) -> torch.tensor:
-        embeddings = []
-        for embed in sorted(self._embeddings.keys()):
-            if names and embed not in names: continue
-            embedding = self._embeddings[embed]
-            embeddings.append(embedding)
-
-        if embeddings:
-            return torch.cat(embeddings, dim=0)
-
-        return torch.Tensor()
-
     def to(self, device: str, pin_memory: bool = False):
 
         # move sentence embeddings to device
-        for name, vector in self._embeddings.items():
-            if str(vector.device) != str(device):
-                if pin_memory:
-                    self._embeddings[name] = vector.to(
-                        device, non_blocking=True
-                    ).pin_memory()
-                else:
-                    self._embeddings[name] = vector.to(device, non_blocking=True)
+        super().to(device=device, pin_memory=pin_memory)
 
-        # move token embeddings to device
+        # also move token embeddings to device
         for token in self:
             token.to(device, pin_memory)
 
     def clear_embeddings(self, embedding_names: List[str] = None):
 
-        # clear sentence embeddings
-        if embedding_names is None:
-            self._embeddings: Dict = {}
-        else:
-            for name in embedding_names:
-                if name in self._embeddings.keys():
-                    del self._embeddings[name]
+        super().clear_embeddings(embedding_names)
 
         # clear token embeddings
         for token in self:
             token.clear_embeddings(embedding_names)
+
+    @lru_cache(maxsize=1)  # cache last context, as training repeats calls
+    def left_context(self, context_length: int, respect_document_boundaries: bool = True):
+        sentence = self
+        left_context: List[str] = []
+        while True:
+            sentence = sentence.previous_sentence()
+            if sentence is None:
+                break
+
+            if respect_document_boundaries and sentence.is_document_boundary:
+                break
+
+            left_context = [t.text for t in sentence.tokens] + left_context
+            if len(left_context) > context_length:
+                left_context = left_context[-context_length:]
+                break
+        return left_context
+
+    @lru_cache(maxsize=1)  # cache last context, as training repeats calls
+    def right_context(self, context_length: int, respect_document_boundaries: bool = True):
+        sentence = self
+        right_context: List[str] = []
+        while True:
+            sentence = sentence.next_sentence()
+            if sentence is None:
+                break
+            if respect_document_boundaries and sentence.is_document_boundary:
+                break
+
+            right_context += [t.text for t in sentence.tokens]
+            if len(right_context) > context_length:
+                right_context = right_context[:context_length]
+                break
+        return right_context
 
     def to_tagged_string(self, main_tag=None) -> str:
         list = []
@@ -876,22 +865,6 @@ class Sentence(DataPoint):
                 plain += " "
         return plain.rstrip()
 
-    def convert_tag_scheme(self, tag_type: str = "ner", target_scheme: str = "iob"):
-
-        tags: List[Label] = []
-        for token in self.tokens:
-            tags.append(token.get_tag(tag_type))
-
-        if target_scheme == "iob":
-            iob2(tags)
-
-        if target_scheme == "iobes":
-            iob2(tags)
-            tags = iob_iobes(tags)
-
-        for index, tag in enumerate(tags):
-            self.tokens[index].set_label(tag_type, tag)
-
     def infer_space_after(self):
         """
         Heuristics in case you wish to infer whitespace_after values for tokenized text. This is useful for some old NLP
@@ -925,11 +898,11 @@ class Sentence(DataPoint):
         return self
 
     def to_original_text(self) -> str:
-        if len(self.tokens) > 0 and (self.tokens[0].start_pos is None):
-            return " ".join([t.text for t in self.tokens])
         str = ""
         pos = 0
         for t in self.tokens:
+            if t.start_pos is None:
+                return self.to_tokenized_string()
             while t.start_pos > pos:
                 str += " "
                 pos += 1
@@ -941,17 +914,29 @@ class Sentence(DataPoint):
 
     def to_dict(self, tag_type: str = None):
         labels = []
-        entities = []
 
         if tag_type:
-            entities = [span.to_dict() for span in self.get_spans(tag_type)]
+            labels = [label.to_dict() for label in self.get_labels(tag_type)]
+            return {"text": self.to_original_text(), tag_type: labels}
+
         if self.labels:
-            labels = [l.to_dict() for l in self.labels]
+            labels = [label.to_dict() for label in self.labels]
 
-        return {"text": self.to_original_text(), "labels": labels, "entities": entities}
+        return {"text": self.to_original_text(), "all labels": labels}
 
+    @typing.overload
     def __getitem__(self, idx: int) -> Token:
-        return self.tokens[idx]
+        ...
+
+    @typing.overload
+    def __getitem__(self, s: slice) -> Span:
+        ...
+
+    def __getitem__(self, subscript):
+        if isinstance(subscript, slice):
+            return Span(self.tokens[subscript])
+        else:
+            return self.tokens[subscript]
 
     def __iter__(self):
         return iter(self.tokens)
@@ -1004,7 +989,7 @@ class Sentence(DataPoint):
 
             try:
                 self.language_code = langdetect.detect(self.to_plain_string())
-            except:
+            except Exception:
                 self.language_code = "en"
 
         return self.language_code
@@ -1025,10 +1010,10 @@ class Sentence(DataPoint):
         Get the next sentence in the document (works only if context is set through dataloader or elsewhere)
         :return: next Sentence in document if set, otherwise None
         """
-        if '_next_sentence' in self.__dict__.keys():
+        if self._next_sentence is not None:
             return self._next_sentence
 
-        if '_position_in_dataset' in self.__dict__.keys():
+        if self._position_in_dataset is not None:
             dataset = self._position_in_dataset[0]
             index = self._position_in_dataset[1] + 1
             if index < len(dataset):
@@ -1041,10 +1026,10 @@ class Sentence(DataPoint):
         Get the previous sentence in the document (works only if context is set through dataloader or elsewhere)
         :return: previous Sentence in document if set, otherwise None
         """
-        if '_previous_sentence' in self.__dict__.keys():
+        if self._previous_sentence is not None:
             return self._previous_sentence
 
-        if '_position_in_dataset' in self.__dict__.keys():
+        if self._position_in_dataset is not None:
             dataset = self._position_in_dataset[0]
             index = self._position_in_dataset[1] - 1
             if index >= 0:
@@ -1057,24 +1042,66 @@ class Sentence(DataPoint):
         Return True or False depending on whether context is set (for instance in dataloader or elsewhere)
         :return: True if context is set, else False
         """
-        return '_previous_sentence' in self.__dict__.keys() or '_position_in_dataset' in self.__dict__.keys()
+        return self._previous_sentence is not None or self._position_in_dataset is not None
 
     def get_labels(self, label_type: str = None):
 
-        # TODO: crude hack - replace with something better
-        if label_type:
-            spans = self.get_spans(label_type)
-            for span in spans:
-                self.add_complex_label(label_type, label=SpanLabel(span, span.tag, span.score))
-
+        # if no label if specified, return all labels
         if label_type is None:
             return self.labels
 
-        return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
+        # if the label type exists in the Sentence, return it
+        if label_type in self.annotation_layers:
+            return self.annotation_layers[label_type]
+
+        # otherwise check if the label exists on the token-level
+        # in this case, create span-labels and return those
+        if label_type in set().union(*(token.annotation_layers.keys() for token in self)):
+            return [
+                SpanLabel(Span([token]), token.get_tag(label_type).value, token.get_tag(label_type).score)
+                for token in self
+                if label_type in token.annotation_layers
+            ]
+
+        # return empty list if none of the above
+        return []
+
+
+class DataPair(DataPoint, typing.Generic[DT, DT2]):
+    def __init__(self, first: DT, second: DT2):
+        super().__init__()
+        self.first = first
+        self.second = second
+
+    def to(self, device: str, pin_memory: bool = False):
+        self.first.to(device, pin_memory)
+        self.second.to(device, pin_memory)
+
+    def clear_embeddings(self, embedding_names: List[str] = None):
+        self.first.clear_embeddings(embedding_names)
+        self.second.clear_embeddings(embedding_names)
+
+    @property
+    def embedding(self):
+        return torch.cat([self.first.embedding, self.second.embedding])
+
+    def __str__(self):
+        return f"DataPair:\n − First {self.first}\n − Second {self.second}\n − Labels: {self.labels}"
+
+    def to_plain_string(self):
+        return f"DataPair: First {self.first}  ||  Second {self.second}"
+
+    def to_original_text(self):
+        return f"{self.first.to_original_text()} || {self.second.to_original_text()}"
+
+    def __len__(self):
+        return len(self.first) + len(self.second)
+
+
+TextPair = DataPair[Sentence, Sentence]
 
 
 class Image(DataPoint):
-
     def __init__(self, data=None, imageURL=None):
         super().__init__()
 
@@ -1087,47 +1114,10 @@ class Image(DataPoint):
         return self.get_embedding()
 
     def __str__(self):
-
         image_repr = self.data.size() if self.data else ""
         image_url = self.imageURL if self.imageURL else ""
 
         return f"Image: {image_repr} {image_url}"
-
-    def get_embedding(self) -> torch.tensor:
-        embeddings = [
-            self._embeddings[embed] for embed in sorted(self._embeddings.keys())
-        ]
-
-        if embeddings:
-            return torch.cat(embeddings, dim=0)
-
-        return torch.tensor([], device=flair.device)
-
-    def set_embedding(self, name: str, vector: torch.tensor):
-        device = flair.device
-        if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
-            device = next(iter(self._embeddings.values())).device
-        if device != vector.device:
-            vector = vector.to(device)
-        self._embeddings[name] = vector
-
-    def to(self, device: str, pin_memory: bool = False):
-        for name, vector in self._embeddings.items():
-            if str(vector.device) != str(device):
-                if pin_memory:
-                    self._embeddings[name] = vector.to(
-                        device, non_blocking=True
-                    ).pin_memory()
-                else:
-                    self._embeddings[name] = vector.to(device, non_blocking=True)
-
-    def clear_embeddings(self, embedding_names: List[str] = None):
-        if embedding_names is None:
-            self._embeddings: Dict = {}
-        else:
-            for name in embedding_names:
-                if name in self._embeddings.keys():
-                    del self._embeddings[name]
 
 
 class FlairDataset(Dataset):
@@ -1138,78 +1128,86 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-            self,
-            train: FlairDataset = None,
-            dev: FlairDataset = None,
-            test: FlairDataset = None,
-            name: str = "corpus",
-            sample_missing_splits: Union[bool, str] = True,
+        self,
+        train: Dataset = None,
+        dev: Dataset = None,
+        test: Dataset = None,
+        name: str = "corpus",
+        sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
-        
+
         # abort if no data is provided
         if not train and not dev and not test:
-            raise RuntimeError('No data provided when initializing corpus object.')
+            raise RuntimeError("No data provided when initializing corpus object.")
 
         # sample test data from train if none is provided
-        if test is None and sample_missing_splits and train and not sample_missing_splits == 'only_dev':
-            train_length = len(train)
+        if test is None and sample_missing_splits and train and not sample_missing_splits == "only_dev":
+            train_length = _len_dataset(train)
             test_size: int = round(train_length / 10)
-            splits = randomly_split_into_two_datasets(train, test_size)
-            test = splits[0]
-            train = splits[1]
+            test, train = randomly_split_into_two_datasets(train, test_size)
 
         # sample dev data from train if none is provided
-        if dev is None and sample_missing_splits and train and not sample_missing_splits == 'only_test':
-            train_length = len(train)
+        if dev is None and sample_missing_splits and train and not sample_missing_splits == "only_test":
+            train_length = _len_dataset(train)
             dev_size: int = round(train_length / 10)
-            splits = randomly_split_into_two_datasets(train, dev_size)
-            dev = splits[0]
-            train = splits[1]
+            dev, train = randomly_split_into_two_datasets(train, dev_size)
 
         # set train dev and test data
-        self._train: FlairDataset = train
-        self._test: FlairDataset = test
-        self._dev: FlairDataset = dev
+        self._train: Optional[Dataset] = train
+        self._test: Optional[Dataset] = test
+        self._dev: Optional[Dataset] = dev
 
     @property
-    def train(self) -> FlairDataset:
+    def train(self) -> Optional[Dataset]:
         return self._train
 
     @property
-    def dev(self) -> FlairDataset:
+    def dev(self) -> Optional[Dataset]:
         return self._dev
 
     @property
-    def test(self) -> FlairDataset:
+    def test(self) -> Optional[Dataset]:
         return self._test
 
-    def downsample(self, percentage: float = 0.1, downsample_train=True, downsample_dev=True, downsample_test=True):
+    def downsample(
+        self,
+        percentage: float = 0.1,
+        downsample_train=True,
+        downsample_dev=True,
+        downsample_test=True,
+    ):
 
-        if downsample_train and self._train:
-            self._train = self._downsample_to_proportion(self.train, percentage)
+        if downsample_train and self._train is not None:
+            self._train = self._downsample_to_proportion(self._train, percentage)
 
-        if downsample_dev and self._dev:
-            self._dev = self._downsample_to_proportion(self.dev, percentage)
+        if downsample_dev and self._dev is not None:
+            self._dev = self._downsample_to_proportion(self._dev, percentage)
 
-        if downsample_test and self._test:
-            self._test = self._downsample_to_proportion(self.test, percentage)
+        if downsample_test and self._test is not None:
+            self._test = self._downsample_to_proportion(self._test, percentage)
 
         return self
 
     def filter_empty_sentences(self):
         log.info("Filtering empty sentences")
-        self._train = Corpus._filter_empty_sentences(self._train)
-        self._test = Corpus._filter_empty_sentences(self._test)
-        self._dev = Corpus._filter_empty_sentences(self._dev)
+        if self._train is not None:
+            self._train = Corpus._filter_empty_sentences(self._train)
+        if self._test is not None:
+            self._test = Corpus._filter_empty_sentences(self._test)
+        if self._dev is not None:
+            self._dev = Corpus._filter_empty_sentences(self._dev)
         log.info(self)
 
     def filter_long_sentences(self, max_charlength: int):
         log.info("Filtering long sentences")
-        self._train = Corpus._filter_long_sentences(self._train, max_charlength)
-        self._test = Corpus._filter_long_sentences(self._test, max_charlength)
-        self._dev = Corpus._filter_long_sentences(self._dev, max_charlength)
+        if self._train is not None:
+            self._train = Corpus._filter_long_sentences(self._train, max_charlength)
+        if self._test is not None:
+            self._test = Corpus._filter_long_sentences(self._test, max_charlength)
+        if self._dev is not None:
+            self._dev = Corpus._filter_long_sentences(self._dev, max_charlength)
         log.info(self)
 
     @staticmethod
@@ -1218,17 +1216,12 @@ class Corpus:
         # find out empty sentence indices
         empty_sentence_indices = []
         non_empty_sentence_indices = []
-        index = 0
 
-        from flair.datasets import DataLoader
-
-        for batch in DataLoader(dataset):
-            for sentence in batch:
-                if len(sentence.to_plain_string()) > max_charlength:
-                    empty_sentence_indices.append(index)
-                else:
-                    non_empty_sentence_indices.append(index)
-                index += 1
+        for index, sentence in Tqdm.tqdm(enumerate(_iter_dataset(dataset))):
+            if len(sentence.to_plain_string()) > max_charlength:
+                empty_sentence_indices.append(index)
+            else:
+                non_empty_sentence_indices.append(index)
 
         # create subset of non-empty sentence indices
         subset = Subset(dataset, non_empty_sentence_indices)
@@ -1241,17 +1234,12 @@ class Corpus:
         # find out empty sentence indices
         empty_sentence_indices = []
         non_empty_sentence_indices = []
-        index = 0
 
-        from flair.datasets import DataLoader
-
-        for batch in DataLoader(dataset):
-            for sentence in batch:
-                if len(sentence) == 0:
-                    empty_sentence_indices.append(index)
-                else:
-                    non_empty_sentence_indices.append(index)
-                index += 1
+        for index, sentence in enumerate(_iter_dataset(dataset)):
+            if len(sentence) == 0:
+                empty_sentence_indices.append(index)
+            else:
+                non_empty_sentence_indices.append(index)
 
         # create subset of non-empty sentence indices
         subset = Subset(dataset, non_empty_sentence_indices)
@@ -1279,37 +1267,33 @@ class Corpus:
 
     def _get_most_common_tokens(self, max_tokens, min_freq) -> List[str]:
         tokens_and_frequencies = Counter(self._get_all_tokens())
-        tokens_and_frequencies = tokens_and_frequencies.most_common()
 
-        tokens = []
-        for token, freq in tokens_and_frequencies:
-            if (min_freq != -1 and freq < min_freq) or (
-                    max_tokens != -1 and len(tokens) == max_tokens
-            ):
+        tokens: List[str] = []
+        for token, freq in tokens_and_frequencies.most_common():
+            if (min_freq != -1 and freq < min_freq) or (max_tokens != -1 and len(tokens) == max_tokens):
                 break
             tokens.append(token)
         return tokens
 
     def _get_all_tokens(self) -> List[str]:
-        tokens = list(map((lambda s: s.tokens), self.train))
+        assert self.train
+        tokens = list(map((lambda s: s.tokens), _iter_dataset(self.train)))
         tokens = [token for sublist in tokens for token in sublist]
         return list(map((lambda t: t.text), tokens))
 
     @staticmethod
     def _downsample_to_proportion(dataset: Dataset, proportion: float):
 
-        sampled_size: int = round(len(dataset) * proportion)
+        sampled_size: int = round(_len_dataset(dataset) * proportion)
         splits = randomly_split_into_two_datasets(dataset, sampled_size)
         return splits[0]
 
-    def obtain_statistics(
-            self, label_type: str = None, pretty_print: bool = True
-    ) -> dict:
+    def obtain_statistics(self, label_type: str = None, pretty_print: bool = True) -> Union[dict, str]:
         """
         Print statistics about the class distribution (only labels of sentences are taken into account) and sentence
         sizes.
         """
-        json_string = {
+        json_data = {
             "TRAIN": self._obtain_statistics_for(self.train, "TRAIN", label_type),
             "TEST": self._obtain_statistics_for(self.test, "TEST", label_type),
             "DEV": self._obtain_statistics_for(self.dev, "DEV", label_type),
@@ -1317,8 +1301,8 @@ class Corpus:
         if pretty_print:
             import json
 
-            json_string = json.dumps(json_string, indent=4)
-        return json_string
+            return json.dumps(json_data, indent=4)
+        return json_data
 
     @staticmethod
     def _obtain_statistics_for(sentences, name, tag_type) -> dict:
@@ -1330,12 +1314,12 @@ class Corpus:
         tokens_per_sentence = Corpus._get_tokens_per_sentence(sentences)
 
         label_size_dict = {}
-        for l, c in classes_to_count.items():
-            label_size_dict[l] = c
+        for label, c in classes_to_count.items():
+            label_size_dict[label] = c
 
         tag_size_dict = {}
-        for l, c in tags_to_count.items():
-            tag_size_dict[l] = c
+        for tag, c in tags_to_count.items():
+            tag_size_dict[tag] = c
 
         return {
             "dataset": name,
@@ -1374,73 +1358,70 @@ class Corpus:
 
     def __str__(self) -> str:
         return "Corpus: %d train + %d dev + %d test sentences" % (
-            len(self.train) if self.train else 0,
-            len(self.dev) if self.dev else 0,
-            len(self.test) if self.test else 0,
+            _len_dataset(self.train) if self.train else 0,
+            _len_dataset(self.dev) if self.dev else 0,
+            _len_dataset(self.test) if self.test else 0,
         )
 
-    def make_label_dictionary(self, label_type: str) -> Dictionary:
+    def make_label_dictionary(self, label_type: str, min_count: int = -1) -> Dictionary:
         """
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
         """
         label_dictionary: Dictionary = Dictionary(add_unk=True)
-        label_dictionary.multi_label = False
+        label_dictionary.span_labels = False
 
-        from flair.datasets import DataLoader
-
+        assert self.train
         datasets = [self.train]
 
-        data = ConcatDataset(datasets)
-
-        loader = DataLoader(data, batch_size=1)
+        data: ConcatDataset = ConcatDataset(datasets)
 
         log.info("Computing label dictionary. Progress:")
 
-        # if there are token labels of provided type, use these. Otherwise use sentence labels
-        token_labels_exist = False
+        all_label_types: typing.Counter[str] = Counter()
+        label_occurrence: typing.Counter[str] = Counter()
+        all_sentence_labels: List[str] = []
+        for sentence in Tqdm.tqdm(_iter_dataset(data)):
 
-        all_label_types = Counter()
-        all_sentence_labels = []
-        for batch in Tqdm.tqdm(iter(loader)):
+            # check if sentence itself has labels
+            labels = sentence.get_labels(label_type)
+            all_label_types.update(sentence.annotation_layers.keys())
 
-            for sentence in batch:
+            # go through all labels and increment count
+            for label in labels:
+                if label.value not in all_sentence_labels:
+                    label_occurrence[label.value] += 1
 
-                # check for labels of words
-                if isinstance(sentence, Sentence):
-                    for token in sentence.tokens:
-                        all_label_types.update(token.annotation_layers.keys())
-                        for label in token.get_labels(label_type):
-                            label_dictionary.add_item(label.value)
-                            token_labels_exist = True
+                # check if there are any span labels
+                if type(label) == SpanLabel and len(label.span) > 1:
+                    label_dictionary.span_labels = True
 
-                # if we are looking for sentence-level labels
-                if not token_labels_exist:
-                    # check if sentence itself has labels
-                    labels = sentence.get_labels(label_type)
-                    all_label_types.update(sentence.annotation_layers.keys())
+            if not label_dictionary.multi_label:
+                if len(labels) > 1:
+                    label_dictionary.multi_label = True
 
-                    for label in labels:
-                        if label.value not in all_sentence_labels: all_sentence_labels.append(label.value)
-
-                    if not label_dictionary.multi_label:
-                        if len(labels) > 1:
-                            label_dictionary.multi_label = True
-
-        # if this is not a token-level prediction problem, add sentence-level labels to dictionary
-        if not token_labels_exist:
-            for label in all_sentence_labels:
+        erfasst_count = 0
+        unked_count = 0
+        for label, count in label_occurrence.most_common():
+            if count >= min_count:
                 label_dictionary.add_item(label)
+                erfasst_count += count
+            else:
+                unked_count += count
 
         if len(label_dictionary.idx2item) == 0:
             log.error(
-                f"Corpus contains only the labels: {', '.join([f'{label[0]} (#{label[1]})' for label in all_label_types.most_common()])}")
+                f"Corpus contains only the labels: {', '.join([f'{label[0]} (#{label[1]})' for label in all_label_types.most_common()])}"
+            )
             log.error(f"You specified as label_type='{label_type}' which is not in this dataset!")
 
             raise Exception
 
         log.info(
-            f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}")
+            f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}"
+        )
+        log.info(f"{erfasst_count} instances in dict, {unked_count} instances are UNK'ed")
+        log.info(f"Most commonly observed '{label_type}'-labels are {label_occurrence.most_common(20)}")
         log.info(f"Created (for label '{label_type}') {label_dictionary}")
 
         return label_dictionary
@@ -1452,11 +1433,14 @@ class Corpus:
                 class_to_count[label.value] += 1
         return class_to_count
 
-    def get_all_sentences(self) -> Dataset:
+    def get_all_sentences(self) -> ConcatDataset:
         parts = []
-        if self.train: parts.append(self.train)
-        if self.dev: parts.append(self.dev)
-        if self.test: parts.append(self.test)
+        if self.train:
+            parts.append(self.train)
+        if self.dev:
+            parts.append(self.dev)
+        if self.test:
+            parts.append(self.test)
         return ConcatDataset(parts)
 
     @deprecated(version="0.8", reason="Use 'make_label_dictionary' instead.")
@@ -1465,7 +1449,7 @@ class Corpus:
         # Make the tag dictionary
         tag_dictionary: Dictionary = Dictionary(add_unk=False)
         tag_dictionary.add_item("O")
-        for sentence in self.get_all_sentences():
+        for sentence in _iter_dataset(self.get_all_sentences()):
             for token in sentence.tokens:
                 tag_dictionary.add_item(token.get_tag(tag_type).value)
         tag_dictionary.add_item("<START>")
@@ -1481,9 +1465,12 @@ class MultiCorpus(Corpus):
         dev_parts = []
         test_parts = []
         for corpus in self.corpora:
-            if corpus.train: train_parts.append(corpus.train)
-            if corpus.dev: dev_parts.append(corpus.dev)
-            if corpus.test: test_parts.append(corpus.test)
+            if corpus.train:
+                train_parts.append(corpus.train)
+            if corpus.dev:
+                dev_parts.append(corpus.dev)
+            if corpus.test:
+                test_parts.append(corpus.test)
 
         super(MultiCorpus, self).__init__(
             ConcatDataset(train_parts) if len(train_parts) > 0 else None,
@@ -1494,11 +1481,13 @@ class MultiCorpus(Corpus):
         )
 
     def __str__(self):
-        output = f"MultiCorpus: " \
-                 f"{len(self.train) if self.train else 0} train + " \
-                 f"{len(self.dev) if self.dev else 0} dev + " \
-                 f"{len(self.test) if self.test else 0} test sentences\n - "
-        output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)} - {corpus.name}' for corpus in self.corpora])
+        output = (
+            f"MultiCorpus: "
+            f"{len(self.train) if self.train else 0} train + "
+            f"{len(self.dev) if self.dev else 0} dev + "
+            f"{len(self.test) if self.test else 0} test sentences\n - "
+        )
+        output += "\n - ".join([f"{type(corpus).__name__} {str(corpus)} - {corpus.name}" for corpus in self.corpora])
         return output
 
 
@@ -1528,27 +1517,29 @@ def iob_iobes(tags):
     """
     IOB -> IOBES
     """
-    new_tags = []
     for i, tag in enumerate(tags):
         if tag.value == "O" or tag.value == "":
-            new_tags.append("O")
-        elif tag.value.split("-")[0] == "B":
-            if i + 1 != len(tags) and tags[i + 1].value.split("-")[0] == "I":
-                new_tags.append(tag.value)
-            else:
-                new_tags.append(tag.value.replace("B-", "S-"))
-        elif tag.value.split("-")[0] == "I":
-            if i + 1 < len(tags) and tags[i + 1].value.split("-")[0] == "I":
-                new_tags.append(tag.value)
-            else:
-                new_tags.append(tag.value.replace("I-", "E-"))
+            tag.value = "O"
+            continue
+        t, label = tag.value.split("-", 1)
+        if len(tags) == i + 1 or tags[i + 1].value == "O":
+            next_same = False
+        else:
+            nt, next_label = tags[i + 1].value.split("-", 1)
+            next_same = nt == "I" and next_label == label
+        if t == "B":
+            if not next_same:
+                tag.value = tag.value.replace("B-", "S-")
+        elif t == "I":
+            if not next_same:
+                tag.value = tag.value.replace("I-", "E-")
         else:
             raise Exception("Invalid IOB format!")
-    return new_tags
 
 
 def randomly_split_into_two_datasets(dataset, length_of_first):
     import random
+
     indices = [i for i in range(len(dataset))]
     random.shuffle(indices)
 
@@ -1557,4 +1548,4 @@ def randomly_split_into_two_datasets(dataset, length_of_first):
     first_dataset.sort()
     second_dataset.sort()
 
-    return [Subset(dataset, first_dataset), Subset(dataset, second_dataset)]
+    return Subset(dataset, first_dataset), Subset(dataset, second_dataset)

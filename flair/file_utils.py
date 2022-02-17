@@ -1,23 +1,24 @@
 """
 Utilities for working with the local dataset cache. Copied from AllenNLP
 """
-from pathlib import Path
-from typing import Tuple, Union, Optional, Sequence, cast
-import os
 import base64
+import functools
+import io
 import logging
+import mmap
+import os
+import re
 import shutil
 import tempfile
-import re
-import functools
+import typing
+import zipfile
+from pathlib import Path
+from typing import Optional, Sequence, Tuple, Union, cast
 from urllib.parse import urlparse
 
-import mmap
 import requests
-import zipfile
-import io
+from tqdm import tqdm as _tqdm
 
-# from allennlp.common.tqdm import Tqdm
 import flair
 
 logger = logging.getLogger("flair")
@@ -56,11 +57,12 @@ def url_to_filename(url: str, etag: str = None) -> str:
         return decoded
 
 
-def filename_to_url(filename: str) -> Tuple[str, str]:
+def filename_to_url(filename: str) -> Tuple[str, Optional[str]]:
     """
     Recovers the the url from the encoded filename. Returns it and the ETag
     (which may be ``None``)
     """
+    etag: Optional[str]
     try:
         # If there is an etag, it's everything after the first period
         decoded, etag = filename.split(".", 1)
@@ -97,9 +99,7 @@ def cached_path(url_or_filename: str, cache_dir: Union[str, Path]) -> Path:
         raise FileNotFoundError("file {} not found".format(url_or_filename))
     else:
         # Something unknown
-        raise ValueError(
-            "unable to parse {} as a URL or as a local path".format(url_or_filename)
-        )
+        raise ValueError("unable to parse {} as a URL or as a local path".format(url_or_filename))
 
 
 def unzip_file(file: Union[str, Path], unzip_to: Union[str, Path]):
@@ -112,12 +112,12 @@ def unzip_file(file: Union[str, Path], unzip_to: Union[str, Path]):
 
 def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True):
     """
-        Unpacks a file to the given location.
+    Unpacks a file to the given location.
 
-        :param file Archive file to unpack
-        :param unpack_to Destination where to store the output
-        :param mode Type of the archive (zip, tar, gz, targz, rar)
-        :param keep Indicates whether to keep the archive after extraction or delete it
+    :param file Archive file to unpack
+    :param unpack_to Destination where to store the output
+    :param mode Type of the archive (zip, tar, gz, targz, rar)
+    :param keep Indicates whether to keep the archive after extraction or delete it
     """
     if mode == "zip" or (mode is None and str(file).endswith("zip")):
         from zipfile import ZipFile
@@ -126,9 +126,7 @@ def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True
             # Extract all the contents of zip file in current directory
             zipObj.extractall(unpack_to)
 
-    elif mode == "targz" or (
-            mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")
-    ):
+    elif mode == "targz" or (mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")):
         import tarfile
 
         with tarfile.open(file, "r:gz") as tarObj:
@@ -163,8 +161,7 @@ def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True
 
 
 def download_file(url: str, cache_dir: Union[str, Path]):
-    if type(cache_dir) is str:
-        cache_dir = Path(cache_dir)
+    cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     filename = re.sub(r".+/", "", url)
@@ -200,7 +197,7 @@ def download_file(url: str, cache_dir: Union[str, Path]):
 
 
 # TODO(joelgrus): do we want to do checksums or anything like that?
-def get_from_cache(url: str, cache_dir: Path = None) -> Path:
+def get_from_cache(url: str, cache_dir: Path) -> Path:
     """
     Given a URL, look for the corresponding dataset in the local cache.
     If it's not there, download it. Then return the path to the cached file.
@@ -216,9 +213,7 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
     # make HEAD request to check ETag
     response = requests.head(url, headers={"User-Agent": "Flair"}, allow_redirects=True)
     if response.status_code != 200:
-        raise IOError(
-            f"HEAD request failed for url {url} with status code {response.status_code}."
-        )
+        raise IOError(f"HEAD request failed for url {url} with status code {response.status_code}.")
 
     # add ETag to filename if it exists
     # etag = response.headers.get("ETag")
@@ -252,11 +247,11 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
 
 
 def open_inside_zip(
-        archive_path: str,
-        cache_dir: Union[str, Path],
-        member_path: Optional[str] = None,
-        encoding: str = "utf8",
-) -> iter:
+    archive_path: str,
+    cache_dir: Union[str, Path],
+    member_path: Optional[str] = None,
+    encoding: str = "utf8",
+) -> typing.Iterable:
     cached_archive_path = cached_path(archive_path, cache_dir=Path(cache_dir))
     archive = zipfile.ZipFile(cached_archive_path, "r")
     if member_path is None:
@@ -267,32 +262,23 @@ def open_inside_zip(
     return io.TextIOWrapper(member_file, encoding=encoding)
 
 
-def get_the_only_file_in_the_archive(
-        members_list: Sequence[str], archive_path: str
-) -> str:
+def get_the_only_file_in_the_archive(members_list: Sequence[str], archive_path: str) -> str:
     if len(members_list) > 1:
         raise ValueError(
             "The archive %s contains multiple files, so you must select "
             "one of the files inside providing a uri of the type: %s"
             % (
                 archive_path,
-                format_embeddings_file_uri(
-                    "path_or_url_to_archive", "path_inside_archive"
-                ),
+                format_embeddings_file_uri("path_or_url_to_archive", "path_inside_archive"),
             )
         )
     return members_list[0]
 
 
-def format_embeddings_file_uri(
-        main_file_path_or_url: str, path_inside_archive: Optional[str] = None
-) -> str:
+def format_embeddings_file_uri(main_file_path_or_url: str, path_inside_archive: Optional[str] = None) -> str:
     if path_inside_archive:
         return "({})#{}".format(main_file_path_or_url, path_inside_archive)
     return main_file_path_or_url
-
-
-from tqdm import tqdm as _tqdm
 
 
 class Tqdm:

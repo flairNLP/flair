@@ -1,23 +1,16 @@
+import json
 import logging
 import os
-import numpy as np
-import json
 import urllib
-
-from tqdm import tqdm
 from pathlib import Path
 from typing import List
 
+import numpy as np
 import torch.utils.data.dataloader
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
-from flair.data import (
-    Sentence,
-    Corpus,
-    FlairDataset,
-    DataPair,
-    Image,
-)
+from flair.data import Corpus, DataPair, FlairDataset, Image, Sentence
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -46,9 +39,7 @@ class FeideggerCorpus(Corpus):
 
         feidegger_dataset: Dataset = FeideggerDataset(dataset_info, **kwargs)
 
-        train_indices = list(
-            np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0]
-        )
+        train_indices = list(np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0])
         train = torch.utils.data.dataset.Subset(feidegger_dataset, train_indices)
 
         dev_indices = list(np.where(np.in1d(feidegger_dataset.split, [8]))[0])
@@ -67,17 +58,18 @@ class FeideggerDataset(FlairDataset):
         self.data_points: List[DataPair] = []
         self.split: List[int] = []
 
-        preprocessor = lambda x: x
+        def identity(x):
+            return x
+
+        preprocessor = identity
         if "lowercase" in kwargs and kwargs["lowercase"]:
-            preprocessor = lambda x: x.lower()
+            preprocessor = str.lower
 
         for image_info in dataset_info:
             image = Image(imageURL=image_info["url"])
             for caption in image_info["descriptions"]:
                 # append Sentence-Image data point
-                self.data_points.append(
-                    DataPair(Sentence(preprocessor(caption), use_tokenizer=True), image)
-                )
+                self.data_points.append(DataPair(Sentence(preprocessor(caption), use_tokenizer=True), image))
                 self.split.append(int(image_info["split"]))
 
     def __len__(self):

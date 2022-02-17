@@ -1,5 +1,5 @@
 [tool.black]
-line-length = 88
+line-length = 120
 target-version = ['py36', 'py37']
 exclude = '''
 (
@@ -12,3 +12,16 @@ exclude = '''
   )/
 )
 '''
+[tool.pytest.ini_options]
+flake8-max-line-length = 210
+flake8-ignore = ["E203", "W503"]  # See https://github.com/PyCQA/pycodestyle/issues/373
+addopts = "-W error --flake8 --mypy --ignore flair/data_fetcher.py --ignore flair/embeddings/legacy.py --isort"
+markers = [
+    "integration",
+]
+[tool.mypy]
+exclude = "flair/data_fetcher.py|flair/embeddings/legacy.py"
+ignore_missing_imports = true
+
+[tool.isort]
+profile = "black"
