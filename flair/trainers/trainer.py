@@ -232,6 +232,8 @@ class ModelTrainer:
                 initial_learning_rate = [learning_rate]
             else:
                 initial_learning_rate = [learning_rate] * len(optimizer.param_groups)
+        else:
+            initial_learning_rate = learning_rate
 
         if not isinstance(min_learning_rate, list):
             if inspect.isclass(optimizer):
@@ -556,6 +558,7 @@ class ModelTrainer:
 
                         lr_info = ",".join([f"{lr:.6f}" for lr in learning_rate])
 
+                        intermittent_loss = train_loss / average_over if average_over > 0 else train_loss / seen_batches
 
                         log.info(
                             f"epoch {epoch} - iter {seen_batches}/"
