@@ -185,9 +185,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
             embedded_entity_pairs = torch.stack(relation_embeddings)
 
-        if for_prediction:
-            return embedded_entity_pairs, labels, entity_pairs
-
         return embedded_entity_pairs, labels
 
     def _print_predictions(self, batch, gold_label_type):
