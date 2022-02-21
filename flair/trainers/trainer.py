@@ -227,19 +227,16 @@ class ModelTrainer:
         if mini_batch_chunk_size is None:
             mini_batch_chunk_size = mini_batch_size
 
-        if not isinstance(learning_rate, list):
-            if inspect.isclass(optimizer):
-                initial_learning_rate = [learning_rate]
-            else:
-                initial_learning_rate = [learning_rate] * len(optimizer.param_groups)
+
+        if inspect.isclass(optimizer):
+            # if optimizer is class, trainer will create a single parameter group
+            initial_learning_rate = [learning_rate]
         else:
-            initial_learning_rate = learning_rate
+            initial_learning_rate = [learning_rate] * len(optimizer.param_groups)
+
 
         if not isinstance(min_learning_rate, list):
-            if inspect.isclass(optimizer):
-                min_learning_rate = [min_learning_rate]
-            else:
-                min_learning_rate = [min_learning_rate] * len(optimizer.param_groups)
+            min_learning_rate = [min_learning_rate] * len(initial_learning_rate)
 
         for i, lr in enumerate(initial_learning_rate):
             if lr < min_learning_rate[i]:
@@ -275,19 +272,16 @@ class ModelTrainer:
 
         # if optimizer class is passed, instantiate:
         if not isinstance(optimizer, torch.optim.Optimizer):
-            if isinstance(learning_rate, list):
-                raise ValueError("If multiple learning rates are used, optimizer needs to be already instatiated.")
-
             kwargs["lr"] = learning_rate
             optimizer = optimizer(self.model.parameters(), **kwargs)
 
         if use_swa:
-            if isinstance(learning_rate, list) and use_swa:
-                raise ValueError("SWA can not be used with per-parameter learning rates.")
-
             import torchcontrib
 
             optimizer = torchcontrib.optim.SWA(optimizer, swa_start=10, swa_freq=5, swa_lr=learning_rate)
+
+        # from here on, learning_rate will be the list of learning rates
+        learning_rate = [group['lr'] for group in optimizer.param_groups]
 
         if use_amp:
             self.model, optimizer = amp.initialize(self.model, optimizer, opt_level=amp_opt_level)
@@ -387,13 +381,15 @@ class ModelTrainer:
             else:
                 log_handler = None
 
+            lr_info = ",".join([f"{lr:.6f}" for lr in learning_rate])
+
             log_line(log)
             log.info(f'Model: "{self.model}"')
             log_line(log)
             log.info(f'Corpus: "{self.corpus}"')
             log_line(log)
             log.info("Parameters:")
-            log.info(f' - learning_rate: "{learning_rate}"')
+            log.info(f' - learning_rate: "{lr_info}"')
             log.info(f' - mini_batch_size: "{mini_batch_size}"')
             log.info(f' - patience: "{patience}"')
             log.info(f' - anneal_factor: "{anneal_factor}"')
@@ -408,10 +404,7 @@ class ModelTrainer:
             log_line(log)
             log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
 
-            if isinstance(learning_rate, list):
-                previous_learning_rate = learning_rate
-            else:
-                previous_learning_rate = [learning_rate] * len(optimizer.param_groups)
+            previous_learning_rate = learning_rate
 
             momentum = [
                 group["momentum"] if "momentum" in group else 0
@@ -890,7 +883,7 @@ class ModelTrainer:
     def fine_tune(
         self,
         base_path: Union[Path, str],
-        learning_rate: Union[float, List[float]] = 5e-5,
+        learning_rate: float = 5e-5,
         max_epochs: int = 10,
         optimizer=torch.optim.AdamW,
         scheduler=LinearSchedulerWithWarmup,
