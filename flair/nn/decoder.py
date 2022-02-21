@@ -192,10 +192,10 @@ class PrototypicalDecoder(torch.nn.Module):
                     if self.metric_space_decoder is not None:
                         logits = self.metric_space_decoder(logits)
 
-                    for logit, label in zip(logits, labels):
-                        counter.update(label)
+                    for logit, _label in zip(logits, labels):
+                        counter.update(_label)
 
-                        idx = encoder.label_dictionary.get_idx_for_item(label[0])
+                        idx = encoder.label_dictionary.get_idx_for_item(_label[0])
 
                         new_prototypes[idx] += logit
 

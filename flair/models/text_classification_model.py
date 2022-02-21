@@ -50,13 +50,11 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         # auto-spawn on GPU if available
         self.to(flair.device)
 
-    def forward_pass(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        for_prediction: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DataPoint]]]:
-        if not isinstance(sentences, list):
-            sentences = [sentences]
+    def _get_labels(self, sentences: List[Sentence]) -> List[List[str]]:
+        return [[label.value for label in sentence.get_labels(self.label_type)] for sentence in sentences]
+
+    def _prepare_tensors(self, data_points: List[Sentence]) -> Tuple[torch.Tensor, ...]:
+        sentences = data_points
 
         # embed sentences
         self.document_embeddings.embed(sentences)
@@ -65,17 +63,10 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         embedding_names = self.document_embeddings.get_names()
         text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
+        return (text_embedding_tensor,)
 
-        labels: List[List[str]] = []
-        for sentence in sentences:
-            labels.append([label.value for label in sentence.get_labels(self.label_type)])
-
-        if for_prediction:
-            sentences_for_prediction: List[DataPoint] = []
-            sentences_for_prediction.extend(sentences)
-            return text_embedding_tensor, labels, sentences_for_prediction
-
-        return text_embedding_tensor, labels
+    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Sentence]:
+        return sentences
 
     def _get_state_dict(self):
         model_state = {
