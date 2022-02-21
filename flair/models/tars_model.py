@@ -403,8 +403,8 @@ class TARSTagger(FewshotClassifier):
 
         for entity_label in sentence.get_labels(self.label_type):
             if entity_label.value == label:
-                new_span = [tars_sentence.get_token(token.idx + label_length) for token in entity_label.span]
-                tars_sentence.add_complex_label(self.static_label_type, SpanLabel(Span(new_span), value="entity"))
+                new_span = Span([tars_sentence.get_token(token.idx + label_length) for token in entity_label.data_point])
+                new_span.add_label(self.static_label_type, value="entity")
 
         return tars_sentence
 
@@ -554,7 +554,7 @@ class TARSTagger(FewshotClassifier):
 
                             # determine whether tokens in this span already have a label
                             tag_this = True
-                            for token in label.span:
+                            for token in label.data_point:
                                 corresponding_token = sentence.get_token(token.idx - label_length)
                                 if corresponding_token is None:
                                     tag_this = False
@@ -565,18 +565,52 @@ class TARSTagger(FewshotClassifier):
 
                             # only add if all tokens have no label
                             if tag_this:
-                                already_set_indices.extend(token.idx for token in label.span)
-                                predicted_span = [sentence.get_token(token.idx - label_length) for token in label.span]
-                                sentence.add_complex_label(
-                                    label_name,
-                                    label=SpanLabel(Span(predicted_span), value=label.value, score=label.score),
-                                )
+                                already_set_indices.extend(token.idx for token in label.data_point)
+                                predicted_span = Span([sentence.get_token(token.idx - label_length) for token in label.data_point])
+                                predicted_span.add_label(label_name, value=label.value, score=label.score)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
         if return_loss:
             return overall_loss, overall_count
+
+    def _print_predictions(self, batch, gold_label_type):
+
+        lines = []
+        if self.tars_model.predict_spans:
+            for datapoint in batch:
+                # all labels default to "O"
+                for token in datapoint:
+                    token.set_label("gold_bio", "O")
+                    token.set_label("predicted_bio", "O")
+
+                # set gold token-level
+                for gold_label in datapoint.get_labels(gold_label_type):
+                    gold_span: Span = gold_label.data_point
+                    prefix = "B-"
+                    for token in gold_span:
+                        token.set_label("gold_bio", prefix + gold_label.value)
+                        prefix = "I-"
+
+                # set predicted token-level
+                for predicted_label in datapoint.get_labels("predicted"):
+                    predicted_span: Span = predicted_label.data_point
+                    prefix = "B-"
+                    for token in predicted_span:
+                        token.set_label("predicted_bio", prefix + predicted_label.value)
+                        prefix = "I-"
+
+                # now print labels in CoNLL format
+                for token in datapoint:
+                    eval_line = (
+                        f"{token.text} "
+                        f"{token.get_label('gold_bio').value} "
+                        f"{token.get_label('predicted_bio').value}\n"
+                    )
+                    lines.append(eval_line)
+                lines.append("\n")
+        return lines
 
 
 class TARSClassifier(FewshotClassifier):

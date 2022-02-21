@@ -6,7 +6,7 @@ from collections import Counter, defaultdict
 from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Union, cast
+from typing import Dict, List, Optional, Union, cast
 
 import torch
 from deprecated import deprecated
@@ -243,6 +243,9 @@ class Label:
     def __eq__(self, other):
         return self.value == other.value and self.score == other.score and self.data_point == other.data_point
 
+    def __hash__(self):
+        return hash(self.__repr__())
+
     @property
     def labeled_identifier(self):
         return f"{self.data_point.unlabeled_identifier}/{self.value}"
@@ -395,13 +398,13 @@ class Token(_PartOfSentence):
     """
 
     def __init__(
-        self,
-        text: str,
-        idx: int = None,
-        head_id: int = None,
-        whitespace_after: bool = True,
-        start_position: int = None,
-        sentence=None,
+            self,
+            text: str,
+            idx: int = None,
+            head_id: int = None,
+            whitespace_after: bool = True,
+            start_position: int = None,
+            sentence=None,
     ):
         super().__init__(sentence=sentence)
 
@@ -578,11 +581,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-        self,
-        text: Union[str, List[str]],
-        use_tokenizer: Union[bool, Tokenizer] = True,
-        language_code: str = None,
-        start_position: int = None,
+            self,
+            text: Union[str, List[str]],
+            use_tokenizer: Union[bool, Tokenizer] = True,
+            language_code: str = None,
+            start_position: int = None,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -769,6 +772,10 @@ class Sentence(DataPoint):
                 list.append(all_tags)
         return " ".join(list)
 
+    @property
+    def text(self):
+        return self.to_tokenized_string()
+
     def to_tokenized_string(self) -> str:
 
         if self.tokenized is None:
@@ -857,10 +864,6 @@ class Sentence(DataPoint):
 
     def __getitem__(self, subscript):
         if isinstance(subscript, slice):
-            # subscript_hash = f"{subscript.start}-{subscript.stop}"
-            # if subscript_hash not in self._known_spans:
-            #     self._known_spans[subscript_hash] = Span(self.tokens[subscript])
-            # return self._known_spans[subscript_hash]
             return Span(self.tokens[subscript])
         else:
             return self.tokens[subscript]
@@ -972,24 +975,12 @@ class Sentence(DataPoint):
     def get_labels(self, label_type: str = None):
 
         # if no label if specified, return all labels
-        # if label_type is None:
-        #     return self.labels
+        if label_type is None:
+            return self.labels
 
         # if the label type exists in the Sentence, return it
         if label_type in self.annotation_layers:
             return self.annotation_layers[label_type]
-
-        # if label_type in self._views:
-        #     return [Label(value=view.tag, score=view.score, data_point=view) for view in self._views[label_type]]
-
-        # otherwise check if the label exists on the token-level
-        # in this case, create span-labels and return those
-        if label_type in set().union(*(token.annotation_layers.keys() for token in self)):
-            return [
-                Label(value=token.get_tag(label_type).value, score=token.get_tag(label_type).score, data_point=token)
-                for token in self
-                if label_type in token.annotation_layers
-            ]
 
         # return empty list if none of the above
         return []
@@ -1060,12 +1051,12 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-        self,
-        train: Dataset = None,
-        dev: Dataset = None,
-        test: Dataset = None,
-        name: str = "corpus",
-        sample_missing_splits: Union[bool, str] = True,
+            self,
+            train: Dataset = None,
+            dev: Dataset = None,
+            test: Dataset = None,
+            name: str = "corpus",
+            sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1104,11 +1095,11 @@ class Corpus:
         return self._test
 
     def downsample(
-        self,
-        percentage: float = 0.1,
-        downsample_train=True,
-        downsample_dev=True,
-        downsample_test=True,
+            self,
+            percentage: float = 0.1,
+            downsample_train=True,
+            downsample_dev=True,
+            downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:
