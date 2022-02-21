@@ -241,7 +241,7 @@ class Label:
         return f'"{self.data_point.unlabeled_identifier}"/{self._value} ({round(self._score, 4)})'
 
     def __eq__(self, other):
-        return self.value == other.value and self.score == other.score
+        return self.value == other.value and self.score == other.score and self.data_point == other.data_point
 
     @property
     def labeled_identifier(self):
