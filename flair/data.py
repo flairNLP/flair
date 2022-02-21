@@ -506,12 +506,6 @@ class Span(_PartOfSentence):
         return f"{self.text} ({','.join([str(t.idx) for t in self.tokens])})"
 
     def __repr__(self) -> str:
-
-        # ids = ",".join([str(t.idx) for t in self.tokens])
-
-        # layerwise_output = \
-        #     [key + ':' + ";".join([label.value for label in self.get_labels(key)]) for key in self.annotation_layers.keys()]
-
         layerwise_output = [
             ";".join([label.value for label in self.get_labels(key)]) for key in self.annotation_layers.keys()
         ]
