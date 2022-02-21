@@ -89,7 +89,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     def forward_pass(
         self,
         sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
+        for_prediction: bool = False,
     ):
 
         if not isinstance(sentences, list):
@@ -102,9 +102,8 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                 filtered_sentences.append(sentence)
 
         # fields to return
+        data_points = []
         span_labels = []
-        sentences_to_spans = []
-        empty_label_candidates = []
         embedded_entity_pairs = None
 
         # embed sentences and send through prediction head
@@ -117,31 +116,25 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
             embedding_list = []
             # get the embeddings of the entity mentions
             for sentence in filtered_sentences:
-                entities = sentence.get_labels(self.label_type)
+                entities = sentence.get_spans(self.label_type)
 
                 for entity in entities:
 
-                    if self.skip_unk_probability and self.training and entity.value not in self.known_entities:
-                        sample = random.uniform(0, 1)
-                        if sample < self.skip_unk_probability:
-                            continue
-
-                    span_labels.append([entity.value])
+                    # get the label of the entity
+                    span_labels.append([entity.get_label(self.label_type).value])
 
                     if self.pooling_operation == "first&last":
                         mention_emb = torch.cat(
                             (
-                                entity.span.tokens[0].get_embedding(embedding_names),
-                                entity.span.tokens[-1].get_embedding(embedding_names),
+                                entity.tokens[0].get_embedding(embedding_names),
+                                entity.tokens[-1].get_embedding(embedding_names),
                             ),
                             0,
                         )
                     embedding_list.append(mention_emb.unsqueeze(0))
 
-                    if return_label_candidates:
-                        sentences_to_spans.append(sentence)
-                        candidate = SpanLabel(span=entity.span, value=None, score=0.0)
-                        empty_label_candidates.append(candidate)
+                if for_prediction:
+                    data_points.extend(entities)
 
             if len(embedding_list) > 0:
                 embedded_entity_pairs = torch.cat(embedding_list, 0)
@@ -149,8 +142,8 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                 if self.use_dropout:
                     embedded_entity_pairs = self.dropout(embedded_entity_pairs)
 
-        if return_label_candidates:
-            return embedded_entity_pairs, span_labels, sentences_to_spans, empty_label_candidates
+        if for_prediction:
+            return embedded_entity_pairs, span_labels, data_points
 
         return embedded_entity_pairs, span_labels
 
@@ -164,6 +157,22 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
             "loss_weights": self.weight_dict,
         }
         return model_state
+
+    def _print_predictions(self, batch, gold_label_type):
+        lines = []
+        for datapoint in batch:
+
+            eval_line = f"\n{datapoint.to_original_text()}\n"
+
+            for span in datapoint.get_spans(gold_label_type):
+                symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
+                eval_line += (
+                    f' - "{span.text}" / {span.get_label(gold_label_type).value}'
+                    f' --> {span.get_label("predicted").value} ({symbol})\n'
+                )
+
+            lines.append(eval_line)
+        return lines
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):

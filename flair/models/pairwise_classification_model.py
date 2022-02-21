@@ -68,7 +68,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
     def forward_pass(
         self,
         datapairs: Union[List[TextPair], TextPair],
-        return_label_candidates: bool = False,
+        for_prediction: bool = False,
     ):
 
         if not isinstance(datapairs, list):
@@ -109,20 +109,16 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
                 sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in concatenated_sentences
             ]
 
-        text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
-
-        # linear layer
-        scores = self.decoder(text_embedding_tensor)
+        text_pair_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
         labels = []
         for pair in datapairs:
             labels.append([label.value for label in pair.get_labels(self.label_type)])
 
-        if return_label_candidates:
-            label_candidates = [Label(value=None, score=0.0) for _ in datapairs]
-            return scores, labels, datapairs, label_candidates
+        if for_prediction:
+            return text_pair_embedding_tensor, labels, datapairs
 
-        return scores, labels
+        return text_pair_embedding_tensor, labels
 
     def _get_state_dict(self):
         model_state = {

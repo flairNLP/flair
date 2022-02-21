@@ -65,7 +65,7 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
     def forward_pass(
         self,
         sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
+        for_prediction: bool = False,
     ):
         if not isinstance(sentences, list):
             sentences = [sentences]
@@ -81,11 +81,10 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
 
         embedded_tokens = torch.stack(all_embeddings)
 
-        labels = [[token.get_tag(self.label_type).value] for token in all_tokens]
+        labels = [[token.get_label(self.label_type).value] for token in all_tokens]
 
-        if return_label_candidates:
-            empty_label_candidates = [Label(value=None, score=0.0) for token in all_tokens]
-            return embedded_tokens, labels, all_tokens, empty_label_candidates
+        if for_prediction:
+            return embedded_tokens, labels, all_tokens
 
         return embedded_tokens, labels
 
@@ -100,8 +99,8 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
             for token in datapoint:
                 eval_line = (
                     f"{token.text} "
-                    f"{token.get_tag(gold_label_type, 'O').value} "
-                    f"{token.get_tag('predicted', 'O').value}\n"
+                    f"{token.get_label(gold_label_type, 'O').value} "
+                    f"{token.get_label('predicted', 'O').value}\n"
                 )
                 lines.append(eval_line)
             lines.append("\n")

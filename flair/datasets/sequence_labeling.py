@@ -8,14 +8,7 @@ from typing import Dict, List, Optional, Union
 from torch.utils.data import ConcatDataset, Dataset
 
 import flair
-from flair.data import (
-    Corpus,
-    FlairDataset,
-    MultiCorpus,
-    Sentence,
-    Span,
-    Token,
-)
+from flair.data import Corpus, FlairDataset, MultiCorpus, Relation, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file
 from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
@@ -432,10 +425,10 @@ class ColumnDataset(FlairDataset):
                     tail_end = int(indices[3])
                     label = indices[4]
                     # head and tail span indices are 1-indexed and end index is inclusive
-                    head = Span(sentence.tokens[head_start - 1 : head_end])
-                    tail = Span(sentence.tokens[tail_start - 1 : tail_end])
-
-                    sentence.add_complex_label("relation", RelationLabel(value=label, head=head, tail=tail))
+                    relation = Relation(
+                        first=sentence[head_start - 1 : head_end], second=sentence[tail_start - 1 : tail_end]
+                    )
+                    relation.add_label(typename="relation", value=label)
 
         if len(sentence) > 0:
             return sentence

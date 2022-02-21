@@ -6,7 +6,7 @@ import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Sentence, Span
+from flair.data import Relation, Sentence, Span
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -116,39 +116,36 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
     def forward_pass(
         self,
         sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
+        for_prediction: bool = False,
     ):
 
-        empty_label_candidates = []
         entity_pairs = []
         labels = []
-        sentences_to_label = []
 
         for sentence in sentences:
 
             # super lame: make dictionary to find relation annotations for a given entity pair
             relation_dict = {}
             for label in sentence.get_labels(self.label_type):
-                relation_label: RelationLabel = label
-                relation_dict[create_position_string(relation_label.head, relation_label.tail)] = relation_label
+                relation_dict[create_position_string(label.data_point.first, label.data_point.second)] = label.value
 
             # get all entity spans
-            span_labels = sentence.get_labels(self.entity_label_type)
+            entity_spans = sentence.get_spans(self.entity_label_type)
 
             # go through cross product of entities, for each pair concat embeddings
-            for span_label in span_labels:
-                span_1 = span_label.span
-
-                for span_label_2 in span_labels:
-                    span_2 = span_label_2.span
-
+            for span_1 in entity_spans:
+                for span_2 in entity_spans:
                     if span_1 == span_2:
                         continue
 
                     # filter entity pairs according to their tags if set
                     if (
                         self.entity_pair_filters is not None
-                        and (span_label.value, span_label_2.value) not in self.entity_pair_filters
+                        and (
+                            span_1.get_label(self.entity_label_type).value,
+                            span_2.get_label(self.entity_label_type).value,
+                        )
+                        not in self.entity_pair_filters
                     ):
                         continue
 
@@ -156,8 +153,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
                     # get gold label for this relation (if one exists)
                     if position_string in relation_dict:
-                        relation_label = relation_dict[position_string]
-                        label = relation_label.value
+                        label = relation_dict[position_string]
 
                     # if there is no gold label for this entity pair, set to 'O' (no relation)
                     else:
@@ -165,15 +161,12 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
                             continue  # skip 'O' labels if training on gold pairs only
                         label = "O"
 
-                    entity_pairs.append((span_1, span_2))
+                    # entity_pairs.append(Relation(span_1, span_2))
 
                     labels.append([label])
 
                     # if predicting, also remember sentences and label candidates
-                    if return_label_candidates:
-                        candidate_label = RelationLabel(head=span_1, tail=span_2, value=None, score=0.0)
-                        empty_label_candidates.append(candidate_label)
-                        sentences_to_label.append(span_1[0].sentence)
+                    entity_pairs.append(Relation(span_1, span_2))
 
         # if there's at least one entity pair in the sentence
         if len(entity_pairs) > 0:
@@ -184,8 +177,8 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
             # get embeddings
             for entity_pair in entity_pairs:
-                span_1 = entity_pair[0]
-                span_2 = entity_pair[1]
+                span_1 = entity_pair.first
+                span_2 = entity_pair.second
 
                 if self.pooling_operation == "first_last":
                     embedding = torch.cat(
@@ -213,15 +206,32 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
         else:
             embedded_entity_pairs = None
 
-        if return_label_candidates:
+        if for_prediction:
             return (
                 embedded_entity_pairs,
                 labels,
-                sentences_to_label,
-                empty_label_candidates,
+                entity_pairs,
             )
 
         return embedded_entity_pairs, labels
+
+    def _print_predictions(self, batch, gold_label_type):
+        lines = []
+        for datapoint in batch:
+
+            eval_line = f"\n{datapoint.to_original_text()}\n"
+
+            for relation in datapoint.get_relations(gold_label_type):
+                symbol = (
+                    "✓" if relation.get_label(gold_label_type).value == relation.get_label("predicted").value else "❌"
+                )
+                eval_line += (
+                    f' - "{relation.text}"\t{relation.get_label(gold_label_type).value}'
+                    f' --> {relation.get_label("predicted").value} ({symbol})\n'
+                )
+
+            lines.append(eval_line)
+        return lines
 
     def _get_state_dict(self):
         model_state = {
@@ -279,4 +289,4 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
 
 def create_position_string(head: Span, tail: Span) -> str:
-    return f"{head.identifier} -> {tail.identifier}"
+    return f"{head.unlabeled_identifier} -> {tail.unlabeled_identifier}"

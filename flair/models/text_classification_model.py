@@ -53,11 +53,8 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
     def forward_pass(
         self,
         sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
-    ) -> Union[
-        Tuple[torch.Tensor, List[List[str]]],
-        Tuple[torch.Tensor, List[List[str]], List[Sentence], List[Label]],
-    ]:
+        for_prediction: bool = False,
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[Sentence]],]:
         if not isinstance(sentences, list):
             sentences = [sentences]
 
@@ -73,9 +70,8 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         for sentence in sentences:
             labels.append([label.value for label in sentence.get_labels(self.label_type)])
 
-        if return_label_candidates:
-            label_candidates = [Label(value="<None>") for sentence in sentences]
-            return text_embedding_tensor, labels, sentences, label_candidates
+        if for_prediction:
+            return text_embedding_tensor, labels, sentences
 
         return text_embedding_tensor, labels
 

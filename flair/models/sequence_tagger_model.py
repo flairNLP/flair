@@ -975,7 +975,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 # now print labels in CoNLL format
                 for token in datapoint:
                     eval_line = (
-                        f"{token.text} " f"{token.get_label('gold_bio').value} " f"{token.get_label('predicted_bio').value}\n"
+                        f"{token.text} "
+                        f"{token.get_label('gold_bio').value} "
+                        f"{token.get_label('predicted_bio').value}\n"
                     )
                     lines.append(eval_line)
                 lines.append("\n")
