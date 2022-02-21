@@ -673,11 +673,6 @@ class Sentence(DataPoint):
             token = Token(token)
         token = cast(Token, token)
 
-        # token.text = token.text.replace("\u200c", "")
-        # token.text = token.text.replace("\u200b", "")
-        # token.text = token.text.replace("\ufe0f", "")
-        # token.text = token.text.replace("\ufeff", "")
-
         # data with zero-width characters cannot be handled
         if token.text == "":
             return
@@ -695,77 +690,6 @@ class Sentence(DataPoint):
                     token.sentence.annotation_layers[typename] = [Label(token, label.value, label.score)]
                 else:
                     token.sentence.annotation_layers[typename].append(Label(token, label.value, label.score))
-
-    # def get_label_names(self):
-    #     label_names = []
-    #     for label in self.labels:
-    #         label_names.append(label.value)
-    #     return label_names
-
-    def _convert_span_labels(self, label_type: str, min_score=-1):
-        current_span: List[Token] = []
-
-        tags: Dict[str, float] = defaultdict(lambda: 0.0)
-
-        previous_tag_value: str = "O"
-        for token in self:
-
-            tag: Label = token.get_label(label_type)
-            tag_value = tag.value
-
-            # non-set tags are OUT tags
-            if tag_value == "" or tag_value == "O" or tag_value == "_":
-                tag_value = "O-"
-
-            # anything that is not a BIOES tag is a SINGLE tag
-            if tag_value[0:2] not in ["B-", "I-", "O-", "E-", "S-"]:
-                tag_value = "S-" + tag_value
-
-            # anything that is not OUT is IN
-            in_span = False
-            if tag_value[0:2] not in ["O-"]:
-                in_span = True
-
-            # single and begin tags start a new span
-            starts_new_span = False
-            if tag_value[0:2] in ["B-", "S-"]:
-                starts_new_span = True
-
-            if previous_tag_value[0:2] in ["S-"] and previous_tag_value[2:] != tag_value[2:] and in_span:
-                starts_new_span = True
-
-            if (starts_new_span or not in_span) and len(current_span) > 0:
-                scores = [t.get_labels(label_type)[0].score for t in current_span]
-                span_score = sum(scores) / len(scores)
-                if span_score > min_score:
-                    span = Span(current_span)
-                    value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
-                    self.add_complex_label(
-                        typename=label_type,
-                        label=SpanLabel(span=span, value=value, score=span_score),
-                    )
-
-                current_span = []
-                tags = defaultdict(lambda: 0.0)
-
-            if in_span:
-                current_span.append(token)
-                weight = 1.1 if starts_new_span else 1.0
-                tags[tag_value[2:]] += weight
-
-            # remember previous tag
-            previous_tag_value = tag_value
-
-        if len(current_span) > 0:
-            scores = [t.get_labels(label_type)[0].score for t in current_span]
-            span_score = sum(scores) / len(scores)
-            if span_score > min_score:
-                span = Span(current_span)
-                value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
-                self.add_complex_label(
-                    typename=label_type,
-                    label=SpanLabel(span=span, value=value, score=span_score),
-                )
 
     @property
     def embedding(self):
