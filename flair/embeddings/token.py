@@ -901,11 +901,24 @@ class GazetteerEmbeddings(TokenEmbeddings):
 
         self.gazetteer_file_dict_list = self._get_gazetteers()
         self.gazetteers_dicts = self._process_gazetteers()
-        self.__embedding_length = len(label_dict)
+        self.feature_list = self._set_feature_list()
+        self.__embedding_length = len(self.feature_list)
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
+
+    def _set_feature_list(self):
+        temp_1 = []
+        temp_2 = []
+        for key in self.labels.keys():
+            if not 'O' == key:
+                if 'partial_match' in self.matching_methods:
+                    temp_1.append(key)
+                if 'full_match' in self.matching_methods:
+                    if 'B-' in key:
+                        temp_2.append(key[2:])
+        return ['O', *temp_1, *temp_2]
 
     def _get_gazetteers(self):
         gazetteer_files = []
@@ -939,12 +952,12 @@ class GazetteerEmbeddings(TokenEmbeddings):
                 hash_dict_index = matching_list.index(elem)
         return gazetteer_tag_dict_list, hash_dict_index
 
-    def _process_gazetteers(self):
-        def get_hash_of_string(text):
-            h = hashlib.new('sha256')
-            h.update(bytes(str(text), "utf-8"))
-            return str(h.hexdigest())
+    def _get_hash_of_string(self, text):
+        h = hashlib.new('sha256')
+        h.update(bytes(str(text), "utf-8"))
+        return str(h.hexdigest())
 
+    def _process_gazetteers(self):
         partial_matching_dict_list = []
         full_matching_dict_list = []
 
@@ -966,7 +979,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                     line_list = re.split(" ", line)
                                     line_list_filtered = self._filter_gazetteer_line(line_list)
                                     for word in line_list_filtered:
-                                        word_hash = get_hash_of_string(word)
+                                        word_hash = self._get_hash_of_string(word)
                                         word_index = line_list_filtered.index(word)
                                         if word_index == 0 and len(line_list_filtered) > 1:
                                             if f'B-{tag_key}' in self.labels.keys():
@@ -975,14 +988,14 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                                 except KeyError:
                                                     gazetteer_tag_dict_list_partial[f'B-{tag_key}'] = {}
                                                     gazetteer_tag_dict_list_partial[f'B-{tag_key}'][word_hash] = word
-                                        elif word_index == len(line_list_filtered)-1 and len(line_list_filtered) > 1:
+                                        elif word_index == len(line_list_filtered) - 1 and len(line_list_filtered) > 1:
                                             if f'E-{tag_key}' in self.labels.keys():
                                                 try:
                                                     gazetteer_tag_dict_list_partial[f'E-{tag_key}'][word_hash] = word
                                                 except KeyError:
                                                     gazetteer_tag_dict_list_partial[f'E-{tag_key}'] = {}
                                                     gazetteer_tag_dict_list_partial[f'E-{tag_key}'][word_hash] = word
-                                        elif 0 < word_index < len(line_list_filtered)-1:
+                                        elif 0 < word_index < len(line_list_filtered) - 1:
                                             if f'I-{tag_key}' in self.labels.keys():
                                                 try:
                                                     gazetteer_tag_dict_list_partial[f'I-{tag_key}'][word_hash] = word
@@ -999,7 +1012,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                 if 'full_match' in self.matching_methods:
                                     line = line.rstrip("\n")
                                     if len(line) > 0:
-                                        line_hash = get_hash_of_string(line)
+                                        line_hash = self._get_hash_of_string(line)
                                         try:
                                             gazetteer_tag_dict_dict_full[tag_key][line_hash] = line
                                         except KeyError:
@@ -1018,8 +1031,20 @@ class GazetteerEmbeddings(TokenEmbeddings):
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         for sentence in sentences:
             for token in sentence.tokens:
-                token.set_embedding(self.name, torch.ones(1, 5))
-
+                if 'partial_match' in self.matching_methods:
+                    word_found = False
+                    token_text_hash = self._get_hash_of_string(token.text)
+                    for gazetteer_dict in self.gazetteers_dicts['partial_match']:
+                        if word_found:
+                            break
+                        for gazetteer_hash_dict in gazetteer_dict.keys():
+                            try:
+                                if token.text == gazetteer_dict[gazetteer_hash_dict][token_text_hash]:
+                                    # token.set_embedding(self.name, torch.ones(1, 5))
+                                    word_found = True
+                                    break
+                            except KeyError:
+                                pass
         return sentences
 
 
