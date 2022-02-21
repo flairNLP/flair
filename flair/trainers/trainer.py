@@ -74,7 +74,7 @@ class ModelTrainer:
     def train(
         self,
         base_path: Union[Path, str],
-        learning_rate: Union[float, List[float]] = 0.1,
+        learning_rate: float = 0.1,
         mini_batch_size: int = 32,
         eval_batch_size: int = None,
         mini_batch_chunk_size: Optional[int] = None,
@@ -87,7 +87,7 @@ class ModelTrainer:
         scheduler=AnnealOnPlateau,
         anneal_factor: float = 0.5,
         patience: int = 3,
-        min_learning_rate: float = 0.0001,
+        min_learning_rate: Union[float, List[float]] = 0.0001,
         initial_extra_patience: int = 0,
         optimizer: Union[torch.optim.Optimizer, Type[torch.optim.Optimizer]] = SGD,
         cycle_momentum: bool = False,
