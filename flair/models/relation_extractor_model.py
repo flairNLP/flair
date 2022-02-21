@@ -161,8 +161,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
                             continue  # skip 'O' labels if training on gold pairs only
                         label = "O"
 
-                    # entity_pairs.append(Relation(span_1, span_2))
-
                     labels.append([label])
 
                     # if predicting, also remember sentences and label candidates
