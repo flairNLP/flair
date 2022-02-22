@@ -123,4 +123,4 @@ class RegexpTagger:
                     token_span = collection.get_token_span(span)
                 except ValueError:
                     raise Exception(f"The match span {span} for label '{label}' is overlapping with a token!")
-                sentence.add_complex_label(label, SpanLabel(token_span, label))
+                token_span.add_label(label, label)

@@ -12,10 +12,11 @@ from flair.tokenization import (
     SciSpacyTokenizer,
     SegtokSentenceSplitter,
     SegtokTokenizer,
+    SpaceTokenizer,
     SpacySentenceSplitter,
     SpacyTokenizer,
     TagSentenceSplitter,
-    TokenizerWrapper, SpaceTokenizer,
+    TokenizerWrapper,
 )
 
 
@@ -459,5 +460,6 @@ def test_token_positions_when_creating_word_by_word():
     assert 7 == sentence.tokens[2].start_position
     assert 13 == sentence.tokens[2].end_position
 
-def no_op_tokenizer(text: str) -> List[Token]:
-    return [Token(text, start_position=0)]
+
+def no_op_tokenizer(text: str) -> List[str]:
+    return [text]

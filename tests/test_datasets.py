@@ -189,8 +189,8 @@ def _assert_conllu_dataset(dataset):
         True,
         True,
         True,
-        True,
         False,
+        True,
     ]
 
     ner_spans1 = sent1.get_labels("ner")

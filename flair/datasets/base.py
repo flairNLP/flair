@@ -105,7 +105,7 @@ class StringDataset(FlairDataset):
     def __init__(
         self,
         texts: Union[str, List[str]],
-        use_tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        use_tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
     ):
         """
         Instantiate StringDataset
@@ -225,7 +225,7 @@ class MongoDataset(FlairDataset):
         self,
         text: str,
         labels: List[str],
-        tokenizer: Union[Callable[[str], List[Token]], Tokenizer],
+        tokenizer: Union[bool, Tokenizer],
     ):
         if self.max_chars_per_doc > 0:
             text = text[: self.max_chars_per_doc]

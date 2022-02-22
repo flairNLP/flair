@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import List, Optional, Set, Tuple, Union
 
 import torch
+from black import Optional
+from torch import Tensor
 
 import flair.embeddings
 import flair.nn
@@ -166,6 +168,8 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
                     # if predicting, also remember sentences and label candidates
                     entity_pairs.append(Relation(span_1, span_2))
 
+        embedded_entity_pairs = None
+
         # if there's at least one entity pair in the sentence
         if len(entity_pairs) > 0:
 
@@ -193,23 +197,15 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
                 relation_embeddings.append(embedding)
 
             # stack and drop out (squeeze and unsqueeze)
-            embedded_entity_pairs = torch.stack(relation_embeddings).unsqueeze(1)
+            embedding_tensor = torch.stack(relation_embeddings).unsqueeze(1)
+            embedding_tensor = self.dropout(embedding_tensor)
+            embedding_tensor = self.locked_dropout(embedding_tensor)
+            embedding_tensor = self.word_dropout(embedding_tensor)
 
-            embedded_entity_pairs = self.dropout(embedded_entity_pairs)
-            embedded_entity_pairs = self.locked_dropout(embedded_entity_pairs)
-            embedded_entity_pairs = self.word_dropout(embedded_entity_pairs)
-
-            embedded_entity_pairs = embedded_entity_pairs.squeeze(1)
-
-        else:
-            embedded_entity_pairs = None
+            embedded_entity_pairs = embedding_tensor.squeeze(1)
 
         if for_prediction:
-            return (
-                embedded_entity_pairs,
-                labels,
-                entity_pairs,
-            )
+            return embedded_entity_pairs, labels, entity_pairs
 
         return embedded_entity_pairs, labels
 

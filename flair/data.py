@@ -253,6 +253,10 @@ class Label:
     def labeled_identifier(self):
         return f"{self.data_point.unlabeled_identifier}/{self.value}"
 
+    @property
+    def unlabeled_identifier(self):
+        return f"{self.data_point.unlabeled_identifier}"
+
 
 class DataPoint:
     """
@@ -426,12 +430,12 @@ class Token(_PartOfSentence):
     """
 
     def __init__(
-            self,
-            text: str,
-            head_id: int = None,
-            whitespace_after: bool = True,
-            start_position: int = 0,
-            sentence=None,
+        self,
+        text: str,
+        head_id: int = None,
+        whitespace_after: bool = True,
+        start_position: int = 0,
+        sentence=None,
     ):
         super().__init__(sentence=sentence)
 
@@ -508,7 +512,6 @@ class Span(_PartOfSentence):
     """
     This class represents one textual span consisting of Tokens.
     """
-
     def __init__(self, tokens: List[Token]):
         super().__init__(tokens[0].sentence)
         self.tokens = tokens
@@ -552,8 +555,12 @@ class Span(_PartOfSentence):
     def __len__(self) -> int:
         return len(self.tokens)
 
+    @property
+    def embedding(self):
+        pass
 
 class Relation(_PartOfSentence):
+
     def __init__(self, first: Span, second: Span):
         super().__init__(sentence=first.sentence)
         self.first: Span = first
@@ -590,6 +597,10 @@ class Relation(_PartOfSentence):
     def end_position(self) -> int:
         return max(self.first.end_position, self.second.end_position)
 
+    @property
+    def embedding(self):
+        pass
+
 
 class Tokenizer(ABC):
     r"""An abstract class representing a :class:`Tokenizer`.
@@ -616,11 +627,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-            self,
-            text: Union[str, List[str]],
-            use_tokenizer: Union[bool, Tokenizer] = True,
-            language_code: str = None,
-            start_position: int = 0,
+        self,
+        text: Union[str, List[str]],
+        use_tokenizer: Union[bool, Tokenizer] = True,
+        language_code: str = None,
+        start_position: int = 0,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -638,7 +649,7 @@ class Sentence(DataPoint):
         self.tokens: List[Token] = []
 
         # private field for all known spans
-        self._known_spans = {}
+        self._known_spans: Dict[str, _PartOfSentence] = {}
 
         self.language_code: Optional[str] = language_code
 
@@ -686,6 +697,10 @@ class Sentence(DataPoint):
             current_offset = word_offset + len(word)
             previous_word_offset = current_offset - 1
             previous_token = token
+
+        # the last token has no whitespace after
+        if len(self) > 0:
+            self.tokens[-1].whitespace_after = False
 
         # log a warning if the dataset is empty
         if text == "":
@@ -741,10 +756,11 @@ class Sentence(DataPoint):
 
         # set token idx and sentence
         token.sentence = self
-        token.idx = len(self.tokens)
+        token.idx = len(self.tokens) + 1
         if token.start_position == 0 and len(self) > 0:
-            token.start_pos = len(self.to_original_text()) + 1 if self[-1].whitespace_after \
-                else len(self.to_original_text())
+            token.start_pos = (
+                len(self.to_original_text()) + 1 if self[-1].whitespace_after else len(self.to_original_text())
+            )
             token.end_pos = token.start_pos + len(token.text)
 
         # append token to sentence
@@ -1071,6 +1087,10 @@ class Sentence(DataPoint):
 
     def remove_labels(self, typename: str):
 
+        # labels also need to be deleted at all tokens
+        for token in self:
+            token.remove_labels(typename)
+
         # labels also need to be deleted at all known spans
         for span in self._known_spans.values():
             span.remove_labels(typename)
@@ -1116,6 +1136,18 @@ class DataPair(DataPoint, typing.Generic[DT, DT2]):
     def unlabeled_identifier(self):
         return f"{self.first.unlabeled_identifier} || {self.second.unlabeled_identifier}"
 
+    @property
+    def start_position(self) -> int:
+        return self.first.start_position
+
+    @property
+    def end_position(self) -> int:
+        return self.first.end_position
+
+    @property
+    def text(self):
+        return self.first.text + " || " + self.second.text
+
 
 TextPair = DataPair[Sentence, Sentence]
 
@@ -1138,6 +1170,22 @@ class Image(DataPoint):
 
         return f"Image: {image_repr} {image_url}"
 
+    @property
+    def start_position(self) -> int:
+        pass
+
+    @property
+    def end_position(self) -> int:
+        pass
+
+    @property
+    def text(self):
+        pass
+
+    @property
+    def unlabeled_identifier(self):
+        pass
+
 
 class FlairDataset(Dataset):
     @abstractmethod
@@ -1147,12 +1195,12 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-            self,
-            train: Dataset = None,
-            dev: Dataset = None,
-            test: Dataset = None,
-            name: str = "corpus",
-            sample_missing_splits: Union[bool, str] = True,
+        self,
+        train: Dataset = None,
+        dev: Dataset = None,
+        test: Dataset = None,
+        name: str = "corpus",
+        sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1191,11 +1239,11 @@ class Corpus:
         return self._test
 
     def downsample(
-            self,
-            percentage: float = 0.1,
-            downsample_train=True,
-            downsample_dev=True,
-            downsample_test=True,
+        self,
+        percentage: float = 0.1,
+        downsample_train=True,
+        downsample_dev=True,
+        downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:

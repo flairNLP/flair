@@ -6,7 +6,7 @@ import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Label, Sentence
+from flair.data import DataPoint, Label, Sentence
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -54,7 +54,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         self,
         sentences: Union[List[Sentence], Sentence],
         for_prediction: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[Sentence]],]:
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DataPoint]]]:
         if not isinstance(sentences, list):
             sentences = [sentences]
 
@@ -66,12 +66,14 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
-        labels = []
+        labels: List[List[str]] = []
         for sentence in sentences:
             labels.append([label.value for label in sentence.get_labels(self.label_type)])
 
         if for_prediction:
-            return text_embedding_tensor, labels, sentences
+            sentences_for_prediction: List[DataPoint] = []
+            sentences_for_prediction.extend(sentences)
+            return text_embedding_tensor, labels, sentences_for_prediction
 
         return text_embedding_tensor, labels
 

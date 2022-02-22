@@ -54,6 +54,7 @@ def test_token_tags():
 
     # now remove all pos tags
     sentence.remove_labels("pos")
+    print(sentence[0].get_labels("pos"))
     assert 0 == len(sentence.get_labels("pos"))
     assert 1 == len(sentence.get_labels("sentiment"))
     assert 1 == len(sentence.labels)

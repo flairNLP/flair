@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Callable, Dict, List, Union
+from typing import Dict, List, Union
 
 import flair
 from flair.data import (
@@ -37,7 +37,7 @@ class ClassificationCorpus(Corpus):
         truncate_to_max_tokens: int = -1,
         truncate_to_max_chars: int = -1,
         filter_if_longer_than: int = -1,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "partial",
         label_name_map: Dict[str, str] = None,
         skip_labels: List[str] = None,
@@ -140,7 +140,7 @@ class ClassificationDataset(FlairDataset):
         truncate_to_max_tokens=-1,
         truncate_to_max_chars=-1,
         filter_if_longer_than: int = -1,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "partial",
         label_name_map: Dict[str, str] = None,
         skip_labels: List[str] = None,
@@ -253,9 +253,7 @@ class ClassificationDataset(FlairDataset):
                 position = f.tell()
                 line = f.readline()
 
-    def _parse_line_to_sentence(
-        self, line: str, label_prefix: str, tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer]
-    ):
+    def _parse_line_to_sentence(self, line: str, label_prefix: str, tokenizer: Union[bool, Tokenizer]):
         words = line.split()
 
         labels = []
@@ -1106,7 +1104,7 @@ class SENTEVAL_CR(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1160,7 +1158,7 @@ class SENTEVAL_MR(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1214,7 +1212,7 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1268,7 +1266,7 @@ class SENTEVAL_MPQA(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1322,7 +1320,7 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1382,7 +1380,7 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
 
     def __init__(
         self,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode: str = "full",
         **corpusargs,
     ):
@@ -1535,7 +1533,7 @@ class GO_EMOTIONS(ClassificationCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "partial",
         **corpusargs,
     ):
@@ -1642,7 +1640,7 @@ class TREC_50(ClassificationCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode="full",
         **corpusargs,
     ):
@@ -1704,7 +1702,7 @@ class TREC_6(ClassificationCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode="full",
         **corpusargs,
     ):
@@ -1767,7 +1765,7 @@ class YAHOO_ANSWERS(ClassificationCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode="partial",
         **corpusargs,
     ):
@@ -1846,7 +1844,7 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "full",
         fine_grained_classes: bool = False,
         **corpusargs,
@@ -1919,7 +1917,7 @@ class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
         self,
         base_path: Union[str, Path] = None,
         memory_mode: str = "full",
-        tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         **corpusargs,
     ):
         """

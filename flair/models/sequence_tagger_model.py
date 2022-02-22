@@ -411,7 +411,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # all others are regular labels for each token
         else:
-            labels = [[token.get_tag(self.label_type, "O").value] for sentence in sentences for token in sentence]
+            labels = [[token.get_label(self.label_type, "O").value] for sentence in sentences for token in sentence]
 
         return labels
 
@@ -515,7 +515,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     # token-labels can be added directly
                     else:
                         for token, label in zip(sentence.tokens, sentence_predictions):
-                            token.add_tag_label(label_name, label)
+                            token.add_label(typename=label_name, value=label[0], score=label[1])
 
                 # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
                 for (sentence, sent_all_tags) in zip(batch, all_tags):
