@@ -168,10 +168,10 @@ def test_download_load_data(tasks_base_path):
 def _assert_conllu_dataset(dataset):
     sent1 = dataset[0]
 
-    assert [entity.span.text for entity in sent1.get_labels("ner")] == ["Larry Page", "Sergey Brin", "Google"]
-    assert [entity.value for entity in sent1.get_labels("ner")] == ["PER", "PER", "ORG"]
+    assert [label.data_point.text for label in sent1.get_labels("ner")] == ["Larry Page", "Sergey Brin", "Google"]
+    assert [label.value for label in sent1.get_labels("ner")] == ["PER", "PER", "ORG"]
 
-    assert [token.get_tag("upos").value for token in sent1.tokens] == [
+    assert [token.get_label("upos").value for token in sent1.tokens] == [
         "PROPN",
         "PROPN",
         "CCONJ",
@@ -202,8 +202,8 @@ def _assert_conllu_dataset(dataset):
     rels1 = sent1.get_labels("relation")
     assert len(rels1) == 2
 
-    assert [token.idx for token in rels1[1].head] == [7]
-    assert [token.idx for token in rels1[1].tail] == [4, 5]
+    assert [token.idx for token in rels1[1].data_point.first] == [7]
+    assert [token.idx for token in rels1[1].data_point.second] == [4, 5]
 
     sent3 = dataset[2]
 
@@ -216,8 +216,8 @@ def _assert_conllu_dataset(dataset):
     rels3 = sent3.get_labels("relation")
     assert len(rels3) == 1
 
-    assert [token.idx for token in rels3[0].head] == [6]
-    assert [token.idx for token in rels3[0].tail] == [1, 2]
+    assert [token.idx for token in rels3[0].data_point.first] == [6]
+    assert [token.idx for token in rels3[0].data_point.second] == [1, 2]
 
 
 def test_load_conllu_corpus(tasks_base_path):
@@ -314,7 +314,7 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
     #     "2",
     # ]
 
-    assert [token.get_tag("deprel").value for token in sent1.tokens] == [
+    assert [token.get_label("deprel").value for token in sent1.tokens] == [
         "nsubj",
         "root",
         "cc",

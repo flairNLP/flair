@@ -426,12 +426,12 @@ class Token(_PartOfSentence):
     """
 
     def __init__(
-        self,
-        text: str,
-        head_id: int = None,
-        whitespace_after: bool = True,
-        start_position: int = None,
-        sentence=None,
+            self,
+            text: str,
+            head_id: int = None,
+            whitespace_after: bool = True,
+            start_position: int = 0,
+            sentence=None,
     ):
         super().__init__(sentence=sentence)
 
@@ -602,7 +602,7 @@ class Tokenizer(ABC):
     """
 
     @abstractmethod
-    def tokenize(self, text: str) -> List[Token]:
+    def tokenize(self, text: str) -> List[str]:
         raise NotImplementedError()
 
     @property
@@ -616,11 +616,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-        self,
-        text: Union[str, List[str]],
-        use_tokenizer: Union[bool, Tokenizer] = True,
-        language_code: str = None,
-        start_position: int = 0,
+            self,
+            text: Union[str, List[str]],
+            use_tokenizer: Union[bool, Tokenizer] = True,
+            language_code: str = None,
+            start_position: int = 0,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -658,11 +658,34 @@ class Sentence(DataPoint):
             raise AssertionError("Unexpected type of parameter 'use_tokenizer'. Parameter should be bool or Tokenizer")
 
         # if text is passed, instantiate sentence with tokens (words)
-        if isinstance(text, (list, tuple)):
-            [self.add_token(Sentence._handle_problem_characters(token)) for token in text]
-        else:
+        if isinstance(text, str):
             text = Sentence._handle_problem_characters(text)
-            [self.add_token(token) for token in tokenizer.tokenize(text)]
+            words = tokenizer.tokenize(text)
+        else:
+            words = text
+
+        # determine token positions and whitespace_after flag
+        current_offset = 0
+        previous_word_offset = -1
+        previous_token = None
+        for word in words:
+            try:
+                word_offset = text.index(word, current_offset)
+                start_position = word_offset
+            except ValueError:
+                word_offset = previous_word_offset + 1
+                start_position = current_offset + 1 if current_offset > 0 else current_offset
+
+            if word:
+                token = Token(text=word, start_position=start_position, whitespace_after=True)
+                self.add_token(token)
+
+            if (previous_token is not None) and word_offset - 1 == previous_word_offset:
+                previous_token.whitespace_after = False
+
+            current_offset = word_offset + len(word)
+            previous_word_offset = current_offset - 1
+            previous_token = token
 
         # log a warning if the dataset is empty
         if text == "":
@@ -716,11 +739,16 @@ class Sentence(DataPoint):
         if token.text == "":
             return
 
-        self.tokens.append(token)
-
         # set token idx and sentence
         token.sentence = self
         token.idx = len(self.tokens)
+        if token.start_position == 0 and len(self) > 0:
+            token.start_pos = len(self.to_original_text()) + 1 if self[-1].whitespace_after \
+                else len(self.to_original_text())
+            token.end_pos = token.start_pos + len(token.text)
+
+        # append token to sentence
+        self.tokens.append(token)
 
         # register token annotations on sentence
         for typename in token.annotation_layers.keys():
@@ -863,8 +891,6 @@ class Sentence(DataPoint):
         str = ""
         pos = 0
         for t in self.tokens:
-            if t.start_pos is None:
-                return self.to_tokenized_string()
             while t.start_pos > pos:
                 str += " "
                 pos += 1
@@ -1121,12 +1147,12 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-        self,
-        train: Dataset = None,
-        dev: Dataset = None,
-        test: Dataset = None,
-        name: str = "corpus",
-        sample_missing_splits: Union[bool, str] = True,
+            self,
+            train: Dataset = None,
+            dev: Dataset = None,
+            test: Dataset = None,
+            name: str = "corpus",
+            sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1165,11 +1191,11 @@ class Corpus:
         return self._test
 
     def downsample(
-        self,
-        percentage: float = 0.1,
-        downsample_train=True,
-        downsample_dev=True,
-        downsample_test=True,
+            self,
+            percentage: float = 0.1,
+            downsample_train=True,
+            downsample_dev=True,
+            downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:

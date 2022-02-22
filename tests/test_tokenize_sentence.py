@@ -15,7 +15,7 @@ from flair.tokenization import (
     SpacySentenceSplitter,
     SpacyTokenizer,
     TagSentenceSplitter,
-    TokenizerWrapper,
+    TokenizerWrapper, SpaceTokenizer,
 )
 
 
@@ -331,26 +331,6 @@ def test_split_text_scispacy():
     assert len(sentences[1].tokens) == 9
 
 
-def test_token_position_in_sentence():
-    sentence = Sentence("I love Berlin .")
-
-    assert 0 == sentence.tokens[0].start_position
-    assert 1 == sentence.tokens[0].end_position
-    assert 2 == sentence.tokens[1].start_position
-    assert 6 == sentence.tokens[1].end_position
-    assert 7 == sentence.tokens[2].start_position
-    assert 13 == sentence.tokens[2].end_position
-
-    sentence = Sentence(" I love  Berlin.", use_tokenizer=SegtokTokenizer())
-
-    assert 1 == sentence.tokens[0].start_position
-    assert 2 == sentence.tokens[0].end_position
-    assert 3 == sentence.tokens[1].start_position
-    assert 7 == sentence.tokens[1].end_position
-    assert 9 == sentence.tokens[2].start_position
-    assert 15 == sentence.tokens[2].end_position
-
-
 def test_print_sentence_tokenized():
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=SegtokTokenizer())
 
@@ -444,6 +424,40 @@ def test_sentence_get_item():
     with pytest.raises(IndexError):
         _ = sentence[4]
 
+
+def test_token_positions_when_creating_with_tokenizer():
+    sentence = Sentence("I love Berlin .", use_tokenizer=SpaceTokenizer())
+
+    assert 0 == sentence.tokens[0].start_position
+    assert 1 == sentence.tokens[0].end_position
+    assert 2 == sentence.tokens[1].start_position
+    assert 6 == sentence.tokens[1].end_position
+    assert 7 == sentence.tokens[2].start_position
+    assert 13 == sentence.tokens[2].end_position
+
+    sentence = Sentence(" I love  Berlin.", use_tokenizer=SegtokTokenizer())
+
+    assert 1 == sentence.tokens[0].start_position
+    assert 2 == sentence.tokens[0].end_position
+    assert 3 == sentence.tokens[1].start_position
+    assert 7 == sentence.tokens[1].end_position
+    assert 9 == sentence.tokens[2].start_position
+    assert 15 == sentence.tokens[2].end_position
+
+
+def test_token_positions_when_creating_word_by_word():
+    sentence: Sentence = Sentence([])
+    sentence.add_token(Token("I"))
+    sentence.add_token("love")
+    sentence.add_token("Berlin")
+    sentence.add_token(".")
+
+    assert 0 == sentence.tokens[0].start_position
+    assert 1 == sentence.tokens[0].end_position
+    assert 2 == sentence.tokens[1].start_position
+    assert 6 == sentence.tokens[1].end_position
+    assert 7 == sentence.tokens[2].start_position
+    assert 13 == sentence.tokens[2].end_position
 
 def no_op_tokenizer(text: str) -> List[Token]:
     return [Token(text, start_position=0)]
