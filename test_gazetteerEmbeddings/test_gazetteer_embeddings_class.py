@@ -1,5 +1,7 @@
 import unittest
 import os
+import torch
+
 from flair.data import Sentence
 from unittest.mock import patch, MagicMock, call, mock_open
 
@@ -510,17 +512,80 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
             self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['partial_match'][1]), 4)
 
     def test_add_embeddings_internal_good(self):
-        sentence1 = Sentence('The Land Tenure Reform Association (LTRA) was a British pressure group for land reform .')
-        sentence2 = Sentence('I love Sandys Fort Spring !')
-        sentence_list = [sentence1, sentence2]
-
+        sentences_1 = Sentence('I love Sandys Fort Spring !')
+        sentences_2 = Sentence('The Land Tenure Reform Association (LTRA) .')
+        sentence_list = [sentences_1, sentences_2]
+        feature_list = ['O',
+                        'B-PER', 'I-PER', 'E-PER', 'S-PER', 'B-ORG', 'I-ORG',
+                        'E-ORG', 'S-ORG', 'B-LOC', 'I-LOC', 'E-LOC', 'S-LOC',
+                        'B-MISC', 'I-MISC', 'E-MISC', 'S-MISC', 'PER', 'ORG',
+                        'LOC', 'MISC']
+        self.partial_match_hash_dict[0]['S-ORG']['6ff25b9536d5242e1d4f685cee13e818fb314375a772d6817acaefe4661021c0'] = \
+            'Sandys'
         gazetteers = {'partial_match': self.partial_match_hash_dict, 'full_match': self.full_match_hash_dict}
 
         with patch.object(GazetteerEmbeddings, '_get_gazetteers'), \
-                patch.object(GazetteerEmbeddings, '_set_feature_list'), \
+                patch.object(GazetteerEmbeddings, '_set_feature_list', return_value=feature_list), \
                 patch.object(GazetteerEmbeddings, '_process_gazetteers', return_value=gazetteers):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
                                                                            label_dict=MagicMock(),
                                                                            full_mathing=True,
                                                                            partial_matching=True)
             gazetteer_embedding.embed(sentence_list)
+
+            # I
+            self.assertEqual(torch.sum(sentence_list[0][0].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][0].embedding[0], torch.tensor(1))
+
+            # love
+            self.assertEqual(torch.sum(sentence_list[0][1].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][1].embedding[0], torch.tensor(1))
+
+            # Sandys
+            self.assertEqual(torch.sum(sentence_list[0][2].embedding), torch.tensor(2))
+            self.assertEqual(sentence_list[0][2].embedding[9], torch.tensor(1))
+            self.assertEqual(sentence_list[0][2].embedding[8], torch.tensor(1))
+
+            # Fort
+            self.assertEqual(torch.sum(sentence_list[0][3].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][3].embedding[10], torch.tensor(1))
+
+            # Spring
+            self.assertEqual(torch.sum(sentence_list[0][4].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][4].embedding[11], torch.tensor(1))
+
+            # !
+            self.assertEqual(torch.sum(sentence_list[0][5].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][5].embedding[0], torch.tensor(1))
+            ############################################################################
+            # The
+            self.assertEqual(torch.sum(sentence_list[1][0].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][0].embedding[0], torch.tensor(1))
+
+            # Land
+            self.assertEqual(torch.sum(sentence_list[1][1].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][1].embedding[5], torch.tensor(1))
+
+            # Tenure
+            self.assertEqual(torch.sum(sentence_list[1][2].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][2].embedding[6], torch.tensor(1))
+
+            # Reform
+            self.assertEqual(torch.sum(sentence_list[1][3].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][3].embedding[6], torch.tensor(1))
+
+            # Association
+            self.assertEqual(torch.sum(sentence_list[1][4].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][4].embedding[7], torch.tensor(1))
+
+            # (LTRA)
+            self.assertEqual(torch.sum(sentence_list[1][5].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][5].embedding[0], torch.tensor(1))
+
+            # .
+            self.assertEqual(torch.sum(sentence_list[1][6].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][6].embedding[0], torch.tensor(1))
+
+            for sentence in sentence_list:
+                for token in sentence:
+                    assert len(token.get_embedding()) == len(feature_list)

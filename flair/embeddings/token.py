@@ -891,6 +891,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
             partial_matching: bool = True
     ):
         super().__init__()
+        self.name = "Gazetteer"
         self.gazetteer_path = path_to_gazetteers
         self.labels = label_dict
         self.matching_methods = []
@@ -1031,20 +1032,25 @@ class GazetteerEmbeddings(TokenEmbeddings):
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         for sentence in sentences:
             for token in sentence.tokens:
+                token_found_in_gazetteer = False
+                feature_vector = [0]*len(self.feature_list)
                 if 'partial_match' in self.matching_methods:
-                    word_found = False
                     token_text_hash = self._get_hash_of_string(token.text)
                     for gazetteer_dict in self.gazetteers_dicts['partial_match']:
-                        if word_found:
-                            break
                         for gazetteer_hash_dict in gazetteer_dict.keys():
                             try:
                                 if token.text == gazetteer_dict[gazetteer_hash_dict][token_text_hash]:
-                                    # token.set_embedding(self.name, torch.ones(1, 5))
-                                    word_found = True
-                                    break
+                                    feature_vector[self.feature_list.index(gazetteer_hash_dict)] = 1
+                                    token_found_in_gazetteer = True
                             except KeyError:
                                 pass
+                if 'full_match' in self.matching_methods:
+                    pass
+                if not token_found_in_gazetteer:
+                    feature_vector[self.feature_list.index('O')] = 1
+                    token.set_embedding(self.name, torch.tensor(feature_vector, dtype=torch.int, device=flair.device))
+                else:
+                    token.set_embedding(self.name, torch.tensor(feature_vector, dtype=torch.int, device=flair.device))
         return sentences
 
 
