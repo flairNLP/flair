@@ -403,7 +403,9 @@ class TARSTagger(FewshotClassifier):
 
         for entity_label in sentence.get_labels(self.label_type):
             if entity_label.value == label:
-                new_span = Span([tars_sentence.get_token(token.idx + label_length) for token in entity_label.data_point])
+                new_span = Span(
+                    [tars_sentence.get_token(token.idx + label_length) for token in entity_label.data_point]
+                )
                 new_span.add_label(self.static_label_type, value="entity")
 
         return tars_sentence
@@ -566,7 +568,9 @@ class TARSTagger(FewshotClassifier):
                             # only add if all tokens have no label
                             if tag_this:
                                 already_set_indices.extend(token.idx for token in label.data_point)
-                                predicted_span = Span([sentence.get_token(token.idx - label_length) for token in label.data_point])
+                                predicted_span = Span(
+                                    [sentence.get_token(token.idx - label_length) for token in label.data_point]
+                                )
                                 predicted_span.add_label(label_name, value=label.value, score=label.score)
 
                 # clearing token embeddings to save memory

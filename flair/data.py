@@ -246,6 +246,9 @@ class Label:
     def __hash__(self):
         return hash(self.__repr__())
 
+    def __lt__(self, other):
+        return self.data_point < other.data_point
+
     @property
     def labeled_identifier(self):
         return f"{self.data_point.unlabeled_identifier}/{self.value}"
@@ -304,6 +307,12 @@ class DataPoint:
                 if name in self._embeddings.keys():
                     del self._embeddings[name]
 
+    def has_label(self, type) -> bool:
+        if type in self.annotation_layers:
+            return True
+        else:
+            return False
+
     def add_label(self, typename: str, value: str, score: float = 1.0):
 
         if typename not in self.annotation_layers:
@@ -342,12 +351,22 @@ class DataPoint:
     @property
     @abstractmethod
     def unlabeled_identifier(self):
-        pass
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def start_position(self) -> int:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def end_position(self) -> int:
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def text(self):
-        pass
+        raise NotImplementedError
 
     @property
     def tag(self):
@@ -356,6 +375,9 @@ class DataPoint:
     @property
     def score(self):
         return self.labels[0].score
+
+    def __lt__(self, other):
+        return self.start_position < other.start_position
 
 
 DT = typing.TypeVar("DT", bound=DataPoint)
@@ -376,10 +398,11 @@ class _PartOfSentence(DataPoint, ABC):
     def add_label(self, typename: str, value: str, score: float = 1.0):
         super().add_label(typename, value, score)
 
+        label = Label(self, value, score)
         if typename not in self.sentence.annotation_layers:
-            self.sentence.annotation_layers[typename] = [Label(self, value, score)]
+            self.sentence.annotation_layers[typename] = [label]
         else:
-            self.sentence.annotation_layers[typename].append(Label(self, value, score))
+            self.sentence.annotation_layers[typename].append(label)
 
     def set_label(self, typename: str, value: str, score: float = 1.0):
         super().set_label(typename, value, score)
@@ -387,8 +410,13 @@ class _PartOfSentence(DataPoint, ABC):
         return self
 
     def remove_labels(self, typename: str):
-        super().remove_labels(typename)
-        self.sentence.remove_labels(typename)
+
+        # labels also need to be deleted at Sentence object
+        for label in self.get_labels(typename):
+            self.sentence.annotation_layers[typename].remove(label)
+
+        # delete labels at object itself
+        super(_PartOfSentence, self).remove_labels(typename)
 
 
 class Token(_PartOfSentence):
@@ -398,18 +426,17 @@ class Token(_PartOfSentence):
     """
 
     def __init__(
-            self,
-            text: str,
-            idx: int = None,
-            head_id: int = None,
-            whitespace_after: bool = True,
-            start_position: int = None,
-            sentence=None,
+        self,
+        text: str,
+        head_id: int = None,
+        whitespace_after: bool = True,
+        start_position: int = None,
+        sentence=None,
     ):
         super().__init__(sentence=sentence)
 
         self.form: str = text
-        self.idx: Optional[int] = idx
+        self.idx: Optional[int] = None
         self.head_id: Optional[int] = head_id
         self.whitespace_after: bool = whitespace_after
 
@@ -439,11 +466,11 @@ class Token(_PartOfSentence):
         return self.sentence.get_token(self.head_id)
 
     @property
-    def start_position(self) -> Optional[int]:
+    def start_position(self) -> int:
         return self.start_pos
 
     @property
-    def end_position(self) -> Optional[int]:
+    def end_position(self) -> int:
         return self.end_pos
 
     @property
@@ -488,12 +515,12 @@ class Span(_PartOfSentence):
         super()._init_labels()
 
     @property
-    def start_pos(self) -> int:
+    def start_position(self) -> int:
         assert self.tokens[0].start_position is not None
         return self.tokens[0].start_position
 
     @property
-    def end_pos(self) -> int:
+    def end_position(self) -> int:
         assert self.tokens[-1].end_position is not None
         return self.tokens[-1].end_position
 
@@ -555,6 +582,14 @@ class Relation(_PartOfSentence):
     def unlabeled_identifier(self) -> str:
         return f"{self.first.unlabeled_identifier}->{self.second.unlabeled_identifier}"
 
+    @property
+    def start_position(self) -> int:
+        return min(self.first.start_position, self.second.start_position)
+
+    @property
+    def end_position(self) -> int:
+        return max(self.first.end_position, self.second.end_position)
+
 
 class Tokenizer(ABC):
     r"""An abstract class representing a :class:`Tokenizer`.
@@ -581,11 +616,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-            self,
-            text: Union[str, List[str]],
-            use_tokenizer: Union[bool, Tokenizer] = True,
-            language_code: str = None,
-            start_position: int = None,
+        self,
+        text: Union[str, List[str]],
+        use_tokenizer: Union[bool, Tokenizer] = True,
+        language_code: str = None,
+        start_position: int = 0,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -608,7 +643,7 @@ class Sentence(DataPoint):
         self.language_code: Optional[str] = language_code
 
         self.start_pos = start_position
-        self.end_pos = start_position + len(text) if start_position is not None else None
+        self.end_pos = start_position + len(text)
 
         # the tokenizer used for this sentence
         if isinstance(use_tokenizer, Tokenizer):
@@ -624,9 +659,9 @@ class Sentence(DataPoint):
 
         # if text is passed, instantiate sentence with tokens (words)
         if isinstance(text, (list, tuple)):
-            [self.add_token(self._restore_windows_1252_characters(token)) for token in text]
+            [self.add_token(Sentence._handle_problem_characters(token)) for token in text]
         else:
-            text = self._restore_windows_1252_characters(text)
+            text = Sentence._handle_problem_characters(text)
             [self.add_token(token) for token in tokenizer.tokenize(text)]
 
         # log a warning if the dataset is empty
@@ -656,10 +691,10 @@ class Sentence(DataPoint):
 
     def get_spans(self, type: str) -> List[Span]:
         spans: List[Span] = []
-        for label in self.get_labels(type):
-            if isinstance(label.data_point, Span):
-                spans.append(label.data_point)
-        return spans
+        for potential_span in self._known_spans.values():
+            if isinstance(potential_span, Span) and potential_span.has_label(type):
+                spans.append(potential_span)
+        return sorted(spans)
 
     def get_token(self, token_id: int) -> Optional[Token]:
         for token in self.tokens:
@@ -669,8 +704,9 @@ class Sentence(DataPoint):
 
     def add_token(self, token: Union[Token, str]):
 
-        assert token.idx is None
-        assert token.sentence is None
+        if isinstance(token, Token):
+            assert token.idx is None
+            assert token.sentence is None
 
         if type(token) is str:
             token = Token(token)
@@ -900,6 +936,14 @@ class Sentence(DataPoint):
             s.add_token(nt)
         return s
 
+    @property
+    def start_position(self) -> int:
+        return 0
+
+    @property
+    def end_position(self) -> int:
+        return len(self.to_original_text())
+
     def __str__(self) -> str:
 
         sentence = f'Sentence: "{self.to_tokenized_string()}"   (Number of tokens: {len(self)})'
@@ -923,7 +967,21 @@ class Sentence(DataPoint):
         return self.language_code
 
     @staticmethod
-    def _restore_windows_1252_characters(text: str) -> str:
+    def _handle_problem_characters(text: str) -> str:
+        text = Sentence.__remove_zero_width_characters(text)
+        text = Sentence.__restore_windows_1252_characters(text)
+        return text
+
+    @staticmethod
+    def __remove_zero_width_characters(text: str) -> str:
+        text = text.replace("\u200c", "")
+        text = text.replace("\u200b", "")
+        text = text.replace("\ufe0f", "")
+        text = text.replace("\ufeff", "")
+        return text
+
+    @staticmethod
+    def __restore_windows_1252_characters(text: str) -> str:
         def to_windows_1252(match):
             try:
                 return bytes([ord(match.group(0))]).decode("windows-1252")
@@ -976,14 +1034,26 @@ class Sentence(DataPoint):
 
         # if no label if specified, return all labels
         if label_type is None:
-            return self.labels
+            return sorted(self.labels)
 
         # if the label type exists in the Sentence, return it
         if label_type in self.annotation_layers:
-            return self.annotation_layers[label_type]
+            return sorted(self.annotation_layers[label_type])
 
         # return empty list if none of the above
         return []
+
+    def remove_labels(self, typename: str):
+
+        # labels also need to be deleted at all known spans
+        for span in self._known_spans.values():
+            span.remove_labels(typename)
+
+        # remove spans without labels
+        self._known_spans = {k: v for k, v in self._known_spans.items() if len(v.labels) > 0}
+
+        # delete labels at object itself
+        super().remove_labels(typename)
 
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):
@@ -1051,12 +1121,12 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-            self,
-            train: Dataset = None,
-            dev: Dataset = None,
-            test: Dataset = None,
-            name: str = "corpus",
-            sample_missing_splits: Union[bool, str] = True,
+        self,
+        train: Dataset = None,
+        dev: Dataset = None,
+        test: Dataset = None,
+        name: str = "corpus",
+        sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1095,11 +1165,11 @@ class Corpus:
         return self._test
 
     def downsample(
-            self,
-            percentage: float = 0.1,
-            downsample_train=True,
-            downsample_dev=True,
-            downsample_test=True,
+        self,
+        percentage: float = 0.1,
+        downsample_train=True,
+        downsample_dev=True,
+        downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:
