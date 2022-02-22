@@ -286,7 +286,7 @@ class DependencyParser(flair.nn.Model):
             for (sentence, arcs, sent_tags) in zip(batch, arc_prediction, relation_prediction):
                 for (token, arc, tag) in zip(sentence.tokens, arcs, sent_tags):
                     token.add_label("predicted", value=tag)
-                    token.add_label("predicted_head_id", value= str(int(arc)))
+                    token.add_label("predicted_head_id", value=str(int(arc)))
 
                     # append both to file for evaluation
                     eval_line = "{} {} {} {} {}\n".format(

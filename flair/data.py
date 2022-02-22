@@ -512,6 +512,7 @@ class Span(_PartOfSentence):
     """
     This class represents one textual span consisting of Tokens.
     """
+
     def __init__(self, tokens: List[Token]):
         super().__init__(tokens[0].sentence)
         self.tokens = tokens
@@ -559,8 +560,8 @@ class Span(_PartOfSentence):
     def embedding(self):
         pass
 
-class Relation(_PartOfSentence):
 
+class Relation(_PartOfSentence):
     def __init__(self, first: Span, second: Span):
         super().__init__(sentence=first.sentence)
         self.first: Span = first
