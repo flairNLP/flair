@@ -3,8 +3,6 @@ from pathlib import Path
 from typing import List, Optional, Set, Tuple, Union
 
 import torch
-from black import Optional
-from torch import Tensor
 
 import flair.embeddings
 import flair.nn

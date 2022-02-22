@@ -257,7 +257,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
                             all_true_values[representation] = [value]
                         else:
                             all_true_values[representation].append(value)
-                        print(all_true_values[representation])
 
                         if representation not in all_spans:
                             all_spans.add(representation)
