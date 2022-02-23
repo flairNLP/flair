@@ -7,7 +7,7 @@ from flair.trainers import ModelTrainer
 from datasets import list_datasets, load_dataset, list_metrics, load_metric
 
 # corpus1 = WNUT_17()
-corpus2 = CONLL_03()
+corpus = CONLL_03()
 # print(corpus)
 #
 # label_dict = {'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-ORG': 3, 'I-ORG': 4, 'B-LOC': 5, 'I-LOC': 6, 'B-MISC': 7, 'I-MISC': 8}
@@ -15,9 +15,13 @@ corpus2 = CONLL_03()
 # print(dataset['train'][0])
 #
 
-sentence = Sentence('The grass is green .')
-sentence1 = Sentence('I love Paris !')
-sentence_list = [sentence, sentence1]
+label_dict = corpus.make_label_dictionary(label_type='ner')
+
+print(label_dict)
+
+# sentence = Sentence('The grass is green .')
+# sentence1 = Sentence('I love Paris !')
+# sentence_list = [sentence, sentence1]
 # glove_embedding = WordEmbeddings('glove')
 #
 # glove_embedding.embed(sentence)
