@@ -10,6 +10,48 @@ from flair.data import Dictionary, Sentence, SpanLabel
 
 log = logging.getLogger("flair")
 
+class candidate_decoder(torch.nn.Module):
+
+    def __init__(self,
+             entity_embedding_size: int,
+             mention_embedding_size: int,
+             entity_dictionary: Dictionary,
+             candidate_generation_method: dict # for now I use a dictionary, one could possibly extend this to a general method
+    ):
+        # TODO: It would be nice if candidate generation method would return indices directly
+        super().__init__()
+
+        self.entity_dictionary = entity_dictionary
+
+        if entity_embedding_size!=mention_embedding_size:
+            self.mention_to_entity = torch.nn.Linear(mention_embedding_size, entity_embedding_size)
+        else:
+            self.mention_to_entity=None
+
+        self.entity_embeddings = torch.randn( len(entity_dictionary), entity_embedding_size, requires_grad=True, device=flair.device) # TODO: more sophisticated way than random for initialization??
+        self.bias = torch.randn(len(entity_dictionary), requires_grad=True, device=flair.device)
+
+        self.candidate_generation_method = candidate_generation_method
+
+    def forward(self,mention_embeddings, labels, mentions):
+
+        # get the set of all label candidates for all mentions
+        restricted_label_set = set(labels)
+
+
+        for mention in mentions:
+            restricted_label_set.update(self.candidate_generation_method[mention]) # TODO: Make sure all the generated candidates are actually in the label set??!!
+
+        indices_of_labels = [self.entity_dictionary.get_idx_for_item(entity) for entity in restricted_label_set]
+
+        #project mentions in entity representation space if necessary
+        if self.mention_to_entity:
+            mention_embeddings = self.mention_to_entity(mention_embeddings)
+
+        # compute scores of mentions w.r.t. restricted set of entities
+        scores = torch.matmul(self.entity_embeddings[indices_of_labels,:],torch.transpose(mention_embeddings,1,0)) + self.bias[indices_of_labels].unsqueeze(1)
+        print(scores.size())
+        return scores
 
 class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
@@ -27,6 +69,8 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         label_type: str = "nel",
         dropout: float = 0.5,
         skip_unk_probability: Optional[float] = None,
+        candidate_generation_method: dict = None, # Idea: If one provides a candidate generation method, then a costum decoder is handed to DefaultClassifier
+        entitiy_embedding_size: int = None,
         **classifierargs,
     ):
         """
@@ -39,12 +83,40 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         :param label_type: name of the label you use.
         """
 
+        # ------------------------------------------NEWNEWNENWENWENWENWEWNEWN--------------------------------
+        if candidate_generation_method:
+
+            mention_embedding_size = 2 * word_embeddings.embedding_length if pooling_operation == 'first&last' else word_embeddings.embedding_length
+
+            if not entitiy_embedding_size:
+                entity_embedding_size = mention_embedding_size
+
+            # update the label_dictionary with the candidate_generation method
+            # previously I had the problem that when using only the entities from AIDA-train in the label_dictionary
+            # and not adding the ones of the candidate generation method, that almost none of the proposed candidates was conatined in the label_dictionary
+            # this way the generated lists deteriorate to one candidate (the gold entity) in the worst case, and the model would not learn to distinguish in that case
+
+            # I assume that the generation method is a dictionary again for now
+            for key in candidate_generation_method:
+                for candidate in candidate_generation_method[key]:
+                    label_dictionary.add_item(candidate)
+
+            decoder = candidate_decoder(entity_embedding_size=entity_embedding_size,
+                                        mention_embedding_size=mention_embedding_size,
+                                        entity_dictionary=label_dictionary,  # TODO: Do I need to remove <unk>??
+                                        candidate_generation_method=candidate_generation_method)
+        else:
+            decoder = None
+
+        # ---------------------------------------------------------------------------------------------------
+
         super(EntityLinker, self).__init__(
             label_dictionary=label_dictionary,
             final_embedding_size=word_embeddings.embedding_length * 2
             if pooling_operation == "first&last"
             else word_embeddings.embedding_length,
-            **classifierargs,
+            decoder=decoder,
+            ** classifierargs,
         )
 
         self.word_embeddings = word_embeddings
@@ -53,6 +125,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         self.skip_unk_probability = skip_unk_probability
         if self.skip_unk_probability:
             self.known_entities = label_dictionary.get_items()
+
 
         # ----- Dropout parameters -----
         # dropouts
@@ -86,6 +159,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     def emb_mean(self, arg):
         return torch.mean(arg, 0)
 
+    def decode(self, ):
+        pass
+
     def forward_pass(
         self,
         sentences: Union[List[Sentence], Sentence],
@@ -103,6 +179,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
         # fields to return
         span_labels = []
+        spans = []
         sentences_to_spans = []
         empty_label_candidates = []
         embedded_entity_pairs = None
@@ -127,6 +204,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                             continue
 
                     span_labels.append([entity.value])
+                    spans.append(entity.span.text)
 
                     if self.pooling_operation == "first&last":
                         mention_emb = torch.cat(
@@ -152,7 +230,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         if return_label_candidates:
             return embedded_entity_pairs, span_labels, sentences_to_spans, empty_label_candidates
 
-        return embedded_entity_pairs, span_labels
+        return embedded_entity_pairs, span_labels, spans
 
     def _get_state_dict(self):
         model_state = {

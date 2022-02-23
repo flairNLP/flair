@@ -569,15 +569,15 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     def forward_loss(self, sentences: Union[List[DT], DT]) -> Tuple[torch.Tensor, int]:
 
         # make a forward pass to produce embedded data points and labels
-        embedded_data_points, labels = self.forward_pass(sentences)  # type: ignore
+        embedded_data_points, labels, spans = self.forward_pass(sentences)  # type: ignore
 
         # no loss can be calculated if there are no labels
         if not any(labels):
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
         # push embedded_data_points through decoder to get the scores
-        scores = self.decoder(embedded_data_points)
-
+        scores = self.decoder(embedded_data_points, [label[0] for label in labels], spans)
+        assert 0
         # calculate the loss
         return self._calculate_loss(scores, labels)
 
