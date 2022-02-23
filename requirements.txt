@@ -5,7 +5,6 @@ tqdm>=4.26.0
 segtok>=1.5.7
 matplotlib>=2.2.3
 mpld3==0.3
-scikit-learn>=0.21.3
 sqlitedict>=1.6.0
 deprecated>=1.2.4
 transformers>=4.0.0
