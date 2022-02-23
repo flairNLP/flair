@@ -9,7 +9,7 @@ from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence, pad_packed_
 from torch.utils.data import Dataset
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Label, Sentence
+from flair.data import DataPoint, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import TokenEmbeddings
 from flair.nn.dropout import LockedDropout, WordDropout

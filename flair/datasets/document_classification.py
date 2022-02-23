@@ -11,7 +11,6 @@ from flair.data import (
     DataPair,
     FlairDataset,
     Sentence,
-    Token,
     Tokenizer,
     _iter_dataset,
 )

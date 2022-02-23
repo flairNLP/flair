@@ -4,7 +4,7 @@ import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Label, Sentence, TextPair
+from flair.data import Sentence, TextPair
 
 
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
