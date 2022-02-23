@@ -576,10 +576,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
         # push embedded_data_points through decoder to get the scores
-        scores = self.decoder(embedded_data_points, [label[0] for label in labels], spans)
-        assert 0
+        scores, batch_dict = self.decoder(embedded_data_points, [label[0] for label in labels], spans)
+
+        # create gold index vector for batch
+        batch_label_indices = torch.tensor([batch_dict[label[0]] for label in labels], dtype=torch.long,
+                                           device=flair.device)
+
         # calculate the loss
-        return self._calculate_loss(scores, labels)
+        return self.loss_function(scores, batch_label_indices), len(labels)
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
 
@@ -679,19 +683,30 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 if not batch:
                     continue
 
-                embedded_data_points, gold_labels, data_points, label_candidates = self.forward_pass(  # type: ignore
+                embedded_data_points, gold_labels, spans, data_points, label_candidates = self.forward_pass(  # type: ignore
                     batch, return_label_candidates=True
                 )
+
                 # if anything could possibly be predicted
                 if len(label_candidates) > 0:
-                    scores = self.decoder(embedded_data_points)
+                    scores, batch_dict = self.decoder(embedded_data_points, [label[0] for label in gold_labels], spans)
+                    #scores, batch_label_indices = self.decoder(embedded_data_points, [label[0] for label in labels],
+                    #                                           spans)
+
+                    #later we need to find the entity name from its index
+                    index_to_entity = list(batch_dict.keys())
 
                     # remove previously predicted labels of this type
                     for sentence in data_points:
                         sentence.remove_labels(label_name)
 
                     if return_loss:
-                        overall_loss += self._calculate_loss(scores, gold_labels)[0]
+                        # create gold index vector for batch
+                        batch_label_indices = torch.tensor([batch_dict[label[0]] for label in gold_labels], dtype=torch.long,
+                                                           device=flair.device)
+
+                        overall_loss = self.loss_function(scores, batch_label_indices)
+                        #overall_loss += self._calculate_loss(scores, gold_labels)[0]
                         label_count += len(label_candidates)
 
                     if self.multi_label:
@@ -723,7 +738,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                         else:
                             conf, idx = torch.max(softmax, dim=-1)
                             for data_point, label_candidate, c, i in zip(data_points, label_candidates, conf, idx):
-                                label_value = self.label_dictionary.get_item_for_index(i.item())
+                                #TODO!!!
+                                # I need to change the following call, indices are w.r.t. the temporary dict
+                                #label_value = self.label_dictionary.get_item_for_index(i.item())
+                                label_value = index_to_entity[i.item()]
                                 if label_value == "O":
                                     continue
                                 label = label_candidate.spawn(value=label_value, score=c.item())

@@ -18,7 +18,7 @@ class candidate_decoder(torch.nn.Module):
              entity_dictionary: Dictionary,
              candidate_generation_method: dict # for now I use a dictionary, one could possibly extend this to a general method
     ):
-        # TODO: It would be nice if candidate generation method would return indices directly
+        # TODO: It would be nice if the candidate generation method would return indices directly
         super().__init__()
 
         self.entity_dictionary = entity_dictionary
@@ -28,7 +28,7 @@ class candidate_decoder(torch.nn.Module):
         else:
             self.mention_to_entity=None
 
-        self.entity_embeddings = torch.randn( len(entity_dictionary), entity_embedding_size, requires_grad=True, device=flair.device) # TODO: more sophisticated way than random for initialization??
+        self.entity_embeddings = torch.randn(entity_embedding_size ,len(entity_dictionary), requires_grad=True, device=flair.device) # TODO: more sophisticated way than random for initialization??
         self.bias = torch.randn(len(entity_dictionary), requires_grad=True, device=flair.device)
 
         self.candidate_generation_method = candidate_generation_method
@@ -38,9 +38,8 @@ class candidate_decoder(torch.nn.Module):
         # get the set of all label candidates for all mentions
         restricted_label_set = set(labels)
 
-
         for mention in mentions:
-            restricted_label_set.update(self.candidate_generation_method[mention]) # TODO: Make sure all the generated candidates are actually in the label set??!!
+            restricted_label_set.update(self.candidate_generation_method[mention])
 
         indices_of_labels = [self.entity_dictionary.get_idx_for_item(entity) for entity in restricted_label_set]
 
@@ -49,9 +48,12 @@ class candidate_decoder(torch.nn.Module):
             mention_embeddings = self.mention_to_entity(mention_embeddings)
 
         # compute scores of mentions w.r.t. restricted set of entities
-        scores = torch.matmul(self.entity_embeddings[indices_of_labels,:],torch.transpose(mention_embeddings,1,0)) + self.bias[indices_of_labels].unsqueeze(1)
-        print(scores.size())
-        return scores
+        scores = torch.matmul(mention_embeddings, self.entity_embeddings[:,indices_of_labels] + self.bias[indices_of_labels])
+
+        # create temporary index dictionary for batch
+        batch_dict = {entity: index for index,entity in enumerate(restricted_label_set)} # TODO: Note!! It works under the assumption that a set, once created, has a fixed iteration order
+
+        return scores, batch_dict
 
 class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
@@ -228,7 +230,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                     embedded_entity_pairs = self.dropout(embedded_entity_pairs)
 
         if return_label_candidates:
-            return embedded_entity_pairs, span_labels, sentences_to_spans, empty_label_candidates
+            return embedded_entity_pairs, span_labels, spans, sentences_to_spans, empty_label_candidates
 
         return embedded_entity_pairs, span_labels, spans
 
