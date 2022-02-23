@@ -5,7 +5,7 @@ import torch
 import torch.nn
 
 import flair.nn
-from flair.data import Dictionary, Label, Sentence
+from flair.data import Dictionary, Sentence
 from flair.embeddings import TokenEmbeddings
 
 log = logging.getLogger("flair")

@@ -440,15 +440,22 @@ class Token(_PartOfSentence):
         super().__init__(sentence=sentence)
 
         self.form: str = text
-        self.idx: Optional[int] = None
+        self._internal_index: Optional[int] = None
         self.head_id: Optional[int] = head_id
         self.whitespace_after: bool = whitespace_after
 
         self.start_pos = start_position
-        self.end_pos = start_position + len(text) if start_position is not None else None
+        self.end_pos = start_position + len(text)
 
         self._embeddings: Dict = {}
         self.tags_proba_dist: Dict[str, List[Label]] = {}
+
+    @property
+    def idx(self) -> int:
+        if isinstance(self._internal_index, int):
+            return self._internal_index
+        else:
+            raise ValueError
 
     @property
     def text(self):
@@ -520,12 +527,10 @@ class Span(_PartOfSentence):
 
     @property
     def start_position(self) -> int:
-        assert self.tokens[0].start_position is not None
         return self.tokens[0].start_position
 
     @property
     def end_position(self) -> int:
-        assert self.tokens[-1].end_position is not None
         return self.tokens[-1].end_position
 
     @property
@@ -744,7 +749,6 @@ class Sentence(DataPoint):
     def add_token(self, token: Union[Token, str]):
 
         if isinstance(token, Token):
-            assert token.idx is None
             assert token.sentence is None
 
         if type(token) is str:
@@ -757,7 +761,7 @@ class Sentence(DataPoint):
 
         # set token idx and sentence
         token.sentence = self
-        token.idx = len(self.tokens) + 1
+        token._internal_index = len(self.tokens) + 1
         if token.start_position == 0 and len(self) > 0:
             token.start_pos = (
                 len(self.to_original_text()) + 1 if self[-1].whitespace_after else len(self.to_original_text())
