@@ -958,15 +958,6 @@ class GazetteerEmbeddings(TokenEmbeddings):
         h.update(bytes(str(text), "utf-8"))
         return str(h.hexdigest())
 
-    def _split_on_window(self, sequence, limit=1):
-        results = []
-        split_sequence = sequence.split()
-        iteration_length = len(split_sequence) - (limit - 1)
-        max_window_indicies = range(iteration_length)
-        for index in max_window_indicies:
-            results.append(split_sequence[index:index + limit])
-        return results
-
     def _process_gazetteers(self):
         partial_matching_dict_list = []
         full_matching_dict_list = []
@@ -1039,26 +1030,63 @@ class GazetteerEmbeddings(TokenEmbeddings):
         return {'partial_match': partial_matching_dict_list, 'full_match': full_matching_dict_list}
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        def split_on_window(sequence, limit=1):
+            results = []
+            split_sequence = sequence.split()
+            iteration_length = len(split_sequence) - (limit - 1)
+            max_window_indicies = range(iteration_length)
+            for index in max_window_indicies:
+                temp = []
+                for n in range(index, index + limit):
+                    temp.append({n: split_sequence[n]})
+                results.append(temp)
+            return results
+
         for sentence in sentences:
             sequence_feature_vectors = [[0] * len(self.feature_list) for count in range(len(sentence.tokens))]
             if 'partial_match' in self.matching_methods:
                 for token in sentence.tokens:
-                    token_index = token.idx - 1
                     token_found_in_gazetteer = False
                     token_text_hash = self._get_hash_of_string(token.text)
                     for gazetteer_dict in self.gazetteers_dicts['partial_match']:
                         for gazetteer_hash_dict in gazetteer_dict.keys():
                             try:
                                 if token.text == gazetteer_dict[gazetteer_hash_dict][token_text_hash]:
-                                    sequence_feature_vectors[token_index][self.feature_list.index(
+                                    sequence_feature_vectors[token.idx - 1][self.feature_list.index(
                                         gazetteer_hash_dict)] = 1
                                     token_found_in_gazetteer = True
                             except KeyError:
                                 pass
                     if not token_found_in_gazetteer:
-                        sequence_feature_vectors[token_index][self.feature_list.index('O')] = 1
+                        sequence_feature_vectors[token.idx - 1][self.feature_list.index('O')] = 1
             if 'full_match' in self.matching_methods:
-                pass
+                temp_token_dict = {}
+                token_string = ''
+                for token in sentence.tokens:
+                    temp_token_dict[token.idx-1] = [token.text, False, []]
+                    token_string = token_string + f' {token.text}'
+                for n in range(1, len(temp_token_dict)+1):
+                    string_window_split_list = split_on_window(token_string, n)
+                    for string_split in string_window_split_list:
+                        joined_string = ' '.join([list(d.values())[0] for d in string_split])
+                        joined_string_hash = self._get_hash_of_string(joined_string)
+                        for gazetteer_dict in self.gazetteers_dicts['full_match']:
+                            for gazetteer_hash_dict in gazetteer_dict.keys():
+                                try:
+                                    if joined_string == gazetteer_dict[gazetteer_hash_dict][joined_string_hash]:
+                                        for t in [list(d.keys())[0] for d in string_split]:
+                                            temp_token_dict[t][1] = True
+                                            temp_token_dict[t][2].append(gazetteer_hash_dict)
+                                except KeyError:
+                                    pass
+                for t_key in temp_token_dict.keys():
+                    if temp_token_dict[t_key][1]:
+                        for key in temp_token_dict[t_key][2]:
+                            sequence_feature_vectors[t_key][self.feature_list.index(
+                                key)] = 1
+                    else:
+                        pass
+                        sequence_feature_vectors[t_key][self.feature_list.index('O')] = 1
             for vector, token in zip(sequence_feature_vectors, sentence.tokens):
                 token.set_embedding(self.name, torch.tensor(vector, dtype=torch.int, device=flair.device))
         return sentences
