@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 import torch
 
@@ -65,8 +65,10 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
         return (text_embedding_tensor,)
 
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Sentence]:
-        return sentences
+    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[DataPoint]:
+        result: List[DataPoint] = []
+        result.extend(sentences)
+        return result
 
     def _get_state_dict(self):
         model_state = {
