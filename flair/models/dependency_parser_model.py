@@ -9,7 +9,7 @@ from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence, pad_packed_
 from torch.utils.data import Dataset
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Label, Sentence
+from flair.data import DataPoint, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import TokenEmbeddings
 from flair.nn.dropout import LockedDropout, WordDropout
@@ -192,7 +192,7 @@ class DependencyParser(flair.nn.Model):
             arc_loss += torch.nn.functional.cross_entropy(score_arc[sen_id][:sen_len], arc_labels)
 
             rel_labels_list = [
-                self.relations_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value) for token in sen.tokens
+                self.relations_dictionary.get_idx_for_item(token.get_label(self.tag_type).value) for token in sen.tokens
             ]
 
             rel_labels = torch.tensor(rel_labels_list, dtype=torch.int64, device=flair.device)
@@ -285,13 +285,13 @@ class DependencyParser(flair.nn.Model):
 
             for (sentence, arcs, sent_tags) in zip(batch, arc_prediction, relation_prediction):
                 for (token, arc, tag) in zip(sentence.tokens, arcs, sent_tags):
-                    token.add_tag_label("predicted", Label(tag))
-                    token.add_tag_label("predicted_head_id", Label(str(int(arc))))
+                    token.add_label("predicted", value=tag)
+                    token.add_label("predicted_head_id", value=str(int(arc)))
 
                     # append both to file for evaluation
                     eval_line = "{} {} {} {} {}\n".format(
                         token.text,
-                        token.get_tag(gold_label_type).value,
+                        token.get_label(gold_label_type).value,
                         str(token.head_id),
                         tag,
                         str(int(arc)),
@@ -300,8 +300,8 @@ class DependencyParser(flair.nn.Model):
                 lines.append("\n")
 
             for sentence in batch:
-                gold_tags = [token.get_tag(gold_label_type).value for token in sentence]
-                predicted_tags = [token.get_tag("predicted").value for token in sentence]
+                gold_tags = [token.get_label(gold_label_type).value for token in sentence]
+                predicted_tags = [token.get_label("predicted").value for token in sentence]
 
                 y_pred += [self.relations_dictionary.get_idx_for_item(tag) for tag in predicted_tags]
                 y_true += [self.relations_dictionary.get_idx_for_item(tag) for tag in gold_tags]
@@ -616,7 +616,7 @@ class ParsingMetric:
                     self.correct_arcs += 1
 
                     # if head AND deprel correct, augment correct_rels score
-                    if relation_prediction[batch_indx][token_indx] == token.get_tag(tag_type).value:
+                    if relation_prediction[batch_indx][token_indx] == token.get_label(tag_type).value:
                         self.correct_rels += 1
 
     def get_las(self) -> float:

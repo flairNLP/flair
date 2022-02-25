@@ -211,7 +211,7 @@ class ViterbiDecoder:
         for tag_seq, tag_seq_conf, length_seq in zip(decoded, confidences.values, lengths):
             tags.append(
                 [
-                    Label(self.tag_dictionary.get_item_for_index(tag), conf.item())
+                    (self.tag_dictionary.get_item_for_index(tag), conf.item())
                     for tag, conf in list(zip(tag_seq, tag_seq_conf))[:length_seq]
                 ]
             )

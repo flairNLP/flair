@@ -8,16 +8,7 @@ from typing import Dict, List, Optional, Union
 from torch.utils.data import ConcatDataset, Dataset
 
 import flair
-from flair.data import (
-    Corpus,
-    FlairDataset,
-    MultiCorpus,
-    RelationLabel,
-    Sentence,
-    Span,
-    SpanLabel,
-    Token,
-)
+from flair.data import Corpus, FlairDataset, MultiCorpus, Relation, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file
 from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
@@ -358,7 +349,7 @@ class ColumnDataset(FlairDataset):
                         continue
 
                     for token in sentence:
-                        if token.get_tag(layer, "O").value != "O" and token.get_tag(layer).value[0:2] not in [
+                        if token.get_label(layer, "O").value != "O" and token.get_label(layer).value[0:2] not in [
                             "B-",
                             "I-",
                             "E-",
@@ -393,7 +384,7 @@ class ColumnDataset(FlairDataset):
         self, lines, word_level_tag_columns: Dict[int, str], span_level_tag_columns: Optional[Dict[int, str]] = None
     ):
 
-        sentence: Sentence = Sentence()
+        sentence: Sentence = Sentence(text=[])
         token: Optional[Token] = None
         filtered_lines = []
         comments = []
@@ -424,13 +415,9 @@ class ColumnDataset(FlairDataset):
                     for span_indices, score, label in predicted_spans:
                         span = sentence[span_indices[0] : span_indices[-1] + 1]
                         value = self._remap_label(label)
-                        sentence.add_complex_label(
-                            typename=span_level_tag_columns[span_column],
-                            label=SpanLabel(span=span, value=value, score=score),
-                        )
+                        span.add_label(span_level_tag_columns[span_column], value=value, score=score)
                 except Exception:
                     pass
-                    # log.warning(f"--\nUnparseable sentence: {''.join(lines)}--\n")
 
         for comment in comments:
             # parse relations if they are set
@@ -444,10 +431,10 @@ class ColumnDataset(FlairDataset):
                     tail_end = int(indices[3])
                     label = indices[4]
                     # head and tail span indices are 1-indexed and end index is inclusive
-                    head = Span(sentence.tokens[head_start - 1 : head_end])
-                    tail = Span(sentence.tokens[tail_start - 1 : tail_end])
-
-                    sentence.add_complex_label("relation", RelationLabel(value=label, head=head, tail=tail))
+                    relation = Relation(
+                        first=sentence[head_start - 1 : head_end], second=sentence[tail_start - 1 : tail_end]
+                    )
+                    relation.add_label(typename="relation", value=label)
 
         if len(sentence) > 0:
             return sentence

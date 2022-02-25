@@ -5,7 +5,7 @@ from typing import Any, Callable, List, Union
 from segtok.segmenter import split_multi, split_single
 from segtok.tokenizer import split_contractions, word_tokenizer
 
-from flair.data import Sentence, Token, Tokenizer
+from flair.data import Sentence, Tokenizer
 
 log = logging.getLogger("flair")
 
@@ -39,27 +39,16 @@ class SpacyTokenizer(Tokenizer):
                 "spacy model or the name of the model to load."
             )
 
-    def tokenize(self, text: str) -> List[Token]:
+    def tokenize(self, text: str) -> List[str]:
         from spacy.tokens.doc import Doc
 
         doc: Doc = self.model.make_doc(text)
-        previous_token = None
-        tokens: List[Token] = []
+        words: List[str] = []
         for word in doc:
             if len(word.text.strip()) == 0:
                 continue
-
-            token = Token(text=word.text, start_position=word.idx, whitespace_after=True)
-            tokens.append(token)
-
-            if (previous_token is not None) and (
-                token.start_pos == previous_token.start_pos + len(previous_token.text)
-            ):
-                previous_token.whitespace_after = False
-
-            previous_token = token
-
-        return tokens
+            words.append(word.text)
+        return words
 
     @property
     def name(self) -> str:
@@ -76,12 +65,11 @@ class SegtokTokenizer(Tokenizer):
     def __init__(self):
         super(SegtokTokenizer, self).__init__()
 
-    def tokenize(self, text: str) -> List[Token]:
+    def tokenize(self, text: str) -> List[str]:
         return SegtokTokenizer.run_tokenize(text)
 
     @staticmethod
-    def run_tokenize(text: str) -> List[Token]:
-        tokens: List[Token] = []
+    def run_tokenize(text: str) -> List[str]:
         words: List[str] = []
 
         sentences = split_single(text)
@@ -91,30 +79,7 @@ class SegtokTokenizer(Tokenizer):
 
         words = list(filter(None, words))
 
-        # determine offsets for whitespace_after field
-        current_offset = 0
-        previous_word_offset = -1
-        previous_token = None
-        for word in words:
-            try:
-                word_offset = text.index(word, current_offset)
-                start_position = word_offset
-            except ValueError:
-                word_offset = previous_word_offset + 1
-                start_position = current_offset + 1 if current_offset > 0 else current_offset
-
-            if word:
-                token = Token(text=word, start_position=start_position, whitespace_after=True)
-                tokens.append(token)
-
-            if (previous_token is not None) and word_offset - 1 == previous_word_offset:
-                previous_token.whitespace_after = False
-
-            current_offset = word_offset + len(word)
-            previous_word_offset = current_offset - 1
-            previous_token = token
-
-        return tokens
+        return words
 
 
 class SpaceTokenizer(Tokenizer):
@@ -125,25 +90,18 @@ class SpaceTokenizer(Tokenizer):
     def __init__(self):
         super(SpaceTokenizer, self).__init__()
 
-    def tokenize(self, text: str) -> List[Token]:
+    def tokenize(self, text: str) -> List[str]:
         return SpaceTokenizer.run_tokenize(text)
 
     @staticmethod
-    def run_tokenize(text: str) -> List[Token]:
-        tokens: List[Token] = []
+    def run_tokenize(text: str) -> List[str]:
+        tokens: List[str] = []
         word = ""
         index = -1
         for index, char in enumerate(text):
             if char == " ":
                 if len(word) > 0:
-                    start_position = index - len(word)
-                    tokens.append(
-                        Token(
-                            text=word,
-                            start_position=start_position,
-                            whitespace_after=True,
-                        )
-                    )
+                    tokens.append(word)
 
                 word = ""
             else:
@@ -151,8 +109,7 @@ class SpaceTokenizer(Tokenizer):
         # increment for last token in sentence if not followed by whitespace
         index += 1
         if len(word) > 0:
-            start_position = index - len(word)
-            tokens.append(Token(text=word, start_position=start_position, whitespace_after=False))
+            tokens.append(word)
 
         return tokens
 
@@ -193,8 +150,7 @@ class JapaneseTokenizer(Tokenizer):
         self.sentence_tokenizer = konoha.SentenceTokenizer()
         self.word_tokenizer = konoha.WordTokenizer(tokenizer, mode=sudachi_mode)
 
-    def tokenize(self, text: str) -> List[Token]:
-        tokens: List[Token] = []
+    def tokenize(self, text: str) -> List[str]:
         words: List[str] = []
 
         sentences = self.sentence_tokenizer.tokenize(text)
@@ -202,29 +158,7 @@ class JapaneseTokenizer(Tokenizer):
             konoha_tokens = self.word_tokenizer.tokenize(sentence)
             words.extend(list(map(str, konoha_tokens)))
 
-        # determine offsets for whitespace_after field
-        current_offset = 0
-        previous_word_offset = -1
-        previous_token = None
-        for word in words:
-            try:
-                word_offset = text.index(word, current_offset)
-                start_position = word_offset
-            except ValueError:
-                word_offset = previous_word_offset + 1
-                start_position = current_offset + 1 if current_offset > 0 else current_offset
-
-            token = Token(text=word, start_position=start_position, whitespace_after=True)
-            tokens.append(token)
-
-            if (previous_token is not None) and word_offset - 1 == previous_word_offset:
-                previous_token.whitespace_after = False
-
-            current_offset = word_offset + len(word)
-            previous_word_offset = current_offset - 1
-            previous_token = token
-
-        return tokens
+        return words
 
     @property
     def name(self) -> str:
@@ -236,11 +170,11 @@ class TokenizerWrapper(Tokenizer):
     Helper class to wrap tokenizer functions to the class-based tokenizer interface.
     """
 
-    def __init__(self, tokenizer_func: Callable[[str], List[Token]]):
+    def __init__(self, tokenizer_func: Callable[[str], List[str]]):
         super(TokenizerWrapper, self).__init__()
         self.tokenizer_func = tokenizer_func
 
-    def tokenize(self, text: str) -> List[Token]:
+    def tokenize(self, text: str) -> List[str]:
         return self.tokenizer_func(text)
 
     @property
@@ -318,25 +252,12 @@ class SciSpacyTokenizer(Tokenizer):
         self.model.tokenizer.prefix_search = prefix_re.search
         self.model.tokenizer.infix_finditer = infix_re.finditer
 
-    def tokenize(self, text: str) -> List[Token]:
+    def tokenize(self, text: str) -> List[str]:
         sentence = self.model(text)
-
-        previous_token = None
-        tokens: List[Token] = []
+        words: List[str] = []
         for word in sentence:
-            token = Token(text=word.text, start_position=word.idx, whitespace_after=True)
-            tokens.append(token)
-
-            if (
-                (previous_token is not None)
-                and (token.start_pos == previous_token.start_pos + len(previous_token.text))
-                and (not word.text[0].isspace())
-            ):
-                previous_token.whitespace_after = False
-
-            previous_token = token
-
-        return tokens
+            word.append(word)
+        return words
 
     @property
     def name(self) -> str:
