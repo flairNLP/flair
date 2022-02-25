@@ -117,9 +117,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         if len(embedding_list) > 0:
             embedded_entity_pairs = torch.cat(embedding_list, 0)
 
-            return embedded_entity_pairs,
+            return (embedded_entity_pairs,)
         else:
-            return torch.zeros(0, self.word_embeddings.embedding_length, device=flair.device),
+            return (torch.zeros(0, self.word_embeddings.embedding_length, device=flair.device),)
 
     def _get_state_dict(self):
         model_state = {
