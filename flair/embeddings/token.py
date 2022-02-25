@@ -966,7 +966,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
                 for gazetteer_file in gazetteer_files:
                     gazetteer_tag_dict_list_partial, hash_dict_index_partial = \
                         check_for_ner_tag_already_in_dict(partial_matching_dict_list, tag_key)
-                    gazetteer_tag_dict_dict_full, hash_dict_index_full = \
+                    gazetteer_tag_dict_list_full, hash_dict_index_full = \
                         check_for_ner_tag_already_in_dict(full_matching_dict_list, tag_key)
                     with open(f'{self.gazetteer_path}/{gazetteer_file}', 'r', encoding='utf-8', errors='strict') as src:
                         for line in src:
@@ -1008,18 +1008,18 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                     if len(line) > 0:
                                         line_hash = self._get_hash_of_string(line)
                                         try:
-                                            gazetteer_tag_dict_dict_full[tag_key][line_hash] = line
+                                            gazetteer_tag_dict_list_full[tag_key][line_hash] = line
                                         except KeyError:
-                                            gazetteer_tag_dict_dict_full[tag_key] = {}
-                                            gazetteer_tag_dict_dict_full[tag_key][line_hash] = line
+                                            gazetteer_tag_dict_list_full[tag_key] = {}
+                                            gazetteer_tag_dict_list_full[tag_key][line_hash] = line
                         if hash_dict_index_partial is not None:
                             partial_matching_dict_list[hash_dict_index_partial] = gazetteer_tag_dict_list_partial
                         else:
                             partial_matching_dict_list.append(gazetteer_tag_dict_list_partial)
                         if hash_dict_index_full is not None:
-                            full_matching_dict_list[hash_dict_index_full] = gazetteer_tag_dict_dict_full
+                            full_matching_dict_list[hash_dict_index_full] = gazetteer_tag_dict_list_full
                         else:
-                            full_matching_dict_list.append(gazetteer_tag_dict_dict_full)
+                            full_matching_dict_list.append(gazetteer_tag_dict_list_full)
         return {'partial_match': partial_matching_dict_list, 'full_match': full_matching_dict_list}
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
@@ -1039,6 +1039,8 @@ class GazetteerEmbeddings(TokenEmbeddings):
             sequence_feature_vectors = [[0] * len(self.feature_list) for count in range(len(sentence.tokens))]
             if 'partial_match' in self.matching_methods:
                 for token in sentence.tokens:
+                    if token.text == 'Tenure':
+                        pass
                     token_found_in_gazetteer = False
                     token_text_hash = self._get_hash_of_string(token.text)
                     for gazetteer_dict in self.gazetteers_dicts['partial_match']:
@@ -1079,7 +1081,9 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                 key)] = 1
                     else:
                         pass
-                        sequence_feature_vectors[t_key][self.feature_list.index('O')] = 1
+                        # if the token has been found using partial matching, the vector has values set to 1
+                        if 1 not in sequence_feature_vectors[t_key][1:]:
+                            sequence_feature_vectors[t_key][self.feature_list.index('O')] = 1
             for vector, token in zip(sequence_feature_vectors, sentence.tokens):
                 token.set_embedding(self.name, torch.tensor(vector, dtype=torch.int, device=flair.device))
         return sentences
