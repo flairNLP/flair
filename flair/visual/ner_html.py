@@ -30,11 +30,11 @@ def split_to_spans(s: Sentence):
     spans = []
     tagged_ents = s.get_labels("ner")
     for ent in tagged_ents:
-        if last_idx != ent.span.start_pos:
-            spans.append((orig[last_idx : ent.span.start_pos], None))
-        spans.append((ent.span.text, ent.value))
-        assert ent.span.end_pos is not None
-        last_idx = ent.span.end_pos
+        if last_idx != ent.data_point.start_position:
+            spans.append((orig[last_idx : ent.data_point.start_position], None))
+        spans.append((ent.data_point.text, ent.value))
+        assert ent.data_point.end_position is not None
+        last_idx = ent.data_point.end_position
     if last_idx < len(orig) - 1:
         spans.append((orig[last_idx : len(orig)], None))
     return spans
