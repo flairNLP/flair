@@ -21,9 +21,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
         train_on_gold_pairs_only: bool = False,
         entity_pair_filters: List[Tuple[str, str]] = None,
         pooling_operation: str = "first_last",
-        dropout_value: float = 0.0,
-        locked_dropout_value: float = 0.1,
-        word_dropout_value: float = 0.0,
         **classifierargs,
     ):
         """
@@ -56,14 +53,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
             self.entity_pair_filters: Optional[Set[Tuple[str, str]]] = set(entity_pair_filters)
         else:
             self.entity_pair_filters = None
-
-        # init dropouts
-        self.dropout_value = dropout_value
-        self.dropout = torch.nn.Dropout(dropout_value)
-        self.locked_dropout_value = locked_dropout_value
-        self.locked_dropout = flair.nn.LockedDropout(locked_dropout_value)
-        self.word_dropout_value = word_dropout_value
-        self.word_dropout = flair.nn.WordDropout(word_dropout_value)
 
         self.to(flair.device)
 
@@ -194,13 +183,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
                 relation_embeddings.append(embedding)
 
-            # stack and drop out (squeeze and unsqueeze)
-            embedding_tensor = torch.stack(relation_embeddings).unsqueeze(1)
-            embedding_tensor = self.dropout(embedding_tensor)
-            embedding_tensor = self.locked_dropout(embedding_tensor)
-            embedding_tensor = self.word_dropout(embedding_tensor)
-
-            embedded_entity_pairs = embedding_tensor.squeeze(1)
+            embedded_entity_pairs = relation_embeddings
 
         if for_prediction:
             return embedded_entity_pairs, labels, entity_pairs
