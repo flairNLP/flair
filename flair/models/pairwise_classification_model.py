@@ -1,10 +1,10 @@
-from typing import List, Union
+from typing import List, Tuple
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Sentence, TextPair
+from flair.data import DataPoint, Sentence, TextPair
 
 
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
@@ -65,18 +65,21 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
     def label_type(self):
         return self._label_type
 
-    def forward_pass(
+    def _get_prediction_data_points(self, sentences: List[TextPair]) -> List[DataPoint]:
+        results: List[DataPoint] = []
+        results.extend(sentences)
+        return results
+
+    def _get_labels(self, sentences: List[TextPair]) -> List[List[str]]:
+        return [[label.value for label in sentence.get_labels(self.label_type)] for sentence in sentences]
+
+    def _prepare_tensors(
         self,
-        datapairs: Union[List[TextPair], TextPair],
-        for_prediction: bool = False,
-    ):
-
-        if not isinstance(datapairs, list):
-            datapairs = [datapairs]
-
+        datapairs: List[TextPair],
+    ) -> Tuple[torch.Tensor, ...]:
         embedding_names = self.document_embeddings.get_names()
 
-        if self.embed_separately:  # embed both sentences seperately, concatenate the resulting vectors
+        if self.embed_separately:  # embed both sentences separately, concatenate the resulting vectors
             first_elements = [pair.first for pair in datapairs]
             second_elements = [pair.second for pair in datapairs]
 
@@ -111,14 +114,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
 
         text_pair_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
-        labels = []
-        for pair in datapairs:
-            labels.append([label.value for label in pair.get_labels(self.label_type)])
-
-        if for_prediction:
-            return text_pair_embedding_tensor, labels, datapairs
-
-        return text_pair_embedding_tensor, labels
+        return (text_pair_embedding_tensor,)
 
     def _get_state_dict(self):
         model_state = {
