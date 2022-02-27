@@ -111,7 +111,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                     # get the label of the entity
                     span_labels.append([entity.get_label(self.label_type).value])
 
-                    if self.pooling_operation == "first&last":
+                    if self.pooling_operation == "first_last":
                         mention_emb = torch.cat(
                             (
                                 entity.tokens[0].get_embedding(embedding_names),
