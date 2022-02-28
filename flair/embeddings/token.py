@@ -900,8 +900,13 @@ class GazetteerEmbeddings(TokenEmbeddings):
             self.matching_methods.append('partial_match')
 
         self.gazetteer_file_dict_list = self._get_gazetteers()
+
+        print("processing gazetteers ...")
         self.gazetteers_dicts = self._process_gazetteers()
+        print("Finished processing gazetteers!")
+
         self.feature_list = self._set_feature_list()
+
         self.__embedding_length = len(self.feature_list)
 
     @property
