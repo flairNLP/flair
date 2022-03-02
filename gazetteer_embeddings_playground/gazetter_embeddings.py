@@ -15,7 +15,7 @@ sentence_list = [sentences_1, sentences_2]
 label_list = ['PER', 'ORG', 'LOC', 'MISC']
 glove_embedding = WordEmbeddings('glove')
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
-                                                               "../test_gazetteerEmbeddings/resources",
+                                                               "./gazetteers",
                                                                partial_matching=True,
                                                                full_mathing=True,
                                                                label_list=label_list)
