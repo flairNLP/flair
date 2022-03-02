@@ -1063,7 +1063,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
                 temp_token_dict = {}
                 token_string = ''
                 for token in sentence.tokens:
-                    temp_token_dict[token.idx-1] = [token.text, False, []]
+                    temp_token_dict[token.idx-1] = [token.text, []]
                     token_string = token_string + f' {token.text}'
                 for n in range(1, len(temp_token_dict)+1):
                     string_window_split_list = split_on_window(token_string, n)
@@ -1075,13 +1075,12 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                 try:
                                     if joined_string == gazetteer_dict[gazetteer_hash_dict][joined_string_hash]:
                                         for t in [list(d.keys())[0] for d in string_split]:
-                                            temp_token_dict[t][1] = True
-                                            temp_token_dict[t][2].append(gazetteer_hash_dict)
+                                            temp_token_dict[t][1].append(gazetteer_hash_dict)
                                 except KeyError:
                                     pass
                 for t_key in temp_token_dict.keys():
-                    if temp_token_dict[t_key][1]:
-                        for key in temp_token_dict[t_key][2]:
+                    if len(temp_token_dict[t_key][1]) > 0:
+                        for key in temp_token_dict[t_key][1]:
                             sequence_feature_vectors[t_key][self.feature_list.index(
                                 key)] = 1
                     else:
