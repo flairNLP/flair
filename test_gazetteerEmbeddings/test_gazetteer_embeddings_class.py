@@ -406,7 +406,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                 patch.object(GazetteerEmbeddings, '_process_gazetteers'):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
                                                                            label_list=MagicMock(),
-                                                                           full_mathing=True,
+                                                                           full_matching=True,
                                                                            partial_matching=False)
             self.assertEqual(gazetteer_embedding.matching_methods, ['full_match'])
 
@@ -416,7 +416,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                 patch.object(GazetteerEmbeddings, '_process_gazetteers'):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
                                                                            label_list=MagicMock(),
-                                                                           full_mathing=False,
+                                                                           full_matching=False,
                                                                            partial_matching=True)
             self.assertEqual(gazetteer_embedding.matching_methods, ['partial_match'])
 
@@ -426,7 +426,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                 patch.object(GazetteerEmbeddings, '_process_gazetteers'):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
                                                                            label_list=label_list,
-                                                                           full_mathing=True,
+                                                                           full_matching=True,
                                                                            partial_matching=True)
             self.assertEqual(gazetteer_embedding.feature_list, ['O',
                                                                 'B-PER', 'I-PER', 'E-PER', 'S-PER', 'B-ORG', 'I-ORG',
@@ -441,7 +441,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                 patch.object(GazetteerEmbeddings, '_process_gazetteers'):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
                                                                            label_list=label_list,
-                                                                           full_mathing=False,
+                                                                           full_matching=False,
                                                                            partial_matching=True)
             self.assertEqual(gazetteer_embedding.feature_list, ['O',
                                                                 'B-PER', 'I-PER', 'E-PER', 'S-PER', 'B-ORG', 'I-ORG',
@@ -455,7 +455,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                 patch.object(GazetteerEmbeddings, '_process_gazetteers'):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
                                                                            label_list=label_list,
-                                                                           full_mathing=True,
+                                                                           full_matching=True,
                                                                            partial_matching=False)
             self.assertEqual(gazetteer_embedding.feature_list, ['O', 'PER', 'ORG', 'LOC', 'MISC'])
             self.assertEqual(gazetteer_embedding.embedding_length, 5)
@@ -512,7 +512,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                 patch.object(GazetteerEmbeddings, '_process_gazetteers', return_value=gazetteers):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
                                                                            label_list=MagicMock(),
-                                                                           full_mathing=False,
+                                                                           full_matching=False,
                                                                            partial_matching=True)
             gazetteer_embedding.embed(sentence_list)
 
@@ -596,7 +596,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                 patch.object(GazetteerEmbeddings, '_process_gazetteers', return_value=gazetteers):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
                                                                            label_list=MagicMock(),
-                                                                           full_mathing=True,
+                                                                           full_matching=True,
                                                                            partial_matching=False)
             gazetteer_embedding.embed(sentence_list)
 
@@ -691,7 +691,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                 patch.object(GazetteerEmbeddings, '_process_gazetteers', return_value=gazetteers):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
                                                                            label_list=MagicMock(),
-                                                                           full_mathing=True,
+                                                                           full_matching=True,
                                                                            partial_matching=True)
             gazetteer_embedding.embed(sentence_list)
 

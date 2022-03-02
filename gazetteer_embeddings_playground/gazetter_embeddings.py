@@ -17,7 +17,7 @@ glove_embedding = WordEmbeddings('glove')
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
                                                                "./gazetteers",
                                                                partial_matching=True,
-                                                               full_mathing=True,
+                                                               full_matching=True,
                                                                label_list=label_list)
 # gazetteer_embedding.embed(sentence_list)
 print(gazetteer_embedding.feature_list)

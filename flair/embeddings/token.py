@@ -886,7 +886,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
             self,
             path_to_gazetteers: str,
             label_list: list,
-            full_mathing: bool = True,
+            full_matching: bool = True,
             partial_matching: bool = True
     ):
         super().__init__()
@@ -894,7 +894,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
         self.gazetteer_path = path_to_gazetteers
         self.labels = label_list
         self.matching_methods = []
-        if full_mathing:
+        if full_matching:
             self.matching_methods.append('full_match')
         if partial_matching:
             self.matching_methods.append('partial_match')
