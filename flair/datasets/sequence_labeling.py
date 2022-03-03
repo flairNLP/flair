@@ -1,9 +1,10 @@
+import json
 import logging
 import os
 import re
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from torch.utils.data import ConcatDataset, Dataset
 
@@ -14,6 +15,238 @@ from flair.file_utils import cached_path, unpack_file
 from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
 
 log = logging.getLogger("flair")
+
+
+class MultiFileJsonlCorpus(Corpus):
+    """
+    This class represents a generic Jsonl corpus with multiple train, dev, and test files.
+    """
+
+    def __init__(
+        self,
+        train_files=None,
+        test_files=None,
+        dev_files=None,
+        encoding: str = "utf-8",
+        text_column_name: str = "data",
+        label_column_name: str = "label",
+        **corpusargs,
+    ):
+        """
+        Instantiates a MuliFileJsonlCorpus as, e.g., created with doccanos JSONL export.
+        Note that at least one of train_files, test_files, and dev_files must contain one path.
+        Otherwise, the initialization will fail.
+
+        :param corpusargs: Additional arguments for Corpus initialization
+        :param train_files: the name of the train files
+        :param test_files: the name of the test files
+        :param dev_files: the name of the dev files, if empty, dev data is sampled from train
+        :param text_column_name: Name of the text column inside the jsonl files.
+        :param label_column_name: Name of the label column inside the jsonl files.
+
+        :raises RuntimeError: If no paths are given
+        """
+        train: Optional[Dataset] = (
+            ConcatDataset(
+                [
+                    JsonlDataset(
+                        train_file,
+                        text_column_name=text_column_name,
+                        label_column_name=label_column_name,
+                        encoding=encoding,
+                    )
+                    for train_file in train_files
+                ]
+            )
+            if train_files and train_files[0]
+            else None
+        )
+
+        # read in test file if exists
+        test: Optional[Dataset] = (
+            ConcatDataset(
+                [
+                    JsonlDataset(test_file, text_column_name=text_column_name, label_column_name=label_column_name)
+                    for test_file in test_files
+                ]
+            )
+            if test_files and test_files[0]
+            else None
+        )
+
+        # read in dev file if exists
+        dev: Optional[Dataset] = (
+            ConcatDataset(
+                [
+                    JsonlDataset(dev_file, text_column_name=text_column_name, label_column_name=label_column_name)
+                    for dev_file in dev_files
+                ]
+            )
+            if dev_files and dev_files[0]
+            else None
+        )
+        super().__init__(train, dev, test, **corpusargs)
+
+
+class JsonlCorpus(MultiFileJsonlCorpus):
+    def __init__(
+        self,
+        data_folder: Union[str, Path],
+        train_file: Optional[Union[str, Path]] = None,
+        test_file: Optional[Union[str, Path]] = None,
+        dev_file: Optional[Union[str, Path]] = None,
+        encoding: str = "utf-8",
+        text_column_name: str = "data",
+        label_column_name: str = "label",
+        autofind_splits: bool = True,
+        name: Optional[str] = None,
+        **corpusargs,
+    ):
+        """
+        Instantiates a JsonlCorpus with one file per Dataset (train, dev, and test).
+
+        :param data_folder: Path to the folder containing the JSONL corpus
+        :param train_file: the name of the train file
+        :param test_file: the name of the test file
+        :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param text_column_name: Name of the text column inside the JSONL file.
+        :param label_column_name: Name of the label column inside the JSONL file.
+        :param autofind_splits: Whether train, test and dev file should be determined automatically
+        :param name: name of the Corpus see flair.data.Corpus
+        """
+        # find train, dev and test files if not specified
+        dev_file, test_file, train_file = find_train_dev_test_files(
+            data_folder, dev_file, test_file, train_file, autofind_splits
+        )
+        super().__init__(
+            dev_files=[dev_file] if dev_file else [],
+            train_files=[train_file] if train_file else [],
+            test_files=[test_file] if test_file else [],
+            text_column_name=text_column_name,
+            label_column_name=label_column_name,
+            name=name if data_folder is None else str(data_folder),
+            encoding=encoding,
+            **corpusargs,
+        )
+
+
+class JsonlDataset(FlairDataset):
+    def __init__(
+        self,
+        path_to_jsonl_file: Union[str, Path],
+        encoding: str = "utf-8",
+        text_column_name: str = "data",
+        label_column_name: str = "label",
+    ):
+        """
+        Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.
+
+        The expected file format is:
+        { "<text_column_name>": "<text>", "label_column_name": [[<start_char_index>, <end_char_index>, <label>],...] }
+
+        :param path_to_json._file: File to read
+        :param text_column_name: Name of the text column
+        :param label_column_name: Name of the label column
+
+        """
+        path_to_json_file = Path(path_to_jsonl_file)
+
+        self.text_column_name = text_column_name
+        self.label_column_name = label_column_name
+        self.path_to_json_file = path_to_json_file
+
+        self.sentences: List[Sentence] = []
+        with path_to_json_file.open(encoding=encoding) as jsonl_fp:
+            for line in jsonl_fp:
+                current_line = json.loads(line)
+                raw_text = current_line[text_column_name]
+                current_labels = current_line[label_column_name]
+                current_sentence = Sentence(raw_text)
+
+                JsonlDataset._add_labels_to_sentence(raw_text, current_sentence, current_labels)
+
+                self.sentences.append(current_sentence)
+
+    @staticmethod
+    def _add_labels_to_sentence(raw_text: str, sentence: Sentence, labels: List[List[Any]]):
+        # Add tags for each annotated span
+        for label in labels:
+            JsonlDataset._add_label_to_sentence(raw_text, sentence, label[0], label[1], label[2])
+
+        # Tag all other token as Outer (O)
+        for token in sentence:
+            if token.get_label("ner").value == "":
+                token.get_label("ner", "O")
+
+    @staticmethod
+    def _add_label_to_sentence(text: str, sentence: Sentence, start: int, end: int, label: str):
+        """
+        Adds a NE label to a given sentence.
+
+        :param text: raw sentence (with all whitespaces etc.). Is used to determine the token indices.
+        :param sentence: Tokenized flair Sentence.
+        :param start: Start character index of the label.
+        :param end: End character index of the label.
+        :param label: Label to assign to the given range.
+        :return: Nothing. Changes sentence as INOUT-param
+        """
+
+        annotated_part = text[start:end]
+
+        # Remove leading and trailing whitespaces from annotated spans
+        while re.search(r"^\s", annotated_part):
+            start += 1
+            annotated_part = text[start:end]
+
+        while re.search(r"\s$", annotated_part):
+            end -= 1
+            annotated_part = text[start:end]
+
+        # Search start and end token index for current span
+        start_idx = -1
+        end_idx = -1
+        for token in sentence:
+            if token.start_pos <= start <= token.end_pos and start_idx == -1:
+                start_idx = token.idx - 1
+
+            if token.start_pos <= end <= token.end_pos and end_idx == -1:
+                end_idx = token.idx - 1
+
+        # If end index is not found set to last token
+        if end_idx == -1:
+            end_idx = sentence[-1].idx - 1
+
+        # Throw error if indices are not valid
+        if start_idx == -1 or start_idx > end_idx:
+            raise ValueError(
+                f"Could not create token span from char span.\n\
+                    Sen: {sentence}\nStart: {start}, End: {end}, Label: {label}\n\
+                        Ann: {annotated_part}\nRaw: {text}\nCo: {start_idx}, {end_idx}"
+            )
+
+        # Add IOB tags
+        prefix = "B"
+        for token in sentence[start_idx : end_idx + 1]:
+            token.add_label("ner", f"{prefix}-{label}")
+            prefix = "I"
+
+    def is_in_memory(self) -> bool:
+        """
+        Currently all Jsonl Datasets are stored in Memory
+        """
+        return True
+
+    def __len__(self):
+        """
+        Number of sentences in the Dataset
+        """
+        return len(self.sentences)
+
+    def __getitem__(self, index: int = 0) -> Sentence:
+        """
+        Returns the sentence at a given index
+        """
+        return self.sentences[index]
 
 
 class MultiFileColumnCorpus(Corpus):

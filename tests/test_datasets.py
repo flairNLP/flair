@@ -1,9 +1,16 @@
 import shutil
 
+import pytest
+
 import flair
 import flair.datasets
 from flair.data import MultiCorpus, Sentence
 from flair.datasets import ColumnCorpus
+from flair.datasets.sequence_labeling import (
+    JsonlCorpus,
+    JsonlDataset,
+    MultiFileJsonlCorpus,
+)
 
 
 def test_load_imdb_data(tasks_base_path):
@@ -355,3 +362,92 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
     assert len(corpus.test) == 1
 
     _assert_universal_dependencies_conllu_dataset(corpus.train)
+
+
+def test_reading_jsonl_dataset_with_one_entry_should_be_successful(tasks_base_path):
+    """
+    Tests reading a JsonlDataset containing a single entry
+    """
+    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl")
+
+    assert len(dataset.sentences) == 3
+    assert dataset.sentences[0].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC>"
+    assert (
+        dataset.sentences[1].to_tagged_string()
+        == "EU <B-ORG> rejects German <B-MISC> call to boycott British <B-MISC> lamb <I-MISC> ."
+    )
+
+
+@pytest.mark.parametrize(
+    "input_text,labels,expected",
+    [
+        ("This is New Berlin", [[8, 18, "LOC"]], "This is New <B-LOC> Berlin <I-LOC>"),
+        ("This is New Berlin.", [[8, 18, "LOC"]], "This is New <B-LOC> Berlin <I-LOC> ."),
+        ("This is New Berlin.", [[8, 19, "LOC"]], "This is New <B-LOC> Berlin <I-LOC> . <I-LOC>"),
+    ],
+)
+def test_jsonl_dataset_extract_single_label_should_be_successful(input_text, labels, expected):
+    """
+    Tests whether labels are correctly applied to sentences
+    """
+    sentence = Sentence(input_text)
+    JsonlDataset._add_labels_to_sentence(input_text, sentence, labels)
+
+    assert sentence.to_tagged_string() == expected
+
+
+def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):
+    corpus = JsonlCorpus(tasks_base_path / "jsonl")
+    assert len(corpus.get_all_sentences()) == 9
+
+
+TRAIN_FILE = "tests/resources/tasks/jsonl/train.jsonl"
+TESTA_FILE = "tests/resources/tasks/jsonl/testa.jsonl"
+TESTB_FILE = "tests/resources/tasks/jsonl/testa.jsonl"
+
+
+@pytest.mark.parametrize(
+    "train_files,dev_files,test_files,expected_size",
+    [
+        (
+            [TRAIN_FILE],
+            [TESTA_FILE],
+            [TESTB_FILE],
+            9,
+        ),
+        (
+            [TRAIN_FILE],
+            [],
+            [TESTB_FILE],
+            6,
+        ),
+        (
+            [TRAIN_FILE],
+            [],
+            None,
+            3,
+        ),
+        (
+            None,
+            [TESTA_FILE],
+            None,
+            3,
+        ),
+        (
+            [TRAIN_FILE, TESTA_FILE],
+            [TESTA_FILE],
+            [TESTB_FILE],
+            12,
+        ),
+    ],
+)
+def test_corpus_with_single_files_should_load(train_files, dev_files, test_files, expected_size):
+    corpus = MultiFileJsonlCorpus(train_files, dev_files, test_files)
+    assert len(corpus.get_all_sentences()) == expected_size
+
+
+def test_empty_corpus_should_raise_error():
+    with pytest.raises(RuntimeError) as err:
+        MultiFileJsonlCorpus(None, None, None)
+
+    assert str(err.value) == "No data provided when initializing corpus object."
