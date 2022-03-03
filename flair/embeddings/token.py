@@ -1044,8 +1044,6 @@ class GazetteerEmbeddings(TokenEmbeddings):
             sequence_feature_vectors = [[0] * len(self.feature_list) for count in range(len(sentence.tokens))]
             if 'partial_match' in self.matching_methods:
                 for token in sentence.tokens:
-                    if token.text == 'Tenure':
-                        pass
                     token_found_in_gazetteer = False
                     token_text_hash = self._get_hash_of_string(token.text)
                     for gazetteer_dict in self.gazetteers_dicts['partial_match']:
