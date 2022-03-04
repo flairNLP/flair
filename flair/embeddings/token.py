@@ -811,7 +811,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
         super().train(mode=mode)
         if mode:
             # memory is wiped each time we do a training run
-            print("train mode resetting embeddings")
+            log.info("train mode resetting embeddings")
             self.word_embeddings = {}
             self.word_count = {}
 
@@ -944,7 +944,7 @@ class FastTextEmbeddings(TokenEmbeddings):
         self.precomputed_word_embeddings: gensim.models.FastText = gensim.models.FastText.load_fasttext_format(
             str(embeddings)
         )
-        print(self.precomputed_word_embeddings)
+        # print(self.precomputed_word_embeddings)
 
         self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
 
@@ -1014,8 +1014,8 @@ class OneHotEmbeddings(TokenEmbeddings):
         self.__embedding_length = embedding_length
         self.vocab_dictionary = vocab_dictionary
 
-        print(self.vocab_dictionary.idx2item)
-        print(f"vocabulary size of {len(self.vocab_dictionary)}")
+        log.info(self.vocab_dictionary.idx2item)
+        log.info(f"vocabulary size of {len(self.vocab_dictionary)}")
 
         # model architecture
         self.embedding_layer = nn.Embedding(len(self.vocab_dictionary), self.__embedding_length)

@@ -15,6 +15,8 @@ from torch.utils.data import Dataset
 import flair
 from flair.data import DT, DataPoint, Dictionary, Sentence, _iter_dataset
 
+log = logging.getLogger("flair")
+
 
 class Result(object):
     def __init__(
@@ -301,7 +303,7 @@ class AnnealOnPlateau(object):
             if old_lr - new_lr > self.eps:
                 param_group["lr"] = new_lr
                 if self.verbose:
-                    print("Epoch {:5d}: reducing learning rate" " of group {} to {:.4e}.".format(epoch, i, new_lr))
+                    log.info("Epoch {:5d}: reducing learning rate" " of group {} to {:.4e}.".format(epoch, i, new_lr))
 
     @property
     def in_cooldown(self):

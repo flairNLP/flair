@@ -562,7 +562,7 @@ class ModelTrainer:
                 self.model.eval()
 
                 if save_model_each_k_epochs > 0 and epoch % save_model_each_k_epochs == 0:
-                    print("saving model of current epoch")
+                    log.info("saving model of current epoch")
                     model_name = "model_epoch_" + str(epoch) + ".pt"
                     self.model.save(base_path / model_name, checkpoint=save_optimizer_state)
 
