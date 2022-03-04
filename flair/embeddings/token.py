@@ -937,21 +937,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
             gazetteer_files.append(dict_with_label_and_files)
         return gazetteer_files
 
-    def _get_hash_of_string(self, text):
-        h = hashlib.new('sha256')
-        h.update(bytes(str(text), "utf-8"))
-        return str(h.hexdigest())
-
     def _process_gazetteers(self):
-        def check_for_ner_tag_already_in_dict(matching_list, ner_tag):
-            gazetteer_tag_dict_list = {}
-            hash_dict_index = None
-            for elem in matching_list:
-                if f'B-{ner_tag}' in elem.keys() or ner_tag in elem.keys():
-                    gazetteer_tag_dict_list = elem
-                    hash_dict_index = matching_list.index(elem)
-            return gazetteer_tag_dict_list, hash_dict_index
-
         def filter_gazetteer_line(line_list):
             line_list_filtered = []
             for w in line_list:
@@ -962,17 +948,13 @@ class GazetteerEmbeddings(TokenEmbeddings):
                     line_list_filtered.append(w)
             return line_list_filtered
 
-        partial_matching_dict_list = []
-        full_matching_dict_list = []
+        partial_matching_dict = {}
+        full_matching_dict = {}
         for gazetteer_dict in self.gazetteer_file_dict_list:
             tag_key = list(gazetteer_dict.keys())[0]
             gazetteer_files = gazetteer_dict[tag_key]
             if len(gazetteer_files) > 0:
                 for gazetteer_file in gazetteer_files:
-                    gazetteer_tag_dict_list_partial, hash_dict_index_partial = \
-                        check_for_ner_tag_already_in_dict(partial_matching_dict_list, tag_key)
-                    gazetteer_tag_dict_list_full, hash_dict_index_full = \
-                        check_for_ner_tag_already_in_dict(full_matching_dict_list, tag_key)
                     with open(f'{self.gazetteer_path}/{gazetteer_file}', 'r', encoding='utf-8', errors='strict') as src:
                         for line in src:
                             if len(line) == 0:
@@ -982,50 +964,45 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                     line_list = re.split(" ", line)
                                     line_list_filtered = filter_gazetteer_line(line_list)
                                     for word in line_list_filtered:
-                                        word_hash = self._get_hash_of_string(word)
                                         word_index = line_list_filtered.index(word)
                                         if word_index == 0 and len(line_list_filtered) > 1:
                                             try:
-                                                gazetteer_tag_dict_list_partial[f'B-{tag_key}'][word_hash] = word
+                                                if f'B-{tag_key}' not in partial_matching_dict[word]:
+                                                    partial_matching_dict[word].append(f'B-{tag_key}')
                                             except KeyError:
-                                                gazetteer_tag_dict_list_partial[f'B-{tag_key}'] = {}
-                                                gazetteer_tag_dict_list_partial[f'B-{tag_key}'][word_hash] = word
+                                                partial_matching_dict[word] = []
+                                                partial_matching_dict[word].append(f'B-{tag_key}')
                                         elif word_index == len(line_list_filtered) - 1 and len(line_list_filtered) > 1:
                                             try:
-                                                gazetteer_tag_dict_list_partial[f'E-{tag_key}'][word_hash] = word
+                                                if f'E-{tag_key}' not in partial_matching_dict[word]:
+                                                    partial_matching_dict[word].append(f'E-{tag_key}')
                                             except KeyError:
-                                                gazetteer_tag_dict_list_partial[f'E-{tag_key}'] = {}
-                                                gazetteer_tag_dict_list_partial[f'E-{tag_key}'][word_hash] = word
+                                                partial_matching_dict[word] = []
+                                                partial_matching_dict[word].append(f'E-{tag_key}')
                                         elif 0 < word_index < len(line_list_filtered) - 1:
                                             try:
-                                                gazetteer_tag_dict_list_partial[f'I-{tag_key}'][word_hash] = word
+                                                if f'I-{tag_key}' not in partial_matching_dict[word]:
+                                                    partial_matching_dict[word].append(f'I-{tag_key}')
                                             except KeyError:
-                                                gazetteer_tag_dict_list_partial[f'I-{tag_key}'] = {}
-                                                gazetteer_tag_dict_list_partial[f'I-{tag_key}'][word_hash] = word
+                                                partial_matching_dict[word] = []
+                                                partial_matching_dict[word].append(f'I-{tag_key}')
                                         elif word_index == 0 and len(line_list_filtered) == 1:
                                             try:
-                                                gazetteer_tag_dict_list_partial[f'S-{tag_key}'][word_hash] = word
+                                                if f'S-{tag_key}' not in partial_matching_dict[word]:
+                                                    partial_matching_dict[word].append(f'S-{tag_key}')
                                             except KeyError:
-                                                gazetteer_tag_dict_list_partial[f'S-{tag_key}'] = {}
-                                                gazetteer_tag_dict_list_partial[f'S-{tag_key}'][word_hash] = word
+                                                partial_matching_dict[word] = []
+                                                partial_matching_dict[word].append(f'S-{tag_key}')
                                 if 'full_match' in self.matching_methods:
                                     line = line.rstrip("\n")
                                     if len(line) > 0:
-                                        line_hash = self._get_hash_of_string(line)
                                         try:
-                                            gazetteer_tag_dict_list_full[tag_key][line_hash] = line
+                                            if tag_key not in full_matching_dict[line]:
+                                                full_matching_dict[line].append(tag_key)
                                         except KeyError:
-                                            gazetteer_tag_dict_list_full[tag_key] = {}
-                                            gazetteer_tag_dict_list_full[tag_key][line_hash] = line
-                        if hash_dict_index_partial is not None:
-                            partial_matching_dict_list[hash_dict_index_partial] = gazetteer_tag_dict_list_partial
-                        else:
-                            partial_matching_dict_list.append(gazetteer_tag_dict_list_partial)
-                        if hash_dict_index_full is not None:
-                            full_matching_dict_list[hash_dict_index_full] = gazetteer_tag_dict_list_full
-                        else:
-                            full_matching_dict_list.append(gazetteer_tag_dict_list_full)
-        return {'partial_match': partial_matching_dict_list, 'full_match': full_matching_dict_list}
+                                            full_matching_dict[line] = []
+                                            full_matching_dict[line].append(tag_key)
+        return {'partial_match': partial_matching_dict, 'full_match': full_matching_dict}
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         def split_on_window(sequence, limit=1):
@@ -1044,18 +1021,10 @@ class GazetteerEmbeddings(TokenEmbeddings):
             sequence_feature_vectors = [[0] * len(self.feature_list) for count in range(len(sentence.tokens))]
             if 'partial_match' in self.matching_methods:
                 for token in sentence.tokens:
-                    token_found_in_gazetteer = False
-                    token_text_hash = self._get_hash_of_string(token.text)
-                    for gazetteer_dict in self.gazetteers_dicts['partial_match']:
-                        for gazetteer_hash_dict in gazetteer_dict.keys():
-                            try:
-                                if token.text == gazetteer_dict[gazetteer_hash_dict][token_text_hash]:
-                                    sequence_feature_vectors[token.idx - 1][self.feature_list.index(
-                                        gazetteer_hash_dict)] = 1
-                                    token_found_in_gazetteer = True
-                            except KeyError:
-                                pass
-                    if not token_found_in_gazetteer:
+                    try:
+                        for tag in self.gazetteers_dicts['partial_match'][token.text]:
+                            sequence_feature_vectors[token.idx - 1][self.feature_list.index(tag)] = 1
+                    except KeyError:
                         sequence_feature_vectors[token.idx - 1][self.feature_list.index('O')] = 1
             if 'full_match' in self.matching_methods:
                 temp_token_dict = {}
@@ -1067,20 +1036,16 @@ class GazetteerEmbeddings(TokenEmbeddings):
                     string_window_split_list = split_on_window(token_string, n)
                     for string_split in string_window_split_list:
                         joined_string = ' '.join([list(d.values())[0] for d in string_split])
-                        joined_string_hash = self._get_hash_of_string(joined_string)
-                        for gazetteer_dict in self.gazetteers_dicts['full_match']:
-                            for gazetteer_hash_dict in gazetteer_dict.keys():
-                                try:
-                                    if joined_string == gazetteer_dict[gazetteer_hash_dict][joined_string_hash]:
-                                        for t in [list(d.keys())[0] for d in string_split]:
-                                            temp_token_dict[t][1].append(gazetteer_hash_dict)
-                                except KeyError:
-                                    pass
+                        try:
+                            for tag in self.gazetteers_dicts['full_match'][joined_string]:
+                                for t in [list(d.keys())[0] for d in string_split]:
+                                    temp_token_dict[t][1].append(tag)
+                        except KeyError:
+                            pass
                 for t_key in temp_token_dict.keys():
                     if len(temp_token_dict[t_key][1]) > 0:
                         for key in temp_token_dict[t_key][1]:
-                            sequence_feature_vectors[t_key][self.feature_list.index(
-                                key)] = 1
+                            sequence_feature_vectors[t_key][self.feature_list.index(key)] = 1
                     else:
                         pass
                         # if the token has been found using partial matching, the vector has values set to 1
