@@ -28,7 +28,6 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
         label_dictionary=relation_label_dict,
         label_type="relation",
         entity_label_type="ner",
-        train_on_gold_pairs_only=True,
     )
 
     # initialize trainer
@@ -45,7 +44,6 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     del trainer, model, relation_label_dict, corpus
 
     loaded_model: RelationExtractor = RelationExtractor.load(results_base_path / "final-model.pt")
-    loaded_model.train_on_gold_pairs_only = False
 
     sentence = Sentence(["Apple", "was", "founded", "by", "Steve", "Jobs", "."])
     sentence[0:1].add_label("ner", "ORG")
