@@ -1,11 +1,11 @@
 import logging
-from typing import List, Union
+from typing import List, Union, Tuple
 
 import torch
 import torch.nn
 
 import flair.nn
-from flair.data import Dictionary, Sentence
+from flair.data import Dictionary, Sentence, DataPoint
 from flair.embeddings import TokenEmbeddings
 
 log = logging.getLogger("flair")
@@ -62,31 +62,27 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
             **kwargs,
         )
 
-    def forward_pass(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        for_prediction: bool = False,
-    ):
-        if not isinstance(sentences, list):
-            sentences = [sentences]
-
+    def _prepare_tensors(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, ...]:
         self.embeddings.embed(sentences)
-
-        names = self.embeddings.get_names()
-
-        # get all tokens in this mini-batch
         all_tokens = [token for sentence in sentences for token in sentence]
 
+        names = self.embeddings.get_names()
         all_embeddings = [token.get_embedding(names) for token in all_tokens]
 
         embedded_tokens = torch.stack(all_embeddings)
+        return (embedded_tokens,)
 
+    def _get_labels(self, sentences: List[Sentence]) -> List[List[str]]:
+        all_tokens = [token for sentence in sentences for token in sentence]
         labels = [[token.get_label(self.label_type).value] for token in all_tokens]
+        return labels
 
-        if for_prediction:
-            return embedded_tokens, labels, all_tokens
+    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[DataPoint]:
+        tokens: List[DataPoint] = []
 
-        return embedded_tokens, labels
+        for sentence in sentences:
+            tokens.extend(sentence)
+        return tokens
 
     @property
     def label_type(self):
