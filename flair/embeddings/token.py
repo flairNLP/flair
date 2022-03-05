@@ -967,29 +967,25 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                                 if f'B-{tag_key}' not in partial_matching_dict[word]:
                                                     partial_matching_dict[word].append(f'B-{tag_key}')
                                             except KeyError:
-                                                partial_matching_dict[word] = []
-                                                partial_matching_dict[word].append(f'B-{tag_key}')
+                                                partial_matching_dict[word] = [f'B-{tag_key}']
                                         elif word_index == len(line_list_filtered) - 1 and len(line_list_filtered) > 1:
                                             try:
                                                 if f'E-{tag_key}' not in partial_matching_dict[word]:
                                                     partial_matching_dict[word].append(f'E-{tag_key}')
                                             except KeyError:
-                                                partial_matching_dict[word] = []
-                                                partial_matching_dict[word].append(f'E-{tag_key}')
+                                                partial_matching_dict[word] = [f'E-{tag_key}']
                                         elif 0 < word_index < len(line_list_filtered) - 1:
                                             try:
                                                 if f'I-{tag_key}' not in partial_matching_dict[word]:
                                                     partial_matching_dict[word].append(f'I-{tag_key}')
                                             except KeyError:
-                                                partial_matching_dict[word] = []
-                                                partial_matching_dict[word].append(f'I-{tag_key}')
+                                                partial_matching_dict[word] = [f'I-{tag_key}']
                                         elif word_index == 0 and len(line_list_filtered) == 1:
                                             try:
                                                 if f'S-{tag_key}' not in partial_matching_dict[word]:
                                                     partial_matching_dict[word].append(f'S-{tag_key}')
                                             except KeyError:
-                                                partial_matching_dict[word] = []
-                                                partial_matching_dict[word].append(f'S-{tag_key}')
+                                                partial_matching_dict[word] = [f'S-{tag_key}']
                                 if 'full_match' in self.matching_methods:
                                     line = line.rstrip("\n")
                                     if len(line) > 0:
