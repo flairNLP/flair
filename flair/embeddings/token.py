@@ -914,17 +914,14 @@ class GazetteerEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _set_feature_list(self):
-        temp_1 = []
-        temp_2 = []
+        tag_list = []
         for tag in self.labels:
             if 'partial_match' in self.matching_methods:
-                temp_1.append(f'B-{tag}')
-                temp_1.append(f'I-{tag}')
-                temp_1.append(f'E-{tag}')
-                temp_1.append(f'S-{tag}')
-            if 'full_match' in self.matching_methods:
-                temp_2.append(tag)
-        return ['O', *temp_1, *temp_2]
+                for pos in ['B', 'I', 'E', 'S']:
+                    tag_list.append(f'{pos}-{tag}')
+         if 'full_match' in self.matching_methods:
+             tag_list.extend(self.labels)
+        return tag_list
 
     def _get_gazetteers(self):
         gazetteer_files = []
