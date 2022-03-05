@@ -41,29 +41,27 @@ class TextRegressor(flair.nn.Model[Sentence]):
     def label_type(self):
         return self.label_name
 
-    def forward(self, sentences):
-
+    def _prepare_tensors(self, sentences: List[Sentence]) -> Tuple[torch.Tensor]:
         self.document_embeddings.embed(sentences)
-
         embedding_names = self.document_embeddings.get_names()
-
         text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
+        return (text_embedding_tensor,)
 
+    def forward(self, *args: torch.Tensor) -> torch.Tensor:
+        text_embedding_tensor, = args
         label_scores = self.decoder(text_embedding_tensor)
-
         return label_scores
 
-    def forward_loss(self, data_points: Union[List[Sentence], Sentence]) -> torch.Tensor:
+    def forward_loss(self, sentences: List[Sentence]) -> torch.Tensor:
 
-        if not isinstance(data_points, list):
-            data_points = [data_points]
+        labels = self._labels_to_tensor(sentences)
+        text_embedding_tensor = self._prepare_tensors(sentences)
+        scores = self.forward(*text_embedding_tensor)
 
-        scores = self.forward(data_points)
+        return self.loss_function(scores.squeeze(1), labels)
 
-        return self._calculate_loss(scores, data_points)
-
-    def _labels_to_indices(self, sentences: List[Sentence]):
+    def _labels_to_tensor(self, sentences: List[Sentence]):
         indices = [
             torch.tensor([float(label.value) for label in sentence.labels], dtype=torch.float) for sentence in sentences
         ]
@@ -110,7 +108,9 @@ class TextRegressor(flair.nn.Model[Sentence]):
                 # stop if all sentences are empty
                 if not batch:
                     continue
-                scores = self.forward(batch)
+
+                (sentence_tensor,) = self._prepare_tensors(batch)
+                scores = self.forward(sentence_tensor)
 
                 for (sentence, score) in zip(batch, scores.tolist()):
                     sentence.set_label(label_name, value=str(score[0]))
@@ -120,24 +120,12 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
             return sentences
 
-    def _calculate_loss(self, scores: torch.Tensor, sentences: List[Sentence]) -> torch.Tensor:
-        """
-        Calculates the loss.
-        :param scores: the prediction scores from the model
-        :param sentences: list of sentences
-        :return: loss value
-        """
-        return self.loss_function(scores.squeeze(1), self._labels_to_indices(sentences))
+    def forward_labels_and_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, torch.Tensor]:
+        labels = self._labels_to_tensor(sentences)
+        text_embedding_tensor = self._prepare_tensors(sentences)
+        scores = self.forward(*text_embedding_tensor)
 
-    def forward_labels_and_loss(
-        self, sentences: Union[Sentence, List[Sentence]]
-    ) -> Tuple[List[List[float]], torch.Tensor]:
-        if not isinstance(sentences, list):
-            sentences = [sentences]
-
-        scores = self.forward(sentences)
-        loss = self._calculate_loss(scores, sentences)
-        return scores, loss
+        return scores, self.loss_function(scores.squeeze(1), labels)
 
     def evaluate(
         self,
@@ -166,7 +154,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
             lines: List[str] = []
             total_count = 0
-            for batch_nr, batch in enumerate(data_loader):
+            for batch in data_loader:
 
                 if isinstance(batch, Sentence):
                     batch = [batch]
