@@ -13,7 +13,7 @@ sentences_2 = Sentence('The Land Tenure Reform Association (LTRA).')
 sentence_list = [sentences_1, sentences_2]
 
 label_list = ['PER', 'ORG', 'LOC', 'MISC']
-glove_embedding = WordEmbeddings('glove')
+bert_embedding = TransformerWordEmbeddings('bert-base-multilingual-cased')
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
                                                                "./gazetteers",
                                                                partial_matching=True,
@@ -22,7 +22,7 @@ gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteer
 # gazetteer_embedding.embed(sentence_list)
 print(gazetteer_embedding.feature_list)
 
-stacked_embeddings = StackedEmbeddings([glove_embedding, gazetteer_embedding])
+stacked_embeddings = StackedEmbeddings([bert_embedding, gazetteer_embedding])
 
 stacked_embeddings.embed(sentence_list)
 
