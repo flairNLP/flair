@@ -1002,8 +1002,8 @@ class GazetteerEmbeddings(TokenEmbeddings):
             results = []
             split_sequence = sequence.split()
             iteration_length = len(split_sequence) - (limit - 1)
-            max_window_indicies = range(iteration_length)
-            for index in max_window_indicies:
+            max_window_indices = range(iteration_length)
+            for index in max_window_indices:
                 temp = []
                 for word in range(index, index + limit):
                     temp.append({word: split_sequence[word]})
