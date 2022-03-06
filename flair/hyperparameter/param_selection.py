@@ -9,9 +9,9 @@ from hyperopt import fmin, hp, tpe
 
 import flair.nn
 from flair.data import Corpus
-from flair.embeddings import DocumentPoolEmbeddings, DocumentRNNEmbeddings
+from flair.embeddings import TransformerDocumentEmbeddings
 from flair.hyperparameter.parameter import (
-    DOCUMENT_EMBEDDING_PARAMETERS,
+    TEXT_CLASSIFICATION_PARAMETERS,
     SEQUENCE_TAGGER_PARAMETERS,
     TRAINING_PARAMETERS,
     Parameter,
@@ -210,18 +210,17 @@ class TextClassifierParamSelector(ParamSelector):
         label_type: str,
         multi_label: bool,
         base_path: Union[str, Path],
-        document_embedding_type: str,
         max_epochs: int = 50,
         evaluation_metric: EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
         training_runs: int = 1,
         optimization_value: OptimizationValue = OptimizationValue.DEV_LOSS,
     ):
         """
+        Text classifier hyperparameter selector that leverages TransformerDocumentEmbeddings
         :param corpus: the corpus
         :param label_type: string to identify the label type ('question_class', 'sentiment', etc.)
         :param multi_label: true, if the dataset is multi label, false otherwise
         :param base_path: the path to the result folder (results will be written to that folder)
-        :param document_embedding_type: either 'lstm', 'mean', 'min', or 'max'
         :param max_epochs: number of epochs to perform on every evaluation run
         :param evaluation_metric: evaluation metric used during training
         :param training_runs: number of training runs per evaluation run
@@ -238,17 +237,14 @@ class TextClassifierParamSelector(ParamSelector):
 
         self.multi_label = multi_label
         self.label_type = label_type
-        self.document_embedding_type = document_embedding_type
 
         self.label_dictionary = self.corpus.make_label_dictionary(self.label_type)
 
     def _set_up_model(self, params: dict):
-        embdding_params = {key: params[key] for key in params if key in DOCUMENT_EMBEDDING_PARAMETERS}
+        text_classification_params = {
+            key: params[key] for key in params if key in TEXT_CLASSIFICATION_PARAMETERS}
 
-        if self.document_embedding_type == "lstm":
-            document_embedding = DocumentRNNEmbeddings(rnn_type="LSTM", **embdding_params)
-        else:
-            document_embedding = DocumentPoolEmbeddings(**embdding_params)  # type: ignore
+        document_embedding = TransformerDocumentEmbeddings(**text_classification_params)
 
         text_classifier: TextClassifier = TextClassifier(
             label_dictionary=self.label_dictionary,

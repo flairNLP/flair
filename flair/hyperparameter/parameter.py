@@ -15,9 +15,6 @@ class Parameter(Enum):
     ANNEAL_FACTOR = "anneal_factor"
     ANNEAL_WITH_RESTARTS = "anneal_with_restarts"
     PATIENCE = "patience"
-    REPROJECT_WORDS = "reproject_words"
-    REPROJECT_WORD_DIMENSION = "reproject_words_dimension"
-    BIDIRECTIONAL = "bidirectional"
     OPTIMIZER = "optimizer"
     MOMENTUM = "momentum"
     DAMPENING = "dampening"
@@ -26,6 +23,9 @@ class Parameter(Enum):
     AMSGRAD = "amsgrad"
     BETAS = "betas"
     EPS = "eps"
+    TRANSFORMER_MODEL = 'model'
+    FINE_TUNE = 'fine_tune'
+    LAYERS = 'LAYERS'
 
 
 TRAINING_PARAMETERS = [
@@ -53,14 +53,8 @@ SEQUENCE_TAGGER_PARAMETERS = [
     Parameter.LOCKED_DROPOUT.value,
     Parameter.WORD_DROPOUT.value,
 ]
-DOCUMENT_EMBEDDING_PARAMETERS = [
-    Parameter.EMBEDDINGS.value,
-    Parameter.HIDDEN_SIZE.value,
-    Parameter.RNN_LAYERS.value,
-    Parameter.REPROJECT_WORDS.value,
-    Parameter.REPROJECT_WORD_DIMENSION.value,
-    Parameter.BIDIRECTIONAL.value,
-    Parameter.DROPOUT.value,
-    Parameter.LOCKED_DROPOUT.value,
-    Parameter.WORD_DROPOUT.value,
+TEXT_CLASSIFICATION_PARAMETERS = [
+    Parameter.LAYERS.value,
+    Parameter.TRANSFORMER_MODEL.value,
+    Parameter.FINE_TUNE.value,
 ]
