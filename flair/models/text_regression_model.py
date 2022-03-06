@@ -49,7 +49,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
         return (text_embedding_tensor,)
 
     def forward(self, *args: torch.Tensor) -> torch.Tensor:
-        text_embedding_tensor, = args
+        (text_embedding_tensor,) = args
         label_scores = self.decoder(text_embedding_tensor)
         return label_scores
 

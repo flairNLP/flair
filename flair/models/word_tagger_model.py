@@ -1,11 +1,11 @@
 import logging
-from typing import List, Union, Tuple
+from typing import List, Tuple
 
 import torch
 import torch.nn
 
 import flair.nn
-from flair.data import Dictionary, Sentence, DataPoint
+from flair.data import DataPoint, Dictionary, Sentence
 from flair.embeddings import TokenEmbeddings
 
 log = logging.getLogger("flair")
