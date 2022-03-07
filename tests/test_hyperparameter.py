@@ -64,7 +64,7 @@ def test_text_classifier_param_selector(results_base_path, tasks_base_path):
 
     # document embeddings parameter
     search_space.add(Parameter.FINE_TUNE, hp.choice, options=[True, False])
-    search_space.add(Parameter.TRANSFORMER_MODEL, hp.choice, options=["bert-base-uncased", "roberta-base"])
+    search_space.add(Parameter.TRANSFORMER_MODEL, hp.choice, options=["albert-base-v1"])
     search_space.add(Parameter.LAYERS, hp.choice, options=["-1", "-2"])
 
     # training parameter
