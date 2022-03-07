@@ -23,9 +23,9 @@ class Parameter(Enum):
     AMSGRAD = "amsgrad"
     BETAS = "betas"
     EPS = "eps"
-    TRANSFORMER_MODEL = 'model'
-    FINE_TUNE = 'fine_tune'
-    LAYERS = 'LAYERS'
+    TRANSFORMER_MODEL = "model"
+    FINE_TUNE = "fine_tune"
+    LAYERS = "LAYERS"
 
 
 TRAINING_PARAMETERS = [

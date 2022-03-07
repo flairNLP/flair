@@ -4,8 +4,8 @@ from .param_selection import (
     TextClassifierParamSelector,
 )
 from .parameter import (
-    TEXT_CLASSIFICATION_PARAMETERS,
     SEQUENCE_TAGGER_PARAMETERS,
+    TEXT_CLASSIFICATION_PARAMETERS,
     TRAINING_PARAMETERS,
     Parameter,
 )

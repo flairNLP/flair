@@ -11,8 +11,8 @@ import flair.nn
 from flair.data import Corpus
 from flair.embeddings import TransformerDocumentEmbeddings
 from flair.hyperparameter.parameter import (
-    TEXT_CLASSIFICATION_PARAMETERS,
     SEQUENCE_TAGGER_PARAMETERS,
+    TEXT_CLASSIFICATION_PARAMETERS,
     TRAINING_PARAMETERS,
     Parameter,
 )
@@ -241,8 +241,7 @@ class TextClassifierParamSelector(ParamSelector):
         self.label_dictionary = self.corpus.make_label_dictionary(self.label_type)
 
     def _set_up_model(self, params: dict):
-        text_classification_params = {
-            key: params[key] for key in params if key in TEXT_CLASSIFICATION_PARAMETERS}
+        text_classification_params = {key: params[key] for key in params if key in TEXT_CLASSIFICATION_PARAMETERS}
 
         document_embedding = TransformerDocumentEmbeddings(**text_classification_params)
 
