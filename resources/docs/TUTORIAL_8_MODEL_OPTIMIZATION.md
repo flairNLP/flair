@@ -168,7 +168,7 @@ print(corpus)
 tag_type = 'ner'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(label_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # 4. initialize embeddings
