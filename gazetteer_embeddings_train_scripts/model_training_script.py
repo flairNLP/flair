@@ -48,8 +48,8 @@ if dict_from_csv['use_roberta_embeddings'] == 'True':
     embeddings.append(roberta_embeddings)
 
 if dict_from_csv['use_bert_embeddings'] == 'True':
-    bert_embeddingS = TransformerWordEmbeddings('bert-base-multilingual-cased')
-    embeddings.append(bert_embeddingS)
+    bert_embeddings = TransformerWordEmbeddings('bert-base-multilingual-cased')
+    embeddings.append(bert_embeddings)
 
 stacked_embeddings = StackedEmbeddings(embeddings)
 
