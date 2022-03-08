@@ -11,11 +11,11 @@ dict_reader = csv.DictReader(file)
 ordered_dict_from_csv = list(dict_reader)[0]
 dict_from_csv = dict(ordered_dict_from_csv)
 print(dict_from_csv)
-if dict_from_csv['use_conll_03']:
+if dict_from_csv['use_conll_03'] == 'True':
     from flair.datasets import CONLL_03
     corpus = CONLL_03()
     label_list = ['PER', 'ORG', 'LOC', 'MISC']
-if dict_from_csv['use_wnut_17']:
+if dict_from_csv['use_wnut_17'] == 'True':
     from flair.datasets import WNUT_17
     corpus = WNUT_17()
     label_list = ['person', 'location', 'group', 'corporation', 'product', 'creative-work']
