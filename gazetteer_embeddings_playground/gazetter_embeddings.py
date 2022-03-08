@@ -4,7 +4,6 @@ from flair.embeddings import WordEmbeddings, TransformerWordEmbeddings, StackedE
 from flair.data import Sentence
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
-from datasets import list_datasets, load_dataset, list_metrics, load_metric
 
 # corpus1 = WNUT_17()
 # corpus = CONLL_03()
