@@ -18,7 +18,7 @@ if dict_from_csv['use_conll_03']:
 if dict_from_csv['use_wnut_17']:
     from flair.datasets import WNUT_17
     corpus = WNUT_17()
-    label_list = ['PER', 'ORG', 'LOC', 'MISC']
+    label_list = ['person', 'location', 'group', 'corporation', 'product', 'creative-work']
 
 label_type = dict_from_csv['label_type']
 label_dict = corpus.make_label_dictionary(label_type=label_type)
