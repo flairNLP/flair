@@ -86,7 +86,6 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                                '#Minas': ['B-ORG'],
                                '#Nome?': ['S-ORG'],
                                "''A.": ['B-ORG'],
-                               "'48": ['B-ORG'],
                                "'A.": ['B-ORG'],
                                "'Achar": ['B-LOC'],
                                "'Adade": ['B-LOC'],
@@ -181,7 +180,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                                'School': ['E-ORG'],
                                'Sciences,': ['I-ORG'],
                                'Site': ['E-LOC'],
-                               'Smallholders': ['I-ORG'],
+                               'Smallholders': ['B-ORG'],
                                'Sorrentino"': ['I-ORG'],
                                'Spring': ['E-ORG', 'E-LOC'],
                                'Stella': ['S-ORG'],
@@ -229,7 +228,6 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                                'Русскій': ['B-ORG'],
                                'Украины': ['E-ORG'],
                                'Художньо-меморіальний': ['B-ORG'],
-                               'в': ['I-LOC'],
                                'дерево': ['B-LOC'],
                                'музей': ['I-ORG'],
                                'рид': ['E-LOC'],
@@ -335,7 +333,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
             self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['full_match']), 61)
 
             self.assertEqual(gazetteer_embedding.gazetteers_dicts['partial_match'], self.partial_match_hash_dict)
-            self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['partial_match']), 170)
+            self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['partial_match']), 168)
 
     def test_add_embeddings_internal_good1(self):
         sentences_1 = Sentence('I love Sandys Fort Spring!')

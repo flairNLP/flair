@@ -938,10 +938,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
         def filter_gazetteer_line(line_list):
             line_list_filtered = []
             for w in line_list:
-                w = w.rstrip("\n")
-                if w.isalpha():
-                    line_list_filtered.append(w)
-                elif len(w) > 1:
+                if any(c.isalpha() for c in w) and len(w) > 1:
                     line_list_filtered.append(w)
             return line_list_filtered
 
@@ -958,7 +955,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                 break
                             else:
                                 if 'partial_match' in self.matching_methods:
-                                    line_list = re.split(" ", line)
+                                    line_list = re.split(" ", line.rstrip("\n"))
                                     line_list_filtered = filter_gazetteer_line(line_list)
                                     for word in line_list_filtered:
                                         word_index = line_list_filtered.index(word)
