@@ -11,6 +11,7 @@ dict_reader = csv.DictReader(file)
 ordered_dict_from_csv = list(dict_reader)[0]
 dict_from_csv = dict(ordered_dict_from_csv)
 print(dict_from_csv)
+transformer_embedding = False
 if dict_from_csv['use_conll_03'] == 'True':
     from flair.datasets import CONLL_03
     corpus = CONLL_03()
@@ -25,6 +26,7 @@ label_dict = corpus.make_label_dictionary(label_type=label_type)
 
 embeddings = []
 if dict_from_csv['use_gazetter_embeddintgs'] == 'True':
+    transformer_embedding = True
     from flair.embeddings import GazetteerEmbeddings
     partial = False
     full = False
@@ -40,6 +42,7 @@ if dict_from_csv['use_gazetter_embeddintgs'] == 'True':
     embeddings.append(gazetteer_embedding)
 
 if dict_from_csv['use_roberta_embeddings'] == 'True':
+    transformer_embedding = True
     roberta_embeddings = TransformerWordEmbeddings(model='xlm-roberta-large',
                                                    layers="-1",
                                                    subtoken_pooling="first",
@@ -50,6 +53,15 @@ if dict_from_csv['use_roberta_embeddings'] == 'True':
 if dict_from_csv['use_bert_embeddings'] == 'True':
     bert_embeddings = TransformerWordEmbeddings('bert-base-multilingual-cased')
     embeddings.append(bert_embeddings)
+
+if dict_from_csv['use_glove_embeddings'] == 'True':
+    from flair.embeddings import WordEmbeddings
+    embeddings.append(WordEmbeddings('glove'),)
+
+if dict_from_csv['use_flair_embeddings'] == 'True':
+    from flair.embeddings import FlairEmbeddings
+    embeddings.append(FlairEmbeddings('news-forward'))
+    embeddings.append(FlairEmbeddings('news-backward'))
 
 stacked_embeddings = StackedEmbeddings(embeddings)
 
@@ -74,8 +86,15 @@ for run in range(1, int(dict_from_csv['runs'])+1):
 
     trainer = ModelTrainer(tagger, corpus)
 
-    trainer.fine_tune(base_path=f'resources/taggers/{dict_from_csv["model_name"]}_run_{run}',
+    if transformer_embedding:
+        trainer.fine_tune(base_path=f'resources/taggers/{dict_from_csv["model_name"]}_run_{run}',
+                          learning_rate=float(dict_from_csv['learning_rate']),
+                          mini_batch_size=int(dict_from_csv['mini_batch_size']),
+                          max_epochs=int(dict_from_csv['max_epochs']))
+    else:
+        trainer.train(base_path=f'resources/taggers/{dict_from_csv["model_name"]}_run_{run}',
                       learning_rate=float(dict_from_csv['learning_rate']),
-                      mini_batch_size=int(dict_from_csv['mini_batch_size']))
+                      mini_batch_size=int(dict_from_csv['mini_batch_size']),
+                      max_epochs=int(dict_from_csv['max_epochs']))
     del tagger
     del trainer
