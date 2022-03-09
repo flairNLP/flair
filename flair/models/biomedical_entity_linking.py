@@ -177,31 +177,11 @@ class BioSyn(object):
 
         return self.sparse_weight
 
-    def init_sparse_encoder(self, corpus):
-        self.sparse_encoder = SparseEncoder().fit(corpus)
-
-        return self.sparse_encoder
-
-    def get_dense_encoder(self):
-        assert self.encoder is not None
-
-        return self.encoder
-
-    def get_dense_tokenizer(self):
-        assert self.tokenizer is not None
-
-        return self.tokenizer
-
-    def get_sparse_encoder(self):
-        assert self.sparse_encoder is not None
-
-        return self.sparse_encoder
-
     def get_sparse_weight(self):
         assert self.sparse_weight is not None
 
         return self.sparse_weight
-
+        
     def load_model(self, model_name_or_path):
         self.load_dense_encoder(model_name_or_path)
         self.load_sparse_encoder(model_name_or_path)
@@ -351,6 +331,9 @@ class BioSyn(object):
         dense_embeds = np.concatenate(dense_embeds, axis=0)
 
         return dense_embeds
+
+    def get_predictions(self, mention):
+        return 1
 
 
 class HunNen(object):
