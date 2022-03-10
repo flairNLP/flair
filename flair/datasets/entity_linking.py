@@ -388,6 +388,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
+        use_ids: bool = False,
         check_existence: bool = False,
         **corpusargs,
     ):
@@ -430,7 +431,10 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
 
             # we use the wikiids in the data instead of directly utilizing the wikipedia urls.
             # like this we can quickly check if the corresponding page exists
-            wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
+            if use_ids:
+                wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
+            else:
+                wikiid_wikiname_dict = {}
 
             for name, path in zip(
                 ["train", "testa", "testb"],
@@ -458,7 +462,10 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
                                 else:
                                     write.write(line_list[0] + "\tO\n")
                         else:  # line with annotation
-                            wikiname = wikiid_wikiname_dict[line_list[5].strip()]
+                            if use_ids:
+                                wikiname = wikiid_wikiname_dict[line_list[5].strip()]
+                            else:
+                                wikiname = line_list[4].split("/")[-1]
                             if wikiname != "O":
                                 write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
                             else:

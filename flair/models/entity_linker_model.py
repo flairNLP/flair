@@ -10,7 +10,7 @@ from flair.data import Dictionary, Sentence, SpanLabel
 
 log = logging.getLogger("flair")
 
-class candidate_decoder(torch.nn.Module):
+class CandidateDecoder(torch.nn.Module):
 
     def __init__(self,
              entity_embedding_size: int,
@@ -28,18 +28,27 @@ class candidate_decoder(torch.nn.Module):
         else:
             self.mention_to_entity=None
 
-        self.entity_embeddings = torch.randn(entity_embedding_size ,len(entity_dictionary), requires_grad=True, device=flair.device) # TODO: more sophisticated way than random for initialization??
-        self.bias = torch.randn(len(entity_dictionary), requires_grad=True, device=flair.device)
+        #self.alpha = torch.nn.Parameter(torch.tensor(0.5, requires_grad=True))
+        self.entity_embeddings = torch.nn.Parameter(torch.randn(entity_embedding_size ,len(entity_dictionary)))#, device=flair.device) # TODO: more sophisticated way than random for initialization??
+        self.bias = torch.nn.Parameter(torch.randn(len(entity_dictionary)))#, device=flair.device)
 
         self.candidate_generation_method = candidate_generation_method
 
+        #self.to(flair.device)
+
     def forward(self,mention_embeddings, labels, mentions):
 
+        # TODO: Note that, for now, I always take the gold label into the restricted classification head, I must only do this during training
         # get the set of all label candidates for all mentions
         restricted_label_set = set(labels)
 
-        for mention in mentions:
-            restricted_label_set.update(self.candidate_generation_method[mention])
+        #for mention in mentions:
+            #try:
+            #    restricted_label_set.update(self.candidate_generation_method[mention])
+            #except KeyError:
+                # temporary fix: If mention not contained in generation method, sample 15 random entities
+                #print('Unknown mention: '+ mention)
+        restricted_label_set.update(random.sample(self.entity_dictionary.get_items(), 500))
 
         indices_of_labels = [self.entity_dictionary.get_idx_for_item(entity) for entity in restricted_label_set]
 
@@ -48,12 +57,35 @@ class candidate_decoder(torch.nn.Module):
             mention_embeddings = self.mention_to_entity(mention_embeddings)
 
         # compute scores of mentions w.r.t. restricted set of entities
-        scores = torch.matmul(mention_embeddings, self.entity_embeddings[:,indices_of_labels] + self.bias[indices_of_labels])
+        #print(flair.device)
+        #print(self.entity_embeddings.device)
+        scores = torch.matmul(mention_embeddings, self.entity_embeddings[:,indices_of_labels]) + self.bias[indices_of_labels]
 
         # create temporary index dictionary for batch
         batch_dict = {entity: index for index,entity in enumerate(restricted_label_set)} # TODO: Note!! It works under the assumption that a set, once created, has a fixed iteration order
 
-        return scores, batch_dict
+        #if labels != []:
+        #    return scores, batch_dict
+        #else: # for prediction we also return a mask, so that scoring of each mention is only for each separate candidate list (try to keep the lists small)
+        index_dict = {entity : i for i, entity in enumerate(restricted_label_set)}
+
+        #mask = torch.zeros(len(mentions), len(restricted_label_set), dtype=torch.bool, device=flair.device)
+        mask = torch.ones(len(mentions), len(restricted_label_set), dtype=torch.bool, device=flair.device)
+
+        """
+        for ind, mention in enumerate(mentions):
+
+            # make sure gold label is set to true (if given)
+            if labels:
+                mask[ind][index_dict[labels[ind]]] = True
+            try: # 1. mention contained in candidate_generation_method
+                for candidate in self.candidate_generation_method[mention]:
+                    mask[ind][index_dict[candidate]] = True
+            except KeyError: # 2. mention not contained --> all ones?!! # TODO!!!!! Check if this works!!
+                mask[ind] = torch.ones(len(restricted_label_set), dtype=torch.bool, device=flair.device) # this a boolean vector!!
+        """
+
+        return scores, batch_dict, mask
 
 class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
@@ -71,8 +103,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         label_type: str = "nel",
         dropout: float = 0.5,
         skip_unk_probability: Optional[float] = None,
-        candidate_generation_method: dict = None, # Idea: If one provides a candidate generation method, then a costum decoder is handed to DefaultClassifier
-        entitiy_embedding_size: int = None,
+        decoder: Optional[CandidateDecoder] = None,
+        #candidate_generation_method: dict = None, # Idea: If one provides a candidate generation method, then a costum decoder is handed to DefaultClassifier
+        # entitiy_embedding_size: int = None,
         **classifierargs,
     ):
         """
@@ -86,6 +119,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         """
 
         # ------------------------------------------NEWNEWNENWENWENWENWEWNEWN--------------------------------
+        """
         if candidate_generation_method:
 
             mention_embedding_size = 2 * word_embeddings.embedding_length if pooling_operation == 'first&last' else word_embeddings.embedding_length
@@ -103,13 +137,13 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                 for candidate in candidate_generation_method[key]:
                     label_dictionary.add_item(candidate)
 
-            decoder = candidate_decoder(entity_embedding_size=entity_embedding_size,
-                                        mention_embedding_size=mention_embedding_size,
-                                        entity_dictionary=label_dictionary,  # TODO: Do I need to remove <unk>??
-                                        candidate_generation_method=candidate_generation_method)
+            decoder = CandidateDecoder(entity_embedding_size=entity_embedding_size,
+                                       mention_embedding_size=mention_embedding_size,
+                                       entity_dictionary=label_dictionary,  # TODO: Do I need to remove <unk>??
+                                       candidate_generation_method=candidate_generation_method)
         else:
             decoder = None
-
+        """
         # ---------------------------------------------------------------------------------------------------
 
         super(EntityLinker, self).__init__(
@@ -146,6 +180,8 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
             raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first&last"')
 
         self.aggregated_embedding = cases[pooling_operation]
+
+        self.decoder.to(flair.device)
 
         self.to(flair.device)
 

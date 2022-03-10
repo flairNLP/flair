@@ -513,6 +513,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             torch.nn.init.xavier_uniform_(self.decoder.weight)
             self._custom_decoder = False
 
+        #self.decoder.to(flair.device)
+
         # set up multi-label logic
         self.multi_label = multi_label
         self.multi_label_threshold = multi_label_threshold
@@ -576,14 +578,32 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
         # push embedded_data_points through decoder to get the scores
-        scores, batch_dict = self.decoder(embedded_data_points, [label[0] for label in labels], spans)
+        # note that batch_dict is derived from the candidate generation method
+        scores, batch_dict, mask = self.decoder(embedded_data_points, [label[0] for label in labels], spans)
 
         # create gold index vector for batch
+        # Problem: What if gold entity not in batch dict?? --> I always add the gold labels
         batch_label_indices = torch.tensor([batch_dict[label[0]] for label in labels], dtype=torch.long,
                                            device=flair.device)
 
+
+        # apply logsoftmax, using mask we set the False values to -inf so that exp(-inf) = 0 play no role in the logsoftmax computation of the True values
+        """
+        logsoftmax = (1/len(batch_label_indices)) * torch.nn.functional.log_softmax(torch.where(mask, scores, torch.tensor(-float('inf'), dtype=torch.float, device=flair.device)) , dim = -1)
+
+        loss_vector = -1 * torch.tensor([logsoftmax[index][gold_index] for index, gold_index in enumerate(batch_label_indices)], device=flair.device, requires_grad=True)
+        loss = loss_vector.sum()
+        """
+
+        #using torch.nn.functional
+        # per mention, we must do it per mention since torch.nn.functional.cross_entropy can not take different weights for different mentions in one go
+
+        loss_vector = torch.tensor([torch.nn.functional.cross_entropy(mention_scores.unsqueeze(0), gold_index.unsqueeze(0), weight= mention_bool_mask.float()) for mention_bool_mask, mention_scores, gold_index in zip(mask, scores, batch_label_indices)], requires_grad=True)
+        loss = loss_vector.mean()
+
         # calculate the loss
-        return self.loss_function(scores, batch_label_indices), len(labels)
+        #return self.loss_function(scores, batch_label_indices), len(labels)
+        return loss, len(labels)
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
 
@@ -689,9 +709,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
                 # if anything could possibly be predicted
                 if len(label_candidates) > 0:
-                    scores, batch_dict = self.decoder(embedded_data_points, [label[0] for label in gold_labels], spans)
-                    #scores, batch_label_indices = self.decoder(embedded_data_points, [label[0] for label in labels],
-                    #                                           spans)
+
+                    #TODO: Note!! In predict method we do not use the labels in decode step, candidates must come solely from candidate generation method
+                    scores, batch_dict, mask = self.decoder(embedded_data_points, [], spans)
 
                     #later we need to find the entity name from its index
                     index_to_entity = list(batch_dict.keys())
@@ -701,11 +721,22 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                         sentence.remove_labels(label_name)
 
                     if return_loss:
+                        # TODO: Problem: It could happen now that the gold entity is not contained in batch_dict!!!
+                        # -> add constant value to loss for each such case and compute loss normally only if gold label in batch dict
+
+
                         # create gold index vector for batch
-                        batch_label_indices = torch.tensor([batch_dict[label[0]] for label in gold_labels], dtype=torch.long,
+                        batch_label_indices = torch.tensor([batch_dict[label[0]] if label[0] in batch_dict else -1 for label in gold_labels], dtype=torch.long,
                                                            device=flair.device)
 
-                        overall_loss = self.loss_function(scores, batch_label_indices)
+                        boolean_out_of_candidate_list = (batch_label_indices == -1) # which labels are not contained in cadidate lists?
+
+                        number_of_gold_entities_not_in_candidate_list = boolean_out_of_candidate_list.count_nonzero()
+
+                        # TODO: Masking in loss as well?? For now we compute the loss w.r.t. to all candidates in a batch and not only the candidates of each mention
+
+                        # for each entity out of candidate list we add a 1 to the loss
+                        overall_loss = self.loss_function(scores[~boolean_out_of_candidate_list,:], batch_label_indices[~boolean_out_of_candidate_list]) + number_of_gold_entities_not_in_candidate_list
                         #overall_loss += self._calculate_loss(scores, gold_labels)[0]
                         label_count += len(label_candidates)
 
@@ -724,6 +755,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                                     data_point.add_complex_label(label_name, label)
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
+
+                        # mask result
+                        softmax = torch.where(mask, softmax, torch.tensor(0., dtype=torch.float, device=flair.device))
 
                         if return_probabilities_for_all_classes:
                             n_labels = softmax.size(1)
