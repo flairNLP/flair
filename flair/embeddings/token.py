@@ -917,7 +917,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
         tag_list = ['O']
         for tag in self.labels:
             if 'partial_match' in self.matching_methods:
-                for pos in ['B', 'I', 'E', 'S']:
+                for pos in ['S', 'B', 'E', 'I']:
                     tag_list.append(f'{pos}-{tag}')
         if 'full_match' in self.matching_methods:
             tag_list.extend(self.labels)
