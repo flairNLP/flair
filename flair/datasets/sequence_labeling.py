@@ -1154,8 +1154,6 @@ class NER_DANISH_DANE(ColumnCorpus):
                 with open(data_path / data_file, "w") as file:
                     file.writelines(lines)
 
-                # print(data_path / data_file)
-
         super(NER_DANISH_DANE, self).__init__(
             data_folder,
             columns,

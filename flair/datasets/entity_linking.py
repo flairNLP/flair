@@ -1312,7 +1312,7 @@ class WSD_UFSAC(MultiCorpus):
                 sample_missing_splits=sample_missing_splits_in_each_corpus,
             )
             corpora.append(corpus)
-        log.info("...done!")
+        log.info("Done with transforming data into column format and creating corpora...")
 
         super(WSD_UFSAC, self).__init__(
             corpora,
