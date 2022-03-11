@@ -39,6 +39,7 @@ if dict_from_csv['use_gazetter_embeddintgs'] == 'True':
                                                                    partial_matching=partial,
                                                                    full_matching=full,
                                                                    label_list=label_list)
+    print(f'Getting gazetteers from {gazetteer_embedding.gazetteer_file_dict_list}')
     embeddings.append(gazetteer_embedding)
 
 if dict_from_csv['use_roberta_embeddings'] == 'True':

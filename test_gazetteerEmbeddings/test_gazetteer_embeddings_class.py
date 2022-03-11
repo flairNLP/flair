@@ -2,7 +2,7 @@ import unittest
 import torch
 
 from flair.data import Sentence
-from unittest.mock import patch, MagicMock, call, mock_open
+from unittest.mock import patch, MagicMock
 
 from flair.embeddings import (
     GazetteerEmbeddings,
@@ -17,6 +17,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                             'America de Manta': ['ORG'],
                             'หนังสือพิมพ์ผู้จัดการ': ['ORG'],
                             'Sandys': ['ORG'],
+                            'I': ['ORG'],
                             'Land Tenure Reform Association': ['ORG'],
                             'Sandys Fort Spring': ['ORG', 'LOC'],
                             '!Bang!': ['ORG'],
@@ -86,6 +87,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                                '#Minas': ['B-ORG'],
                                '#Nome?': ['S-ORG'],
                                "''A.": ['B-ORG'],
+                               "'48": ['B-ORG'],
                                "'A.": ['B-ORG'],
                                "'Achar": ['B-LOC'],
                                "'Adade": ['B-LOC'],
@@ -173,6 +175,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                                'Salto"': ['I-LOC'],
                                'Salvetti': ['I-ORG'],
                                'Sandys': ['S-ORG', 'B-ORG', 'B-LOC'],
+                               'I': ['S-ORG'],
                                'Sandøydrætten': ['S-LOC'],
                                'Sandøyfjorden': ['S-LOC'],
                                'Sandøygrunnen': ['S-LOC'],
@@ -180,7 +183,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                                'School': ['E-ORG'],
                                'Sciences,': ['I-ORG'],
                                'Site': ['E-LOC'],
-                               'Smallholders': ['B-ORG'],
+                               'Smallholders': ['I-ORG'],
                                'Sorrentino"': ['I-ORG'],
                                'Spring': ['E-ORG', 'E-LOC'],
                                'Stella': ['S-ORG'],
@@ -359,10 +362,10 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="./resources",
                                                                            label_list=label_list)
             self.assertEqual(gazetteer_embedding.gazetteers_dicts['full_match'], self.full_match_hash_dict)
-            self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['full_match']), 61)
+            self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['full_match']), 62)
 
             self.assertEqual(gazetteer_embedding.gazetteers_dicts['partial_match'], self.partial_match_hash_dict)
-            self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['partial_match']), 168)
+            self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['partial_match']), 170)
 
     def test_add_embeddings_internal_good1(self):
         sentences_1 = Sentence('I love Sandys Fort Spring!')
@@ -389,7 +392,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
 
             # I
             self.assertEqual(torch.sum(sentence_list[0][0].embedding), torch.tensor(1))
-            self.assertEqual(sentence_list[0][0].embedding[0], torch.tensor(1))
+            self.assertEqual(sentence_list[0][0].embedding[8], torch.tensor(1))
 
             # love
             self.assertEqual(torch.sum(sentence_list[0][1].embedding), torch.tensor(1))
@@ -473,7 +476,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
 
             # I
             self.assertEqual(torch.sum(sentence_list[0][0].embedding), torch.tensor(1))
-            self.assertEqual(sentence_list[0][0].embedding[0], torch.tensor(1))
+            self.assertEqual(sentence_list[0][0].embedding[2], torch.tensor(1))
 
             # !
             self.assertEqual(torch.sum(sentence_list[0][1].embedding), torch.tensor(1))
@@ -567,8 +570,9 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                     assert len(token.get_embedding()) == len(feature_list)
 
             # I
-            self.assertEqual(torch.sum(sentence_list[0][0].embedding), torch.tensor(1))
-            self.assertEqual(sentence_list[0][0].embedding[0], torch.tensor(1))
+            self.assertEqual(torch.sum(sentence_list[0][0].embedding), torch.tensor(2))
+            self.assertEqual(sentence_list[0][0].embedding[8], torch.tensor(1))
+            self.assertEqual(sentence_list[0][0].embedding[18], torch.tensor(1))
 
             # !
             self.assertEqual(torch.sum(sentence_list[0][1].embedding), torch.tensor(1))

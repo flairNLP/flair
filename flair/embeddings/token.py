@@ -938,7 +938,9 @@ class GazetteerEmbeddings(TokenEmbeddings):
         def filter_gazetteer_line(line_list):
             line_list_filtered = []
             for w in line_list:
-                if any(c.isalpha() for c in w) and len(w) > 1:
+                if any(c.isalnum() for c in w) and len(w) > 1:
+                    line_list_filtered.append(w)
+                elif len(line_list) == 1 and len(w) >= 1:
                     line_list_filtered.append(w)
             return line_list_filtered
 
@@ -990,8 +992,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                             if tag_key not in full_matching_dict[line]:
                                                 full_matching_dict[line].append(tag_key)
                                         except KeyError:
-                                            full_matching_dict[line] = []
-                                            full_matching_dict[line].append(tag_key)
+                                            full_matching_dict[line] = [tag_key]
         return {'partial_match': partial_matching_dict, 'full_match': full_matching_dict}
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
@@ -1036,6 +1037,8 @@ class GazetteerEmbeddings(TokenEmbeddings):
                     if len(temp_token_dict[t_key][1]) > 0:
                         for key in temp_token_dict[t_key][1]:
                             sequence_feature_vectors[t_key][self.feature_list.index(key)] = 1
+                        if sequence_feature_vectors[t_key][self.feature_list.index('O')] == 1:
+                            sequence_feature_vectors[t_key][self.feature_list.index('O')] = 0
                     else:
                         pass
                         # if the token has been found using partial matching, the vector has values set to 1
