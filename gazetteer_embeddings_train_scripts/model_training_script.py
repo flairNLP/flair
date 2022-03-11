@@ -26,7 +26,6 @@ label_dict = corpus.make_label_dictionary(label_type=label_type)
 
 embeddings = []
 if dict_from_csv['use_gazetter_embeddintgs'] == 'True':
-    transformer_embedding = True
     from flair.embeddings import GazetteerEmbeddings
     partial = False
     full = False
@@ -52,6 +51,7 @@ if dict_from_csv['use_roberta_embeddings'] == 'True':
     embeddings.append(roberta_embeddings)
 
 if dict_from_csv['use_bert_embeddings'] == 'True':
+    transformer_embedding = True
     bert_embeddings = TransformerWordEmbeddings('bert-base-multilingual-cased')
     embeddings.append(bert_embeddings)
 
