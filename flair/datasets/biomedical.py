@@ -8,7 +8,6 @@ import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from copy import copy
-from gzip import BadGzipFile
 from operator import attrgetter
 from pathlib import Path
 from tarfile import (
@@ -5105,10 +5104,6 @@ class HunerMultiCorpus(MultiCorpus):
             except (BadZipFile, LargeZipFile):
                 logger.exception(
                     f"Error while processing Zip file from corpus {name}:\n{sys.exc_info()[1]}\n\n", exc_info=False
-                )
-            except BadGzipFile:
-                logger.exception(
-                    f"Error while processing Gzip file from corpus {name}:\n{sys.exc_info()[1]}\n\n", exc_info=False
                 )
             except IOError:
                 logger.exception(
