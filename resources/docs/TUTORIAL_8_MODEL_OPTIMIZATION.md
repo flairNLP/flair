@@ -77,8 +77,8 @@ training, we just evaluate the model once after training on the test set for log
 Hyperparameter tuning for text classification in Flair uses `TransformerDocumentEmbeddings` and allows
 choosing between a number of parameters. You can tune the `TRANSFORMER_MODEL` parameter that defines the name of
 HuggingFace transformer model used, the `LAYERS` parameter defining which layers to take for embedding (the default
-is -1 - topmost layer) and the `FINE_TUNE` boolean parameter that determines whether the transformers are fine-tuned
-during training.
+is -1 - topmost layer) as well as the usual training-related hyperparameters such as `LEARNING_RATE` and
+`MINI_BATCH_SIZE`.
 
 First, you need to load your corpus.
 ```python
@@ -104,7 +104,6 @@ search_space.add(Parameter.MINI_BATCH_SIZE, hp.choice, options=[8, 16, 32])
 
 # define transformer embedding hyperparameters
 search_space.add(Parameter.TRANSFORMER_MODEL, hp.choice, options=['bert-base-uncased', 'roberta-base'])
-search_space.add(Parameter.FINE_TUNE, hp.choice, options=[True, False])
 ```
 
 Note that the first two hyperparameters affect training whereas the last two affect the transformer document
@@ -126,6 +125,7 @@ param_selector = TextClassifierParamSelector(
     False, 
     'resources/results', 
     max_epochs=50, 
+    fine_tune=True,
     training_runs=3,
     optimization_value=OptimizationValue.DEV_SCORE
 )

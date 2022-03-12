@@ -24,7 +24,6 @@ class Parameter(Enum):
     BETAS = "betas"
     EPS = "eps"
     TRANSFORMER_MODEL = "model"
-    FINE_TUNE = "fine_tune"
     LAYERS = "LAYERS"
 
 
@@ -56,5 +55,4 @@ SEQUENCE_TAGGER_PARAMETERS = [
 TEXT_CLASSIFICATION_PARAMETERS = [
     Parameter.LAYERS.value,
     Parameter.TRANSFORMER_MODEL.value,
-    Parameter.FINE_TUNE.value,
 ]
