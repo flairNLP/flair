@@ -307,6 +307,38 @@ class RelationLabel(Label):
     def identifier(self):
         return f"{self.head.id_text} -> {self.tail.id_text}"
 
+class EntityLinkingLabel(Label):
+    def __init__(self, span, cui, concept_name, ontology = None, score: float = 1):
+        super().__init__(cui, score)
+        self.span = span
+        self.ontology = ontology
+        self.concept_name = concept_name
+
+    def spawn(self, value: str, score: float = 1):
+        return EntityLinkingLabel(self.span, value, self.ontology, self.concept_name, score)
+
+    def __str__(self):
+        return f"{self._value} {self.concept_name} [{self.span}] ({round(self._score, 4)})"
+
+    def __repr__(self):
+        return f"{self._value} {self.concept_name} [{self.span}] ({round(self._score, 4)})"
+
+    def __len__(self):
+        return len(self.span)
+
+    def __eq__(self, other):
+        return (
+            self.value == other.value
+            and self.span.id_text == other.span.id_text
+            and self.concept_name == other.concept_name
+            and self.ontology == other.ontology
+            and self.score == other.score
+        )
+
+    @property
+    def identifier(self):
+        return f"{self.cui}"
+
 
 class DataPoint:
     """
