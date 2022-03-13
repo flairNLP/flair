@@ -22,8 +22,19 @@ markers = [
 ]
 
 [tool.mypy]
-exclude = "flair/data_fetcher.py|flair/embeddings/legacy.py"
 ignore_missing_imports = true
+exclude = [
+    '^flair/data_fetcher\.py$', # TOML's single-quoted strings do not require escaping backslashes
+    '^flair/embeddings/legacy\.py$',
+]
+
+[[tool.mypy.overrides]]
+module = "flair.data_fetcher"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "flair.embeddings.legacy"
+ignore_errors = true
 
 [tool.isort]
 profile = "black"
