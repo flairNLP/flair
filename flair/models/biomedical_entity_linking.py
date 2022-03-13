@@ -13,7 +13,7 @@ from transformers import AutoTokenizer, AutoModel, default_data_collator
 from huggingface_hub import hf_hub_url, cached_download
 from string import punctuation
 import flair
-from flair.data import Sentence, SpanLabel
+from flair.data import Sentence, EntityLinkingLabel
 from typing import List, Union
 from pathlib import Path
 
@@ -142,6 +142,7 @@ class DictionaryDataset:
                 if line == "":
                     continue
                 cui, name = line.split("||")
+                name = name.lower()
                 data.append((name, cui))
 
         data = np.array(data)
@@ -181,7 +182,7 @@ class BioSyn(object):
         assert self.sparse_weight is not None
 
         return self.sparse_weight
-        
+
     def load_model(self, model_name_or_path):
         self.load_dense_encoder(model_name_or_path)
         self.load_sparse_encoder(model_name_or_path)
@@ -332,8 +333,25 @@ class BioSyn(object):
 
         return dense_embeds
 
-    def get_predictions(self, mention):
-        return 1
+    def get_predictions(self, mention, dictionary, dict_sparse_embeds, dict_dense_embeds, topk):
+        # embed mention
+        mention_sparse_embeds = self.embed_sparse(names=[mention])
+        mention_dense_embeds = self.embed_dense(names=[mention])
+
+        # calcuate score matrix and get top 5
+        sparse_score_matrix = self.get_score_matrix(
+            query_embeds=mention_sparse_embeds, dict_embeds=dict_sparse_embeds
+        )
+        dense_score_matrix = self.get_score_matrix(
+            query_embeds=mention_dense_embeds, dict_embeds=dict_dense_embeds
+        )
+        sparse_weight = self.get_sparse_weight().item()
+        hybrid_score_matrix = sparse_weight * sparse_score_matrix + dense_score_matrix
+        hybrid_candidate_idxs = self.retrieve_candidate(
+            score_matrix=hybrid_score_matrix, topk=topk
+        )
+        return dictionary[hybrid_candidate_idxs].squeeze(0)
+
 
 
 class HunNen(object):
@@ -387,7 +405,7 @@ class HunNen(object):
 
     def predict(self, sentences: Union[List[Sentence], Sentence], entity_type, topk = 10):
         """
-        On one or more senteces, predict the cui on all named entites annotated with a tag of type entity_type. 
+        On one or more sentences, predict the cui on all named entites annotated with a tag of type entity_type. 
         Annotates the top k predictions.
         :param sentences: one or more sentences to run the predictions on
         :param entity_type: only entities with this tag will be annotated
@@ -402,35 +420,18 @@ class HunNen(object):
                 # preprocess mention
                 mention = TextPreprocess().run(entity.span.text)
 
-                # embed mention
-                mention_sparse_embeds = self.biosyn.embed_sparse(names=[mention])
-                mention_dense_embeds = self.biosyn.embed_dense(names=[mention])
-
-                # calcuate score matrix and get top 5
-                sparse_score_matrix = self.biosyn.get_score_matrix(
-                    query_embeds=mention_sparse_embeds, dict_embeds=self.dict_sparse_embeds
-                )
-                dense_score_matrix = self.biosyn.get_score_matrix(
-                    query_embeds=mention_dense_embeds, dict_embeds=self.dict_dense_embeds
-                )
-                sparse_weight = self.biosyn.get_sparse_weight().item()
-                hybrid_score_matrix = sparse_weight * sparse_score_matrix + dense_score_matrix
-                hybrid_candidate_idxs = self.biosyn.retrieve_candidate(
-                    score_matrix=hybrid_score_matrix, topk=topk
-                )
-
                 # get predictions from dictionary
-                predictions = self.dictionary[hybrid_candidate_idxs].squeeze(0)
+                predictions = self.biosyn.get_predictions(mention, self.dictionary, self.dict_sparse_embeds, self.dict_dense_embeds, topk)
 
                 for prediction in predictions:
                     predicted_name = prediction[0]
                     predicted_id = prediction[1]
                     sentence.add_complex_label(typename="entity_type" + "_nen", 
-                        label=SpanLabel(span=entity.span, value= f"{predicted_name} {predicted_id}"))
+                        label=EntityLinkingLabel(span=entity.span, cui = predicted_id, concept_name = predicted_name))
 
 
     @staticmethod
-    def _cache_or_load_dictionary(biosyn, model_name_or_path, dictionary_path):
+    def _cache_or_load_dictionary(entity_linker, model_name_or_path, dictionary_path):
         dictionary_name = os.path.splitext(os.path.basename(dictionary_path))[0]
 
         cache_folder = os.path.join(flair.cache_root, "datasets")
@@ -453,10 +454,10 @@ class HunNen(object):
         else:
             dictionary = DictionaryDataset(dictionary_path=dictionary_path).data
             dictionary_names = dictionary[:, 0]
-            dict_sparse_embeds = biosyn.embed_sparse(
+            dict_sparse_embeds = entity_linker.embed_sparse(
                 names=dictionary_names, show_progress=True
             )
-            dict_dense_embeds = biosyn.embed_dense(
+            dict_dense_embeds = entity_linker.embed_dense(
                 names=dictionary_names, show_progress=True
             )
             cached_dictionary = {
