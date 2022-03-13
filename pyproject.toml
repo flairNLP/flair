@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 120
-target-version = ['py36', 'py37']
+target-version = ['py36', 'py37', 'py38', 'py39', 'py310']
 exclude = '''
 (
   /(
@@ -12,6 +12,7 @@ exclude = '''
   )/
 )
 '''
+
 [tool.pytest.ini_options]
 flake8-max-line-length = 210
 flake8-ignore = ["E203", "W503"]  # See https://github.com/PyCQA/pycodestyle/issues/373
@@ -19,9 +20,84 @@ addopts = "-W error --flake8 --mypy --ignore flair/data_fetcher.py --ignore flai
 markers = [
     "integration",
 ]
+
 [tool.mypy]
 exclude = "flair/data_fetcher.py|flair/embeddings/legacy.py"
 ignore_missing_imports = true
 
 [tool.isort]
 profile = "black"
+
+[tool.poetry]
+name = "flair"
+version = "0.10"
+description = "A very simple framework for state-of-the-art NLP"
+readme = "README.md"
+authors = ["Alan Akbik <alan.akbik@gmail.com>"]
+maintainers = ["Alan Akbik <alan.akbik@gmail.com>", "Tanja Bergmann <tanja.bergmann@zalando.de>"]
+repository = "https://github.com/flairNLP/flair"
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = ">=3.6.2,<3.11"
+
+bpemb = ">=0.3.3"
+conllu = ">=4.4.1"
+Deprecated = ">=1.2.13"
+ftfy = ">=6.0.3"
+gdown = ">=4.4.0"
+gensim = ">=4.1.2"
+janome = ">=0.4.2"
+konoha = ">=5.1.2"
+langdetect = ">=1.0.9"
+lxml = ">=4.8.0"
+matplotlib = [
+    {version = "~3.3.4", python = "~3.6.2"},
+    {version = ">=3.5.1", python = ">=3.7.0"},
+]
+mpld3 = ">=0.3"
+numpy = [ # Used indirectly through bpemb, gensim, matplotlib, scikit-learn, transformers
+    {version = "~1.19.5", python = "~3.6.2"},
+    {version = "~1.21.5", python = "~3.7.0"},
+    {version = ">=1.22.3", python = ">=3.8.0"},
+]
+pptree = ">=3.1"
+scikit-learn = [
+    {version = "~0.24.2", python = "~3.6.2"},
+    {version = ">=1.0.2", python = ">=3.7.0"},
+]
+scipy = [ # Used indirectly through bpemb, gensim, scikit-learn
+    {version = "~1.5.4", python = "~3.6.2"},
+    {version = "~1.7.3", python = ">=3.7.0"},
+    #{version = ">=1.8.0", python = ">=3.8.0"}, # gensim 4.1.2 does not handle scipy-1.8.0 well
+]
+segtok = ">=1.5.11"
+sqlitedict = ">=2.0.0"
+torch = [
+    {version = ">=1.5.0,<1.11", python = "~3.6.2"},
+    {version = ">=1.5.0", python = ">=3.7.0"},
+]
+tqdm = ">=4.63.0"
+transformers = ">=4.17.0"
+wikipedia-api = ">=0.5.4"
+
+[tool.poetry.dev-dependencies]
+flake8 = ">=4.0.1"
+flake8-black = [
+    {version = "==0.3.0", python = "~3.6.2"},
+    {version = ">=0.3.2", python = ">=3.7.0"},
+]
+isort = ">=5.10.1"
+pre-commit = ">= 2.17.0"
+pytest = "^6.2.5" # we do not want pytest-7
+pytest-flake8 = ">=1.1.0"
+pytest-isort = ">=3.0.0"
+pytest-mypy = ">=0.9.1"
+types-dataclasses = ">=0.6.4"
+types-Deprecated = ">=1.2.5"
+types-requests = ">=2.27.11"
+types-tabulate = ">=0.8.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

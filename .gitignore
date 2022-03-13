@@ -49,6 +49,11 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+train.tsv
+test.tsv
+dev.tsv
+**/results/loss.tsv
+**/results/weights.txt
 
 # Translations
 *.mo
@@ -106,7 +111,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-Pipfile.lock
+poetry.lock
 
 resources/taggers/
 regression_train/
