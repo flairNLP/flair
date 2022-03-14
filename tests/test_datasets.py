@@ -355,3 +355,94 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
     assert len(corpus.test) == 1
 
     _assert_universal_dependencies_conllu_dataset(corpus.train)
+
+
+def test_hipe_2022_corpus(tasks_base_path):
+    """
+    This test covers the complete v1.0 version of the HIPE 2022,
+    including the version with document separator.
+    """
+
+    # We have manually checked, that these numbers are correct:
+    hipe_stats = {
+        "v1.0": {
+            "ajmc": {"de": {"sample": {"sents": 119, "docs": 8}}, "en": {"sample": {"sents": 83, "docs": 5}}},
+            "hipe2020": {
+                "de": {
+                    "train": {"sents": 3470 + 2, "docs": 103},  # 2 sentences with missing EOS marker
+                    "dev": {
+                        "sents": 1202,
+                        "docs": 33,
+                    },
+                },
+                "en": {"dev": {"sents": 1045, "docs": 80}},
+                "fr": {"train": {"sents": 5743, "docs": 158}, "dev": {"sents": 1244, "docs": 43}},
+            },
+            "letemps": {"fr": {"train": {"sents": 14051, "docs": 414}, "dev": {"sents": 1341, "docs": 51}}},
+            "newseye": {
+                # +1 offset, because of missing EOS marker at EOD
+                "de": {
+                    "train": {"sents": 23646 + 1, "docs": 11},
+                    "dev": {"sents": 1110 + 1, "docs": 12},
+                    "dev2": {"sents": 1541 + 1, "docs": 12},
+                },
+                "fi": {
+                    "train": {"sents": 1141 + 1, "docs": 24},
+                    "dev": {"sents": 140 + 1, "docs": 24},
+                    "dev2": {"sents": 104 + 1, "docs": 21},
+                },
+                "fr": {
+                    "train": {"sents": 7106 + 1, "docs": 35},
+                    "dev": {"sents": 662 + 1, "docs": 35},
+                    "dev2": {"sents": 1016 + 1, "docs": 35},
+                },
+                "sv": {
+                    "train": {"sents": 1063 + 1, "docs": 21},
+                    "dev": {"sents": 126 + 1, "docs": 21},
+                    "dev2": {"sents": 136 + 1, "docs": 21},
+                },
+            },
+            "sonar": {"de": {"dev": {"sents": 1603 + 10, "docs": 10}}},  # 10 sentences with missing EOS marker
+            "topres19th": {"en": {"train": {"sents": 5874, "docs": 309}, "dev": {"sents": 646, "docs": 34}}},
+        }
+    }
+
+    def test_hipe_2022(dataset_version="v1.0", add_document_separator=True):
+        for dataset_name, languages in hipe_stats[dataset_version].items():
+            for language in languages:
+                splits = languages[language]
+
+                corpus = flair.datasets.NER_HIPE_2022(
+                    dataset_name=dataset_name,
+                    language=language,
+                    dev_split_name="dev",
+                    add_document_separator=add_document_separator,
+                )
+
+                for split_name, stats in splits.items():
+                    split_description = f"{dataset_name}/{language}@{split_name}"
+
+                    total_sentences = sum(stats.values()) if add_document_separator else stats["sents"]
+
+                    if split_name == "train":
+                        assert (
+                            len(corpus.train) == total_sentences
+                        ), f"Sentence count mismatch for {split_description}: {len(corpus.train)} vs. {total_sentences}"
+                    elif split_name in ["dev", "sample"]:
+                        assert (
+                            len(corpus.dev) == total_sentences
+                        ), f"Sentence count mismatch for {split_description}: {len(corpus.dev)} vs. {total_sentences}"
+                    elif split_name == "dev2":
+                        corpus = flair.datasets.NER_HIPE_2022(
+                            dataset_name=dataset_name,
+                            language=language,
+                            dev_split_name="dev2",
+                            add_document_separator=add_document_separator,
+                        )
+
+                        assert (
+                            len(corpus.dev) == total_sentences
+                        ), f"Sentence count mismatch for {split_description}: {len(corpus.dev)} vs. {total_sentences}"
+
+    test_hipe_2022(add_document_separator=True)
+    test_hipe_2022(add_document_separator=False)
