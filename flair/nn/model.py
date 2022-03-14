@@ -761,7 +761,15 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
         # add DefaultClassifier arguments
-        for arg in ["decoder", "dropout", "multi_label", "multi_label_threshold", "loss_weights"]:
+        for arg in [
+            "decoder",
+            "dropout",
+            "word_dropout",
+            "locked_dropout",
+            "multi_label",
+            "multi_label_threshold",
+            "loss_weights",
+        ]:
             if arg not in kwargs and arg in state:
                 kwargs[arg] = state[arg]
 
@@ -772,6 +780,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
         # add variables of DefaultClassifier
         state["dropout"] = self.dropout.p
+        state["word_dropout"] = self.word_dropout.dropout_rate
+        state["locked_dropout"] = self.locked_dropout.dropout_rate
         state["multi_label"] = self.multi_label
         state["multi_label_threshold"] = self.multi_label_threshold
         state["loss_weights"] = self.loss_weights

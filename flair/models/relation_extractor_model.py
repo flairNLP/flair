@@ -183,7 +183,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
                 relation_embeddings.append(embedding)
 
-            embedded_entity_pairs = relation_embeddings
+            embedded_entity_pairs = torch.stack(relation_embeddings)
 
         if for_prediction:
             return embedded_entity_pairs, labels, entity_pairs
@@ -217,9 +217,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
             "entity_label_type": self.entity_label_type,
             "weight_dict": self.weight_dict,
             "pooling_operation": self.pooling_operation,
-            "dropout_value": self.dropout_value,
-            "locked_dropout_value": self.locked_dropout_value,
-            "word_dropout_value": self.word_dropout_value,
             "entity_pair_filters": self.entity_pair_filters,
         }
         return model_state
@@ -235,9 +232,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
             entity_label_type=state["entity_label_type"],
             loss_weights=state["weight_dict"],
             pooling_operation=state["pooling_operation"],
-            dropout_value=state["dropout_value"],
-            locked_dropout_value=state["locked_dropout_value"],
-            word_dropout_value=state["word_dropout_value"],
             entity_pair_filters=state["entity_pair_filters"],
             **kwargs,
         )
