@@ -356,8 +356,8 @@ class SapBert(object):
         self.encoder = None
 
     # Differenece to BioSyn: not loading sparse encoder and weights
-    def load_model(self, path):
-        self.load_bert(path)
+    def load_model(self, model_name_or_path):
+        self.load_bert(model_name_or_path)
         
         return self
 
@@ -586,30 +586,25 @@ class HunNen(object):
         """
         # Use BioSyn
         if model_type.lower() == "biosyn":
-            # load biosyn
-            model = BioSyn(max_length=max_length, use_cuda=torch.cuda.is_available())
-
             # modify name if it's one of the BioSyn huggingface models
             if model_name in ["sapbert-bc5cdr-disease", "sapbert-ncbi-disease", "sapbert-bc5cdr-chemical", 
             "biobert-bc5cdr-disease", "biobert-ncbi-disease", "biobert-bc5cdr-chemical"]:
                 model_name = "dmis-lab/biosyn-" + model_name
+            model = BioSyn(max_length=max_length, use_cuda=torch.cuda.is_available())
 
-            model.load_model(model_name_or_path=model_name)
+
 
         # Use SapBert
         elif model_type.lower() == "sapbert":
             if model_name == "sapbert":
                 model_name = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
-
-            model = SapBert().load_model(
-            path=model_name,
-            max_length=max_length,
-            use_cuda=torch.cuda.is_available())
+            model = SapBert(max_length=max_length, use_cuda=torch.cuda.is_available())
 
         else:
             print("Invalid value for model_type. The only possible values are 'BioSyn' and 'SapBert'")
             return        
 
+        model.load_model(model_name_or_path=model_name)
         # cache or load dictionary
         dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec = cls._cache_or_load_dictionary(
             model, model_name, str(dictionary_path)
