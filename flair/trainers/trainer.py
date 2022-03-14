@@ -291,8 +291,8 @@ class ModelTrainer:
             optimizer.load_state_dict(optimizer_state_dict)
 
         # minimize training loss if training with dev data, else maximize dev score
-        anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
-        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.0
+        anneal_mode = "min" if not train_with_dev or anneal_against_dev_loss else "max"
+        best_validation_score = 100000000000 if not train_with_dev or anneal_against_dev_loss else 0.0
 
         dataset_size = _len_dataset(self.corpus.train)
         if train_with_dev:
@@ -697,7 +697,7 @@ class ModelTrainer:
                 # determine if this is the best model or if we need to anneal
                 current_epoch_has_best_model_so_far = False
                 # default mode: anneal against dev score
-                if not train_with_dev and not anneal_against_dev_loss:
+                if train_with_dev and not anneal_against_dev_loss:
                     if dev_score > best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_score
@@ -706,7 +706,7 @@ class ModelTrainer:
                         scheduler.step(dev_score, dev_eval_result.loss)
 
                 # alternative: anneal against dev loss
-                if not train_with_dev and anneal_against_dev_loss:
+                if train_with_dev and anneal_against_dev_loss:
                     if dev_eval_result.loss < best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_eval_result.loss
@@ -715,7 +715,7 @@ class ModelTrainer:
                         scheduler.step(dev_eval_result.loss)
 
                 # alternative: anneal against train loss
-                if train_with_dev:
+                if not train_with_dev:
                     if train_loss < best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = train_loss
