@@ -901,9 +901,9 @@ class GazetteerEmbeddings(TokenEmbeddings):
 
         self.gazetteer_file_dict_list = self._get_gazetteers()
 
-        print("processing gazetteers ...")
+        log.info("processing gazetteers ...")
         self.gazetteers_dicts = self._process_gazetteers()
-        print("Finished processing gazetteers!")
+        log.info("Finished processing gazetteers!")
 
         self.feature_list = self._set_feature_list()
 
