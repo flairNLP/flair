@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
@@ -13,8 +14,10 @@ from flair.data import DataPoint, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import TokenEmbeddings
 from flair.nn.dropout import LockedDropout, WordDropout
-from flair.training_utils import Result, store_embeddings
+from flair.training_utils import Result, log_line, store_embeddings
 from flair.visual.tree_printer import tree_printer
+
+log = logging.getLogger("flair")
 
 
 class DependencyParser(flair.nn.Model):
@@ -239,7 +242,7 @@ class DependencyParser(flair.nn.Model):
 
                 if print_tree:
                     tree_printer(sentence, self.tag_type)
-                    print("-" * 50)
+                    log_line(log)
             store_embeddings(batch, storage_mode=embedding_storage_mode)
 
     def evaluate(
