@@ -3,11 +3,13 @@ import re
 import pickle
 import logging
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data.dataloader import DataLoader
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModel, default_data_collator
 from huggingface_hub import hf_hub_url, cached_download
@@ -333,7 +335,7 @@ class BioSyn(object):
 
         return dense_embeds
 
-    def get_predictions(self, mention, dictionary, dict_sparse_embeds, dict_dense_embeds, topk):
+    def get_predictions(self, mention, dictionary, dict_sparse_embeds, dict_dense_embeds, topk, tgt_space_mean_vec=None):
         # embed mention
         mention_sparse_embeds = self.embed_sparse(names=[mention])
         mention_dense_embeds = self.embed_dense(names=[mention])
@@ -353,6 +355,220 @@ class BioSyn(object):
         return dictionary[hybrid_candidate_idxs].squeeze(0)
 
 
+class SapBert(object):
+    """
+    Wrapper class for BERT encoder
+    """
+
+    def __init__(self):
+        self.tokenizer = None
+        self.encoder = None
+
+    def get_dense_encoder(self):
+        assert (self.encoder is not None)
+
+        return self.encoder
+
+    def get_dense_tokenizer(self):
+        assert (self.tokenizer is not None)
+
+        return self.tokenizer
+
+    def save_model(self, path, context=False):
+        # save bert model, bert config
+        self.encoder.save_pretrained(path)
+
+        # save bert vocab
+        self.tokenizer.save_pretrained(path)
+        
+
+    def load_model(self, path, max_length=25, use_cuda=True, lowercase=True):
+        self.load_bert(path, max_length, use_cuda)
+        
+        return self
+
+    def load_bert(self, path, max_length, use_cuda, lowercase=True):
+        self.tokenizer = AutoTokenizer.from_pretrained(path, 
+                use_fast=True, do_lower_case=lowercase)
+        self.encoder = AutoModel.from_pretrained(path)
+        if use_cuda:
+            self.encoder = self.encoder.cuda()
+
+        return self.encoder, self.tokenizer
+    
+    # Difference: has parameters cosine and normalize and uses them, same when not cosine and not normalize
+    def get_score_matrix(self, query_embeds, dict_embeds, cosine=False, normalise=False):
+        """
+        Return score matrix
+
+        Parameters
+        ----------
+        query_embeds : np.array
+            2d numpy array of query embeddings
+        dict_embeds : np.array
+            2d numpy array of query embeddings
+
+        Returns
+        -------
+        score_matrix : np.array
+            2d numpy array of scores
+        """
+        if cosine:
+            score_matrix = cosine_similarity(query_embeds, dict_embeds)
+        else:
+            score_matrix = np.matmul(query_embeds, dict_embeds.T)
+
+        if normalise:
+            score_matrix = (score_matrix - score_matrix.min() ) / (score_matrix.max() - score_matrix.min())
+        
+        return score_matrix
+
+    # same as in BioSyn
+    def retrieve_candidate(self, score_matrix, topk):
+        """
+        Return sorted topk idxes (descending order)
+
+        Parameters
+        ----------
+        score_matrix : np.array
+            2d numpy array of scores
+        topk : int
+            The number of candidates
+
+        Returns
+        -------
+        topk_idxs : np.array
+            2d numpy array of scores [# of query , # of dict]
+        """
+        
+        def indexing_2d(arr, cols):
+            rows = np.repeat(np.arange(0,cols.shape[0])[:, np.newaxis],cols.shape[1],axis=1)
+            return arr[rows, cols]
+
+        # get topk indexes without sorting
+        topk_idxs = np.argpartition(score_matrix,-topk)[:, -topk:]
+
+        # get topk indexes with sorting
+        topk_score_matrix = indexing_2d(score_matrix, topk_idxs)
+        topk_argidxs = np.argsort(-topk_score_matrix) 
+        topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
+
+        return topk_idxs
+
+    # not in BioSyn
+    def retrieve_candidate_cuda(self, score_matrix, topk, batch_size=128, show_progress=False):
+        """
+        Return sorted topk idxes (descending order)
+
+        Parameters
+        ----------
+        score_matrix : np.array
+            2d numpy array of scores
+        topk : int
+            The number of candidates
+
+        Returns
+        -------
+        topk_idxs : np.array
+            2d numpy array of scores [# of query , # of dict]
+        """
+
+        res = None
+        for i in tqdm(np.arange(0, score_matrix.shape[0], batch_size), disable=not show_progress):
+            score_matrix_tmp = torch.tensor(score_matrix[i:i+batch_size]).cuda()
+            matrix_sorted = torch.argsort(score_matrix_tmp, dim=1, descending=True)[:, :topk].cpu()
+            if res is None: 
+                res = matrix_sorted
+            else:
+                res = torch.cat([res, matrix_sorted], axis=0)
+
+        return res.numpy()
+
+    # Attention: uses cuda
+    # Differnece: parameters batch_size (in BioSyn as constant) and agg_mode
+    # different code
+    def embed_dense(self, names, show_progress=False, batch_size=2048, agg_mode="cls"):
+        """
+        Embedding data into dense representations
+
+        Parameters
+        ----------
+        names : np.array
+            An array of names
+
+        Returns
+        -------
+        dense_embeds : list
+            A list of dense embeddings
+        """
+        self.encoder.eval() # prevent dropout
+        
+        # Difference: batch size given as parameter
+        batch_size=batch_size
+        dense_embeds = []
+
+
+        with torch.no_grad():
+            if show_progress:
+                iterations = tqdm(range(0, len(names), batch_size))
+            else:
+                iterations = range(0, len(names), batch_size)
+                
+            for start in iterations:
+                end = min(start + batch_size, len(names))
+                batch = names[start:end]
+                batch_tokenized_names = self.tokenizer.batch_encode_plus(
+                        batch, add_special_tokens=True, 
+                        truncation=True, max_length=25, 
+                        padding="max_length", return_tensors='pt')
+                batch_tokenized_names_cuda = {}
+                for k,v in batch_tokenized_names.items(): 
+                    batch_tokenized_names_cuda[k] = v.cuda()
+                
+                last_hidden_state = self.encoder(**batch_tokenized_names_cuda)[0]
+                if agg_mode == "cls":
+                    batch_dense_embeds = last_hidden_state[:,0,:] # [CLS]
+                elif agg_mode == "mean_all_tok":
+                    batch_dense_embeds = last_hidden_state.mean(1) # pooling
+                elif agg_mode == "mean":
+                    batch_dense_embeds = (last_hidden_state * batch_tokenized_names_cuda['attention_mask'].unsqueeze(-1)).sum(1) / batch_tokenized_names_cuda['attention_mask'].sum(-1).unsqueeze(-1)
+                else:
+                    print ("no such agg_mode:", agg_mode)
+                    batch_dense_embeds = []
+
+                batch_dense_embeds = batch_dense_embeds.cpu().detach().numpy()
+                dense_embeds.append(batch_dense_embeds)
+        dense_embeds = np.concatenate(dense_embeds, axis=0)
+        
+        return dense_embeds
+
+    def embed_sparse(self, names, show_progress):
+        return []
+
+    # possible values for agg_mode: cls|mean_pool|nospec
+    def get_predictions(self, mention, dictionary, dict_sparse_embeds, dict_dense_embeds, topk, tgt_space_mean_vec=None, agg_mode="cls"):
+        mention_dense_embeds = self.embed_dense(names=[mention], agg_mode=agg_mode)
+        # should I leave this in?
+        if tgt_space_mean_vec is not None:
+            mention_dense_embeds -= tgt_space_mean_vec
+
+        # get score matrix
+        # same as in BioSyn, but wihtout the sparse encoder
+        dense_score_matrix = self.get_score_matrix(
+                query_embeds=mention_dense_embeds, 
+                dict_embeds=dict_dense_embeds,
+        )
+        score_matrix = dense_score_matrix
+        # same as in BioSyn, but with options for batchsize and show_progress
+        # TODO: Should differentiate based on cuda availability!
+        candidate_idxs = self.retrieve_candidate_cuda(
+                score_matrix = score_matrix, 
+                topk = topk,
+                batch_size=16,
+                show_progress=False
+        )
+        return [dictionary[ind] for ind in candidate_idxs[0].tolist()]#.squeeze()
+
 
 class HunNen(object):
     """
@@ -360,7 +576,7 @@ class HunNen(object):
     Can predict top k entities on sentences annotated with biomedical entity mentions using BioSyn.
     """
 
-    def __init__(self, model, dictionary: DictionaryDataset, dict_sparse_embeds, dict_dense_embeds):
+    def __init__(self, model, dictionary: DictionaryDataset, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec):
         """
         Initalize HunNen class, called by classmethod load
         :param model: BioSyn object containing the dense and sparse encoders
@@ -369,39 +585,55 @@ class HunNen(object):
         :param dict_dense_embeds: dense embeddings of dictionary
         """
         super().__init__()
-        self.biosyn = model
+        self.model = model
         self.dictionary = dictionary
         self.dict_sparse_embeds = dict_sparse_embeds
         self.dict_dense_embeds = dict_dense_embeds
+        self.tgt_space_mean_vec = tgt_space_mean_vec
         
     @classmethod
-    def load(cls, model_name, dictionary_path:  Union[str, Path]):
+    def load(cls, model_name, dictionary_path:  Union[str, Path], model_type, max_length=25):
         """
         Load a model for biomedical named entity normalization using BioSyn on sentences annotated with 
         biomedical entity mentions
         :param model_name: Name of pretrained model to use. Currently possible values for pretrained models are: 
         sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease, 
-        biobert-ncbi-disease, biobert-bc5cdr-chemical
+        biobert-ncbi-disease, biobert-bc5cdr-chemical, sapbert
         :param dictionary_path: Path to a file with each line in the format: cui||name, with one line for each
         name of a concept
         """
-        # load biosyn
-        biosyn = BioSyn(max_length=25, use_cuda=torch.cuda.is_available())
+        # Use BioSyn
+        if model_type.lower() == "biosyn":
+            # load biosyn
+            model = BioSyn(max_length=max_length, use_cuda=torch.cuda.is_available())
 
-        # modify name if it's a huggingface model
-        if model_name in ["sapbert-bc5cdr-disease", "sapbert-ncbi-disease", "sapbert-bc5cdr-chemical", 
-        "biobert-bc5cdr-disease", "biobert-ncbi-disease", "biobert-bc5cdr-chemical"]:
-            model_name = "dmis-lab/biosyn-" + model_name
+            # modify name if it's one of the BioSyn huggingface models
+            if model_name in ["sapbert-bc5cdr-disease", "sapbert-ncbi-disease", "sapbert-bc5cdr-chemical", 
+            "biobert-bc5cdr-disease", "biobert-ncbi-disease", "biobert-bc5cdr-chemical"]:
+                model_name = "dmis-lab/biosyn-" + model_name
 
-        biosyn.load_model(model_name_or_path=model_name)
-        
+            model.load_model(model_name_or_path=model_name)
+
+        # Use SapBert
+        elif model_type.lower() == "sapbert":
+            if model_name == "sapbert":
+                model_name = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
+
+            model = SapBert().load_model(
+            path=model_name,
+            max_length=max_length,
+            use_cuda=torch.cuda.is_available())
+
+        else:
+            print("Invalid value for model_type. The only possible values are 'BioSyn' and 'SapBert'")
+            return        
 
         # cache or load dictionary
-        dictionary, dict_sparse_embeds, dict_dense_embeds = cls._cache_or_load_dictionary(
-            biosyn, model_name, str(dictionary_path)
+        dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec = cls._cache_or_load_dictionary(
+            model, model_name, str(dictionary_path)
         )
 
-        return cls(biosyn, dictionary, dict_sparse_embeds, dict_dense_embeds);
+        return cls(model, dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec);
 
     def predict(self, sentences: Union[List[Sentence], Sentence], entity_type, topk = 10):
         """
@@ -421,17 +653,25 @@ class HunNen(object):
                 mention = TextPreprocess().run(entity.span.text)
 
                 # get predictions from dictionary
-                predictions = self.biosyn.get_predictions(mention, self.dictionary, self.dict_sparse_embeds, self.dict_dense_embeds, topk)
+                predictions = self.model.get_predictions(
+                    mention, 
+                    self.dictionary, 
+                    self.dict_sparse_embeds, 
+                    self.dict_dense_embeds, 
+                    topk,
+                    self.tgt_space_mean_vec
+                )
 
                 for prediction in predictions:
                     predicted_name = prediction[0]
                     predicted_id = prediction[1]
-                    sentence.add_complex_label(typename="entity_type" + "_nen", 
+                    sentence.add_complex_label(typename=entity_type + "_nen", 
                         label=EntityLinkingLabel(span=entity.span, cui = predicted_id, concept_name = predicted_name))
 
 
     @staticmethod
-    def _cache_or_load_dictionary(entity_linker, model_name_or_path, dictionary_path):
+    def _cache_or_load_dictionary(entity_linker, model_name_or_path, dictionary_path, mean_centering=False):
+        tgt_space_mean_vec = None
         dictionary_name = os.path.splitext(os.path.basename(dictionary_path))[0]
 
         cache_folder = os.path.join(flair.cache_root, "datasets")
@@ -453,13 +693,18 @@ class HunNen(object):
 
         else:
             dictionary = DictionaryDataset(dictionary_path=dictionary_path).data
-            dictionary_names = dictionary[:, 0]
+            # dictionary_names = dictionary[:, 0]
+            dictionary_names = [row[0] for row in dictionary]
             dict_sparse_embeds = entity_linker.embed_sparse(
                 names=dictionary_names, show_progress=True
             )
             dict_dense_embeds = entity_linker.embed_dense(
                 names=dictionary_names, show_progress=True
             )
+
+            if mean_centering:
+                tgt_space_mean_vec = dict_dense_embeds.mean(0)
+                dict_dense_embeds -= tgt_space_mean_vec
             cached_dictionary = {
                 "dictionary": dictionary,
                 "dict_sparse_embeds": dict_sparse_embeds,
@@ -472,8 +717,4 @@ class HunNen(object):
                 pickle.dump(cached_dictionary, fin)
             print("Saving dictionary into cached file {}".format(cached_dictionary_path))
 
-        return dictionary, dict_sparse_embeds, dict_dense_embeds
-
-
-
-
+        return dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec
