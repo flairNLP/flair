@@ -30,6 +30,7 @@ class MultiFileJsonlCorpus(Corpus):
         encoding: str = "utf-8",
         text_column_name: str = "data",
         label_column_name: str = "label",
+        label_type: str = "ner",
         **corpusargs,
     ):
         """
@@ -53,6 +54,7 @@ class MultiFileJsonlCorpus(Corpus):
                         train_file,
                         text_column_name=text_column_name,
                         label_column_name=label_column_name,
+                        label_type=label_type,
                         encoding=encoding,
                     )
                     for train_file in train_files
@@ -66,7 +68,12 @@ class MultiFileJsonlCorpus(Corpus):
         test: Optional[Dataset] = (
             ConcatDataset(
                 [
-                    JsonlDataset(test_file, text_column_name=text_column_name, label_column_name=label_column_name)
+                    JsonlDataset(
+                        test_file,
+                        text_column_name=text_column_name,
+                        label_column_name=label_column_name,
+                        label_type=label_type,
+                    )
                     for test_file in test_files
                 ]
             )
@@ -78,7 +85,12 @@ class MultiFileJsonlCorpus(Corpus):
         dev: Optional[Dataset] = (
             ConcatDataset(
                 [
-                    JsonlDataset(dev_file, text_column_name=text_column_name, label_column_name=label_column_name)
+                    JsonlDataset(
+                        dev_file,
+                        text_column_name=text_column_name,
+                        label_column_name=label_column_name,
+                        label_type=label_type,
+                    )
                     for dev_file in dev_files
                 ]
             )
@@ -98,6 +110,7 @@ class JsonlCorpus(MultiFileJsonlCorpus):
         encoding: str = "utf-8",
         text_column_name: str = "data",
         label_column_name: str = "label",
+        label_type: str = "ner",
         autofind_splits: bool = True,
         name: Optional[str] = None,
         **corpusargs,
@@ -124,6 +137,7 @@ class JsonlCorpus(MultiFileJsonlCorpus):
             test_files=[test_file] if test_file else [],
             text_column_name=text_column_name,
             label_column_name=label_column_name,
+            label_type=label_type,
             name=name if data_folder is None else str(data_folder),
             encoding=encoding,
             **corpusargs,
@@ -137,6 +151,7 @@ class JsonlDataset(FlairDataset):
         encoding: str = "utf-8",
         text_column_name: str = "data",
         label_column_name: str = "label",
+        label_type: str = "ner",
     ):
         """
         Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.
@@ -153,6 +168,7 @@ class JsonlDataset(FlairDataset):
 
         self.text_column_name = text_column_name
         self.label_column_name = label_column_name
+        self.label_type = label_type
         self.path_to_json_file = path_to_json_file
 
         self.sentences: List[Sentence] = []
@@ -163,23 +179,21 @@ class JsonlDataset(FlairDataset):
                 current_labels = current_line[label_column_name]
                 current_sentence = Sentence(raw_text)
 
-                JsonlDataset._add_labels_to_sentence(raw_text, current_sentence, current_labels)
+                self._add_labels_to_sentence(raw_text, current_sentence, current_labels)
 
                 self.sentences.append(current_sentence)
 
-    @staticmethod
-    def _add_labels_to_sentence(raw_text: str, sentence: Sentence, labels: List[List[Any]]):
+    def _add_labels_to_sentence(self, raw_text: str, sentence: Sentence, labels: List[List[Any]]):
         # Add tags for each annotated span
         for label in labels:
-            JsonlDataset._add_label_to_sentence(raw_text, sentence, label[0], label[1], label[2])
+            self._add_label_to_sentence(raw_text, sentence, label[0], label[1], label[2])
 
         # Tag all other token as Outer (O)
         for token in sentence:
-            if token.get_label("ner").value == "":
-                token.get_label("ner", "O")
+            if token.get_label(self.label_type).value == "":
+                token.get_label(self.label_type, "O")
 
-    @staticmethod
-    def _add_label_to_sentence(text: str, sentence: Sentence, start: int, end: int, label: str):
+    def _add_label_to_sentence(self, text: str, sentence: Sentence, start: int, end: int, label: str):
         """
         Adds a NE label to a given sentence.
 
@@ -227,7 +241,7 @@ class JsonlDataset(FlairDataset):
         # Add IOB tags
         prefix = "B"
         for token in sentence[start_idx : end_idx + 1]:
-            token.add_label("ner", f"{prefix}-{label}")
+            token.add_label(self.label_type, f"{prefix}-{label}")
             prefix = "I"
 
     def is_in_memory(self) -> bool:

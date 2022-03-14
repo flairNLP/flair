@@ -364,41 +364,57 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
     _assert_universal_dependencies_conllu_dataset(corpus.train)
 
 
-def test_reading_jsonl_dataset_with_one_entry_should_be_successful(tasks_base_path):
+def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
+    corpus = MultiFileJsonlCorpus(
+        train_files=[tasks_base_path / "jsonl/train.jsonl"],
+        dev_files=[tasks_base_path / "jsonl/testa.jsonl"],
+        test_files=[tasks_base_path / "jsonl/testb.jsonl"],
+        label_type="pos",
+    )
+
+    for sentence in corpus.get_all_sentences():
+        assert sentence.has_label("pos")
+        assert not sentence.has_label("ner")
+
+
+def test_jsonl_corpus_should_use_label_type(tasks_base_path):
+    corpus = JsonlCorpus(tasks_base_path / "jsonl", label_type="pos")
+
+    for sentence in corpus.get_all_sentences():
+        assert sentence.has_label("pos")
+        assert not sentence.has_label("ner")
+
+
+def test_jsonl_dataset_should_use_label_type(tasks_base_path):
     """
-    Tests reading a JsonlDataset containing a single entry
+    Tests whether the dataset respects the label_type parameter
+    """
+    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl", label_type="pos")  # use other type
+
+    for sentence in dataset.sentences:
+        assert sentence.has_label("pos")
+        assert not sentence.has_label("ner")
+
+
+def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
+    """
+    Tests reading a JsonlDataset containing multiple tagged entries
     """
     dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl")
 
-    assert len(dataset.sentences) == 3
+    assert len(dataset.sentences) == 5
     assert dataset.sentences[0].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC>"
+    assert dataset.sentences[1].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC> ."
+    assert dataset.sentences[2].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC> . <I-LOC>"
     assert (
-        dataset.sentences[1].to_tagged_string()
+        dataset.sentences[3].to_tagged_string()
         == "EU <B-ORG> rejects German <B-MISC> call to boycott British <B-MISC> lamb <I-MISC> ."
     )
 
 
-@pytest.mark.parametrize(
-    "input_text,labels,expected",
-    [
-        ("This is New Berlin", [[8, 18, "LOC"]], "This is New <B-LOC> Berlin <I-LOC>"),
-        ("This is New Berlin.", [[8, 18, "LOC"]], "This is New <B-LOC> Berlin <I-LOC> ."),
-        ("This is New Berlin.", [[8, 19, "LOC"]], "This is New <B-LOC> Berlin <I-LOC> . <I-LOC>"),
-    ],
-)
-def test_jsonl_dataset_extract_single_label_should_be_successful(input_text, labels, expected):
-    """
-    Tests whether labels are correctly applied to sentences
-    """
-    sentence = Sentence(input_text)
-    JsonlDataset._add_labels_to_sentence(input_text, sentence, labels)
-
-    assert sentence.to_tagged_string() == expected
-
-
 def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):
     corpus = JsonlCorpus(tasks_base_path / "jsonl")
-    assert len(corpus.get_all_sentences()) == 9
+    assert len(corpus.get_all_sentences()) == 11
 
 
 TRAIN_FILE = "tests/resources/tasks/jsonl/train.jsonl"
@@ -413,19 +429,19 @@ TESTB_FILE = "tests/resources/tasks/jsonl/testa.jsonl"
             [TRAIN_FILE],
             [TESTA_FILE],
             [TESTB_FILE],
-            9,
+            11,
         ),
         (
             [TRAIN_FILE],
             [],
             [TESTB_FILE],
-            6,
+            8,
         ),
         (
             [TRAIN_FILE],
             [],
             None,
-            3,
+            5,
         ),
         (
             None,
@@ -437,7 +453,7 @@ TESTB_FILE = "tests/resources/tasks/jsonl/testa.jsonl"
             [TRAIN_FILE, TESTA_FILE],
             [TESTA_FILE],
             [TESTB_FILE],
-            12,
+            14,
         ),
     ],
 )
