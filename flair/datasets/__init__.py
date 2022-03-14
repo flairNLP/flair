@@ -184,6 +184,7 @@ from .sequence_labeling import (
     NER_GERMAN_GERMEVAL,
     NER_GERMAN_LEGAL,
     NER_GERMAN_POLITICS,
+    NER_HIPE_2022,
     NER_HUNGARIAN,
     NER_ICELANDIC,
     NER_JAPANESE,
