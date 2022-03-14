@@ -264,9 +264,10 @@ class BioSyn(object):
         # get topk indexes with sorting
         topk_score_matrix = indexing_2d(score_matrix, topk_idxs)
         topk_argidxs = np.argsort(-topk_score_matrix)
+        topk_scores = np.sort(topk_score_matrix)
         topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
 
-        return topk_idxs
+        return topk_idxs, topk_scores
 
     def embed_sparse(self, names, show_progress=False):
         """
@@ -349,10 +350,11 @@ class BioSyn(object):
         )
         sparse_weight = self.get_sparse_weight().item()
         hybrid_score_matrix = sparse_weight * sparse_score_matrix + dense_score_matrix
-        hybrid_candidate_idxs = self.retrieve_candidate(
+        hybrid_candidate_idxs, hybrid_candidate_scores = self.retrieve_candidate(
             score_matrix=hybrid_score_matrix, topk=topk
         )
-        return dictionary[hybrid_candidate_idxs].squeeze(0)
+        # return dictionary[hybrid_candidate_idxs].squeeze(0)
+        return [np.append(dictionary[ind], score) for ind, score in zip(hybrid_candidate_idxs[0].tolist(), hybrid_candidate_scores[0].tolist())]
 
 
 class SapBert(object):
@@ -450,7 +452,7 @@ class SapBert(object):
 
         # get topk indexes with sorting
         topk_score_matrix = indexing_2d(score_matrix, topk_idxs)
-        topk_argidxs = np.argsort(-topk_score_matrix) 
+        topk_argidxs = np.argsort(-topk_score_matrix)
         topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
 
         return topk_idxs
@@ -474,15 +476,20 @@ class SapBert(object):
         """
 
         res = None
+        scores = None
         for i in tqdm(np.arange(0, score_matrix.shape[0], batch_size), disable=not show_progress):
             score_matrix_tmp = torch.tensor(score_matrix[i:i+batch_size]).cuda()
-            matrix_sorted = torch.argsort(score_matrix_tmp, dim=1, descending=True)[:, :topk].cpu()
+            sorted_values, matrix_sorted = torch.sort(score_matrix_tmp, dim=1, descending=True)
+            matrix_sorted = matrix_sorted[:, :topk].cpu()
+            sorted_values = sorted_values[:, :topk].cpu()
             if res is None: 
                 res = matrix_sorted
+                scores = sorted_values
             else:
                 res = torch.cat([res, matrix_sorted], axis=0)
+                scores = torch.cat([scores, sorted_values], axis=0)
 
-        return res.numpy()
+        return res.numpy(), scores.numpy()
 
     # Attention: uses cuda
     # Differnece: parameters batch_size (in BioSyn as constant) and agg_mode
@@ -561,13 +568,14 @@ class SapBert(object):
         score_matrix = dense_score_matrix
         # same as in BioSyn, but with options for batchsize and show_progress
         # TODO: Should differentiate based on cuda availability!
-        candidate_idxs = self.retrieve_candidate_cuda(
+        candidate_idxs, candidate_scores = self.retrieve_candidate_cuda(
                 score_matrix = score_matrix, 
                 topk = topk,
                 batch_size=16,
                 show_progress=False
         )
-        return [dictionary[ind] for ind in candidate_idxs[0].tolist()]#.squeeze()
+        # build return value with array of [concept_name, cui, score]
+        return [np.append(dictionary[ind], score) for ind, score in zip(candidate_idxs[0].tolist(), candidate_scores[0].tolist())]#.squeeze()
 
 
 class HunNen(object):
@@ -663,10 +671,8 @@ class HunNen(object):
                 )
 
                 for prediction in predictions:
-                    predicted_name = prediction[0]
-                    predicted_id = prediction[1]
                     sentence.add_complex_label(typename=entity_type + "_nen", 
-                        label=EntityLinkingLabel(span=entity.span, cui = predicted_id, concept_name = predicted_name))
+                        label=EntityLinkingLabel(span=entity.span, cui = prediction[1], concept_name = prediction[0], score = prediction[2].astype(float)))
 
 
     @staticmethod
