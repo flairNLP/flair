@@ -156,7 +156,7 @@ class BioSyn(object):
     Wrapper class for dense encoder and sparse encoder
     """
 
-    def __init__(self, max_length, use_cuda, initial_sparse_weight=None):
+    def __init__(self, max_length, use_cuda):
         self.max_length = max_length
         self.use_cuda = use_cuda
 
@@ -164,21 +164,6 @@ class BioSyn(object):
         self.encoder = None
         self.sparse_encoder = None
         self.sparse_weight = None
-
-        if initial_sparse_weight != None:
-            self.sparse_weight = self.init_sparse_weight(initial_sparse_weight)
-
-    def init_sparse_weight(self, initial_sparse_weight):
-        """
-        :param initial_sparse_weight float: initial sparse weight
-        """
-        if self.use_cuda:
-            self.sparse_weight = nn.Parameter(torch.empty(1).cuda())
-        else:
-            self.sparse_weight = nn.Parameter(torch.empty(1))
-        self.sparse_weight.data.fill_(initial_sparse_weight)  # init sparse_weight
-
-        return self.sparse_weight
 
     def get_sparse_weight(self):
         assert self.sparse_weight is not None
@@ -362,43 +347,31 @@ class SapBert(object):
     Wrapper class for BERT encoder
     """
 
-    def __init__(self):
+    # Same as BioSyn
+    def __init__(self, max_length, use_cuda):
+        self.max_length = max_length
+        self.use_cuda = use_cuda
+
         self.tokenizer = None
         self.encoder = None
 
-    def get_dense_encoder(self):
-        assert (self.encoder is not None)
-
-        return self.encoder
-
-    def get_dense_tokenizer(self):
-        assert (self.tokenizer is not None)
-
-        return self.tokenizer
-
-    def save_model(self, path, context=False):
-        # save bert model, bert config
-        self.encoder.save_pretrained(path)
-
-        # save bert vocab
-        self.tokenizer.save_pretrained(path)
-        
-
-    def load_model(self, path, max_length=25, use_cuda=True, lowercase=True):
-        self.load_bert(path, max_length, use_cuda)
+    # Differenece to BioSyn: not loading sparse encoder and weights
+    def load_model(self, path):
+        self.load_bert(path)
         
         return self
 
-    def load_bert(self, path, max_length, use_cuda, lowercase=True):
+    # Difference to load_dense_encoder in BioSyn: use_fast and do_lower_case
+    def load_bert(self, path, lowercase=True):
         self.tokenizer = AutoTokenizer.from_pretrained(path, 
                 use_fast=True, do_lower_case=lowercase)
         self.encoder = AutoModel.from_pretrained(path)
-        if use_cuda:
+        if self.use_cuda:
             self.encoder = self.encoder.cuda()
 
         return self.encoder, self.tokenizer
     
-    # Difference: has parameters cosine and normalize and uses them, same when not cosine and not normalize
+    # Difference to BioSyn: has parameters cosine and normalize and uses them, same when not cosine and not normalize
     def get_score_matrix(self, query_embeds, dict_embeds, cosine=False, normalise=False):
         """
         Return score matrix
@@ -453,11 +426,12 @@ class SapBert(object):
         # get topk indexes with sorting
         topk_score_matrix = indexing_2d(score_matrix, topk_idxs)
         topk_argidxs = np.argsort(-topk_score_matrix)
+        topk_scores = np.sort(topk_score_matrix)
         topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
 
-        return topk_idxs
+        return topk_idxs, topk_scores
 
-    # not in BioSyn
+    # Not in BioSyn
     def retrieve_candidate_cuda(self, score_matrix, topk, batch_size=128, show_progress=False):
         """
         Return sorted topk idxes (descending order)
@@ -490,6 +464,9 @@ class SapBert(object):
                 scores = torch.cat([scores, sorted_values], axis=0)
 
         return res.numpy(), scores.numpy()
+
+    def embed_sparse(self, names, show_progress):
+        return []
 
     # Attention: uses cuda
     # Differnece: parameters batch_size (in BioSyn as constant) and agg_mode
@@ -526,7 +503,7 @@ class SapBert(object):
                 batch = names[start:end]
                 batch_tokenized_names = self.tokenizer.batch_encode_plus(
                         batch, add_special_tokens=True, 
-                        truncation=True, max_length=25, 
+                        truncation=True, max_length=self.max_length, 
                         padding="max_length", return_tensors='pt')
                 batch_tokenized_names_cuda = {}
                 for k,v in batch_tokenized_names.items(): 
@@ -548,9 +525,6 @@ class SapBert(object):
         dense_embeds = np.concatenate(dense_embeds, axis=0)
         
         return dense_embeds
-
-    def embed_sparse(self, names, show_progress):
-        return []
 
     # possible values for agg_mode: cls|mean_pool|nospec
     def get_predictions(self, mention, dictionary, dict_sparse_embeds, dict_dense_embeds, topk, tgt_space_mean_vec=None, agg_mode="cls"):
