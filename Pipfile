@@ -10,7 +10,7 @@ flair = {editable = true, path = "."}
 pytest = "*"
 flake8 = "<4.0.0"
 pytest-mypy = "*"
-pytest-isort = "*"
+pytest-isort = "5.*"
 pytest-flake8 = "*"
 flake8-black = "*"
 types-tabulate = "*"
