@@ -393,6 +393,8 @@ class LanguageModel(nn.Module):
         return perplexity
 
     def __getstate__(self):
+        # "document_delimiter" property may be missing in some older pre-trained models
+        self.document_delimiter = getattr(self, "document_delimiter", "\n")
 
         # serialize the language models and the constructor arguments (but nothing else)
         model_state = {
