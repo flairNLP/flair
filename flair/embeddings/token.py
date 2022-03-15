@@ -885,14 +885,14 @@ class GazetteerEmbeddings(TokenEmbeddings):
     def __init__(
             self,
             path_to_gazetteers: str,
-            label_list: list,
+            label_dict: Dictionary,
             full_matching: bool = True,
             partial_matching: bool = True
     ):
         super().__init__()
         self.name = "Gazetteer"
         self.gazetteer_path = path_to_gazetteers
-        self.labels = label_list
+        self.labels = label_dict
         self.matching_methods = []
         if full_matching:
             self.matching_methods.append('full_match')
@@ -915,17 +915,24 @@ class GazetteerEmbeddings(TokenEmbeddings):
 
     def _set_feature_list(self):
         tag_list = ['O']
-        for tag in self.labels:
-            if 'partial_match' in self.matching_methods:
+        if 'partial_match' in self.matching_methods:
+            for tag in self.labels.get_items():
+                if tag == "<unk>":
+                    continue
                 for pos in ['S', 'B', 'E', 'I']:
                     tag_list.append(f'{pos}-{tag}')
         if 'full_match' in self.matching_methods:
-            tag_list.extend(self.labels)
+            for tag in self.labels.get_items():
+                if tag == "<unk>":
+                    continue
+                tag_list.append(tag)
         return tag_list
 
     def _get_gazetteers(self):
         gazetteer_files = []
-        for tag in self.labels:
+        for tag in self.labels.get_items():
+            if tag == "<unk>":
+                continue
             dict_with_label_and_files = {}
             pattern = f'.*-?{tag}[-_].*[.]txt'
             temp_list = []

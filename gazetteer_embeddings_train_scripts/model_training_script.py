@@ -15,11 +15,9 @@ transformer_embedding = False
 if dict_from_csv['use_conll_03'] == 'True':
     from flair.datasets import CONLL_03
     corpus = CONLL_03()
-    label_list = ['PER', 'ORG', 'LOC', 'MISC']
 if dict_from_csv['use_wnut_17'] == 'True':
     from flair.datasets import WNUT_17
     corpus = WNUT_17()
-    label_list = ['person', 'location', 'group', 'corporation', 'product', 'creative-work']
 
 label_type = dict_from_csv['label_type']
 label_dict = corpus.make_label_dictionary(label_type=label_type)
@@ -37,7 +35,7 @@ if dict_from_csv['use_gazetter_embeddintgs'] == 'True':
                                                                    dict_from_csv['path_to_gazetteers'],
                                                                    partial_matching=partial,
                                                                    full_matching=full,
-                                                                   label_list=label_list)
+                                                                   label_dict=label_dict)
     print(f'Getting gazetteers from {gazetteer_embedding.gazetteer_file_dict_list}')
     embeddings.append(gazetteer_embedding)
 

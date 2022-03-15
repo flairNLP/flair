@@ -5,19 +5,20 @@ from flair.data import Sentence
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 
-# corpus1 = WNUT_17()
-# corpus = CONLL_03()
+# corpus = WNUT_17()
+corpus = CONLL_03()
 sentences_1 = Sentence('I love Sandys Fort Spring!')
 sentences_2 = Sentence('The Land Tenure Reform Association (LTRA).')
 sentence_list = [sentences_1, sentences_2]
 
-label_list = ['PER', 'ORG', 'LOC', 'MISC']
+label_dict = corpus.make_label_dictionary(label_type='ner')
+
 bert_embedding = TransformerWordEmbeddings('bert-base-multilingual-cased')
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
                                                                "./gazetteers",
                                                                partial_matching=True,
                                                                full_matching=True,
-                                                               label_list=label_list)
+                                                               label_dict=label_dict)
 # gazetteer_embedding.embed(sentence_list)
 print(gazetteer_embedding.feature_list)
 
