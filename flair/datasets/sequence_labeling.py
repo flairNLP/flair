@@ -4126,3 +4126,138 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
             comment_symbol="#",
             **corpusargs,
         )
+
+
+class NER_HIPE_2022(ColumnCorpus):
+    def __init__(
+        self,
+        dataset_name: str,
+        language: str,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        version: str = "v1.0",
+        dev_split_name="dev",
+        add_document_separator=False,
+        sample_missing_splits=False,
+        **corpusargs,
+    ):
+        """
+        Initialize the CLEF-HIPE 2022 NER dataset. The first time you call this constructor it will automatically
+        download the specified dataset (by given a language).
+        :dataset_name: Supported datasets are: ajmc, hipe2020, letemps, newseye, sonar and topres19th.
+        :language: Language for a supported dataset.
+        :base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :tag_to_bioes: Dataset will automatically transformed into BIOES format (internally).
+        :in_memory: If True, keeps dataset in memory giving speedups in training.
+        :version: Version of CLEF-HIPE dataset. Currently only v1.0 is supported and available.
+        :dev_split_name: Defines default name of development split (dev by default). Only the NewsEye dataset has
+        currently two development splits: dev and dev2.
+        :add_document_separator: If True, a special document seperator will be introduced. This is highly
+        recommended when using our FLERT approach.
+        :sample_missing_splits: If True, data is automatically sampled when certain data splits are None.
+        """
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # Dataset split mapping
+        hipe_available_splits = {
+            "v1.0": {
+                "ajmc": {"de": ["sample"], "en": ["sample"]},
+                "hipe2020": {"de": ["train", "dev"], "en": ["dev"], "fr": ["train", "dev"]},
+                "letemps": {"fr": ["train", "dev"]},
+                "newseye": {
+                    "de": ["train", "dev", "dev2"],
+                    "fi": ["train", "dev", "dev2"],
+                    "fr": ["train", "dev", "dev2"],
+                    "sv": ["train", "dev", "dev2"],
+                },
+                "sonar": {"de": ["dev"]},
+                "topres19th": {"en": ["train", "dev"]},
+            }
+        }
+
+        eos_marker = "EndOfSentence"
+        document_separator = "# hipe2022:document_id"
+
+        # Special document marker for sample splits in AJMC dataset
+        if f"{version}/{dataset_name}" == "v1.0/ajmc":
+            document_separator = "# hipe2022:original_source"
+
+        columns = {0: "text", 1: "ner"}
+
+        dataset_base = self.__class__.__name__.lower()
+        data_folder = base_path / dataset_base / dataset_name / language
+
+        data_url = f"https://github.com/hipe-eval/HIPE-2022-data/raw/main/data/{version}/{dataset_name}/{language}"
+
+        dataset_splits = hipe_available_splits[version][dataset_name][language]
+
+        for split in dataset_splits:
+            cached_path(
+                f"{data_url}/HIPE-2022-{version}-{dataset_name}-{split}-{language}.tsv", data_folder / "original"
+            )
+
+        train_file = "train.txt" if "train" in dataset_splits else None
+        dev_file = f"{dev_split_name}.txt" if "sample" not in dataset_splits else "sample.txt"
+        test_file = "test.txt" if "test" in dataset_splits else None
+
+        new_data_folder = data_folder
+
+        if add_document_separator:
+            new_data_folder = new_data_folder / "with_doc_seperator"
+            new_data_folder.mkdir(parents=True, exist_ok=True)
+
+        dev_path = new_data_folder / dev_file
+
+        if not dev_path.exists():
+            for split in dataset_splits:
+                original_filename = f"HIPE-2022-{version}-{dataset_name}-{split}-{language}.tsv"
+                self.__prepare_corpus(
+                    data_folder / "original" / original_filename,
+                    new_data_folder / f"{split}.txt",
+                    eos_marker,
+                    document_separator,
+                    add_document_separator,
+                )
+
+        super(NER_HIPE_2022, self).__init__(
+            new_data_folder,
+            columns,
+            train_file=train_file,
+            dev_file=dev_file,
+            test_file=test_file,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            document_separator_token="-DOCSTART-",
+            skip_first_line=True,
+            comment_symbol="# ",
+            sample_missing_splits=sample_missing_splits,
+            **corpusargs,
+        )
+
+    @staticmethod
+    def __prepare_corpus(
+        file_in: Path, file_out: Path, eos_marker: str, document_separator: str, add_document_separator: bool
+    ):
+        with open(file_in, "rt") as f_p:
+            lines = f_p.readlines()
+
+        with open(file_out, "wt") as f_out:
+            # Add missing newline after header
+            f_out.write(lines[0] + "\n")
+
+            for line in lines[1:]:
+                line = line.rstrip()
+
+                # Add "real" document marker
+                if add_document_separator and line.startswith(document_separator):
+                    f_out.write("-DOCSTART- O\n\n")
+
+                f_out.write(line + "\n")
+
+                if eos_marker in line:
+                    f_out.write("\n")
