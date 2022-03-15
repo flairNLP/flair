@@ -933,12 +933,9 @@ class GazetteerEmbeddings(TokenEmbeddings):
         for tag in self.labels.get_items():
             if tag == "<unk>":
                 continue
-            dict_with_label_and_files = {}
             pattern = f'.*-?{tag}[-_].*[.]txt'
-            temp_list = []
-            temp_list.extend([f for f in os.listdir(self.gazetteer_path + '/') if re.match(pattern, f)])
-            dict_with_label_and_files[tag] = temp_list
-            gazetteer_files.append(dict_with_label_and_files)
+            gazetteer_files.append({tag: list([f for f in os.listdir(self.gazetteer_path + '/')
+                                               if re.match(pattern, f)])})
         return gazetteer_files
 
     def _process_gazetteers(self):
@@ -1028,9 +1025,9 @@ class GazetteerEmbeddings(TokenEmbeddings):
                 temp_token_dict = {}
                 token_string = ''
                 for token in sentence.tokens:
-                    temp_token_dict[token.idx-1] = [token.text, []]
+                    temp_token_dict[token.idx - 1] = [token.text, []]
                     token_string = token_string + f' {token.text}'
-                for n in range(1, len(temp_token_dict)+1):
+                for n in range(1, len(temp_token_dict) + 1):
                     string_window_split_list = split_on_window(token_string, n)
                     for string_split in string_window_split_list:
                         joined_string = ' '.join([list(d.values())[0] for d in string_split])
@@ -1380,7 +1377,6 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
                 self.language_embeddings[language_code] = gensim.models.KeyedVectors.load(str(embeddings_file))
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-
                 word_embedding = self.get_cached_vec(language_code=language_code, word=token.text)
 
                 token.set_embedding(self.name, word_embedding)
