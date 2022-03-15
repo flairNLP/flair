@@ -360,12 +360,10 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                            {'LOC': ['eng-LOC-name-test.txt']},
                            {'MISC': []}
                            ]
-        label_dict = MagicMock()
-        label_dict.get_items.return_value = ['PER', 'ORG', 'LOC', 'MISC']
         with patch.object(GazetteerEmbeddings, '_get_gazetteers', return_value=gazetteer_files), \
                 patch.object(GazetteerEmbeddings, '_set_feature_list'):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="./resources",
-                                                                           label_dict=label_dict)
+                                                                           label_dict=MagicMock())
             self.assertEqual(gazetteer_embedding.gazetteers_dicts['full_match'], self.full_match_hash_dict)
             self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['full_match']), 62)
 

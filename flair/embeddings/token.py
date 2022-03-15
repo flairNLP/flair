@@ -901,11 +901,11 @@ class GazetteerEmbeddings(TokenEmbeddings):
 
         self.gazetteer_file_dict_list = self._get_gazetteers()
 
+        self.feature_list = self._set_feature_list()
+
         log.info("processing gazetteers ...")
         self.gazetteers_dicts = self._process_gazetteers()
         log.info("Finished processing gazetteers!")
-
-        self.feature_list = self._set_feature_list()
 
         self.__embedding_length = len(self.feature_list)
 
