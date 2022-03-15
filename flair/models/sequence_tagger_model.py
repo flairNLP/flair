@@ -981,6 +981,18 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     )
                     lines.append(eval_line)
                 lines.append("\n")
+
+        else:
+            for datapoint in batch:
+                # print labels in CoNLL format
+                for token in datapoint:
+                    eval_line = (
+                        f"{token.text} "
+                        f"{token.get_label(gold_label_type).value} "
+                        f"{token.get_label('predicted').value}\n"
+                    )
+                    lines.append(eval_line)
+                lines.append("\n")
         return lines
 
 

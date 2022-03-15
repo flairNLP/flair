@@ -493,6 +493,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         self,
         label_dictionary: Dictionary,
         final_embedding_size: int,
+        dropout: float = 0.0,
+        locked_dropout: float = 0.0,
+        word_dropout: float = 0.0,
         multi_label: bool = False,
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
@@ -504,11 +507,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
 
+        # initialize the decoder
         if decoder is not None:
             self.decoder = decoder
             self._custom_decoder = True
         else:
-            # initialize the decoder
             self.decoder = torch.nn.Linear(final_embedding_size, len(self.label_dictionary))
             torch.nn.init.xavier_uniform_(self.decoder.weight)
             self._custom_decoder = False
@@ -516,6 +519,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         # set up multi-label logic
         self.multi_label = multi_label
         self.multi_label_threshold = multi_label_threshold
+
+        # init dropouts
+        self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
+        self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
+        self.word_dropout = flair.nn.WordDropout(word_dropout)
 
         # loss weights and loss function
         self.weight_dict = loss_weights
@@ -572,6 +580,13 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         # no loss can be calculated if there are no labels
         if not any(labels):
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+
+        # use dropout
+        embedded_data_points = embedded_data_points.unsqueeze(1)
+        embedded_data_points = self.dropout(embedded_data_points)
+        embedded_data_points = self.locked_dropout(embedded_data_points)
+        embedded_data_points = self.word_dropout(embedded_data_points)
+        embedded_data_points = embedded_data_points.squeeze(1)
 
         # push embedded_data_points through decoder to get the scores
         scores = self.decoder(embedded_data_points)
@@ -745,14 +760,31 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-        if "decoder" not in kwargs and "decoder" in state:
-            kwargs["decoder"] = state["decoder"]
+        # add DefaultClassifier arguments
+        for arg in [
+            "decoder",
+            "dropout",
+            "word_dropout",
+            "locked_dropout",
+            "multi_label",
+            "multi_label_threshold",
+            "loss_weights",
+        ]:
+            if arg not in kwargs and arg in state:
+                kwargs[arg] = state[arg]
 
         return super(Classifier, cls)._init_model_with_state_dict(state, **kwargs)
 
     def _get_state_dict(self):
         state = super()._get_state_dict()
 
+        # add variables of DefaultClassifier
+        state["dropout"] = self.dropout.p
+        state["word_dropout"] = self.word_dropout.dropout_rate
+        state["locked_dropout"] = self.locked_dropout.dropout_rate
+        state["multi_label"] = self.multi_label
+        state["multi_label_threshold"] = self.multi_label_threshold
+        state["loss_weights"] = self.loss_weights
         if self._custom_decoder:
             state["decoder"] = self.decoder
 
