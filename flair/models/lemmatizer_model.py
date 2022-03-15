@@ -634,7 +634,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             if verbose:
-                print(line_to_print)
+                log.info(line_to_print)
 
             if return_loss:
                 return overall_loss, number_tokens_in_total

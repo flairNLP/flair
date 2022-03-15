@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Union
+from typing import List, Union
 
 import torch
 
@@ -22,10 +22,8 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         self,
         word_embeddings: flair.embeddings.TokenEmbeddings,
         label_dictionary: Dictionary,
-        pooling_operation: str = "first&last",
+        pooling_operation: str = "first_last",
         label_type: str = "nel",
-        dropout: float = 0.5,
-        skip_unk_probability: Optional[float] = None,
         **classifierargs,
     ):
         """
@@ -41,7 +39,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         super(EntityLinker, self).__init__(
             label_dictionary=label_dictionary,
             final_embedding_size=word_embeddings.embedding_length * 2
-            if pooling_operation == "first&last"
+            if pooling_operation == "first_last"
             else word_embeddings.embedding_length,
             **classifierargs,
         )
@@ -49,25 +47,16 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
         self._label_type = label_type
-        self.skip_unk_probability = skip_unk_probability
-        if self.skip_unk_probability:
-            self.known_entities = label_dictionary.get_items()
-
-        # ----- Dropout parameters -----
-        # dropouts
-        self.use_dropout: float = dropout
-        if dropout > 0.0:
-            self.dropout = torch.nn.Dropout(dropout)
 
         cases = {
             "average": self.emb_mean,
             "first": self.emb_first,
             "last": self.emb_last,
-            "first&last": self.emb_firstAndLast,
+            "first_last": self.emb_firstAndLast,
         }
 
         if pooling_operation not in cases:
-            raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first&last"')
+            raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first_last"')
 
         self.aggregated_embedding = cases[pooling_operation]
 
@@ -122,7 +111,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                     # get the label of the entity
                     span_labels.append([entity.get_label(self.label_type).value])
 
-                    if self.pooling_operation == "first&last":
+                    if self.pooling_operation == "first_last":
                         mention_emb = torch.cat(
                             (
                                 entity.tokens[0].get_embedding(embedding_names),
@@ -137,9 +126,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
             if len(embedding_list) > 0:
                 embedded_entity_pairs = torch.cat(embedding_list, 0)
-
-                if self.use_dropout:
-                    embedded_entity_pairs = self.dropout(embedded_entity_pairs)
 
         if for_prediction:
             return embedded_entity_pairs, span_labels, data_points

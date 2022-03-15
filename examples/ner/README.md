@@ -105,7 +105,7 @@ For this example we could reach a F1-score of 75.38% with is on-par with the res
 ## Fine-Tuning using FLERT approach
 
 In the example, we extend our fine-tuning steps and use an additional context window of 64 tokens, as it was proposed in the
-[FLERT](ttps://arxiv.org/abs/2011.06993) paper.
+[FLERT](https://arxiv.org/abs/2011.06993) paper.
 
 As the Masakhane dataset does not provide any document boundaries, we leave this option unused.
 
