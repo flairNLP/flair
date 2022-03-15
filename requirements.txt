@@ -8,6 +8,7 @@ mpld3==0.3
 scikit-learn>=0.21.3
 sqlitedict>=1.6.0
 deprecated>=1.2.4
+hyperopt>=0.2.7
 transformers>=4.0.0
 bpemb>=0.3.2
 regex
