@@ -19,7 +19,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
         column_format={1: "text", 2: "pos", 3: "ner"},
     )
 
-    relation_label_dict = corpus.make_label_dictionary(label_type="relation", add_unk=False)
+    relation_label_dict = corpus.make_label_dictionary(label_type="relation", add_unk=True)
 
     embeddings = TransformerWordEmbeddings()
 
@@ -37,7 +37,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
         results_base_path,
         learning_rate=0.1,
         mini_batch_size=2,
-        max_epochs=3,
+        max_epochs=10,
         shuffle=False,
     )
 
