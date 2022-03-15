@@ -278,27 +278,10 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                                                                            label_dict=label_dict,
                                                                            full_matching=True,
                                                                            partial_matching=True)
-            self.assertEqual(gazetteer_embedding.feature_list, ['O',
-                                                                'S-PER',
-                                                                'B-PER',
-                                                                'E-PER',
-                                                                'I-PER',
-                                                                'S-ORG',
-                                                                'B-ORG',
-                                                                'E-ORG',
-                                                                'I-ORG',
-                                                                'S-LOC',
-                                                                'B-LOC',
-                                                                'E-LOC',
-                                                                'I-LOC',
-                                                                'S-MISC',
-                                                                'B-MISC',
-                                                                'E-MISC',
-                                                                'I-MISC',
-                                                                'PER',
-                                                                'ORG',
-                                                                'LOC',
-                                                                'MISC'])
+            self.assertEqual(gazetteer_embedding.feature_list, ['O', 'S-PER', 'B-PER', 'E-PER', 'I-PER', 'S-ORG',
+                                                                'B-ORG', 'E-ORG', 'I-ORG', 'S-LOC', 'B-LOC', 'E-LOC',
+                                                                'I-LOC', 'S-MISC', 'B-MISC', 'E-MISC', 'I-MISC',
+                                                                'PER', 'ORG', 'LOC', 'MISC'])
             self.assertEqual(gazetteer_embedding.embedding_length, 21)
 
     def test_set_feature_list_good2(self):
@@ -310,23 +293,9 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                                                                            label_dict=label_dict,
                                                                            full_matching=False,
                                                                            partial_matching=True)
-            self.assertEqual(gazetteer_embedding.feature_list, ['O',
-                                                                'S-PER',
-                                                                'B-PER',
-                                                                'E-PER',
-                                                                'I-PER',
-                                                                'S-ORG',
-                                                                'B-ORG',
-                                                                'E-ORG',
-                                                                'I-ORG',
-                                                                'S-LOC',
-                                                                'B-LOC',
-                                                                'E-LOC',
-                                                                'I-LOC',
-                                                                'S-MISC',
-                                                                'B-MISC',
-                                                                'E-MISC',
-                                                                'I-MISC'])
+            self.assertEqual(gazetteer_embedding.feature_list, ['O', 'S-PER', 'B-PER', 'E-PER', 'I-PER', 'S-ORG',
+                                                                'B-ORG', 'E-ORG', 'I-ORG', 'S-LOC', 'B-LOC', 'E-LOC',
+                                                                'I-LOC', 'S-MISC', 'B-MISC', 'E-MISC', 'I-MISC'])
             self.assertEqual(gazetteer_embedding.embedding_length, 17)
 
     def test_set_feature_list_good3(self):
