@@ -266,7 +266,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
-
+        sentences = sorted(sentences, key=len, reverse=True)
         gold_labels = self._prepare_label_tensor(sentences)
         sentence_tensor, lengths = self._prepare_tensors(sentences)
 
@@ -305,7 +305,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = pack_padded_sequence(sentence_tensor, lengths, batch_first=True, enforce_sorted=False)
+            packed = pack_padded_sequence(sentence_tensor, lengths, batch_first=True)
             rnn_output, hidden = self.rnn(packed)
             sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
 
@@ -455,7 +455,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             sentences = [sentence for sentence in sentences if len(sentence) > 0]
 
             # reverse sort all sequences by their length
-            reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
+            reordered_sentences = sorted(sentences, key=len, reverse=True)
 
             if len(reordered_sentences) == 0:
                 return sentences
@@ -475,9 +475,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 # stop if all sentences are empty
                 if not batch:
                     continue
-
-                # sort the sentences to have descending length
-                batch = sorted(batch, key=len, reverse=True)
 
                 # get features from forward propagation
                 sentence_tensor, lengths = self._prepare_tensors(batch)
