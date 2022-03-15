@@ -965,19 +965,21 @@ class ModelTrainer:
         self,
         base_path: Union[Path, str],
         optimizer,
-        mini_batch_size: int = 32,
+        file_name: str = "learning_rate.tsv",
         start_learning_rate: float = 1e-7,
         end_learning_rate: float = 10,
-        iterations: int = 1000,
+        iterations: int = 100,
+        mini_batch_size: int = 32,
         stop_early: bool = True,
-        file_name: str = "learning_rate.tsv",
+        smoothing_factor: float = 0.98,
         **kwargs,
     ) -> Path:
         best_loss = None
+        moving_avg_loss = 0.0
 
         # cast string to Path
-        base_path = Path(base_path)
-        base_path.mkdir(exist_ok=True, parents=True)
+        if type(base_path) is str:
+            base_path = Path(base_path)
         learning_rate_tsv = init_output_file(base_path, file_name)
 
         with open(learning_rate_tsv, "a") as f:
@@ -993,14 +995,8 @@ class ModelTrainer:
         self.model.train()
 
         step = 0
-
-        loss_list = []
-        average_loss_list = []
-
         while step < iterations:
-
             batch_loader = DataLoader(train_data, batch_size=mini_batch_size, shuffle=True)
-
             for batch in batch_loader:
                 step += 1
 
@@ -1018,34 +1014,27 @@ class ModelTrainer:
 
                 learning_rate = scheduler.get_lr()[0]
 
-                # append current loss to list of losses for all iterations
-                loss_list.append(loss.item())
-
-                # compute averaged loss
-                import statistics
-
-                moving_avg_loss = statistics.mean(loss_list)
-                average_loss_list.append(moving_avg_loss)
-
-                if len(average_loss_list) > 10:
-                    drop = average_loss_list[-10] - moving_avg_loss
+                loss_item = loss.item()
+                if step == 1:
+                    best_loss = loss_item
                 else:
-                    drop = 0.0
-
-                if not best_loss or moving_avg_loss < best_loss:
-                    best_loss = moving_avg_loss
+                    if smoothing_factor > 0:
+                        moving_avg_loss = smoothing_factor * moving_avg_loss + (1 - smoothing_factor) * loss_item
+                        loss_item = moving_avg_loss / (1 - smoothing_factor ** (step + 1))
+                    if loss_item < best_loss:  # type: ignore
+                        best_loss = loss  # type: ignore
 
                 if step > iterations:
                     break
 
-                if stop_early and (moving_avg_loss > 4 * best_loss or torch.isnan(loss)):
+                if stop_early and (loss_item > 4 * best_loss or torch.isnan(loss)):  # type: ignore
                     log_line(log)
                     log.info("loss diverged - stopping early!")
                     step = iterations
                     break
 
                 with open(str(learning_rate_tsv), "a") as f:
-                    f.write(f"{step}\t{learning_rate}\t{loss.item()}" f"\t{moving_avg_loss}\t{drop}\n")
+                    f.write(f"{step}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n")
 
             self.model.load_state_dict(model_state)
             self.model.to(flair.device)

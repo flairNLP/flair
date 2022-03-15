@@ -11,21 +11,24 @@ Flair에는 잘 알려진 하이퍼 매개변수 선택 도구인 [hyperopt](htt
 자세한 내용은 [tutorial 6](/resources/docs/KOR_docs/TUTORIAL_6_CORPUS.md)을 확인하세요.
 
 ```python
-from flair.datasets import TREC_6
+from flair.datasets import WNUT_17
+
 # 당신의 말뭉치를 로드하세요.
-corpus = TREC_6()
+corpus = WNUT_17().downsample(0.1)
 ```
 
 두 번째로는 매개변수의 검색 공간을 정의해야 합니다. 이를 통해 hyperopt에서 정의한 모든 [parameter expressions](https://github.com/hyperopt/hyperopt/wiki/FMin#21-parameter-expressions)을 사용할 수 있습니다.
 
 ```python
 from hyperopt import hp
+from flair.embeddings import FlairEmbeddings, StackedEmbeddings, WordEmbeddings
 from flair.hyperparameter.param_selection import SearchSpace, Parameter
+
 # 검색 공간을 정의하세요.
 search_space = SearchSpace()
 search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
-    [ WordEmbeddings('en') ], 
-    [ FlairEmbeddings('news-forward'), FlairEmbeddings('news-backward') ]
+    WordEmbeddings('en'),
+    StackedEmbeddings([FlairEmbeddings('news-forward'), FlairEmbeddings('news-backward')])
 ])
 search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[32, 64, 128])
 search_space.add(Parameter.RNN_LAYERS, hp.choice, options=[1, 2])
@@ -34,14 +37,7 @@ search_space.add(Parameter.LEARNING_RATE, hp.choice, options=[0.05, 0.1, 0.15, 0
 search_space.add(Parameter.MINI_BATCH_SIZE, hp.choice, options=[8, 16, 32])
 ```
 
-Attention: 항상 검색 공간에 임베딩을 추가해야 합니다(위 그림 참조). 다른 종류의 임베딩을 테스트하지 않으려면 검색 공간에 하나의 임베딩 옵션만 전달하면 됩니다. 그러면 모든 테스트 실행에서 사용될 것입니다. 
-다음 예시를 참조하세요.
-
-```python
-search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
-    [ FlairEmbeddings('news-forward'), FlairEmbeddings('news-backward') ]
-])
-```
+Attention: 항상 검색 공간에 임베딩을 추가해야 합니다(위 그림 참조). 다른 종류의 임베딩을 테스트하지 않으려면 검색 공간에 하나의 임베딩 옵션만 전달하면 됩니다. 그러면 모든 테스트 실행에서 사용될 것입니다.
 
 마지막 단계에서 실제 매개변수 선택기를 생성해야 합니다.
 작업에 따라 `TextClassifierParamSelector` 또는 `SequenceTaggerParamSelector`를 정의하고 최적화를 시작해야 합니다.
@@ -52,17 +48,16 @@ hyperopt가 수행해야 하는 최대 평가 실행 횟수를 정의할 수 있
 최종 평가 점수는 모든 실행에 대한 평균이 됩니다.
 
 ```python
-from flair.hyperparameter.param_selection import TextClassifierParamSelector, OptimizationValue
+from flair.hyperparameter.param_selection import SequenceTaggerParamSelector
+
 # 매개변수 선택기 생성
-param_selector = TextClassifierParamSelector(
-    corpus, 
-    False, 
-    'resources/results', 
-    'lstm',
-    max_epochs=50, 
-    training_runs=3,
-    optimization_value=OptimizationValue.DEV_SCORE
-)
+param_selector = SequenceTaggerParamSelector(corpus,
+                                             'ner',
+                                             'resources/results',
+                                             training_runs=3,
+                                             max_epochs=50
+                                             )
+
 # 최적화 시작
 param_selector.optimize(search_space, max_evals=100)
 ```
@@ -90,13 +85,14 @@ from flair.datasets import WNUT_17
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from flair.trainers import ModelTrainer
 from typing import List
+from torch.optim.adam import Adam
 # 1. 말뭉치 가져오기
 corpus = WNUT_17().downsample(0.1)
 print(corpus)
 # 2. 우리는 예측하고 싶은 태그는 무엇인가요?
 tag_type = 'ner'
 # 3. 말뭉치에서 태그 사전 만들기
-tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(label_type=tag_type)
 print(tag_dictionary.idx2item)
 # 4. 임베딩 초기화하기
 embedding_types: List[TokenEmbeddings] = [
@@ -113,27 +109,11 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
 # 6. 트레이너 초기화하기
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 # 7. 학습률 찾기
-learning_rate_tsv = trainer.find_learning_rate('resources/taggers/example-ner',
-                                                    'learning_rate.tsv')
+learning_rate_tsv = trainer.find_learning_rate('resources/taggers/example-ner', Adam)
 # 8. 학습률 찾기 곡선 그리기
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
 plotter.plot_learning_rate(learning_rate_tsv)
-```
-
-## Custom Optimizers
-
-이제 'ModelTrainer'를 초기화할 때 PyTorch의 최적화 프로그램을 훈련에 사용할 수 있습니다. 옵티마이저에 추가 옵션을 제공하려면 `weight_decay` 예제와 같이 지정하기만 하면 됩니다:
-
-```python
-from torch.optim.adam import Adam
-trainer = ModelTrainer(tagger, corpus,
-                       optimizer=Adam)
-                                     
-trainer.train(
-    "resources/taggers/example",
-    weight_decay=1e-4
-)
 ```
 
 ## Next
