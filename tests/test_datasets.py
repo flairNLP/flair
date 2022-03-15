@@ -453,8 +453,8 @@ def test_hipe_2022_corpus(tasks_base_path):
 
     test_hipe_2022(add_document_separator=True)
     test_hipe_2022(add_document_separator=False)
-    
-    
+
+
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
     corpus = MultiFileJsonlCorpus(
         train_files=[tasks_base_path / "jsonl/train.jsonl"],
