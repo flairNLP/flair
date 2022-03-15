@@ -1,9 +1,16 @@
 import shutil
 
+import pytest
+
 import flair
 import flair.datasets
 from flair.data import MultiCorpus, Sentence
 from flair.datasets import ColumnCorpus
+from flair.datasets.sequence_labeling import (
+    JsonlCorpus,
+    JsonlDataset,
+    MultiFileJsonlCorpus,
+)
 
 
 def test_load_imdb_data(tasks_base_path):
@@ -355,3 +362,108 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
     assert len(corpus.test) == 1
 
     _assert_universal_dependencies_conllu_dataset(corpus.train)
+
+
+def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
+    corpus = MultiFileJsonlCorpus(
+        train_files=[tasks_base_path / "jsonl/train.jsonl"],
+        dev_files=[tasks_base_path / "jsonl/testa.jsonl"],
+        test_files=[tasks_base_path / "jsonl/testb.jsonl"],
+        label_type="pos",
+    )
+
+    for sentence in corpus.get_all_sentences():
+        assert sentence.has_label("pos")
+        assert not sentence.has_label("ner")
+
+
+def test_jsonl_corpus_should_use_label_type(tasks_base_path):
+    corpus = JsonlCorpus(tasks_base_path / "jsonl", label_type="pos")
+
+    for sentence in corpus.get_all_sentences():
+        assert sentence.has_label("pos")
+        assert not sentence.has_label("ner")
+
+
+def test_jsonl_dataset_should_use_label_type(tasks_base_path):
+    """
+    Tests whether the dataset respects the label_type parameter
+    """
+    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl", label_type="pos")  # use other type
+
+    for sentence in dataset.sentences:
+        assert sentence.has_label("pos")
+        assert not sentence.has_label("ner")
+
+
+def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
+    """
+    Tests reading a JsonlDataset containing multiple tagged entries
+    """
+    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl")
+
+    assert len(dataset.sentences) == 5
+    assert dataset.sentences[0].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC>"
+    assert dataset.sentences[1].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC> ."
+    assert dataset.sentences[2].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC> . <I-LOC>"
+    assert (
+        dataset.sentences[3].to_tagged_string()
+        == "EU <B-ORG> rejects German <B-MISC> call to boycott British <B-MISC> lamb <I-MISC> ."
+    )
+
+
+def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):
+    corpus = JsonlCorpus(tasks_base_path / "jsonl")
+    assert len(corpus.get_all_sentences()) == 11
+
+
+TRAIN_FILE = "tests/resources/tasks/jsonl/train.jsonl"
+TESTA_FILE = "tests/resources/tasks/jsonl/testa.jsonl"
+TESTB_FILE = "tests/resources/tasks/jsonl/testa.jsonl"
+
+
+@pytest.mark.parametrize(
+    "train_files,dev_files,test_files,expected_size",
+    [
+        (
+            [TRAIN_FILE],
+            [TESTA_FILE],
+            [TESTB_FILE],
+            11,
+        ),
+        (
+            [TRAIN_FILE],
+            [],
+            [TESTB_FILE],
+            8,
+        ),
+        (
+            [TRAIN_FILE],
+            [],
+            None,
+            5,
+        ),
+        (
+            None,
+            [TESTA_FILE],
+            None,
+            3,
+        ),
+        (
+            [TRAIN_FILE, TESTA_FILE],
+            [TESTA_FILE],
+            [TESTB_FILE],
+            14,
+        ),
+    ],
+)
+def test_corpus_with_single_files_should_load(train_files, dev_files, test_files, expected_size):
+    corpus = MultiFileJsonlCorpus(train_files, dev_files, test_files)
+    assert len(corpus.get_all_sentences()) == expected_size
+
+
+def test_empty_corpus_should_raise_error():
+    with pytest.raises(RuntimeError) as err:
+        MultiFileJsonlCorpus(None, None, None)
+
+    assert str(err.value) == "No data provided when initializing corpus object."
