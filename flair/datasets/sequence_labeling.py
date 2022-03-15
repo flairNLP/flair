@@ -3955,7 +3955,7 @@ class NER_HIPE_2022(ColumnCorpus):
             )
 
         train_file = "train.txt" if "train" in dataset_splits else None
-        dev_file = f"{dev_split_name}.txt" if not "sample" in dataset_splits else "sample.txt"
+        dev_file = f"{dev_split_name}.txt" if "sample" not in dataset_splits else "sample.txt"
         test_file = "test.txt" if "test" in dataset_splits else None
 
         new_data_folder = data_folder
