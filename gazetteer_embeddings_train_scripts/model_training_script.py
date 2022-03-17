@@ -1,9 +1,12 @@
 import csv
 import sys
+import flair
 from flair.embeddings import TransformerWordEmbeddings, StackedEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 
+#flair.device = 'cuda:0'
+#flair.device = 'cuda:1'
 csv_file = sys.argv[1]
 print(f"running {csv_file}")
 file = open(csv_file, "r")
