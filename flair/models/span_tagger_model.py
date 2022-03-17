@@ -116,6 +116,11 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 # use the gold labels
                 spans_labels.append(span.get_label(self.label_type).value)
 
+                #span.set_label(self.label_type, value=span.get_label(self.label_type).value)
+                # TODO: not sure if this necessary/right? If not, the "O" is not visible as span label
+                # and (not sure if related) the model always predicts "<unk>" (why?)
+                # if done, "O" is visible, BUT predict doesn't work because label cannot be removed somehow...?
+
             spans.extend(spans_sentence)
 
             if for_prediction:
@@ -126,7 +131,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
         if for_prediction:
             return spans_embedded, spans_labels, data_points
-            print("for pred")
 
         return spans_embedded, spans_labels
 

@@ -10,6 +10,7 @@ from .sequence_tagger_model import MultiTagger, SequenceTagger
 from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier
 from .word_tagger_model import WordTagger
+from .span_tagger_model import SpanTagger
 
 __all__ = [
     "DependencyParser",
@@ -22,6 +23,7 @@ __all__ = [
     "MultiTagger",
     "SequenceTagger",
     "WordTagger",
+    "SpanTagger",
     "FewshotClassifier",
     "TARSClassifier",
     "TARSTagger",
