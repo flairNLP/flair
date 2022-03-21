@@ -74,6 +74,76 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                             'Опорски рид': ['LOC'],
                             'კუნძული ორპირი': ['LOC']}
 
+    full_match_hash_dict2 = {' National Archives and Library Agency': ['1'],
+                             '!Bang!': ['3'],
+                             '!Xunkhwesa Combined School': ['1', '3'],
+                             '""Onderzoek - en Documentatiecentrum Beweging van Mensen met Laag Inkomen en Kinderen"': [
+                                 '3'],
+                             '"Congarees" Site': ['2'],
+                             '"El Salto" Tonatico': ['2'],
+                             '"La Cetățui" archaeological site in Tismana': ['2'],
+                             '"La Grande Cité"': ['2'],
+                             '"Mons. Aurelio Sorrentino" Diocesan Museum': ['3'],
+                             '"Octavian Goga" Cluj County Library': ['3'],
+                             '"Pedro Arrupe" Political Training Institute': ['3'],
+                             '"Red Terror" Martyrs\' Memorial Museum': ['3'],
+                             '#Minas para Todos': ['3'],
+                             '#Nome?': ['3'],
+                             "' Azeïlât Aḥmoûd": ['2'],
+                             "' Cogozzo - Don Eugenio Mazzi '": ['3'],
+                             "' Villa Saviola '": ['3'],
+                             "''A. Ilvento''-Grassano": ['3'],
+                             "'48 Smallholders Party": ['3'],
+                             "'A. Rosmini' - Robecchetto C/I": ['3'],
+                             "'Achar Teïdoûm": ['2'],
+                             "'Adade Yus Mountain": ['2'],
+                             "'Adam Dihé": ['2'],
+                             "'Aklé 'Âouâna": ['2'],
+                             "'Aklé Aoukâr": ['2'],
+                             "'Aklé el Liyene": ['2'],
+                             "'Aleb Bel 'Aïd": ['2'],
+                             "'t Gaverhopke Kerstbier": ['0'],
+                             "'t Gaverhopke Kriek": ['0'],
+                             "'t Vliegend Peert Centre for Old Arts": ['1'],
+                             '+EU': ['1'],
+                             ', Berhampur': ['1'],
+                             '1 - Antonio Salvetti Colle V.E.': ['3'],
+                             '1 - I.C. Nocera Inferiore': ['3'],
+                             '1 2 3 Stella': ['3'],
+                             '1 C.D. Bovio Ruvo': ['3'],
+                             '1 C.D.Gramsci - S.M. Pende': ['3'],
+                             '7α-hydroxydehydroepiandrosterone': ['0'],
+                             '7α-methylestr-4-ene-3,17-dione': ['0'],
+                             '7β-hydroxydehydroepiandrosterone': ['0'],
+                             'America de Manta': ['1'],
+                             'I': ['1'],
+                             'Jekabpils Agrobusiness College': ['3'],
+                             'Land Tenure Reform Association': ['3'],
+                             'Raymond and Beverly Sackler Institute for Biological, Physical and Engineering Sciences, Yale University': [
+                                 '3'],
+                             'Sandys': ['1'],
+                             'Sandys Fort Spring': ['2', '3'],
+                             'Sandøydrætten': ['2'],
+                             'Sandøyfjorden': ['2'],
+                             'Sandøygrunnen': ['2'],
+                             'Ąžuolas': ['3'],
+                             'Ķūķu cliffs': ['2'],
+                             'ΑΕΝ Dromolaxia': ['3'],
+                             'Ειδικό Γυμνάσιο - Ειδικό ΓΕΛ Αθηνών': ['3'],
+                             'Голоух': ['2'],
+                             'Дом-музей Островского': ['3'],
+                             'Опорски рид': ['2'],
+                             'Партия Развития Украины': ['3'],
+                             'Русскій BЂстникъ': ['3'],
+                             'Художньо-меморіальний музей Олекси Новаківського': ['3'],
+                             'дерево спарапетов в Иджеване': ['2'],
+                             'آبشار شوی': ['2'],
+                             'تاهات أتاكور': ['2'],
+                             'หนังสือพิมพ์ผู้จัดการ': ['1'],
+                             'โรงเรียนหาดใหญ่รัฐประชาสรรค์': ['3'],
+                             'კუნძული ორპირი': ['2'],
+                             '알로이시오중학교': ['3']}
+
     partial_match_hash_dict = {'!Bang!': ['S-ORG'],
                                '!Xunkhwesa': ['B-ORG'],
                                '""Onderzoek': ['B-ORG'],
@@ -245,6 +315,183 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                                'ორპირი': ['E-LOC'],
                                '알로이시오중학교': ['S-ORG']}
 
+    partial_match_hash_dict2 = {'!Bang!': ['S-3'],
+                                '!Xunkhwesa': ['B-1', 'B-3'],
+                                '""Onderzoek': ['B-3'],
+                                '"Congarees"': ['B-2'],
+                                '"El': ['B-2'],
+                                '"La': ['B-2'],
+                                '"Mons.': ['B-3'],
+                                '"Octavian': ['B-3'],
+                                '"Pedro': ['B-3'],
+                                '"Red': ['B-3'],
+                                '#Minas': ['B-3'],
+                                '#Nome?': ['S-3'],
+                                "''A.": ['B-3'],
+                                "'48": ['B-3'],
+                                "'A.": ['B-3'],
+                                "'Achar": ['B-2'],
+                                "'Adade": ['B-2'],
+                                "'Adam": ['B-2'],
+                                "'Aklé": ['B-2'],
+                                "'Aleb": ['B-2'],
+                                "'Aïd": ['E-2'],
+                                "'t": ['B-0', 'B-1'],
+                                "'Âouâna": ['E-2'],
+                                '+EU': ['S-1'],
+                                '7α-hydroxydehydroepiandrosterone': ['S-0'],
+                                '7α-methylestr-4-ene-3,17-dione': ['S-0'],
+                                '7β-hydroxydehydroepiandrosterone': ['S-0'],
+                                'Agency': ['E-1'],
+                                'Agrobusiness': ['I-3'],
+                                'America': ['B-1'],
+                                'Antonio': ['B-3'],
+                                'Aoukâr': ['E-2'],
+                                'Archives': ['I-1'],
+                                'Arrupe"': ['I-3'],
+                                'Arts': ['E-1'],
+                                'Association': ['E-3'],
+                                'Aurelio': ['I-3'],
+                                'Azeïlât': ['B-2'],
+                                'Aḥmoûd': ['E-2'],
+                                'Bel': ['I-2'],
+                                'Berhampur': ['S-1'],
+                                'Beverly': ['I-3'],
+                                'Beweging': ['I-3'],
+                                'Biological,': ['I-3'],
+                                'Bovio': ['I-3'],
+                                'BЂстникъ': ['E-3'],
+                                'C.D.': ['B-3'],
+                                'C.D.Gramsci': ['B-3'],
+                                'C/I': ['E-3'],
+                                'Centre': ['I-1'],
+                                'Cetățui"': ['I-2'],
+                                'Cité"': ['E-2'],
+                                'Cluj': ['I-3'],
+                                'Cogozzo': ['B-3'],
+                                'Colle': ['I-3'],
+                                'College': ['E-3'],
+                                'Combined': ['I-1', 'I-3'],
+                                'County': ['I-3'],
+                                'Dihé': ['E-2'],
+                                'Diocesan': ['I-3'],
+                                'Documentatiecentrum': ['I-3'],
+                                'Don': ['I-3'],
+                                'Dromolaxia': ['E-3'],
+                                'Engineering': ['I-3'],
+                                'Eugenio': ['I-3'],
+                                'Fort': ['I-2', 'I-3'],
+                                'Gaverhopke': ['I-0'],
+                                'Goga"': ['I-3'],
+                                'Grande': ['I-2'],
+                                'I': ['S-1'],
+                                'I.C.': ['B-3'],
+                                "Ilvento''-Grassano": ['E-3'],
+                                'Inferiore': ['E-3'],
+                                'Inkomen': ['I-3'],
+                                'Institute': ['E-3', 'I-3'],
+                                'Jekabpils': ['B-3'],
+                                'Kerstbier': ['E-0'],
+                                'Kinderen"': ['E-3'],
+                                'Kriek': ['E-0'],
+                                'Laag': ['I-3'],
+                                'Land': ['B-3'],
+                                'Library': ['I-1', 'E-3'],
+                                'Liyene': ['E-2'],
+                                'Manta': ['E-1'],
+                                "Martyrs'": ['I-3'],
+                                'Mazzi': ['E-3'],
+                                'Memorial': ['I-3'],
+                                'Mensen': ['I-3'],
+                                'Mountain': ['E-2'],
+                                'Museum': ['E-3'],
+                                'National': ['B-1'],
+                                'Nocera': ['I-3'],
+                                'Old': ['I-1'],
+                                'Party': ['E-3'],
+                                'Peert': ['I-1'],
+                                'Pende': ['E-3'],
+                                'Physical': ['I-3'],
+                                'Political': ['I-3'],
+                                'Raymond': ['B-3'],
+                                'Reform': ['I-3'],
+                                'Robecchetto': ['I-3'],
+                                "Rosmini'": ['I-3'],
+                                'Ruvo': ['E-3'],
+                                'S.M.': ['I-3'],
+                                'Sackler': ['I-3'],
+                                'Salto"': ['I-2'],
+                                'Salvetti': ['I-3'],
+                                'Sandys': ['S-1', 'B-2', 'B-3'],
+                                'Sandøydrætten': ['S-2'],
+                                'Sandøyfjorden': ['S-2'],
+                                'Sandøygrunnen': ['S-2'],
+                                'Saviola': ['E-3'],
+                                'School': ['E-1', 'E-3'],
+                                'Sciences,': ['I-3'],
+                                'Site': ['E-2'],
+                                'Smallholders': ['I-3'],
+                                'Sorrentino"': ['I-3'],
+                                'Spring': ['E-2', 'E-3'],
+                                'Stella': ['S-3'],
+                                'Tenure': ['I-3'],
+                                'Terror"': ['I-3'],
+                                'Teïdoûm': ['E-2'],
+                                'Tismana': ['E-2'],
+                                'Todos': ['E-3'],
+                                'Tonatico': ['E-2'],
+                                'Training': ['I-3'],
+                                'University': ['E-3'],
+                                'V.E.': ['E-3'],
+                                'Villa': ['B-3'],
+                                'Vliegend': ['I-1'],
+                                'Yale': ['I-3'],
+                                'Yus': ['I-2'],
+                                'and': ['I-1', 'I-3'],
+                                'archaeological': ['I-2'],
+                                'cliffs': ['E-2'],
+                                'de': ['I-1'],
+                                'el': ['I-2'],
+                                'en': ['I-3'],
+                                'for': ['I-1', 'I-3'],
+                                'in': ['I-2'],
+                                'met': ['I-3'],
+                                'para': ['I-3'],
+                                'site': ['I-2'],
+                                'van': ['I-3'],
+                                'Ąžuolas': ['S-3'],
+                                'Ķūķu': ['B-2'],
+                                'ΑΕΝ': ['B-3'],
+                                'Αθηνών': ['E-3'],
+                                'ΓΕΛ': ['I-3'],
+                                'Γυμνάσιο': ['I-3'],
+                                'Ειδικό': ['B-3'],
+                                'Голоух': ['S-2'],
+                                'Дом-музей': ['B-3'],
+                                'Иджеване': ['E-2'],
+                                'Новаківського': ['E-3'],
+                                'Олекси': ['I-3'],
+                                'Опорски': ['B-2'],
+                                'Островского': ['E-3'],
+                                'Партия': ['B-3'],
+                                'Развития': ['I-3'],
+                                'Русскій': ['B-3'],
+                                'Украины': ['E-3'],
+                                'Художньо-меморіальний': ['B-3'],
+                                'дерево': ['B-2'],
+                                'музей': ['I-3'],
+                                'рид': ['E-2'],
+                                'спарапетов': ['I-2'],
+                                'آبشار': ['B-2'],
+                                'أتاكور': ['E-2'],
+                                'تاهات': ['B-2'],
+                                'شوی': ['E-2'],
+                                'หนังสือพิมพ์ผู้จัดการ': ['S-1'],
+                                'โรงเรียนหาดใหญ่รัฐประชาสรรค์': ['S-3'],
+                                'კუნძული': ['B-2'],
+                                'ორპირი': ['E-2'],
+                                '알로이시오중학교': ['S-3']}
+
     def setUp(self) -> None:
         self.maxDiff = None
         pass
@@ -310,7 +557,56 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
             self.assertEqual(gazetteer_embedding.feature_list, ['O', 'PER', 'ORG', 'LOC', 'MISC'])
             self.assertEqual(gazetteer_embedding.embedding_length, 5)
 
-    def test_get_gazetteers_good(self):
+    def test_set_feature_list_good4(self):
+        label_dict = MagicMock()
+        label_dict.get_items.return_value = ['PER', 'ORG', 'LOC', 'MISC']
+        gazetteers = ['eng-CHEM-name-test.txt', 'eng-ORG-alias-test.txt', 'eng-LOC-name-test.txt',
+                      'eng-ORG-name-test.txt']
+        with patch.object(GazetteerEmbeddings, '_get_gazetteers', return_value=gazetteers), \
+                patch.object(GazetteerEmbeddings, '_process_gazetteers'):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
+                                                                           label_dict=label_dict,
+                                                                           full_matching=True,
+                                                                           partial_matching=True,
+                                                                           use_all_gazetteers=True)
+            self.assertEqual(gazetteer_embedding.feature_list, ['O', 'S-0', 'B-0', 'E-0', 'I-0', 'S-1', 'B-1', 'E-1',
+                                                                'I-1', 'S-2', 'B-2', 'E-2', 'I-2', 'S-3', 'B-3', 'E-3',
+                                                                'I-3', '0', '1', '2', '3'])
+            self.assertEqual(gazetteer_embedding.embedding_length, 21)
+
+    def test_set_feature_list_good5(self):
+        label_dict = MagicMock()
+        label_dict.get_items.return_value = ['PER', 'ORG', 'LOC', 'MISC']
+        gazetteers = ['eng-CHEM-name-test.txt', 'eng-ORG-alias-test.txt', 'eng-LOC-name-test.txt',
+                      'eng-ORG-name-test.txt']
+        with patch.object(GazetteerEmbeddings, '_get_gazetteers', return_value=gazetteers), \
+                patch.object(GazetteerEmbeddings, '_process_gazetteers'):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
+                                                                           label_dict=label_dict,
+                                                                           full_matching=False,
+                                                                           partial_matching=True,
+                                                                           use_all_gazetteers=True)
+            self.assertEqual(gazetteer_embedding.feature_list, ['O', 'S-0', 'B-0', 'E-0', 'I-0', 'S-1', 'B-1', 'E-1',
+                                                                'I-1', 'S-2', 'B-2', 'E-2', 'I-2', 'S-3', 'B-3', 'E-3',
+                                                                'I-3'])
+            self.assertEqual(gazetteer_embedding.embedding_length, 17)
+
+    def test_set_feature_list_good6(self):
+        label_dict = MagicMock()
+        label_dict.get_items.return_value = ['PER', 'ORG', 'LOC', 'MISC']
+        gazetteers = ['eng-CHEM-name-test.txt', 'eng-ORG-alias-test.txt', 'eng-LOC-name-test.txt',
+                      'eng-ORG-name-test.txt']
+        with patch.object(GazetteerEmbeddings, '_get_gazetteers', return_value=gazetteers), \
+                patch.object(GazetteerEmbeddings, '_process_gazetteers'):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
+                                                                           label_dict=label_dict,
+                                                                           full_matching=True,
+                                                                           partial_matching=False,
+                                                                           use_all_gazetteers=True)
+            self.assertEqual(gazetteer_embedding.feature_list, ['O', '0', '1', '2', '3'])
+            self.assertEqual(gazetteer_embedding.embedding_length, 5)
+
+    def test_get_gazetteers_good1(self):
         label_dict = MagicMock()
         label_dict.get_items.return_value = ['PER', 'ORG', 'LOC', 'MISC']
         with patch.object(GazetteerEmbeddings, '_process_gazetteers'), \
@@ -323,7 +619,20 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                                                                             {'LOC': ['eng-LOC-name-test.txt']},
                                                                             {'MISC': []}])
 
-    def test_process_gazetteers_good(self):
+    def test_get_gazetteers_good2(self):
+        label_dict = MagicMock()
+        label_dict.get_items.return_value = ['PER', 'ORG', 'LOC', 'MISC']
+        with patch.object(GazetteerEmbeddings, '_process_gazetteers'), \
+                patch.object(GazetteerEmbeddings, '_set_feature_list'):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="./resources",
+                                                                           label_dict=label_dict,
+                                                                           use_all_gazetteers=True)
+            self.assertEqual(gazetteer_embedding.gazetteer_file_dict_list, [{'0': ['eng-CHEM-name-test.txt']},
+                                                                            {'1': ['eng-ORG-alias-test.txt']},
+                                                                            {'2': ['eng-LOC-name-test.txt']},
+                                                                            {'3': ['eng-ORG-name-test.txt']}])
+
+    def test_process_gazetteers_good1(self):
         gazetteer_files = [{'PER': []},
                            {'ORG': ['eng-ORG-alias-test.txt', 'eng-ORG-name-test.txt']},
                            {'LOC': ['eng-LOC-name-test.txt']},
@@ -338,6 +647,21 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
 
             self.assertEqual(gazetteer_embedding.gazetteers_dicts['partial_match'], self.partial_match_hash_dict)
             self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['partial_match']), 170)
+
+    def test_process_gazetteers_good2(self):
+        gazetteer_files = [{'0': ['eng-CHEM-name-test.txt']},
+                           {'1': ['eng-ORG-alias-test.txt']},
+                           {'2': ['eng-LOC-name-test.txt']},
+                           {'3': ['eng-ORG-name-test.txt']}]
+        with patch.object(GazetteerEmbeddings, '_get_gazetteers', return_value=gazetteer_files), \
+                patch.object(GazetteerEmbeddings, '_set_feature_list'):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="./resources",
+                                                                           label_dict=MagicMock())
+            self.assertEqual(gazetteer_embedding.gazetteers_dicts['full_match'], self.full_match_hash_dict2)
+            self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['full_match']), 67)
+
+            self.assertEqual(gazetteer_embedding.gazetteers_dicts['partial_match'], self.partial_match_hash_dict2)
+            self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['partial_match']), 176)
 
     def test_add_embeddings_internal_good1(self):
         sentences_1 = Sentence('I love Sandys Fort Spring!')
@@ -628,3 +952,156 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
             self.assertEqual(torch.sum(sentence_list[2][0].embedding), torch.tensor(2))
             self.assertEqual(sentence_list[2][0].embedding[12], torch.tensor(1))
             self.assertEqual(sentence_list[2][0].embedding[19], torch.tensor(1))
+
+    def test_add_embeddings_internal_good4(self):
+        sentences_1 = Sentence('7α-methylestr-4-ene-3,17-dione is a chemical')
+        sentences_2 = Sentence('The Land Tenure Reform Association (LTRA).')
+        sentence_list = [sentences_1, sentences_2]
+        feature_list = ['O', 'S-0', 'B-0', 'E-0', 'I-0', 'S-1', 'B-1', 'E-1',
+                        'I-1', 'S-2', 'B-2', 'E-2', 'I-2', 'S-3', 'B-3', 'E-3',
+                        'I-3', '0', '1', '2', '3']
+        gazetteers = {'partial_match': self.partial_match_hash_dict2, 'full_match': self.full_match_hash_dict2}
+        with patch.object(GazetteerEmbeddings, '_get_gazetteers'), \
+                patch.object(GazetteerEmbeddings, '_set_feature_list', return_value=feature_list), \
+                patch.object(GazetteerEmbeddings, '_process_gazetteers', return_value=gazetteers):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
+                                                                           label_dict=MagicMock(),
+                                                                           full_matching=True,
+                                                                           partial_matching=True,
+                                                                           use_all_gazetteers=True)
+            gazetteer_embedding.embed(sentence_list)
+
+            for sentence in sentence_list:
+                for token in sentence:
+                    assert len(token.get_embedding()) == len(feature_list)
+
+            # 7α-methylestr-4-ene-3,17-dione
+            self.assertEqual(torch.sum(sentence_list[0][0].embedding), torch.tensor(2))
+            self.assertEqual(sentence_list[0][0].embedding[1], torch.tensor(1))
+            self.assertEqual(sentence_list[0][0].embedding[17], torch.tensor(1))
+
+            # is
+            self.assertEqual(torch.sum(sentence_list[0][1].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][1].embedding[0], torch.tensor(1))
+
+            # a
+            self.assertEqual(torch.sum(sentence_list[0][2].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][2].embedding[0], torch.tensor(1))
+
+            # chemical
+            self.assertEqual(torch.sum(sentence_list[0][3].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][3].embedding[0], torch.tensor(1))
+            ############################################################################
+            # The
+            self.assertEqual(torch.sum(sentence_list[1][0].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][0].embedding[0], torch.tensor(1))
+
+            # Land
+            self.assertEqual(torch.sum(sentence_list[1][1].embedding), torch.tensor(2))
+            self.assertEqual(sentence_list[1][1].embedding[14], torch.tensor(1))
+            self.assertEqual(sentence_list[1][1].embedding[20], torch.tensor(1))
+
+            # Tenure
+            self.assertEqual(torch.sum(sentence_list[1][2].embedding), torch.tensor(2))
+            self.assertEqual(sentence_list[1][2].embedding[16], torch.tensor(1))
+            self.assertEqual(sentence_list[1][2].embedding[20], torch.tensor(1))
+
+            # Reform
+            self.assertEqual(torch.sum(sentence_list[1][3].embedding), torch.tensor(2))
+            self.assertEqual(sentence_list[1][3].embedding[16], torch.tensor(1))
+            self.assertEqual(sentence_list[1][3].embedding[20], torch.tensor(1))
+
+            # Association
+            self.assertEqual(torch.sum(sentence_list[1][4].embedding), torch.tensor(2))
+            self.assertEqual(sentence_list[1][4].embedding[15], torch.tensor(1))
+            self.assertEqual(sentence_list[1][4].embedding[20], torch.tensor(1))
+
+            # (
+            self.assertEqual(torch.sum(sentence_list[1][5].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][5].embedding[0], torch.tensor(1))
+
+            # LTRA
+            self.assertEqual(torch.sum(sentence_list[1][6].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][6].embedding[0], torch.tensor(1))
+
+            # )
+            self.assertEqual(torch.sum(sentence_list[1][7].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][7].embedding[0], torch.tensor(1))
+
+            # .
+            self.assertEqual(torch.sum(sentence_list[1][8].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][8].embedding[0], torch.tensor(1))
+
+    def test_add_embeddings_internal_good5(self):
+        sentences_1 = Sentence('7α-methylestr-4-ene-3,17-dione is a chemical')
+        sentences_2 = Sentence('The Land Tenure Reform Association (LTRA).')
+        sentence_list = [sentences_1, sentences_2]
+        feature_list = ['O', 'S-0', 'B-0', 'E-0', 'I-0', 'S-1', 'B-1', 'E-1',
+                        'I-1', 'S-2', 'B-2', 'E-2', 'I-2', 'S-3', 'B-3', 'E-3',
+                        'I-3']
+        gazetteers = {'partial_match': self.partial_match_hash_dict2, 'full_match': self.full_match_hash_dict2}
+        with patch.object(GazetteerEmbeddings, '_get_gazetteers'), \
+                patch.object(GazetteerEmbeddings, '_set_feature_list', return_value=feature_list), \
+                patch.object(GazetteerEmbeddings, '_process_gazetteers', return_value=gazetteers):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
+                                                                           label_dict=MagicMock(),
+                                                                           full_matching=False,
+                                                                           partial_matching=True,
+                                                                           use_all_gazetteers=True)
+            gazetteer_embedding.embed(sentence_list)
+
+            for sentence in sentence_list:
+                for token in sentence:
+                    assert len(token.get_embedding()) == len(feature_list)
+
+            # 7α-methylestr-4-ene-3,17-dione
+            self.assertEqual(torch.sum(sentence_list[0][0].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][0].embedding[1], torch.tensor(1))
+
+            # is
+            self.assertEqual(torch.sum(sentence_list[0][1].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][1].embedding[0], torch.tensor(1))
+
+            # a
+            self.assertEqual(torch.sum(sentence_list[0][2].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][2].embedding[0], torch.tensor(1))
+
+            # chemical
+            self.assertEqual(torch.sum(sentence_list[0][3].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][3].embedding[0], torch.tensor(1))
+            ############################################################################
+            # The
+            self.assertEqual(torch.sum(sentence_list[1][0].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][0].embedding[0], torch.tensor(1))
+
+            # Land
+            self.assertEqual(torch.sum(sentence_list[1][1].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][1].embedding[14], torch.tensor(1))
+
+            # Tenure
+            self.assertEqual(torch.sum(sentence_list[1][2].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][2].embedding[16], torch.tensor(1))
+
+            # Reform
+            self.assertEqual(torch.sum(sentence_list[1][3].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][3].embedding[16], torch.tensor(1))
+
+            # Association
+            self.assertEqual(torch.sum(sentence_list[1][4].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][4].embedding[15], torch.tensor(1))
+
+            # (
+            self.assertEqual(torch.sum(sentence_list[1][5].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][5].embedding[0], torch.tensor(1))
+
+            # LTRA
+            self.assertEqual(torch.sum(sentence_list[1][6].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][6].embedding[0], torch.tensor(1))
+
+            # )
+            self.assertEqual(torch.sum(sentence_list[1][7].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][7].embedding[0], torch.tensor(1))
+
+            # .
+            self.assertEqual(torch.sum(sentence_list[1][8].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][8].embedding[0], torch.tensor(1))
