@@ -1040,7 +1040,7 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
 
     def test_add_embeddings_internal_good5(self):
         sentences_1 = Sentence('7α-methylestr-4-ene-3,17-dione is a chemical')
-        sentences_2 = Sentence('The Land Tenure Reform Association (LTRA).')
+        sentences_2 = Sentence('I love Sandys Fort Spring!')
         sentence_list = [sentences_1, sentences_2]
         feature_list = ['O', 'S-0', 'B-0', 'E-0', 'I-0', 'S-1', 'B-1', 'E-1',
                         'I-1', 'S-2', 'B-2', 'E-2', 'I-2', 'S-3', 'B-3', 'E-3',
@@ -1076,38 +1076,78 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
             self.assertEqual(torch.sum(sentence_list[0][3].embedding), torch.tensor(1))
             self.assertEqual(sentence_list[0][3].embedding[0], torch.tensor(1))
             ############################################################################
-            # The
+            # I
             self.assertEqual(torch.sum(sentence_list[1][0].embedding), torch.tensor(1))
-            self.assertEqual(sentence_list[1][0].embedding[0], torch.tensor(1))
+            self.assertEqual(sentence_list[1][0].embedding[5], torch.tensor(1))
 
-            # Land
+            # love
             self.assertEqual(torch.sum(sentence_list[1][1].embedding), torch.tensor(1))
-            self.assertEqual(sentence_list[1][1].embedding[14], torch.tensor(1))
+            self.assertEqual(sentence_list[1][1].embedding[0], torch.tensor(1))
 
-            # Tenure
-            self.assertEqual(torch.sum(sentence_list[1][2].embedding), torch.tensor(1))
-            self.assertEqual(sentence_list[1][2].embedding[16], torch.tensor(1))
+            # Sandys
+            self.assertEqual(torch.sum(sentence_list[1][2].embedding), torch.tensor(3))
+            self.assertEqual(sentence_list[1][2].embedding[10], torch.tensor(1))
+            self.assertEqual(sentence_list[1][2].embedding[14], torch.tensor(1))
+            self.assertEqual(sentence_list[1][2].embedding[5], torch.tensor(1))
 
-            # Reform
-            self.assertEqual(torch.sum(sentence_list[1][3].embedding), torch.tensor(1))
+            # Fort
+            self.assertEqual(torch.sum(sentence_list[1][3].embedding), torch.tensor(2))
+            self.assertEqual(sentence_list[1][3].embedding[12], torch.tensor(1))
             self.assertEqual(sentence_list[1][3].embedding[16], torch.tensor(1))
 
-            # Association
-            self.assertEqual(torch.sum(sentence_list[1][4].embedding), torch.tensor(1))
+            # Spring
+            self.assertEqual(torch.sum(sentence_list[1][4].embedding), torch.tensor(2))
+            self.assertEqual(sentence_list[1][4].embedding[11], torch.tensor(1))
             self.assertEqual(sentence_list[1][4].embedding[15], torch.tensor(1))
 
-            # (
+            # !
             self.assertEqual(torch.sum(sentence_list[1][5].embedding), torch.tensor(1))
             self.assertEqual(sentence_list[1][5].embedding[0], torch.tensor(1))
 
-            # LTRA
-            self.assertEqual(torch.sum(sentence_list[1][6].embedding), torch.tensor(1))
-            self.assertEqual(sentence_list[1][6].embedding[0], torch.tensor(1))
+    def test_add_embeddings_internal_good6(self):
+        sentences_1 = Sentence('7α-methylestr-4-ene-3,17-dione is a chemical')
+        sentences_2 = Sentence('America de Manta')
+        sentence_list = [sentences_1, sentences_2]
+        feature_list = ['O', '0', '1', '2', '3']
+        gazetteers = {'partial_match': self.partial_match_hash_dict2, 'full_match': self.full_match_hash_dict2}
+        with patch.object(GazetteerEmbeddings, '_get_gazetteers'), \
+                patch.object(GazetteerEmbeddings, '_set_feature_list', return_value=feature_list), \
+                patch.object(GazetteerEmbeddings, '_process_gazetteers', return_value=gazetteers):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
+                                                                           label_dict=MagicMock(),
+                                                                           full_matching=True,
+                                                                           partial_matching=False,
+                                                                           use_all_gazetteers=True)
+            gazetteer_embedding.embed(sentence_list)
 
-            # )
-            self.assertEqual(torch.sum(sentence_list[1][7].embedding), torch.tensor(1))
-            self.assertEqual(sentence_list[1][7].embedding[0], torch.tensor(1))
+            for sentence in sentence_list:
+                for token in sentence:
+                    assert len(token.get_embedding()) == len(feature_list)
 
-            # .
-            self.assertEqual(torch.sum(sentence_list[1][8].embedding), torch.tensor(1))
-            self.assertEqual(sentence_list[1][8].embedding[0], torch.tensor(1))
+            # 7α-methylestr-4-ene-3,17-dione
+            self.assertEqual(torch.sum(sentence_list[0][0].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][0].embedding[1], torch.tensor(1))
+
+            # is
+            self.assertEqual(torch.sum(sentence_list[0][1].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][1].embedding[0], torch.tensor(1))
+
+            # a
+            self.assertEqual(torch.sum(sentence_list[0][2].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][2].embedding[0], torch.tensor(1))
+
+            # chemical
+            self.assertEqual(torch.sum(sentence_list[0][3].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][3].embedding[0], torch.tensor(1))
+            ############################################################################
+            # America
+            self.assertEqual(torch.sum(sentence_list[1][0].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][0].embedding[2], torch.tensor(1))
+
+            # de
+            self.assertEqual(torch.sum(sentence_list[1][1].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][1].embedding[2], torch.tensor(1))
+
+            # Manta
+            self.assertEqual(torch.sum(sentence_list[1][2].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][2].embedding[2], torch.tensor(1))
