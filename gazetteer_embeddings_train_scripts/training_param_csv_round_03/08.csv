@@ -1,0 +1,2 @@
+use_conll_03,use_wnut_17,label_type,use_gazetter_embeddintgs,path_to_gazetteers,partial_matching,full_matching,use_all_gazetteers,use_roberta_embeddings,use_bert_embeddings,use_glove_embeddings,use_flair_embeddings,hidden_size,use_crf,use_rnn,reproject_embeddings,learning_rate,mini_batch_size,max_epochs,model_name,runs
+True,False,ner,True,./gazetteers,True,False,True,False,False,True,True,256,True,True,True,0.1,32,150,model_08,3

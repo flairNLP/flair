@@ -30,15 +30,19 @@ if dict_from_csv['use_gazetter_embeddintgs'] == 'True':
     from flair.embeddings import GazetteerEmbeddings
     partial = False
     full = False
+    all_gazetteers = False
     if dict_from_csv['partial_matching'] == 'True':
         partial = True
     if dict_from_csv['full_matching'] == 'True':
         full = True
+    if dict_from_csv['use_all_gazetteers'] == 'True':
+        all_gazetteers = True
     gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
                                                                    dict_from_csv['path_to_gazetteers'],
                                                                    partial_matching=partial,
                                                                    full_matching=full,
-                                                                   label_dict=label_dict)
+                                                                   label_dict=label_dict,
+                                                                   use_all_gazetteers=all_gazetteers)
     print(f'Getting gazetteers from {gazetteer_embedding.gazetteer_file_dict_list}')
     embeddings.append(gazetteer_embedding)
 
