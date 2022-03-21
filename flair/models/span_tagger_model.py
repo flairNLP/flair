@@ -38,6 +38,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         :param max_span_length: maximum length of spans (in tokens) that are considered
         """
 
+        # make sure the label dictionary has an "O" entry for "no tagged span"
+        label_dictionary.add_item("O")
+
         super(SpanTagger, self).__init__(
             label_dictionary=label_dictionary,
             final_embedding_size=word_embeddings.embedding_length * 2
@@ -93,7 +96,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         spans_embedded = None
         spans_labels = []
         data_points = []
-        spans = [] #TODO not really used anywhere... nice for debugging
+        #spans = [] #TODO not really used anywhere... nice for debugging
 
         embedding_list = []
         for sentence in sentences:
@@ -102,7 +105,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             spans_sentence = []
             tokens = [token for token in sentence]
             for span_len in range(1, self.max_span_length+1):
-                spans_sentence.extend([Span(tokens[n:n + span_len]) for n in range(len(tokens) - span_len)])
+                spans_sentence.extend([Span(tokens[n:n + span_len])
+                                       for n in range(len(tokens) - span_len)])
 
             # embed each span (concatenate embeddings of first and last token)
             for span in spans_sentence:
@@ -111,17 +115,24 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                         (span[0].get_embedding(names),
                          span[-1].get_embedding(names)),
                         0,)
+
+                if self.pooling_operation == "average":
+                    span_embedding = torch.mean(
+                        torch.stack([span[i].get_embedding(names) for i in range(len(span.tokens))])
+                        ,0)
+
+                if self.pooling_operation == "first":
+                    span_embedding = span[0].get_embedding(names)
+
+                if self.pooling_operation == "last":
+                    span_embedding = span[-1].get_embedding(names)
+
                 embedding_list.append(span_embedding.unsqueeze(0))
 
-                # use the gold labels
-                spans_labels.append(span.get_label(self.label_type).value)
+                # use the span gold labels
+                spans_labels.append([span.get_label(self.label_type).value])
 
-                #span.set_label(self.label_type, value=span.get_label(self.label_type).value)
-                # TODO: not sure if this necessary/right? If not, the "O" is not visible as span label
-                # and (not sure if related) the model always predicts "<unk>" (why?)
-                # if done, "O" is visible, BUT predict doesn't work because label cannot be removed somehow...?
-
-            spans.extend(spans_sentence)
+            #spans.extend(spans_sentence)
 
             if for_prediction:
                 data_points.extend(spans_sentence)
