@@ -560,8 +560,10 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
     def test_set_feature_list_good4(self):
         label_dict = MagicMock()
         label_dict.get_items.return_value = ['PER', 'ORG', 'LOC', 'MISC']
-        gazetteers = ['eng-CHEM-name-test.txt', 'eng-ORG-alias-test.txt', 'eng-LOC-name-test.txt',
-                      'eng-ORG-name-test.txt']
+        gazetteers = [{'0': ['eng-CHEM-name-test.txt']},
+                      {'1': ['eng-ORG-alias-test.txt']},
+                      {'2': ['eng-LOC-name-test.txt']},
+                      {'3': ['eng-ORG-name-test.txt']}]
         with patch.object(GazetteerEmbeddings, '_get_gazetteers', return_value=gazetteers), \
                 patch.object(GazetteerEmbeddings, '_process_gazetteers'):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
@@ -577,8 +579,10 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
     def test_set_feature_list_good5(self):
         label_dict = MagicMock()
         label_dict.get_items.return_value = ['PER', 'ORG', 'LOC', 'MISC']
-        gazetteers = ['eng-CHEM-name-test.txt', 'eng-ORG-alias-test.txt', 'eng-LOC-name-test.txt',
-                      'eng-ORG-name-test.txt']
+        gazetteers = [{'0': ['eng-CHEM-name-test.txt']},
+                      {'1': ['eng-ORG-alias-test.txt']},
+                      {'2': ['eng-LOC-name-test.txt']},
+                      {'3': ['eng-ORG-name-test.txt']}]
         with patch.object(GazetteerEmbeddings, '_get_gazetteers', return_value=gazetteers), \
                 patch.object(GazetteerEmbeddings, '_process_gazetteers'):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
@@ -594,8 +598,10 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
     def test_set_feature_list_good6(self):
         label_dict = MagicMock()
         label_dict.get_items.return_value = ['PER', 'ORG', 'LOC', 'MISC']
-        gazetteers = ['eng-CHEM-name-test.txt', 'eng-ORG-alias-test.txt', 'eng-LOC-name-test.txt',
-                      'eng-ORG-name-test.txt']
+        gazetteers = [{'0': ['eng-CHEM-name-test.txt']},
+                      {'1': ['eng-ORG-alias-test.txt']},
+                      {'2': ['eng-LOC-name-test.txt']},
+                      {'3': ['eng-ORG-name-test.txt']}]
         with patch.object(GazetteerEmbeddings, '_get_gazetteers', return_value=gazetteers), \
                 patch.object(GazetteerEmbeddings, '_process_gazetteers'):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
