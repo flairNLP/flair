@@ -4136,7 +4136,8 @@ class NER_HIPE_2022(ColumnCorpus):
         base_path: Union[str, Path] = None,
         tag_to_bioes: str = "ner",
         in_memory: bool = True,
-        version: str = "v1.0",
+        version: str = "v2.0",
+        branch_name: str = "release-v2.0",
         dev_split_name="dev",
         add_document_separator=False,
         sample_missing_splits=False,
@@ -4152,6 +4153,7 @@ class NER_HIPE_2022(ColumnCorpus):
         :tag_to_bioes: Dataset will automatically transformed into BIOES format (internally).
         :in_memory: If True, keeps dataset in memory giving speedups in training.
         :version: Version of CLEF-HIPE dataset. Currently only v1.0 is supported and available.
+        :branch_name: Defines git branch name of HIPE data repository (main by default).
         :dev_split_name: Defines default name of development split (dev by default). Only the NewsEye dataset has
         currently two development splits: dev and dev2.
         :add_document_separator: If True, a special document seperator will be introduced. This is highly
@@ -4180,19 +4182,25 @@ class NER_HIPE_2022(ColumnCorpus):
             }
         }
 
+        # v2.0 only adds new language and splits for AJMC dataset
+        hipe_available_splits["v2.0"] = hipe_available_splits.get("v1.0").copy()
+        hipe_available_splits["v2.0"]["ajmc"] = {"de": ["train", "dev"], "en": ["train", "dev"], "fr": ["train", "dev"]}
+
         eos_marker = "EndOfSentence"
         document_separator = "# hipe2022:document_id"
 
         # Special document marker for sample splits in AJMC dataset
-        if f"{version}/{dataset_name}" == "v1.0/ajmc":
+        if f"{dataset_name}" == "ajmc":
             document_separator = "# hipe2022:original_source"
 
         columns = {0: "text", 1: "ner"}
 
         dataset_base = self.__class__.__name__.lower()
-        data_folder = base_path / dataset_base / dataset_name / language
+        data_folder = base_path / dataset_base / version / dataset_name / language
 
-        data_url = f"https://github.com/hipe-eval/HIPE-2022-data/raw/main/data/{version}/{dataset_name}/{language}"
+        data_url = (
+            f"https://github.com/hipe-eval/HIPE-2022-data/raw/{branch_name}/data/{version}/{dataset_name}/{language}"
+        )
 
         dataset_splits = hipe_available_splits[version][dataset_name][language]
 
