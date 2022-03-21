@@ -1,5 +1,7 @@
 import shutil
 
+from importlib_metadata import version
+
 import pytest
 
 import flair
@@ -414,12 +416,29 @@ def test_hipe_2022_corpus(tasks_base_path):
         }
     }
 
+    hipe_stats["v2.0"] = hipe_stats.get("v1.0").copy()
+    hipe_stats["v2.0"]["ajmc"] = {
+        "de": {
+            "train": {"sents": 1022 + 2, "docs": 76},  # 2 sentences with missing EOS marker
+            "dev": {"sents": 192, "docs": 14},
+        },
+        "en": {
+            "train": {"sents": 1153 + 1, "docs": 60},  # 1 sentence with missing EOS marker
+            "dev": {"sents": 251 + 1, "docs": 14},  # 1 sentence with missing EOS marker
+        },
+        "fr": {
+            "train": {"sents": 893 + 1, "docs": 72},  # 1 sentence with missing EOS marker
+            "dev": {"sents": 201 + 1, "docs": 17},  # 1 sentence with missing EOS marker
+        },
+    }
+
     def test_hipe_2022(dataset_version="v1.0", add_document_separator=True):
         for dataset_name, languages in hipe_stats[dataset_version].items():
             for language in languages:
                 splits = languages[language]
 
                 corpus = flair.datasets.NER_HIPE_2022(
+                    version=dataset_version,
                     dataset_name=dataset_name,
                     language=language,
                     dev_split_name="dev",
@@ -441,6 +460,7 @@ def test_hipe_2022_corpus(tasks_base_path):
                         ), f"Sentence count mismatch for {split_description}: {len(corpus.dev)} vs. {total_sentences}"
                     elif split_name == "dev2":
                         corpus = flair.datasets.NER_HIPE_2022(
+                            version=dataset_version,
                             dataset_name=dataset_name,
                             language=language,
                             dev_split_name="dev2",
@@ -451,8 +471,10 @@ def test_hipe_2022_corpus(tasks_base_path):
                             len(corpus.dev) == total_sentences
                         ), f"Sentence count mismatch for {split_description}: {len(corpus.dev)} vs. {total_sentences}"
 
-    test_hipe_2022(add_document_separator=True)
-    test_hipe_2022(add_document_separator=False)
+    test_hipe_2022(dataset_version="v1.0", add_document_separator=True)
+    test_hipe_2022(dataset_version="v1.0", add_document_separator=False)
+    test_hipe_2022(dataset_version="v2.0", add_document_separator=True)
+    test_hipe_2022(dataset_version="v2.0", add_document_separator=False)
 
 
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
