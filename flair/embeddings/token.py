@@ -919,9 +919,9 @@ class GazetteerEmbeddings(TokenEmbeddings):
         tag_list = ['O']
         if 'partial_match' in self.matching_methods:
             if self.use_all_gazetteers:
-                for index, val in enumerate(self.gazetteer_file_dict_list):
+                for index in self.gazetteer_file_dict_list:
                     for pos in ['S', 'B', 'E', 'I']:
-                        tag_list.append(f'{pos}-{index}')
+                        tag_list.append(f'{pos}-{list(index.keys())[0]}')
             else:
                 for tag in self.labels.get_items():
                     if tag == "<unk>":
@@ -930,8 +930,8 @@ class GazetteerEmbeddings(TokenEmbeddings):
                         tag_list.append(f'{pos}-{tag}')
         if 'full_match' in self.matching_methods:
             if self.use_all_gazetteers:
-                for index, val in enumerate(self.gazetteer_file_dict_list):
-                    tag_list.append(f'{index}')
+                for index in self.gazetteer_file_dict_list:
+                    tag_list.append(f'{list(index.keys())[0]}')
             else:
                 for tag in self.labels.get_items():
                     if tag == "<unk>":
