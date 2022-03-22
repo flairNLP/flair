@@ -4242,6 +4242,7 @@ class NER_HIPE_2022(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
             skip_first_line=True,
+            column_delimiter="\t",
             comment_symbol="# ",
             sample_missing_splits=sample_missing_splits,
             **corpusargs,
@@ -4259,7 +4260,11 @@ class NER_HIPE_2022(ColumnCorpus):
             f_out.write(lines[0] + "\n")
 
             for line in lines[1:]:
-                line = line.rstrip()
+                if line.startswith(" 	"):
+                    # Workaround for empty tokens
+                    continue
+
+                line = line.strip()
 
                 # Add "real" document marker
                 if add_document_separator and line.startswith(document_separator):
