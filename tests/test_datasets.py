@@ -429,6 +429,10 @@ def test_hipe_2022_corpus(tasks_base_path):
             "dev": {"sents": 201 + 1, "docs": 17},  # 1 sentence with missing EOS marker
         },
     }
+    hipe_stats["v2.0"]["newseye"] = {"de": {"train": {"sents": 20839 + 1, "docs": 7}}}  # missing EOD marker
+    hipe_stats["v2.0"]["sonar"] = {
+        "de": {"dev": {"sents": 816 + 10, "docs": 10}}  # 9 sentences with missing EOS marker + missing EOD
+    }
 
     def test_hipe_2022(dataset_version="v1.0", add_document_separator=True):
         for dataset_name, languages in hipe_stats[dataset_version].items():
