@@ -4260,7 +4260,7 @@ class NER_HIPE_2022(ColumnCorpus):
             f_out.write(lines[0] + "\n")
 
             for line in lines[1:]:
-                if line.startswith(" 	"):
+                if line.startswith(" \t"):
                     # Workaround for empty tokens
                     continue
 
