@@ -12,6 +12,7 @@ gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteer
                                                                "./gazetteers",
                                                                partial_matching=True,
                                                                full_matching=False,
+                                                               use_all_gazetteers=True,
                                                                label_dict=label_dict)
 for sentence in corpus.get_all_sentences():
     gazetteer_embedding.embed(sentence)
@@ -44,20 +45,22 @@ tokens = 0
 tokens_found = 0
 
 token_dict_3 = {}
+token_dict_4 = {}
 
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
                                                                "./gazetteers",
                                                                partial_matching=True,
                                                                full_matching=True,
+                                                               use_all_gazetteers=True,
                                                                label_dict=label_dict)
 for sentence in corpus.get_all_sentences():
     gazetteer_embedding.embed(sentence)
     for token in sentence:
         try:
-            if token_dict_2[token.text]:
+            if token_dict_4[token.text]:
                 pass
         except KeyError:
-            token_dict_2[token.text] = True
+            token_dict_4[token.text] = True
             tokens += 1
         try:
             if token.embedding[0] != torch.tensor(1):
