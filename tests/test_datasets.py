@@ -373,65 +373,120 @@ def test_hipe_2022_corpus(tasks_base_path):
     # We have manually checked, that these numbers are correct:
     hipe_stats = {
         "v1.0": {
-            "ajmc": {"de": {"sample": {"sents": 119, "docs": 8}}, "en": {"sample": {"sents": 83, "docs": 5}}},
+            "ajmc": {
+                "de": {"sample": {"sents": 119, "docs": 8, "labels": ["date", "loc", "pers", "scope", "work"]}},
+                "en": {"sample": {"sents": 83, "docs": 5, "labels": ["date", "loc", "pers", "scope", "work"]}},
+            },
             "hipe2020": {
                 "de": {
-                    "train": {"sents": 3470 + 2, "docs": 103},  # 2 sentences with missing EOS marker
-                    "dev": {
-                        "sents": 1202,
-                        "docs": 33,
+                    "train": {
+                        "sents": 3470 + 2,  # 2 sentences with missing EOS marker
+                        "docs": 103,
+                        "labels": ["loc", "org", "pers", "prod", "time"],
                     },
+                    "dev": {"sents": 1202, "docs": 33, "labels": ["loc", "org", "pers", "prod", "time"]},
                 },
-                "en": {"dev": {"sents": 1045, "docs": 80}},
-                "fr": {"train": {"sents": 5743, "docs": 158}, "dev": {"sents": 1244, "docs": 43}},
+                "en": {"dev": {"sents": 1045, "docs": 80, "labels": ["loc", "org", "pers", "prod", "time"]}},
+                "fr": {
+                    "train": {"sents": 5743, "docs": 158, "labels": ["loc", "org", "pers", "prod", "time", "comp"]},
+                    "dev": {"sents": 1244, "docs": 43, "labels": ["loc", "org", "pers", "prod", "time"]},
+                },
             },
-            "letemps": {"fr": {"train": {"sents": 14051, "docs": 414}, "dev": {"sents": 1341, "docs": 51}}},
+            "letemps": {
+                "fr": {
+                    "train": {"sents": 14051, "docs": 414, "labels": ["loc", "org", "pers"]},
+                    "dev": {"sents": 1341, "docs": 51, "labels": ["loc", "org", "pers"]},
+                }
+            },
             "newseye": {
                 # +1 offset, because of missing EOS marker at EOD
                 "de": {
-                    "train": {"sents": 23646 + 1, "docs": 11},
-                    "dev": {"sents": 1110 + 1, "docs": 12},
-                    "dev2": {"sents": 1541 + 1, "docs": 12},
+                    "train": {"sents": 23646 + 1, "docs": 11, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev": {"sents": 1110 + 1, "docs": 12, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev2": {"sents": 1541 + 1, "docs": 12, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
                 },
                 "fi": {
-                    "train": {"sents": 1141 + 1, "docs": 24},
-                    "dev": {"sents": 140 + 1, "docs": 24},
-                    "dev2": {"sents": 104 + 1, "docs": 21},
+                    "train": {"sents": 1141 + 1, "docs": 24, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev": {"sents": 140 + 1, "docs": 24, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev2": {"sents": 104 + 1, "docs": 21, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
                 },
                 "fr": {
-                    "train": {"sents": 7106 + 1, "docs": 35},
-                    "dev": {"sents": 662 + 1, "docs": 35},
-                    "dev2": {"sents": 1016 + 1, "docs": 35},
+                    "train": {"sents": 7106 + 1, "docs": 35, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev": {"sents": 662 + 1, "docs": 35, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev2": {"sents": 1016 + 1, "docs": 35, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
                 },
                 "sv": {
-                    "train": {"sents": 1063 + 1, "docs": 21},
-                    "dev": {"sents": 126 + 1, "docs": 21},
-                    "dev2": {"sents": 136 + 1, "docs": 21},
+                    "train": {"sents": 1063 + 1, "docs": 21, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev": {"sents": 126 + 1, "docs": 21, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev2": {"sents": 136 + 1, "docs": 21, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
                 },
             },
-            "sonar": {"de": {"dev": {"sents": 1603 + 10, "docs": 10}}},  # 10 sentences with missing EOS marker
-            "topres19th": {"en": {"train": {"sents": 5874, "docs": 309}, "dev": {"sents": 646, "docs": 34}}},
+            "sonar": {
+                "de": {
+                    "dev": {
+                        "sents": 1603 + 10,  # 10 sentences with missing EOS marker
+                        "docs": 10,
+                        "labels": ["LOC", "ORG", "PER"],
+                    }
+                }
+            },
+            "topres19th": {
+                "en": {
+                    "train": {"sents": 5874, "docs": 309, "labels": ["BUILDING", "LOC", "STREET"]},
+                    "dev": {"sents": 646, "docs": 34, "labels": ["BUILDING", "LOC", "STREET"]},
+                }
+            },
         }
     }
 
     hipe_stats["v2.0"] = hipe_stats.get("v1.0").copy()
     hipe_stats["v2.0"]["ajmc"] = {
         "de": {
-            "train": {"sents": 1022 + 2, "docs": 76},  # 2 sentences with missing EOS marker
-            "dev": {"sents": 192, "docs": 14},
+            "train": {
+                "sents": 1022 + 2,  # 2 sentences with missing EOS marker
+                "docs": 76,
+                "labels": ["date", "loc", "object", "pers", "scope", "work"],
+            },
+            "dev": {"sents": 192, "docs": 14, "labels": ["loc", "object", "pers", "scope", "work"]},
         },
         "en": {
-            "train": {"sents": 1153 + 1, "docs": 60},  # 1 sentence with missing EOS marker
-            "dev": {"sents": 251 + 1, "docs": 14},  # 1 sentence with missing EOS marker
+            "train": {
+                "sents": 1153 + 1,  # 1 sentence with missing EOS marker
+                "docs": 60,
+                "labels": ["date", "loc", "object", "pers", "scope", "work"],
+            },
+            "dev": {
+                "sents": 251 + 1,  # 1 sentence with missing EOS marker
+                "docs": 14,
+                "labels": ["date", "loc", "pers", "scope", "work"],
+            },
         },
         "fr": {
-            "train": {"sents": 893 + 1, "docs": 72},  # 1 sentence with missing EOS marker
-            "dev": {"sents": 201 + 1, "docs": 17},  # 1 sentence with missing EOS marker
+            "train": {
+                "sents": 893 + 1,  # 1 sentence with missing EOS marker
+                "docs": 72,
+                "labels": ["date", "loc", "object", "pers", "scope", "work"],
+            },
+            "dev": {
+                "sents": 201 + 1,  # 1 sentence with missing EOS marker
+                "docs": 17,
+                "labels": ["pers", "scope", "work"],
+            },
         },
     }
-    hipe_stats["v2.0"]["newseye"] = {"de": {"train": {"sents": 20839 + 1, "docs": 7}}}  # missing EOD marker
+    hipe_stats["v2.0"]["newseye"] = {
+        "de": {
+            "train": {"sents": 20839 + 1, "docs": 7, "labels": ["HumanProd", "LOC", "ORG", "PER"]}  # missing EOD marker
+        }
+    }
     hipe_stats["v2.0"]["sonar"] = {
-        "de": {"dev": {"sents": 816 + 10, "docs": 10}}  # 9 sentences with missing EOS marker + missing EOD
+        "de": {
+            "dev": {
+                "sents": 816 + 10,  # 9 sentences with missing EOS marker + missing EOD
+                "docs": 10,
+                "labels": ["LOC", "ORG", "PER"],
+            }
+        }
     }
 
     def test_hipe_2022(dataset_version="v1.0", add_document_separator=True):
@@ -450,16 +505,34 @@ def test_hipe_2022_corpus(tasks_base_path):
                 for split_name, stats in splits.items():
                     split_description = f"{dataset_name}/{language}@{split_name}"
 
-                    total_sentences = sum(stats.values()) if add_document_separator else stats["sents"]
+                    current_sents = stats["sents"]
+                    current_docs = stats["docs"]
+                    current_labels = set(stats["labels"] + ["<unk>"])
+
+                    total_sentences = current_sents + current_docs if add_document_separator else stats["sents"]
 
                     if split_name == "train":
                         assert (
                             len(corpus.train) == total_sentences
                         ), f"Sentence count mismatch for {split_description}: {len(corpus.train)} vs. {total_sentences}"
+
+                        gold_labels = set(corpus.make_label_dictionary(label_type="ner").get_items())
+
+                        assert (
+                            current_labels == gold_labels
+                        ), f"Label mismatch for {split_description}: {current_labels} vs. {gold_labels}"
+
                     elif split_name in ["dev", "sample"]:
                         assert (
                             len(corpus.dev) == total_sentences
                         ), f"Sentence count mismatch for {split_description}: {len(corpus.dev)} vs. {total_sentences}"
+
+                        corpus._train = corpus._dev
+                        gold_labels = set(corpus.make_label_dictionary(label_type="ner").get_items())
+
+                        assert (
+                            current_labels == gold_labels
+                        ), f"Label mismatch for {split_description}: {current_labels} vs. {gold_labels}"
                     elif split_name == "dev2":
                         corpus = flair.datasets.NER_HIPE_2022(
                             version=dataset_version,
@@ -469,9 +542,16 @@ def test_hipe_2022_corpus(tasks_base_path):
                             add_document_separator=add_document_separator,
                         )
 
+                        corpus._train = corpus._dev
+                        gold_labels = set(corpus.make_label_dictionary(label_type="ner").get_items())
+
                         assert (
                             len(corpus.dev) == total_sentences
                         ), f"Sentence count mismatch for {split_description}: {len(corpus.dev)} vs. {total_sentences}"
+
+                        assert (
+                            current_labels == gold_labels
+                        ), f"Label mismatch for {split_description}: {current_labels} vs. {gold_labels}"
 
     test_hipe_2022(dataset_version="v1.0", add_document_separator=True)
     test_hipe_2022(dataset_version="v1.0", add_document_separator=False)
