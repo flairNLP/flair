@@ -1055,8 +1055,8 @@ class GazetteerEmbeddings(TokenEmbeddings):
                             pass
                 for t_key in temp_token_dict.keys():
                     if len(temp_token_dict[t_key][1]) > 0:
-                        for key in temp_token_dict[t_key][1]:
-                            sequence_feature_vectors[t_key][self.feature_list.index(key)] = 1
+                        for tag in temp_token_dict[t_key][1]:
+                            sequence_feature_vectors[t_key][self.feature_list.index(tag)] = 1
                         if sequence_feature_vectors[t_key][self.feature_list.index('O')] == 1:
                             sequence_feature_vectors[t_key][self.feature_list.index('O')] = 0
                     else:
