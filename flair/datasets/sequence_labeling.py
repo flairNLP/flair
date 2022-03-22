@@ -4137,7 +4137,7 @@ class NER_HIPE_2022(ColumnCorpus):
         tag_to_bioes: str = "ner",
         in_memory: bool = True,
         version: str = "v2.0",
-        branch_name: str = "release-v2.0",
+        branch_name: str = "main",
         dev_split_name="dev",
         add_document_separator=False,
         sample_missing_splits=False,
