@@ -24,7 +24,7 @@ for sentence in corpus.get_all_sentences():
             token_dict_2[token.text] = True
             tokens += 1
         try:
-            if token.embedding[0] != torch.tensor(1):
+            if token.embedding[0] != torch.tensor(1) and 1 in token.embedding[1:]:
                 if token_dict[token.text][0]:
                     pass
         except IndexError:
@@ -63,7 +63,7 @@ for sentence in corpus.get_all_sentences():
             token_dict_4[token.text] = True
             tokens += 1
         try:
-            if token.embedding[0] != torch.tensor(1):
+            if token.embedding[0] != torch.tensor(1) and 1 in token.embedding[1:]:
                 if token_dict_3[token.text][0]:
                     pass
         except IndexError:
