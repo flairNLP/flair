@@ -4183,7 +4183,7 @@ class NER_HIPE_2022(ColumnCorpus):
         }
 
         # v2.0 only adds new language and splits for AJMC dataset
-        hipe_available_splits["v2.0"] = hipe_available_splits.get("v1.0").copy()
+        hipe_available_splits["v2.0"] = hipe_available_splits["v1.0"].copy()
         hipe_available_splits["v2.0"]["ajmc"] = {"de": ["train", "dev"], "en": ["train", "dev"], "fr": ["train", "dev"]}
 
         eos_marker = "EndOfSentence"
