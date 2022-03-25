@@ -23,7 +23,7 @@ from . import (  # noqa: E402 import after setting device
     visual,
 )
 
-__version__ = "0.10"
+__version__ = "0.11"
 
 logging.config.dictConfig(
     {
