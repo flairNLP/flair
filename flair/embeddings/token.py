@@ -1,18 +1,16 @@
 import hashlib
 import logging
-import glob, os
+import os
 import re
 from collections import Counter
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
-from io import open
 
 import gensim
 import numpy as np
 import torch
 from bpemb import BPEmb
 from gensim.models import KeyedVectors
-from mypy.plugins import ctypes
 from torch import nn
 
 import flair
@@ -24,7 +22,7 @@ log = logging.getLogger("flair")
 
 
 class TokenEmbeddings(Embeddings[Sentence]):
-    """Abstract base class for all token-level embeddings. Ever new type of word embedding must implement these methods."""
+    """Abstract base class for all token-level embeddings. Every new type of word embedding must implement these methods."""
 
     @property
     def embedding_type(self) -> str:
