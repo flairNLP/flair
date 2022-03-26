@@ -1,17 +1,17 @@
 import torch
-from flair.datasets import CONLL_03
+from flair.datasets import CONLL_03, WNUT_17
 from flair.embeddings import GazetteerEmbeddings
 
 tokens = 0
 tokens_found = 0
-corpus = CONLL_03()
+corpus = WNUT_17()
 label_dict = corpus.make_label_dictionary(label_type='ner')
 token_dict = {}
 token_dict_2 = {}
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
                                                                "./gazetteers",
-                                                               partial_matching=True,
-                                                               full_matching=False,
+                                                               partial_matching=False,
+                                                               full_matching=True,
                                                                use_all_gazetteers=True,
                                                                label_dict=label_dict)
 for sentence in corpus.get_all_sentences():
@@ -39,7 +39,7 @@ print(tokens_found)
 del gazetteer_embedding
 del corpus
 del label_dict
-corpus = CONLL_03()
+corpus = WNUT_17()
 label_dict = corpus.make_label_dictionary(label_type='ner')
 tokens = 0
 tokens_found = 0
