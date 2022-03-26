@@ -307,8 +307,9 @@ class RelationLabel(Label):
     def identifier(self):
         return f"{self.head.id_text} -> {self.tail.id_text}"
 
+
 class EntityLinkingLabel(Label):
-    def __init__(self, span, cui, concept_name, ontology = None, score: float = 1):
+    def __init__(self, span, cui, concept_name, ontology=None, score: float = 1):
         super().__init__(cui, score)
         self.span = span
         self.ontology = ontology
@@ -318,10 +319,10 @@ class EntityLinkingLabel(Label):
         return EntityLinkingLabel(self.span, value, self.ontology, self.concept_name, score)
 
     def __str__(self):
-        return f"{self._value} {self.concept_name} [{self.span}] ({round(self._score, 4)})"
+        return f"{self._value} {self.concept_name} [{self.span.id_text}] ({round(self._score, 4)})"
 
     def __repr__(self):
-        return f"{self._value} {self.concept_name} [{self.span}] ({round(self._score, 4)})"
+        return f"{self._value} {self.concept_name} [{self.span.id_text}] ({round(self._score, 4)})"
 
     def __len__(self):
         return len(self.span)
