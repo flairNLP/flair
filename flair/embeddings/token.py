@@ -956,15 +956,6 @@ class GazetteerEmbeddings(TokenEmbeddings):
         return gazetteer_files
 
     def _process_gazetteers(self):
-        def filter_gazetteer_line(line_list):
-            line_list_filtered = []
-            for w in line_list:
-                if any(c.isalnum() for c in w) and len(w) > 1:
-                    line_list_filtered.append(w)
-                elif len(line_list) == 1 and len(w) >= 1:
-                    line_list_filtered.append(w)
-            return line_list_filtered
-
         partial_matching_dict = {}
         full_matching_dict = {}
         for gazetteer_dict in self.gazetteer_file_dict_list:
@@ -979,7 +970,8 @@ class GazetteerEmbeddings(TokenEmbeddings):
                             else:
                                 if 'partial_match' in self.matching_methods:
                                     line_list = re.split(" ", line.rstrip("\n"))
-                                    line_list_filtered = filter_gazetteer_line(line_list)
+                                    line_list_filtered = [w for w in line_list if any(c.isalnum() for c in w) and
+                                                          len(w) > 1 or len(line_list) == 1 and len(w) >= 1]
                                     for word in line_list_filtered:
                                         word_index = line_list_filtered.index(word)
                                         if word_index == 0 and len(line_list_filtered) > 1:
@@ -1058,8 +1050,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
                     if len(temp_token_dict[t_key][1]) > 0:
                         for tag in temp_token_dict[t_key][1]:
                             sequence_feature_vectors[t_key][self.feature_list.index(tag)] = 1
-                        if sequence_feature_vectors[t_key][self.feature_list.index('O')] == 1:
-                            sequence_feature_vectors[t_key][self.feature_list.index('O')] = 0
+                        sequence_feature_vectors[t_key][self.feature_list.index('O')] = 0
                     else:
                         pass
                         # if the token has been found using partial matching, the vector has values set to 1
