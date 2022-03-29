@@ -612,6 +612,31 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
             self.assertEqual(gazetteer_embedding.feature_list, ['O', '0', '1', '2', '3'])
             self.assertEqual(gazetteer_embedding.embedding_length, 5)
 
+    def test_set_feature_list_no_label_dict1(self):
+        with patch.object(GazetteerEmbeddings, '_get_gazetteers'), \
+                patch.object(GazetteerEmbeddings, '_process_gazetteers'):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
+                                                                           full_matching=True,
+                                                                           partial_matching=True)
+            self.assertEqual(gazetteer_embedding.feature_list, ['O'])
+            self.assertEqual(gazetteer_embedding.embedding_length, 1)
+
+    def test_set_feature_list_no_label_dict2(self):
+        gazetteers = [{'0': ['eng-CHEM-name-test.txt']},
+                      {'1': ['eng-ORG-alias-test.txt']},
+                      {'2': ['eng-LOC-name-test.txt']},
+                      {'3': ['eng-ORG-name-test.txt']}]
+        with patch.object(GazetteerEmbeddings, '_get_gazetteers', return_value=gazetteers), \
+                patch.object(GazetteerEmbeddings, '_process_gazetteers'):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
+                                                                           full_matching=True,
+                                                                           partial_matching=True,
+                                                                           use_all_gazetteers=True)
+            self.assertEqual(gazetteer_embedding.feature_list, ['O', 'S-0', 'B-0', 'E-0', 'I-0', 'S-1', 'B-1', 'E-1',
+                                                                'I-1', 'S-2', 'B-2', 'E-2', 'I-2', 'S-3', 'B-3', 'E-3',
+                                                                'I-3', '0', '1', '2', '3'])
+            self.assertEqual(gazetteer_embedding.embedding_length, 21)
+
     def test_get_gazetteers_good1(self):
         label_dict = MagicMock()
         label_dict.get_items.return_value = ['PER', 'ORG', 'LOC', 'MISC']
@@ -632,6 +657,23 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                 patch.object(GazetteerEmbeddings, '_set_feature_list'):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="./resources",
                                                                            label_dict=label_dict,
+                                                                           use_all_gazetteers=True)
+            self.assertEqual(gazetteer_embedding.gazetteer_file_dict_list, [{'0': ['eng-CHEM-name-test.txt']},
+                                                                            {'1': ['eng-ORG-alias-test.txt']},
+                                                                            {'2': ['eng-LOC-name-test.txt']},
+                                                                            {'3': ['eng-ORG-name-test.txt']}])
+
+    def test_get_gazetteers_no_label_dict1(self):
+
+        with patch.object(GazetteerEmbeddings, '_process_gazetteers'), \
+                patch.object(GazetteerEmbeddings, '_set_feature_list'):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="./resources")
+            self.assertEqual(gazetteer_embedding.gazetteer_file_dict_list, [])
+
+    def test_get_gazetteers_no_label_dict2(self):
+        with patch.object(GazetteerEmbeddings, '_process_gazetteers'), \
+                patch.object(GazetteerEmbeddings, '_set_feature_list'):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="./resources",
                                                                            use_all_gazetteers=True)
             self.assertEqual(gazetteer_embedding.gazetteer_file_dict_list, [{'0': ['eng-CHEM-name-test.txt']},
                                                                             {'1': ['eng-ORG-alias-test.txt']},
@@ -668,6 +710,17 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
 
             self.assertEqual(gazetteer_embedding.gazetteers_dicts['partial_match'], self.partial_match_dict2)
             self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['partial_match']), 176)
+
+    def test_process_gazetteers_no_label_dict1(self):
+        with patch.object(GazetteerEmbeddings, '_get_gazetteers', return_value=[]), \
+                patch.object(GazetteerEmbeddings, '_set_feature_list'):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="./resources",
+                                                                           label_dict=MagicMock())
+            self.assertEqual(gazetteer_embedding.gazetteers_dicts['full_match'], {})
+            self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['full_match']), 0)
+
+            self.assertEqual(gazetteer_embedding.gazetteers_dicts['partial_match'], {})
+            self.assertEqual(len(gazetteer_embedding.gazetteers_dicts['partial_match']), 0)
 
     def test_add_embeddings_internal_good1(self):
         sentences_1 = Sentence('I love Sandys Fort Spring!')
@@ -1151,3 +1204,82 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
             # Manta
             self.assertEqual(torch.sum(sentence_list[1][2].embedding), torch.tensor(1))
             self.assertEqual(sentence_list[1][2].embedding[2], torch.tensor(1))
+
+    def test_add_embeddings_internal_no_label_dict(self):
+        sentences_1 = Sentence('I !love! Sandys Fort Spring!')
+        sentences_2 = Sentence('The Land Tenure Reform Association (LTRA).')
+        sentence_list = [sentences_1, sentences_2]
+        feature_list = ['O']
+        gazetteers = {'partial_match': {}, 'full_match': {}}
+        with patch.object(GazetteerEmbeddings, '_get_gazetteers'), \
+                patch.object(GazetteerEmbeddings, '_set_feature_list', return_value=feature_list), \
+                patch.object(GazetteerEmbeddings, '_process_gazetteers', return_value=gazetteers):
+            gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="/path/to/gazetteers",
+                                                                           label_dict=MagicMock(),
+                                                                           full_matching=True,
+                                                                           partial_matching=True)
+            gazetteer_embedding.embed(sentence_list)
+
+            for sentence in sentence_list:
+                for token in sentence:
+                    assert len(token.get_embedding()) == len(feature_list)
+
+            # I
+            self.assertEqual(torch.sum(sentence_list[0][0].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][0].embedding[0], torch.tensor(1))
+
+            # love
+            self.assertEqual(torch.sum(sentence_list[0][1].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][1].embedding[0], torch.tensor(1))
+
+            # Sandys
+            self.assertEqual(torch.sum(sentence_list[0][2].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][2].embedding[0], torch.tensor(1))
+
+            # Fort
+            self.assertEqual(torch.sum(sentence_list[0][3].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][3].embedding[0], torch.tensor(1))
+
+            # Spring
+            self.assertEqual(torch.sum(sentence_list[0][4].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][4].embedding[0], torch.tensor(1))
+
+            # !
+            self.assertEqual(torch.sum(sentence_list[0][5].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[0][5].embedding[0], torch.tensor(1))
+            ############################################################################
+            # The
+            self.assertEqual(torch.sum(sentence_list[1][0].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][0].embedding[0], torch.tensor(1))
+
+            # Land
+            self.assertEqual(torch.sum(sentence_list[1][1].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][1].embedding[0], torch.tensor(1))
+
+            # Tenure
+            self.assertEqual(torch.sum(sentence_list[1][2].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][2].embedding[0], torch.tensor(1))
+
+            # Reform
+            self.assertEqual(torch.sum(sentence_list[1][3].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][3].embedding[0], torch.tensor(1))
+
+            # Association
+            self.assertEqual(torch.sum(sentence_list[1][4].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][4].embedding[0], torch.tensor(1))
+
+            # (
+            self.assertEqual(torch.sum(sentence_list[1][5].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][5].embedding[0], torch.tensor(1))
+
+            # LTRA
+            self.assertEqual(torch.sum(sentence_list[1][6].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][6].embedding[0], torch.tensor(1))
+
+            # )
+            self.assertEqual(torch.sum(sentence_list[1][7].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][7].embedding[0], torch.tensor(1))
+
+            # .
+            self.assertEqual(torch.sum(sentence_list[1][8].embedding), torch.tensor(1))
+            self.assertEqual(sentence_list[1][8].embedding[0], torch.tensor(1))

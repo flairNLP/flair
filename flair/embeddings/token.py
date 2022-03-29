@@ -883,7 +883,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
     def __init__(
             self,
             path_to_gazetteers: str,
-            label_dict: Dictionary,
+            label_dict: Dictionary = None,
             full_matching: bool = True,
             partial_matching: bool = True,
             use_all_gazetteers: bool = False
@@ -921,20 +921,22 @@ class GazetteerEmbeddings(TokenEmbeddings):
                     for pos in ['S', 'B', 'E', 'I']:
                         tag_list.append(f'{pos}-{list(index.keys())[0]}')
             else:
-                for tag in self.labels.get_items():
-                    if tag == "<unk>":
-                        continue
-                    for pos in ['S', 'B', 'E', 'I']:
-                        tag_list.append(f'{pos}-{tag}')
+                if self.labels is not None:
+                    for tag in self.labels.get_items():
+                        if tag == "<unk>":
+                            continue
+                        for pos in ['S', 'B', 'E', 'I']:
+                            tag_list.append(f'{pos}-{tag}')
         if 'full_match' in self.matching_methods:
             if self.use_all_gazetteers:
                 for index in self.gazetteer_file_dict_list:
                     tag_list.append(f'{list(index.keys())[0]}')
             else:
-                for tag in self.labels.get_items():
-                    if tag == "<unk>":
-                        continue
-                    tag_list.append(tag)
+                if self.labels is not None:
+                    for tag in self.labels.get_items():
+                        if tag == "<unk>":
+                            continue
+                        tag_list.append(tag)
         return tag_list
 
     def _get_gazetteers(self):
@@ -944,12 +946,13 @@ class GazetteerEmbeddings(TokenEmbeddings):
             for index, file in enumerate(files):
                 gazetteer_files.append({str(index): [file]})
         else:
-            for tag in self.labels.get_items():
-                if tag == "<unk>":
-                    continue
-                pattern = f'.*-?{tag}[-_].*[.]txt'
-                gazetteer_files.append({tag: list([f for f in os.listdir(self.gazetteer_path + '/')
-                                                   if re.match(pattern, f)])})
+            if self.labels is not None:
+                for tag in self.labels.get_items():
+                    if tag == "<unk>":
+                        continue
+                    pattern = f'.*-?{tag}[-_].*[.]txt'
+                    gazetteer_files.append({tag: list([f for f in os.listdir(self.gazetteer_path + '/')
+                                                       if re.match(pattern, f)])})
         return gazetteer_files
 
     def _process_gazetteers(self):
