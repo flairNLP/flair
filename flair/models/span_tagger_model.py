@@ -96,7 +96,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         spans_embedded = None
         spans_labels = []
         data_points = []
-        #spans = [] #TODO not really used anywhere... nice for debugging
 
         embedding_list = []
         for sentence in sentences:
@@ -132,8 +131,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 # use the span gold labels
                 spans_labels.append([span.get_label(self.label_type).value])
 
-            #spans.extend(spans_sentence)
-
             if for_prediction:
                 data_points.extend(spans_sentence)
 
@@ -145,14 +142,14 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
         return spans_embedded, spans_labels
 
-    def _post_process_predictions(self, batch):
+    def _post_process_predictions(self, batch, label_type):
         """
         Post processing the span predictions to avoid overlapping predictions.
         Only use the most confident one, i.e. sort the span predictions by confidence, go through them, for each token
         check if it was already part of a used span.
-        #TODO at the moment this makes nested NER impossible, maybe change skipping criterion?
 
         :param batch: batch of sentences with already predicted span labels to be "cleaned"
+        :param label_type: name of the label that is given to the span
         """
 
         import operator
@@ -161,31 +158,19 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             all_predicted_spans = []
 
             # get all predicted spans and their confidence score, sort them afterwards
-
-            # TODO: which of the following is the right choice? this works for training/evaluating but not during model.predict()
-            for span in sentence.get_spans("predicted"):
+            for span in sentence.get_spans(label_type):
                 span_tokens = span.tokens
-                span_score = span.get_label("predicted").score
-                span_prediction = span.get_label("predicted").value
+                span_score = span.get_label(label_type).score
+                span_prediction = span.get_label(label_type).value
                 all_predicted_spans.append((span_tokens, span_prediction, span_score))
 
-            # this would work in predict()
-            # BUT: in training this would use only the gold labels (they have score 1.0)...
-            #for span in sentence.get_spans(self.label_type):
-            #    span_tokens = span.tokens
-            #    span_score = span.get_label(self.label_type).score
-            #    span_prediction = span.get_label(self.label_type).value
-            #    all_predicted_spans.append((span_tokens, span_prediction, span_score))
-
-            sentence.remove_labels("predicted") #TODO good? or need to do self.label_type instead?
-            #sentence.remove_labels(self.label_type) # TODO: but then, would the gold labels be removed as well...?
+            sentence.remove_labels(label_type)  # first remove the predicted labels
 
             already_seen_token_indices: List[int] = []
 
             # sort by confidence score
             sorted_predicted_spans = sorted(all_predicted_spans, key=operator.itemgetter(2))
             sorted_predicted_spans.reverse()
-            #print(sorted_predicted_spans)
 
             # starting with highest scored span prediction
             for predicted_span in sorted_predicted_spans:
@@ -193,12 +178,11 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 span_tokens, span_prediction, span_score = predicted_span
 
                 # check whether any token in this span already has been labeled
-                # TODO: maybe think about better idea so that nested NER would be allowed?
+                # TODO: like this, nested NER would not be allowed... think about better solution/skipping criterion!
                 tag_span = True
                 for token in span_tokens:
                     if token is None or token.idx in already_seen_token_indices:
                         tag_span = False
-                        #print("skipping stuff...")
                         continue
 
                 # only add if none of the token is part of an already (so "higher") labeled span
@@ -207,8 +191,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                     predicted_span = Span(
                         [sentence.get_token(token.idx) for token in span_tokens]
                     )
-                    predicted_span.add_label("predicted", value=span_prediction, score=span_score) #TODO same question
-                    #predicted_span.add_label(self.label_type, value=span_prediction, score=span_score)
+                    predicted_span.add_label(label_type, value=span_prediction, score=span_score)
 
     def _get_state_dict(self):
         model_state = {

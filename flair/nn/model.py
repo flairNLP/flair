@@ -739,7 +739,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                                     continue
                                 data_point.add_label(typename=label_name, value=label_value, score=c.item())
 
-                self._post_process_predictions(batch)
+                self._post_process_predictions(batch, label_type=label_name)
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
@@ -747,7 +747,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 return overall_loss, label_count
 
     # some models need postprocessing of predictions, e.g. the SpanTagger should avoid span overlaps
-    def _post_process_predictions(self, batch):
+    def _post_process_predictions(self, batch, label_type):
         return batch
 
     def _get_label_threshold(self, label_value):
