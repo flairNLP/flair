@@ -429,8 +429,8 @@ IBM 7090
 IBM 7094
 IJMON 
 IBM 1400 series
-Wikipedia:Citation needed
-This claim needs references to reliable sources. 
+
+
 IBM 1410
 IBM 7010
 SHARE Operating System
@@ -797,13 +797,13 @@ Azure Sphere
 ThreadX
 Altair DOS 
 Altair 8800
-Wikipedia:Citation needed
-This claim needs references to reliable sources. 
+
+
 Mobilinux
 Transaction Management eXecutive
 IMOS 
-Wikipedia:Citation needed
-This claim needs references to reliable sources. 
+
+
 NCR VRX
 ES
 Nintendo Switch system software
@@ -854,8 +854,8 @@ TRS-80 Color Computer
 NewDos/80
 DeskMate
 Tandy 1000
-Wikipedia:Citation needed
-This claim needs references to reliable sources. 
+
+
 Edos
 DOS/360
 DOS/VS
@@ -1007,11 +1007,11 @@ Technical Systems Consultants
 SWTPC
 GIMIX 
 Unicos
-Wikipedia:Citation needed
-This claim needs references to reliable sources. 
+
+
 Zenix 
-Wikipedia:Citation needed
-This claim needs references to reliable sources. 
+
+
 MINIX
 Andrew S. Tanenbaum
 Netherlands

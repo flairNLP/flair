@@ -9,7 +9,7 @@ label_dict = corpus.make_label_dictionary(label_type='ner')
 token_dict = {}
 token_dict_2 = {}
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
-                                                               "/home/danielc/PycharmProjects/model_trainigs_results/code_gazetteers",
+                                                               "./code_gazetteers",
                                                                partial_matching=False,
                                                                full_matching=True,
                                                                use_all_gazetteers=True,
@@ -48,7 +48,7 @@ token_dict_3 = {}
 token_dict_4 = {}
 
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
-                                                               "/home/danielc/PycharmProjects/model_trainigs_results/code_gazetteers",
+                                                               "./code_gazetteers",
                                                                partial_matching=True,
                                                                full_matching=True,
                                                                use_all_gazetteers=True,
