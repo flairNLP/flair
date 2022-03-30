@@ -1,0 +1,144 @@
+Academic Free License
+Lawrence E. Rosen
+Permissive software license
+Affero General Public License
+Copyleft
+GNU AGPL
+Apache License
+Apache Software Foundation
+Apple Public Source License
+Apple Computer
+Artistic License
+Larry Wall
+Beerware
+Poul-Henning Kamp
+BSD License
+Regents of the University of California
+Boost Software License
+Creative Commons Zero
+Creative Commons
+CC-BY
+Creative Commons
+CC-BY-SA
+Creative Commons
+CeCILL
+Commissariat à l'énergie atomique et aux énergies alternatives
+CNRS
+INRIA
+Common Development and Distribution License
+Sun Microsystems
+Common Public License
+IBM
+Cryptix General License
+Eclipse Public License
+Eclipse Foundation
+Educational Community License
+Indiana University
+European Union Public Licence
+European Commission
+FreeBSD
+FreeBSD
+GNU Affero General Public License
+Free Software Foundation
+GNU General Public License
+GNU Lesser General Public License
+IBM Public License
+ISC license
+Internet Systems Consortium
+LaTeX Project Public License
+Microsoft Public License
+Microsoft
+MIT License
+Massachusetts Institute of Technology
+Mozilla Public License
+Mozilla Foundation
+Netscape Public License
+Netscape
+Open Software License
+OpenSSL license
+PHP License
+Python Software Foundation License
+Q Public License
+Trolltech
+Sleepycat License
+Sleepycat Software
+Unlicense
+W3C Software Notice and License
+World Wide Web Consortium
+WTFPL
+Sam Hocevar
+XCore Open Source License
+XMOS
+XFree86
+Zlib/libpng license
+Eiffel Forum License
+Intel Open Source License
+Intel Corporation
+RealNetworks Public Source License
+RealNetworks
+Reciprocal Public License
+Sun Industry Standards Source License
+Sun Public License
+Sybase Open Watcom Public License
+Watcom C/C++ compiler
+Zope Public License
+Zope Foundation
+Server Side Public License
+MongoDB
+Academic Free License
+Affero General Public License
+Apache License
+Apache License
+Apple Public Source License
+Apple Public Source License
+Artistic License
+Artistic License
+Beerware
+BSD licenses
+BSD licenses
+BSD licenses
+BSD licenses
+Boost Software License
+CeCILL
+Common Development and Distribution License
+Common Public License
+Creative Commons Zero
+CC BY-SA
+Cryptix General License
+Eclipse Public License
+Educational Community License
+Eiffel Forum License
+European Union Public Licence
+GNU Affero General Public License
+GNU General Public License
+GNU General Public License
+GNU Lesser General Public License
+GNU Free Documentation License
+IBM Public License
+Intel Open Source License
+ISC license
+LaTeX Project Public License
+Microsoft Public License
+Microsoft Reciprocal License
+MIT License
+Mozilla Public License
+Mozilla Public License
+NASA Open Source Agreement
+Netscape Public License
+Open Software License
+OpenSSL license
+PHP License
+Python Software Foundation License
+Q Public License
+Reciprocal Public License
+Sleepycat License
+Sun Industry Standards Source License
+Sun Public License
+Sybase Open Watcom Public License
+Unlicense
+W3C Software Notice and License
+WTFPL
+XFree86
+Zlib/libpng license
+Zope Public License
+Zope Public License

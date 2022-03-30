@@ -1,15 +1,15 @@
 import torch
-from flair.datasets import CONLL_03, WNUT_17
+from flair.datasets import CONLL_03, WNUT_17, NER_ENGLISH_STACKOVERFLOW
 from flair.embeddings import GazetteerEmbeddings
 
 tokens = 0
 tokens_found = 0
-corpus = WNUT_17()
+corpus = NER_ENGLISH_STACKOVERFLOW()
 label_dict = corpus.make_label_dictionary(label_type='ner')
 token_dict = {}
 token_dict_2 = {}
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
-                                                               "./gazetteers",
+                                                               "/home/danielc/PycharmProjects/model_trainigs_results/code_gazetteers",
                                                                partial_matching=False,
                                                                full_matching=True,
                                                                use_all_gazetteers=True,
@@ -39,7 +39,7 @@ print(tokens_found)
 del gazetteer_embedding
 del corpus
 del label_dict
-corpus = WNUT_17()
+corpus = NER_ENGLISH_STACKOVERFLOW()
 label_dict = corpus.make_label_dictionary(label_type='ner')
 tokens = 0
 tokens_found = 0
@@ -48,7 +48,7 @@ token_dict_3 = {}
 token_dict_4 = {}
 
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
-                                                               "./gazetteers",
+                                                               "/home/danielc/PycharmProjects/model_trainigs_results/code_gazetteers",
                                                                partial_matching=True,
                                                                full_matching=True,
                                                                use_all_gazetteers=True,

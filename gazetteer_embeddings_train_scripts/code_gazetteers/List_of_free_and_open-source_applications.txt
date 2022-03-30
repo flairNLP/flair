@@ -1,0 +1,1317 @@
+Bitwarden
+ChatSecure
+Collabora Online
+Microsoft Office
+Mozilla Public License
+DuckDuckGo
+Element 
+Firefox Focus
+Firefox for iOS
+Infomaniak
+Jami 
+Joplin 
+Kickstarter
+Linphone
+MAPS.ME
+MuPDF
+NetNewsWire
+Nextcloud
+Nextcloud
+OnlyOffice
+Microsoft Office
+GNU AGPL
+Open Food Facts
+Tor 
+Tor 
+Organic Maps
+OsmAnd
+OwnCloud
+ProtonMail
+Signal 
+Simplenote
+Surespot
+Telegram 
+Tutanota
+Vim 
+Syntax highlighting
+VLC media player
+The White House
+WikiHow
+Wikipedia
+Wire 
+WordPress
+IOS version history
+Issues relating to the iOS operating system
+Outline of iOS
+IPhone
+IPhone 
+IPhone 3G
+IPhone 3GS
+IPhone 4
+IPhone 4S
+IPhone 5
+IPhone 5C
+IPhone 5S
+IPhone 6
+IPhone 6S
+IPhone 7
+IPhone 8
+IPhone X
+IPhone XR
+IPhone XS
+IPhone 11
+IPhone 11 Pro
+IPhone 12
+IPhone 12 Pro
+IPhone 13
+IPhone 13 Pro
+IPhone SE 
+IPhone SE 
+IPhone SE 
+IPod Touch
+List of iOS and iPadOS devices
+IPod Touch 
+IPod Touch 
+IPod Touch 
+IPod Touch 
+IPad
+IPad 
+IPad 2
+IPad 
+IPad 
+IPad 
+IPad 
+IPad 
+IPad 
+IPad 
+IPad Mini
+IPad Mini 
+IPad Mini 2
+IPad Mini 3
+IPad Mini 4
+IPad Mini 
+IPad Mini 
+IPad Air
+IPad Air 2
+IPad Air 
+IPad Air 
+IPad Air 
+IPad Pro
+IPad Pro 
+IPad Pro 
+IPad Pro 
+IPad Pro 
+IPad Pro 
+Apple TV
+Apple Watch
+HomePod
+HomePod Mini
+IPhone 
+IPhone 3G
+IPhone 3GS
+IPhone 4
+IPhone 4S
+IPhone 5
+IPhone 5C
+IPhone 5S
+IPhone 6
+IPhone 6S
+IPhone 7
+IPhone 8
+IPhone X
+IPhone XR
+IPhone XS
+IPhone 11
+IPhone 11 Pro
+IPhone 12
+IPhone 12 Pro
+IPhone 13
+IPhone 13 Pro
+IPhone SE 
+IPhone SE 
+IPhone SE 
+List of iOS and iPadOS devices
+IPod Touch 
+IPod Touch 
+IPod Touch 
+IPod Touch 
+IPad 
+IPad 2
+IPad 
+IPad 
+IPad 
+IPad 
+IPad 
+IPad 
+IPad 
+IPad Mini
+IPad Mini 
+IPad Mini 2
+IPad Mini 3
+IPad Mini 4
+IPad Mini 
+IPad Mini 
+IPad Air
+IPad Air 2
+IPad Air 
+IPad Air 
+IPad Air 
+IPad Pro
+IPad Pro 
+IPad Pro 
+IPad Pro 
+IPad Pro 
+IPad Pro 
+Apple TV
+Apple Watch
+HomePod
+HomePod Mini
+IPhone OS 1
+IPhone OS 2
+IPhone OS 3
+IOS 4
+IOS 5
+IOS 6
+IOS 7
+IOS 8
+IOS 9
+IOS 10
+IOS 11
+IOS 12
+IOS 13
+IOS 14
+IOS 15
+WatchOS
+TvOS
+IPadOS
+IPadOS 13
+IPadOS 14
+IPadOS 15
+AirDrop
+AirPlay
+AirPrint
+CarPlay
+Control Center 
+ITunes
+Night Shift 
+Notification Center
+Shazam 
+Siri
+Spotlight 
+SpringBoard
+VoiceOver
+IOS SDK
+Cocoa Touch
+Core Animation
+HomeKit
+Inter-App Audio
+WebKit
+GymKit
+HealthKit
+Pre-installed iOS apps
+Apple Books
+Calculator 
+Calendar 
+Clock 
+Contacts 
+FaceTime
+Files 
+Find My
+Fitness 
+Health 
+HomeKit
+Apple Mail
+Apple Maps
+Measure 
+Messages 
+Music 
+Apple News
+Notes 
+Apple Photos
+Apple Podcasts
+Reminders 
+Safari 
+Shortcuts 
+Stocks 
+Translate 
+Apple TV app
+Voice Memos
+Apple Wallet
+Weather 
+Apple Watch
+Find My Friends
+Find My iPhone
+Newsstand 
+Classroom 
+Clips 
+GarageBand
+IMovie
+IWork
+Keynote 
+Numbers 
+Pages 
+ITunes Remote
+Beats Music
+Cards 
+IPhoto
+Nike+
+IPhone OS 1
+IPhone OS 2
+IPhone OS 3
+IOS 4
+IOS 5
+IOS 6
+IOS 7
+IOS 8
+IOS 9
+IOS 10
+IOS 11
+IOS 12
+IOS 13
+IOS 14
+IOS 15
+WatchOS
+TvOS
+IPadOS
+IPadOS 13
+IPadOS 14
+IPadOS 15
+IPhone OS 1
+IPhone OS 2
+IPhone OS 3
+IOS 4
+IOS 5
+IOS 6
+IOS 7
+IOS 8
+IOS 9
+IOS 10
+IOS 11
+IOS 12
+IOS 13
+IOS 14
+IOS 15
+WatchOS
+TvOS
+IPadOS
+IPadOS 13
+IPadOS 14
+IPadOS 15
+AirDrop
+AirPlay
+AirPrint
+CarPlay
+Control Center 
+ITunes
+Night Shift 
+Notification Center
+Shazam 
+Siri
+Spotlight 
+SpringBoard
+VoiceOver
+AirDrop
+AirPlay
+AirPrint
+CarPlay
+Control Center 
+ITunes
+Night Shift 
+Notification Center
+Shazam 
+Siri
+Spotlight 
+SpringBoard
+VoiceOver
+IOS SDK
+Cocoa Touch
+Core Animation
+HomeKit
+Inter-App Audio
+WebKit
+GymKit
+HealthKit
+IOS SDK
+Cocoa Touch
+Core Animation
+HomeKit
+Inter-App Audio
+WebKit
+GymKit
+HealthKit
+Apple Books
+Calculator 
+Calendar 
+Clock 
+Contacts 
+FaceTime
+Files 
+Find My
+Fitness 
+Health 
+HomeKit
+Apple Mail
+Apple Maps
+Measure 
+Messages 
+Music 
+Apple News
+Notes 
+Apple Photos
+Apple Podcasts
+Reminders 
+Safari 
+Shortcuts 
+Stocks 
+Translate 
+Apple TV app
+Voice Memos
+Apple Wallet
+Weather 
+Apple Watch
+Find My Friends
+Find My iPhone
+Newsstand 
+Apple Books
+Calculator 
+Calendar 
+Clock 
+Contacts 
+FaceTime
+Files 
+Find My
+Fitness 
+Health 
+HomeKit
+Apple Mail
+Apple Maps
+Measure 
+Messages 
+Music 
+Apple News
+Notes 
+Apple Photos
+Apple Podcasts
+Reminders 
+Safari 
+Shortcuts 
+Stocks 
+Translate 
+Apple TV app
+Voice Memos
+Apple Wallet
+Weather 
+Apple Watch
+Find My Friends
+Find My iPhone
+Newsstand 
+Classroom 
+Clips 
+GarageBand
+IMovie
+IWork
+Keynote 
+Numbers 
+Pages 
+ITunes Remote
+Beats Music
+Cards 
+IPhoto
+Nike+
+Classroom 
+Clips 
+GarageBand
+IMovie
+IWork
+Keynote 
+Numbers 
+Pages 
+ITunes Remote
+Beats Music
+Cards 
+IPhoto
+Nike+
+Apple Arcade
+Apple Card
+App Store 
+App Store 
+App Store 
+Apple Music
+FaceTime
+Family Sharing
+Game Center
+ICloud
+IMessage
+ITunes Connect
+ITunes Store
+Apple News
+Apple News+
+Apple One 
+Apple Pay
+Apple Push Notification service
+TestFlight
+Apple TV+
+List of original programs distributed by Apple
+Apple Wallet
+IAd
+ILife
+ITunes Radio
+MobileMe
+Apple Arcade
+Apple Card
+App Store 
+App Store 
+App Store 
+Apple Music
+FaceTime
+Family Sharing
+Game Center
+ICloud
+IMessage
+ITunes Connect
+ITunes Store
+Apple News
+Apple News+
+Apple One 
+Apple Pay
+Apple Push Notification service
+TestFlight
+Apple TV+
+List of original programs distributed by Apple
+Apple Wallet
+IAd
+ILife
+ITunes Radio
+MobileMe
+Apple silicon
+300-page iPhone bill
+Antennagate
+Batterygate
+Bendgate
+IOS jailbreaking
+FairPlay
+List of iOS games
+IFund
+History of iPhone
+IPhone hardware
+Metal 
+Swift 
+Apple Worldwide Developers Conference
+Category" width="16
+Category:IOS
+Alternative terms for free software
+Comparison of open-source and closed-source software
+Comparison of source-code-hosting facilities
+Free software
+List of free software project directories
+Gratis versus libre
+Long-term support
+Open-source software
+Open-source software development
+Outline of free software
+Timeline of free and open-source software
+Comparison of free software for audio
+List of open-source bioinformatics software
+List of open-source codecs
+Comparison of open-source configuration management software
+Device Driver
+Free and open-source graphics device driver
+Comparison of open-source wireless drivers
+Comparison of free geophysics software
+List of open-source health software
+List of open-source software for mathematics
+List of office suites
+Comparison of open-source operating systems
+Comparison of open-source programming language licensing
+List of open-source routing platforms
+List of free television software
+List of open-source video games
+List of free and open-source web applications
+Comparison of shopping cart software
+List of free and open-source Android applications
+List of commercial open-source applications and services
+List of trademarked open-source software
+List of formerly proprietary software
+List of formerly open-source software
+Free software movement
+History of free and open-source software
+Open-source-software movement
+List of free-software events
+Free Software Movement of India
+Free Software Foundation
+Academic Free License
+Apache License
+Apple Public Source License
+Artistic License
+Beerware
+BSD licenses
+Creative Commons license
+Common Development and Distribution License
+Eclipse Public License
+Free Software Foundation
+GNU General Public License
+GNU Lesser General Public License
+ISC license
+MIT License
+Mozilla Public License
+Python License
+Python Software Foundation License
+Shared Source Initiative
+Sleepycat License
+Unlicense
+WTFPL
+Zlib License
+Comparison of free and open-source software licences
+Contributor License Agreement
+Copyleft
+Debian Free Software Guidelines
+Definition of Free Cultural Works
+Free license
+The Free Software Definition
+The Open Source Definition
+Open-source license
+Permissive software license
+Public domain
+Viral license
+Comparison of free and open-source software licences
+Contributor License Agreement
+Copyleft
+Debian Free Software Guidelines
+Definition of Free Cultural Works
+Free license
+The Free Software Definition
+The Open Source Definition
+Open-source license
+Permissive software license
+Public domain
+Viral license
+Digital rights management
+Hardware restriction
+License proliferation
+Mozilla software rebranded by Debian
+Proprietary device driver
+Proprietary firmware
+Proprietary software
+SCO–Linux disputes
+Software patents and free software
+Open-source software security
+Trusted Computing
+Fork 
+GNU Manifesto
+Microsoft Open Specification Promise
+Open-core model
+Open-source hardware
+Shared Source Initiative
+Source-available software
+The Cathedral and the Bazaar
+Revolution OS
+Portal
+Google Search
+Search engine
+Google Alerts
+Google Arts &amp; Culture
+Google Assistant
+Virtual assistant
+Google Books
+Google Dataset Search
+Google Finance
+Google Flights
+Google Images
+Google News
+Google Patents
+Google Scholar
+Academic journal
+Google Shopping
+Google Travel
+YouTube
+Google Ads
+AdMob
+Google AdSense
+Google Ad Manager
+Google Marketing Platform
+Tag management system
+Blogger
+Weblog
+FeedBurner
+News feed
+Gmail
+Google Account
+Google Calendar
+Gmail
+Google Chat
+Instant messaging
+Google Charts
+Google Classroom
+Content management system
+Google Currents
+Google Domains
+Google Duo
+Videotelephony
+Google Fonts
+Webfonts
+Google Groups
+Usenet
+Google Meet
+Google Translate
+Google Voice
+Voice over IP
+Google Docs Editors
+Productivity software
+Google Docs
+Word processor
+Google Sheets
+Spreadsheet
+Google Slides
+Presentation program
+Google Drawings
+Diagram
+Google Forms
+Surveying
+Google Sites
+Web page
+Google Keep
+Note-taking
+Google Docs
+Word processor
+Google Sheets
+Spreadsheet
+Google Slides
+Presentation program
+Google Drawings
+Diagram
+Google Forms
+Surveying
+Google Sites
+Web page
+Google Keep
+Note-taking
+Google Drive
+File hosting service
+Synchronization
+Google Maps
+Google My Maps
+Google Mars
+Mars
+Google Moon
+Moon
+Google Street View
+Interactive panorama
+Google Sky
+Google Santa Tracker
+Santa Claus
+Google Analytics
+Urchin
+Google Surveys
+Firebase
+Creative Commons
+API
+Google Ngram Viewer
+Google Public Data Explorer
+OECD
+Eurostat
+TensorFlow
+Machine learning
+Google Trends
+Google Data Studio
+Google Workspace
+Domain name
+Gmail
+Google Contacts
+Google Calendar
+Google Docs Editors
+Google Sites
+Google Meet
+Google Chat
+Google Cloud Search
+Google My Business
+Google Tables
+Accelerated Mobile Pages
+Google App Engine
+Google Developers
+Open-source software
+API
+Free and open source software
+Dart
+Flutter
+Android
+IOS
+Go
+OpenSocial
+Google PageSpeed Tools
+Google Web Toolkit
+Google Search Console
+Sitemaps
+Ninja
+GYP
+Chromium
+Gerrit
+Googletest
+C++
+Bazel
+Build system
+FlatBuffers
+Protocol Buffers
+High-Level Shading Language
+OpenGL Shading Language
+Standard Portable Intermediate Representation
+American fuzzy lop
+Google Guava
+Google Closure Tools
+ReCAPTCHA
+Google Safe Browsing
+Titan Security Key
+Universal 2nd Factor
+Security token
+Google Pixel
+Pixel 3
+Chromebook
+Pixel Slate
+Titan Security Key
+Universal 2nd Factor
+Security token
+Google Pixel
+Pixel 3
+Chromebook
+Pixel Slate
+Android
+Linux
+Open Handset Alliance
+Wear OS
+Android Auto
+Android TV
+Wear OS
+Android Auto
+Android TV
+Cast OS
+Google Cast
+Google Nest
+Chrome OS
+Glass OS
+Google Glass
+Fuchsia
+AdWords Editor
+Google AdWords
+Google Drive
+Google Drive
+Google Chrome
+Web browser
+Google Earth
+Geographic information system
+Google IME
+Input method editor
+Google Japanese Input
+Input method editor
+Google Pinyin
+Input method editor
+Pinyin
+Google Toolbar
+Android Studio
+Integrated development environment
+Google Web Designer
+WYSIWYG
+HTML5
+Google Drive
+Tilt Brush
+HTC Vive
+Oculus Rift
+Google Trends
+MacOS
+Google Pixel
+Smartphone
+Tablet computer
+Laptop
+Headphones
+Google Nest
+Home automation
+Smart speaker
+Smart displays
+Digital media player
+Smart doorbell
+Smart thermostat
+Smoke detector
+Wireless router
+Google Chromecast
+Digital media player
+Fitbit
+Activity tracker
+Smartwatch
+Google Glass
+Wearable computer
+Google Stadia
+Game controller
+Google Stadia
+Jamboard
+Interactive whiteboard
+Nexus One
+Nexus S
+Nest Learning Thermostat
+Galaxy Nexus
+Nexus Q
+Nexus 7
+Nexus 10
+Nest Learning Thermostat
+Nexus 4
+Chromebook Pixel
+Nexus 7
+Chromecast
+Nexus 5
+Android
+Nest Protect
+Nexus 6
+Nexus 9
+Nexus Player
+Chromebook Pixel
+Nest Cam Indoor
+Nest Protect
+Nest Learning Thermostat
+Nexus 5X
+Nexus 6P
+Pixel C
+Chromecast
+Chromecast Audio
+Nest Cam Outdoor
+Pixel
+Pixel XL
+Daydream View
+Virtual reality
+Google Home
+Google Wifi
+Chromecast Ultra
+4K resolution
+Nest Cam IQ Indoor
+Nest Thermostat E
+Nest Hello
+Nest Cam IQ Outdoor
+Nest × Yale
+Nest Secure
+Pixel 2
+Pixel 2 XL
+Daydream View
+Virtual reality
+Home Mini
+Google Nest
+Pixel Buds
+Pixelbook
+Pixel 3
+Pixel 3 XL
+Pixel Slate
+2-in-1 PC
+Pixel Stand
+Nest Hub
+Chromecast
+Stadia Controller
+Pixel 3a
+Pixel 3a XL
+Nest Hub Max
+Pixel 4
+Pixel 4
+Pixelbook Go
+Nest Mini
+Nest Wifi
+Pixel Buds
+Pixel 4a
+Pixel 4a
+Pixel 5
+Nest Audio
+Chromecast with Google TV
+Nest Thermostat
+Pixel Buds A-Series
+Pixel 5a
+Pixel 6
+Pixel 6 Pro
+Pixel Visual Core
+Titan M
+Pixel Neural Core
+Titan C
+Google Tensor
+Google Cloud Platform
+Google Crisis Response
+Google Fi
+Mobile virtual network operator
+Google Get Your Business Online
+Search engine optimization
+Google Public DNS
+Domain Name System
+Google Person Finder
+Google Firebase
+API
+Google Cast
+Google Pay
+Digital wallet
+E-commerce payment system
+Google Stadia
+YouTube TV
+Google Chrome App
+Google Hangouts
+AngularJS
+Google Clips
+Google Bookmarks
+Internet bookmark
+Poly
+3D modeling
+Google Expeditions
+Virtual reality
+Educational institution
+Google App Maker
+Google Cloud Print
+Google Play Music
+YouTube Music
+Google Podcasts
+Google Station
+Software development kit
+Crashlytics
+Firebase
+Chromecast
+YouTube
+Google Allo
+Representational state transfer
+Google URL Shortener
+Inbox by Gmail
+Gmail
+Google+
+Google Nest
+Smart home
+Google Nest
+Google Assistant
+Nintendo 3DS
+Google Daydream
+Google Daydream
+Google Fusion Tables
+Google Translator Toolkit
+Computer-assisted translation
+Comparison of computer-assisted translation tools
+Google Translate
+Google Search Appliance
+Google Native Client
+Lego
+Firefox
+Blogger
+Mac OS X Dashboard
+Gmail
+Blogger
+Google Trends
+Google Talk
+Google Personalized Search
+Screensaver
+Hard disk
+RSS
+Atom
+SpreadsheetML
+.gov
+TLD
+Google Video Player
+Voice Search
+Google Quick Search Box
+Quicksilver
+Google Images
+Picasa
+Flickr
+Google WiFi
+VPN
+Google WiFi
+Wi-Fi Protected Access
+802.1x
+Google Play Newsstand
+Google Contact Lens
+Contact lens
+Verily
+Google Swiffy
+Adobe Flash
+SWF
+HTML5
+Google Nexus
+Google Custom Search
+Google Spaces
+Google Map Maker
+Trendalyzer
+Google Developers
+Picasa
+Google Photos
+MyTracks
+Project Ara
+Panoramio
+Geotagging
+Photo sharing
+Google Moderator
+BebaPay
+Google Helpouts
+Speak To Tweet
+Voicemail
+Twitter
+Google Questions and Answers
+Knowledge market
+Orkut
+Quickoffice
+Google TV
+Android TV
+Google Offers
+Google Chrome Frame
+Google Schemer
+Google Currents
+Google Checkout
+IGoogle
+Web feed
+Google Latitude
+Google Reader
+News aggregator
+Atom
+RSS
+Meebo
+Google Building Maker
+Google Talk
+Google Hangouts
+Short message service
+Google Cloud Connect
+Microsoft Office
+Plug-in
+Picnik
+Picasa Web Albums Uploader
+Picasa
+IPhoto
+Google Chart API
+Google Charts
+Google Apps
+Nexus Q
+Digital media player
+OpenRefine
+Knol
+Google China
+Cantopop
+Mandopop
+Mainland China
+Google Insights for Search
+BumpTop
+Google Video
+Video hosting service
+Google Notebook
+Google Website Optimizer
+Google Mini
+Google Wave
+Collaborative real-time editor
+Google Friend Connect
+Google+
+Jaiku
+Social networking
+Microblogging
+Lifestreaming
+Google Code Search
+Google Health
+Google Buzz
+Gmail
+Google Sidewiki
+Gears
+Google Squared
+Unstructured data
+Aardvark
+Google PowerMeter
+Google Desktop
+Desktop environment
+Google Fast Flip
+Google Pack
+Google Directory
+Open Directory Project
+PageRank
+Google Blog Search
+Weblog
+Google Labs
+Google Image Swirl
+Google Places
+Marratech
+Web conferencing
+Google SearchWiki
+GOOG-411
+Directory assistance
+Google Base
+Optical character recognition
+Dodgeball
+Social networking service
+Google Latitude
+Living Stories
+The New York Times
+The Washington Post
+Google Mashup Editor
+Google Ride Finder
+Google Maps
+Bookmarklet
+Google Page Creator
+Google Sites
+Google Browser Sync
+Firefox
+Google Lively
+Picasa
+Firefox
+Google Web Accelerator
+Google Ads
+Google Custom Search
+Google Answers
+Google Desktop
+Writely
+Word processor
+Portal:Internet
+Android Auto
+Android TV
+ARCore
+Blogger
+Google Cardboard
+Chrome Remote Desktop
+Chromecast Built-in
+Google Cloud Platform
+Google Contacts
+Crowdsource
+Google Currents
+Files by Google
+Flutter
+Find My Device
+Gboard
+Tenor
+Gmail
+Google Search
+AdMob
+Google Ads
+Google Analytics
+Google Arts &amp; Culture
+Google Assistant
+Google Authenticator
+Google Calendar
+Google Camera
+Google Chat
+Google Chrome
+Google Classroom
+Google Cloud Search
+Google Docs
+Google Drive
+Google Duo
+Google Earth
+Google Family Link
+Google Family Link
+Google Fi
+Google Fiber
+Google Fit
+Google Health
+Google Home
+Chromecast
+Google Cast
+Google I/O
+Google Japanese Input
+Google Keep
+Google Lens
+Google Meet
+Google News
+Google One
+Google Opinion Rewards
+Google Pay
+Google Photos
+Google Pixel Buds
+Google Play Books
+Google Play Games
+Google Play Services
+ARCore
+Google Podcasts
+Google Primer
+Google Santa Tracker
+Google Sheets
+Google Shopping
+Google Express
+Google Slides
+Google Street View
+Google Tasks
+Google Translate
+Google TV
+Google Voice
+Google ATAP
+Jamboard
+Live Transcribe
+Looker
+Google Maps
+Messages
+Google ATAP
+Google Glass
+Google Pixel
+Google Pixel
+Baseline Study
+Read Along
+Snapseed
+Socratic
+Google ATAP
+Speech Services by Google
+Google Stadia
+Waze
+Wear OS
+YouTube
+YouTube Kids
+YouTube Music
+YouTube TV
+Google AdSense
+Google Ads
+Google Ads
+Google Ads
+Android Auto
+Google Assistant
+Android Things
+Google Cloud Print
+Google Daydream
+DoubleClick for Publishers
+Google Ads
+Google Expeditions
+Google Arts &amp; Culture
+FameBit
+Google+
+Google Allo
+Google Body
+Google Cast
+Google Clips
+Google Currents
+Google Play Newsstand
+Google Finance
+Google Gesture Search
+Google Goggles
+Google Lens
+Google Hangouts
+Google Chat
+Google Meet
+Google Play Music
+Google Reader
+Google Maps Navigation
+Google Maps
+Material Design
+Google My Business
+Google My Maps
+Google News &amp; Weather
+Google News
+Google Now
+Google Search
+Google Pay Send
+Google Pay
+Google Drive
+Google Pinyin
+Google Play Newsstand
+Google Play Music
+YouTube Music
+Google Podcasts
+Google Play Newsstand
+Google News
+Google Reader
+Google Spaces
+Google Station
+Google TalkBack
+Google Trips
+Google Voice
+Google Hangouts
+Google Voice Search
+Google Now
+Google Nest Wifi
+Google Home
+Inbox by Gmail
+Gmail
+Google Nest
+Google Nest
+MyTracks
+Google Fit
+Quickoffice
+Tango
+ARCore
+Google Maps
+YouTube Gaming
+YouTube
+YouTube
+Zagat
