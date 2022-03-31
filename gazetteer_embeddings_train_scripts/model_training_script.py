@@ -15,9 +15,12 @@ ordered_dict_from_csv = list(dict_reader)[0]
 dict_from_csv = dict(ordered_dict_from_csv)
 print(dict_from_csv)
 transformer_embedding = False
-if dict_from_csv['use_stackoverflow_ner'] == 'True':
-    from flair.datasets import NER_ENGLISH_STACKOVERFLOW
-    corpus = NER_ENGLISH_STACKOVERFLOW()
+try:
+    if dict_from_csv['use_stackoverflow_ner'] == 'True':
+        from flair.datasets import NER_ENGLISH_STACKOVERFLOW
+        corpus = NER_ENGLISH_STACKOVERFLOW()
+except KeyError:
+    pass
 if dict_from_csv['use_conll_03'] == 'True':
     from flair.datasets import CONLL_03
     corpus = CONLL_03()
