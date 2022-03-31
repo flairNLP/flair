@@ -41,8 +41,11 @@ if dict_from_csv['use_gazetter_embeddintgs'] == 'True':
         partial = True
     if dict_from_csv['full_matching'] == 'True':
         full = True
-    if dict_from_csv['use_all_gazetteers'] == 'True':
-        all_gazetteers = True
+    try:
+        if dict_from_csv['use_all_gazetteers'] == 'True':
+            all_gazetteers = True
+    except KeyError:
+        pass
     gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
                                                                    dict_from_csv['path_to_gazetteers'],
                                                                    partial_matching=partial,
