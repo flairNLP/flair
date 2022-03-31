@@ -1,6 +1,8 @@
 import logging
 from typing import List, Union
 
+import pandas as pd
+import csv
 import torch
 
 import flair.embeddings
@@ -25,6 +27,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         pooling_operation: str = "first_last",
         label_type: str = "ner",
         max_span_length: int = 5,
+        gazetteer_file: str = None,
         **classifierargs,
     ):
         """
@@ -36,22 +39,41 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         the embedding of the first and the embedding of the last word.
         :param label_type: name of the label you use.
         :param max_span_length: maximum length of spans (in tokens) that are considered
+        :param gazetteer_file: path to a csv file containing a gazetteer list with span strings in rows, label names in columns, counts in cells
         """
 
         # make sure the label dictionary has an "O" entry for "no tagged span"
         label_dictionary.add_item("O")
 
+        final_embedding_size = word_embeddings.embedding_length * 2 \
+            if pooling_operation == "first_last" else word_embeddings.embedding_length
+
+        if gazetteer_file:
+            self.gazetteer_file = gazetteer_file
+            # TODO: which of pandas or csv/dict is faster in look up?
+            ### using pandas:
+            self.gazetteer = pd.read_csv(self.gazetteer_file, header=0, index_col=0)
+            final_embedding_size += len(self.gazetteer.columns)
+
+            ### using dict from csv:
+            #self.gazetteer = {}
+            #with open(self.gazetteer_file, mode='r') as inp:
+            #    reader = csv.reader(inp)
+            #    header = next(reader)  # header line
+            #    self.nr_gazetteer_tags = len(header) - 1 # nr of tags (exclude first column, i.e. span_string)
+            #    self.gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
+            #final_embedding_size += self.nr_gazetteer_tags
+
         super(SpanTagger, self).__init__(
             label_dictionary=label_dictionary,
-            final_embedding_size=word_embeddings.embedding_length * 2
-            if pooling_operation == "first_last"
-            else word_embeddings.embedding_length,
+            final_embedding_size=final_embedding_size,
             **classifierargs,
         )
 
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
         self._label_type = label_type
+
         self.max_span_length = max_span_length
 
         cases = {
@@ -79,6 +101,19 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
     def emb_mean(self, arg):
         return torch.mean(arg, 0)
+
+    def get_gazetteer_embedding(self, span_string: str) -> torch.Tensor:
+        ### using pandas:
+        if span_string in self.gazetteer.index:
+            return torch.Tensor(self.gazetteer.loc[span_string]).to(flair.device)
+        else:
+            return torch.zeros(len(self.gazetteer.columns)).to(flair.device)
+
+        ### using dict from csv:
+        #if span_string in self.gazetteer:
+        #    return torch.Tensor(self.gazetteer[span_string]).to(flair.device)
+        #else:
+        #    return torch.zeros(self.nr_gazetteer_tags).to(flair.device)  # get same length zero vector
 
     def forward_pass(
         self,
@@ -125,6 +160,12 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
                 if self.pooling_operation == "last":
                     span_embedding = span[-1].get_embedding(names)
+
+                # if a gazetteer was given, concat the gazetteer embedding to the span_embedding
+                if isinstance(self.gazetteer, pd.DataFrame):
+                #if isinstance(self.gazetteer, dict):
+                    gazetteer_vector = self.get_gazetteer_embedding(span.text)
+                    span_embedding = torch.cat((span_embedding, gazetteer_vector), 0)
 
                 embedding_list.append(span_embedding.unsqueeze(0))
 
@@ -201,6 +242,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "label_dictionary": self.label_dictionary,
             "pooling_operation": self.pooling_operation,
             "loss_weights": self.weight_dict,
+            "gazetteer_file": self.gazetteer_file if self.gazetteer_file else None
         }
         return model_state
 
@@ -229,6 +271,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             label_type=state["label_type"],
             pooling_operation=state["pooling_operation"],
             loss_weights=state["loss_weights"] if "loss_weights" in state else {"<unk>": 0.3},
+            gazetteer_file = state["gazetteer_file"] if "gazetteer_file" in state else None,
             **kwargs,
         )
 
