@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import io
 
 urls = [
-    ["https://en.wikipedia.org/wiki/Comparison_of_free_and_open-source_software_licences", "Free software"]
+    ["https://en.wikipedia.org/wiki/List_of_algorithms", "List of data structures"]
     ]
 
 for url in urls:
@@ -19,7 +19,7 @@ for url in urls:
     response = requests.get(url=url[0])
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    for tag in soup.find_all("td"):
+    for tag in soup.find_all("li"):
         if tag.text == url[1]:
             break
         p1 = """title=\"[^<>]*\""""
