@@ -35,6 +35,7 @@ for sentence in corpus.get_all_sentences():
 
 print(tokens)
 print(tokens_found)
+print((tokens_found/tokens)*100)
 
 del gazetteer_embedding
 del corpus
@@ -74,6 +75,7 @@ for sentence in corpus.get_all_sentences():
 
 print(tokens)
 print(tokens_found)
+print((tokens_found/tokens)*100)
 
 all(map(token_dict_3.pop, token_dict))
 print(token_dict_3)
