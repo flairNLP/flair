@@ -358,8 +358,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
         for label_name, count in counter.most_common():
             if label_name == "O":
                 continue
-            # if label_name in exclude_labels:
-            #     continue
             target_names.append(label_name)
             labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
 
