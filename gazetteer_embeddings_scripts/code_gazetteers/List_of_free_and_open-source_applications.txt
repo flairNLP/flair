@@ -1315,3 +1315,278 @@ YouTube Gaming
 YouTube
 YouTube
 Zagat
+Alpine Linux
+dpkg
+Entropy
+Flatpak
+GNU Guix
+Homebrew
+ipkg
+netpkg
+Nix Package Manager
+OpenPKG
+opkg
+Pacman
+PETget
+PISI
+pkgsrc
+RPM Package Manager
+slackpkg
+slapt-get
+Smart Package Manager
+Snappy
+Swaret
+Zero Install
+Amazon Appstore
+Aptoide
+Cafe Bazaar
+F-Droid
+GetJar
+Google Play
+SlideME
+Mac App Store
+Fink
+MacPorts
+Joyent
+Zero Install
+FreeBSD Ports
+OpenBSD ports
+pkgsrc
+dpkg
+OpenPKG
+PC-BSD
+Image Packaging System
+pkgsrc
+OpenCSW
+OpenPKG
+App Store
+Cydia
+Windows Store
+Windows Package Manager
+Windows Phone Store
+Cygwin
+Homebrew
+Ninite
+NuGet
+Chocolatey
+Pacman
+wpkg
+Zero Install
+SMP/E
+ABS
+apt-build
+Sorcery
+Fink
+MacPorts
+Homebrew
+pkgsrc
+vcpkg
+Nix package manager
+Portage
+Upkg
+MacPorts
+NetBSD
+Collective Knowledge Framework
+AppImage
+Autopackage
+Zero Install
+PackageKit
+Steam
+Uplay
+Xbox Live
+Software Distributor
+Bitnami
+CocoaPods
+Composer
+Conda
+CPAN
+CRAN
+CTAN
+Docker
+EasyInstall
+Enthought
+Go
+Gradle
+Ivy
+Leiningen
+LuaRocks
+Maven
+npm
+NuGet
+OPAM
+PAR::Repository
+PEAR
+pip
+Pkg.jl
+Quicklisp
+RubyGems
+sbt
+Yarn
+Alfresco
+LGPLv3
+Ametys CMS
+Apache Roller
+Apache Sling
+JCR
+Bloomreach Experience Manager
+dotCMS
+DSpace
+Enonic XP
+NoSQL
+Fedora Commons
+Jahia
+LogicalDOC
+Nuxeo EP
+Magnolia
+OpenCms
+OpenKM
+OpenWGA
+XWiki
+Apache Lenya
+Daisy
+BetterCMS
+C1 CMS
+DNN
+mojoPortal
+EPL
+nopCommerce
+Orchard Project
+Umbraco
+blosxom
+Bricolage
+EPrints
+Foswiki
+Ikiwiki
+Movable Type
+Sellerdeck
+SPINE
+TWiki
+WebGUI
+ATutor
+Backdrop CMS
+Bolt (CMS)
+b2evolution
+CMSimple
+CMS Made Simple
+Composr CMS
+CPAL
+Concrete CMS
+Contao
+DokuWiki
+Dotclear
+Drupal
+GNU GPLv2+
+Exponent CMS
+eZ Platform
+eZ Publish
+Geeklog
+GetSimple CMS
+Grav
+Habari
+ImpressCMS
+ImpressPages
+Jamroom
+MPL
+Joomla!
+Kajona
+Known
+Magento
+Mambo
+MediaWiki
+Microweber
+Midgard CMS
+MODX
+Novius OS
+GNU Affero GPL
+Nucleus CMS
+OctoberCMS
+OpenCart
+GNU
+Omeka
+papaya CMS
+pH7Builder
+GPL 3.0
+Phire CMS
+PHP-Fusion
+GNU Affero GPL
+PHP-Nuke
+phpWebLog
+PhpWiki
+Pimcore
+PivotX
+Pixie (CMS)
+PmWiki
+Prestashop
+ProcessWire
+SMW+
+Serendipity
+Silverstripe CMS
+SPIP
+Textpattern
+Tiki Wiki CMS Groupware
+TYPO3
+WordPress
+XOOPS
+django CMS
+Mezzanine
+MoinMoin
+Plone
+Wagtail
+Alchemy CMS
+Radiant
+Refinery CMS
+ContentBox Modular CMS
+Ghost
+TiddlyWiki
+Wiki.js
+MongoDB
+GNU Affero GPL
+OpenACS
+Adobe Business Catalyst
+Alfresco
+censhare
+Contentful
+CoreMedia Content Cloud
+Cloud CMS
+Frontis Archive Publishing System
+Huddle
+Microsoft Office 365
+O3Spaces
+OU Campus
+Polopoly Web CMS
+uCoz
+Umbraco
+Windows Live
+Zesty.io
+Alfresco
+Altitude3.Net
+censhare
+Oracle
+Contentverse
+Contegro
+CoreMedia Content Cloud
+MongoDB
+dotCMS
+Ektron CMS
+Elcom CMS
+Documentum
+Episerver CMS
+Hyland
+IBM Enterprise Content Management
+Jadu
+Jahia
+Kentico CMS
+Movable Type
+Oracle WebCenter Content
+OU Campus
+Pulse CMS
+Sitecore
+Sitefinity
+SharePoint
+Teamsite
+Telligent Community
+Apache Jackrabbit
+AxKit
+Jakarta Slide
+Open Semantic Framework
+RadPHP
