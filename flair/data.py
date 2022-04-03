@@ -365,7 +365,7 @@ class DataPoint:
         if add_score:
             for key in keys:
                 all_labels.extend(
-                    [f"{label.value} ({label.score})" for label in self.get_labels(key) if label.data_point == self]
+                    [f"{label.value} ({round(label.score, 4)})" for label in self.get_labels(key) if label.data_point == self]
                 )
             labels = "; ".join(all_labels)
             if labels != "":
