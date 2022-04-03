@@ -17,7 +17,7 @@ import flair
 from flair.file_utils import Tqdm
 
 log = logging.getLogger("flair")
-arrow = ' → '
+arrow = " → "
 
 
 def _iter_dataset(dataset: Optional[Dataset]) -> typing.Iterable:
@@ -232,7 +232,7 @@ class Label:
         return {"value": self.value, "confidence": self.score}
 
     def __str__(self):
-        return f'{self.data_point.unlabeled_identifier}{arrow}{self._value} ({round(self._score, 4)})'
+        return f"{self.data_point.unlabeled_identifier}{arrow}{self._value} ({round(self._score, 4)})"
 
     @property
     def shortstring(self):
@@ -358,24 +358,24 @@ class DataPoint:
     def unlabeled_identifier(self):
         raise NotImplementedError
 
-    def _printout_labels(self, main_label = None, add_score: bool = True):
+    def _printout_labels(self, main_label=None, add_score: bool = True):
 
         all_labels = []
         keys = [main_label] if main_label is not None else self.annotation_layers.keys()
         if add_score:
             for key in keys:
-                    all_labels.extend([f"{label.value} ({label.score})" for label in self.get_labels(key)
-                                       if label.data_point == self])
-            labels = '; '.join(all_labels)
-            if labels != '':
+                all_labels.extend(
+                    [f"{label.value} ({label.score})" for label in self.get_labels(key) if label.data_point == self]
+                )
+            labels = "; ".join(all_labels)
+            if labels != "":
                 labels = arrow + labels
         else:
             for key in keys:
-                all_labels.extend([f"{label.value}" for label in self.get_labels(key)
-                                   if label.data_point == self])
-            labels = '/'.join(all_labels)
-            if labels != '':
-                labels = '/' + labels
+                all_labels.extend([f"{label.value}" for label in self.get_labels(key) if label.data_point == self])
+            labels = "/".join(all_labels)
+            if labels != "":
+                labels = "/" + labels
         return labels
 
     def __str__(self) -> str:
@@ -598,14 +598,16 @@ class Relation(_PartOfSentence):
 
     @property
     def text(self):
-        return f'{self.first.text} -> {self.second.text}'
+        return f"{self.first.text} -> {self.second.text}"
 
     @property
     def unlabeled_identifier(self) -> str:
-        return f'Relation' \
-               f'[{self.first.tokens[0].idx-1}:{self.first.tokens[-1].idx}]' \
-               f'[{self.second.tokens[0].idx-1}:{self.second.tokens[-1].idx}]' \
-               f': "{self.text}"'
+        return (
+            f"Relation"
+            f"[{self.first.tokens[0].idx-1}:{self.first.tokens[-1].idx}]"
+            f"[{self.second.tokens[0].idx-1}:{self.second.tokens[-1].idx}]"
+            f': "{self.text}"'
+        )
 
     @property
     def start_position(self) -> int:
@@ -858,12 +860,15 @@ class Sentence(DataPoint):
 
         label_append = []
         for label in self.get_labels(main_label):
-            if label.data_point in already_printed: continue
-            label_append.append(f'"{label.data_point.text}"{label.data_point._printout_labels(main_label=main_label, add_score=False)}')
+            if label.data_point in already_printed:
+                continue
+            label_append.append(
+                f'"{label.data_point.text}"{label.data_point._printout_labels(main_label=main_label, add_score=False)}'
+            )
             already_printed.append(label.data_point)
 
         if len(label_append) > 0:
-            output += f"{arrow}[" + ', '.join(label_append) + "]"
+            output += f"{arrow}[" + ", ".join(label_append) + "]"
 
         return output
 
