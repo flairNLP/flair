@@ -255,3 +255,27 @@ def test_mixed_labels():
     assert 4 == len(sentence.get_labels("pos"))
     assert 1 == len(sentence.get_labels("sentiment"))
     assert 1 == len(sentence.get_labels("ner"))
+
+
+def test_data_point_equality():
+
+    # example sentence
+    sentence = Sentence("George Washington went to Washington .")
+
+    # add two NER labels
+    sentence[0:2].add_label("span_ner", "PER")
+    sentence[0:2].add_label("span_other", "Politician")
+    sentence[4].add_label("ner", "LOC")
+    sentence[4].add_label("other", "Village")
+
+    # get the four labels
+    ner_label = sentence.get_label("ner")
+    other_label = sentence.get_label("other")
+    span_ner_label = sentence.get_label("span_ner")
+    span_other_label = sentence.get_label("span_other")
+
+    # check that only two of the respective data points are equal
+    assert ner_label.data_point == other_label.data_point
+    assert span_ner_label.data_point == span_other_label.data_point
+    assert ner_label.data_point != span_other_label.data_point
+    assert other_label.data_point != span_ner_label.data_point

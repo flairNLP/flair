@@ -285,7 +285,8 @@ class Classifier(Model[DT], typing.Generic[DT]):
             true_values_span_aligned = []
             predicted_values_span_aligned = []
             for span in all_spans:
-                true_values_span_aligned.append(all_true_values[span] if span in all_true_values else ["O"])
+                true_value = all_true_values[span] if span in all_true_values else ["O"]
+                true_values_span_aligned.append(true_value)
                 predicted_values_span_aligned.append(
                     all_predicted_values[span] if span in all_predicted_values else ["O"]
                 )

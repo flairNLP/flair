@@ -22,12 +22,8 @@ document embeddings, including our proposed **[Flair embeddings](https://www.acl
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.10](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.11](https://github.com/flairNLP/flair/releases)!
 
-
-## Join Us: Open Positions at HU-Berlin!
-
-If you're interested in doing NLP/ML research to pursue a PhD and love open source, consider applying to [open positions](https://github.com/flairNLP/flair/issues/2446) for research associates and PhD candidates at Humboldt University Berlin! We currently have **three open positions** with application deadlines soon!
 
 ## State-of-the-Art Models
 
