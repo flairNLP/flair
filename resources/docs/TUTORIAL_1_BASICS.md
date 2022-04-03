@@ -23,7 +23,7 @@ print(sentence)
 This should print:
 
 ```console
-Sentence: "The grass is green ."   [− Tokens: 5]
+Sentence: "The grass is green ."
 ```
 
 The print-out tells us that the sentence consists of 5 tokens.
@@ -39,10 +39,10 @@ print(sentence[3])
 which should print in both cases
 
 ```console
-Token: 4 green
+Token[3]: "green"
 ```
 
-This print-out includes the token id (4) and the lexical value of the token ("green"). You can also iterate over all
+This print-out includes the token index (3) and the lexical value of the token ("green"). You can also iterate over all
 tokens in a sentence.
 
 ```python
@@ -53,11 +53,11 @@ for token in sentence:
 This should print:
 
 ```console
-Token: 1 The
-Token: 2 grass
-Token: 3 is
-Token: 4 green
-Token: 5 .
+Token[0]: "The"
+Token[1]: "grass"
+Token[2]: "is"
+Token[3]: "green"
+Token[4]: "."
 ```
 
 ## Tokenization
@@ -76,8 +76,11 @@ from flair.data import Sentence
 # Make a sentence object by passing an untokenized string and the 'use_tokenizer' flag
 untokenized_sentence = Sentence('The grass is green.', use_tokenizer=False)
 
-# Print the object to see what's in there
+# Print the sentence
 print(untokenized_sentence)
+
+# Print the number of tokens in sentence (only 4 because no tokenizer is used)
+print(len(untokenized_sentence))
 ```
 
 In this case, no tokenization is performed and the text is split on whitespaces, thus resulting in only 4 tokens here. 
@@ -104,7 +107,7 @@ print(japanese_sentence)
 This should print:
 
 ```console
-Sentence: "私 は ベルリン が 好き"   [− Tokens: 5]
+Sentence: "私 は ベルリン が 好き"
 ```
 
 You can write your own tokenization routine. Check the code of `flair.data.Tokenizer` and its implementations
@@ -123,7 +126,7 @@ print(sentence)
 This should print:
 
 ```console
-Sentence: "The grass is green ."   [− Tokens: 5]
+Sentence: "The grass is green ."
 ```
 
 
@@ -139,35 +142,66 @@ the word 'green'. This means that we've tagged this word as an entity of type co
 
 ```python
 # add a tag to a word in the sentence
-sentence[3].add_tag('ner', 'color')
+sentence[3].set_label('ner', 'color')
 
-# print the sentence with all tags of this type
-print(sentence.to_tagged_string())
+# print the sentence (now with this annotation)
+print(sentence)
 ```
 
 This should print:
 
 ```console
-The grass is green <color> .
+Sentence: "The grass is green ." → ["green"/color]
 ```
 
-Each tag is of class `Label` which next to the value has a score indicating confidence. Print like this: 
+The output indicates that the word "green" in this sentence is labeled as a "color". You can also
+iterate through each token and print it to see if it has labels:
 
 ```python
-# get token 3 in the sentence 
-token = sentence[3]
-
-# get the 'ner' tag of the token
-tag = token.get_tag('ner')
-
-# print token
-print(f'"{token}" is tagged as "{tag.value}" with confidence score "{tag.score}"')
+for token in sentence:
+    print(token)
 ```
 
 This should print:
 
 ```console
-"Token: 4 green" is tagged as "color" with confidence score "1.0"
+Token[0]: "The"
+Token[1]: "grass"
+Token[2]: "is"
+Token[3]: "green" → color (1.0)
+Token[4]: "."
+```
+
+This shows that there are 5 tokens in the sentence, one of which has a label.
+
+### Accessing Label information
+
+Each label is of class `Label` which next to the value has a score indicating confidence. Print like this: 
+
+```python
+# get and print token 3 in the sentence 
+token = sentence[3]
+print(token)
+
+# get the 'ner' label of the token
+label = token.get_label('ner')
+
+# print text and id fields of the token, and the value and score fields of the label
+print(f'token.text is: "{token.text}"')
+print(f'token.idx is: "{token.idx}"')
+print(f'label.value is: "{label.value}"')
+print(f'label.score is: "{label.score}"')
+```
+
+This should print:
+
+```console
+Token[3]: "green" → color (1.0)
+
+token.text is: "green"
+token.idx is: "4"
+label.value is: "color"
+label.score is: "1.0"
 ```
 
 Our color tag has a score of 1.0 since we manually added it. If a tag is predicted by our
@@ -196,7 +230,7 @@ print(sentence)
 This should print: 
 
 ```console
-Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0)]}]
+Sentence: "France is the current world cup winner ." → sports (1.0)
 ```
 
 Indicating that this sentence belongs to the topic 'sports' with confidence 1.0.
@@ -231,10 +265,10 @@ print(sentence)
 This should print: 
 
 ```console
-Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0), soccer (1.0)], 'language': [English (1.0)]}]
+Sentence: "France is the current world cup winner ." → sports (1.0); soccer (1.0); English (1.0)
 ```
 
-Indicating that this sentence has two "topic" labels and one "language" label. 
+Indicating that this sentence now has three labels. 
 
 ### Accessing a sentence's labels
 

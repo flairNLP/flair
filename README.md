@@ -75,10 +75,12 @@ tagger.predict(sentence)
 Done! The `Sentence` now has entity annotations. Print the sentence to see what the tagger found.
 
 ```python
+# print the sentence with all annotations
 print(sentence)
+
 print('The following NER tags are found:')
 
-# iterate over entities and print
+# iterate over entities and print each
 for entity in sentence.get_spans('ner'):
     print(entity)
 ```
@@ -86,11 +88,11 @@ for entity in sentence.get_spans('ner'):
 This should print:
 
 ```console
-Sentence: "I love Berlin ." - 4 Tokens
+Sentence: "I love Berlin ." → ["Berlin"/LOC]
 
 The following NER tags are found:
 
-Span [3]: "Berlin"   [− Labels: LOC (0.9992)]
+Span[2:3]: "Berlin" → LOC (0.999)
 ```
 
 ## Tutorials
