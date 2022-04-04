@@ -365,7 +365,11 @@ class DataPoint:
         if add_score:
             for key in keys:
                 all_labels.extend(
-                    [f"{label.value} ({round(label.score, 4)})" for label in self.get_labels(key) if label.data_point == self]
+                    [
+                        f"{label.value} ({round(label.score, 4)})"
+                        for label in self.get_labels(key)
+                        if label.data_point == self
+                    ]
                 )
             labels = "; ".join(all_labels)
             if labels != "":
@@ -1473,15 +1477,20 @@ class Corpus:
             else:
                 unked_count += count
 
-        if len(label_dictionary.idx2item) == 0 or (len(label_dictionary.idx2item) == 1 and '<unk>' in label_dictionary.get_items()):
+        if len(label_dictionary.idx2item) == 0 or (
+            len(label_dictionary.idx2item) == 1 and "<unk>" in label_dictionary.get_items()
+        ):
             log.error(f"ERROR: You specified label_type='{label_type}' which is not in this dataset!")
-            contained_labels = ', '.join([f"'{label[0]}' (in {label[1]} sentences)"
-                                          for label in sentence_label_type_counter.most_common()])
+            contained_labels = ", ".join(
+                [f"'{label[0]}' (in {label[1]} sentences)" for label in sentence_label_type_counter.most_common()]
+            )
             log.error(f"ERROR: The corpus contains the following label types: {contained_labels}")
             raise Exception
 
-        log.info(f"Dictionary created for label '{label_type}' with {len(label_dictionary)} "
-                 f"values: {', '.join([label[0] + f' (seen {label[1]} times)' for label in label_value_counter.most_common(20)])}")
+        log.info(
+            f"Dictionary created for label '{label_type}' with {len(label_dictionary)} "
+            f"values: {', '.join([label[0] + f' (seen {label[1]} times)' for label in label_value_counter.most_common(20)])}"
+        )
 
         if unked_count > 0:
             log.info(f" - at UNK threshold {min_count}, {unked_count} instances are UNK'ed and {erfasst_count} remain")
