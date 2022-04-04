@@ -4,33 +4,31 @@ from bs4 import BeautifulSoup
 import io
 
 urls = [
-    ["https://en.wikipedia.org/wiki/List_of_content_management_systems", "Comparison of web frameworks"]
+    "https://en.wikipedia.org/wiki/Comparison_of_integrated_development_environments"
     ]
 
 for url in urls:
     text = []
 
-    table_name = url[0].split("/")[4]
+    table_name = url.split("/")[4]
 
     fileName = table_name + '.txt'
 
     f = io.open(f'./code_gazetteers/{fileName}', 'w', encoding='utf8')
 
-    response = requests.get(url=url[0])
+    s = requests.Session()
+    response = s.get(url, timeout=10)
     soup = BeautifulSoup(response.content, 'html.parser')
+    all_tables = soup.find_all('table')
+    lst_data = []
+    for right_table in soup.find_all('table', {"class": 'wikitable sortable'}):
+        rows = right_table.findAll("tr")
+        for row in rows:
+            data = [d.text.rstrip() for d in row.find_all('th')]
+            lst_data.append(data)
+            print(data)
 
-    for tag in soup.find_all("td"):
-        if tag.text == url[1]:
-            break
-        p1 = """title=\"[^<>]*\""""
-        p2 = """[>].*[<][/]a"""
-        p3 = """\(\..*\)"""
-        p4 = """href=\"[^<>]*\""""
-        for elem in re.findall(pattern=p2, string=str(tag.contents)):
-            text.append(elem)
-            print(elem)
-
-    for item in text:
+    for item in lst_data:
         f.write("%s\n" % item)
 
     f.close()

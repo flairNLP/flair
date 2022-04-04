@@ -1590,3 +1590,264 @@ AxKit
 Jakarta Slide
 Open Semantic Framework
 RadPHP
+Microsoft Binder
+Microsoft Classroom
+Microsoft Clip Organizer
+Docs.com
+Microsoft Data Analyzer
+Microsoft Entourage
+Microsoft Equation Editor
+Microsoft Exchange Client
+Microsoft Expression Web
+Microsoft FrontPage
+Gigjam Preview
+Microsoft InfoPath
+Microsoft InterConnect
+Microsoft Mail
+Microsoft MapPoint
+Microsoft Mathematics
+Microsoft Office Accounting
+Microsoft Office Document Imaging
+Microsoft Office Document Scanning
+Microsoft Office Live
+Microsoft Office Live Meeting
+Microsoft Office PerformancePoint Server
+Microsoft Office Picture Manager
+Microsoft Office Project Portfolio Server
+Microsoft Outlook Hotmail Connector
+Microsoft PhotoDraw
+Microsoft Photo Editor
+Microsoft Schedule+
+Microsoft Search Server
+Microsoft SharePoint Designer
+Microsoft SharePoint Foundation
+Microsoft SharePoint Workspace
+Microsoft Vizact
+Office Assistant
+Office Web Components
+Access
+Excel
+OneNote
+Outlook
+PowerPoint
+Project
+Publisher
+Visio
+Sway
+Word
+Forms
+Bookings
+Delve
+Office Online
+OneDrive
+Outlook.com
+Planner
+Microsoft Stream
+Microsoft Teams
+SharePoint
+Microsoft To-Do
+Skype
+Yammer
+Fluid Framework
+Project Cortex
+Microsoft Lists
+Adobe AnimateFormerly Adobe Flash Professional
+Flash Builder
+FlashDevelop
+IntelliJ IDEA
+Powerflasher FDT
+Eclipse w/ AonixADT[1]
+GNAT Programming Studio
+SlickEdit
+Understand
+Fresh
+SASM
+SlickEdit
+Basic4android
+FreeBASIC
+Gambas
+Microsoft Small Basic
+Microsoft Visual Studio
+MonoDevelop
+PBASIC Stamp Editor
+PureBasic
+SharpDevelop
+SlickEdit
+Xojo
+Anjuta
+AppCode
+C++Builder
+Code::Blocks
+CodeLite
+Dev-C++
+Eclipse CDT
+Geany
+GNAT Programming Studio
+JetBrains CLion
+KDevelop
+LabWindows/CVI
+Microsoft Visual Studio
+Microsoft Visual Studio Code
+MonoDevelop
+NetBeans C/C++ pack
+OpenWatcom
+Oracle Solaris Studio
+Qt Creator
+Rational Software Architect
+SlickEdit
+Ultimate++ TheIDE
+Understand
+Xcode
+Microsoft Visual Studio
+MonoDevelop
+SharpDevelop
+SlickEdit
+Understand
+Visual Studio Code
+Xamarin Studio
+Eclipse
+Rider
+Allegro Common Lisp
+LispWorks
+SLIME
+BlackBox Component Builder
+EiffelStudio
+Code::Blocks
+Geany
+GNAT Programming Studio
+KDevelop
+NetBeans
+OpenWatcom
+Plato
+Understand
+Simply Fortran
+SlickEdit
+IntelliJ IDEA
+Eclipse GDT
+IntelliJ IDEA
+NetBeans
+SlickEdit
+EclipseFP Plugin
+SlickEdit
+BlueJ
+DrJava
+Eclipse JDT
+Geany
+Greenfoot
+IntelliJ IDEA
+JBuilder
+JCreator
+JDeveloper
+jGRASP
+MyEclipse
+NetBeans
+Rational Application Developer
+Servoy
+SlickEdit
+Understand
+Xcode
+Anjuta
+Atom
+Brackets
+Aptana Studio
+Codeanywhere
+CodeLite
+Eclipse Web Tools
+Komodo IDE / Edit
+NetBeans
+Nodeclipse NTS
+NuSphere PhpED
+Oracle JDeveloper
+Servoy
+SlickEdit
+Visual Studio
+Visual Studio Code
+WebStorm
+Atom
+Emacs / spacemacs
+Visual Studio Code
+Decoda
+SlickEdit
+ZeroBrane Studio
+Delphi
+Free Pascal IDE
+KDevelop
+Lazarus
+MIDletPascal
+Morfik
+MSEide
+Understand
+Visual Studio via Oxygene
+PocketStudio
+Dev-Pascal
+PascalABC.NET
+Eclipse EPIC
+Geany
+Komodo IDE / Edit
+NetBeans
+Padre
+JetBrains IDEs [39]
+SlickEdit
+Adobe Dreamweaver
+Aptana Studio
+CodeLite
+Codelobster
+Eclipse Che
+Eclipse PDT
+Geany
+HTML-Kit
+HyperEdit
+KDevelop
+Komodo IDE / Edit
+NetBeans
+PHPEclipse
+PhpED Professional
+PHPEdit
+PhpStorm
+Quanta Plus
+RadPHP
+SlickEdit
+Zend Studio
+Anjuta
+eric
+Geany
+GuiPy
+IDLE
+Komodo IDE
+KDevelop
+Microsoft Visual Studio
+MonoDevelop
+Ninja-IDE
+PIDA
+PyCharm
+PyDev / LiClipse
+PyScripter
+PythonAnywhere
+SlickEdit
+SourceLair
+Spyder
+Thonny
+Understand
+Visual Studio Code
+Wing
+R Tools for Visual Studio
+RStudio
+DrRacket
+Aptana Studio with integrated RadRails plugin
+Eclipse DLTK Ruby Plugin
+eric
+Komodo IDE / Edit
+NetBeans
+RubyMine
+SlickEdit
+Eclipse JDT
+IntelliJ IDEA
+NetBeans
+Dolphin Smalltalk
+Pharo
+Squeak
+VisualAge
+VisualWorks
+Eclipse DLTK
+Komodo IDE / Edit
+SlickEdit
