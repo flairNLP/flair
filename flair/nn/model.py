@@ -285,7 +285,15 @@ class Classifier(Model[DT], typing.Generic[DT]):
             true_values_span_aligned = []
             predicted_values_span_aligned = []
             for span in all_spans:
-                true_values_span_aligned.append(all_true_values[span] if span in all_true_values else ["O"])
+                list_of_gold_values_for_span = all_true_values[span] if span in all_true_values else ["O"]
+                # delete exluded labels if exclude_labels is given
+                for excluded_label in exclude_labels:
+                    if excluded_label in list_of_gold_values_for_span:
+                        list_of_gold_values_for_span.remove(excluded_label)
+                # if after excluding labels, no label is left, ignore the datapoint
+                if not list_of_gold_values_for_span:
+                    continue
+                true_values_span_aligned.append(list_of_gold_values_for_span)
                 predicted_values_span_aligned.append(
                     all_predicted_values[span] if span in all_predicted_values else ["O"]
                 )
@@ -350,8 +358,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
         for label_name, count in counter.most_common():
             if label_name == "O":
-                continue
-            if label_name in exclude_labels:
                 continue
             target_names.append(label_name)
             labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
