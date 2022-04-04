@@ -315,14 +315,16 @@ sentence = Sentence('George Washington went to Washington. Dort kaufte er einen 
 tagger.predict(sentence)
 
 # print sentence with predicted tags
-print(sentence.to_tagged_string())
+print(sentence)
 ```
 
-This should print: 
+This should print (line breaks added for readability): 
 ```console
-George <PROPN> Washington <PROPN> went <VERB> to <ADP> Washington <PROPN> . <PUNCT>
+Sentence: "George Washington went to Washington . Dort kaufte er einen Hut ." 
 
-Dort <ADV> kaufte <VERB> er <PRON> einen <DET> Hut <NOUN> . <PUNCT>
+→ ["George"/PROPN, "Washington"/PROPN, "went"/VERB, "to"/ADP, "Washington"/PROPN, "."/PUNCT] 
+
+→ ["Dort"/ADV, "kaufte"/VERB, "er"/PRON, "einen"/DET, "Hut"/NOUN, "."/PUNCT]
 ```
 
 So, both 'went' and 'kaufte' are identified as VERBs in these sentences.
