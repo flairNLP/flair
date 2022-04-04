@@ -342,30 +342,31 @@ Here's an example:
 tagger = SequenceTagger.load('frame')
 
 # make English sentence
-sentence_1 = Sentence('George returned to Berlin to return his hat.')
-sentence_2 = Sentence('He had a look at different hats.')
+sentence = Sentence('George returned to Berlin to return his hat.')
 
 # predict NER tags
-tagger.predict(sentence_1)
-tagger.predict(sentence_2)
+tagger.predict(sentence)
 
-# print sentence with predicted tags
-print(sentence_1.to_tagged_string())
-print(sentence_2.to_tagged_string())
+# go through tokens and print predicted frame (if one is predicted)
+for token in sentence:
+    print(token)
 ```
 This should print: 
 
 ```console
-George returned <return.01> to Berlin to return <return.02> his hat .
-
-He had <have.LV> a look <look.01> at different hats .
+Token[0]: "George"
+Token[1]: "returned" → return.01 (0.9951)
+Token[2]: "to"
+Token[3]: "Berlin"
+Token[4]: "to"
+Token[5]: "return" → return.02 (0.6361)
+Token[6]: "his"
+Token[7]: "hat"
+Token[8]: "."
 ```
 
-As we can see, the frame detector makes a distinction in sentence 1 between two different meanings of the word 'return'.
+As we can see, the frame detector makes a distinction in the sentence between two different meanings of the word 'return'.
 'return.01' means returning to a location, while 'return.02' means giving something back.
-
-Similarly, in sentence 2 the frame detector finds a light verb construction in which 'have' is the light verb and
-'look' is a frame evoking word.
 
 ## Tagging a List of Sentences
 
@@ -393,7 +394,7 @@ tagger.predict(sentences)
 
 # iterate through sentences and print predicted labels
 for sentence in sentences:
-    print(sentence.to_tagged_string())
+    print(sentence)
 ```
 
 Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
@@ -429,7 +430,7 @@ print(sentence)
 
 This should print:
 ```console
-Sentence: "enormously entertaining for moviegoers of any age."   [− Tokens: 8  − Sentence-Labels: {'class': [POSITIVE (0.9976)]}]
+Sentence: "enormously entertaining for moviegoers of any age ." → POSITIVE (0.9976)
 ```
 
 The label POSITIVE is added to the sentence, indicating that this sentence has positive sentiment.
