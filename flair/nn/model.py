@@ -290,7 +290,8 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 for excluded_label in exclude_labels:
                     if excluded_label in list_of_gold_values_for_span:
                         list_of_gold_values_for_span.remove(excluded_label)
-                if not list_of_gold_values_for_span: # if after excluding labels, no label is left, ignore the datapoint
+                # if after excluding labels, no label is left, ignore the datapoint
+                if not list_of_gold_values_for_span:
                     continue
                 true_values_span_aligned.append(list_of_gold_values_for_span)
                 predicted_values_span_aligned.append(
