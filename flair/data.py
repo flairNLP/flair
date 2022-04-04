@@ -1441,19 +1441,19 @@ class Corpus:
 
         log.info("Computing label dictionary. Progress:")
 
-        all_label_types: typing.Counter[str] = Counter()
-        label_occurrence: typing.Counter[str] = Counter()
+        sentence_label_type_counter: typing.Counter[str] = Counter()
+        label_value_counter: typing.Counter[str] = Counter()
         all_sentence_labels: List[str] = []
         for sentence in Tqdm.tqdm(_iter_dataset(data)):
 
-            # check if sentence itself has labels
-            labels = sentence.get_labels(label_type)
-            all_label_types.update(sentence.annotation_layers.keys())
+            # count all label types per sentence
+            sentence_label_type_counter.update(sentence.annotation_layers.keys())
 
-            # go through all labels and increment count
+            # go through all labels of label_type and count values
+            labels = sentence.get_labels(label_type)
             for label in labels:
                 if label.value not in all_sentence_labels:
-                    label_occurrence[label.value] += 1
+                    label_value_counter[label.value] += 1
 
                 # check if there are any span labels
                 if type(label.data_point) == Span and len(label.data_point) > 1:
@@ -1463,29 +1463,28 @@ class Corpus:
                 if len(labels) > 1:
                     label_dictionary.multi_label = True
 
+        # if an unk threshold is set, UNK all label values below this threshold
         erfasst_count = 0
         unked_count = 0
-        for label, count in label_occurrence.most_common():
+        for label, count in label_value_counter.most_common():
             if count >= min_count:
                 label_dictionary.add_item(label)
                 erfasst_count += count
             else:
                 unked_count += count
 
-        if len(label_dictionary.idx2item) == 0:
-            log.error(
-                f"Corpus contains only the labels: {', '.join([f'{label[0]} (#{label[1]})' for label in all_label_types.most_common()])}"
-            )
-            log.error(f"You specified as label_type='{label_type}' which is not in this dataset!")
-
+        if len(label_dictionary.idx2item) == 0 or (len(label_dictionary.idx2item) == 1 and '<unk>' in label_dictionary.get_items()):
+            log.error(f"ERROR: You specified label_type='{label_type}' which is not in this dataset!")
+            contained_labels = ', '.join([f"'{label[0]}' (in {label[1]} sentences)"
+                                          for label in sentence_label_type_counter.most_common()])
+            log.error(f"ERROR: The corpus contains the following label types: {contained_labels}")
             raise Exception
 
-        log.info(
-            f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}"
-        )
-        log.info(f"{erfasst_count} instances in dict, {unked_count} instances are UNK'ed")
-        log.info(f"Most commonly observed '{label_type}'-labels are {label_occurrence.most_common(20)}")
-        log.info(f"Created (for label '{label_type}') {label_dictionary}")
+        log.info(f"Dictionary created for label '{label_type}' with {len(label_dictionary)} "
+                 f"values: {', '.join([label[0] + f' (seen {label[1]} times)' for label in label_value_counter.most_common(20)])}")
+
+        if unked_count > 0:
+            log.info(f" - at UNK threshold {min_count}, {unked_count} instances are UNK'ed and {erfasst_count} remain")
 
         return label_dictionary
 
