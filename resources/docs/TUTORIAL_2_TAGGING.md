@@ -475,7 +475,7 @@ for entity in entities:
     print(entity)
 
 # 3. load relation extractor
-extractor: RelationExtractor = RelationExtractor.load('relations-fast')
+extractor: RelationExtractor = RelationExtractor.load('relations')
 
 # predict relations
 extractor.predict(sentence)
@@ -489,10 +489,10 @@ for relation in relations:
 This should print: 
 
 ~~~
-PER [George (1)] (0.9971)
-LOC [Washington (5)] (0.9847)
+Span[0:1]: "George" → PER (0.9971)
+Span[4:5]: "Washington" → LOC (0.9847)
 
-born_in [George (1) -> Washington (5)] (0.9998)
+Relation[0:1][4:5]: "George -> Washington" → born_in (1.0)
 ~~~
 
 Indicating that a born_in relationship holds between "George" and "Washington"!
