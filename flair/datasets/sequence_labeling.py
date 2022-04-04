@@ -608,7 +608,7 @@ class ColumnDataset(FlairDataset):
                         self.span_level_tag_columns[column] = layer
 
             for column in self.span_level_tag_columns:
-                log.info(f"Column {column} ({self.span_level_tag_columns[column]}) is a span-level column.")
+                log.debug(f"Column {column} ({self.span_level_tag_columns[column]}) is a span-level column.")
 
             # for column in self.word_level_tag_columns:
             #     log.info(f"Column {column} ({self.word_level_tag_columns[column]}) is a word-level column.")
@@ -681,7 +681,7 @@ class ColumnDataset(FlairDataset):
                     relation = Relation(
                         first=sentence[head_start - 1 : head_end], second=sentence[tail_start - 1 : tail_end]
                     )
-                    relation.add_label(typename="relation", value=label)
+                    relation.add_label(typename="relation", value=self._remap_label(label))
 
         if len(sentence) > 0:
             return sentence
