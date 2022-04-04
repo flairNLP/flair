@@ -2,21 +2,23 @@
 
 `OneHotEmbeddings` are embeddings that encode each word in a vocabulary as a one-hot vector, followed by an embedding 
 layer. These embeddings
-thus do not encode any prior knowledge as do most other embeddings. They also differ in that they require to see 
-a `Corpus` during instantiation, so they can build up a vocabulary consisting
-of the most common words seen in the corpus, plus an UNK token for all rare words. 
+thus do not encode any prior knowledge as do most other embeddings. They also differ in that they 
+require to see a vocabulary (`vocab_dictionary`) during instantiation. Such dictionary can be passed as an argument
+during class initialization or constructed directly from a corpus with a `from_corpus` method. The dictionary consists 
+of all unique tokens contained in the corpus plus an UNK token for all rare words. 
 
 You initialize these embeddings like this:
 
 ```python
 from flair.embeddings import OneHotEmbeddings
 from flair.datasets import UD_ENGLISH
+from flair.data import Sentence
 
 # load a corpus
 corpus = UD_ENGLISH()
 
 # init embedding
-embeddings = OneHotEmbeddings(corpus=corpus)
+embeddings = OneHotEmbeddings.from_corpus(corpus)
 
 # create a sentence
 sentence = Sentence('The grass is green .')
@@ -36,7 +38,7 @@ this using the `min_freq` parameter. For instance, if your corpus is very large 
 higher `min_freq`: 
 
 ```python
-embeddings = OneHotEmbeddings(corpus=corpus, min_freq=10)
+embeddings = OneHotEmbeddings.from_corpus(corpus, min_freq=10)
 ```
 
 ### Embedding dimensionality
@@ -45,7 +47,7 @@ By default, the embeddings have a dimensionality of 300. If you want to try high
 `embedding_length` parameter:
 
 ```python
-embeddings = OneHotEmbeddings(corpus=corpus, embedding_length=100)
+embeddings = OneHotEmbeddings.from_corpus(corpus, embedding_length=100)
 ```
 
 
@@ -64,7 +66,7 @@ from flair.embeddings import OneHotEmbeddings
 corpus = UD_ENGLISH()
 
 # embed POS tags
-embeddings = OneHotEmbeddings(corpus=corpus, field='upos')
+embeddings = OneHotEmbeddings.from_corpus(corpus, field='upos')
 ```
 
 This should print a vocabulary of size 18 consisting of universal part-of-speech tags. 
