@@ -28,7 +28,6 @@ from . import (  # noqa: E402 import after setting device
     visual,
 )
 
-
 logging.config.dictConfig(
     {
         "version": 1,
