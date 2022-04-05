@@ -63,4 +63,5 @@ __all__ = [
     "nn",
     "trainers",
     "visual",
+    "datasets",
 ]
