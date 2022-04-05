@@ -57,24 +57,17 @@ Which indicates that "George Washington" is a person (PER) and "Washington" is
 a location (LOC). Each such `Span` has a text, its position in the sentence and `Label` 
 with a value and a score (confidence in the prediction). 
 
-Let's first print each entity span:
-
-```python
-for entity in sentence.get_spans('ner'):
-    print(entity)
-```
-
-On each span, you can access additional information, such as the position offsets of
-each entity in the sentence, and all information on the label. The following snippet
-illustrates how you access these fields:
+Let us iterate over the spans again and access these fields:
 
 ```python
 # iterate over each entity
 for entity in sentence.get_spans('ner'):
+    
     # print entity text, start_position and end_position
     print(f'entity.text is: "{entity.text}"')
     print(f'entity.start_position is: "{entity.start_position}"')
     print(f'entity.end_position is: "{entity.end_position}"')
+    
     # also print the value and score of its "ner"-label
     print(f'entity "ner"-label value is: "{entity.get_label("ner").value}"')
     print(f'entity "ner"-label score is: "{entity.get_label("ner").score}"\n')
