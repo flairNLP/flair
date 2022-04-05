@@ -25,13 +25,16 @@ sentence = Sentence('George Washington went to Washington.')
 tagger.predict(sentence)
 
 # print sentence with predicted tags
-print(sentence.to_tagged_string())
+print(sentence)
 ```
 
 This should print: 
 ```console
-George <B-PER> Washington <E-PER> went to Washington <S-LOC> . 
+Sentence: "George Washington went to Washington ." → ["George Washington"/PER, "Washington"/LOC]
 ```
+
+Showing us that two entities are labeled in this sentence: "George Washington" as PER (person) and "Washington" 
+as LOC (location.)
 
 ### Getting Annotated Spans
 
@@ -46,27 +49,73 @@ for entity in sentence.get_spans('ner'):
 
 This should print:
 ```console
-Span [1,2]: "George Washington"   [− Labels: PER (0.9968)]
-Span [5]: "Washington"   [− Labels: LOC (0.9994)]
+Span[0:2]: "George Washington" → PER (0.9989)
+Span[4:5]: "Washington" → LOC (0.9942)
 ```
 
 Which indicates that "George Washington" is a person (PER) and "Washington" is
 a location (LOC). Each such `Span` has a text, its position in the sentence and `Label` 
 with a value and a score (confidence in the prediction). 
-You can also get additional information, such as the position offsets of
-each entity in the sentence by calling:
+
+Let us iterate over the spans again and access these fields:
 
 ```python
-print(sentence.to_dict(tag_type='ner'))
+# iterate over each entity
+for entity in sentence.get_spans('ner'):
+    
+    # print entity text, start_position and end_position
+    print(f'entity.text is: "{entity.text}"')
+    print(f'entity.start_position is: "{entity.start_position}"')
+    print(f'entity.end_position is: "{entity.end_position}"')
+    
+    # also print the value and score of its "ner"-label
+    print(f'entity "ner"-label value is: "{entity.get_label("ner").value}"')
+    print(f'entity "ner"-label score is: "{entity.get_label("ner").score}"\n')
 ```
 
 This should print:
 ```console
-{'text': 'George Washington went to Washington.',
-    'entities': [
-        {'text': 'George Washington', 'start_pos': 0, 'end_pos': 17, 'type': 'PER', 'confidence': 0.999},
-        {'text': 'Washington', 'start_pos': 26, 'end_pos': 36, 'type': 'LOC', 'confidence': 0.998}
-    ]}
+entity.text is: "George Washington"
+entity.start_position is: "0"
+entity.end_position is: "17"
+entity "ner"-label value is: "PER"
+entity "ner"-label score is: "0.998886227607727"
+
+entity.text is: "Washington"
+entity.start_position is: "26"
+entity.end_position is: "36"
+entity "ner"-label value is: "LOC"
+entity "ner"-label score is: "0.9942097663879395"
+```
+
+### Getting Any Labels
+
+Not all our taggers predict on the `Span`-level: Part-of-Speech taggers for instance predict on the `Token`-level, 
+while relation extractors predict on the `Relation`-level. If you don't know what objects are predicted 
+by a specific tagger, the best way to access predictions is through the generic `get_labels()` method:
+
+```python
+for label in sentence.get_labels('ner'):
+    print(label)
+```
+
+The printout is identical in this case to `sentence.get_spans('ner')`: 
+
+```console
+Span[0:2]: "George Washington" → PER (0.9989)
+Span[4:5]: "Washington" → LOC (0.9942)
+```
+
+You can access the label's value and score, and even access the data point object to which the label attaches:
+
+```python
+# iterate over all 'ner'-labels in the sentence
+for label in sentence.get_labels('ner'):
+    # print label value and score
+    print(f'label.value is: "{label.value}"')
+    print(f'label.score is: "{label.score}"')
+    # access the data point to which label attaches and print its text
+    print(f'the text of label.data_point is: "{label.data_point.text}"\n')
 ```
 
 
@@ -90,7 +139,35 @@ tagger.predict(sentence)
 print(sentence)
 ``` 
 
-The sentence now has two types of annotation: POS and NER. 
+The sentence now has two types of annotation: POS and NER. Print them using `get_labels()`: 
+
+```python
+for label in sentence.get_labels('pos'):
+  print(label)
+
+for label in sentence.get_labels('ner'):
+  print(label)
+``` 
+
+This should print first the POS tags, then the NER spans: 
+
+```console
+Token[0]: "George" → NNP (1.0)
+Token[1]: "Washington" → NNP (1.0)
+Token[2]: "went" → VBD (1.0)
+Token[3]: "to" → IN (0.7628)
+Token[4]: "Washington" → NNP (1.0)
+Token[5]: "." → . (1.0)
+
+Span[0:2]: "George Washington" → PER (0.9989)
+Span[4:5]: "Washington" → LOC (0.9942)
+``` 
+
+You can alternatively just print all labels of the sentence at the same time, regardless of type: 
+```python
+for label in sentence.labels:
+  print(label)
+``` 
 
 ### List of Pre-Trained Sequence Tagger Models
 
@@ -182,12 +259,12 @@ sentence = Sentence('George Washington ging nach Washington.')
 tagger.predict(sentence)
 
 # print sentence with predicted tags
-print(sentence.to_tagged_string())
+print(sentence)
 ```
 
 This should print: 
 ```console
-George <B-PER> Washington <E-PER> ging nach Washington <S-LOC> .
+Sentence: "George Washington ging nach Washington ." → ["George Washington"/PER, "Washington"/LOC]
 ```
 
 ### Tagging an Arabic sentence
@@ -212,7 +289,7 @@ for entity in sentence.get_labels('ner'):
 
 This should print: 
 ```console
-LOC [برلين (2)] (0.9803) 
+Span[1:2]: "برلين" → LOC (0.9803)
 ```
 
 ### Tagging Multilingual Text
@@ -231,14 +308,16 @@ sentence = Sentence('George Washington went to Washington. Dort kaufte er einen 
 tagger.predict(sentence)
 
 # print sentence with predicted tags
-print(sentence.to_tagged_string())
+print(sentence)
 ```
 
-This should print: 
+This should print (line breaks added for readability): 
 ```console
-George <PROPN> Washington <PROPN> went <VERB> to <ADP> Washington <PROPN> . <PUNCT>
+Sentence: "George Washington went to Washington . Dort kaufte er einen Hut ." 
 
-Dort <ADV> kaufte <VERB> er <PRON> einen <DET> Hut <NOUN> . <PUNCT>
+→ ["George"/PROPN, "Washington"/PROPN, "went"/VERB, "to"/ADP, "Washington"/PROPN, "."/PUNCT] 
+
+→ ["Dort"/ADV, "kaufte"/VERB, "er"/PRON, "einen"/DET, "Hut"/NOUN, "."/PUNCT]
 ```
 
 So, both 'went' and 'kaufte' are identified as VERBs in these sentences.
@@ -256,30 +335,31 @@ Here's an example:
 tagger = SequenceTagger.load('frame')
 
 # make English sentence
-sentence_1 = Sentence('George returned to Berlin to return his hat.')
-sentence_2 = Sentence('He had a look at different hats.')
+sentence = Sentence('George returned to Berlin to return his hat.')
 
 # predict NER tags
-tagger.predict(sentence_1)
-tagger.predict(sentence_2)
+tagger.predict(sentence)
 
-# print sentence with predicted tags
-print(sentence_1.to_tagged_string())
-print(sentence_2.to_tagged_string())
+# go through tokens and print predicted frame (if one is predicted)
+for token in sentence:
+    print(token)
 ```
 This should print: 
 
 ```console
-George returned <return.01> to Berlin to return <return.02> his hat .
-
-He had <have.LV> a look <look.01> at different hats .
+Token[0]: "George"
+Token[1]: "returned" → return.01 (0.9951)
+Token[2]: "to"
+Token[3]: "Berlin"
+Token[4]: "to"
+Token[5]: "return" → return.02 (0.6361)
+Token[6]: "his"
+Token[7]: "hat"
+Token[8]: "."
 ```
 
-As we can see, the frame detector makes a distinction in sentence 1 between two different meanings of the word 'return'.
+As we can see, the frame detector makes a distinction in the sentence between two different meanings of the word 'return'.
 'return.01' means returning to a location, while 'return.02' means giving something back.
-
-Similarly, in sentence 2 the frame detector finds a light verb construction in which 'have' is the light verb and
-'look' is a frame evoking word.
 
 ## Tagging a List of Sentences
 
@@ -307,7 +387,7 @@ tagger.predict(sentences)
 
 # iterate through sentences and print predicted labels
 for sentence in sentences:
-    print(sentence.to_tagged_string())
+    print(sentence)
 ```
 
 Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
@@ -343,7 +423,7 @@ print(sentence)
 
 This should print:
 ```console
-Sentence: "enormously entertaining for moviegoers of any age."   [− Tokens: 8  − Sentence-Labels: {'class': [POSITIVE (0.9976)]}]
+Sentence: "enormously entertaining for moviegoers of any age ." → POSITIVE (0.9976)
 ```
 
 The label POSITIVE is added to the sentence, indicating that this sentence has positive sentiment.
@@ -368,9 +448,9 @@ Relations hold between two entities. For instance, a text like "George was born 
 names two entities and also expresses that there is a born_in relationship between
 both. 
 
-We added two experimental relation extraction models, 
-trained over a modified version of TACRED: `relations` and `relations-fast`. 
-Use these models together with an entity tagger, like so: 
+We added an experimental relation extraction model 
+trained over a modified version of TACRED: `relations`. 
+Use this models together with an entity tagger, like so: 
 ```python
 from flair.data import Sentence
 from flair.models import RelationExtractor, SequenceTagger
@@ -388,7 +468,7 @@ for entity in entities:
     print(entity)
 
 # 3. load relation extractor
-extractor: RelationExtractor = RelationExtractor.load('relations-fast')
+extractor: RelationExtractor = RelationExtractor.load('relations')
 
 # predict relations
 extractor.predict(sentence)
@@ -402,10 +482,10 @@ for relation in relations:
 This should print: 
 
 ~~~
-PER [George (1)] (0.9971)
-LOC [Washington (5)] (0.9847)
+Span[0:1]: "George" → PER (0.9971)
+Span[4:5]: "Washington" → LOC (0.9847)
 
-born_in [George (1) -> Washington (5)] (0.9998)
+Relation[0:1][4:5]: "George -> Washington" → born_in (1.0)
 ~~~
 
 Indicating that a born_in relationship holds between "George" and "Washington"!

@@ -598,13 +598,8 @@ def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
     dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl")
 
     assert len(dataset.sentences) == 5
-    assert dataset.sentences[0].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC>"
-    assert dataset.sentences[1].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC> ."
-    assert dataset.sentences[2].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC> . <I-LOC>"
-    assert (
-        dataset.sentences[3].to_tagged_string()
-        == "EU <B-ORG> rejects German <B-MISC> call to boycott British <B-MISC> lamb <I-MISC> ."
-    )
+    assert dataset.sentences[0].get_token(3).get_label("ner").value == "B-LOC"
+    assert dataset.sentences[0].get_token(4).get_label("ner").value == "I-LOC"
 
 
 def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):
