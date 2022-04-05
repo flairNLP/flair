@@ -14,6 +14,11 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
+# global variable: version
+__version__ = "0.11"
+
+# global variable: arrow symbol
+_arrow = " → "
 
 from . import (  # noqa: E402 import after setting device
     data,
@@ -23,7 +28,6 @@ from . import (  # noqa: E402 import after setting device
     visual,
 )
 
-__version__ = "0.11"
 
 logging.config.dictConfig(
     {

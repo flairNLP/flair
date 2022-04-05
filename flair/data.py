@@ -17,7 +17,6 @@ import flair
 from flair.file_utils import Tqdm
 
 log = logging.getLogger("flair")
-arrow = " → "
 
 
 def _iter_dataset(dataset: Optional[Dataset]) -> typing.Iterable:
@@ -232,7 +231,7 @@ class Label:
         return {"value": self.value, "confidence": self.score}
 
     def __str__(self):
-        return f"{self.data_point.unlabeled_identifier}{arrow}{self._value} ({round(self._score, 4)})"
+        return f"{self.data_point.unlabeled_identifier}{flair._arrow}{self._value} ({round(self._score, 4)})"
 
     @property
     def shortstring(self):
@@ -373,7 +372,7 @@ class DataPoint:
                 )
             labels = "; ".join(all_labels)
             if labels != "":
-                labels = arrow + labels
+                labels = flair._arrow + labels
         else:
             for key in keys:
                 all_labels.extend([f"{label.value}" for label in self.get_labels(key) if label.data_point == self])
@@ -877,7 +876,7 @@ class Sentence(DataPoint):
             already_printed.append(label.data_point)
 
         if len(label_append) > 0:
-            output += f"{arrow}[" + ", ".join(label_append) + "]"
+            output += f"{flair._arrow}[" + ", ".join(label_append) + "]"
 
         return output
 
