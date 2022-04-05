@@ -598,8 +598,8 @@ def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
     dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl")
 
     assert len(dataset.sentences) == 5
-    assert dataset.sentences[0].get_token(3).get_label('ner').value == "B-LOC"
-    assert dataset.sentences[0].get_token(4).get_label('ner').value == "I-LOC"
+    assert dataset.sentences[0].get_token(3).get_label("ner").value == "B-LOC"
+    assert dataset.sentences[0].get_token(4).get_label("ner").value == "I-LOC"
 
 
 def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):
