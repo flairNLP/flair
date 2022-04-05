@@ -455,9 +455,9 @@ Relations hold between two entities. For instance, a text like "George was born 
 names two entities and also expresses that there is a born_in relationship between
 both. 
 
-We added two experimental relation extraction models, 
-trained over a modified version of TACRED: `relations` and `relations-fast`. 
-Use these models together with an entity tagger, like so: 
+We added an experimental relation extraction model 
+trained over a modified version of TACRED: `relations`. 
+Use this models together with an entity tagger, like so: 
 ```python
 from flair.data import Sentence
 from flair.models import RelationExtractor, SequenceTagger
