@@ -8,7 +8,7 @@ This model is implemented in Flair by the `TARSClassifier` class.
 In this tutorial, we will show you different ways of using TARS: 
 
     
-## Use Case #1: Classify Text Without Training Data (Zero-Shot)
+## Use Case 1: Classify Text Without Training Data (Zero-Shot)
 
 In some cases, you might not have any training data for the text classification task you want to solve. In this case, 
 you can load our default TARS model and do zero-shot prediction. That is, you use the `predict_zero_shot` method
@@ -40,14 +40,14 @@ print(sentence)
 The output should look like:
 
 ```console
-Sentence: "I am so glad you liked it !"   [− Tokens: 8  − Sentence-Labels: {'label': [happy (0.9312)]}]
+Sentence: "I am so glad you liked it !" → happy (0.8667)
 ```
 
 So the label "happy" was chosen for this sentence. 
 
 Try it out with some other labels! Zero-shot prediction will sometimes (*but not always*) work remarkably well. 
 
-## Use Case #2: Zero-shot Named Entity Recognition (NER) with TARS
+## Use Case 2: Zero-shot Named Entity Recognition (NER) with TARS
 
 We extend the TARS zero-shot learning approach to sequence labeling and ship a pre-trained model for English NER. Try defining some classes and see if the model can find them: 
 
@@ -79,18 +79,18 @@ for sentence in sentences:
 This should print: 
 
 ```console
-The Humboldt <B-University> University <I-University> of <I-University> Berlin <E-University> is situated near the Spree <S-River> in Berlin <S-City> , Germany <S-Country>
+Sentence: "The Humboldt University of Berlin is situated near the Spree in Berlin , Germany" → ["Humboldt University of Berlin"/University, "Spree"/River, "Berlin"/City, "Germany"/Country]
 
-Bayern <B-Soccer Team> Munich <E-Soccer Team> played against Real <B-Soccer Team> Madrid <E-Soccer Team>
+Sentence: "Bayern Munich played against Real Madrid" → ["Bayern Munich"/Soccer Team, "Real Madrid"/Soccer Team]
 
-I flew with an Airbus <B-Vehicle> A380 <E-Vehicle> to Peru <S-City> to pick up my Porsche <B-Vehicle> Cayenne <E-Vehicle>
+Sentence: "I flew with an Airbus A380 to Peru to pick up my Porsche Cayenne" → ["Airbus A380"/Vehicle, "Peru"/Country, "Porsche Cayenne"/Vehicle]
 
-Game <B-TV Show> of <I-TV Show> Thrones <E-TV Show> is my favorite series
+Sentence: "Game of Thrones is my favorite series" → ["Game of Thrones"/TV Show]
 ```
 
 
 So in these examples, we are finding entity classes such as "TV show" (_Game of Thrones_), "vehicle" (_Airbus A380_ and _Porsche Cayenne_), "soccer team" (_Bayern Munich_ and _Real Madrid_) and "river" (_Spree_), even though the model was never explicitly trained for this. Note that this is ongoing research and the examples are a bit cherry-picked. We expect the zero-shot model to improve quite a bit until the next release.
-## Use Case #3: Train a TARS model 
+## Use Case 3: Train a TARS model 
 
 You can also train your own TARS model, either from scratch or by using the provided TARS model as a starting
 point. If you chose the latter, you might need only few training data to train a new task.
@@ -230,7 +230,7 @@ print(sentence)
 The output should look like:
 ```
 Existing tasks are: {'AGNews', 'DBPedia', 'IMDB', 'SST', 'TREC_6', 'NEWS_CATEGORY', 'Amazon', 'Yelp', 'GO_EMOTIONS'}
-Sentence: "I absolutely love this !"   [− Tokens: 5  − Sentence-Labels: {'label': [LOVE (0.9708)]}]
+Sentence: "I absolutely love this !" → LOVE (0.9974)
 ```
 
 ## Please cite the following paper when using TARS:

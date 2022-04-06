@@ -512,9 +512,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                             span: Span = sentence[predicted_span[0][0] : predicted_span[0][-1] + 1]
                             span.add_label(label_name, value=predicted_span[2], score=predicted_span[1])
 
-                    # token-labels can be added directly
+                    # token-labels can be added directly ("O" and legacy "_" predictions are skipped)
                     else:
                         for token, label in zip(sentence.tokens, sentence_predictions):
+                            if label[0] in ["O", "_"]:
+                                continue
                             token.add_label(typename=label_name, value=label[0], score=label[1])
 
                 # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
@@ -670,6 +672,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "chunk": "flair/chunk-english",
             "chunk-fast": "flair/chunk-english-fast",
             # Language-specific NER models
+            "ar-ner": "megantosh/flair-arabic-multi-ner",
+            "ar-pos": "megantosh/flair-arabic-dialects-codeswitch-egy-lev",
             "da-ner": "flair/ner-danish",
             "de-ner": "flair/ner-german",
             "de-ler": "flair/ner-german-legal",
