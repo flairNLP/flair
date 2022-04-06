@@ -4130,7 +4130,7 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
 
 class NER_HIPE_2022(ColumnCorpus):
     def _prepare_corpus(
-        file_in: Path, file_out: Path, eos_marker: str, document_separator: str, add_document_separator: bool
+        self, file_in: Path, file_out: Path, eos_marker: str, document_separator: str, add_document_separator: bool
     ):
         with open(file_in, "rt") as f_p:
             lines = f_p.readlines()
