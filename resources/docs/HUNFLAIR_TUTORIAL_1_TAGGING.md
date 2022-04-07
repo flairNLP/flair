@@ -135,9 +135,9 @@ for sentence in sentences:
 ```
 This should print:
 ~~~
-Fragile <B-Disease> X <I-Disease> syndrome <E-Disease> ( FXS <S-Disease> ) is a developmental <B-Disease> disorder <E-Disease> caused by a mutation in the X - linked FMR1 <S-Gene> gene , coding for the FMRP <S-Gene> protein which is largely involved in synaptic function .
-FXS <S-Disease> patients present several behavioral <B-Disease> abnormalities <E-Disease> , including hyperactivity <S-Disease> , anxiety <S-Disease> , sensory hyper - responsiveness , and cognitive <B-Disease> deficits <E-Disease> .
-Autistic <B-Disease> symptoms <E-Disease> , e.g. , altered social interaction and communication , are also often observed : FXS <S-Disease> is indeed the most common monogenic cause of autism <S-Disease>.
+Sentence: "Fragile X syndrome ( FXS ) is a developmental disorder caused by a mutation in the X - linked FMR1 gene , coding for the FMRP protein which is largely involved in synaptic function ." → ["Fragile X syndrome"/Disease, "FXS"/Disease, "developmental disorder"/Disease, "FMR1"/Gene, "FMRP"/Gene]
+Sentence: "FXS patients present several behavioral abnormalities , including hyperactivity , anxiety , sensory hyper - responsiveness , and cognitive deficits ." → ["FXS"/Disease, "behavioral abnormalities"/Disease, "hyperactivity"/Disease, "anxiety"/Disease, "cognitive deficits"/Disease]
+Sentence: "Autistic symptoms , e.g. , altered social interaction and communication , are also often observed : FXS is indeed the most common monogenic cause of autism ." → ["Autistic symptoms"/Disease, "FXS"/Disease, "autism"/Disease]
 ~~~
 
 ### Next
