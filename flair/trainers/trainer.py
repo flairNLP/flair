@@ -22,6 +22,8 @@ except ImportError:
     amp = None
 
 import random
+from numpy.random import choice as yes_no
+from flair.data import Sentence, Token
 
 from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
 
@@ -460,8 +462,29 @@ class ModelTrainer:
                     log_line(log)
                     break
 
+                train_data_masked = []
+                elements = [0,1]
+                probabilities = [0.15, 0.85]
+
+                for sentence in train_data:
+                    #mask tokens from mentions
+                    for span in sentence.get_spans('nel'):
+                        mask_or_leave = int(yes_no(elements, 1, probabilities))
+                        if mask_or_leave == 0:
+                            for token in span.tokens:
+                                token.form = '[MASK]'
+                    #create new sentence
+                    new_sen = Sentence(text=[token.text for token in sentence])
+                    # now I need to add the labels to the new sentence
+                    for span in sentence.get_spans('nel'):
+                        span_label = span.get_label('nel').value
+                        span_indices = [token.idx -1 for token in span.tokens]
+                        for ind in span_indices:
+                            new_sen[ind].set_label('nel', span_label)
+                    train_data_masked.append(new_sen)
+
                 batch_loader = DataLoader(
-                    train_data,
+                    train_data_masked,
                     batch_size=mini_batch_size,
                     shuffle=shuffle if epoch > 1 else False,  # never shuffle the first epoch
                     num_workers=0 if num_workers is None else num_workers,
