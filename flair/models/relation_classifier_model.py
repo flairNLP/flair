@@ -1,5 +1,5 @@
 import itertools
-from typing import Tuple, List, Set, Dict, Union, Optional, Iterator, Sequence, NamedTuple
+from typing import Tuple, List, Set, Dict, Iterator, Sequence, NamedTuple, Union, Optional
 
 import torch
 
