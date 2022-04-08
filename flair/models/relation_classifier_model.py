@@ -58,7 +58,7 @@ class RelationClassifier(TextClassifier):
         Yields all valid entity pair permutations.
         The permutations are constructed by a filtered cross-product
         under the specifications of `self.entity_label_types` and `self.relations`.
-        :param sentence: A flair `Sentence` object with entity labels
+        :param sentence: A flair `Sentence` object with entity annotations
         :return: Tuples of (<HEAD>, <TAIL>) `_RelationArguments`
         """
         entities: Iterator[_RelationArgument] = itertools.chain.from_iterable([  # Flatten nested 2D list
@@ -97,8 +97,8 @@ class RelationClassifier(TextClassifier):
         The mask is constructed from the labels of the head and tail span.
 
         Example:
-            For the `head=Larry Page` and `tail=Sergey Brin`
-            and the sentence "Larry Page and Sergey Brin founded Google .",
+            For the `head=Larry Page` and `tail=Sergey Brin` and
+            the sentence "Larry Page and Sergey Brin founded Google .",
             the masked sentence is "[H-PER] and Sergey Brin founded [T-ORG]"
 
         :param head: The head `_RelationArgument`
@@ -129,7 +129,20 @@ class RelationClassifier(TextClassifier):
         #   If not, I guess that only the tokens matter but not the whitespaces in between.
         return Sentence(masked_sentence_tokens)
 
-    def encode_sentence(self, sentence: Sentence) -> Iterator[Sentence]:
+    def _encode_sentence(self, sentence: Sentence) -> Iterator[Sentence]:
+        """
+        Yields masked sentences for all valid entity pair permutations as for the `TextClassifier`.
+
+        Example:
+            For the `founded_by` relation from `PER` to `ORG` and
+            the sentence "Larry Page and Sergey Brin founded Google .",
+            the masked sentences are
+            - "[H-PER] and Sergey Brin founded [T-ORG]" and
+            - "Larry Page and [H-PER] founded [T-ORG]".
+
+        :param sentence: A flair `Sentence` object with entity annotations
+        :return: Encoded sentences
+        """
         for head, tail in self._entity_pair_permutations(sentence):
             yield self._create_sentence_with_masked_spans(head, tail)
 
