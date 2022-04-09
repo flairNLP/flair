@@ -3,9 +3,11 @@ from typing import Tuple, List, Set, Dict, Iterator, Sequence, NamedTuple, Union
 
 import torch
 
-from flair.data import Sentence, DataPoint, Span, Dictionary, Label
+from flair.data import Dictionary, Sentence, Span, Relation, Label
 from flair.embeddings import DocumentEmbeddings
 from flair.models import TextClassifier
+
+_RelationID = Tuple[int, int, int, int]
 
 
 class _RelationArgument(NamedTuple):
@@ -25,6 +27,7 @@ class RelationClassifier(TextClassifier):
                  label_type: str,
                  entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
                  relations: Optional[Dict[str, Set[Tuple[str, str]]]] = None,
+                 zero_tag_value: str = 'O',
                  **classifierargs) -> None:
         """
         TODO: Add docstring
@@ -52,6 +55,7 @@ class RelationClassifier(TextClassifier):
         # Control mask templates
         self._head_mask: str = '[H-ENTITY]'
         self._tail_mask: str = '[T-ENTITY]'
+        self.zero_tag_value = zero_tag_value
 
     def _entity_pair_permutations(self, sentence: Sentence) -> Iterator[Tuple[_RelationArgument, _RelationArgument]]:
         """
@@ -150,11 +154,53 @@ class RelationClassifier(TextClassifier):
             for head, tail in self._entity_pair_permutations(sentence)
         ]
 
-    def decode_sentence(self, sentence: Sentence):
-        pass
+    @staticmethod
+    def _get_relation_id(relation: Relation) -> _RelationID:
+        """Returns a unique identifier for a relation by position in its sentence."""
+        return relation.first[0].idx, relation.first[-1].idx, relation.second[0].idx, relation.second[-1].idx
 
     def forward_pass(self,
                      sentences: Union[List[Sentence], Sentence],
                      for_prediction: bool = False) -> Union[Tuple[torch.Tensor, List[List[str]]],
-                                                            Tuple[torch.Tensor, List[List[str]], List[DataPoint]]]:
-        pass
+                                                            Tuple[torch.Tensor, List[List[str]], List[Relation]]]:
+        if not isinstance(sentences, list):
+            sentences: List[Sentence] = [sentences]
+
+        masked_sentence_embeddings: List[torch.Tensor] = []
+        masked_sentence_batch_relations: List[Relation] = []
+        gold_labels: List[List[str]] = []
+
+        for sentence in sentences:
+
+            # Encode the original sentence into a list of masked sentences and
+            # the corresponding relations in the original sentence for all valid entity pair permutations.
+            # Each masked sentence is one relation candidate.
+            masked_sentences, relations = zip(*self._encode_sentence(sentence))
+            masked_sentence_batch_relations.extend(relations)
+
+            # Embed masked sentences
+            self.document_embeddings.embed(list(masked_sentences))
+            encoded_sentence_embedding: torch.Tensor = torch.stack(
+                [masked_sentence.get_embedding(self.document_embeddings.get_names())
+                 for masked_sentence in masked_sentences],
+                dim=0
+            )
+            masked_sentence_embeddings.append(encoded_sentence_embedding)
+
+            # Add gold labels for each masked sentence, if available.
+            # Use a dictionary to find relation annotations for a given entity pair relation.
+            relation_to_gold_label: Dict[_RelationID, str] = {
+                self._get_relation_id(relation): relation.get_label(self.label_type,
+                                                                    zero_tag_value=self.zero_tag_value).value
+                for relation in sentence.get_relations(self.label_type)
+            }
+            gold_labels.extend([
+                [relation_to_gold_label.get(self._get_relation_id(relation), self.out_label)]
+                for relation in relations
+            ])
+
+        masked_sentence_batch_embeddings: torch.Tensor = torch.cat(masked_sentence_embeddings, dim=0)
+
+        if for_prediction:
+            return masked_sentence_batch_embeddings, gold_labels, masked_sentence_batch_relations
+        return masked_sentence_batch_embeddings, gold_labels
