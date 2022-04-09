@@ -3,9 +3,9 @@ from typing import Tuple, List, Set, Dict, Iterator, Sequence, NamedTuple, Union
 
 import torch
 
+import flair
 from flair.data import Dictionary, Sentence, Span, Relation, Label
 from flair.embeddings import DocumentEmbeddings
-from flair.models import TextClassifier
 
 _RelationID = Tuple[int, int, int, int]
 
@@ -19,7 +19,7 @@ class _RelationArgument(NamedTuple):
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
 #  - EntityPairRelationClassifier ?
 #  - MaskedRelationClassifier ?
-class RelationClassifier(TextClassifier):
+class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
     def __init__(self,
                  document_embeddings: DocumentEmbeddings,
@@ -40,7 +40,13 @@ class RelationClassifier(TextClassifier):
         :param relations:
         :param classifierargs:
         """
-        super().__init__(document_embeddings, label_type, label_dictionary=label_dictionary, **classifierargs)
+        super().__init__(label_dictionary=label_dictionary,
+                         final_embedding_size=document_embeddings.embedding_length,
+                         **classifierargs)
+
+        self.document_embeddings = document_embeddings
+
+        self._label_type = label_type
 
         if isinstance(entity_label_types, str):
             self.entity_label_types: Dict[str, Optional[Set[str]]] = {entity_label_types: None}
@@ -56,6 +62,9 @@ class RelationClassifier(TextClassifier):
         self._head_mask: str = '[H-ENTITY]'
         self._tail_mask: str = '[T-ENTITY]'
         self.zero_tag_value = zero_tag_value
+
+        # Auto-spawn on GPU, if available
+        self.to(flair.device)
 
     def _entity_pair_permutations(self, sentence: Sentence) -> Iterator[Tuple[_RelationArgument, _RelationArgument]]:
         """
@@ -195,7 +204,7 @@ class RelationClassifier(TextClassifier):
                 for relation in sentence.get_relations(self.label_type)
             }
             gold_labels.extend([
-                [relation_to_gold_label.get(self._get_relation_id(relation), self.out_label)]
+                [relation_to_gold_label.get(self._get_relation_id(relation), self.zero_tag_value)]
                 for relation in relations
             ])
 
@@ -204,3 +213,7 @@ class RelationClassifier(TextClassifier):
         if for_prediction:
             return masked_sentence_batch_embeddings, gold_labels, masked_sentence_batch_relations
         return masked_sentence_batch_embeddings, gold_labels
+
+    @property
+    def label_type(self) -> str:
+        return self._label_type
