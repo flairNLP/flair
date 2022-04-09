@@ -97,9 +97,9 @@ class RelationClassifier(TextClassifier):
         The mask is constructed from the labels of the head and tail span.
 
         Example:
-            For the `head=Larry Page` and `tail=Sergey Brin` and
+            For the `head=Google` and `tail=Larry Page` and
             the sentence "Larry Page and Sergey Brin founded Google .",
-            the masked sentence is "[H-PER] and Sergey Brin founded [T-ORG]"
+            the masked sentence is "[T-PER] and Sergey Brin founded [H-ORG]"
 
         :param head: The head `_RelationArgument`
         :param tail: The tail `_RelationArgument`
@@ -129,22 +129,26 @@ class RelationClassifier(TextClassifier):
         #   If not, I guess that only the tokens matter but not the whitespaces in between.
         return Sentence(masked_sentence_tokens)
 
-    def _encode_sentence(self, sentence: Sentence) -> Iterator[Sentence]:
+    def _encode_sentence(self, sentence: Sentence) -> List[Tuple[Sentence, Relation]]:
         """
-        Yields masked sentences for all valid entity pair permutations as for the `TextClassifier`.
+        Returns masked entity pair sentences and their relation for all valid entity pair permutations.
+        The created masked sentences are newly created sentences with no reference to the passed sentence.
+        The created relations have head and tail spans from the original passed sentence.
 
         Example:
-            For the `founded_by` relation from `PER` to `ORG` and
+            For the `founded_by` relation from `ORG` to `PER` and
             the sentence "Larry Page and Sergey Brin founded Google .",
-            the masked sentences are
-            - "[H-PER] and Sergey Brin founded [T-ORG]" and
-            - "Larry Page and [H-PER] founded [T-ORG]".
+            the masked sentences and relations are
+            - "[T-PER] and Sergey Brin founded [H-ORG]" -> Relation(head='Google', tail='Larry Page')  and
+            - "Larry Page and [T-PER] founded [H-ORG]"  -> Relation(head='Google', tail='Sergey Brin').
 
         :param sentence: A flair `Sentence` object with entity annotations
-        :return: Encoded sentences
+        :return: Encoded sentences and the corresponding relation in the original sentence
         """
-        for head, tail in self._entity_pair_permutations(sentence):
-            yield self._create_sentence_with_masked_spans(head, tail)
+        return [
+            (self._create_sentence_with_masked_spans(head, tail), Relation(first=head.span, second=tail.span))
+            for head, tail in self._entity_pair_permutations(sentence)
+        ]
 
     def decode_sentence(self, sentence: Sentence):
         pass
