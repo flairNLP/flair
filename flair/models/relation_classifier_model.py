@@ -10,7 +10,7 @@ from flair.models import TextClassifier
 
 class _RelationArgument(NamedTuple):
     """A `_RelationArgument` encapsulates either a relation's head or a tail span, including its label."""
-    entity: Span
+    span: Span
     label: Label
 
 
@@ -63,10 +63,10 @@ class RelationClassifier(TextClassifier):
         """
         entities: Iterator[_RelationArgument] = itertools.chain.from_iterable([  # Flatten nested 2D list
             (
-                _RelationArgument(entity=entity, label=entity.get_label(label_type=label_type))
-                for entity in sentence.get_spans(type=label_type)
+                _RelationArgument(span=entity_span, label=entity_span.get_label(label_type=label_type))
+                for entity_span in sentence.get_spans(type=label_type)
                 # Only use entities labelled with the specified labels for each label type
-                if labels is None or entity.get_label(label_type=label_type).value in labels
+                if labels is None or entity_span.get_label(label_type=label_type).value in labels
             )
             for label_type, labels in self.entity_label_types.items()
         ])
@@ -75,7 +75,7 @@ class RelationClassifier(TextClassifier):
         for head, tail in itertools.product(entities, repeat=2):
 
             # Remove identity relation entity pairs
-            if head.entity is tail.entity:
+            if head.span is tail.span:
                 continue
 
             # Remove entity pairs with labels that do not match any of the specified relations in `self.relations`
@@ -105,8 +105,8 @@ class RelationClassifier(TextClassifier):
         :param tail: The tail `_RelationArgument`
         :return: The masked sentence
         """
-        original_sentence: Sentence = head.entity.sentence
-        assert original_sentence is tail.entity.sentence, 'The head and tail need to come from the same sentence.'
+        original_sentence: Sentence = head.span.sentence
+        assert original_sentence is tail.span.sentence, 'The head and tail need to come from the same sentence.'
 
         # We can not use the plaintext of the head/tail span in the sentence as the mask
         # since there may be multiple occurrences of the same entity mentioned in the sentence.
@@ -114,14 +114,14 @@ class RelationClassifier(TextClassifier):
         masked_sentence_tokens: List[str] = []
         for token in original_sentence:
 
-            if token is head.entity[0]:
+            if token is head.span[0]:
                 masked_sentence_tokens.append(self._label_aware_head_mask(head.label.value))
 
-            elif token is tail.entity[0]:
+            elif token is tail.span[0]:
                 masked_sentence_tokens.append(self._label_aware_tail_mask(tail.label.value))
 
-            elif (all(token is not non_leading_head_token for non_leading_head_token in head.entity.tokens[1:]) and
-                  all(token is not non_leading_tail_token for non_leading_tail_token in tail.entity.tokens[1:])):
+            elif (all(token is not non_leading_head_token for non_leading_head_token in head.span.tokens[1:]) and
+                  all(token is not non_leading_tail_token for non_leading_tail_token in tail.span.tokens[1:])):
                 masked_sentence_tokens.append(token.text)
 
         # TODO: Question: When I check the sentence with sentence.to_original_text(), the text is not consistently separated with whitespaces.
