@@ -180,36 +180,45 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         gold_labels: List[List[str]] = []
 
         for sentence in sentences:
-
             # Encode the original sentence into a list of masked sentences and
             # the corresponding relations in the original sentence for all valid entity pair permutations.
             # Each masked sentence is one relation candidate.
-            masked_sentences, relations = zip(*self._encode_sentence(sentence))
-            masked_sentence_batch_relations.extend(relations)
+            encoded: List[Tuple[Sentence, Relation]] = self._encode_sentence(sentence)
 
-            # Embed masked sentences
-            self.document_embeddings.embed(list(masked_sentences))
-            encoded_sentence_embedding: torch.Tensor = torch.stack(
-                [masked_sentence.get_embedding(self.document_embeddings.get_names())
-                 for masked_sentence in masked_sentences],
-                dim=0
-            )
-            masked_sentence_embeddings.append(encoded_sentence_embedding)
+            # Process the encoded sentences, if there's at least one entity pair in the original sentence.
+            if encoded:
+                masked_sentences, relations = zip(*encoded)
 
-            # Add gold labels for each masked sentence, if available.
-            # Use a dictionary to find relation annotations for a given entity pair relation.
-            relation_to_gold_label: Dict[_RelationID, str] = {
-                self._get_relation_id(relation): relation.get_label(self.label_type,
-                                                                    zero_tag_value=self.zero_tag_value).value
-                for relation in sentence.get_relations(self.label_type)
-            }
-            gold_labels.extend([
-                [relation_to_gold_label.get(self._get_relation_id(relation), self.zero_tag_value)]
-                for relation in relations
-            ])
+                masked_sentence_batch_relations.extend(relations)
 
-        masked_sentence_batch_embeddings: torch.Tensor = torch.cat(masked_sentence_embeddings, dim=0)
+                # Embed masked sentences
+                self.document_embeddings.embed(list(masked_sentences))
+                encoded_sentence_embedding: torch.Tensor = torch.stack(
+                    [masked_sentence.get_embedding(self.document_embeddings.get_names())
+                     for masked_sentence in masked_sentences],
+                    dim=0,
+                )  # TODO: Should the embeddings be sent to flair.device or is this done later automatically?
+                masked_sentence_embeddings.append(encoded_sentence_embedding)
 
+                # Add gold labels for each masked sentence, if available.
+                # Use a dictionary to find relation annotations for a given entity pair relation.
+                relation_to_gold_label: Dict[_RelationID, str] = {
+                    self._get_relation_id(relation): relation.get_label(self.label_type,
+                                                                        zero_tag_value=self.zero_tag_value).value
+                    for relation in sentence.get_relations(self.label_type)
+                }
+                # TODO: The 'O' zero tag value is not part of the initial label dictionary. Is this fine?
+                gold_labels.extend([
+                    [relation_to_gold_label.get(self._get_relation_id(relation), self.zero_tag_value)]
+                    for relation in relations
+                ])
+
+        # TODO: Should the embeddings be sent to flair.device or is this done later automatically?
+        # TODO: What should I return if the sentences contains no entity pairs? Is an empty tensor correct?
+        masked_sentence_batch_embeddings: torch.Tensor = (
+            torch.cat(masked_sentence_embeddings, dim=0) if masked_sentence_embeddings
+            else torch.empty(0, self.document_embeddings.embedding_length)
+        )
         if for_prediction:
             return masked_sentence_batch_embeddings, gold_labels, masked_sentence_batch_relations
         return masked_sentence_batch_embeddings, gold_labels
