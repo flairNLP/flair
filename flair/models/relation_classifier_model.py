@@ -1,5 +1,5 @@
 import itertools
-from typing import Tuple, List, Set, Dict, Iterator, Sequence, NamedTuple, Union, Optional
+from typing import Tuple, List, Set, Dict, Iterator, Sequence, NamedTuple, Union, Optional, Any
 
 import torch
 
@@ -222,6 +222,31 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         if for_prediction:
             return masked_sentence_batch_embeddings, gold_labels, masked_sentence_batch_relations
         return masked_sentence_batch_embeddings, gold_labels
+
+    def _get_state_dict(self) -> Dict[str, Any]:
+        model_state: Dict[str, Any] = {
+            **super()._get_state_dict(),
+            'document_embeddings': self.document_embeddings,
+            'label_dictionary': self.label_dictionary,
+            'label_type': self.label_type,
+            'entity_label_types': self.entity_label_types,
+            'relations': self.relations,
+            'zero_tag_value': self.zero_tag_value
+        }
+        return model_state
+
+    @classmethod
+    def _init_model_with_state_dict(cls, state: Dict[str, Any], **kwargs):
+        return super()._init_model_with_state_dict(
+            state,
+            document_embeddings=state['document_embeddings'],
+            label_dictionary=state['label_dictionary'],
+            label_type=state['label_type'],
+            entity_label_types=state['entity_label_types'],
+            relations=state['relations'],
+            zero_tag_value=state['zero_tag_value'],
+            **kwargs
+        )
 
     @property
     def label_type(self) -> str:
