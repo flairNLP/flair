@@ -4129,6 +4129,33 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
 
 
 class NER_HIPE_2022(ColumnCorpus):
+    @staticmethod
+    def _prepare_corpus(
+        file_in: Path, file_out: Path, eos_marker: str, document_separator: str, add_document_separator: bool
+    ):
+        with open(file_in, "rt") as f_p:
+            lines = f_p.readlines()
+
+        with open(file_out, "wt") as f_out:
+            # Add missing newline after header
+            f_out.write(lines[0] + "\n")
+
+            for line in lines[1:]:
+                if line.startswith(" \t"):
+                    # Workaround for empty tokens
+                    continue
+
+                line = line.strip()
+
+                # Add "real" document marker
+                if add_document_separator and line.startswith(document_separator):
+                    f_out.write("-DOCSTART- O\n\n")
+
+                f_out.write(line + "\n")
+
+                if eos_marker in line:
+                    f_out.write("\n")
+
     def __init__(
         self,
         dataset_name: str,
@@ -4141,6 +4168,7 @@ class NER_HIPE_2022(ColumnCorpus):
         dev_split_name="dev",
         add_document_separator=False,
         sample_missing_splits=False,
+        preproc_fn=None,
         **corpusargs,
     ):
         """
@@ -4159,6 +4187,7 @@ class NER_HIPE_2022(ColumnCorpus):
         :add_document_separator: If True, a special document seperator will be introduced. This is highly
         recommended when using our FLERT approach.
         :sample_missing_splits: If True, data is automatically sampled when certain data splits are None.
+        :preproc_fn: Function that is used for dataset preprocessing. If None, default preprocessing will be performed.
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -4221,10 +4250,12 @@ class NER_HIPE_2022(ColumnCorpus):
 
         dev_path = new_data_folder / dev_file
 
+        self.preproc_fn = self._prepare_corpus if not preproc_fn else preproc_fn
+
         if not dev_path.exists():
             for split in dataset_splits:
                 original_filename = f"HIPE-2022-{version}-{dataset_name}-{split}-{language}.tsv"
-                self.__prepare_corpus(
+                self.preproc_fn(
                     data_folder / "original" / original_filename,
                     new_data_folder / f"{split}.txt",
                     eos_marker,
@@ -4247,30 +4278,3 @@ class NER_HIPE_2022(ColumnCorpus):
             sample_missing_splits=sample_missing_splits,
             **corpusargs,
         )
-
-    @staticmethod
-    def __prepare_corpus(
-        file_in: Path, file_out: Path, eos_marker: str, document_separator: str, add_document_separator: bool
-    ):
-        with open(file_in, "rt") as f_p:
-            lines = f_p.readlines()
-
-        with open(file_out, "wt") as f_out:
-            # Add missing newline after header
-            f_out.write(lines[0] + "\n")
-
-            for line in lines[1:]:
-                if line.startswith(" \t"):
-                    # Workaround for empty tokens
-                    continue
-
-                line = line.strip()
-
-                # Add "real" document marker
-                if add_document_separator and line.startswith(document_separator):
-                    f_out.write("-DOCSTART- O\n\n")
-
-                f_out.write(line + "\n")
-
-                if eos_marker in line:
-                    f_out.write("\n")
