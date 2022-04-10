@@ -190,14 +190,14 @@ def _assert_conllu_dataset(dataset):
     ]
 
     assert [token.whitespace_after for token in sent1.tokens] == [
-        True,
-        True,
-        True,
-        True,
-        True,
-        True,
-        False,
-        True,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
     ]
 
     ner_spans1 = sent1.get_labels("ner")
@@ -299,12 +299,12 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
     sent1: Sentence = dataset[0]
 
     assert [token.whitespace_after for token in sent1.tokens] == [
-        True,
-        True,
-        True,
-        True,
-        False,
-        True,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
     ]
 
     assert len(sent1.get_labels("Number")) == 4
