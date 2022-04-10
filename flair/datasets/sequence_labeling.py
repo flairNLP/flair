@@ -662,7 +662,7 @@ class ColumnDataset(FlairDataset):
                     for span_indices, score, label in predicted_spans:
                         span = sentence[span_indices[0] : span_indices[-1] + 1]
                         value = self._remap_label(label)
-                        if value != 'O':
+                        if value != "O":
                             span.add_label(span_level_tag_columns[span_column], value=value, score=score)
                 except Exception:
                     pass
@@ -683,7 +683,7 @@ class ColumnDataset(FlairDataset):
                         first=sentence[head_start - 1 : head_end], second=sentence[tail_start - 1 : tail_end]
                     )
                     remapped = self._remap_label(label)
-                    if remapped != 'O':
+                    if remapped != "O":
                         relation.add_label(typename="relation", value=remapped)
 
         if len(sentence) > 0:
@@ -722,7 +722,7 @@ class ColumnDataset(FlairDataset):
                                 # add each other feature as label-value pair
                                 label_name = feature.split("=")[0]
                                 label_value = self._remap_label(feature.split("=")[1])
-                                if label_value != 'O':
+                                if label_value != "O":
                                     token.add_label(label_name, label_value)
 
                     else:
@@ -731,7 +731,7 @@ class ColumnDataset(FlairDataset):
                         # get the label value
                         label_value = self._remap_label(fields[column])
                         # add label
-                        if label_value != 'O':
+                        if label_value != "O":
                             token.add_label(label_name, label_value)
 
                 if column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == "-":
