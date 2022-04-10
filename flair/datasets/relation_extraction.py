@@ -39,6 +39,7 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         augment_train: bool = False,
+        **corpusargs,
     ):
         """
         SemEval-2010 Task 8 on Multi-Way Classification of Semantic Relations Between Pairs of
@@ -83,6 +84,7 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
             column_format={1: "text", 2: "ner"},
             comment_symbol="# ",
             in_memory=in_memory,
+            **corpusargs,
         )
 
     def extract_and_convert_to_conllu(self, data_file, data_folder, augment_train):
@@ -227,7 +229,7 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
 
 
 class RE_ENGLISH_TACRED(ColumnCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, **corpusargs):
         """
         TAC Relation Extraction Dataset with 41 relations from https://nlp.stanford.edu/projects/tacred/.
         Manual download is required for this dataset.
@@ -260,6 +262,7 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
             column_format={1: "text", 2: "ner"},
             comment_symbol="# ",
             in_memory=in_memory,
+            **corpusargs,
         )
 
     def extract_and_convert_to_conllu(self, data_file, data_folder):
@@ -351,7 +354,7 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
 
 
 class RE_ENGLISH_CONLL04(ColumnCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, **corpusargs):
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -385,6 +388,7 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
             in_memory=in_memory,
             column_format={1: "text", 2: "ner"},
             comment_symbol="# ",
+            **corpusargs,
         )
 
     def _parse_incr(self, source_file) -> Iterable[conllu.TokenList]:
@@ -536,6 +540,7 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
+        **corpusargs,
     ):
         """
         DrugProt corpus: Biocreative VII Track 1 from https://zenodo.org/record/5119892#.YSdSaVuxU5k/ on
@@ -570,6 +575,7 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
             sample_missing_splits=False,
             column_format={1: "text", 2: "ner", 3: "ner"},
             comment_symbol="# ",
+            **corpusargs,
         )
 
     def extract_and_convert_to_conllu(self, data_file, data_folder):

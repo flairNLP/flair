@@ -19,6 +19,8 @@ All you need to do is use the `predict()` method of the tagger on a sentence. Th
 in the sentence. Lets use a sentence with two named entities:
 
 ```python
+from flair.data import Sentence
+
 sentence = Sentence('George Washington went to Washington.')
 
 # predict NER tags
@@ -143,10 +145,10 @@ The sentence now has two types of annotation: POS and NER. Print them using `get
 
 ```python
 for label in sentence.get_labels('pos'):
-  print(label)
+    print(label)
 
 for label in sentence.get_labels('ner'):
-  print(label)
+    print(label)
 ``` 
 
 This should print first the POS tags, then the NER spans: 
@@ -166,7 +168,7 @@ Span[4:5]: "Washington" → LOC (0.9942)
 You can alternatively just print all labels of the sentence at the same time, regardless of type: 
 ```python
 for label in sentence.labels:
-  print(label)
+    print(label)
 ``` 
 
 ### List of Pre-Trained Sequence Tagger Models

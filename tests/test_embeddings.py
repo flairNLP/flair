@@ -333,3 +333,9 @@ def test_transformers_keep_tokenizer_when_saving(results_base_path):
     reloaded_tagger = SequenceTagger.load(initial_tagger_path)
 
     reloaded_tagger.save(reloaded_tagger_path)
+
+
+def test_transformer_subword_token_mapping():
+    sentence = Sentence("El pasto es verde.")
+    embeddings = TransformerWordEmbeddings("PlanTL-GOB-ES/roberta-base-biomedical-es", layers="-1")
+    embeddings.embed(sentence)
