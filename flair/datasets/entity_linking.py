@@ -402,8 +402,8 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
         in_memory: If True, keeps dataset in memory giving speedups in training.
-        use_ids_and_check_existence: If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be ignored. This also means that one works with current wikipedia-arcticle names
-            and possibly alter some of the out-dated ones in the original dataset
+        use_ids_and_check_existence: If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be ignored. This also means that one works with
+            current wikipedia-arcticle names and possibly alter some of the out-dated ones in the original dataset
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -429,6 +429,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
                 # we use the wikiids in the data instead of directly utilizing the wikipedia urls.
                 # like this we can quickly check if the corresponding page exists
                 import wikipediaapi
+
                 wiki_wiki = wikipediaapi.Wikipedia(language="en")
                 wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
 
@@ -470,7 +471,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
                                         write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
                                     else:  # neither the wikiid nor the url exist
                                         write.write(line_list[0] + "\tO\n")
-                            else: # write wikipedia names as given in the file
+                            else:  # write wikipedia names as given in the file
                                 wikiname = line_list[4].split("/")[-1]
                                 write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
 
