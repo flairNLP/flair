@@ -6,8 +6,8 @@ tokens = 0
 tokens_found = 0
 corpus = NER_ENGLISH_STACKOVERFLOW()
 label_dict = corpus.make_label_dictionary(label_type='ner')
-token_dict = {}
-token_dict_2 = {}
+token_set_1 = set()
+token_set_2 = set()
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
                                                                "./code_gazetteers",
                                                                partial_matching=False,
@@ -17,36 +17,31 @@ gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteer
 for sentence in corpus.get_all_sentences():
     gazetteer_embedding.embed(sentence)
     for token in sentence:
-        try:
-            if token_dict_2[token.text]:
-                pass
-        except KeyError:
-            token_dict_2[token.text] = True
-            tokens += 1
+        if token.text in token_set_1:
+            pass
+        else:
+            token_set_1.add(token.text)
         try:
             if token.embedding[0] != torch.tensor(1) and 1 in token.embedding[1:]:
-                if token_dict[token.text][0]:
+                if token.text in token_set_2:
                     pass
+                else:
+                    token_set_2.add(token.text)
         except IndexError:
             pass
-        except KeyError:
-            token_dict[token.text] = [True, token]
-            tokens_found += 1
 
-print(tokens)
-print(tokens_found)
-print((tokens_found/tokens)*100)
+print(len(token_set_1))
+print(len(token_set_2))
+print(((len(token_set_2)/len(token_set_1))*100))
 
 del gazetteer_embedding
 del corpus
 del label_dict
 corpus = NER_ENGLISH_STACKOVERFLOW()
 label_dict = corpus.make_label_dictionary(label_type='ner')
-tokens = 0
-tokens_found = 0
 
-token_dict_3 = {}
-token_dict_4 = {}
+token_set_3 = set()
+token_set_4 = set()
 
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
                                                                "./code_gazetteers",
@@ -57,25 +52,19 @@ gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteer
 for sentence in corpus.get_all_sentences():
     gazetteer_embedding.embed(sentence)
     for token in sentence:
-        try:
-            if token_dict_4[token.text]:
-                pass
-        except KeyError:
-            token_dict_4[token.text] = True
-            tokens += 1
+        if token.text in token_set_3:
+            pass
+        else:
+            token_set_3.add(token.text)
         try:
             if token.embedding[0] != torch.tensor(1) and 1 in token.embedding[1:]:
-                if token_dict_3[token.text][0]:
+                if token.text in token_set_4:
                     pass
+                else:
+                    token_set_4.add(token.text)
         except IndexError:
             pass
-        except KeyError:
-            token_dict_3[token.text] = [True, token]
-            tokens_found += 1
 
-print(tokens)
-print(tokens_found)
-print((tokens_found/tokens)*100)
-
-all(map(token_dict_3.pop, token_dict))
-print(token_dict_3)
+print(len(token_set_3))
+print(len(token_set_4))
+print(((len(token_set_4)/len(token_set_3))*100))
