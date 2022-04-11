@@ -7,8 +7,6 @@ import flair
 from flair.data import Dictionary, Sentence, Span, Relation, Label
 from flair.embeddings import DocumentEmbeddings
 
-_RelationID = Tuple[int, int, int, int]
-
 
 class _RelationArgument(NamedTuple):
     """A `_RelationArgument` encapsulates either a relation's head or a tail span, including its label."""
@@ -163,11 +161,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             for head, tail in self._entity_pair_permutations(sentence)
         ]
 
-    @staticmethod
-    def _get_relation_id(relation: Relation) -> _RelationID:
-        """Returns a unique identifier for a relation by position in its sentence."""
-        return relation.first[0].idx, relation.first[-1].idx, relation.second[0].idx, relation.second[-1].idx
-
     def forward_pass(self,
                      sentences: Union[List[Sentence], Sentence],
                      for_prediction: bool = False) -> Union[Tuple[torch.Tensor, List[List[str]]],
@@ -202,14 +195,14 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
                 # Add gold labels for each masked sentence, if available.
                 # Use a dictionary to find relation annotations for a given entity pair relation.
-                relation_to_gold_label: Dict[_RelationID, str] = {
-                    self._get_relation_id(relation): relation.get_label(self.label_type,
-                                                                        zero_tag_value=self.zero_tag_value).value
+                relation_to_gold_label: Dict[str, str] = {
+                    relation.unlabeled_identifier: relation.get_label(self.label_type,
+                                                                      zero_tag_value=self.zero_tag_value).value
                     for relation in sentence.get_relations(self.label_type)
                 }
                 # TODO: The 'O' zero tag value is not part of the initial label dictionary. Is this fine?
                 gold_labels.extend([
-                    [relation_to_gold_label.get(self._get_relation_id(relation), self.zero_tag_value)]
+                    [relation_to_gold_label.get(relation.unlabeled_identifier, self.zero_tag_value)]
                     for relation in relations
                 ])
 
