@@ -29,15 +29,32 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                  train_on_gold_pairs_only: bool = False,
                  **classifierargs) -> None:
         """
-        TODO: Add docstring
-        # This does not yet support entities with two labels at the same span.
-        # Supports only directional relations, self referencing relations are not supported
-        :param document_embeddings:
-        :param label_dictionary:
-        :param label_type:
-        :param entity_label_types:
-        :param relations:
-        :param classifierargs:
+        Initializes a RelationClassifier.
+
+        :param document_embeddings: The embeddings used to embed each sentence
+        :param label_dictionary: A Dictionary containing all predictable labels from the corpus
+        :param label_type: The label type which is going to be predicted, in case a corpus has multiple annotations
+        :param entity_label_types: A label type or sequence of label types of the required relation entities.
+                                   You can also specify a label filter in a dictionary with the label type as key and
+                                   the valid entity labels as values in a set.
+                                   E.g. to use only 'PER' and 'ORG' labels from a NER-tagger: `{'ner': {'PER', 'ORG'}}`
+                                        to use all labels from 'ner', pass 'ner'.
+        :param relations: A dictionary filter of valid relation entity pair combinations
+                          to be used as relation candidates. Specify the relation as key and
+                          the valid entity pair labels in a set of tuples (<HEAD>, <TAIL>) as value.
+                          E.g. for the `born_in` relation, only relations from 'PER' to 'LOC' make sense.
+                          Relations from 'PER' to 'PER' are not meaningful.
+                          Therefore, it is advised to specify the valid relations as: `{'born_in': {('PER', 'ORG')}}`.
+
+                          This setting may help to reduce the number of relation candidates to be classified.
+                          Leaving this parameter as `None` (default) disables the relation-filter,
+                          i.e. the model classifies the relation for each entity pair
+                          in the cross product of all valid entity pairs.
+
+        :param zero_tag_value: The label to use for out-of-class relations
+        :param train_on_gold_pairs_only: If `True`, skip out-of-class relations in training.
+                                         If `False`, out-of-class relations are used in training as well.
+        :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
         """
         super().__init__(label_dictionary=label_dictionary,
                          final_embedding_size=document_embeddings.embedding_length,
