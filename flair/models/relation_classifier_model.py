@@ -26,6 +26,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                  entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
                  relations: Optional[Dict[str, Set[Tuple[str, str]]]] = None,
                  zero_tag_value: str = 'O',
+                 train_on_gold_pairs_only: bool = False,
                  **classifierargs) -> None:
         """
         TODO: Add docstring
@@ -55,6 +56,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             self.entity_label_types: Dict[str, Optional[Set[str]]] = entity_label_types
 
         self.relations = relations
+
+        self.train_on_gold_pairs_only = train_on_gold_pairs_only
 
         # Control mask templates
         self._head_mask: str = '[H-ENTITY]'
@@ -201,10 +204,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                     for relation in sentence.get_relations(self.label_type)
                 }
                 # TODO: The 'O' zero tag value is not part of the initial label dictionary. Is this fine?
-                gold_labels.extend([
-                    [relation_to_gold_label.get(relation.unlabeled_identifier, self.zero_tag_value)]
-                    for relation in relations
-                ])
+                for relation in relations:
+                    gold_label: str = relation_to_gold_label.get(relation.unlabeled_identifier, self.zero_tag_value)
+                    if gold_label == self.zero_tag_value and self.train_on_gold_pairs_only:
+                        continue  # Skip zero tag value labels, if training on gold pairs only
+                    gold_labels.append([gold_label])
 
         # TODO: Should the embeddings be sent to flair.device or is this done later automatically?
         # TODO: What should I return if the sentences contains no entity pairs? Is an empty tensor correct?
@@ -224,7 +228,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             'label_type': self.label_type,
             'entity_label_types': self.entity_label_types,
             'relations': self.relations,
-            'zero_tag_value': self.zero_tag_value
+            'zero_tag_value': self.zero_tag_value,
+            'train_on_gold_pairs_only': self.train_on_gold_pairs_only
         }
         return model_state
 
@@ -238,6 +243,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             entity_label_types=state['entity_label_types'],
             relations=state['relations'],
             zero_tag_value=state['zero_tag_value'],
+            train_on_gold_pairs_only=state['train_on_gold_pairs_only'],
             **kwargs
         )
 
