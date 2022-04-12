@@ -1,28 +1,266 @@
+import json
 import logging
 import os
 import re
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from torch.utils.data import ConcatDataset, Dataset
 
 import flair
-from flair.data import (
-    Corpus,
-    FlairDataset,
-    MultiCorpus,
-    RelationLabel,
-    Sentence,
-    Span,
-    SpanLabel,
-    Token,
-)
+from flair.data import Corpus, FlairDataset, MultiCorpus, Relation, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file
 from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
 
 log = logging.getLogger("flair")
+
+
+class MultiFileJsonlCorpus(Corpus):
+    """
+    This class represents a generic Jsonl corpus with multiple train, dev, and test files.
+    """
+
+    def __init__(
+        self,
+        train_files=None,
+        test_files=None,
+        dev_files=None,
+        encoding: str = "utf-8",
+        text_column_name: str = "data",
+        label_column_name: str = "label",
+        label_type: str = "ner",
+        **corpusargs,
+    ):
+        """
+        Instantiates a MuliFileJsonlCorpus as, e.g., created with doccanos JSONL export.
+        Note that at least one of train_files, test_files, and dev_files must contain one path.
+        Otherwise, the initialization will fail.
+
+        :param corpusargs: Additional arguments for Corpus initialization
+        :param train_files: the name of the train files
+        :param test_files: the name of the test files
+        :param dev_files: the name of the dev files, if empty, dev data is sampled from train
+        :param text_column_name: Name of the text column inside the jsonl files.
+        :param label_column_name: Name of the label column inside the jsonl files.
+
+        :raises RuntimeError: If no paths are given
+        """
+        train: Optional[Dataset] = (
+            ConcatDataset(
+                [
+                    JsonlDataset(
+                        train_file,
+                        text_column_name=text_column_name,
+                        label_column_name=label_column_name,
+                        label_type=label_type,
+                        encoding=encoding,
+                    )
+                    for train_file in train_files
+                ]
+            )
+            if train_files and train_files[0]
+            else None
+        )
+
+        # read in test file if exists
+        test: Optional[Dataset] = (
+            ConcatDataset(
+                [
+                    JsonlDataset(
+                        test_file,
+                        text_column_name=text_column_name,
+                        label_column_name=label_column_name,
+                        label_type=label_type,
+                    )
+                    for test_file in test_files
+                ]
+            )
+            if test_files and test_files[0]
+            else None
+        )
+
+        # read in dev file if exists
+        dev: Optional[Dataset] = (
+            ConcatDataset(
+                [
+                    JsonlDataset(
+                        dev_file,
+                        text_column_name=text_column_name,
+                        label_column_name=label_column_name,
+                        label_type=label_type,
+                    )
+                    for dev_file in dev_files
+                ]
+            )
+            if dev_files and dev_files[0]
+            else None
+        )
+        super().__init__(train, dev, test, **corpusargs)
+
+
+class JsonlCorpus(MultiFileJsonlCorpus):
+    def __init__(
+        self,
+        data_folder: Union[str, Path],
+        train_file: Optional[Union[str, Path]] = None,
+        test_file: Optional[Union[str, Path]] = None,
+        dev_file: Optional[Union[str, Path]] = None,
+        encoding: str = "utf-8",
+        text_column_name: str = "data",
+        label_column_name: str = "label",
+        label_type: str = "ner",
+        autofind_splits: bool = True,
+        name: Optional[str] = None,
+        **corpusargs,
+    ):
+        """
+        Instantiates a JsonlCorpus with one file per Dataset (train, dev, and test).
+
+        :param data_folder: Path to the folder containing the JSONL corpus
+        :param train_file: the name of the train file
+        :param test_file: the name of the test file
+        :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param text_column_name: Name of the text column inside the JSONL file.
+        :param label_column_name: Name of the label column inside the JSONL file.
+        :param autofind_splits: Whether train, test and dev file should be determined automatically
+        :param name: name of the Corpus see flair.data.Corpus
+        """
+        # find train, dev and test files if not specified
+        dev_file, test_file, train_file = find_train_dev_test_files(
+            data_folder, dev_file, test_file, train_file, autofind_splits
+        )
+        super().__init__(
+            dev_files=[dev_file] if dev_file else [],
+            train_files=[train_file] if train_file else [],
+            test_files=[test_file] if test_file else [],
+            text_column_name=text_column_name,
+            label_column_name=label_column_name,
+            label_type=label_type,
+            name=name if data_folder is None else str(data_folder),
+            encoding=encoding,
+            **corpusargs,
+        )
+
+
+class JsonlDataset(FlairDataset):
+    def __init__(
+        self,
+        path_to_jsonl_file: Union[str, Path],
+        encoding: str = "utf-8",
+        text_column_name: str = "data",
+        label_column_name: str = "label",
+        label_type: str = "ner",
+    ):
+        """
+        Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.
+
+        The expected file format is:
+        { "<text_column_name>": "<text>", "label_column_name": [[<start_char_index>, <end_char_index>, <label>],...] }
+
+        :param path_to_json._file: File to read
+        :param text_column_name: Name of the text column
+        :param label_column_name: Name of the label column
+
+        """
+        path_to_json_file = Path(path_to_jsonl_file)
+
+        self.text_column_name = text_column_name
+        self.label_column_name = label_column_name
+        self.label_type = label_type
+        self.path_to_json_file = path_to_json_file
+
+        self.sentences: List[Sentence] = []
+        with path_to_json_file.open(encoding=encoding) as jsonl_fp:
+            for line in jsonl_fp:
+                current_line = json.loads(line)
+                raw_text = current_line[text_column_name]
+                current_labels = current_line[label_column_name]
+                current_sentence = Sentence(raw_text)
+
+                self._add_labels_to_sentence(raw_text, current_sentence, current_labels)
+
+                self.sentences.append(current_sentence)
+
+    def _add_labels_to_sentence(self, raw_text: str, sentence: Sentence, labels: List[List[Any]]):
+        # Add tags for each annotated span
+        for label in labels:
+            self._add_label_to_sentence(raw_text, sentence, label[0], label[1], label[2])
+
+        # Tag all other token as Outer (O)
+        for token in sentence:
+            if token.get_label(self.label_type).value == "":
+                token.get_label(self.label_type, "O")
+
+    def _add_label_to_sentence(self, text: str, sentence: Sentence, start: int, end: int, label: str):
+        """
+        Adds a NE label to a given sentence.
+
+        :param text: raw sentence (with all whitespaces etc.). Is used to determine the token indices.
+        :param sentence: Tokenized flair Sentence.
+        :param start: Start character index of the label.
+        :param end: End character index of the label.
+        :param label: Label to assign to the given range.
+        :return: Nothing. Changes sentence as INOUT-param
+        """
+
+        annotated_part = text[start:end]
+
+        # Remove leading and trailing whitespaces from annotated spans
+        while re.search(r"^\s", annotated_part):
+            start += 1
+            annotated_part = text[start:end]
+
+        while re.search(r"\s$", annotated_part):
+            end -= 1
+            annotated_part = text[start:end]
+
+        # Search start and end token index for current span
+        start_idx = -1
+        end_idx = -1
+        for token in sentence:
+            if token.start_pos <= start <= token.end_pos and start_idx == -1:
+                start_idx = token.idx - 1
+
+            if token.start_pos <= end <= token.end_pos and end_idx == -1:
+                end_idx = token.idx - 1
+
+        # If end index is not found set to last token
+        if end_idx == -1:
+            end_idx = sentence[-1].idx - 1
+
+        # Throw error if indices are not valid
+        if start_idx == -1 or start_idx > end_idx:
+            raise ValueError(
+                f"Could not create token span from char span.\n\
+                    Sen: {sentence}\nStart: {start}, End: {end}, Label: {label}\n\
+                        Ann: {annotated_part}\nRaw: {text}\nCo: {start_idx}, {end_idx}"
+            )
+
+        # Add IOB tags
+        prefix = "B"
+        for token in sentence[start_idx : end_idx + 1]:
+            token.add_label(self.label_type, f"{prefix}-{label}")
+            prefix = "I"
+
+    def is_in_memory(self) -> bool:
+        """
+        Currently all Jsonl Datasets are stored in Memory
+        """
+        return True
+
+    def __len__(self):
+        """
+        Number of sentences in the Dataset
+        """
+        return len(self.sentences)
+
+    def __getitem__(self, index: int = 0) -> Sentence:
+        """
+        Returns the sentence at a given index
+        """
+        return self.sentences[index]
 
 
 class MultiFileColumnCorpus(Corpus):
@@ -271,14 +509,20 @@ class ColumnDataset(FlairDataset):
                 previous_sentence = None
                 while True:
                     # parse next sentence
+                    next_sentence = self._read_next_sentence(file)
+
+                    # quit if last sentence reached
+                    if len(next_sentence) == 0:
+                        break
+
                     sentence = self._convert_lines_to_sentence(
-                        self._read_next_sentence(file),
+                        next_sentence,
                         word_level_tag_columns=self.word_level_tag_columns,
                         span_level_tag_columns=self.span_level_tag_columns,
                     )
-                    # quit if last sentence reached
+
                     if not sentence:
-                        break
+                        continue
 
                     # skip banned sentences
                     if self.banned_sentences is not None and any(
@@ -309,7 +553,7 @@ class ColumnDataset(FlairDataset):
                     sentence_raw = self._read_next_sentence(file)
 
                     # quit if last sentence reached
-                    if not sentence_raw:
+                    if len(sentence_raw) == 0:
                         break
 
                     # append raw lines for each sentence
@@ -352,7 +596,7 @@ class ColumnDataset(FlairDataset):
                         continue
 
                     for token in sentence:
-                        if token.get_tag(layer, "O").value != "O" and token.get_tag(layer).value[0:2] not in [
+                        if token.get_label(layer, "O").value != "O" and token.get_label(layer).value[0:2] not in [
                             "B-",
                             "I-",
                             "E-",
@@ -364,7 +608,7 @@ class ColumnDataset(FlairDataset):
                         self.span_level_tag_columns[column] = layer
 
             for column in self.span_level_tag_columns:
-                log.info(f"Column {column} ({self.span_level_tag_columns[column]}) is a span-level column.")
+                log.debug(f"Column {column} ({self.span_level_tag_columns[column]}) is a span-level column.")
 
             # for column in self.word_level_tag_columns:
             #     log.info(f"Column {column} ({self.word_level_tag_columns[column]}) is a word-level column.")
@@ -387,7 +631,7 @@ class ColumnDataset(FlairDataset):
         self, lines, word_level_tag_columns: Dict[int, str], span_level_tag_columns: Optional[Dict[int, str]] = None
     ):
 
-        sentence: Sentence = Sentence()
+        sentence: Sentence = Sentence(text=[])
         token: Optional[Token] = None
         filtered_lines = []
         comments = []
@@ -418,13 +662,10 @@ class ColumnDataset(FlairDataset):
                     for span_indices, score, label in predicted_spans:
                         span = sentence[span_indices[0] : span_indices[-1] + 1]
                         value = self._remap_label(label)
-                        sentence.add_complex_label(
-                            typename=span_level_tag_columns[span_column],
-                            label=SpanLabel(span=span, value=value, score=score),
-                        )
+                        if value != "O":
+                            span.add_label(span_level_tag_columns[span_column], value=value, score=score)
                 except Exception:
                     pass
-                    # log.warning(f"--\nUnparseable sentence: {''.join(lines)}--\n")
 
         for comment in comments:
             # parse relations if they are set
@@ -438,10 +679,12 @@ class ColumnDataset(FlairDataset):
                     tail_end = int(indices[3])
                     label = indices[4]
                     # head and tail span indices are 1-indexed and end index is inclusive
-                    head = Span(sentence.tokens[head_start - 1 : head_end])
-                    tail = Span(sentence.tokens[tail_start - 1 : tail_end])
-
-                    sentence.add_complex_label("relation", RelationLabel(value=label, head=head, tail=tail))
+                    relation = Relation(
+                        first=sentence[head_start - 1 : head_end], second=sentence[tail_start - 1 : tail_end]
+                    )
+                    remapped = self._remap_label(label)
+                    if remapped != "O":
+                        relation.add_label(typename="relation", value=remapped)
 
         if len(sentence) > 0:
             return sentence
@@ -479,7 +722,8 @@ class ColumnDataset(FlairDataset):
                                 # add each other feature as label-value pair
                                 label_name = feature.split("=")[0]
                                 label_value = self._remap_label(feature.split("=")[1])
-                                token.add_label(label_name, label_value)
+                                if label_value != "O":
+                                    token.add_label(label_name, label_value)
 
                     else:
                         # get the task name (e.g. 'ner')
@@ -487,7 +731,8 @@ class ColumnDataset(FlairDataset):
                         # get the label value
                         label_value = self._remap_label(fields[column])
                         # add label
-                        token.add_label(label_name, label_value)
+                        if label_value != "O":
+                            token.add_label(label_name, label_value)
 
                 if column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == "-":
                     token.whitespace_after = False
@@ -1160,8 +1405,6 @@ class NER_DANISH_DANE(ColumnCorpus):
 
                 with open(data_path / data_file, "w") as file:
                     file.writelines(lines)
-
-                print(data_path / data_file)
 
         super(NER_DANISH_DANE, self).__init__(
             data_folder,
@@ -3886,5 +4129,157 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            **corpusargs,
+        )
+
+
+class NER_HIPE_2022(ColumnCorpus):
+    @staticmethod
+    def _prepare_corpus(
+        file_in: Path, file_out: Path, eos_marker: str, document_separator: str, add_document_separator: bool
+    ):
+        with open(file_in, "rt") as f_p:
+            lines = f_p.readlines()
+
+        with open(file_out, "wt") as f_out:
+            # Add missing newline after header
+            f_out.write(lines[0] + "\n")
+
+            for line in lines[1:]:
+                if line.startswith(" \t"):
+                    # Workaround for empty tokens
+                    continue
+
+                line = line.strip()
+
+                # Add "real" document marker
+                if add_document_separator and line.startswith(document_separator):
+                    f_out.write("-DOCSTART- O\n\n")
+
+                f_out.write(line + "\n")
+
+                if eos_marker in line:
+                    f_out.write("\n")
+
+    def __init__(
+        self,
+        dataset_name: str,
+        language: str,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        version: str = "v2.0",
+        branch_name: str = "main",
+        dev_split_name="dev",
+        add_document_separator=False,
+        sample_missing_splits=False,
+        preproc_fn=None,
+        **corpusargs,
+    ):
+        """
+        Initialize the CLEF-HIPE 2022 NER dataset. The first time you call this constructor it will automatically
+        download the specified dataset (by given a language).
+        :dataset_name: Supported datasets are: ajmc, hipe2020, letemps, newseye, sonar and topres19th.
+        :language: Language for a supported dataset.
+        :base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :tag_to_bioes: Dataset will automatically transformed into BIOES format (internally).
+        :in_memory: If True, keeps dataset in memory giving speedups in training.
+        :version: Version of CLEF-HIPE dataset. Currently only v1.0 is supported and available.
+        :branch_name: Defines git branch name of HIPE data repository (main by default).
+        :dev_split_name: Defines default name of development split (dev by default). Only the NewsEye dataset has
+        currently two development splits: dev and dev2.
+        :add_document_separator: If True, a special document seperator will be introduced. This is highly
+        recommended when using our FLERT approach.
+        :sample_missing_splits: If True, data is automatically sampled when certain data splits are None.
+        :preproc_fn: Function that is used for dataset preprocessing. If None, default preprocessing will be performed.
+        """
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # Dataset split mapping
+        hipe_available_splits = {
+            "v1.0": {
+                "ajmc": {"de": ["sample"], "en": ["sample"]},
+                "hipe2020": {"de": ["train", "dev"], "en": ["dev"], "fr": ["train", "dev"]},
+                "letemps": {"fr": ["train", "dev"]},
+                "newseye": {
+                    "de": ["train", "dev", "dev2"],
+                    "fi": ["train", "dev", "dev2"],
+                    "fr": ["train", "dev", "dev2"],
+                    "sv": ["train", "dev", "dev2"],
+                },
+                "sonar": {"de": ["dev"]},
+                "topres19th": {"en": ["train", "dev"]},
+            }
+        }
+
+        # v2.0 only adds new language and splits for AJMC dataset
+        hipe_available_splits["v2.0"] = hipe_available_splits["v1.0"].copy()
+        hipe_available_splits["v2.0"]["ajmc"] = {"de": ["train", "dev"], "en": ["train", "dev"], "fr": ["train", "dev"]}
+
+        eos_marker = "EndOfSentence"
+        document_separator = "# hipe2022:document_id"
+
+        # Special document marker for sample splits in AJMC dataset
+        if f"{dataset_name}" == "ajmc":
+            document_separator = "# hipe2022:original_source"
+
+        columns = {0: "text", 1: "ner"}
+
+        dataset_base = self.__class__.__name__.lower()
+        data_folder = base_path / dataset_base / version / dataset_name / language
+
+        data_url = (
+            f"https://github.com/hipe-eval/HIPE-2022-data/raw/{branch_name}/data/{version}/{dataset_name}/{language}"
+        )
+
+        dataset_splits = hipe_available_splits[version][dataset_name][language]
+
+        for split in dataset_splits:
+            cached_path(
+                f"{data_url}/HIPE-2022-{version}-{dataset_name}-{split}-{language}.tsv", data_folder / "original"
+            )
+
+        train_file = "train.txt" if "train" in dataset_splits else None
+        dev_file = f"{dev_split_name}.txt" if "sample" not in dataset_splits else "sample.txt"
+        test_file = "test.txt" if "test" in dataset_splits else None
+
+        new_data_folder = data_folder
+
+        if add_document_separator:
+            new_data_folder = new_data_folder / "with_doc_seperator"
+            new_data_folder.mkdir(parents=True, exist_ok=True)
+
+        dev_path = new_data_folder / dev_file
+
+        self.preproc_fn = self._prepare_corpus if not preproc_fn else preproc_fn
+
+        if not dev_path.exists():
+            for split in dataset_splits:
+                original_filename = f"HIPE-2022-{version}-{dataset_name}-{split}-{language}.tsv"
+                self.preproc_fn(
+                    data_folder / "original" / original_filename,
+                    new_data_folder / f"{split}.txt",
+                    eos_marker,
+                    document_separator,
+                    add_document_separator,
+                )
+
+        super(NER_HIPE_2022, self).__init__(
+            new_data_folder,
+            columns,
+            train_file=train_file,
+            dev_file=dev_file,
+            test_file=test_file,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            document_separator_token="-DOCSTART-",
+            skip_first_line=True,
+            column_delimiter="\t",
+            comment_symbol="# ",
+            sample_missing_splits=sample_missing_splits,
             **corpusargs,
         )

@@ -7,8 +7,8 @@
 4	Sergey	PROPN	B-PER	_
 5	Brin	PROPN	I-PER	_
 6	founded	VERB	O	_
-7	Google	PROPN	B-ORG	_
-8	.	PUNCT	O	SpaceAfter=No
+7	Google	PROPN	B-ORG	SpaceAfter=No
+8	.	PUNCT	O	_
 
 # text = Microsoft was founded by Bill Gates.
 # relations = 1;1;5;6;founded_by
@@ -17,8 +17,8 @@
 3	founded	VERB	O	_
 4	by	ADP	O	_
 5	Bill	PROPN	B-PER	_
-6	Gates	PROPN	I-PER	_
-7	.	PUNCT	O	SpaceAfter=No
+6	Gates	PROPN	I-PER	SpaceAfter=No
+7	.	PUNCT	O	_
 
 # text = Konrad Zuse was born in Berlin on 22 June 1910.
 # relations = 6;6;1;2;place_of_birth
@@ -31,8 +31,8 @@
 7	on	ADP	O	_
 8	22	NUM	B-DATE	_
 9	June	PROPN	I-DATE	_
-10	1910	NUM	I-DATE	_
-11	.	PUNCT	O	SpaceAfter=No
+10	1910	NUM	I-DATE	SpaceAfter=No
+11	.	PUNCT	O	_
 
 # text = Joseph Weizenbaum was born in Berlin, Germany.
 # relations = 6;6;1;2;place_of_birth
@@ -43,5 +43,5 @@
 5	in	ADP	O	_
 6	Berlin	PROPN	B-LOC	_
 7	,	PUNCT	O	_
-8	Germany	PROPN	B-LOC	_
-9	.	PUNCT	O	SpaceAfter=No
+8	Germany	PROPN	B-LOC	SpaceAfter=No
+9	.	PUNCT	O	_

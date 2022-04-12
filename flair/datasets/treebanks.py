@@ -129,7 +129,7 @@ class UniversalDependenciesDataset(FlairDataset):
 
     def _read_next_sentence(self, file):
         line = file.readline()
-        sentence: Sentence = Sentence()
+        sentence: Sentence = Sentence([])
 
         # current token ID
         token_idx = 0

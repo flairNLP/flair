@@ -3,11 +3,10 @@ from pathlib import Path
 from typing import List, Tuple, Union
 
 import torch
-import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import Label, Sentence
+from flair.data import DataPoint, Sentence
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -40,14 +39,13 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         (if any label's weight is unspecified it will default to 1.0)
         """
 
-        super(TextClassifier, self).__init__(**classifierargs)
+        super(TextClassifier, self).__init__(
+            **classifierargs, final_embedding_size=document_embeddings.embedding_length
+        )
 
         self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
 
         self._label_type = label_type
-
-        self.decoder = nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
-        nn.init.xavier_uniform_(self.decoder.weight)
 
         # auto-spawn on GPU if available
         self.to(flair.device)
@@ -55,11 +53,8 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
     def forward_pass(
         self,
         sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
-    ) -> Union[
-        Tuple[torch.Tensor, List[List[str]]],
-        Tuple[torch.Tensor, List[List[str]], List[Sentence], List[Label]],
-    ]:
+        for_prediction: bool = False,
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DataPoint]]]:
         if not isinstance(sentences, list):
             sentences = [sentences]
 
@@ -71,22 +66,20 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
-        # send through decoder to get logits
-        scores = self.decoder(text_embedding_tensor)
-
-        labels = []
+        labels: List[List[str]] = []
         for sentence in sentences:
             labels.append([label.value for label in sentence.get_labels(self.label_type)])
 
-        if return_label_candidates:
-            label_candidates = [Label(value="<None>") for sentence in sentences]
-            return scores, labels, sentences, label_candidates
+        if for_prediction:
+            sentences_for_prediction: List[DataPoint] = []
+            sentences_for_prediction.extend(sentences)
+            return text_embedding_tensor, labels, sentences_for_prediction
 
-        return scores, labels
+        return text_embedding_tensor, labels
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "document_embeddings": self.document_embeddings,
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
@@ -96,12 +89,14 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
         label_type = None if "label_type" not in state.keys() else state["label_type"]
 
-        model = TextClassifier(
+        return super()._init_model_with_state_dict(
+            state,
             document_embeddings=state["document_embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=label_type,
@@ -110,9 +105,8 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
             if "multi_label_threshold" not in state.keys()
             else state["multi_label_threshold"],
             loss_weights=weights,
+            **kwargs,
         )
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @staticmethod
     def _fetch_model(model_name) -> str:

@@ -50,15 +50,16 @@ tagger.predict(sentence)
 ```
 Done! The Sentence now has entity annotations. Let's print the entities found by the tagger:
 ```python
-for entity in sentence.get_spans():
-    print(entity)
+for annotation_layer in sentence.annotation_layers.keys():
+    for entity in sentence.get_spans(annotation_layer):
+        print(entity)
 ```
 This should print:
 ~~~
-Span [1,2]: "Behavioral abnormalities"   [− Labels: Disease (0.6736)]
-Span [10,11,12]: "Fragile X Syndrome"   [− Labels: Disease (0.99)]
-Span [5]: "Fmr1"   [− Labels: Gene (0.838)]
-Span [7]: "Mouse"   [− Labels: Species (0.9979)]
+Span[0:2]: "Behavioral abnormalities" → Disease (0.6736)
+Span[9:12]: "Fragile X Syndrome" → Disease (0.99)
+Span[4:5]: "Fmr1" → Gene (0.838)
+Span[6:7]: "Mouse" → Species (0.9979)
 ~~~
 
 ## Comparison to other biomedical NER tools

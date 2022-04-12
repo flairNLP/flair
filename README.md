@@ -22,12 +22,8 @@ document embeddings, including our proposed **[Flair embeddings](https://www.acl
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.10](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.11](https://github.com/flairNLP/flair/releases)!
 
-
-## Join Us: Open Positions at HU-Berlin!
-
-If you're interested in doing NLP/ML research to pursue a PhD and love open source, consider applying to [open positions](https://github.com/flairNLP/flair/issues/2446) for research associates and PhD candidates at Humboldt University Berlin! We currently have **three open positions** with application deadlines soon!
 
 ## State-of-the-Art Models
 
@@ -79,10 +75,12 @@ tagger.predict(sentence)
 Done! The `Sentence` now has entity annotations. Print the sentence to see what the tagger found.
 
 ```python
+# print the sentence with all annotations
 print(sentence)
+
 print('The following NER tags are found:')
 
-# iterate over entities and print
+# iterate over entities and print each
 for entity in sentence.get_spans('ner'):
     print(entity)
 ```
@@ -90,11 +88,11 @@ for entity in sentence.get_spans('ner'):
 This should print:
 
 ```console
-Sentence: "I love Berlin ." - 4 Tokens
+Sentence: "I love Berlin ." → ["Berlin"/LOC]
 
 The following NER tags are found:
 
-Span [3]: "Berlin"   [− Labels: LOC (0.9992)]
+Span[2:3]: "Berlin" → LOC (0.999)
 ```
 
 ## Tutorials

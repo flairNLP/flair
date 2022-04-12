@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DT, Dictionary, Label, Sentence
+from flair.data import DT, DataPoint, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.file_utils import Tqdm
 from flair.training_utils import Result, store_embeddings
@@ -62,20 +62,19 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         """
         raise NotImplementedError
 
-    @abstractmethod
     def _get_state_dict(self):
-        """Returns the state dictionary for this model.
-        Implementing this enables the save() and save_checkpoint()
-        functionality."""
-        raise NotImplementedError
+        """Returns the state dictionary for this model."""
+        state_dict = {"state_dict": self.state_dict()}
 
-    @staticmethod
-    @abstractmethod
-    def _init_model_with_state_dict(state):
-        """Initialize the model from a state dictionary.
-        Implementing this enables the load() and load_checkpoint()
-        functionality."""
-        raise NotImplementedError
+        return state_dict
+
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        """Initialize the model from a state dictionary."""
+        model = cls(**kwargs)
+
+        model.load_state_dict(state["state_dict"])
+        return model
 
     @staticmethod
     def _fetch_model(model_name) -> str:
@@ -248,7 +247,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 for datapoint in batch:
 
                     for gold_label in datapoint.get_labels(gold_label_type):
-                        representation = str(sentence_id) + ": " + gold_label.identifier
+                        representation = str(sentence_id) + ": " + gold_label.unlabeled_identifier
 
                         value = gold_label.value
                         if gold_label_dictionary and gold_label_dictionary.get_idx_for_item(value) == 0:
@@ -263,7 +262,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                             all_spans.add(representation)
 
                     for predicted_span in datapoint.get_labels("predicted"):
-                        representation = str(sentence_id) + ": " + predicted_span.identifier
+                        representation = str(sentence_id) + ": " + predicted_span.unlabeled_identifier
 
                         # add to all_predicted_values
                         if representation not in all_predicted_values:
@@ -286,7 +285,15 @@ class Classifier(Model[DT], typing.Generic[DT]):
             true_values_span_aligned = []
             predicted_values_span_aligned = []
             for span in all_spans:
-                true_values_span_aligned.append(all_true_values[span] if span in all_true_values else ["O"])
+                list_of_gold_values_for_span = all_true_values[span] if span in all_true_values else ["O"]
+                # delete exluded labels if exclude_labels is given
+                for excluded_label in exclude_labels:
+                    if excluded_label in list_of_gold_values_for_span:
+                        list_of_gold_values_for_span.remove(excluded_label)
+                # if after excluding labels, no label is left, ignore the datapoint
+                if not list_of_gold_values_for_span:
+                    continue
+                true_values_span_aligned.append(list_of_gold_values_for_span)
                 predicted_values_span_aligned.append(
                     all_predicted_values[span] if span in all_predicted_values else ["O"]
                 )
@@ -351,8 +358,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
         for label_name, count in counter.most_common():
             if label_name == "O":
-                continue
-            if label_name in exclude_labels:
                 continue
             target_names.append(label_name)
             labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
@@ -465,16 +470,16 @@ class Classifier(Model[DT], typing.Generic[DT]):
         lines = []
         for datapoint in batch:
             # check if there is a label mismatch
-            g = [label.identifier + label.value for label in datapoint.get_labels(gold_label_type)]
-            p = [label.identifier + label.value for label in datapoint.get_labels("predicted")]
+            g = [label.labeled_identifier for label in datapoint.get_labels(gold_label_type)]
+            p = [label.labeled_identifier for label in datapoint.get_labels("predicted")]
             g.sort()
             p.sort()
             correct_string = " -> MISMATCH!\n" if g != p else ""
             # print info
             eval_line = (
                 f"{datapoint.to_original_text()}\n"
-                f" - Gold: {datapoint.get_labels(gold_label_type)}\n"
-                f" - Pred: {datapoint.get_labels('predicted')}\n{correct_string}\n"
+                f" - Gold: {', '.join(label.value if label.data_point == datapoint else label.labeled_identifier for label in datapoint.get_labels(gold_label_type))}\n"
+                f" - Pred: {', '.join(label.value if label.data_point == datapoint else label.labeled_identifier for label in datapoint.get_labels('predicted'))}\n{correct_string}\n"
             )
             lines.append(eval_line)
         return lines
@@ -490,29 +495,17 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     forward_pass() method to implement this base class.
     """
 
-    def forward_pass(
-        self,
-        sentences: Union[List[DT], DT],
-        return_label_candidates: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DT], List[Label]]]:
-        """This method does a forward pass through the model given a list of data
-        points as input.
-        Returns the tuple (scores, labels) if return_label_candidates = False,
-        where scores are a tensor of logits produced by the decoder and labels
-        are the string labels for each data point. Returns the tuple (scores,
-        labels, data_points, candidate_labels) if return_label_candidates = True,
-        where data_points are the data points to which labels are added (commonly
-        either Sentence or Token objects) and candidate_labels are empty Label
-        objects for each prediction (depending on the task Label, SpanLabel or
-        RelationLabel)."""
-        raise NotImplementedError
-
     def __init__(
         self,
         label_dictionary: Dictionary,
+        final_embedding_size: int,
+        dropout: float = 0.0,
+        locked_dropout: float = 0.0,
+        word_dropout: float = 0.0,
         multi_label: bool = False,
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
+        decoder: Optional[torch.nn.Module] = None,
     ):
 
         super().__init__()
@@ -520,9 +513,23 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
 
+        # initialize the decoder
+        if decoder is not None:
+            self.decoder = decoder
+            self._custom_decoder = True
+        else:
+            self.decoder = torch.nn.Linear(final_embedding_size, len(self.label_dictionary))
+            torch.nn.init.xavier_uniform_(self.decoder.weight)
+            self._custom_decoder = False
+
         # set up multi-label logic
         self.multi_label = multi_label
         self.multi_label_threshold = multi_label_threshold
+
+        # init dropouts
+        self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
+        self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
+        self.word_dropout = flair.nn.WordDropout(word_dropout)
 
         # loss weights and loss function
         self.weight_dict = loss_weights
@@ -542,6 +549,21 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
+    def forward_pass(
+        self,
+        sentences: Union[List[DT], DT],
+        for_prediction: bool = False,
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DataPoint]]]:
+        """This method does a forward pass through the model given a list of data
+        points as input.
+        Returns the tuple (embeddings, labels) if return_label_candidates = False,
+        where scores are a tensor of logits produced by the decoder and labels
+        are the string labels for each data point.
+        Returns the tuple (embeddings, labels, data_points) if return_label_candidates = True,
+        where data_points are the data points to which labels are added (commonly
+        either Sentence, Span or Token objects)."""
+        raise NotImplementedError
+
     @property
     def multi_label_threshold(self):
         return self._multi_label_threshold
@@ -557,13 +579,28 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             self._multi_label_threshold = {"default": x}
 
     def forward_loss(self, sentences: Union[List[DT], DT]) -> Tuple[torch.Tensor, int]:
-        scores, labels = self.forward_pass(sentences)  # type: ignore
+
+        # make a forward pass to produce embedded data points and labels
+        embedded_data_points, labels = self.forward_pass(sentences)  # type: ignore
+
+        # no loss can be calculated if there are no labels
+        if not any(labels):
+            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+
+        # use dropout
+        embedded_data_points = embedded_data_points.unsqueeze(1)
+        embedded_data_points = self.dropout(embedded_data_points)
+        embedded_data_points = self.locked_dropout(embedded_data_points)
+        embedded_data_points = self.word_dropout(embedded_data_points)
+        embedded_data_points = embedded_data_points.squeeze(1)
+
+        # push embedded_data_points through decoder to get the scores
+        scores = self.decoder(embedded_data_points)
+
+        # calculate the loss
         return self._calculate_loss(scores, labels)
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
-
-        if not any(labels):
-            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
         if self.multi_label:
             labels = torch.tensor(
@@ -661,23 +698,25 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 if not batch:
                     continue
 
-                scores, gold_labels, data_points, label_candidates = self.forward_pass(  # type: ignore
-                    batch, return_label_candidates=True
+                embedded_data_points, gold_labels, data_points = self.forward_pass(  # type: ignore
+                    batch, for_prediction=True
                 )
-                # remove previously predicted labels of this type
-                for sentence in data_points:
-                    sentence.remove_labels(label_name)
-
-                if return_loss:
-                    overall_loss += self._calculate_loss(scores, gold_labels)[0]
-                    label_count += len(label_candidates)
-
                 # if anything could possibly be predicted
-                if len(label_candidates) > 0:
+                if len(data_points) > 0:
+                    scores = self.decoder(embedded_data_points)
+
+                    # remove previously predicted labels of this type
+                    for data_point in data_points:
+                        data_point.remove_labels(label_name)
+
+                    if return_loss:
+                        overall_loss += self._calculate_loss(scores, gold_labels)[0]
+                        label_count += len(data_points)
+
                     if self.multi_label:
                         sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
                         n_labels = sigmoided.size(1)
-                        for s_idx, (data_point, label_candidate) in enumerate(zip(data_points, label_candidates)):
+                        for s_idx, data_point in enumerate(data_points):
                             for l_idx in range(n_labels):
                                 label_value = self.label_dictionary.get_item_for_index(l_idx)
                                 if label_value == "O":
@@ -685,29 +724,26 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                                 label_threshold = self._get_label_threshold(label_value)
                                 label_score = sigmoided[s_idx, l_idx].item()
                                 if label_score > label_threshold or return_probabilities_for_all_classes:
-                                    label = label_candidate.spawn(value=label_value, score=label_score)
-                                    data_point.add_complex_label(label_name, label)
+                                    data_point.add_label(typename=label_name, value=label_value, score=label_score)
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
 
                         if return_probabilities_for_all_classes:
                             n_labels = softmax.size(1)
-                            for s_idx, (data_point, label_candidate) in enumerate(zip(data_points, label_candidates)):
+                            for s_idx, data_point in enumerate(data_points):
                                 for l_idx in range(n_labels):
                                     label_value = self.label_dictionary.get_item_for_index(l_idx)
                                     if label_value == "O":
                                         continue
                                     label_score = softmax[s_idx, l_idx].item()
-                                    label = label_candidate.spawn(value=label_value, score=label_score)
-                                    data_point.add_complex_label(label_name, label)
+                                    data_point.add_label(typename=label_name, value=label_value, score=label_score)
                         else:
                             conf, idx = torch.max(softmax, dim=-1)
-                            for data_point, label_candidate, c, i in zip(data_points, label_candidates, conf, idx):
+                            for data_point, c, i in zip(data_points, conf, idx):
                                 label_value = self.label_dictionary.get_item_for_index(i.item())
                                 if label_value == "O":
                                     continue
-                                label = label_candidate.spawn(value=label_value, score=c.item())
-                                data_point.add_complex_label(label_name, label)
+                                data_point.add_label(typename=label_name, value=label_value, score=c.item())
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
@@ -727,3 +763,35 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             + f"  (weights): {self.weight_dict}\n"
             + f"  (weight_tensor) {self.loss_weights}\n)"
         )
+
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        # add DefaultClassifier arguments
+        for arg in [
+            "decoder",
+            "dropout",
+            "word_dropout",
+            "locked_dropout",
+            "multi_label",
+            "multi_label_threshold",
+            "loss_weights",
+        ]:
+            if arg not in kwargs and arg in state:
+                kwargs[arg] = state[arg]
+
+        return super(Classifier, cls)._init_model_with_state_dict(state, **kwargs)
+
+    def _get_state_dict(self):
+        state = super()._get_state_dict()
+
+        # add variables of DefaultClassifier
+        state["dropout"] = self.dropout.p
+        state["word_dropout"] = self.word_dropout.dropout_rate
+        state["locked_dropout"] = self.locked_dropout.dropout_rate
+        state["multi_label"] = self.multi_label
+        state["multi_label_threshold"] = self.multi_label_threshold
+        state["loss_weights"] = self.loss_weights
+        if self._custom_decoder:
+            state["decoder"] = self.decoder
+
+        return state

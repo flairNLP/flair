@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
@@ -9,12 +10,14 @@ from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence, pad_packed_
 from torch.utils.data import Dataset
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Label, Sentence
+from flair.data import DataPoint, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import TokenEmbeddings
 from flair.nn.dropout import LockedDropout, WordDropout
-from flair.training_utils import Result, store_embeddings
+from flair.training_utils import Result, log_line, store_embeddings
 from flair.visual.tree_printer import tree_printer
+
+log = logging.getLogger("flair")
 
 
 class DependencyParser(flair.nn.Model):
@@ -192,7 +195,7 @@ class DependencyParser(flair.nn.Model):
             arc_loss += torch.nn.functional.cross_entropy(score_arc[sen_id][:sen_len], arc_labels)
 
             rel_labels_list = [
-                self.relations_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value) for token in sen.tokens
+                self.relations_dictionary.get_idx_for_item(token.get_label(self.tag_type).value) for token in sen.tokens
             ]
 
             rel_labels = torch.tensor(rel_labels_list, dtype=torch.int64, device=flair.device)
@@ -239,7 +242,7 @@ class DependencyParser(flair.nn.Model):
 
                 if print_tree:
                     tree_printer(sentence, self.tag_type)
-                    print("-" * 50)
+                    log_line(log)
             store_embeddings(batch, storage_mode=embedding_storage_mode)
 
     def evaluate(
@@ -285,13 +288,13 @@ class DependencyParser(flair.nn.Model):
 
             for (sentence, arcs, sent_tags) in zip(batch, arc_prediction, relation_prediction):
                 for (token, arc, tag) in zip(sentence.tokens, arcs, sent_tags):
-                    token.add_tag_label("predicted", Label(tag))
-                    token.add_tag_label("predicted_head_id", Label(str(int(arc))))
+                    token.add_label("predicted", value=tag)
+                    token.add_label("predicted_head_id", value=str(int(arc)))
 
                     # append both to file for evaluation
                     eval_line = "{} {} {} {} {}\n".format(
                         token.text,
-                        token.get_tag(gold_label_type).value,
+                        token.get_label(gold_label_type).value,
                         str(token.head_id),
                         tag,
                         str(int(arc)),
@@ -300,8 +303,8 @@ class DependencyParser(flair.nn.Model):
                 lines.append("\n")
 
             for sentence in batch:
-                gold_tags = [token.get_tag(gold_label_type).value for token in sentence]
-                predicted_tags = [token.get_tag("predicted").value for token in sentence]
+                gold_tags = [token.get_label(gold_label_type).value for token in sentence]
+                predicted_tags = [token.get_label("predicted").value for token in sentence]
 
                 y_pred += [self.relations_dictionary.get_idx_for_item(tag) for tag in predicted_tags]
                 y_true += [self.relations_dictionary.get_idx_for_item(tag) for tag in gold_tags]
@@ -372,7 +375,7 @@ class DependencyParser(flair.nn.Model):
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "token_embeddings": self.token_embeddings,
             "use_rnn": self.use_rnn,
             "lstm_hidden_size": self.lstm_hidden_size,
@@ -385,10 +388,10 @@ class DependencyParser(flair.nn.Model):
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
-
-        model = DependencyParser(
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        return super()._init_model_with_state_dict(
+            state,
             token_embeddings=state["token_embeddings"],
             relations_dictionary=state["relations_dictionary"],
             use_rnn=state["use_rnn"],
@@ -398,9 +401,8 @@ class DependencyParser(flair.nn.Model):
             lstm_layers=state["lstm_layers"],
             mlp_dropout=state["mlp_dropout"],
             lstm_dropout=state["lstm_dropout"],
+            **kwargs,
         )
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @property
     def label_type(self):
@@ -617,7 +619,7 @@ class ParsingMetric:
                     self.correct_arcs += 1
 
                     # if head AND deprel correct, augment correct_rels score
-                    if relation_prediction[batch_indx][token_indx] == token.get_tag(tag_type).value:
+                    if relation_prediction[batch_indx][token_indx] == token.get_label(tag_type).value:
                         self.correct_rels += 1
 
     def get_las(self) -> float:

@@ -3,11 +3,10 @@ from pathlib import Path
 from typing import List, Optional, Set, Tuple, Union
 
 import torch
-import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import RelationLabel, Sentence, Span
+from flair.data import Relation, Sentence, Span
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -22,10 +21,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
         train_on_gold_pairs_only: bool = False,
         entity_pair_filters: List[Tuple[str, str]] = None,
         pooling_operation: str = "first_last",
-        dropout_value: float = 0.0,
-        locked_dropout_value: float = 0.1,
-        word_dropout_value: float = 0.0,
-        non_linear_decoder: Optional[int] = 2048,
         **classifierargs,
     ):
         """
@@ -36,7 +31,14 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
         :param loss_weights: Dictionary of weights for labels for the loss function
         (if any label's weight is unspecified it will default to 1.0)
         """
-        super(RelationExtractor, self).__init__(**classifierargs)
+
+        # pooling operation to get embeddings for entites
+        self.pooling_operation = pooling_operation
+        relation_representation_length = 2 * embeddings.embedding_length
+        if self.pooling_operation == "first_last":
+            relation_representation_length *= 2
+
+        super(RelationExtractor, self).__init__(**classifierargs, final_embedding_size=relation_representation_length)
 
         # set embeddings
         self.embeddings: flair.embeddings.TokenEmbeddings = embeddings
@@ -51,37 +53,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
             self.entity_pair_filters: Optional[Set[Tuple[str, str]]] = set(entity_pair_filters)
         else:
             self.entity_pair_filters = None
-
-        # init dropouts
-        self.dropout_value = dropout_value
-        self.dropout = torch.nn.Dropout(dropout_value)
-        self.locked_dropout_value = locked_dropout_value
-        self.locked_dropout = flair.nn.LockedDropout(locked_dropout_value)
-        self.word_dropout_value = word_dropout_value
-        self.word_dropout = flair.nn.WordDropout(word_dropout_value)
-
-        # pooling operation to get embeddings for entites
-        self.pooling_operation = pooling_operation
-        relation_representation_length = 2 * embeddings.embedding_length
-        if self.pooling_operation == "first_last":
-            relation_representation_length *= 2
-        if type(self.embeddings) == flair.embeddings.TransformerDocumentEmbeddings:
-            relation_representation_length = embeddings.embedding_length
-
-        # entity pairs could also be no relation at all, add default value for this case to dictionary
-        self.label_dictionary.add_item("O")
-
-        # decoder can be linear or nonlinear
-        self.non_linear_decoder = non_linear_decoder
-        if non_linear_decoder is not None:
-            self.decoder_1 = nn.Linear(relation_representation_length, non_linear_decoder)
-            self.nonlinearity = torch.nn.ReLU()
-            self.decoder_2 = nn.Linear(non_linear_decoder, len(self.label_dictionary))
-            nn.init.xavier_uniform_(self.decoder_1.weight)
-            nn.init.xavier_uniform_(self.decoder_2.weight)
-        else:
-            self.decoder = nn.Linear(relation_representation_length, len(self.label_dictionary))
-            nn.init.xavier_uniform_(self.decoder.weight)
 
         self.to(flair.device)
 
@@ -134,39 +105,36 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
     def forward_pass(
         self,
         sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
+        for_prediction: bool = False,
     ):
 
-        empty_label_candidates = []
         entity_pairs = []
         labels = []
-        sentences_to_label = []
 
         for sentence in sentences:
 
             # super lame: make dictionary to find relation annotations for a given entity pair
             relation_dict = {}
             for label in sentence.get_labels(self.label_type):
-                relation_label: RelationLabel = label
-                relation_dict[create_position_string(relation_label.head, relation_label.tail)] = relation_label
+                relation_dict[create_position_string(label.data_point.first, label.data_point.second)] = label.value
 
             # get all entity spans
-            span_labels = sentence.get_labels(self.entity_label_type)
+            entity_spans = sentence.get_spans(self.entity_label_type)
 
             # go through cross product of entities, for each pair concat embeddings
-            for span_label in span_labels:
-                span_1 = span_label.span
-
-                for span_label_2 in span_labels:
-                    span_2 = span_label_2.span
-
+            for span_1 in entity_spans:
+                for span_2 in entity_spans:
                     if span_1 == span_2:
                         continue
 
                     # filter entity pairs according to their tags if set
                     if (
                         self.entity_pair_filters is not None
-                        and (span_label.value, span_label_2.value) not in self.entity_pair_filters
+                        and (
+                            span_1.get_label(self.entity_label_type).value,
+                            span_2.get_label(self.entity_label_type).value,
+                        )
+                        not in self.entity_pair_filters
                     ):
                         continue
 
@@ -174,8 +142,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
                     # get gold label for this relation (if one exists)
                     if position_string in relation_dict:
-                        relation_label = relation_dict[position_string]
-                        label = relation_label.value
+                        label = relation_dict[position_string]
 
                     # if there is no gold label for this entity pair, set to 'O' (no relation)
                     else:
@@ -183,15 +150,12 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
                             continue  # skip 'O' labels if training on gold pairs only
                         label = "O"
 
-                    entity_pairs.append((span_1, span_2))
-
                     labels.append([label])
 
                     # if predicting, also remember sentences and label candidates
-                    if return_label_candidates:
-                        candidate_label = RelationLabel(head=span_1, tail=span_2, value=None, score=0.0)
-                        empty_label_candidates.append(candidate_label)
-                        sentences_to_label.append(span_1[0].sentence)
+                    entity_pairs.append(Relation(span_1, span_2))
+
+        embedded_entity_pairs = None
 
         # if there's at least one entity pair in the sentence
         if len(entity_pairs) > 0:
@@ -202,8 +166,8 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
             # get embeddings
             for entity_pair in entity_pairs:
-                span_1 = entity_pair[0]
-                span_2 = entity_pair[1]
+                span_1 = entity_pair.first
+                span_2 = entity_pair.second
 
                 if self.pooling_operation == "first_last":
                     embedding = torch.cat(
@@ -215,77 +179,62 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
                         ]
                     )
                 else:
-                    embedding = torch.cat(
-                        [
-                            span_1.tokens[0].get_embedding(),
-                            span_2.tokens[0].get_embedding(),
-                        ]
-                    )
+                    embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
 
                 relation_embeddings.append(embedding)
 
-            # stack and drop out (squeeze and unsqueeze)
-            all_relations = torch.stack(relation_embeddings).unsqueeze(1)
+            embedded_entity_pairs = torch.stack(relation_embeddings)
 
-            all_relations = self.dropout(all_relations)
-            all_relations = self.locked_dropout(all_relations)
-            all_relations = self.word_dropout(all_relations)
+        if for_prediction:
+            return embedded_entity_pairs, labels, entity_pairs
 
-            all_relations = all_relations.squeeze(1)
+        return embedded_entity_pairs, labels
 
-            # send through decoder
-            if self.non_linear_decoder:
-                sentence_relation_scores = self.decoder_2(self.nonlinearity(self.decoder_1(all_relations)))
-            else:
-                sentence_relation_scores = self.decoder(all_relations)
+    def _print_predictions(self, batch, gold_label_type):
+        lines = []
+        for datapoint in batch:
 
-        else:
-            sentence_relation_scores = None
+            eval_line = f"\n{datapoint.to_original_text()}\n"
 
-        if return_label_candidates:
-            return (
-                sentence_relation_scores,
-                labels,
-                sentences_to_label,
-                empty_label_candidates,
-            )
+            for relation in datapoint.get_relations(gold_label_type):
+                symbol = (
+                    "✓" if relation.get_label(gold_label_type).value == relation.get_label("predicted").value else "❌"
+                )
+                eval_line += (
+                    f' - "{relation.text}"\t{relation.get_label(gold_label_type).value}'
+                    f' --> {relation.get_label("predicted").value} ({symbol})\n'
+                )
 
-        return sentence_relation_scores, labels
+            lines.append(eval_line)
+        return lines
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "embeddings": self.embeddings,
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "entity_label_type": self.entity_label_type,
             "weight_dict": self.weight_dict,
             "pooling_operation": self.pooling_operation,
-            "dropout_value": self.dropout_value,
-            "locked_dropout_value": self.locked_dropout_value,
-            "word_dropout_value": self.word_dropout_value,
             "entity_pair_filters": self.entity_pair_filters,
-            "non_linear_decoder": self.non_linear_decoder,
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
-        model = RelationExtractor(
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+
+        return super()._init_model_with_state_dict(
+            state,
             embeddings=state["embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
             entity_label_type=state["entity_label_type"],
             loss_weights=state["weight_dict"],
             pooling_operation=state["pooling_operation"],
-            dropout_value=state["dropout_value"],
-            locked_dropout_value=state["locked_dropout_value"],
-            word_dropout_value=state["word_dropout_value"],
             entity_pair_filters=state["entity_pair_filters"],
-            non_linear_decoder=state["non_linear_decoder"],
+            **kwargs,
         )
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @property
     def label_type(self):
@@ -298,8 +247,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
-        model_map["relations-fast"] = "/".join([hu_path, "relations-fast", "relations-fast.pt"])
-        model_map["relations"] = "/".join([hu_path, "relations", "relations.pt"])
+        model_map["relations"] = "/".join([hu_path, "relations", "relations-v11.pt"])
 
         cache_dir = Path("models")
         if model_name in model_map:
@@ -309,4 +257,4 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
 
 def create_position_string(head: Span, tail: Span) -> str:
-    return f"{head.id_text} -> {tail.id_text}"
+    return f"{head.unlabeled_identifier} -> {tail.unlabeled_identifier}"

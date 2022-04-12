@@ -59,7 +59,7 @@ def test_sequence_tagger_no_crf(results_base_path, tasks_base_path):
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.span.text for span in sentence.get_labels("ner")]
+    entities = [label.data_point.text for label in sentence.get_labels("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data
@@ -109,7 +109,7 @@ def test_sequence_tagger_with_crf(results_base_path, tasks_base_path):
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.span.text for span in sentence.get_labels("ner")]
+    entities = [label.data_point.text for label in sentence.get_labels("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data
@@ -159,7 +159,7 @@ def test_sequence_tagger_stacked(results_base_path, tasks_base_path):
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.span.text for span in sentence.get_labels("ner")]
+    entities = [label.data_point.text for label in sentence.get_labels("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data
@@ -211,7 +211,7 @@ def test_sequence_tagger_transformer_finetune(results_base_path, tasks_base_path
     loaded_model.predict([sentence_empty])
 
     # check if loaded model can predict
-    entities = [span.span.text for span in sentence.get_labels("ner")]
+    entities = [label.data_point.text for label in sentence.get_labels("ner")]
     assert "New York" in entities
 
     # check if loaded model successfully fit the training data
@@ -383,6 +383,7 @@ def test_text_classifier_multi(results_base_path, tasks_base_path):
 
     # check if loaded model successfully fit the training data
     result: Result = loaded_model.evaluate(corpus.test, gold_label_type="city")
+    print(result.classification_report)
     assert result.classification_report["micro avg"]["f1-score"] == 1.0
 
     del loaded_model

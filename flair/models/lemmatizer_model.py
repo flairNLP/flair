@@ -634,14 +634,14 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             if verbose:
-                print(line_to_print)
+                log.info(line_to_print)
 
             if return_loss:
                 return overall_loss, number_tokens_in_total
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "embeddings": self.encoder_embeddings,
             "rnn_input_size": self.rnn_input_size,
             "rnn_hidden_size": self.rnn_hidden_size,
@@ -660,8 +660,10 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
         return model_state
 
-    def _init_model_with_state_dict(state):
-        model = Lemmatizer(
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        return super()._init_model_with_state_dict(
+            state,
             embeddings=state["embeddings"],
             encode_characters=state["encode_characters"],
             rnn_input_size=state["rnn_input_size"],
@@ -676,9 +678,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
             start_symbol_for_encoding=state["start_symbol"],
             end_symbol_for_encoding=state["end_symbol"],
             bidirectional_encoding=state["bidirectional_encoding"],
+            **kwargs,
         )
-        model.load_state_dict(state["state_dict"])
-        return model
 
     def _print_predictions(self, batch, gold_label_type):
         lines = []

@@ -275,7 +275,7 @@ class WordEmbeddings(TokenEmbeddings):
             if "field" not in self.__dict__ or self.field is None:
                 word = token.text
             else:
-                word = token.get_tag(self.field).value
+                word = token.get_label(self.field).value
             word_indices.append(self.get_cached_token_index(word))
 
         embeddings = self.embedding(torch.tensor(word_indices, dtype=torch.long, device=self.device))
@@ -671,8 +671,7 @@ class FlairEmbeddings(TokenEmbeddings):
         self.chars_per_chunk: int = chars_per_chunk
 
         # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence("hello")
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0][0].get_embedding())
 
@@ -812,7 +811,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
         super().train(mode=mode)
         if mode:
             # memory is wiped each time we do a training run
-            print("train mode resetting embeddings")
+            log.info("train mode resetting embeddings")
             self.word_embeddings = {}
             self.word_count = {}
 
@@ -945,7 +944,6 @@ class FastTextEmbeddings(TokenEmbeddings):
         self.precomputed_word_embeddings: gensim.models.FastText = gensim.models.FastText.load_fasttext_format(
             str(embeddings)
         )
-        print(self.precomputed_word_embeddings)
 
         self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
 
@@ -975,7 +973,7 @@ class FastTextEmbeddings(TokenEmbeddings):
                 if "field" not in self.__dict__ or self.field is None:
                     word = token.text
                 else:
-                    word = token.get_tag(self.field).value
+                    word = token.get_label(self.field).value
 
                 word_embedding = self.get_cached_vec(word)
 
@@ -1015,8 +1013,8 @@ class OneHotEmbeddings(TokenEmbeddings):
         self.__embedding_length = embedding_length
         self.vocab_dictionary = vocab_dictionary
 
-        print(self.vocab_dictionary.idx2item)
-        print(f"vocabulary size of {len(self.vocab_dictionary)}")
+        log.info(self.vocab_dictionary.idx2item)
+        log.info(f"vocabulary size of {len(self.vocab_dictionary)}")
 
         # model architecture
         self.embedding_layer = nn.Embedding(len(self.vocab_dictionary), self.__embedding_length)
@@ -1039,7 +1037,7 @@ class OneHotEmbeddings(TokenEmbeddings):
         if self.field == "text":
             one_hot_sentences = [self.vocab_dictionary.get_idx_for_item(t.text) for t in tokens]
         else:
-            one_hot_sentences = [self.vocab_dictionary.get_idx_for_item(t.get_tag(self.field).value) for t in tokens]
+            one_hot_sentences = [self.vocab_dictionary.get_idx_for_item(t.get_label(self.field).value) for t in tokens]
 
         one_hot_sentences_tensor = torch.tensor(one_hot_sentences, dtype=torch.long).to(flair.device)
 
@@ -1065,7 +1063,7 @@ class OneHotEmbeddings(TokenEmbeddings):
         if field == "text":
             most_common = Counter(list(map((lambda t: t.text), tokens))).most_common()
         else:
-            most_common = Counter(list(map((lambda t: t.get_tag(field).value), tokens))).most_common()
+            most_common = Counter(list(map((lambda t: t.get_label(field).value), tokens))).most_common()
 
         tokens = []
         for token, freq in most_common:
@@ -1206,12 +1204,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
 
-                if "field" not in self.__dict__ or self.field is None:
-                    word = token.text
-                else:
-                    word = token.get_tag(self.field).value
-
-                word_embedding = self.get_cached_vec(language_code=language_code, word=word)
+                word_embedding = self.get_cached_vec(language_code=language_code, word=token.text)
 
                 token.set_embedding(self.name, word_embedding)
 
@@ -1310,10 +1303,7 @@ class BytePairEmbeddings(TokenEmbeddings):
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
 
-                if "field" not in self.__dict__ or self.field is None:
-                    word = token.text
-                else:
-                    word = token.get_tag(self.field).value
+                word = token.text
 
                 if word.strip() == "":
                     # empty words get no embedding
@@ -1410,7 +1400,7 @@ class ELMoEmbeddings(TokenEmbeddings):
         )
 
         # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence()
+        dummy_sentence: Sentence = Sentence([])
         dummy_sentence.add_token(Token("hello"))
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0][0].get_embedding())

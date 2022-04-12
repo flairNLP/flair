@@ -219,21 +219,19 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "document_embeddings": self.document_embeddings,
             "label_name": self.label_type,
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
-
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
         label_name = state["label_name"] if "label_name" in state.keys() else None
 
-        model = TextRegressor(document_embeddings=state["document_embeddings"], label_name=label_name)
-
-        model.load_state_dict(state["state_dict"])
-        return model
+        return super()._init_model_with_state_dict(
+            state, document_embeddings=state["document_embeddings"], label_name=label_name, **kwargs
+        )
 
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:

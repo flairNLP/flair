@@ -332,7 +332,7 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "input_modality_0_embedding": self.source_embeddings,
             "input_modality_1_embedding": self.target_embeddings,
             "similarity_measure": self.similarity_measure,
@@ -345,13 +345,16 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+
         # The conversion from old model's constructor interface
         if "input_embeddings" in state:
             state["input_modality_0_embedding"] = state["input_embeddings"][0]
             state["input_modality_1_embedding"] = state["input_embeddings"][1]
-        model = SimilarityLearner(
+
+        return super()._init_model_with_state_dict(
+            state,
             source_embeddings=state["input_modality_0_embedding"],
             target_embeddings=state["input_modality_1_embedding"],
             source_mapping=state["source_mapping"],
@@ -361,7 +364,5 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
             eval_device=state["eval_device"],
             recall_at_points=state["recall_at_points"],
             recall_at_points_weights=state["recall_at_points_weights"],
+            **kwargs,
         )
-
-        model.load_state_dict(state["state_dict"])
-        return model

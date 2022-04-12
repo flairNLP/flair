@@ -2,12 +2,12 @@ import logging
 import os
 from abc import abstractmethod
 from pathlib import Path
-from typing import Callable, Generic, List, Union
+from typing import Generic, List, Union
 
 import torch.utils.data.dataloader
 from torch.utils.data.dataset import ConcatDataset, Subset
 
-from flair.data import DT, FlairDataset, Sentence, Token, Tokenizer
+from flair.data import DT, FlairDataset, Sentence, Tokenizer
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 
 log = logging.getLogger("flair")
@@ -105,7 +105,7 @@ class StringDataset(FlairDataset):
     def __init__(
         self,
         texts: Union[str, List[str]],
-        use_tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+        use_tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
     ):
         """
         Instantiate StringDataset
@@ -225,7 +225,7 @@ class MongoDataset(FlairDataset):
         self,
         text: str,
         labels: List[str],
-        tokenizer: Union[Callable[[str], List[Token]], Tokenizer],
+        tokenizer: Union[bool, Tokenizer],
     ):
         if self.max_chars_per_doc > 0:
             text = text[: self.max_chars_per_doc]
