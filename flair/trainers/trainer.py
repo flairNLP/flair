@@ -839,7 +839,7 @@ class ModelTrainer:
                 num_workers=num_workers,
                 main_evaluation_metric=main_evaluation_metric,
                 gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
-                exclude_labels=exclude_labels
+                exclude_labels=exclude_labels,
             )
         else:
             final_score = 0
