@@ -210,7 +210,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                     [masked_sentence.get_embedding(self.document_embeddings.get_names())
                      for masked_sentence in masked_sentences],
                     dim=0,
-                )  # TODO: Should the embeddings be sent to flair.device or is this done later automatically?
+                )
                 masked_sentence_embeddings.append(encoded_sentence_embedding)
 
                 # Add gold labels for each masked sentence, if available.
@@ -227,7 +227,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                         continue  # Skip zero tag value labels, if training on gold pairs only
                     gold_labels.append([gold_label])
 
-        # TODO: Should the embeddings be sent to flair.device or is this done later automatically?
         # TODO: What should I return if the sentences contains no entity pairs? Is an empty tensor correct?
         masked_sentence_batch_embeddings: torch.Tensor = (
             torch.cat(masked_sentence_embeddings, dim=0) if masked_sentence_embeddings
