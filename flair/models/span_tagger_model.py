@@ -36,6 +36,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         ignore_embeddings: bool = False,
         use_mlp: bool = False,
         mlp_hidden_dim: int = 1024,
+        decoder=None,
         **classifierargs,
     ):
         """
@@ -97,25 +98,26 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         self.use_mlp = use_mlp
         self.mlp_hidden_dim = mlp_hidden_dim
 
-        if not use_mlp:
-            decoder = None  # if None, parent class uses linear layer as default
-        else:
-            #TODO: maybe make more flexible: multiple layers, other nonlinearity, dropout?
-            decoder = torch.nn.Sequential(
-                torch.nn.Linear(final_embedding_size, mlp_hidden_dim),
-                torch.nn.ReLU(),
-                torch.nn.Linear(mlp_hidden_dim, len(label_dictionary))
-                )
-            for n, p in decoder.named_parameters():
-                if '.weight' in n:
-                    torch.nn.init.xavier_uniform_(p)
-
         super(SpanTagger, self).__init__(
             label_dictionary=label_dictionary,
             final_embedding_size=final_embedding_size,
             decoder=decoder,
             **classifierargs,
         )
+
+        if not decoder:
+            if self.use_mlp:
+                #TODO: maybe make more flexible: multiple layers, other nonlinearity, dropout?
+                decoder = torch.nn.Sequential(
+                    torch.nn.Linear(final_embedding_size, mlp_hidden_dim),
+                    torch.nn.ReLU(),
+                    torch.nn.Linear(mlp_hidden_dim, len(label_dictionary))
+                    )
+                for n, p in decoder.named_parameters():
+                    if '.weight' in n:
+                        torch.nn.init.xavier_uniform_(p)
+
+        self.decoder = decoder
 
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
@@ -365,6 +367,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "use_mlp": self.use_mlp,
             "mlp_hidden_dim": self.mlp_hidden_dim,
             "concat_span_length_to_embedding": self.concat_span_length_to_embedding,
+            #"decoder": self.decoder,
 
         }
         return model_state
@@ -375,12 +378,23 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
             eval_line = f"\n{datapoint.to_original_text()}\n"
 
+            # first iterate over gold spans and see if matches predictions
+            printed = []
             for span in datapoint.get_spans(gold_label_type):
                 symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
+                printed.append(span)
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                     f' --> {span.get_label("predicted").value} ({symbol})\n'
                 )
+            # now add also the predicted spans that have *no* gold span equivalent
+            for span in datapoint.get_spans("predicted"):
+                if span.get_label("predicted").value != span.get_label(gold_label_type).value and span not in printed:
+                    printed.append(span)
+                    eval_line += (
+                        f' - "{span.text}" / {span.get_label(gold_label_type).value}'
+                        f' --> {span.get_label("predicted").value} ("❌")\n'
+                    )
 
             lines.append(eval_line)
         return lines
@@ -400,8 +414,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             ignore_embeddings=state["ignore_embeddings"],
             max_span_length=state["max_span_length"],
             use_mlp=state["use_mlp"],
-            mlp_hidden_dim=["mlp_hidden_dim"],
-            concat_span_length_to_embedding=["concat_span_length_to_embedding"],
+            mlp_hidden_dim=state["mlp_hidden_dim"],
+            concat_span_length_to_embedding=state["concat_span_length_to_embedding"],
+            #decoder=state["decoder"],
 
         **kwargs,
         )
