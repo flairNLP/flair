@@ -29,10 +29,13 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         pooling_operation: str = "first_last",
         label_type: str = "ner",
         max_span_length: int = 5,
+        concat_span_length_to_embedding: bool = False,
         resolve_overlaps: str = "by_token",
         gazetteer_file: str = None,
         gazetteer_count_type: str = "abs",
         ignore_embeddings: bool = False,
+        use_mlp: bool = False,
+        mlp_hidden_dim: int = 1024,
         **classifierargs,
     ):
         """
@@ -44,6 +47,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         the embedding of the first and the embedding of the last word.
         :param label_type: name of the label you use.
         :param max_span_length: maximum length of spans (in tokens) that are considered
+        :param concat_span_length_to_embedding: if set to True span length is concatenated to span embeddings
         :param resolve_overlaps: one of
             'keep_overlaps' : overlapping predictions stay as they are (i.e. not using _post_process_predictions())
             'by_token' : only allow one prediction per token/span
@@ -52,6 +56,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         :param gazetteer_count_type: in use only if gazetteer_file is given: "abs" for absolute counts, "rel" for relative/normalized counts (sum to 1) #TODO: more possibilities
         :param gazetteer_file: path to a csv file containing a gazetteer list with span strings in rows, label names in columns, counts in cells
         :param ignore_embeddings: simple baseline: just use gazetteer embedding, so ignore embeddings
+        :param use_mlp: use a MLP as output layer (instead of default linear layer + xavier transformation), may be helpful for interactions with gazetteer
+        :param mlp_hidden_dim: size of the hidden layer in output MLP
         """
 
         # make sure the label dictionary has an "O" entry for "no tagged span"
@@ -64,6 +70,10 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         self.gazetteer_count_type = gazetteer_count_type
         self.ignore_embeddings = ignore_embeddings
         # TODO: where to put an optional span_length_embedding-layer?
+
+        self.concat_span_length_to_embedding = concat_span_length_to_embedding
+        if self.concat_span_length_to_embedding:
+            final_embedding_size += 1
 
         if self.ignore_embeddings:
             final_embedding_size = 0
@@ -84,10 +94,26 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             #    self.gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
             #final_embedding_size += self.nr_gazetteer_tags
 
+        self.use_mlp = use_mlp
+        self.mlp_hidden_dim = mlp_hidden_dim
+
+        if not use_mlp:
+            decoder = None  # if None, parent class uses linear layer as default
+        else:
+            #TODO: maybe make more flexible: multiple layers, other nonlinearity, dropout?
+            decoder = torch.nn.Sequential(
+                torch.nn.Linear(final_embedding_size, mlp_hidden_dim),
+                torch.nn.ReLU(),
+                torch.nn.Linear(mlp_hidden_dim, len(label_dictionary))
+                )
+            for n, p in decoder.named_parameters():
+                if '.weight' in n:
+                    torch.nn.init.xavier_uniform_(p)
+
         super(SpanTagger, self).__init__(
             label_dictionary=label_dictionary,
             final_embedding_size=final_embedding_size,
-            # decoder = # TODO: maybe try a MLP instead of the default linear layer + xavier ?
+            decoder=decoder,
             **classifierargs,
         )
 
@@ -151,7 +177,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
         if count_type == "projection":
             raise NotImplementedError
-            # TODO: better way of normalizing gazetteer counts?
+            # TODO: better way of normalizing gazetteer counts? tf-idf? project in window up to some max-count?
 
         return vector
 
@@ -202,9 +228,14 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                     if self.pooling_operation == "last":
                         span_embedding = span[-1].get_embedding(names)
 
-                # if ignore_embeddings == True
+                    # concat the span length (scalar tensor) to span_embedding
+                    if self.concat_span_length_to_embedding:
+                        length_as_tensor = torch.tensor([len(span)]).to(flair.device)
+                        span_embedding = torch.cat((span_embedding, length_as_tensor), 0)
+
+                # if ignore_embeddings == True use dummy "embedding" to have a baseline with just gazetteer
                 else:
-                    span_embedding = torch.zeros(0).to(flair.device)  # dummy "embedding"
+                    span_embedding = torch.zeros(0).to(flair.device)
 
                 # if a gazetteer was given, concat the gazetteer embedding to the span_embedding
                 if self.gazetteer_file:
@@ -331,6 +362,10 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "gazetteer_count_type": self.gazetteer_count_type,
             "max_span_length": self.max_span_length,
             "ignore_embeddings": self.ignore_embeddings,
+            "use_mlp": self.use_mlp,
+            "mlp_hidden_dim": self.mlp_hidden_dim,
+            "concat_span_length_to_embedding": self.concat_span_length_to_embedding,
+
         }
         return model_state
 
@@ -364,7 +399,11 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             gazetteer_count_type=state["gazetteer_count_type"],
             ignore_embeddings=state["ignore_embeddings"],
             max_span_length=state["max_span_length"],
-            **kwargs,
+            use_mlp=state["use_mlp"],
+            mlp_hidden_dim=["mlp_hidden_dim"],
+            concat_span_length_to_embedding=["concat_span_length_to_embedding"],
+
+        **kwargs,
         )
 
     @property
