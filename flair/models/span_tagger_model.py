@@ -16,8 +16,10 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
     """
     Span Tagger
     The model expects text/sentences with annotated tags on token level (e.g. NER), and learns to predict spans.
-    All possible combinations of spans (up to a defined max length) are considered, represented via concatenation
-    of the word embeddings of the first and last token in the span. Then fed through a linear layer to get the actual class label.
+    All possible combinations of spans (up to a defined max length) are considered, represented e.g. via concatenation
+    of the word embeddings of the first and last token in the span.
+    An optional gazetteer look up is added.
+    Then fed through a linear layer to get the actual span label. Overlapping spans can be resolved or kept.
     """
 
     def __init__(
@@ -27,7 +29,10 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         pooling_operation: str = "first_last",
         label_type: str = "ner",
         max_span_length: int = 5,
+        resolve_overlaps: str = "by_token",
         gazetteer_file: str = None,
+        gazetteer_count_type: str = "abs",
+        ignore_embeddings: bool = False,
         **classifierargs,
     ):
         """
@@ -39,7 +44,14 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         the embedding of the first and the embedding of the last word.
         :param label_type: name of the label you use.
         :param max_span_length: maximum length of spans (in tokens) that are considered
+        :param resolve_overlaps: one of
+            'keep_overlaps' : overlapping predictions stay as they are (i.e. not using _post_process_predictions())
+            'by_token' : only allow one prediction per token/span
+            'no_boundary_clashes' : predictions cannot overlap boundaries, but can include other predictions (nested NER)
+            'prefer_longer' : #TODO implement this. Somehow favour longer span predictions over shorter ones?
+        :param gazetteer_count_type: in use only if gazetteer_file is given: "abs" for absolute counts, "rel" for relative/normalized counts (sum to 1) #TODO: more possibilities
         :param gazetteer_file: path to a csv file containing a gazetteer list with span strings in rows, label names in columns, counts in cells
+        :param ignore_embeddings: simple baseline: just use gazetteer embedding, so ignore embeddings
         """
 
         # make sure the label dictionary has an "O" entry for "no tagged span"
@@ -48,9 +60,17 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         final_embedding_size = word_embeddings.embedding_length * 2 \
             if pooling_operation == "first_last" else word_embeddings.embedding_length
 
-        if gazetteer_file:
-            self.gazetteer_file = gazetteer_file
+        self.gazetteer_file = gazetteer_file
+        self.gazetteer_count_type = gazetteer_count_type
+        self.ignore_embeddings = ignore_embeddings
+        # TODO: where to put an optional span_length_embedding-layer?
+
+        if self.ignore_embeddings:
+            final_embedding_size = 0
+
+        if self.gazetteer_file:
             # TODO: which of pandas or csv/dict is faster in look up?
+            print("Reading gazetteer file:", self.gazetteer_file)
             ### using pandas:
             self.gazetteer = pd.read_csv(self.gazetteer_file, header=0, index_col=0)
             final_embedding_size += len(self.gazetteer.columns)
@@ -67,6 +87,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         super(SpanTagger, self).__init__(
             label_dictionary=label_dictionary,
             final_embedding_size=final_embedding_size,
+            # decoder = # TODO: maybe try a MLP instead of the default linear layer + xavier ?
             **classifierargs,
         )
 
@@ -75,16 +96,20 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         self._label_type = label_type
 
         self.max_span_length = max_span_length
+        self.resolve_overlaps = resolve_overlaps
 
         cases = {
             "average": self.emb_mean,
             "first": self.emb_first,
             "last": self.emb_last,
-            "first_last": self.emb_firstAndLast,
+            "first_last": self.emb_firstAndLast
         }
 
         if pooling_operation not in cases:
             raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first_last"')
+
+        if resolve_overlaps not in ["keep_overlaps", "no_boundary_clashes", "by_token", "prefer_longer"]:
+            raise KeyError('resolve_overlaps has to be one of "keep_overlaps", "no_boundary_clashes", "by_token", "prefer_longer"')
 
         self.aggregated_embedding = cases[pooling_operation]
 
@@ -102,18 +127,33 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
     def emb_mean(self, arg):
         return torch.mean(arg, 0)
 
-    def get_gazetteer_embedding(self, span_string: str) -> torch.Tensor:
+    def get_gazetteer_embedding(self, span_string: str,
+                                count_type="abs") -> torch.Tensor:
         ### using pandas:
         if span_string in self.gazetteer.index:
-            return torch.Tensor(self.gazetteer.loc[span_string]).to(flair.device)
+            vector = torch.Tensor(self.gazetteer.loc[span_string]).to(flair.device)
+            #print(span_string, vector)
         else:
-            return torch.zeros(len(self.gazetteer.columns)).to(flair.device)
+            vector = torch.zeros(len(self.gazetteer.columns)).to(flair.device)
 
         ### using dict from csv:
         #if span_string in self.gazetteer:
-        #    return torch.Tensor(self.gazetteer[span_string]).to(flair.device)
+        #    vector = torch.Tensor(self.gazetteer[span_string]).to(flair.device)
         #else:
-        #    return torch.zeros(self.nr_gazetteer_tags).to(flair.device)  # get same length zero vector
+        #    vector = torch.zeros(self.nr_gazetteer_tags).to(flair.device)  # get same length zero vector
+
+        if count_type == "abs":
+            return vector
+
+        if count_type == "rel":
+            if torch.sum(vector) > 0:  # avoid zero division
+                vector = vector / torch.sum(vector)
+
+        if count_type == "projection":
+            raise NotImplementedError
+            # TODO: better way of normalizing gazetteer counts?
+
+        return vector
 
     def forward_pass(
         self,
@@ -124,10 +164,10 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         if not isinstance(sentences, list):
             sentences = [sentences]
 
-        self.word_embeddings.embed(sentences)
-        names = self.word_embeddings.get_names()
+        if not self.ignore_embeddings:
+            self.word_embeddings.embed(sentences)
+            names = self.word_embeddings.get_names()
 
-        # fields to return
         spans_embedded = None
         spans_labels = []
         data_points = []
@@ -144,27 +184,31 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
             # embed each span (concatenate embeddings of first and last token)
             for span in spans_sentence:
-                if self.pooling_operation == "first_last":
-                    span_embedding = torch.cat(
-                        (span[0].get_embedding(names),
-                         span[-1].get_embedding(names)),
-                        0,)
 
-                if self.pooling_operation == "average":
-                    span_embedding = torch.mean(
-                        torch.stack([span[i].get_embedding(names) for i in range(len(span.tokens))])
-                        ,0)
+                if not self.ignore_embeddings:
 
-                if self.pooling_operation == "first":
-                    span_embedding = span[0].get_embedding(names)
+                    if self.pooling_operation == "first_last":
+                        span_embedding = torch.cat(
+                            (span[0].get_embedding(names),
+                             span[-1].get_embedding(names)), 0)
 
-                if self.pooling_operation == "last":
-                    span_embedding = span[-1].get_embedding(names)
+                    if self.pooling_operation == "average":
+                        span_embedding = torch.mean(
+                            torch.stack([span[i].get_embedding(names) for i in range(len(span.tokens))]), 0)
+
+                    if self.pooling_operation == "first":
+                        span_embedding = span[0].get_embedding(names)
+
+                    if self.pooling_operation == "last":
+                        span_embedding = span[-1].get_embedding(names)
+
+                # if ignore_embeddings == True
+                else:
+                    span_embedding = torch.zeros(0).to(flair.device)  # dummy "embedding"
 
                 # if a gazetteer was given, concat the gazetteer embedding to the span_embedding
-                if isinstance(self.gazetteer, pd.DataFrame):
-                #if isinstance(self.gazetteer, dict):
-                    gazetteer_vector = self.get_gazetteer_embedding(span.text)
+                if self.gazetteer_file:
+                    gazetteer_vector = self.get_gazetteer_embedding(span.text, count_type=self.gazetteer_count_type)
                     span_embedding = torch.cat((span_embedding, gazetteer_vector), 0)
 
                 embedding_list.append(span_embedding.unsqueeze(0))
@@ -185,54 +229,94 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
     def _post_process_predictions(self, batch, label_type):
         """
-        Post processing the span predictions to avoid overlapping predictions.
-        Only use the most confident one, i.e. sort the span predictions by confidence, go through them, for each token
-        check if it was already part of a used span.
+        Post-processing the span predictions to avoid overlapping predictions.
+        When in doubt use the most confident one, i.e. sort the span predictions by confidence, go through them and
+        decide via the given criterion.
 
         :param batch: batch of sentences with already predicted span labels to be "cleaned"
         :param label_type: name of the label that is given to the span
         """
 
-        import operator
+        # keep every span prediction, overlapping spans remain:
+        if self.resolve_overlaps == "keep_overlaps":
+            return batch
 
-        for sentence in batch:
-            all_predicted_spans = []
+        # only keep most confident span in case of overlaps:
+        else:
+            import operator
 
-            # get all predicted spans and their confidence score, sort them afterwards
-            for span in sentence.get_spans(label_type):
-                span_tokens = span.tokens
-                span_score = span.get_label(label_type).score
-                span_prediction = span.get_label(label_type).value
-                all_predicted_spans.append((span_tokens, span_prediction, span_score))
+            for sentence in batch:
+                all_predicted_spans = []
 
-            sentence.remove_labels(label_type)  # first remove the predicted labels
+                # get all predicted spans and their confidence score, sort them afterwards
+                for span in sentence.get_spans(label_type):
+                    span_tokens = span.tokens
+                    span_score = span.get_label(label_type).score
+                    span_prediction = span.get_label(label_type).value
+                    all_predicted_spans.append((span_tokens, span_prediction, span_score))
 
-            already_seen_token_indices: List[int] = []
+                sentence.remove_labels(label_type)  # first remove the predicted labels
 
-            # sort by confidence score
-            sorted_predicted_spans = sorted(all_predicted_spans, key=operator.itemgetter(2))
-            sorted_predicted_spans.reverse()
+                # sort by confidence score
+                sorted_predicted_spans = sorted(all_predicted_spans, key=operator.itemgetter(2))
+                sorted_predicted_spans.reverse()
+                #print(sorted_predicted_spans)
 
-            # starting with highest scored span prediction
-            for predicted_span in sorted_predicted_spans:
-                # print(predicted_span)
-                span_tokens, span_prediction, span_score = predicted_span
+                if self.resolve_overlaps == "by_token":
+                    # in short: if a token already was part of a higher ranked span, break
+                    already_seen_token_indices: List[int] = []
 
-                # check whether any token in this span already has been labeled
-                # TODO: like this, nested NER would not be allowed... think about better solution/skipping criterion!
-                tag_span = True
-                for token in span_tokens:
-                    if token is None or token.idx in already_seen_token_indices:
-                        tag_span = False
-                        continue
+                    # starting with highest scored span prediction
+                    for predicted_span in sorted_predicted_spans:
+                        span_tokens, span_prediction, span_score = predicted_span
 
-                # only add if none of the token is part of an already (so "higher") labeled span
-                if tag_span:
-                    already_seen_token_indices.extend(token.idx for token in span_tokens)
-                    predicted_span = Span(
-                        [sentence.get_token(token.idx) for token in span_tokens]
-                    )
-                    predicted_span.add_label(label_type, value=span_prediction, score=span_score)
+                        # check whether any token in this span already has been labeled
+                        tag_span = True
+                        for token in span_tokens:
+                            if token is None or token.idx in already_seen_token_indices:
+                                tag_span = False
+                                #print("skipping", predicted_span)
+                                break
+
+                        # only add if none of the token is part of an already (so "higher") labeled span
+                        if tag_span:
+                            #print("using", predicted_span)
+                            already_seen_token_indices.extend(token.idx for token in span_tokens)
+                            predicted_span = Span(
+                                [sentence.get_token(token.idx) for token in span_tokens]
+                            )
+                            predicted_span.add_label(label_type, value=span_prediction, score=span_score)
+
+                if self.resolve_overlaps == "no_boundary_clashes":
+                    # in short: don't allow clashing start/end positions, nesting is okay
+                    already_predicted_spans = []  # list of tuples with start/end positions of already predicted spans
+
+                    for predicted_span in sorted_predicted_spans:
+                        tag_span = True
+                        span_tokens, span_prediction, span_score = predicted_span
+                        start_candidate = span_tokens[0].idx
+                        end_candidate = span_tokens[-1].idx
+
+                        # check if boundaries clash, if yes set tag_span = False
+                        for (start_already, end_already) in already_predicted_spans:
+                            if (start_candidate < start_already <= end_candidate < end_already or
+                                    start_already < start_candidate <= end_already < end_candidate):
+                                tag_span = False
+                                #print("found clash for", span_tokens)
+                                break
+
+                        if tag_span:
+                            already_predicted_spans.append((start_candidate, end_candidate))
+                            #print("using ", span_tokens)
+                            predicted_span = Span(
+                                [sentence.get_token(token.idx) for token in span_tokens]
+                            )
+                            predicted_span.add_label(label_type, value=span_prediction, score=span_score)
+
+                if self.resolve_overlaps == "prefer_longer":
+                    # TODO: somehow favour longer spans over shorter ones...? how to combine that with ranking by score
+                    raise NotImplementedError
+
 
     def _get_state_dict(self):
         model_state = {
@@ -242,7 +326,11 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "label_dictionary": self.label_dictionary,
             "pooling_operation": self.pooling_operation,
             "loss_weights": self.weight_dict,
-            "gazetteer_file": self.gazetteer_file if self.gazetteer_file else None
+            "resolve_overlaps": self.resolve_overlaps,
+            "gazetteer_file": self.gazetteer_file if self.gazetteer_file else None,
+            "gazetteer_count_type": self.gazetteer_count_type,
+            "max_span_length": self.max_span_length,
+            "ignore_embeddings": self.ignore_embeddings,
         }
         return model_state
 
@@ -271,7 +359,11 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             label_type=state["label_type"],
             pooling_operation=state["pooling_operation"],
             loss_weights=state["loss_weights"] if "loss_weights" in state else {"<unk>": 0.3},
-            gazetteer_file = state["gazetteer_file"] if "gazetteer_file" in state else None,
+            resolve_overlaps=state["resolve_overlaps"],
+            gazetteer_file=state["gazetteer_file"] if "gazetteer_file" in state else None,
+            gazetteer_count_type=state["gazetteer_count_type"],
+            ignore_embeddings=state["ignore_embeddings"],
+            max_span_length=state["max_span_length"],
             **kwargs,
         )
 
