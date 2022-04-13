@@ -226,7 +226,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                                                                       zero_tag_value=self.zero_tag_value).value
                     for relation in sentence.get_relations(self.label_type)
                 }
-                # TODO: The 'O' zero tag value is not part of the initial label dictionary. Is this fine?
                 for relation in relations:
                     gold_label: str = relation_to_gold_label.get(relation.unlabeled_identifier, self.zero_tag_value)
                     if gold_label == self.zero_tag_value and self.train_on_gold_pairs_only:
