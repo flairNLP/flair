@@ -5,7 +5,7 @@ from enum import Enum
 from functools import reduce
 from math import inf
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -13,7 +13,9 @@ from torch.optim import Optimizer
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import DataPoint, Dictionary, Sentence, _iter_dataset
+from flair.data import DT, DataPoint, Dictionary, Sentence, _iter_dataset
+
+log = logging.getLogger("flair")
 
 
 class Result(object):
@@ -301,7 +303,7 @@ class AnnealOnPlateau(object):
             if old_lr - new_lr > self.eps:
                 param_group["lr"] = new_lr
                 if self.verbose:
-                    print("Epoch {:5d}: reducing learning rate" " of group {} to {:.4e}.".format(epoch, i, new_lr))
+                    log.info("Epoch {:5d}: reducing learning rate" " of group {} to {:.4e}.".format(epoch, i, new_lr))
 
     @property
     def in_cooldown(self):
@@ -365,37 +367,41 @@ def add_file_handler(log, output_file):
     return fh
 
 
-def store_embeddings(data_points: Union[List[DataPoint], Dataset], storage_mode: str):
-    # if memory mode option 'none' delete everything
+def store_embeddings(
+    data_points: Union[List[DT], Dataset], storage_mode: str, dynamic_embeddings: Optional[List[str]] = None
+):
+
     if isinstance(data_points, Dataset):
         data_points = list(_iter_dataset(data_points))
 
+    # if memory mode option 'none' delete everything
     if storage_mode == "none":
-        delete_keys = None
-    # else delete only dynamic embeddings (otherwise autograd will keep everything in memory)
-    else:
-        # find out which ones are dynamic embeddings
-        delete_keys = []
-        data_point = data_points[0]
-        if isinstance(data_point, Sentence):
-            first_token = data_point[0]
-            for name, vector in first_token._embeddings.items():
-                if vector.requires_grad:
-                    delete_keys.append(name)
+        dynamic_embeddings = None
 
-        for name, vector in data_point._embeddings.items():
-            if vector.requires_grad:
-                delete_keys.append(name)
+    # if dynamic embedding keys not passed, identify them automatically
+    elif not dynamic_embeddings:
+        dynamic_embeddings = identify_dynamic_embeddings(data_points[0])
 
-        # find out which ones are dynamic embeddings
+    # always delete dynamic embeddings
     for data_point in data_points:
-        data_point.clear_embeddings(delete_keys)
+        data_point.clear_embeddings(dynamic_embeddings)
 
-    # memory management - option 1: send everything to CPU (pin to memory if we train on GPU)
+    # if storage mode is "cpu", send everything to CPU (pin to memory if we train on GPU)
     if storage_mode == "cpu":
         pin_memory = str(flair.device) != "cpu"
         for data_point in data_points:
             data_point.to("cpu", pin_memory=pin_memory)
 
-    # record current embedding storage mode to allow optimization (for instance in FlairEmbeddings class)
-    flair.embedding_storage_mode = storage_mode
+
+def identify_dynamic_embeddings(data_point: DataPoint):
+    dynamic_embeddings = []
+    if isinstance(data_point, Sentence):
+        first_token = data_point[0]
+        for name, vector in first_token._embeddings.items():
+            if vector.requires_grad:
+                dynamic_embeddings.append(name)
+
+    for name, vector in data_point._embeddings.items():
+        if vector.requires_grad:
+            dynamic_embeddings.append(name)
+    return dynamic_embeddings

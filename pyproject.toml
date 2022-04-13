@@ -15,7 +15,11 @@ exclude = '''
 [tool.pytest.ini_options]
 flake8-max-line-length = 210
 flake8-ignore = ["E203", "W503"]  # See https://github.com/PyCQA/pycodestyle/issues/373
-addopts = "-W error --flake8 --mypy --ignore flair/data_fetcher.py --ignore flair/embeddings/legacy.py --isort"
+addopts = "--flake8 --mypy --ignore flair/data_fetcher.py --ignore flair/embeddings/legacy.py --isort"
+filterwarnings = [
+    "error",  # Convert all warnings to errors
+    "ignore:the imp module is deprecated:DeprecationWarning:past"  # ignore DeprecationWarning from hyperopt dependency
+]
 markers = [
     "integration",
 ]

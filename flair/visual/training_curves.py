@@ -153,7 +153,7 @@ class Plotter(object):
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "weights.png"
         plt.savefig(path, dpi=300)
-        print(f"Weights plots are saved in {path}")  # to let user know the path of the save plots
+        log.info(f"Weights plots are saved in {path}")  # to let user know the path of the save plots
         plt.close(fig)
 
     def plot_training_curves(self, file_name: Union[str, Path], plot_values: List[str] = ["loss", "F1"]):
@@ -183,7 +183,7 @@ class Plotter(object):
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "training.png"
         plt.savefig(path, dpi=300)
-        print(f"Loss and F1 plots are saved in {path}")  # to let user know the path of the save plots
+        log.info(f"Loss and F1 plots are saved in {path}")  # to let user know the path of the save plots
         plt.show(block=False)  # to have the plots displayed when user run this module
         plt.close(fig)
 
@@ -207,6 +207,6 @@ class Plotter(object):
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "learning_rate.png"
         plt.savefig(path, dpi=300)
-        print(f"Learning_rate plots are saved in {path}")  # to let user know the path of the save plots
+        log.info(f"Learning_rate plots are saved in {path}")  # to let user know the path of the save plots
         plt.show(block=True)  # to have the plots displayed when user run this module
         plt.close(fig)

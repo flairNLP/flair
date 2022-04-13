@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
@@ -9,12 +10,14 @@ from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence, pad_packed_
 from torch.utils.data import Dataset
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Label, Sentence
+from flair.data import DataPoint, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import TokenEmbeddings
 from flair.nn.dropout import LockedDropout, WordDropout
-from flair.training_utils import Result, store_embeddings
+from flair.training_utils import Result, log_line, store_embeddings
 from flair.visual.tree_printer import tree_printer
+
+log = logging.getLogger("flair")
 
 
 class DependencyParser(flair.nn.Model):
@@ -23,6 +26,7 @@ class DependencyParser(flair.nn.Model):
         token_embeddings: TokenEmbeddings,
         relations_dictionary: Dictionary,
         tag_type: str = "dependency",
+        use_rnn: Union[bool, str] = True,
         lstm_hidden_size: int = 400,
         mlp_arc_units: int = 500,
         mlp_rel_units: int = 100,
@@ -63,44 +67,45 @@ class DependencyParser(flair.nn.Model):
             self.word_dropout = WordDropout(dropout_rate=word_dropout)
 
         self.tag_type = tag_type
-        self.lstm_input_dim: int = self.token_embeddings.embedding_length
 
-        self.lstm = BiLSTM(
-            input_size=self.lstm_input_dim,
-            hidden_size=self.lstm_hidden_size,
-            num_layers=self.lstm_layers,
-            dropout=self.lstm_dropout,
-        )
+        self.use_rnn = True
 
-        self.mlp_arc_h = MLP(
-            n_in=self.lstm_hidden_size * 2,
-            n_hidden=self.mlp_arc_units,
-            dropout=self.mlp_dropout,
-        )
-        self.mlp_arc_d = MLP(
-            n_in=self.lstm_hidden_size * 2,
-            n_hidden=self.mlp_arc_units,
-            dropout=self.mlp_dropout,
-        )
-        self.mlp_rel_h = MLP(
-            n_in=self.lstm_hidden_size * 2,
-            n_hidden=self.mlp_rel_units,
-            dropout=self.mlp_dropout,
-        )
-        self.mlp_rel_d = MLP(
-            n_in=self.lstm_hidden_size * 2,
-            n_hidden=self.mlp_rel_units,
-            dropout=self.mlp_dropout,
-        )
+        # if there is no RNN
+        if not use_rnn:
+
+            self.use_rnn = False
+            mlp_input_dim = self.token_embeddings.embedding_length
+
+        else:
+
+            self.lstm_input_dim: int = self.token_embeddings.embedding_length
+            mlp_input_dim = self.lstm_hidden_size * 2
+
+            if use_rnn == "Variational":
+                self.lstm: torch.nn.Module = BiLSTM(
+                    input_size=self.lstm_input_dim,
+                    hidden_size=self.lstm_hidden_size,
+                    num_layers=self.lstm_layers,
+                    dropout=self.lstm_dropout,
+                )
+            else:
+                self.lstm = torch.nn.LSTM(
+                    self.lstm_input_dim,
+                    self.lstm_hidden_size,
+                    num_layers=self.lstm_layers,
+                    dropout=lstm_dropout,
+                    bidirectional=True,
+                    batch_first=True,
+                )
+
+        self.mlp_arc_h = MLP(n_in=mlp_input_dim, n_hidden=self.mlp_arc_units, dropout=self.mlp_dropout)
+        self.mlp_arc_d = MLP(n_in=mlp_input_dim, n_hidden=self.mlp_arc_units, dropout=self.mlp_dropout)
+        self.mlp_rel_h = MLP(n_in=mlp_input_dim, n_hidden=self.mlp_rel_units, dropout=self.mlp_dropout)
+        self.mlp_rel_d = MLP(n_in=mlp_input_dim, n_hidden=self.mlp_rel_units, dropout=self.mlp_dropout)
 
         self.arc_attn = Biaffine(n_in=self.mlp_arc_units, bias_x=True, bias_y=False)
 
-        self.rel_attn = Biaffine(
-            n_in=self.mlp_rel_units,
-            n_out=len(relations_dictionary),
-            bias_x=True,
-            bias_y=True,
-        )
+        self.rel_attn = Biaffine(n_in=self.mlp_rel_units, n_out=len(relations_dictionary), bias_x=True, bias_y=True)
 
         self.to(flair.device)
 
@@ -139,16 +144,17 @@ class DependencyParser(flair.nn.Model):
         if self.use_word_dropout:
             sentence_tensor = self.word_dropout(sentence_tensor)
 
-        x = pack_padded_sequence(sentence_tensor, torch.tensor(lengths), True, False)
+        if self.use_rnn:
+            sentence_sequence = pack_padded_sequence(sentence_tensor, torch.IntTensor(lengths), True, False)
 
-        x, _ = self.lstm(x)
-        x_encoded, _ = pad_packed_sequence(x, True, total_length=seq_len)
+            sentence_sequence, _ = self.lstm(sentence_sequence)
+            sentence_tensor, _ = pad_packed_sequence(sentence_sequence, True, total_length=seq_len)
 
         # apply MLPs for arc and relations to the BiLSTM output states
-        arc_h = self.mlp_arc_h(x_encoded)
-        arc_d = self.mlp_arc_d(x_encoded)
-        rel_h = self.mlp_rel_h(x_encoded)
-        rel_d = self.mlp_rel_d(x_encoded)
+        arc_h = self.mlp_arc_h(sentence_tensor)
+        arc_d = self.mlp_arc_d(sentence_tensor)
+        rel_h = self.mlp_rel_h(sentence_tensor)
+        rel_d = self.mlp_rel_d(sentence_tensor)
 
         # get scores from the biaffine attentions
         # [batch_size, seq_len, seq_len]
@@ -189,7 +195,7 @@ class DependencyParser(flair.nn.Model):
             arc_loss += torch.nn.functional.cross_entropy(score_arc[sen_id][:sen_len], arc_labels)
 
             rel_labels_list = [
-                self.relations_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value) for token in sen.tokens
+                self.relations_dictionary.get_idx_for_item(token.get_label(self.tag_type).value) for token in sen.tokens
             ]
 
             rel_labels = torch.tensor(rel_labels_list, dtype=torch.int64, device=flair.device)
@@ -236,7 +242,7 @@ class DependencyParser(flair.nn.Model):
 
                 if print_tree:
                     tree_printer(sentence, self.tag_type)
-                    print("-" * 50)
+                    log_line(log)
             store_embeddings(batch, storage_mode=embedding_storage_mode)
 
     def evaluate(
@@ -260,8 +266,8 @@ class DependencyParser(flair.nn.Model):
         lines: List[str] = ["token gold_tag gold_arc predicted_tag predicted_arc\n"]
 
         average_over = 0
-        eval_loss_arc = torch.zeros(1, device=flair.device)
-        eval_loss_rel = torch.zeros(1, device=flair.device)
+        eval_loss_arc = 0.0
+        eval_loss_rel = 0.0
 
         y_true = []
         y_pred = []
@@ -277,18 +283,18 @@ class DependencyParser(flair.nn.Model):
 
             parsing_metric(arc_prediction, relation_prediction, batch, gold_label_type)
 
-            eval_loss_arc += loss_arc
-            eval_loss_rel += loss_rel
+            eval_loss_arc += loss_arc.item()
+            eval_loss_rel += loss_rel.item()
 
             for (sentence, arcs, sent_tags) in zip(batch, arc_prediction, relation_prediction):
                 for (token, arc, tag) in zip(sentence.tokens, arcs, sent_tags):
-                    token.add_tag_label("predicted", Label(tag))
-                    token.add_tag_label("predicted_head_id", Label(str(int(arc))))
+                    token.add_label("predicted", value=tag)
+                    token.add_label("predicted_head_id", value=str(int(arc)))
 
                     # append both to file for evaluation
                     eval_line = "{} {} {} {} {}\n".format(
                         token.text,
-                        token.get_tag(gold_label_type).value,
+                        token.get_label(gold_label_type).value,
                         str(token.head_id),
                         tag,
                         str(int(arc)),
@@ -297,8 +303,8 @@ class DependencyParser(flair.nn.Model):
                 lines.append("\n")
 
             for sentence in batch:
-                gold_tags = [token.get_tag(gold_label_type).value for token in sentence.tokens]
-                predicted_tags = [tag.tag for tag in sentence.get_spans("predicted")]
+                gold_tags = [token.get_label(gold_label_type).value for token in sentence]
+                predicted_tags = [token.get_label("predicted").value for token in sentence]
 
                 y_pred += [self.relations_dictionary.get_idx_for_item(tag) for tag in predicted_tags]
                 y_true += [self.relations_dictionary.get_idx_for_item(tag) for tag in gold_tags]
@@ -345,7 +351,7 @@ class DependencyParser(flair.nn.Model):
             log_header=log_header,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            loss=(eval_loss_rel + eval_loss_arc).item(),
+            loss=(eval_loss_rel + eval_loss_arc),
         )
         return result
 
@@ -369,8 +375,9 @@ class DependencyParser(flair.nn.Model):
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "token_embeddings": self.token_embeddings,
+            "use_rnn": self.use_rnn,
             "lstm_hidden_size": self.lstm_hidden_size,
             "relations_dictionary": self.relations_dictionary,
             "mlp_arc_units": self.mlp_arc_units,
@@ -381,21 +388,21 @@ class DependencyParser(flair.nn.Model):
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
-
-        model = DependencyParser(
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        return super()._init_model_with_state_dict(
+            state,
             token_embeddings=state["token_embeddings"],
             relations_dictionary=state["relations_dictionary"],
+            use_rnn=state["use_rnn"],
             lstm_hidden_size=state["lstm_hidden_size"],
             mlp_arc_units=state["mlp_arc_units"],
             mlp_rel_units=state["mlp_rel_units"],
             lstm_layers=state["lstm_layers"],
             mlp_dropout=state["mlp_dropout"],
             lstm_dropout=state["lstm_dropout"],
+            **kwargs,
         )
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @property
     def label_type(self):
@@ -612,7 +619,7 @@ class ParsingMetric:
                     self.correct_arcs += 1
 
                     # if head AND deprel correct, augment correct_rels score
-                    if relation_prediction[batch_indx][token_indx] == token.get_tag(tag_type).value:
+                    if relation_prediction[batch_indx][token_indx] == token.get_label(tag_type).value:
                         self.correct_rels += 1
 
     def get_las(self) -> float:

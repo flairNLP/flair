@@ -172,8 +172,8 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
 
     model.predict(sentence)
 
-    assert "apple" in sentence.get_label_names()
-    assert "tv" in sentence.get_label_names()
+    assert "apple" in [label.value for label in sentence.labels]
+    assert "tv" in [label.value for label in sentence.labels]
 
     for label in sentence.labels:
         print(label)
@@ -188,8 +188,8 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
 
     loaded_model.predict(sentence)
 
-    assert "apple" in sentence.get_label_names()
-    assert "tv" in sentence.get_label_names()
+    assert "apple" in [label.value for label in sentence.labels]
+    assert "tv" in [label.value for label in sentence.labels]
 
     for label in sentence.labels:
         assert label.value is not None

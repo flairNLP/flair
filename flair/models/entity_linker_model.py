@@ -2,11 +2,10 @@ import logging
 from typing import List, Union
 
 import torch
-import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import Dictionary, Sentence, SpanLabel
+from flair.data import Dictionary, Sentence
 
 log = logging.getLogger("flair")
 
@@ -23,7 +22,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         self,
         word_embeddings: flair.embeddings.TokenEmbeddings,
         label_dictionary: Dictionary,
-        pooling_operation: str = "average",
+        pooling_operation: str = "first_last",
         label_type: str = "nel",
         **classifierargs,
     ):
@@ -37,31 +36,27 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         :param label_type: name of the label you use.
         """
 
-        super(EntityLinker, self).__init__(label_dictionary, **classifierargs)
+        super(EntityLinker, self).__init__(
+            label_dictionary=label_dictionary,
+            final_embedding_size=word_embeddings.embedding_length * 2
+            if pooling_operation == "first_last"
+            else word_embeddings.embedding_length,
+            **classifierargs,
+        )
 
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
         self._label_type = label_type
 
-        # if we concatenate the embeddings we need double input size in our linear layer
-        if self.pooling_operation == "first&last":
-            self.decoder = nn.Linear(2 * self.word_embeddings.embedding_length, len(self.label_dictionary)).to(
-                flair.device
-            )
-        else:
-            self.decoder = nn.Linear(self.word_embeddings.embedding_length, len(self.label_dictionary)).to(flair.device)
-
-        nn.init.xavier_uniform_(self.decoder.weight)
-
         cases = {
             "average": self.emb_mean,
             "first": self.emb_first,
             "last": self.emb_last,
-            "first&last": self.emb_firstAndLast,
+            "first_last": self.emb_firstAndLast,
         }
 
         if pooling_operation not in cases:
-            raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first&last"')
+            raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first_last"')
 
         self.aggregated_embedding = cases[pooling_operation]
 
@@ -82,7 +77,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     def forward_pass(
         self,
         sentences: Union[List[Sentence], Sentence],
-        return_label_candidates: bool = False,
+        for_prediction: bool = False,
     ):
 
         if not isinstance(sentences, list):
@@ -95,16 +90,12 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
                 filtered_sentences.append(sentence)
 
         # fields to return
+        data_points = []
         span_labels = []
-        sentences_to_spans = []
-        empty_label_candidates = []
+        embedded_entity_pairs = None
 
-        # if the entire batch has no sentence with candidates, return empty
-        if len(filtered_sentences) == 0:
-            scores = None
-
-        # otherwise, embed sentence and send through prediction head
-        else:
+        # embed sentences and send through prediction head
+        if len(filtered_sentences) > 0:
             # embed all tokens
             self.word_embeddings.embed(filtered_sentences)
 
@@ -113,58 +104,72 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
             embedding_list = []
             # get the embeddings of the entity mentions
             for sentence in filtered_sentences:
-                spans = sentence.get_spans(self.label_type)
+                entities = sentence.get_spans(self.label_type)
 
-                for span in spans:
-                    mention_emb = torch.Tensor(0, self.word_embeddings.embedding_length).to(flair.device)
+                for entity in entities:
 
-                    for token in span.tokens:
+                    # get the label of the entity
+                    span_labels.append([entity.get_label(self.label_type).value])
+
+                    if self.pooling_operation == "first_last":
                         mention_emb = torch.cat(
                             (
-                                mention_emb,
-                                token.get_embedding(embedding_names).unsqueeze(0),
+                                entity.tokens[0].get_embedding(embedding_names),
+                                entity.tokens[-1].get_embedding(embedding_names),
                             ),
                             0,
                         )
+                    embedding_list.append(mention_emb.unsqueeze(0))
 
-                    embedding_list.append(self.aggregated_embedding(mention_emb).unsqueeze(0))
+                if for_prediction:
+                    data_points.extend(entities)
 
-                    span_labels.append([label.value for label in span.get_labels(typename=self.label_type)])
+            if len(embedding_list) > 0:
+                embedded_entity_pairs = torch.cat(embedding_list, 0)
 
-                    if return_label_candidates:
-                        sentences_to_spans.append(sentence)
-                        candidate = SpanLabel(span=span, value=None, score=0.0)
-                        empty_label_candidates.append(candidate)
+        if for_prediction:
+            return embedded_entity_pairs, span_labels, data_points
 
-            embedding_tensor = torch.cat(embedding_list, 0).to(flair.device)
-            scores = self.decoder(embedding_tensor)
-
-        if return_label_candidates:
-            return scores, span_labels, sentences_to_spans, empty_label_candidates
-
-        return scores, span_labels
+        return embedded_entity_pairs, span_labels
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "word_embeddings": self.word_embeddings,
             "label_type": self.label_type,
             "label_dictionary": self.label_dictionary,
             "pooling_operation": self.pooling_operation,
+            "loss_weights": self.weight_dict,
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
-        model = EntityLinker(
+    def _print_predictions(self, batch, gold_label_type):
+        lines = []
+        for datapoint in batch:
+
+            eval_line = f"\n{datapoint.to_original_text()}\n"
+
+            for span in datapoint.get_spans(gold_label_type):
+                symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
+                eval_line += (
+                    f' - "{span.text}" / {span.get_label(gold_label_type).value}'
+                    f' --> {span.get_label("predicted").value} ({symbol})\n'
+                )
+
+            lines.append(eval_line)
+        return lines
+
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        return super()._init_model_with_state_dict(
+            state,
             word_embeddings=state["word_embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
             pooling_operation=state["pooling_operation"],
+            loss_weights=state["loss_weights"] if "loss_weights" in state else {"<unk>": 0.3},
+            **kwargs,
         )
-
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @property
     def label_type(self):

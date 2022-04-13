@@ -11,12 +11,13 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Label, Sentence, SpanLabel
+from flair.data import Dictionary, Label, Sentence, Span
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import store_embeddings
 
+from .sequence_tagger_utils.bioes import get_spans_from_bio
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
 
@@ -30,8 +31,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         tag_dictionary: Dictionary,
         tag_type: str,
         use_rnn: bool = True,
-        rnn: Optional[torch.nn.Module] = None,
+        rnn: Optional[torch.nn.RNN] = None,
         rnn_type: str = "LSTM",
+        tag_format: str = "BIOES",
         hidden_size: int = 256,
         rnn_layers: int = 1,
         bidirectional: bool = True,
@@ -43,6 +45,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         train_initial_hidden_state: bool = False,
         loss_weights: Dict[str, float] = None,
         init_from_state_dict: bool = False,
+        allow_unk_predictions: bool = False,
     ):
         """
         Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
@@ -71,13 +74,42 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         """
         super(SequenceTagger, self).__init__()
 
-        # ----- Embedding specific parameters -----
+        # ----- Create the internal tag dictionary -----
+        self.tag_type = tag_type
+        self.tag_format = tag_format.upper()
+        if init_from_state_dict:
+            self.label_dictionary = tag_dictionary
+        else:
+            # span-labels need special encoding (BIO or BIOES)
+            if tag_dictionary.span_labels:
+                # the big question is whether the label dictionary should contain an UNK or not
+                # without UNK, we cannot evaluate on data that contains labels not seen in test
+                # with UNK, the model learns less well if there are no UNK examples
+                self.label_dictionary = Dictionary(add_unk=allow_unk_predictions)
+                for label in tag_dictionary.get_items():
+                    if label == "<unk>":
+                        continue
+                    self.label_dictionary.add_item("O")
+                    if tag_format == "BIOES":
+                        self.label_dictionary.add_item("S-" + label)
+                        self.label_dictionary.add_item("B-" + label)
+                        self.label_dictionary.add_item("E-" + label)
+                        self.label_dictionary.add_item("I-" + label)
+                    if tag_format == "BIO":
+                        self.label_dictionary.add_item("B-" + label)
+                        self.label_dictionary.add_item("I-" + label)
+            else:
+                self.label_dictionary = tag_dictionary
+
+        # is this a span prediction problem?
+        self.predict_spans = self._determine_if_span_prediction_problem(self.label_dictionary)
+
+        self.tagset_size = len(self.label_dictionary)
+        log.info(f"SequenceTagger predicts: {self.label_dictionary}")
+
+        # ----- Embeddings -----
         self.embeddings = embeddings
         embedding_dim: int = embeddings.embedding_length
-        self.tag_dictionary = tag_dictionary
-        self.tagset_size = len(tag_dictionary)
-        self.tag_type = tag_type
-        self.label_dictionary = tag_dictionary
 
         # ----- Initial loss weights parameters -----
         self.weight_dict = loss_weights
@@ -94,8 +126,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         self.use_crf = use_crf
         # Previously trained models have been trained without an explicit CRF, thus it is required to check
         # whether we are loading a model from state dict in order to skip or add START and STOP token
-        if use_crf and not init_from_state_dict and not self.tag_dictionary.start_stop_tags_are_set():
-            self.tag_dictionary.set_start_stop_tags()
+        if use_crf and not init_from_state_dict and not self.label_dictionary.start_stop_tags_are_set():
+            self.label_dictionary.set_start_stop_tags()
             self.tagset_size += 2
 
         # ----- Dropout parameters -----
@@ -121,7 +153,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # ----- RNN layer -----
         if use_rnn:
             # If shared RNN provided, else create one for model
-            self.rnn = (
+            self.rnn: torch.nn.RNN = (
                 rnn
                 if rnn
                 else self.RNN(
@@ -146,21 +178,21 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 ) = self._init_initial_hidden_state(num_directions)
 
             # final linear map to tag space
-            self.linear = torch.nn.Linear(hidden_output_dim, len(tag_dictionary))
+            self.linear = torch.nn.Linear(hidden_output_dim, len(self.label_dictionary))
         else:
-            self.linear = torch.nn.Linear(embedding_dim, len(tag_dictionary))
+            self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary))
 
-        # ----- CRF / Linear layer -----
+        # the loss function is Viterbi if using CRF, else regular Cross Entropy Loss
+        self.loss_function = (
+            ViterbiLoss(self.label_dictionary)
+            if use_crf
+            else torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+        )
+
+        # if using CRF, we also require a CRF and a Viterbi decoder
         if use_crf:
-            self.crf = CRF(
-                self.tag_dictionary,
-                self.tagset_size,
-                init_from_state_dict,
-            )
-            self.loss_function = ViterbiLoss(tag_dictionary)
-            self.viterbi_decoder = ViterbiDecoder(tag_dictionary)
-        else:
-            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+            self.crf = CRF(self.label_dictionary, self.tagset_size, init_from_state_dict)
+            self.viterbi_decoder = ViterbiDecoder(self.label_dictionary)
 
         self.to(flair.device)
 
@@ -168,7 +200,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def label_type(self):
         return self.tag_type
 
-    def _init_loss_weights(self, loss_weights: dict) -> torch.tensor:
+    def _init_loss_weights(self, loss_weights: Dict[str, float]) -> torch.Tensor:
         """
         Intializes the loss weights based on given dictionary:
         :param loss_weights: dictionary - contains loss weights
@@ -188,11 +220,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         """
         hs_initializer = torch.nn.init.xavier_normal_
         lstm_init_h = torch.nn.Parameter(
-            torch.randn(self.nlayers * num_directions, self.hidden_size),
+            torch.randn(self.rnn.num_layers * num_directions, self.hidden_size),
             requires_grad=True,
         )
         lstm_init_c = torch.nn.Parameter(
-            torch.randn(self.nlayers * num_directions, self.hidden_size),
+            torch.randn(self.rnn.num_layers * num_directions, self.hidden_size),
             requires_grad=True,
         )
 
@@ -205,7 +237,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         hidden_size: int,
         bidirectional: bool,
         rnn_input_dim: int,
-    ) -> torch.nn.Module:
+    ) -> torch.nn.RNN:
         """
         Static wrapper function returning an RNN instance from PyTorch
         :param rnn_type: Type of RNN from torch.nn
@@ -230,6 +262,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
 
+        # if there are no sentences, there is no loss
+        if len(sentences) == 0:
+            return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
+
         # forward pass to get scores
         scores, gold_labels = self.forward(sentences)  # type: ignore
 
@@ -241,16 +277,17 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         Forward propagation through network. Returns gold labels of batch in addition.
         :param sentences: Batch of current sentences
         """
-
+        if not isinstance(sentences, list):
+            sentences = [sentences]
         self.embeddings.embed(sentences)
 
         # make a zero-padded tensor for the whole sentence
         lengths, sentence_tensor = self._make_padded_tensor_for_batch(sentences)
 
         # sort tensor in decreasing order based on lengths of sentences in batch
-        lengths = lengths.sort(dim=0, descending=True)
-        sentences = [sentences[i] for i in lengths.indices]
-        sentence_tensor = sentence_tensor[lengths.indices]
+        sorted_lengths, length_indices = lengths.sort(dim=0, descending=True)
+        sentences = [sentences[i] for i in length_indices]
+        sentence_tensor = sentence_tensor[length_indices]
 
         # ----- Forward Propagation -----
         if self.use_dropout:
@@ -264,7 +301,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = pack_padded_sequence(sentence_tensor, lengths.values, batch_first=True, enforce_sorted=False)
+            packed = pack_padded_sequence(sentence_tensor, sorted_lengths, batch_first=True, enforce_sorted=False)
             rnn_output, hidden = self.rnn(packed)
             sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
 
@@ -281,9 +318,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # -- A tensor of shape (aggregated sequence length for all sentences in batch, tagset size) for linear layer
         if self.use_crf:
             features = self.crf(features)
-            scores = (features, lengths, self.crf.transitions)
+            scores = (features, sorted_lengths, self.crf.transitions)
         else:
-            scores = self._get_scores_from_features(features, lengths)
+            scores = self._get_scores_from_features(features, sorted_lengths)
 
         # get the gold labels
         gold_labels = self._get_gold_labels(sentences)
@@ -325,6 +362,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if nb_padding_tokens > 0:
                 t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
+
         sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
@@ -332,11 +370,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 self.embeddings.embedding_length,
             ]
         )
-        lengths: torch.Tensor = torch.tensor(lengths, dtype=torch.long)
-        return lengths, sentence_tensor
+        return torch.tensor(lengths, dtype=torch.long), sentence_tensor
 
     @staticmethod
-    def _get_scores_from_features(features: torch.tensor, lengths: torch.tensor):
+    def _get_scores_from_features(features: torch.Tensor, lengths: torch.Tensor):
         """
         Trims current batch tensor in shape (batch size, sequence length, tagset size) in such a way that all
         pads are going to be removed.
@@ -344,20 +381,37 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         :param lengths: length from each sentence in batch in order to trim padding tokens
         """
         features_formatted = []
-        for feat, length in zip(features, lengths.values):
+        for feat, length in zip(features, lengths):
             features_formatted.append(feat[:length])
         scores = torch.cat(features_formatted)
 
         return scores
 
-    def _get_gold_labels(self, sentences: Union[List[DataPoint], DataPoint]):
+    def _get_gold_labels(self, sentences: Union[List[Sentence], Sentence]):
         """
         Extracts gold labels from each sentence.
         :param sentences: List of sentences in batch
         """
-        tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
-        labels = [[[token.get_tag(self.label_type).value] for token in sentence] for sentence in tokens_per_sentence]
-        labels = [token for sentence in labels for token in sentence]
+        # spans need to be encoded as token-level predictions
+        if self.predict_spans:
+            all_sentence_labels = []
+            for sentence in sentences:
+                sentence_labels = ["O"] * len(sentence)
+                for label in sentence.get_labels(self.label_type):
+                    span: Span = label.data_point
+                    if len(span) == 1:
+                        sentence_labels[span[0].idx - 1] = "S-" + label.value
+                    else:
+                        sentence_labels[span[0].idx - 1] = "B-" + label.value
+                        sentence_labels[span[-1].idx - 1] = "E-" + label.value
+                        for i in range(span[0].idx, span[-1].idx - 1):
+                            sentence_labels[i] = "I-" + label.value
+                all_sentence_labels.extend(sentence_labels)
+            labels = [[label] for label in all_sentence_labels]
+
+        # all others are regular labels for each token
+        else:
+            labels = [[token.get_label(self.label_type, "O").value] for sentence in sentences for token in sentence]
 
         return labels
 
@@ -389,7 +443,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 return sentences
 
             # make sure its a list
-            if not isinstance(sentences, list):
+            if not isinstance(sentences, list) and not isinstance(sentences, flair.data.Dataset):
                 sentences = [sentences]
 
             # filter empty sentences
@@ -407,17 +461,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             )
             # progress bar for verbosity
             if verbose:
-                dataloader = tqdm(dataloader)
+                dataloader = tqdm(dataloader, desc="Batch inference")
 
-            overall_loss = 0
+            overall_loss = torch.zeros(1, device=flair.device)
             batch_no = 0
             label_count = 0
             for batch in dataloader:
 
                 batch_no += 1
-
-                if verbose:
-                    dataloader.set_description(f"Inferencing on batch {batch_no}")
 
                 # stop if all sentences are empty
                 if not batch:
@@ -438,53 +489,104 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
                 # Sort batch in same way as forward propagation
                 lengths = torch.LongTensor([len(sentence) for sentence in batch])
-                lengths = lengths.sort(dim=0, descending=True)
-                batch = [batch[i] for i in lengths.indices]
+                _, sort_indices = lengths.sort(dim=0, descending=True)
+                batch = [batch[i] for i in sort_indices]
 
+                # make predictions
                 if self.use_crf:
-                    predictions = self.viterbi_decoder.decode(features)
+                    predictions, all_tags = self.viterbi_decoder.decode(features, return_probabilities_for_all_classes)
                 else:
-                    predictions = self._standard_inference(features, batch)
+                    predictions, all_tags = self._standard_inference(
+                        features, batch, return_probabilities_for_all_classes
+                    )
 
-                for sentence, labels in zip(batch, predictions):
-                    for token, label in zip(sentence.tokens, labels):
-                        token.add_tag_label(label_name, label)
+                # add predictions to Sentence
+                for sentence, sentence_predictions in zip(batch, predictions):
 
-            store_embeddings(sentences, storage_mode=embedding_storage_mode)
+                    # BIOES-labels need to be converted to spans
+                    if self.predict_spans:
+                        sentence_tags = [label[0] for label in sentence_predictions]
+                        sentence_scores = [label[1] for label in sentence_predictions]
+                        predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
+                        for predicted_span in predicted_spans:
+                            span: Span = sentence[predicted_span[0][0] : predicted_span[0][-1] + 1]
+                            span.add_label(label_name, value=predicted_span[2], score=predicted_span[1])
+
+                    # token-labels can be added directly ("O" and legacy "_" predictions are skipped)
+                    else:
+                        for token, label in zip(sentence.tokens, sentence_predictions):
+                            if label[0] in ["O", "_"]:
+                                continue
+                            token.add_label(typename=label_name, value=label[0], score=label[1])
+
+                # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
+                for (sentence, sent_all_tags) in zip(batch, all_tags):
+                    for (token, token_all_tags) in zip(sentence.tokens, sent_all_tags):
+                        token.add_tags_proba_dist(label_name, token_all_tags)
+
+                store_embeddings(sentences, storage_mode=embedding_storage_mode)
 
             if return_loss:
                 return overall_loss, label_count
 
-    def _standard_inference(self, features: torch.tensor, batch: list):
+    def _standard_inference(self, features: torch.Tensor, batch: List[Sentence], probabilities_for_all_classes: bool):
         """
         Softmax over emission scores from forward propagation.
         :param features: sentence tensor from forward propagation
         :param batch: list of sentence
+        :param probabilities_for_all_classes: whether to return score for each tag in tag dictionary
         """
         softmax_batch = F.softmax(features, dim=1).cpu()
         scores_batch, prediction_batch = torch.max(softmax_batch, dim=1)
         predictions = []
+        all_tags = []
+
         for sentence in batch:
             scores = scores_batch[: len(sentence)]
             predictions_for_sentence = prediction_batch[: len(sentence)]
             predictions.append(
                 [
-                    Label(self.tag_dictionary.get_item_for_index(prediction), score.item())
+                    (self.label_dictionary.get_item_for_index(prediction), score.item())
                     for token, score, prediction in zip(sentence, scores, predictions_for_sentence)
                 ]
             )
             scores_batch = scores_batch[len(sentence) :]
             prediction_batch = prediction_batch[len(sentence) :]
 
-        return predictions
+        if probabilities_for_all_classes:
+            lengths = [len(sentence) for sentence in batch]
+            all_tags = self._all_scores_for_token(softmax_batch, lengths)
+
+        return predictions, all_tags
+
+    def _all_scores_for_token(self, scores: torch.Tensor, lengths: List[int]):
+        """
+        Returns all scores for each tag in tag dictionary.
+        :param scores: Scores for current sentence.
+        """
+        scores = scores.numpy()
+        prob_all_tags = [
+            [
+                Label(self.label_dictionary.get_item_for_index(score_id), score)
+                for score_id, score in enumerate(score_dist)
+            ]
+            for score_dist in scores
+        ]
+
+        prob_tags_per_sentence = []
+        previous = 0
+        for length in lengths:
+            prob_tags_per_sentence.append(prob_all_tags[previous : previous + length])
+            previous = length
+        return prob_tags_per_sentence
 
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "embeddings": self.embeddings,
             "hidden_size": self.hidden_size,
-            "tag_dictionary": self.tag_dictionary,
+            "tag_dictionary": self.label_dictionary,
             "tag_type": self.tag_type,
             "use_crf": self.use_crf,
             "use_rnn": self.use_rnn,
@@ -499,8 +601,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+
         """Initialize the model from a state dictionary."""
         rnn_type = "LSTM" if "rnn_type" not in state.keys() else state["rnn_type"]
         use_dropout = 0.0 if "use_dropout" not in state.keys() else state["use_dropout"]
@@ -514,7 +617,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"]
                 del state["state_dict"]["transitions"]
 
-        model = SequenceTagger(
+        return super()._init_model_with_state_dict(
+            state,
             embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
             tag_type=state["tag_type"],
@@ -529,10 +633,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             reproject_embeddings=reproject_embeddings,
             loss_weights=weights,
             init_from_state_dict=True,
+            **kwargs,
         )
-
-        model.load_state_dict(state["state_dict"])
-        return model
 
     @staticmethod
     def _fetch_model(model_name) -> str:
@@ -570,6 +672,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "chunk": "flair/chunk-english",
             "chunk-fast": "flair/chunk-english-fast",
             # Language-specific NER models
+            "ar-ner": "megantosh/flair-arabic-multi-ner",
+            "ar-pos": "megantosh/flair-arabic-dialects-codeswitch-egy-lev",
             "da-ner": "flair/ner-danish",
             "de-ner": "flair/ner-german",
             "de-ler": "flair/ner-german-legal",
@@ -819,15 +923,15 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     library_version=flair.__version__,
                     cache_dir=flair.cache_root / "models" / model_folder,
                 )
-            except HTTPError as e:
+            except HTTPError:
                 # output information
                 log.error("-" * 80)
                 log.error(
                     f"ACHTUNG: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
                 )
                 # log.error(f" - Error message: {e}")
-                log.error(f" -> Please check https://huggingface.co/models?filter=flair for all available models.")
-                log.error(f" -> Alternatively, point to a model file on your local drive.")
+                log.error(" -> Please check https://huggingface.co/models?filter=flair for all available models.")
+                log.error(" -> Alternatively, point to a model file on your local drive.")
                 log.error("-" * 80)
                 Path(flair.cache_root / "models" / model_folder).rmdir()  # remove folder again if not valid
 
@@ -840,37 +944,59 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             log.warning(f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens.")
         return filtered_sentences
 
+    def _determine_if_span_prediction_problem(self, dictionary: Dictionary) -> bool:
+        for item in dictionary.get_items():
+            if item.startswith("B-") or item.startswith("S-") or item.startswith("I-"):
+                return True
+        return False
+
     def _print_predictions(self, batch, gold_label_type):
+
         lines = []
-        for datapoint in batch:
-            # all labels default to "O"
-            for token in datapoint:
-                token.set_label("gold_bio", "O")
-                token.set_label("predicted_bio", "O")
+        if self.predict_spans:
+            for datapoint in batch:
+                # all labels default to "O"
+                for token in datapoint:
+                    token.set_label("gold_bio", "O")
+                    token.set_label("predicted_bio", "O")
 
-            # set gold token-level
-            for gold_label in datapoint.get_labels(gold_label_type):
-                gold_label: SpanLabel = gold_label
-                prefix = "B-"
-                for token in gold_label.span:
-                    token.set_label("gold_bio", prefix + gold_label.value)
-                    prefix = "I-"
+                # set gold token-level
+                for gold_label in datapoint.get_labels(gold_label_type):
+                    gold_span: Span = gold_label.data_point
+                    prefix = "B-"
+                    for token in gold_span:
+                        token.set_label("gold_bio", prefix + gold_label.value)
+                        prefix = "I-"
 
-            # set predicted token-level
-            for predicted_label in datapoint.get_labels("predicted"):
-                predicted_label: SpanLabel = predicted_label
-                prefix = "B-"
-                for token in predicted_label.span:
-                    token.set_label("predicted_bio", prefix + predicted_label.value)
-                    prefix = "I-"
+                # set predicted token-level
+                for predicted_label in datapoint.get_labels("predicted"):
+                    predicted_span: Span = predicted_label.data_point
+                    prefix = "B-"
+                    for token in predicted_span:
+                        token.set_label("predicted_bio", prefix + predicted_label.value)
+                        prefix = "I-"
 
-            # now print labels in CoNLL format
-            for token in datapoint:
-                eval_line = (
-                    f"{token.text} " f"{token.get_tag('gold_bio').value} " f"{token.get_tag('predicted_bio').value}\n"
-                )
-                lines.append(eval_line)
-            lines.append("\n")
+                # now print labels in CoNLL format
+                for token in datapoint:
+                    eval_line = (
+                        f"{token.text} "
+                        f"{token.get_label('gold_bio').value} "
+                        f"{token.get_label('predicted_bio').value}\n"
+                    )
+                    lines.append(eval_line)
+                lines.append("\n")
+
+        else:
+            for datapoint in batch:
+                # print labels in CoNLL format
+                for token in datapoint:
+                    eval_line = (
+                        f"{token.text} "
+                        f"{token.get_label(gold_label_type).value} "
+                        f"{token.get_label('predicted').value}\n"
+                    )
+                    lines.append(eval_line)
+                lines.append("\n")
         return lines
 
 
@@ -883,6 +1009,7 @@ class MultiTagger:
         self,
         sentences: Union[List[Sentence], Sentence],
         return_loss: bool = False,
+        mini_batch_size: int = 32,
     ):
         """
         Predict sequence tags for Named Entity Recognition task
@@ -911,6 +1038,7 @@ class MultiTagger:
                 label_name=name,
                 return_loss=return_loss,
                 embedding_storage_mode="cpu",
+                mini_batch_size=mini_batch_size,
             )
 
         # clear embeddings after predicting
@@ -939,7 +1067,7 @@ class MultiTagger:
             model_names = [model_names]
 
         taggers = {}
-        models = []
+        models: List[SequenceTagger] = []
 
         # load each model
         for model_name in model_names:

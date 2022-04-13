@@ -1,15 +1,13 @@
 import csv
 import logging
 import os
-import typing
-from collections import Counter
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 import requests
 
 import flair
-from flair.data import Corpus, Dictionary, MultiCorpus, Sentence, _iter_dataset
+from flair.data import Corpus, MultiCorpus, Sentence
 from flair.datasets.sequence_labeling import ColumnCorpus
 from flair.file_utils import cached_path, unpack_file
 from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
@@ -17,81 +15,7 @@ from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
 log = logging.getLogger("flair")
 
 
-class EntityLinkingCorpus(ColumnCorpus):
-    def __init__(
-        self,
-        data_folder,
-        train_file,
-        columns={0: "text", 1: "nel"},
-        column_delimiter="\t",
-        in_memory=True,
-        document_separator_token="-DOCSTART-",
-        **corpusargs,
-    ):
-        """
-        Super class for all entity linking corpora. Expects the data to be in column format with one column for words and another one for BIO-tags and wikipedia-page
-        name, e.g. B-Brad_Pitt.
-        The class provides the function make_entity_dict to create an entity dictionary suited for entity linking.
-        """
-        # TODO: Add a routine, that checks annotations for some widespread errors/inconsistencies??? (e.g. in AQUAINT corpus Iran-Iraq_War vs. Iran-Iraq_war)
-
-        super(EntityLinkingCorpus, self).__init__(
-            data_folder,
-            columns,
-            train_file=train_file,
-            column_delimiter=column_delimiter,
-            in_memory=in_memory,
-            document_separator_token=document_separator_token,
-            **corpusargs,
-        )
-
-    def make_entity_dict(self, label_type="nel", threshold: int = 1) -> Dictionary:
-        """
-        Create ID-dictionary for the wikipedia-page names.
-        param threshold: Ignore links that occur less than threshold value
-
-        In entity_occurences all wikinames and their number of occurence is saved.
-        ent_dictionary contains all wikinames that occure at least threshold times and gives each name an ID
-        """
-        self.threshold = threshold
-        self.entity_occurences: typing.Counter[str] = Counter()
-
-        for sentence in _iter_dataset(self.get_all_sentences()):
-            if not sentence.is_document_boundary:  # exclude "-DOCSTART-"-sentences
-
-                spans = sentence.get_spans(label_type)
-                self.entity_occurences.update(span.tag for span in spans)
-        self.total_number_of_entity_mentions = sum(self.entity_occurences.values())
-        self.number_of_entities = len(self.entity_occurences)
-
-        # Create the annotation dictionary
-        self.ent_dictionary: Dictionary = Dictionary(add_unk=True)
-
-        for x in self.entity_occurences:
-            if self.entity_occurences[x] >= threshold:
-                self.ent_dictionary.add_item(x)
-
-        return self.ent_dictionary
-
-    # this fct removes every second unknown label
-    def remove_unknowns(self):
-        remove = True
-        for sentence in self.get_all_sentences():
-            if not sentence.is_document_boundary:  # exclude "-DOCSTART-"-sentences
-
-                spans = sentence.get_spans("nel")
-                for span in spans:
-                    annotation = span.tag
-                    if self.ent_dictionary.get_idx_for_item(annotation) == 0:  # unknown label
-                        if remove:
-                            for token in span:
-                                token.remove_labels("nel")
-                            remove = False
-                        else:
-                            remove = True
-
-
-class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
+class NEL_ENGLISH_AQUAINT(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -267,13 +191,14 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
 
         super(NEL_ENGLISH_AQUAINT, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
             in_memory=in_memory,
             **corpusargs,
         )
 
 
-class NEL_GERMAN_HIPE(EntityLinkingCorpus):
+class NEL_GERMAN_HIPE(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -391,6 +316,7 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
 
         super(NEL_GERMAN_HIPE, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=train_file_name,
             dev_file=wiki_language + "_dev.tsv",
             test_file=wiki_language + "_test.tsv",
@@ -457,7 +383,7 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
         return qid_wikiname_dict
 
 
-class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
+class NEL_ENGLISH_AIDA(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -545,13 +471,14 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
                                     else:  # neither the wikiid nor the url exist
                                         write.write(line_list[0] + "\tO\n")
                                 else:
-                                    write.write(line_list[0] + "\t" + line_list[4] + "-" + wikiname + "\n")
+                                    write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
 
                 # delete unprocessed file
                 os.remove(path)
 
         super(NEL_ENGLISH_AIDA, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
             dev_file="testa",
             test_file="testb",
@@ -610,7 +537,7 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
         return wikiid_wikiname_dict
 
 
-class NEL_ENGLISH_IITB(EntityLinkingCorpus):
+class NEL_ENGLISH_IITB(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -751,13 +678,14 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
 
         super(NEL_ENGLISH_IITB, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
             in_memory=in_memory,
             **corpusargs,
         )
 
 
-class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
+class NEL_ENGLISH_TWEEKI(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -818,13 +746,14 @@ class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
 
         super(NEL_ENGLISH_TWEEKI, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
             in_memory=in_memory,
             **corpusargs,
         )
 
 
-class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
+class NEL_ENGLISH_REDDIT(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -977,6 +906,7 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
 
         super(NEL_ENGLISH_REDDIT, self).__init__(
             data_folder,
+            column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
             in_memory=in_memory,
             **corpusargs,
@@ -1249,7 +1179,7 @@ class WSD_UFSAC(MultiCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         cut_multisense: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         banned_sentences: List[str] = None,
         sample_missing_splits_in_multicorpus: Union[bool, str] = True,
@@ -1274,7 +1204,7 @@ class WSD_UFSAC(MultiCorpus):
                                multiple possible senses. If True only the first listed sense will be used and the
                                suffix '_cut' will be added to the name of the CoNLL file. Otherwise the whole list of
                                senses will be detected as one new sense. The default is True.
-        :param columns: Columns to consider when loading the dataset. You can add 1: "lemma" or 2: "pos" to the default dict {0: "text", 3: "wn30_key"}
+        :param columns: Columns to consider when loading the dataset. You can add 1: "lemma" or 2: "pos" to the default dict {0: "text", 3: "sense"}
             if you want to use additional pos and/or lemma for the words.
         :param tag_to_bioes: whether to convert to BIOES tagging scheme
         :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
@@ -1326,7 +1256,7 @@ class WSD_UFSAC(MultiCorpus):
 
         corpora: List[Corpus] = []
 
-        print("Transforming data into column format and creating corpora...")
+        log.info("Transforming data into column format and creating corpora...")
 
         if use_raganato_ALL_as_test_data:
             # in this case no test data should be generated by sampling from train data. But if the sample arguments are set to true, the dev set will be sampled
@@ -1382,7 +1312,7 @@ class WSD_UFSAC(MultiCorpus):
                 sample_missing_splits=sample_missing_splits_in_each_corpus,
             )
             corpora.append(corpus)
-        print("...done!")
+        log.info("Done with transforming data into column format and creating corpora...")
 
         super(WSD_UFSAC, self).__init__(
             corpora,
@@ -1391,12 +1321,12 @@ class WSD_UFSAC(MultiCorpus):
         )
 
 
-class WSD_RAGANATO_ALL(EntityLinkingCorpus):
+class WSD_RAGANATO_ALL(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
@@ -1445,7 +1375,7 @@ class WSD_RAGANATO_ALL(EntityLinkingCorpus):
 
         super(WSD_RAGANATO_ALL, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
@@ -1458,12 +1388,12 @@ class WSD_RAGANATO_ALL(EntityLinkingCorpus):
         )
 
 
-class WSD_SEMCOR(EntityLinkingCorpus):
+class WSD_SEMCOR(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
@@ -1523,7 +1453,7 @@ class WSD_SEMCOR(EntityLinkingCorpus):
 
         super(WSD_SEMCOR, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             test_file=test_file,
             in_memory=in_memory,
@@ -1537,12 +1467,12 @@ class WSD_SEMCOR(EntityLinkingCorpus):
         )
 
 
-class WSD_WORDNET_GLOSS_TAGGED(EntityLinkingCorpus):
+class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
@@ -1599,7 +1529,7 @@ class WSD_WORDNET_GLOSS_TAGGED(EntityLinkingCorpus):
 
         super(WSD_WORDNET_GLOSS_TAGGED, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             test_file=test_file,
             in_memory=in_memory,
@@ -1613,12 +1543,12 @@ class WSD_WORDNET_GLOSS_TAGGED(EntityLinkingCorpus):
         )
 
 
-class WSD_MASC(EntityLinkingCorpus):
+class WSD_MASC(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
@@ -1679,7 +1609,7 @@ class WSD_MASC(EntityLinkingCorpus):
 
         super(WSD_MASC, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             test_file=test_file,
             in_memory=in_memory,
@@ -1693,12 +1623,12 @@ class WSD_MASC(EntityLinkingCorpus):
         )
 
 
-class WSD_OMSTI(EntityLinkingCorpus):
+class WSD_OMSTI(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
@@ -1760,7 +1690,7 @@ class WSD_OMSTI(EntityLinkingCorpus):
 
         super(WSD_OMSTI, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             test_file=test_file,
             in_memory=in_memory,
@@ -1774,12 +1704,12 @@ class WSD_OMSTI(EntityLinkingCorpus):
         )
 
 
-class WSD_TRAINOMATIC(EntityLinkingCorpus):
+class WSD_TRAINOMATIC(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        columns={0: "text", 3: "wn30_key"},
+        columns={0: "text", 3: "sense"},
         tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
@@ -1838,7 +1768,7 @@ class WSD_TRAINOMATIC(EntityLinkingCorpus):
 
         super(WSD_TRAINOMATIC, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             test_file=test_file,
             in_memory=in_memory,

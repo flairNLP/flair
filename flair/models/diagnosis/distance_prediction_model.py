@@ -146,7 +146,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "word_embeddings": self.word_embeddings,
             "max_distance": self.max_distance,
             "beta": self.beta,
@@ -156,22 +156,22 @@ class DistancePredictor(flair.nn.Model[Sentence]):
         }
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weight = 1 if "loss_max_weight" not in state.keys() else state["loss_max_weight"]
 
-        model = DistancePredictor(
+        return super()._init_model_with_state_dict(
+            state,
             word_embeddings=state["word_embeddings"],
             max_distance=state["max_distance"],
             beta=beta,
             loss_max_weight=weight,
             regression=state["regression"],
             regr_loss_step=state["regr_loss_step"],
+            **kwargs,
         )
-
-        model.load_state_dict(state["state_dict"])
-        return model
 
     # So far only one sentence allowed
     # If list of sentences is handed the function works with the first sentence of the list
@@ -261,7 +261,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
 
             buckets = [0 for _ in range(11)]
 
-            eval_loss = 0.0
+            eval_loss = torch.zeros(1, device=flair.device)
 
             metric = MetricRegression("Evaluation")
 
@@ -360,7 +360,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
                 f"spearman: {metric.spearmanr():.4f}"
             )
 
-            result: Result = Result(metric.pearsonr(), log_header, log_line, detailed_result, loss=eval_loss)
+            result: Result = Result(metric.pearsonr(), log_header, log_line, detailed_result, loss=eval_loss.item())
 
             return result
 
@@ -376,7 +376,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
         y_pred = []
 
         with torch.no_grad():
-            eval_loss = 0.0
+            eval_loss = torch.zeros(1, device=flair.device)
 
             lines: List[str] = []
             # we iterate over each sentence, instead of batches
@@ -464,7 +464,7 @@ class DistancePredictor(flair.nn.Model[Sentence]):
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,
-                loss=eval_loss,
+                loss=eval_loss.item(),
             )
 
             return result

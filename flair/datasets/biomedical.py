@@ -10,8 +10,17 @@ from collections import defaultdict, deque
 from copy import copy
 from operator import attrgetter
 from pathlib import Path
+from tarfile import (
+    CompressionError,
+    ExtractError,
+    HeaderError,
+    ReadError,
+    StreamError,
+    TarError,
+)
 from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from warnings import warn
+from zipfile import BadZipFile, LargeZipFile
 
 import ftfy
 from lxml import etree
@@ -5088,8 +5097,32 @@ class HunerMultiCorpus(MultiCorpus):
                     corpus = constructor_func(sentence_splitter=sentence_splitter)
 
                 self.huner_corpora.append(corpus)
-            except Exception:
-                print(f"Can't download and prepare corpus {name}:\n{sys.exc_info()[1]}\n\n")
+            except (CompressionError, ExtractError, HeaderError, ReadError, StreamError, TarError):
+                logger.exception(
+                    f"Error while processing Tar file from corpus {name}:\n{sys.exc_info()[1]}\n\n", exc_info=False
+                )
+            except (BadZipFile, LargeZipFile):
+                logger.exception(
+                    f"Error while processing Zip file from corpus {name}:\n{sys.exc_info()[1]}\n\n", exc_info=False
+                )
+            except IOError:
+                logger.exception(
+                    f"Error while downloading data for corpus {name}:\n{sys.exc_info()[1]}\n\n", exc_info=False
+                )
+            except shutil.Error:
+                logger.exception(
+                    f"Error while copying data files for corpus {name}:\n{sys.exc_info()[1]}\n\n", exc_info=False
+                )
+            except etree.LxmlError:
+                logger.exception(
+                    f"Error while processing XML file from corpus {name}:\n{sys.exc_info()[1]}\n\n", exc_info=False
+                )
+            except json.JSONDecodeError:
+                logger.exception(
+                    f"Error while processing JSON file from corpus {name}:\n{sys.exc_info()[1]}\n\n", exc_info=False
+                )
+            except (FileNotFoundError, OSError, ValueError):
+                logger.exception(f"Error while preparing corpus {name}:\n{sys.exc_info()[1]}\n\n", exc_info=False)
 
         super(HunerMultiCorpus, self).__init__(corpora=self.huner_corpora, name=f"HUNER-{entity_type}")
 

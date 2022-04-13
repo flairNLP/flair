@@ -336,30 +336,27 @@ class LanguageModelTrainer:
                             cur_loss = total_loss.item() / self.log_interval
                             elapsed = time.time() - start_time
                             log.info(
-                                "| split {:3d} /{:3d} | {:5d}/{:5d} batches"
-                                " | ms/batch {:5.2f} | "
-                                "loss {:5.2f} | ppl {:8.2f}".format(
-                                    curr_split,
-                                    number_of_splits,
-                                    batch,
-                                    len(train_data) // sequence_length,
-                                    elapsed * 1000 / self.log_interval,
-                                    cur_loss,
-                                    math.exp(cur_loss),
-                                )
+                                f"| split {curr_split:3d}/{number_of_splits:3d} | {batch:5d}/{len(train_data) // sequence_length:5d} batches "
+                                f"| ms/batch {elapsed * 1000 / self.log_interval:5.2f} | loss {cur_loss:5.4f} | ppl {math.exp(cur_loss):5.4f}"
                             )
-                            total_loss = torch.zeros(1)
+                            total_loss = torch.zeros(1, device=flair.device)
                             start_time = time.time()
-
-                    log.info("%d seconds for train split %d" % (time.time() - split_start_time, curr_split))
 
                     ##########################################################
                     self.model.eval()
 
                     val_loss = self.evaluate(val_data, mini_batch_size, sequence_length)
+
+                    # Save the model if the validation loss is the best we've
+                    # seen so far.
+                    if val_loss < best_val_loss:
+                        self.model.save(savefile)
+                        best_val_loss = val_loss
+                        log.info("best split so far")
+
                     scheduler.step(val_loss)
 
-                    log.info("best loss so far {:5.2f}".format(best_val_loss))
+                    log.info(f"best loss so far {best_val_loss:5.8f}")
 
                     log.info(self.model.generate_text())
 
@@ -372,30 +369,15 @@ class LanguageModelTrainer:
                             best_val_loss,
                         )
 
-                    # Save the model if the validation loss is the best we've
-                    # seen so far.
-                    if val_loss < best_val_loss:
-                        self.model.save(savefile)
-                        best_val_loss = val_loss
-
                     ##########################################################
                     # print info
                     ##########################################################
                     log.info("-" * 89)
 
                     summary = (
-                        "| end of split {:3d} /{:3d} | epoch {:3d}"
-                        " | time: {:5.2f}s | valid loss {:5.2f}"
-                        " | "
-                        "valid ppl {:8.2f} | learning rate {:3.4f}"
-                    ).format(
-                        curr_split,
-                        number_of_splits,
-                        epoch + 1,
-                        (time.time() - split_start_time),
-                        val_loss,
-                        math.exp(val_loss),
-                        learning_rate,
+                        f"| end of split {curr_split:3d} /{number_of_splits:3d} | epoch {epoch + 1:3d} | time: "
+                        f"{(time.time() - split_start_time):5.2f}s | valid loss {val_loss:5.4f} | valid ppl "
+                        f"{math.exp(val_loss):5.4f} | learning rate {learning_rate:3.4f}"
                     )
 
                     with open(loss_txt, "a") as myfile:
@@ -403,6 +385,7 @@ class LanguageModelTrainer:
 
                     log.info(summary)
                     log.info("-" * 89)
+                    log.info("%d seconds for train split %d" % (time.time() - split_start_time, curr_split))
 
                 log.info("Epoch time: %.2f" % (time.time() - epoch_start_time))
 
@@ -420,7 +403,7 @@ class LanguageModelTrainer:
         test_data = self._batchify(self.corpus.test, mini_batch_size)
         test_loss = self.evaluate(test_data, mini_batch_size, sequence_length)
 
-        summary = "TEST: valid loss {:5.2f} | valid ppl {:8.2f}".format(test_loss, math.exp(test_loss))
+        summary = f"TEST: valid loss {test_loss:5.4f} | valid ppl {math.exp(test_loss):8.4f}"
         with open(loss_txt, "a") as myfile:
             myfile.write("%s\n" % summary)
 
@@ -459,8 +442,8 @@ class LanguageModelTrainer:
     def _get_batch(source, i, sequence_length):
         seq_len = min(sequence_length, len(source) - 1 - i)
 
-        data = source[i : i + seq_len].clone().detach()
-        target = source[i + 1 : i + 1 + seq_len].view(-1).clone().detach()
+        data = source[i : i + seq_len]
+        target = source[i + 1 : i + 1 + seq_len].view(-1)
 
         data = data.to(flair.device)
         target = target.to(flair.device)
@@ -470,7 +453,7 @@ class LanguageModelTrainer:
     @staticmethod
     def _repackage_hidden(h):
         """Wraps hidden states in new tensors, to detach them from their history."""
-        return tuple(v.clone().detach() for v in h)
+        return tuple(v.detach() for v in h)
 
     @staticmethod
     def load_checkpoint(

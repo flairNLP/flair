@@ -14,7 +14,7 @@ from conllu.models import Metadata, Token
 
 import flair
 from flair.data import Sentence
-from flair.datasets.conllu import CoNLLUCorpus
+from flair.datasets.sequence_labeling import ColumnCorpus
 from flair.file_utils import cached_path
 from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
 
@@ -33,12 +33,13 @@ def convert_ptb_token(token: str) -> str:
     }.get(token.lower(), token)
 
 
-class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
+class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         augment_train: bool = False,
+        **corpusargs,
     ):
         """
         SemEval-2010 Task 8 on Multi-Way Classification of Semantic Relations Between Pairs of
@@ -80,8 +81,10 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
             data_folder,
             train_file=train_file_name,
             test_file="semeval2010-task8-test.conllu",
-            token_annotation_fields=["ner"],
+            column_format={1: "text", 2: "ner"},
+            comment_symbol="# ",
             in_memory=in_memory,
+            **corpusargs,
         )
 
     def extract_and_convert_to_conllu(self, data_file, data_folder, augment_train):
@@ -225,8 +228,8 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
 
 
-class RE_ENGLISH_TACRED(CoNLLUCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+class RE_ENGLISH_TACRED(ColumnCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, **corpusargs):
         """
         TAC Relation Extraction Dataset with 41 relations from https://nlp.stanford.edu/projects/tacred/.
         Manual download is required for this dataset.
@@ -256,8 +259,10 @@ class RE_ENGLISH_TACRED(CoNLLUCorpus):
 
         super(RE_ENGLISH_TACRED, self).__init__(
             data_folder,
-            token_annotation_fields=["ner"],
+            column_format={1: "text", 2: "ner"},
+            comment_symbol="# ",
             in_memory=in_memory,
+            **corpusargs,
         )
 
     def extract_and_convert_to_conllu(self, data_file, data_folder):
@@ -348,8 +353,8 @@ class RE_ENGLISH_TACRED(CoNLLUCorpus):
         return conllu.TokenList(tokens=token_dicts, metadata=Metadata(metadata))
 
 
-class RE_ENGLISH_CONLL04(CoNLLUCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+class RE_ENGLISH_CONLL04(ColumnCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, **corpusargs):
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -380,8 +385,10 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
 
         super(RE_ENGLISH_CONLL04, self).__init__(
             data_folder,
-            token_annotation_fields=["ner"],
             in_memory=in_memory,
+            column_format={1: "text", 2: "ner"},
+            comment_symbol="# ",
+            **corpusargs,
         )
 
     def _parse_incr(self, source_file) -> Iterable[conllu.TokenList]:
@@ -527,12 +534,13 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
 
 
-class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
+class RE_ENGLISH_DRUGPROT(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
+        **corpusargs,
     ):
         """
         DrugProt corpus: Biocreative VII Track 1 from https://zenodo.org/record/5119892#.YSdSaVuxU5k/ on
@@ -564,8 +572,10 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
         super(RE_ENGLISH_DRUGPROT, self).__init__(
             data_folder,
             in_memory=in_memory,
-            token_annotation_fields=["ner", "ner-2"],
             sample_missing_splits=False,
+            column_format={1: "text", 2: "ner", 3: "ner"},
+            comment_symbol="# ",
+            **corpusargs,
         )
 
     def extract_and_convert_to_conllu(self, data_file, data_folder):

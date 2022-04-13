@@ -167,7 +167,6 @@ def download_file(url: str, cache_dir: Union[str, Path]):
     filename = re.sub(r".+/", "", url)
     # get cache path to put the file
     cache_path = cache_dir / filename
-    print(cache_path)
 
     # Download to temporary file, then copy to cache dir once finished.
     # Otherwise you get corrupt cache entries if the download gets interrupted.

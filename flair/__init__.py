@@ -14,9 +14,11 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-# global variable: embedding_storage_mode
-embedding_storage_mode = "default"
+# global variable: version
+__version__ = "0.11.1"
 
+# global variable: arrow symbol
+_arrow = " → "
 
 from . import (  # noqa: E402 import after setting device
     data,
@@ -25,8 +27,6 @@ from . import (  # noqa: E402 import after setting device
     trainers,
     visual,
 )
-
-__version__ = "0.10"
 
 logging.config.dictConfig(
     {
@@ -58,10 +58,10 @@ __all__ = [
     "__version__",
     "logger",
     "set_seed",
-    "embedding_storage_mode",
     "data",
     "models",
     "nn",
     "trainers",
     "visual",
+    "datasets",
 ]

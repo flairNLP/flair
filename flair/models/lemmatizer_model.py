@@ -34,27 +34,27 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
     ):
         """
         Initializes a Lemmatizer model
-        The model consists of a decoder and an encoder. The encoder is either a RNN-cell (torch.nn.GRU) or a Token-Embedding from flair
-        if a embedding is handed to the constructor (token_embedding).
-        The output of the encoder is used as the initial hidden state to the decoder, which is a RNN-cell (torch.nn.GRU) that predicts
-        the lemma of the given token one letter at a time.
-        Note that one can use data in which only those words are annotated that differ from their lemma or data in which
-        all words are annotated with a (maybe equal) lemma.
+        The model consists of a decoder and an encoder. The encoder is either a RNN-cell (torch.nn.GRU)
+        or a Token-Embedding from flair if an embedding is handed to the constructor (token_embedding).
+        The output of the encoder is used as the initial hidden state to the decoder, which is an RNN-cell (GRU)
+        that predicts the lemma of the given token one letter at a time.
+        Note that one can use data in which only those words are annotated that differ from their lemma or data
+        in which all words are annotated with a (maybe equal) lemma.
         :param embeddings: Embedding used to encode sentence
-        :param rnn_input_size: Input size of the RNN('s). Each letter of a token is represented by a hot-one-vector over the given character
-            dictionary. This vector is transformed to a input_size vector with a linear layer.
+        :param rnn_input_size: Input size of the RNN('s). Each letter of a token is represented by a hot-one-vector
+            over the given character dictionary. This vector is transformed to a input_size vector with a linear layer.
         :param rnn_hidden_size: size of the hidden state of the RNN('s).
         :param rnn_layers: Number of stacked RNN cells
         :param beam_size: Number of hypothesis used when decoding the output of the RNN. Only used in prediction.
-        :param char_dict: Dictionary of characters the model is able to process. The dictionary must contain <unk> for the handling
-            of unknown characters. If None, a standard dictionary will be loaded. One can either hand over a path to a dictionary or
-            the dictionary itself.
+        :param char_dict: Dictionary of characters the model is able to process. The dictionary must contain <unk> for
+            the handling of unknown characters. If None, a standard dictionary will be loaded. One can either hand
+            over a path to a dictionary or the dictionary itself.
         :param label_type: Name of the gold labels to use.
-        :param max_sequence_length_dependent_on_input: If set to True, the maximum length of a decoded sequence in the prediction
-            depends on the sentences you want to lemmatize. To be precise the maximum length is computed as the length of the longest
-            token in the sentences plus one.
-        :param max_sequence_length: If set to True and max_sequence_length_dependend_on_input is False a fixed maximum length for
-            the decoding will be used for all sentences.
+        :param max_sequence_length_dependent_on_input: If set to True, the maximum length of a decoded sequence in
+            the prediction depends on the sentences you want to lemmatize. To be precise the maximum length is
+            computed as the length of the longest token in the sentences plus one.
+        :param max_sequence_length: If set to True and max_sequence_length_dependend_on_input is False a fixed
+            maximum length for the decoding will be used for all sentences.
         :param use_attention: whether or not to use attention. Only sensible if encoding via RNN
         """
 
@@ -162,10 +162,10 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
     ):
         """
         For a given list of strings this function creates index vectors that represent the characters of the strings.
-        Each string is represented by sequence_length (maximum string length + entries for special symbold) many indices representing characters
-        in self.char_dict.
-        One can manually set the vector length with the parameter seq_length, though the vector length is always at least maximum string length in the
-        list.
+        Each string is represented by sequence_length (maximum string length + entries for special symbold) many
+        indices representing characters in self.char_dict.
+        One can manually set the vector length with the parameter seq_length, though the vector length is always
+        at least maximum string length in the list.
         :param end_symbol: add self.end_index at the end of each representation
         :param start_symbol: add self.start_index in front of of each representation
         :param padding_in_front: whether to fill up with self.dummy_index in front or in back of strings
@@ -287,8 +287,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
             if self.bi_encoding and self.bi_hidden_states_to_hidden_size is not None:
                 encoder_outputs = self.bi_hidden_states_to_hidden_size(encoder_outputs)
 
-                # concatenate the final hidden states of the encoder. These will be projected to hidden_size of decoder later with self.emb_to_hidden
-                # initial_hidden_states = torch.transpose(initial_hidden_states, 0,1).reshape(1,len(tokens),2*self.rnn_hidden_size) # works only for rnn_layers = 1
+                # concatenate the final hidden states of the encoder. These will be projected to hidden_size of
+                # decoder later with self.emb_to_hidden
                 conditions = torch.cat(2 * [torch.eye(self.rnn_layers).bool()])
                 bi_states = [initial_hidden_states[conditions[:, i], :, :] for i in range(self.rnn_layers)]
                 initial_hidden_states = torch.stack([torch.cat((b[0, :, :], b[1, :, :]), dim=1) for b in bi_states])
@@ -343,8 +343,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                 # project 2*hidden_size to hidden_size
                 all_encoder_outputs = self.bi_hidden_states_to_hidden_size(all_encoder_outputs)
 
-                # concatenate the final hidden states of the encoder. These will be projected to hidden_size of decoder later with self.emb_to_hidden
-                # initial_hidden_states = torch.transpose(initial_hidden_states, 0,1).reshape(1,len(tokens),2*self.rnn_hidden_size) # works only for rnn_layers = 1
+                # concatenate the final hidden states of the encoder. These will be projected to hidden_size of decoder
+                # later with self.emb_to_hidden
                 conditions = torch.cat(2 * [torch.eye(self.rnn_layers).bool()])
                 bi_states = [initial_hidden_states[conditions[:, i], :, :] for i in range(self.rnn_layers)]
                 initial_hidden_states = torch.stack([torch.cat((b[0, :, :], b[1, :, :]), dim=1) for b in bi_states])
@@ -393,10 +393,12 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         Predict lemmas of words for a given (list of) sentence(s).
         :param sentences: sentences to predict
         :param label_name: label name used for predicted lemmas
-        :param mini_batch_size: number of tokens that are send through the RNN simultaneously, assuming batching_in_rnn is set to True
+        :param mini_batch_size: number of tokens that are send through the RNN simultaneously, assuming batching_in_rnn
+            is set to True
         :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
             you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
-        :param return_loss: whether or not to compute and return loss. Setting it to True only makes sense if labels are provided
+        :param return_loss: whether or not to compute and return loss. Setting it to True only makes sense if labels
+            are provided
         :param verbose: If True, lemmatized sentences will be printed in the console.
         """
         if isinstance(sentences, Sentence):
@@ -560,8 +562,9 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                         hypothesis_scores = torch.cat(self.beam_size * [scores], dim=1) + log_probabilities
                         # print(hypothesis_scores)
 
-                        # reshape to vector of size (batch_size, beam_size*beam_size), each row contains beam_size*beam_size scores of the new possible hypothesis
-                        hypothesis_scores_per_token = hypothesis_scores.view(number_tokens, self.beam_size ** 2)
+                        # reshape to vector of size (batch_size, beam_size*beam_size),
+                        # each row contains beam_size*beam_size scores of the new possible hypothesis
+                        hypothesis_scores_per_token = hypothesis_scores.view(number_tokens, self.beam_size**2)
                         # print(hypothesis_scores_per_token)
 
                         # choose beam_size best for each token - size (batch_size, beam_size)
@@ -570,8 +573,10 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                             indices_per_token,
                         ) = hypothesis_scores_per_token.topk(self.beam_size, 1)
 
-                        # out of indices_per_token we now need to recompute the original indices of the hypothesis in a list of length beam_size*batch_size
-                        # where the first three inidices belong to the first token, the next three to the second token, and so on
+                        # out of indices_per_token we now need to recompute the original indices of the hypothesis in
+                        # a list of length beam_size*batch_size
+                        # where the first three inidices belong to the first token, the next three to the second token,
+                        # and so on
                         beam_numbers: List[int] = []
                         seq_numbers: List[int] = []
 
@@ -629,14 +634,14 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             if verbose:
-                print(line_to_print)
+                log.info(line_to_print)
 
             if return_loss:
                 return overall_loss, number_tokens_in_total
 
     def _get_state_dict(self):
         model_state = {
-            "state_dict": self.state_dict(),
+            **super()._get_state_dict(),
             "embeddings": self.encoder_embeddings,
             "rnn_input_size": self.rnn_input_size,
             "rnn_hidden_size": self.rnn_hidden_size,
@@ -655,8 +660,10 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
         return model_state
 
-    def _init_model_with_state_dict(state):
-        model = Lemmatizer(
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        return super()._init_model_with_state_dict(
+            state,
             embeddings=state["embeddings"],
             encode_characters=state["encode_characters"],
             rnn_input_size=state["rnn_input_size"],
@@ -671,9 +678,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
             start_symbol_for_encoding=state["start_symbol"],
             end_symbol_for_encoding=state["end_symbol"],
             bidirectional_encoding=state["bidirectional_encoding"],
+            **kwargs,
         )
-        model.load_state_dict(state["state_dict"])
-        return model
 
     def _print_predictions(self, batch, gold_label_type):
         lines = []

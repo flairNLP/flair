@@ -1,5 +1,3 @@
-from unittest.mock import MagicMock
-
 from flair.data import Sentence, Span, Token
 from flair.embeddings import FlairEmbeddings
 from flair.visual import Highlighter
@@ -50,15 +48,11 @@ def test_html_rendering():
         "a ballot of party members and will become the "
         "next UK prime minister. &"
     )
-    sent = Sentence()
-    sent.get_spans = MagicMock()
-    sent.get_spans.return_value = [
-        mock_ner_span(text, "PER", 0, 13),
-        mock_ner_span(text, "MISC", 35, 47),
-        mock_ner_span(text, "LOC", 109, 111),
-    ]
-    sent.to_original_text = MagicMock()
-    sent.to_original_text.return_value = text
+    sentence = Sentence(text)
+
+    print(sentence[0:2].add_label("ner", "PER"))
+    print(sentence[6:7].add_label("ner", "MISC"))
+    print(sentence[19:20].add_label("ner", "LOC"))
     colors = {
         "PER": "#F7FF53",
         "ORG": "#E8902E",
@@ -66,7 +60,7 @@ def test_html_rendering():
         "MISC": "#4647EB",
         "O": "#ddd",
     }
-    actual = render_ner_html([sent], colors=colors)
+    actual = render_ner_html([sentence], colors=colors)
 
     expected_res = HTML_PAGE.format(
         text=PARAGRAPH.format(

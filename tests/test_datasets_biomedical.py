@@ -10,23 +10,16 @@ from tqdm import tqdm  # type: ignore
 
 import flair
 import flair.datasets.biomedical as biomedical
-from flair.data import Token, _iter_dataset
+from flair.data import Sentence, Token, _iter_dataset
 from flair.datasets import ColumnCorpus
 from flair.datasets.biomedical import (
-    SENTENCE_TAG,
     CoNLLWriter,
     Entity,
     HunerDataset,
     InternalBioNerDataset,
     filter_nested_entities,
 )
-from flair.tokenization import (
-    NoSentenceSplitter,
-    SentenceSplitter,
-    SpaceTokenizer,
-    TagSentenceSplitter,
-    TokenizerWrapper,
-)
+from flair.tokenization import NoSentenceSplitter, SentenceSplitter, SpaceTokenizer
 
 
 def has_balanced_parantheses(text: str) -> bool:
@@ -82,21 +75,14 @@ SPECIES_DATASETS = [
 ALL_DATASETS = CELLLINE_DATASETS + CHEMICAL_DATASETS + DISEASE_DATASETS + GENE_DATASETS + SPECIES_DATASETS
 
 
-def simple_tokenizer(text: str) -> List[Token]:
-    tokens: List[Token] = []
+def simple_tokenizer(text: str) -> List[str]:
+    tokens: List[str] = []
     word = ""
     index = -1
     for index, char in enumerate(text):
         if char == " " or char == "-":
             if len(word) > 0:
-                start_position = index - len(word)
-                tokens.append(
-                    Token(
-                        text=word,
-                        start_position=start_position,
-                        whitespace_after=(char == " "),
-                    )
-                )
+                tokens.append(word)
 
             word = ""
         else:
@@ -105,8 +91,7 @@ def simple_tokenizer(text: str) -> List[Token]:
     # increment for last token in sentence if not followed by whitespace
     index += 1
     if len(word) > 0:
-        start_position = index - len(word)
-        tokens.append(Token(text=word, start_position=start_position, whitespace_after=False))
+        tokens.append(word)
 
     return tokens
 
@@ -171,31 +156,6 @@ def test_conll_writer_one_token_multiple_entities2():
     )
 
     assert_conll_writer_output(dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 O -"])
-
-
-def test_conll_writer_whitespace_after():
-    text = f"A sentence with cardio-dependent. {SENTENCE_TAG}Clark et al. reported that"
-    dataset = InternalBioNerDataset(
-        documents={"1": text},
-        entities_per_document={"1": []},
-    )
-
-    assert_conll_writer_output(
-        dataset,
-        [
-            "A O +",
-            "sentence O +",
-            "with O +",
-            "cardio O -",
-            "dependent. O +",
-            "Clark O +",
-            "et O +",
-            "al. O +",
-            "reported O +",
-            "that O -",
-        ],
-        TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=TokenizerWrapper(simple_tokenizer)),
-    )
 
 
 def assert_conll_writer_output(
@@ -340,21 +300,11 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
     base_path = flair.cache_root / "datasets"
     data_folder = base_path / dataset_name
 
-    from flair.tokenization import SciSpacyTokenizer
-
-    tokenizer = SciSpacyTokenizer()
-
     corpus = CorpusType()
     internal = corpus.to_internal(data_folder)
     for doc_id, doc_text in internal.documents.items():
         misaligned_starts = []
         misaligned_ends: List[int] = []
-
-        token_starts = set()
-        token_ends = set()
-        for token in tokenizer.tokenize(doc_text):
-            token_starts.add(token.start_pos)
-            token_ends.add(token.end_pos)
 
         entities = internal.entities_per_document[doc_id]
         entity_starts = [i.char_span.start for i in entities]
@@ -376,50 +326,48 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
 def test_scispacy_tokenization():
     from flair.tokenization import SciSpacyTokenizer
 
-    tokenizer = SciSpacyTokenizer()
+    spacy_tokenizer = SciSpacyTokenizer()
 
-    tokens = tokenizer.tokenize("HBeAg(+) patients")
+    sentence = Sentence("HBeAg(+) patients", use_tokenizer=spacy_tokenizer)
+    assert len(sentence) == 5
+    assert sentence[0].text == "HBeAg"
+    assert sentence[0].start_position == 0
+    assert sentence[1].text == "("
+    assert sentence[1].start_position == 5
+    assert sentence[2].text == "+"
+    assert sentence[2].start_position == 6
+    assert sentence[3].text == ")"
+    assert sentence[3].start_position == 7
+    assert sentence[4].text == "patients"
+    assert sentence[4].start_position == 9
 
-    assert len(tokens) == 5
-    assert tokens[0].text == "HBeAg"
-    assert tokens[0].start_pos == 0
-    assert tokens[1].text == "("
-    assert tokens[1].start_pos == 5
-    assert tokens[2].text == "+"
-    assert tokens[2].start_pos == 6
-    assert tokens[3].text == ")"
-    assert tokens[3].start_pos == 7
-    assert tokens[4].text == "patients"
-    assert tokens[4].start_pos == 9
+    sentence = Sentence("HBeAg(+)/HBsAg(+)", use_tokenizer=spacy_tokenizer)
+    assert len(sentence) == 9
 
-    tokens = tokenizer.tokenize("HBeAg(+)/HBsAg(+)")
+    assert sentence[0].text == "HBeAg"
+    assert sentence[0].start_position == 0
+    assert sentence[1].text == "("
+    assert sentence[1].start_position == 5
+    assert sentence[2].text == "+"
+    assert sentence[2].start_position == 6
+    assert sentence[3].text == ")"
+    assert sentence[3].start_position == 7
+    assert sentence[4].text == "/"
+    assert sentence[4].start_position == 8
+    assert sentence[5].text == "HBsAg"
+    assert sentence[5].start_position == 9
+    assert sentence[6].text == "("
+    assert sentence[6].start_position == 14
+    assert sentence[7].text == "+"
+    assert sentence[7].start_position == 15
+    assert sentence[8].text == ")"
+    assert sentence[8].start_position == 16
 
-    assert len(tokens) == 9
+    sentence = Sentence("doxorubicin (DOX)-induced", use_tokenizer=spacy_tokenizer)
 
-    assert tokens[0].text == "HBeAg"
-    assert tokens[0].start_pos == 0
-    assert tokens[1].text == "("
-    assert tokens[1].start_pos == 5
-    assert tokens[2].text == "+"
-    assert tokens[2].start_pos == 6
-    assert tokens[3].text == ")"
-    assert tokens[3].start_pos == 7
-    assert tokens[4].text == "/"
-    assert tokens[4].start_pos == 8
-    assert tokens[5].text == "HBsAg"
-    assert tokens[5].start_pos == 9
-    assert tokens[6].text == "("
-    assert tokens[6].start_pos == 14
-    assert tokens[7].text == "+"
-    assert tokens[7].start_pos == 15
-    assert tokens[8].text == ")"
-    assert tokens[8].start_pos == 16
-
-    tokens = tokenizer.tokenize("doxorubicin (DOX)-induced")
-
-    assert len(tokens) == 5
-    assert tokens[0].text == "doxorubicin"
-    assert tokens[1].text == "("
-    assert tokens[2].text == "DOX"
-    assert tokens[3].text == ")"
-    assert tokens[4].text == "-induced"
+    assert len(sentence) == 5
+    assert sentence[0].text == "doxorubicin"
+    assert sentence[1].text == "("
+    assert sentence[2].text == "DOX"
+    assert sentence[3].text == ")"
+    assert sentence[4].text == "-induced"

@@ -108,6 +108,7 @@ from .document_classification import (
     SENTEVAL_SST_GRANULAR,
     SENTEVAL_SUBJ,
     SENTIMENT_140,
+    STACKOVERFLOW,
     TREC_6,
     TREC_50,
     WASSA_ANGER,
@@ -137,7 +138,6 @@ from .entity_linking import (
     WSD_TRAINOMATIC,
     WSD_UFSAC,
     WSD_WORDNET_GLOSS_TAGGED,
-    EntityLinkingCorpus,
 )
 
 # Expose all relation extraction datasets
@@ -184,10 +184,12 @@ from .sequence_labeling import (
     NER_GERMAN_GERMEVAL,
     NER_GERMAN_LEGAL,
     NER_GERMAN_POLITICS,
+    NER_HIPE_2022,
     NER_HUNGARIAN,
     NER_ICELANDIC,
     NER_JAPANESE,
     NER_MASAKHANE,
+    NER_MULTI_CONER,
     NER_MULTI_WIKIANN,
     NER_MULTI_WIKINER,
     NER_MULTI_XTREME,
@@ -204,7 +206,6 @@ from .sequence_labeling import (
     WNUT_17,
     ColumnCorpus,
     ColumnDataset,
-    MultiCoNer,
 )
 
 # Expose all text-image datasets
@@ -379,6 +380,7 @@ __all__ = [
     "GO_EMOTIONS",
     "IMDB",
     "NEWSGROUPS",
+    "STACKOVERFLOW",
     "SENTEVAL_CR",
     "SENTEVAL_MPQA",
     "SENTEVAL_MR",
@@ -445,6 +447,7 @@ __all__ = [
     "NER_GERMAN_GERMEVAL",
     "NER_GERMAN_LEGAL",
     "NER_GERMAN_POLITICS",
+    "NER_HIPE_2022",
     "NER_HUNGARIAN",
     "NER_ICELANDIC",
     "NER_JAPANESE",
@@ -465,7 +468,7 @@ __all__ = [
     "WNUT_17",
     "ColumnCorpus",
     "ColumnDataset",
-    "MultiCoNer",
+    "NER_MULTI_CONER",
     "FeideggerCorpus",
     "FeideggerDataset",
     "GLUE_MNLI",

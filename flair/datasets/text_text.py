@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 import flair
-from flair.data import Corpus, DataPair, FlairDataset, Sentence, _iter_dataset
+from flair.data import Corpus, DataPair, FlairDataset, Sentence, TextPair, _iter_dataset
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file, unzip_file
 
@@ -180,7 +180,7 @@ class ParallelTextDataset(FlairDataset):
             source_sentence.tokens = source_sentence.tokens[: self.max_tokens_per_doc]
             target_sentence.tokens = target_sentence.tokens[: self.max_tokens_per_doc]
 
-        return DataPair(source_sentence, target_sentence)
+        return TextPair(source_sentence, target_sentence)
 
     def __len__(self):
         return self.total_sentence_count
@@ -416,7 +416,7 @@ class DataPairDataset(FlairDataset):
             first_sentence.tokens = first_sentence.tokens[: self.max_tokens_per_doc]
             second_sentence.tokens = second_sentence.tokens[: self.max_tokens_per_doc]
 
-        data_pair = DataPair(first_sentence, second_sentence)
+        data_pair = TextPair(first_sentence, second_sentence)
 
         if label:
             data_pair.add_label(typename=self.label_type, value=label)
@@ -502,6 +502,7 @@ class GLUE_RTE(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "RTE/eval_dataset.tsv",
+            label_type=label_type,
             columns=[1, 2, 3],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -621,6 +622,7 @@ class GLUE_MNLI(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "MNLI" / eval_dataset,
+            label_type=label_type,
             columns=[8, 9, 11],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -791,6 +793,7 @@ class GLUE_QNLI(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "QNLI/eval_dataset.tsv",
+            label_type=label_type,
             columns=[1, 2, 3],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -878,6 +881,7 @@ class GLUE_QQP(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "QQP/eval_dataset.tsv",
+            label_type=label_type,
             columns=[1, 2, 0],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -965,6 +969,7 @@ class GLUE_WNLI(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "WNLI/eval_dataset.tsv",
+            label_type=label_type,
             columns=[1, 2, 3],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -1053,6 +1058,7 @@ class SUPERGLUE_RTE(DataPairCorpus):
 
         self.eval_dataset = DataPairDataset(
             data_folder / "RTE/eval_dataset.tsv",
+            label_type="textual_entailment",
             columns=[0, 1, 2],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,

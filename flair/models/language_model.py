@@ -4,10 +4,12 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
+from torch import logsumexp
 from torch.optim import Optimizer
 
 import flair
 from flair.data import Dictionary
+from flair.nn.recurrent import create_recurrent_layer
 
 
 class LanguageModel(nn.Module):
@@ -23,6 +25,7 @@ class LanguageModel(nn.Module):
         nout=None,
         document_delimiter: str = "\n",
         dropout=0.1,
+        recurrent_type="LSTM",
     ):
 
         super(LanguageModel, self).__init__()
@@ -39,11 +42,10 @@ class LanguageModel(nn.Module):
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(len(dictionary), embedding_size)
 
-        if nlayers == 1:
-            self.rnn = nn.LSTM(embedding_size, hidden_size, nlayers)
-        else:
-            self.rnn = nn.LSTM(embedding_size, hidden_size, nlayers, dropout=dropout)
-
+        self.rnn, self.state_count = create_recurrent_layer(
+            recurrent_type, embedding_size, hidden_size, nlayers, dropout
+        )
+        self.recurrent_type = recurrent_type
         self.hidden = None
 
         self.nout = nout
@@ -73,28 +75,32 @@ class LanguageModel(nn.Module):
         encoded = self.encoder(input)
         emb = self.drop(encoded)
 
-        self.rnn.flatten_parameters()
+        if hasattr(self.rnn, "flatten_parameters"):
+            self.rnn.flatten_parameters()
 
-        output, hidden = self.rnn(emb, hidden)
+        if len(hidden) == 1:
+            output, h = self.rnn(emb, hidden[0])
+            hidden = (h,)
+        else:
+            output, hidden = self.rnn(emb, hidden)
 
         if self.proj is not None:
             output = self.proj(output)
 
         output = self.drop(output)
 
-        decoded = self.decoder(output.view(output.size(0) * output.size(1), output.size(2)))
+        decoded = self.decoder(output)
 
         return (
-            decoded.view(output.size(0), output.size(1), decoded.size(1)),
+            decoded,
             output,
             hidden,
         )
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).detach()
-        return (
-            weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
-            weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
+        return tuple(
+            weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach() for _ in range(self.state_count)
         )
 
     def get_representation(
@@ -181,7 +187,7 @@ class LanguageModel(nn.Module):
 
         state = torch.load(str(model_file), map_location=flair.device)
 
-        document_delimiter = state["document_delimiter"] if "document_delimiter" in state else "\n"
+        document_delimiter = state.get("document_delimiter", "\n")
 
         model = LanguageModel(
             dictionary=state["dictionary"],
@@ -192,6 +198,7 @@ class LanguageModel(nn.Module):
             nout=state["nout"],
             document_delimiter=document_delimiter,
             dropout=state["dropout"],
+            recurrent_type=state.get("recurrent_type", "lstm"),
         )
         model.load_state_dict(state["state_dict"])
         model.eval()
@@ -206,9 +213,9 @@ class LanguageModel(nn.Module):
         epoch = state["epoch"] if "epoch" in state else None
         split = state["split"] if "split" in state else None
         loss = state["loss"] if "loss" in state else None
-        document_delimiter = state["document_delimiter"] if "document_delimiter" in state else "\n"
+        document_delimiter = state.get("document_delimiter", "\n")
 
-        optimizer_state_dict = state["optimizer_state_dict"] if "optimizer_state_dict" in state else None
+        optimizer_state_dict = state.get("optimizer_state_dict")
 
         model = LanguageModel(
             dictionary=state["dictionary"],
@@ -219,6 +226,7 @@ class LanguageModel(nn.Module):
             nout=state["nout"],
             document_delimiter=document_delimiter,
             dropout=state["dropout"],
+            recurrent_type=state.get("recurrent_type", "lstm"),
         )
         model.load_state_dict(state["state_dict"])
         model.eval()
@@ -254,6 +262,7 @@ class LanguageModel(nn.Module):
             "epoch": epoch,
             "split": split,
             "loss": loss,
+            "recurrent_type": self.recurrent_type,
         }
 
         torch.save(model_state, str(file), pickle_protocol=4)
@@ -269,6 +278,7 @@ class LanguageModel(nn.Module):
             "nout": self.nout,
             "document_delimiter": self.document_delimiter,
             "dropout": self.dropout,
+            "recurrent_type": self.recurrent_type,
         }
 
         torch.save(model_state, str(file), pickle_protocol=4)
@@ -335,7 +345,7 @@ class LanguageModel(nn.Module):
                     word_idx = torch.tensor(0)
 
                 # print(word_idx)
-                prob = decoder_output[word_idx]
+                prob = decoder_output[word_idx] - logsumexp(decoder_output, dim=0)
                 log_prob += prob
 
                 input = word_idx.detach().unsqueeze(0).unsqueeze(0)
@@ -354,7 +364,7 @@ class LanguageModel(nn.Module):
             if not self.is_forward_lm:
                 text = text[::-1]
 
-            return text, log_prob_float
+            return text, -log_prob_float
 
     def calculate_perplexity(self, text: str) -> float:
 
@@ -383,6 +393,8 @@ class LanguageModel(nn.Module):
         return perplexity
 
     def __getstate__(self):
+        # "document_delimiter" property may be missing in some older pre-trained models
+        self.document_delimiter = getattr(self, "document_delimiter", "\n")
 
         # serialize the language models and the constructor arguments (but nothing else)
         model_state = {
@@ -395,6 +407,7 @@ class LanguageModel(nn.Module):
             "nout": self.nout,
             "document_delimiter": self.document_delimiter,
             "dropout": self.dropout,
+            "recurrent_type": self.recurrent_type,
         }
 
         return model_state
@@ -414,6 +427,7 @@ class LanguageModel(nn.Module):
                 nout=d["nout"],
                 document_delimiter=d["document_delimiter"],
                 dropout=d["dropout"],
+                recurrent_type=d.get("recurrent_type", "lstm"),
             )
 
             language_model.load_state_dict(d["state_dict"])
@@ -427,6 +441,10 @@ class LanguageModel(nn.Module):
             self.eval()
 
         else:
+            if "recurrent_type" not in d:
+                d["recurrent_type"] = "lstm"
+            if "state_count" not in d:
+                d["state_count"] = 2
             super().__setstate__(d)
 
     def _apply(self, fn):

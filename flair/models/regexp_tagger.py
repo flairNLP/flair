@@ -1,44 +1,46 @@
 import re
+import typing
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Union
 
-from flair.data import Sentence, Span, SpanLabel, Token
+from flair.data import Sentence, Span, Token
+
+
+@dataclass
+class TokenCollection:
+    """
+    A utility class for RegexpTagger to hold all tokens for a given Sentence and define some functionality
+    :param sentence: A Sentence object
+    """
+
+    sentence: Sentence
+    __tokens_start_pos: List[int] = field(init=False, default_factory=list)
+    __tokens_end_pos: List[int] = field(init=False, default_factory=list)
+
+    def __post_init__(self):
+        for token in self.tokens:
+            self.__tokens_start_pos.append(token.start_pos)
+            self.__tokens_end_pos.append(token.end_pos)
+
+    @property
+    def tokens(self) -> List[Token]:
+        return list(self.sentence)
+
+    def get_token_span(self, span: Tuple[int, int]) -> Span:
+        """
+        Given an interval specified with start and end pos as tuple, this function returns a Span object
+        spanning the tokens included in the interval. If the interval is overlapping with a token span, a
+        ValueError is raised
+
+        :param span: Start and end pos of the requested span as tuple
+        :return: A span object spanning the requested token interval
+        """
+        span_start: int = self.__tokens_start_pos.index(span[0])
+        span_end: int = self.__tokens_end_pos.index(span[1])
+        return Span(self.tokens[span_start : span_end + 1])
 
 
 class RegexpTagger:
-    @dataclass
-    class TokenCollection:
-        """
-        A utility class for RegexpTagger to hold all tokens for a given Sentence and define some functionality
-        :param sentence: A Sentence object
-        """
-
-        sentence: Sentence
-        __tokens_start_pos: List[int] = field(init=False, default_factory=list)
-        __tokens_end_pos: List[int] = field(init=False, default_factory=list)
-
-        def __post_init__(self):
-            for token in self.tokens:
-                self.__tokens_start_pos.append(token.start_pos)
-                self.__tokens_end_pos.append(token.end_pos)
-
-        @property
-        def tokens(self) -> List[Token]:
-            return list(self.sentence)
-
-        def get_token_span(self, span: Tuple[int, int]) -> Span:
-            """
-            Given an interval specified with start and end pos as tuple, this function returns a Span object
-            spanning the tokens included in the interval. If the interval is overlapping with a token span, a
-            ValueError is raised
-
-            :param span: Start and end pos of the requested span as tuple
-            :return: A span object spanning the requested token interval
-            """
-            span_start: int = self.__tokens_start_pos.index(span[0])
-            span_end: int = self.__tokens_end_pos.index(span[1])
-            return Span(self.tokens[span_start : span_end + 1])
-
     def __init__(self, mapping: Union[List[Tuple[str, str]], Tuple[str, str]]):
         """
         This tagger is capable of tagging sentence objects with given regexp -> label mappings.
@@ -52,7 +54,7 @@ class RegexpTagger:
 
         :param mapping: A list of tuples or a single tuple representing a mapping as regexp -> label
         """
-        self._regexp_mapping: Dict[str, re.Pattern] = {}
+        self._regexp_mapping: Dict[str, typing.Pattern] = {}
         self.register_labels(mapping=mapping)
 
     @property
@@ -112,7 +114,7 @@ class RegexpTagger:
         This will add a complex_label to the given sentence for every match.span() for every registered_mapping.
         If a match span overlaps with a token span an exception is raised.
         """
-        collection = RegexpTagger.TokenCollection(sentence)
+        collection = TokenCollection(sentence)
 
         for label, pattern in self._regexp_mapping.items():
             for match in pattern.finditer(sentence.to_original_text()):
@@ -121,4 +123,4 @@ class RegexpTagger:
                     token_span = collection.get_token_span(span)
                 except ValueError:
                     raise Exception(f"The match span {span} for label '{label}' is overlapping with a token!")
-                sentence.add_complex_label(label, SpanLabel(token_span, label))
+                token_span.add_label(label, label)

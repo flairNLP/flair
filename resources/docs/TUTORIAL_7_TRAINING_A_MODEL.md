@@ -70,7 +70,7 @@ Once the model is trained you can use it to predict tags for new sentences. Just
 
 ```python
 # load the model you trained
-model = SequenceTagger.load('resources/taggers/example-pos/final-model.pt')
+model = SequenceTagger.load('resources/taggers/example-upos/final-model.pt')
 
 # create example sentence
 sentence = Sentence('I love Berlin')
@@ -414,7 +414,7 @@ can have one of three values:
 * during *training*: this in many cases speeds things up significantly since embeddings only need to be computed in the
   first epoch, after which they are just retrieved from memory. A disadvantage is that this increases memory
   requirements. Depending on the size of your dataset and your memory setup, this option may not be possible.
-* during *inference*: this slow down your inference when used with a GPU as embeddings need to be moved from GPU memory
+* during *inference*: this slows down your inference when used with a GPU as embeddings need to be moved from GPU memory
   to regular memory. The only reason to use this option during inference would be to not only use the predictions but
   also the embeddings after prediction.
 

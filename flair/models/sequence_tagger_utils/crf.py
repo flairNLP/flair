@@ -32,15 +32,14 @@ class CRF(torch.nn.Module):
             self.transitions.detach()[:, tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
         self.to(flair.device)
 
-    def forward(self, features: torch.tensor) -> torch.tensor:
+    def forward(self, features: torch.Tensor) -> torch.Tensor:
         """
         Forward propagation of Conditional Random Field.
         :param features: output from RNN / Linear layer in shape (batch size, seq len, hidden size)
         :return: CRF scores (emission scores for each token + transitions prob from previous state) in
         shape (batch_size, seq len, tagset size, tagset size)
         """
-        batch_size = features.size(0)
-        seq_len = features.size(1)
+        batch_size, seq_len = features.size()[:2]
 
         emission_scores = features
         emission_scores = emission_scores.unsqueeze(-1).expand(batch_size, seq_len, self.tagset_size, self.tagset_size)
