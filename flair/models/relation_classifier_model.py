@@ -26,6 +26,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                  entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
                  relations: Optional[Dict[str, Set[Tuple[str, str]]]] = None,
                  zero_tag_value: str = 'O',
+                 allow_unk_tag: bool = True,
                  train_on_gold_pairs_only: bool = False,
                  **classifierargs) -> None:
         """
@@ -52,17 +53,23 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                           in the cross product of all valid entity pairs.
 
         :param zero_tag_value: The label to use for out-of-class relations
+        :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing
         :param train_on_gold_pairs_only: If `True`, skip out-of-class relations in training.
                                          If `False`, out-of-class relations are used in training as well.
         :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
         """
+        # Set lable type and modify label dictionary
+        self._label_type = label_type
+        self.zero_tag_value = zero_tag_value
+        label_dictionary.add_item(self.zero_tag_value)
+        if not allow_unk_tag:
+            label_dictionary.remove_item('<unk>')
+
         super().__init__(label_dictionary=label_dictionary,
                          final_embedding_size=document_embeddings.embedding_length,
                          **classifierargs)
 
         self.document_embeddings = document_embeddings
-
-        self._label_type = label_type
 
         if isinstance(entity_label_types, str):
             self.entity_label_types: Dict[str, Optional[Set[str]]] = {entity_label_types: None}
@@ -79,7 +86,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         # Control mask templates
         self._head_mask: str = '[H-ENTITY]'
         self._tail_mask: str = '[T-ENTITY]'
-        self.zero_tag_value = zero_tag_value
 
         # Auto-spawn on GPU, if available
         self.to(flair.device)
