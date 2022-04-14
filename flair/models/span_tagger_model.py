@@ -1,7 +1,6 @@
 import logging
 from typing import List, Union
 
-import pandas as pd
 import csv
 import torch
 
@@ -30,7 +29,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         label_type: str = "ner",
         max_span_length: int = 5,
         concat_span_length_to_embedding: bool = False,
-        resolve_overlaps: str = "by_token",
+        resolve_overlaps: str = "keep_overlaps",
         gazetteer_file: str = None,
         gazetteer_count_type: str = "abs",
         ignore_embeddings: bool = False,
@@ -70,33 +69,37 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         self.gazetteer_file = gazetteer_file
         self.gazetteer_count_type = gazetteer_count_type
         self.ignore_embeddings = ignore_embeddings
-        # TODO: where to put an optional span_length_embedding-layer?
+
+        if self.ignore_embeddings:
+            final_embedding_size = 0
 
         self.concat_span_length_to_embedding = concat_span_length_to_embedding
         if self.concat_span_length_to_embedding:
             final_embedding_size += 1
 
-        if self.ignore_embeddings:
-            final_embedding_size = 0
-
         if self.gazetteer_file:
-            # TODO: which of pandas or csv/dict is faster in look up?
             print("Reading gazetteer file:", self.gazetteer_file)
-            ### using pandas:
-            self.gazetteer = pd.read_csv(self.gazetteer_file, header=0, index_col=0)
-            final_embedding_size += len(self.gazetteer.columns)
-
-            ### using dict from csv:
-            #self.gazetteer = {}
-            #with open(self.gazetteer_file, mode='r') as inp:
-            #    reader = csv.reader(inp)
-            #    header = next(reader)  # header line
-            #    self.nr_gazetteer_tags = len(header) - 1 # nr of tags (exclude first column, i.e. span_string)
-            #    self.gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
-            #final_embedding_size += self.nr_gazetteer_tags
+            self.gazetteer = {}
+            with open(self.gazetteer_file, mode='r') as inp:
+                reader = csv.reader(inp)
+                header = next(reader)  # header line
+                self.nr_gazetteer_tags = len(header) - 1  # nr of tags (exclude first column, i.e. span_string)
+                self.gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
+            final_embedding_size += self.nr_gazetteer_tags
 
         self.use_mlp = use_mlp
         self.mlp_hidden_dim = mlp_hidden_dim
+
+        if self.use_mlp:
+            #TODO: maybe make more flexible: multiple layers, other nonlinearity, dropout?
+            decoder = torch.nn.Sequential(
+                torch.nn.Linear(final_embedding_size, self.mlp_hidden_dim),
+                torch.nn.ReLU(),
+                torch.nn.Linear(mlp_hidden_dim, len(label_dictionary))
+                )
+            for n, p in decoder.named_parameters():
+                if '.weight' in n:
+                    torch.nn.init.xavier_uniform_(p)
 
         super(SpanTagger, self).__init__(
             label_dictionary=label_dictionary,
@@ -104,20 +107,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             decoder=decoder,
             **classifierargs,
         )
-
-        if not decoder:
-            if self.use_mlp:
-                #TODO: maybe make more flexible: multiple layers, other nonlinearity, dropout?
-                decoder = torch.nn.Sequential(
-                    torch.nn.Linear(final_embedding_size, mlp_hidden_dim),
-                    torch.nn.ReLU(),
-                    torch.nn.Linear(mlp_hidden_dim, len(label_dictionary))
-                    )
-                for n, p in decoder.named_parameters():
-                    if '.weight' in n:
-                        torch.nn.init.xavier_uniform_(p)
-
-        self.decoder = decoder
 
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
@@ -157,18 +146,11 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
     def get_gazetteer_embedding(self, span_string: str,
                                 count_type="abs") -> torch.Tensor:
-        ### using pandas:
-        if span_string in self.gazetteer.index:
-            vector = torch.Tensor(self.gazetteer.loc[span_string]).to(flair.device)
-            #print(span_string, vector)
-        else:
-            vector = torch.zeros(len(self.gazetteer.columns)).to(flair.device)
 
-        ### using dict from csv:
-        #if span_string in self.gazetteer:
-        #    vector = torch.Tensor(self.gazetteer[span_string]).to(flair.device)
-        #else:
-        #    vector = torch.zeros(self.nr_gazetteer_tags).to(flair.device)  # get same length zero vector
+        if span_string in self.gazetteer:
+            vector = torch.Tensor(self.gazetteer[span_string]).to(flair.device)
+        else:
+            vector = torch.zeros(self.nr_gazetteer_tags).to(flair.device)  # get same length zero vector
 
         if count_type == "abs":
             return vector
@@ -207,8 +189,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             spans_sentence = []
             tokens = [token for token in sentence]
             for span_len in range(1, self.max_span_length+1):
-                spans_sentence.extend([Span(tokens[n:n + span_len])
-                                       for n in range(len(tokens) - span_len)])
+                spans_sentence.extend([Span(tokens[n:n + span_len]) for n in range(len(tokens) - span_len + 1)])
 
             # embed each span (concatenate embeddings of first and last token)
             for span in spans_sentence:
@@ -230,14 +211,14 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                     if self.pooling_operation == "last":
                         span_embedding = span[-1].get_embedding(names)
 
-                    # concat the span length (scalar tensor) to span_embedding
-                    if self.concat_span_length_to_embedding:
-                        length_as_tensor = torch.tensor([len(span)]).to(flair.device)
-                        span_embedding = torch.cat((span_embedding, length_as_tensor), 0)
-
                 # if ignore_embeddings == True use dummy "embedding" to have a baseline with just gazetteer
                 else:
                     span_embedding = torch.zeros(0).to(flair.device)
+
+                # concat the span length (scalar tensor) to span_embedding
+                if self.concat_span_length_to_embedding:
+                    length_as_tensor = torch.tensor([len(span)]).to(flair.device)
+                    span_embedding = torch.cat((span_embedding, length_as_tensor), 0)
 
                 # if a gazetteer was given, concat the gazetteer embedding to the span_embedding
                 if self.gazetteer_file:
@@ -256,7 +237,12 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             spans_embedded = torch.cat(embedding_list, 0)
 
         if for_prediction:
+            #for (span, label, data_point) in zip(spans_embedded, spans_labels, data_points):
+            #    print(span, label, data_point)
             return spans_embedded, spans_labels, data_points
+
+        #for (span, label) in zip(spans_embedded, spans_labels):
+        #    print(span, label)
 
         return spans_embedded, spans_labels
 
@@ -293,7 +279,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 # sort by confidence score
                 sorted_predicted_spans = sorted(all_predicted_spans, key=operator.itemgetter(2))
                 sorted_predicted_spans.reverse()
-                #print(sorted_predicted_spans)
+                #for s in sorted_predicted_spans:
+                #    print(s)
 
                 if self.resolve_overlaps == "by_token":
                     # in short: if a token already was part of a higher ranked span, break
