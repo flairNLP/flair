@@ -201,7 +201,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
         if tokenizer_data is None:
             # load tokenizer and transformer model
-            self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+            self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, **kwargs)
         else:
             # load tokenizer from inmemory zip-file
             self.tokenizer = self._tokenizer_from_bytes(tokenizer_data)
@@ -337,7 +337,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
         zip_obj = zipfile.ZipFile(zip_data)
         with tempfile.TemporaryDirectory() as temp_dir:
             zip_obj.extractall(temp_dir)
-            return AutoTokenizer.from_pretrained(temp_dir)
+            return AutoTokenizer.from_pretrained(temp_dir, add_prefix_space=True)
 
     def _tokenizer_bytes(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -521,41 +521,17 @@ class TransformerEmbedding(Embeddings[Sentence]):
             log.error(f"subtokenized: '{subtokens}'")
         return token_subtoken_lengths
 
-    def _gather_tokenized_strings(self, sentences: List[Sentence]):
-        tokenized_sentences = []
-        all_token_subtoken_lengths = []
-        subtoken_lengths = []
+    def _gather_flair_tokens(self, sentences: List[Sentence]):
+        sentence_tokens = []
         for sentence in sentences:
+            # flair specific pre-tokenization
+            tokens = [token.text for token in sentence]
+            sentence_tokens.append(tokens)
+        return sentence_tokens
 
-            # subtokenize the sentence
-            tokenized_string = sentence.to_tokenized_string()
-
-            # transformer specific tokenization
-            subtokenized_sentence = self.tokenizer.tokenize(tokenized_string)
-
-            # set zero embeddings for empty sentences and exclude
-            if len(subtokenized_sentence) == 0:
-                if self.token_embedding:
-                    for token in sentence:
-                        token.set_embedding(self.name, torch.zeros(self.embedding_length))
-                if self.document_embedding:
-                    sentence.set_embedding(self.name, torch.zeros(self.embedding_length))
-                continue
-
-            if self.token_embedding:
-                # determine into how many subtokens each token is split
-                all_token_subtoken_lengths.append(
-                    self._reconstruct_tokens_from_subtokens(sentence, subtokenized_sentence)
-                )
-            subtoken_lengths.append(len(subtokenized_sentence))
-
-            # remember tokenized sentences and their subtokenization
-            tokenized_sentences.append(tokenized_string)
-        return tokenized_sentences, all_token_subtoken_lengths, subtoken_lengths
-
-    def _build_transformer_model_inputs(self, batch_encoding, tokenized_sentences, sentences):
-        model_kwargs = {}
+    def _build_transformer_model_inputs(self, batch_encoding, sentences):
         input_ids = batch_encoding["input_ids"].to(flair.device)
+        model_kwargs = {"input_ids": input_ids}
 
         # Models such as FNet do not have an attention_mask
         if "attention_mask" in batch_encoding:
@@ -565,8 +541,8 @@ class TransformerEmbedding(Embeddings[Sentence]):
         if self.use_lang_emb and self.tokenizer.lang2id is not None:
             model_kwargs["langs"] = torch.zeros_like(input_ids, dtype=input_ids.dtype)
             if not self.allow_long_sentences:
-                for s_id, sentence_text in enumerate(tokenized_sentences):
-                    lang_id = self.tokenizer.lang2id.get(sentences[s_id].get_language_code(), 0)
+                for s_id, sentence in enumerate(sentences):
+                    lang_id = self.tokenizer.lang2id.get(sentence.get_language_code(), 0)
                     model_kwargs["langs"][s_id] = lang_id
             else:
                 sentence_part_lengths = torch.unique(
@@ -579,150 +555,157 @@ class TransformerEmbedding(Embeddings[Sentence]):
                     lang_id = self.tokenizer.lang2id.get(sentence.get_language_code(), 0)
                     model_kwargs["langs"][sentence_idx : sentence_idx + part_length] = lang_id
                     sentence_idx += part_length
-
-        return input_ids, model_kwargs
+        word_ids = [
+            torch.tensor([-100 if val is None else val for val in batch_encoding.word_ids(i)], device=flair.device)
+            for i, _ in enumerate(sentences)
+        ]
+        model_kwargs["word_ids"] = word_ids
+        return model_kwargs
 
     def _combine_strided_sentences(
-        self, hidden_states: torch.Tensor, sentence_parts_lengths: torch.Tensor
+        self, hidden_states: torch.Tensor, overflow_to_sample_mapping: torch.Tensor
     ) -> List[torch.Tensor]:
-        sentence_idx_offset = 0
         sentence_hidden_states = []
-        for nr_sentence_parts in sentence_parts_lengths:
-            sentence_hidden_state = hidden_states[:, sentence_idx_offset, ...]
-            sentence_idx_offset += 1
-
-            for i in range(1, nr_sentence_parts):
-                remainder_sentence_hidden_state = hidden_states[:, sentence_idx_offset, ...]
-                sentence_idx_offset += 1
-                sentence_hidden_state = torch.cat(
-                    (
-                        sentence_hidden_state[:, : -1 - self.stride // 2, :],
-                        remainder_sentence_hidden_state[:, 1 + self.stride // 2 :, :],
-                    ),
-                    1,
+        for sentence_id in torch.arange(0, overflow_to_sample_mapping.max() + 1):
+            selected_sentences = hidden_states[overflow_to_sample_mapping == sentence_id]
+            if selected_sentences.size()[0] == 1:
+                sentence_hidden_states.append(selected_sentences[0, :])
+            else:
+                sentence_hidden_states.append(
+                    torch.cat(
+                        [selected_sentences[0, : self.stride // 2]]
+                        + list(selected_sentences[:, 1 + self.stride // 2 : hidden_states.size()[1] - 1 - self.stride // 2])
+                        + [
+                            selected_sentences[
+                                selected_sentences.size()[0] - 1, hidden_states.size()[1] - 1 - self.stride // 2 :
+                            ]
+                        ]
+                    )
                 )
-            sentence_hidden_states.append(sentence_hidden_state)
         return sentence_hidden_states
 
-    def _try_document_embedding_shortcut(self, hidden_states, sentences):
+    def _can_document_embedding_shortcut(self):
         # cls first pooling can be done without recreating sentence hidden states
-        if (
+        return (
             self.document_embedding
             and not self.token_embedding
             and self.cls_pooling == "cls"
             and self.initial_cls_token
-        ):
-            embeddings_all_document_layers = hidden_states[:, :, 0]
-            if self.layer_mean:
-                document_embs = torch.mean(embeddings_all_document_layers, dim=0)
-            else:
-                document_embs = torch.flatten(embeddings_all_document_layers.permute((1, 0, 2)), 1)
-            for (document_emb, sentence) in zip(document_embs, sentences):
-                sentence.set_embedding(self.name, document_emb)
-            return True
-        return False
+        )
 
     def _extract_document_embeddings(self, sentence_hidden_states, sentences):
-        for sentence_hidden_state, sentence in zip(sentence_hidden_states, sentences):
-            if self.cls_pooling == "cls":
-                index_of_cls_token = 0 if self.initial_cls_token else -1
-                embedding_all_document_layers = sentence_hidden_state[:, index_of_cls_token, :]
-            elif self.cls_pooling == "mean":
-                embedding_all_document_layers = sentence_hidden_state.mean(dim=1)
-            elif self.cls_pooling == "max":
-                embedding_all_document_layers, _ = sentence_hidden_state.max(dim=1)
-            else:
-                raise ValueError(f"cls pooling method: `{self.cls_pooling}` is not implemented")
-            if self.layer_mean:
-                document_emb = torch.mean(embedding_all_document_layers, dim=0)
-            else:
-                document_emb = embedding_all_document_layers.view(-1)
+        for document_emb, sentence in zip(sentence_hidden_states, sentences):
             sentence.set_embedding(self.name, document_emb)
 
-    def _extract_token_embeddings(self, sentence_hidden_states, sentences, all_token_subtoken_lengths):
-        for sentence_hidden_state, sentence, subtoken_lengths in zip(
-            sentence_hidden_states, sentences, all_token_subtoken_lengths
-        ):
-            subword_start_idx = self.begin_offset
+    def _extract_token_embeddings(self, sentence_embeddings, sentences):
+        for token_embeddings, sentence in zip(sentence_embeddings, sentences):
+            for token_embedding, token in zip(token_embeddings, sentence):
+                token.set_embedding(self.name, token_embedding)
 
-            for token, n_subtokens in zip(sentence, subtoken_lengths):
-                if n_subtokens == 0:
-                    token.set_embedding(self.name, torch.zeros(self.embedding_length))
-                    continue
-                subword_end_idx = subword_start_idx + n_subtokens
-                assert subword_start_idx < subword_end_idx <= sentence_hidden_state.size()[1]
-                current_embeddings = sentence_hidden_state[:, subword_start_idx:subword_end_idx]
-                subword_start_idx = subword_end_idx
+    def forward(
+        self, word_ids: List[torch.Tensor], overflow_to_sample_mapping: Optional[torch.Tensor] = None, **kwargs
+    ):
+        hidden_states = self.model(**kwargs)[-1]
+
+        # make the tuple a tensor; makes working with it easier.
+        hidden_states = torch.stack(hidden_states)
+
+        # only use layers that will be outputted
+        hidden_states = hidden_states[self.layer_indexes, :, :]
+        if self.layer_mean:
+            hidden_states = hidden_states.mean(dim=0)
+        else:
+            hidden_states = torch.flatten(hidden_states.permute((0, 3, 1, 2)), 0, 1).permute((1, 2, 0))
+
+        if self._can_document_embedding_shortcut():
+            return {"document_embeddings": hidden_states[:, 0]}
+
+        if self.allow_long_sentences:
+            assert overflow_to_sample_mapping is not None
+            sentence_hidden_states = self._combine_strided_sentences(
+                hidden_states,
+                overflow_to_sample_mapping,
+            )
+        else:
+            sentence_hidden_states = list(hidden_states)
+
+        result = dict()
+
+        if self.document_embedding:
+            document_embeddings = []
+            for sentence_hidden_state in sentence_hidden_states:
+                if self.cls_pooling == "cls":
+                    index_of_cls_token = 0 if self.initial_cls_token else sentence_hidden_state.size()[0] - 1
+                    document_emb = sentence_hidden_state[index_of_cls_token, :]
+                elif self.cls_pooling == "mean":
+                    document_emb = sentence_hidden_state.mean(dim=0)
+                elif self.cls_pooling == "max":
+                    document_emb, _ = sentence_hidden_state.max(dim=0)
+                else:
+                    raise ValueError(f"cls pooling method: `{self.cls_pooling}` is not implemented")
+                document_embeddings.append(document_emb)
+            result["document_embeddings"] = document_embeddings
+
+        if self.token_embedding:
+            all_token_embeddings = []
+            for sentence_hidden_state, word_id in zip(sentence_hidden_states, word_ids):
                 if self.subtoken_pooling == "first":
-                    final_embedding = current_embeddings[:, 0]
+                    first_mask = torch.cat(
+                        [torch.tensor([True], device=flair.device), word_id[1:] != word_id[: word_id.size()[0] - 1]]
+                    )
+                    token_embeddings = sentence_hidden_state[(word_id >= 0) & first_mask, :]
                 elif self.subtoken_pooling == "last":
-                    final_embedding = current_embeddings[:, -1]
+                    last_mask = torch.cat(
+                        [word_id[1:] != word_id[: word_id.size()[0] - 1], torch.tensor([True], device=flair.device)]
+                    )
+                    token_embeddings = sentence_hidden_state[(word_id >= 0) & last_mask]
                 elif self.subtoken_pooling == "first_last":
-                    final_embedding = torch.cat([current_embeddings[:, 0], current_embeddings[:, -1]], dim=1)
+                    first_mask = torch.cat([[True], word_id[1:] != word_id[: word_id.size()[0] - 1]])
+                    last_mask = torch.cat(
+                        [word_id[1:] != word_id[: word_id.size()[0] - 1], torch.tensor([True], device=flair.device)]
+                    )
+                    first_token_embeddings = sentence_hidden_state[(word_id >= 0) & first_mask]
+                    last_token_embeddings = sentence_hidden_state[(word_id >= 0) & last_mask]
+                    token_embeddings = torch.cat([first_token_embeddings, last_token_embeddings], dim=1)
                 elif self.subtoken_pooling == "mean":
-                    final_embedding = current_embeddings.mean(dim=1)
+                    tokens = []
+                    for _id in torch.arange(word_id.max() + 1):
+                        tokens.append(sentence_hidden_state[word_id == _id].mean(dim=1))
+                    token_embeddings = torch.cat(tokens, dim=0)
                 else:
                     raise ValueError(f"subtoken pooling method: `{self.subtoken_pooling}` is not implemented")
-
-                if self.layer_mean:
-                    final_embedding = final_embedding.mean(dim=0)
-                else:
-                    final_embedding = torch.flatten(final_embedding)
-
-                token.set_embedding(self.name, final_embedding)
+                all_token_embeddings.append(token_embeddings)
+            result["token_embeddings"] = all_token_embeddings
+        return result
 
     def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
-        tokenized_sentences, all_token_subtoken_lengths, subtoken_lengths = self._gather_tokenized_strings(sentences)
+        flair_tokens = self._gather_flair_tokens(sentences)
 
         # encode inputs
         batch_encoding = self.tokenizer(
-            tokenized_sentences,
+            flair_tokens,
             stride=self.stride,
             return_overflowing_tokens=self.allow_long_sentences,
             truncation=self.truncate,
             padding=True,
             return_tensors="pt",
+            is_split_into_words=True,
         )
 
-        input_ids, model_kwargs = self._build_transformer_model_inputs(batch_encoding, tokenized_sentences, sentences)
+        model_kwargs = self._build_transformer_model_inputs(batch_encoding, sentences)
 
         gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
 
         with gradient_context:
-            hidden_states = self.model(input_ids, **model_kwargs)[-1]
-
-            # make the tuple a tensor; makes working with it easier.
-            hidden_states = torch.stack(hidden_states)
-
-            # only use layers that will be outputted
-            hidden_states = hidden_states[self.layer_indexes, :, :]
-
-            if self._try_document_embedding_shortcut(hidden_states, sentences):
-                return
-
-            if self.allow_long_sentences:
-                sentence_hidden_states = self._combine_strided_sentences(
-                    hidden_states,
-                    sentence_parts_lengths=torch.unique(
-                        batch_encoding["overflow_to_sample_mapping"],
-                        return_counts=True,
-                        sorted=True,
-                    )[1].tolist(),
-                )
-            else:
-                sentence_hidden_states = list(hidden_states.permute((1, 0, 2, 3)))
-
-            # remove padding tokens
-            sentence_hidden_states = [
-                sentence_hidden_state[:, : subtoken_length + 1, :]
-                for (subtoken_length, sentence_hidden_state) in zip(subtoken_lengths, sentence_hidden_states)
-            ]
+            embeddings = self.forward(
+                overflow_to_sample_mapping=batch_encoding.get("overflow_to_sample_mapping"), **model_kwargs
+            )
 
             if self.document_embedding:
-                self._extract_document_embeddings(sentence_hidden_states, sentences)
+                self._extract_document_embeddings(embeddings["document_embeddings"], sentences)
 
             if self.token_embedding:
-                self._extract_token_embeddings(sentence_hidden_states, sentences, all_token_subtoken_lengths)
+                self._extract_token_embeddings(embeddings["token_embeddings"], sentences)
 
     def _expand_sentence_with_context(self, sentence):
         expand_context = not self.training or random.randint(1, 100) > (self.context_dropout * 100)
