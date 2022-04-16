@@ -7,7 +7,7 @@ from torch.nn.functional import softmax
 from torch.nn.utils.rnn import pack_padded_sequence
 
 import flair
-from flair.data import Dictionary, Label, List
+from flair.data import Dictionary, Label, List, Sentence
 
 START_TAG: str = "<START>"
 STOP_TAG: str = "<STOP>"
@@ -140,7 +140,9 @@ class ViterbiDecoder:
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
-    def decode(self, features_tuple: tuple, probabilities_for_all_classes: bool) -> Tuple[List, List]:
+    def decode(
+        self, features_tuple: tuple, probabilities_for_all_classes: bool, sentences: List[Sentence]
+    ) -> Tuple[List, List]:
         """
         Decoding function returning the most likely sequence of tags.
         :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
@@ -217,26 +219,26 @@ class ViterbiDecoder:
             )
 
         if probabilities_for_all_classes:
-            all_tags = self._all_scores_for_token(scores, lengths)
+            all_tags = self._all_scores_for_token(scores.cpu(), lengths, sentences)
 
         return tags, all_tags
 
-    def _all_scores_for_token(self, scores: torch.Tensor, lengths: torch.IntTensor):
+    def _all_scores_for_token(self, scores: torch.Tensor, lengths: torch.IntTensor, sentences: List[Sentence]):
         """
         Returns all scores for each tag in tag dictionary.
         :param scores: Scores for current sentence.
         """
         scores = scores.numpy()
         prob_tags_per_sentence = []
-        for scores_sentence, length in zip(scores, lengths):
+        for scores_sentence, length, sentence in zip(scores, lengths, sentences):
             scores_sentence = scores_sentence[:length]
             prob_tags_per_sentence.append(
                 [
                     [
-                        Label(self.tag_dictionary.get_item_for_index(score_id), score)
+                        Label(token, self.tag_dictionary.get_item_for_index(score_id), score)
                         for score_id, score in enumerate(score_dist)
                     ]
-                    for score_dist in scores_sentence
+                    for score_dist, token in zip(scores_sentence, sentence)
                 ]
             )
         return prob_tags_per_sentence
