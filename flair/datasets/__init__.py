@@ -84,6 +84,7 @@ from .biomedical import (
     LOCTEXT,
     MIRNA,
     NCBI_DISEASE,
+    NLM_CHEM,
     OSIRIS,
     PDR,
     S800,

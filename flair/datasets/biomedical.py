@@ -12,13 +12,16 @@ from operator import attrgetter
 from pathlib import Path
 from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from warnings import warn
+from datasets import load_dataset
+from flair.data import EntityLinkingLabel, Sentence, SpanLabel
+from flair import cache_root
 
 import ftfy
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
 import flair
-from flair.data import MultiCorpus, Tokenizer
+from flair.data import MultiCorpus, Tokenizer, Span, SpanLabel
 from flair.datasets.sequence_labeling import ColumnCorpus, ColumnDataset
 from flair.file_utils import Tqdm, cached_path, unpack_file
 from flair.tokenization import (
@@ -324,6 +327,106 @@ def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNer
     return InternalBioNerDataset(documents=documents, entities_per_document=dict(entities_per_document))
 
 
+def bigbio_dataset_to_flair_sentences(dataset, tokenizer):
+    """
+    :param dataset: Hugging face dataset in the bigbio schmema
+    :param tokenizer: The tokenizer to use when converting to flair sentences
+    :return: The text from the hugging face dataset as a list of flair Sentence objects without labels
+    """
+    # Get all passage strings from all rows in the dataset into one list
+    sentences = [passage["text"][0] for row in dataset for passage in row["passages"]]
+    # make into flair Sentences
+    sentences = [Sentence(sentence, use_tokenizer=tokenizer) for sentence in sentences]
+    return sentences
+
+
+def bigbio_dataset_to_annotated_flair_sentences(dataset, tokenizer):
+    """
+    :param dataset: Hugging face dataset in the bigbio schmema
+    :param tokenizer: The tokenizer to use when converting to flair sentences
+    :return: The text from the hugging face dataset as a list of flair Sentence objects
+            with the annotations as flair labels
+    """
+    sentences = []
+    number_of_annotated_entities = 0
+    number_of_found_entities = 0
+    number_of_entities_with_incompatible_boundaries = 0
+    for row in dataset:
+        # make array of (Sentence object, range(offset_start, offset_end))
+        sentences_with_offsets = [
+            {
+                "text": Sentence(passage["text"][0], use_tokenizer=tokenizer),
+                "offsets": range(passage["offsets"][0][0], passage["offsets"][0][1] + 1),
+            }  # +1 so range includes the end value
+            for passage in row["passages"]
+        ]
+        # count number of annotated entities to later comopare to number of found entities
+        number_of_annotated_entities += len(row["entities"])
+
+        with open("mismatches.txt", "a") as f:
+            # look for tokens in sentence for all entities
+            for entity in row["entities"]:
+                offset_begin = entity["offsets"][0][0]
+                offset_end = entity["offsets"][0][1]
+                # search sentences for correct position
+                for sentence in sentences_with_offsets:
+                    # found a sentence and entity offset match
+                    if offset_begin in sentence["offsets"] and offset_end in sentence["offsets"]:
+                        relative_offset_begin = offset_begin - sentence["offsets"].start
+                        relative_offset_end = offset_end - sentence["offsets"].start
+                        tokens = []
+                        matches_beginning_of_token = False
+                        # find tokens that correspond to offsets
+                        for token in sentence["text"]:
+                            # token is part of the entity
+                            if (
+                                token.start_position >= relative_offset_begin
+                                and token.end_position <= relative_offset_end
+                            ):
+                                tokens.append(token)
+                                # remember if token and entity beginning match up
+                                if token.start_position == relative_offset_begin:
+                                    matches_beginning_of_token = True
+                                # end of entity found
+                                if token.end_position == relative_offset_end and matches_beginning_of_token:
+                                    tokens_text = "".join([t.text for t in tokens])
+                                    entity_text = entity["text"][0].replace(" ", "")
+                                    assert tokens_text == entity_text
+                                    number_of_found_entities += 1
+                                    matches_beginning_of_token = False
+                                    break
+                            # haven't reached correct offset yet
+                            elif token.end_position < relative_offset_end:
+                                continue
+
+                            # all error cases: entity does not start and end at token boundaries
+                            else:
+                                number_of_entities_with_incompatible_boundaries += 1
+                                f.write(
+                                    f"document id: {row['document_id']}, entity id: {entity['id']}, entity text: {entity['text'][0]}\n"
+                                )
+                                f.write("Tokens in flair:\n")
+                                for seen_token in tokens:
+                                    f.write(f"{seen_token.text}\n")
+                                f.write(f"{token.text}\n")
+                                f.write("\n")
+                                break
+                        label = EntityLinkingLabel(span=Span(tokens), cui="TODO", concept_name=entity["text"])
+                        sentence["text"].add_complex_label(typename=entity["type"], label=label)
+                        break
+                # if no matching sentence for the token was found
+                else:
+                    raise Error("Could not find position of the entity " + entity["id"])
+
+        sentences.append([sentence["text"] for sentence in sentences_with_offsets])
+    print(f"Number of entities in the dataset: {number_of_annotated_entities}")
+    print(f"Number of found entities: {number_of_found_entities}")
+    print(
+        f"Number of entities with offsets that don't match token boundaries: {number_of_entities_with_incompatible_boundaries}"
+    )
+    return sentences
+
+
 class CoNLLWriter:
     """
     Class which implements the output CONLL file generation of corpora given as instances of
@@ -518,6 +621,24 @@ class HunerDataset(ColumnCorpus, ABC):
             documents={k: dataset.documents[k] for k in ids},
             entities_per_document={k: dataset.entities_per_document[k] for k in ids},
         )
+
+
+class NLM_CHEM:
+    def __init__(self, path_to_dataset_loader, use_tokenizer):
+        print(Path("nlmchem.py"))
+        dataset = load_dataset(path_to_dataset_loader, name="nlmchem_bigbio_kb", cache_dir=cache_root / "datasets")
+        self.dataset = dataset["validation"]
+        self.tokenizer = use_tokenizer
+        self.sentences = bigbio_dataset_to_flair_sentences(self.dataset, tokenizer=use_tokenizer)
+
+    def get_sentences(self):
+        return self.sentences
+
+    def get_annotated_sentences(self):
+        self.annotated_sentences = bigbio_dataset_to_annotated_flair_sentences(self.dataset, self.tokenizer)
+        # for sentence in self.annotated_sentences:
+        #     print(sentence)
+        #     print()
 
 
 class BIO_INFER(ColumnCorpus):
