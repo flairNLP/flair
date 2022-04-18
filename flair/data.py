@@ -309,7 +309,7 @@ class RelationLabel(Label):
 
 
 class EntityLinkingLabel(Label):
-    def __init__(self, span, cui, concept_name, ontology=None, score: float = 1):
+    def __init__(self, span, cui: Optional[str], concept_name, ontology=None, score: float = 1):
         super().__init__(cui, score)
         self.span = span
         self.ontology = ontology
@@ -338,7 +338,7 @@ class EntityLinkingLabel(Label):
 
     @property
     def identifier(self):
-        return f"{self.cui}"
+        return f"{self.value}"
 
 
 class DataPoint:
