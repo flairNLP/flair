@@ -12,6 +12,7 @@ from operator import attrgetter
 from pathlib import Path
 from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from warnings import warn
+from xmlrpc.client import Boolean
 from datasets import load_dataset
 from flair.data import EntityLinkingLabel, Sentence, SpanLabel
 from flair import cache_root
@@ -21,7 +22,7 @@ from lxml import etree
 from lxml.etree import XMLSyntaxError
 
 import flair
-from flair.data import MultiCorpus, Tokenizer, Span, SpanLabel
+from flair.data import MultiCorpus, Tokenizer, Span, SpanLabel, Token
 from flair.datasets.sequence_labeling import ColumnCorpus, ColumnDataset
 from flair.file_utils import Tqdm, cached_path, unpack_file
 from flair.tokenization import (
@@ -340,7 +341,7 @@ def bigbio_dataset_to_flair_sentences(dataset, tokenizer):
     return sentences
 
 
-def bigbio_dataset_to_annotated_flair_sentences(dataset, tokenizer):
+def bigbio_dataset_to_annotated_flair_sentences(dataset, tokenizer, add_labels: Boolean):
     """
     :param dataset: Hugging face dataset in the bigbio schmema
     :param tokenizer: The tokenizer to use when converting to flair sentences
@@ -348,9 +349,6 @@ def bigbio_dataset_to_annotated_flair_sentences(dataset, tokenizer):
             with the annotations as flair labels
     """
     sentences = []
-    number_of_annotated_entities = 0
-    number_of_found_entities = 0
-    number_of_entities_with_incompatible_boundaries = 0
     for row in dataset:
         # make array of (Sentence object, range(offset_start, offset_end))
         sentences_with_offsets = [
@@ -360,70 +358,186 @@ def bigbio_dataset_to_annotated_flair_sentences(dataset, tokenizer):
             }  # +1 so range includes the end value
             for passage in row["passages"]
         ]
-        # count number of annotated entities to later comopare to number of found entities
-        number_of_annotated_entities += len(row["entities"])
+        # # count number of annotated entities to later comopare to number of found entities
+        # number_of_annotated_entities += len(row["entities"])
 
         with open("mismatches.txt", "a") as f:
             # look for tokens in sentence for all entities
             for entity in row["entities"]:
                 offset_begin = entity["offsets"][0][0]
                 offset_end = entity["offsets"][0][1]
+
                 # search sentences for correct position
                 for sentence in sentences_with_offsets:
+
                     # found a sentence and entity offset match
                     if offset_begin in sentence["offsets"] and offset_end in sentence["offsets"]:
                         relative_offset_begin = offset_begin - sentence["offsets"].start
                         relative_offset_end = offset_end - sentence["offsets"].start
                         tokens = []
-                        matches_beginning_of_token = False
+
                         # find tokens that correspond to offsets
                         for token in sentence["text"]:
-                            # token is part of the entity
+                            # Case: token is part of the entity
                             if (
                                 token.start_position >= relative_offset_begin
                                 and token.end_position <= relative_offset_end
                             ):
                                 tokens.append(token)
-                                # remember if token and entity beginning match up
-                                if token.start_position == relative_offset_begin:
-                                    matches_beginning_of_token = True
+
                                 # end of entity found
-                                if token.end_position == relative_offset_end and matches_beginning_of_token:
+                                if token.end_position == relative_offset_end:
                                     tokens_text = "".join([t.text for t in tokens])
                                     entity_text = entity["text"][0].replace(" ", "")
                                     assert tokens_text == entity_text
-                                    number_of_found_entities += 1
-                                    matches_beginning_of_token = False
                                     break
-                            # haven't reached correct offset yet
-                            elif token.end_position < relative_offset_end:
+
+                            # Case: haven't reached correct offset yet
+                            elif token.end_position <= relative_offset_begin:
                                 continue
 
-                            # all error cases: entity does not start and end at token boundaries
+                            # Error cases: entity does not start and end at token boundaries
                             else:
-                                number_of_entities_with_incompatible_boundaries += 1
-                                f.write(
-                                    f"document id: {row['document_id']}, entity id: {entity['id']}, entity text: {entity['text'][0]}\n"
-                                )
-                                f.write("Tokens in flair:\n")
-                                for seen_token in tokens:
-                                    f.write(f"{seen_token.text}\n")
-                                f.write(f"{token.text}\n")
-                                f.write("\n")
+
+                                # Case: End does not match
+                                if (
+                                    token.start_position >= relative_offset_begin
+                                    and token.end_position > relative_offset_end
+                                ):
+                                    #  create two new tokens
+                                    entity_length = relative_offset_end - token.start_position
+                                    entity_text = token.text[:entity_length]
+                                    rest_of_token = token.text[entity_length:]
+                                    entity_token = Token(
+                                        entity_text,
+                                        token.idx,
+                                        start_position=token.start_position,
+                                        whitespace_after=False,
+                                    )
+                                    rest_token = Token(
+                                        rest_of_token,
+                                        token.idx + 1,
+                                        start_position=token.start_position + entity_length,
+                                    )
+                                    # create new token list
+                                    before_new_tokens = sentence["text"].tokens[: token.idx - 1]
+                                    after_new_tokens = sentence["text"].tokens[token.idx :]
+                                    for token in after_new_tokens:
+                                        token.idx += 1
+                                    new_tokens = before_new_tokens + [entity_token, rest_token] + after_new_tokens
+                                    # replace token list in sentence
+                                    sentence["text"].tokens = new_tokens
+
+                                    # process end of entity
+                                    tokens.append(entity_token)
+                                    tokens_text = "".join([t.text for t in tokens])
+                                    entity_text = entity["text"][0].replace(" ", "")
+                                    assert tokens_text == entity_text
+                                    break
+
+                                # Case: Begin does not match
+                                elif (
+                                    token.start_position < relative_offset_begin
+                                    and token.end_position <= relative_offset_end
+                                ):
+                                    #  create two new tokens
+                                    entity_offset = relative_offset_begin - token.start_position
+                                    rest_of_token = token.text[:entity_offset]
+                                    entity_text = token.text[entity_offset:]
+                                    rest_token = Token(
+                                        rest_of_token,
+                                        token.idx,
+                                        start_position=token.start_position,
+                                        whitespace_after=False,
+                                    )
+                                    entity_token = Token(
+                                        entity_text,
+                                        token.idx + 1,
+                                        start_position=token.start_position + entity_offset,
+                                    )
+                                    # create new token list
+                                    before_new_tokens = sentence["text"].tokens[: token.idx - 1]
+                                    after_new_tokens = sentence["text"].tokens[token.idx :]
+                                    for token in after_new_tokens:
+                                        token.idx += 1
+                                    new_tokens = before_new_tokens + [rest_token, entity_token] + after_new_tokens
+                                    # replace token list in sentence
+                                    sentence["text"].tokens = new_tokens
+
+                                    tokens.append(entity_token)
+                                    # if end of entity found
+                                    if entity_token.end_position == relative_offset_end:
+                                        tokens_text = "".join([t.text for t in tokens])
+                                        entity_text = entity["text"][0].replace(" ", "")
+                                        assert tokens_text == entity_text
+                                        break
+                                    else:
+                                        continue
+
+                                # Case: Begin and end do not match
+                                elif (
+                                    token.start_position < relative_offset_begin
+                                    and token.end_position > relative_offset_end
+                                ):
+                                    #  create three new tokens
+                                    entity_offset = relative_offset_begin - token.start_position
+                                    before_entity_text = token.text[:entity_offset]
+                                    entity_text = token.text[entity_offset : entity_offset + len(entity["text"][0])]
+                                    after_entity_text = token.text[entity_offset + len(entity["text"][0]) :]
+                                    before_token = Token(
+                                        before_entity_text,
+                                        token.idx,
+                                        start_position=token.start_position,
+                                        whitespace_after=False,
+                                    )
+                                    entity_token = Token(
+                                        entity_text,
+                                        token.idx + 1,
+                                        start_position=token.start_position + entity_offset,
+                                        whitespace_after=False,
+                                    )
+                                    after_token = Token(
+                                        after_entity_text,
+                                        token.idx + 2,
+                                        start_position=token.start_position + entity_offset + len(entity["text"][0]),
+                                    )
+                                    # create new token list
+                                    before_new_tokens = sentence["text"].tokens[: token.idx - 1]
+                                    after_new_tokens = sentence["text"].tokens[token.idx :]
+                                    for token in after_new_tokens:
+                                        token.idx += 2
+                                    new_tokens = (
+                                        before_new_tokens + [before_token, entity_token, after_token] + after_new_tokens
+                                    )
+                                    # replace token list in sentence
+                                    sentence["text"].tokens = new_tokens
+
+                                    # add entity
+                                    tokens.append(entity_token)
+                                    tokens_text = "".join([t.text for t in tokens])
+                                    entity_text = entity["text"][0].replace(" ", "")
+                                    assert tokens_text == entity_text
+                                    break
+
                                 break
-                        label = EntityLinkingLabel(span=Span(tokens), cui="TODO", concept_name=entity["text"])
-                        sentence["text"].add_complex_label(typename=entity["type"], label=label)
+
+                        # if specified by add_labels, add the found entities to the sentences
+                        for gold_annotation in entity["normalized"]:
+                            label = EntityLinkingLabel(
+                                span=Span(tokens),
+                                cui=gold_annotation["db_id"],
+                                concept_name=entity["text"],
+                                ontology=gold_annotation["db_name"],
+                            )
+                            sentence["text"].add_complex_label(typename=entity["type"] + "_GOLD", label=label)
                         break
+
                 # if no matching sentence for the token was found
                 else:
-                    raise Error("Could not find position of the entity " + entity["id"])
+                    raise Exception("Could not find position of the entity " + entity["id"])
 
         sentences.append([sentence["text"] for sentence in sentences_with_offsets])
-    print(f"Number of entities in the dataset: {number_of_annotated_entities}")
-    print(f"Number of found entities: {number_of_found_entities}")
-    print(
-        f"Number of entities with offsets that don't match token boundaries: {number_of_entities_with_incompatible_boundaries}"
-    )
+
     return sentences
 
 
@@ -629,16 +743,17 @@ class NLM_CHEM:
         dataset = load_dataset(path_to_dataset_loader, name="nlmchem_bigbio_kb", cache_dir=cache_root / "datasets")
         self.dataset = dataset["validation"]
         self.tokenizer = use_tokenizer
-        self.sentences = bigbio_dataset_to_flair_sentences(self.dataset, tokenizer=use_tokenizer)
+        self.sentences = bigbio_dataset_to_annotated_flair_sentences(
+            self.dataset, tokenizer=use_tokenizer, add_labels=False
+        )
 
     def get_sentences(self):
         return self.sentences
 
     def get_annotated_sentences(self):
-        self.annotated_sentences = bigbio_dataset_to_annotated_flair_sentences(self.dataset, self.tokenizer)
-        # for sentence in self.annotated_sentences:
-        #     print(sentence)
-        #     print()
+        self.annotated_sentences = bigbio_dataset_to_annotated_flair_sentences(
+            self.dataset, self.tokenizer, add_labels=True
+        )
 
 
 class BIO_INFER(ColumnCorpus):
