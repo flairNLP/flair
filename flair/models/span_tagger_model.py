@@ -34,7 +34,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         gazetteer_count_type: str = "abs",
         ignore_embeddings: bool = False,
         use_mlp: bool = False,
-        mlp_hidden_dim: int = 1024,
+        mlp_hidden_dim: int = 1024, #TODO make flexible
         decoder=None,
         **classifierargs,
     ):
@@ -53,7 +53,11 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             'by_token' : only allow one prediction per token/span
             'no_boundary_clashes' : predictions cannot overlap boundaries, but can include other predictions (nested NER)
             'prefer_longer' : #TODO implement this. Somehow favour longer span predictions over shorter ones?
-        :param gazetteer_count_type: in use only if gazetteer_file is given: "abs" for absolute counts, "rel" for relative/normalized counts (sum to 1) #TODO: more possibilities
+        :param gazetteer_count_type: in use only if gazetteer_file is given:
+            "abs": absolute counts,
+            "rel": normalized counts (sum to 1) (note: frequency info gets lost!)
+            "rel_add_freq_info": normalized counts, added info about "confidence" (based on absolute frequency)
+            #TODO: more possibilities?
         :param gazetteer_file: path to a csv file containing a gazetteer list with span strings in rows, label names in columns, counts in cells
         :param ignore_embeddings: simple baseline: just use gazetteer embedding, so ignore embeddings
         :param use_mlp: use a MLP as output layer (instead of default linear layer + xavier transformation), may be helpful for interactions with gazetteer
@@ -86,6 +90,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 self.nr_gazetteer_tags = len(header) - 1  # nr of tags (exclude first column, i.e. span_string)
                 self.gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
             final_embedding_size += self.nr_gazetteer_tags
+
+        if self.gazetteer_count_type == "rel_add_freq_info":
+            final_embedding_size += 1
 
         self.use_mlp = use_mlp
         self.mlp_hidden_dim = mlp_hidden_dim
@@ -159,9 +166,15 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             if torch.sum(vector) > 0:  # avoid zero division
                 vector = vector / torch.sum(vector)
 
-        if count_type == "projection":
-            raise NotImplementedError
-            # TODO: better way of normalizing gazetteer counts? tf-idf? project in window up to some max-count?
+        if count_type == "rel_add_freq_info":
+            # projects sum_count in [0,1] (greater than defined max gets 1), concatenated to rel vector
+            # adds a kind of "confidence" of the label distribution, based on frequency
+            sum_count = torch.sum(vector)
+            defined_max = 300 #TODO: what to choose here? make parameter?
+            freq_info = torch.tensor([min(sum_count/defined_max, 1)]).to(flair.device)
+            if sum_count > 0:
+                vector = vector / torch.sum(vector)
+            vector = torch.cat((vector, freq_info),0)
 
         return vector
 
