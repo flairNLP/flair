@@ -4168,7 +4168,7 @@ class NER_HIPE_2022(ColumnCorpus):
         base_path: Union[str, Path] = None,
         tag_to_bioes: str = "ner",
         in_memory: bool = True,
-        version: str = "v2.0",
+        version: str = "v2.1",
         branch_name: str = "main",
         dev_split_name="dev",
         add_document_separator=False,
@@ -4219,6 +4219,8 @@ class NER_HIPE_2022(ColumnCorpus):
         # v2.0 only adds new language and splits for AJMC dataset
         hipe_available_splits["v2.0"] = hipe_available_splits["v1.0"].copy()
         hipe_available_splits["v2.0"]["ajmc"] = {"de": ["train", "dev"], "en": ["train", "dev"], "fr": ["train", "dev"]}
+
+        hipe_available_splits["v2.1"] = hipe_available_splits["v2.0"].copy()
 
         eos_marker = "EndOfSentence"
         document_separator = "# hipe2022:document_id"

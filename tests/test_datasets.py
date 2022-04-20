@@ -1,3 +1,4 @@
+import copy
 import shutil
 
 import pytest
@@ -488,8 +489,14 @@ def test_hipe_2022_corpus(tasks_base_path):
             }
         }
     }
+    hipe_stats["v2.1"] = copy.deepcopy(hipe_stats["v2.0"])
+    hipe_stats["v2.1"]["hipe2020"]["fr"]["train"] = {
+        "sents": 5743,
+        "docs": 158,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
 
-    def test_hipe_2022(dataset_version="v1.0", add_document_separator=True):
+    def test_hipe_2022(dataset_version="v2.1", add_document_separator=True):
         for dataset_name, languages in hipe_stats[dataset_version].items():
             for language in languages:
                 splits = languages[language]
@@ -503,7 +510,7 @@ def test_hipe_2022_corpus(tasks_base_path):
                 )
 
                 for split_name, stats in splits.items():
-                    split_description = f"{dataset_name}/{language}@{split_name}"
+                    split_description = f"{dataset_name}@{dataset_version}/{language}#{split_name}"
 
                     current_sents = stats["sents"]
                     current_docs = stats["docs"]
@@ -557,6 +564,8 @@ def test_hipe_2022_corpus(tasks_base_path):
     test_hipe_2022(dataset_version="v1.0", add_document_separator=False)
     test_hipe_2022(dataset_version="v2.0", add_document_separator=True)
     test_hipe_2022(dataset_version="v2.0", add_document_separator=False)
+    test_hipe_2022(dataset_version="v2.1", add_document_separator=True)
+    test_hipe_2022(dataset_version="v2.1", add_document_separator=False)
 
 
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
