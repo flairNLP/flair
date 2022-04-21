@@ -31,7 +31,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         concat_span_length_to_embedding: bool = False,
         resolve_overlaps: str = "keep_overlaps",
         gazetteer_file: str = None,
-        gazetteer_count_type: str = "abs",
+        gazetteer_count_type: str = "rel",
+        gazetteer_concat_confidence_score: bool = True,
         ignore_embeddings: bool = False,
         use_mlp: bool = False,
         mlp_hidden_dim: int = 1024, #TODO make flexible
@@ -56,8 +57,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         :param gazetteer_count_type: in use only if gazetteer_file is given:
             "abs": absolute counts,
             "rel": normalized counts (sum to 1) (note: frequency info gets lost!)
-            "rel_add_freq_info": normalized counts, added info about "confidence" (based on absolute frequency)
             #TODO: more possibilities?
+        :param gazetteer_concat_confidence_score: set to True to concatenate a confidence score to gazetteer features,
+            based on absolute frequency in gazetteer, especially when using "rel", "one_hot" or "multi_hot"
         :param gazetteer_file: path to a csv file containing a gazetteer list with span strings in rows, label names in columns, counts in cells
         :param ignore_embeddings: simple baseline: just use gazetteer embedding, so ignore embeddings
         :param use_mlp: use a MLP as output layer (instead of default linear layer + xavier transformation), may be helpful for interactions with gazetteer
@@ -91,8 +93,12 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 self.gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
             final_embedding_size += self.nr_gazetteer_tags
 
-        if self.gazetteer_count_type == "rel_add_freq_info":
+        self.gazetteer_concat_confidence_score = gazetteer_concat_confidence_score
+        if self.gazetteer_concat_confidence_score:
             final_embedding_size += 1
+
+        #if self.gazetteer_count_type == "rel_add_freq_info":
+        #    final_embedding_size += 1
 
         self.use_mlp = use_mlp
         self.mlp_hidden_dim = mlp_hidden_dim
@@ -160,23 +166,36 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             vector = torch.zeros(self.nr_gazetteer_tags).to(flair.device)  # get same length zero vector
 
         if count_type == "abs":
-            return vector
+            gaz_vector = vector
 
         if count_type == "rel":
             if torch.sum(vector) > 0:  # avoid zero division
-                vector = vector / torch.sum(vector)
+                gaz_vector = vector / torch.sum(vector)
+            else:
+                gaz_vector = vector
 
-        if count_type == "rel_add_freq_info":
-            # projects sum_count in [0,1] (greater than DEFINED_MAX gets 1), concatenated to rel vector
-            # adds a kind of "confidence" of the label distribution, based on frequency
+        if count_type == "one_hot":
+            one_hot = torch.zeros(len(vector)).to(flair.device)
+            if torch.sum(vector) > 0:  # necessary to avoid torch.argmax returning id 0
+                one_hot[torch.argmax(vector)] = 1
+            gaz_vector = one_hot
+
+        if count_type == "multi_hot":
+            if torch.sum(vector) > 0:  # avoid zero division
+                rel_vector = vector / torch.sum(vector)
+            else:
+                rel_vector = vector
+            THRESHOLD = 0.3
+            multi_hot = (rel_vector >= THRESHOLD).type(torch.int8)
+            gaz_vector = multi_hot
+
+        if self.gazetteer_concat_confidence_score:
             sum_count = torch.sum(vector)
-            DEFINED_MAX = 50 #TODO: what to choose here? make parameter
-            freq_info = torch.tensor([min(sum_count/DEFINED_MAX, 1)]).to(flair.device)
-            if sum_count > 0:
-                vector = vector / torch.sum(vector)
-            vector = torch.cat((vector, freq_info),0)
+            DEFINED_MAX = 50  # TODO: what to choose here? make parameter
+            confidence = torch.tensor([min(sum_count / DEFINED_MAX, 1)]).to(flair.device)
+            gaz_vector = torch.cat((gaz_vector, confidence), 0)
 
-        return vector
+        return gaz_vector
 
     def forward_pass(
         self,
@@ -204,9 +223,24 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             for span_len in range(1, self.max_span_length+1):
                 spans_sentence.extend([Span(tokens[n:n + span_len]) for n in range(len(tokens) - span_len + 1)])
 
+            # delete spans that are subspans of labeled spans (to help make gazetteer training signal more clear)
+            goldspans = sentence.get_spans(self.label_type)
+
+            # make list of all subspans of goldspans
+            gold_subspans = []
+            for goldspan in goldspans:
+                goldspan_tokens = [token for token in goldspan.tokens]
+                for span_len in range(1, self.max_span_length+1):
+                    gold_subspans.extend([Span(goldspan_tokens[n:n + span_len]) for n in range(len(goldspan_tokens) - span_len + 1)])
+
+            gold_subspans = [span for span in gold_subspans if not span.has_label(self.label_type)] # FULL goldspans should be kept!
+
+            # finally: remove the gold_subspans from spans_sentence
+            spans_sentence = [span for span in spans_sentence
+                              if span.unlabeled_identifier not in [s.unlabeled_identifier for s in gold_subspans]]
+
             # embed each span (concatenate embeddings of first and last token)
             for span in spans_sentence:
-
                 if not self.ignore_embeddings:
 
                     if self.pooling_operation == "first_last":
@@ -366,6 +400,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "resolve_overlaps": self.resolve_overlaps,
             "gazetteer_file": self.gazetteer_file if self.gazetteer_file else None,
             "gazetteer_count_type": self.gazetteer_count_type,
+            "gazetteer_concat_confidence_score": self.gazetteer_concat_confidence_score,
             "max_span_length": self.max_span_length,
             "ignore_embeddings": self.ignore_embeddings,
             "use_mlp": self.use_mlp,
@@ -415,6 +450,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             resolve_overlaps=state["resolve_overlaps"],
             gazetteer_file=state["gazetteer_file"] if "gazetteer_file" in state else None,
             gazetteer_count_type=state["gazetteer_count_type"],
+            gazetteer_concat_confidence_score=state["gazetteer_concat_confidence_score"],
             ignore_embeddings=state["ignore_embeddings"],
             max_span_length=state["max_span_length"],
             use_mlp=state["use_mlp"],
