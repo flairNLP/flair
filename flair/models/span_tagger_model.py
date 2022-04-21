@@ -167,11 +167,11 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 vector = vector / torch.sum(vector)
 
         if count_type == "rel_add_freq_info":
-            # projects sum_count in [0,1] (greater than defined max gets 1), concatenated to rel vector
+            # projects sum_count in [0,1] (greater than DEFINED_MAX gets 1), concatenated to rel vector
             # adds a kind of "confidence" of the label distribution, based on frequency
             sum_count = torch.sum(vector)
-            defined_max = 300 #TODO: what to choose here? make parameter?
-            freq_info = torch.tensor([min(sum_count/defined_max, 1)]).to(flair.device)
+            DEFINED_MAX = 50 #TODO: what to choose here? make parameter
+            freq_info = torch.tensor([min(sum_count/DEFINED_MAX, 1)]).to(flair.device)
             if sum_count > 0:
                 vector = vector / torch.sum(vector)
             vector = torch.cat((vector, freq_info),0)
@@ -242,6 +242,10 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
                 # use the span gold labels
                 spans_labels.append([span.get_label(self.label_type).value])
+
+                # check if everything looks as it should
+                #if span.get_label(self.label_type).value != "O":
+                #    print(span, span_embedding, span.get_label(self.label_type).value)
 
             if for_prediction:
                 data_points.extend(spans_sentence)
