@@ -664,7 +664,6 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
                                                                             {'3': ['eng-ORG-name-test.txt']}])
 
     def test_get_gazetteers_no_label_dict1(self):
-
         with patch.object(GazetteerEmbeddings, '_process_gazetteers'), \
                 patch.object(GazetteerEmbeddings, '_set_feature_list'):
             gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="./resources")
