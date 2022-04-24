@@ -7,3 +7,4 @@ types-Deprecated
 types-dataclasses
 types-tabulate
 types-requests
+pytest-github-actions-annotate-failures
