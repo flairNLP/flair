@@ -48,17 +48,21 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         the embedding of the first and the embedding of the last word.
         :param label_type: name of the label you use.
         :param max_span_length: maximum length of spans (in tokens) that are considered
-        :param concat_span_length_to_embedding: if set to True span length is concatenated to span embeddings
+        :param concat_span_length_to_embedding: if set to True span length (in tokens) is concatenated to span embeddings
         :param resolve_overlaps: one of
             'keep_overlaps' : overlapping predictions stay as they are (i.e. not using _post_process_predictions())
-            'by_token' : only allow one prediction per token/span
+            'by_token' : only allow one prediction per token/span (prefer spans with higher confidence)
             'no_boundary_clashes' : predictions cannot overlap boundaries, but can include other predictions (nested NER)
-            'prefer_longer' : #TODO implement this. Somehow favour longer span predictions over shorter ones?
+            'prefer_longer' : prefers longer spans over shorter ones # TODO: names are confusing, this is also "by token" but with length instead of score
         :param gazetteer_count_type: in use only if gazetteer_file is given:
-            "abs": absolute counts,
-            "rel": normalized counts (sum to 1) (note: frequency info gets lost!)
-            #TODO: more possibilities?
-        :param gazetteer_concat_confidence_score: set to True to concatenate a confidence score to gazetteer features,
+            "abs": absolute counts
+                note: look out for effects based on frequency differences between the entries!
+            "one_hot": converted into one hot vector (using argmax)
+            "multi_hot": converted into multi-hot-vector (using fixed threshold over relative frequency)
+            "rel": normalized absolute counts (sum to 1)
+                note:   with "one_hot", "multi_hot" and "rel" frequency/confidence info get lost
+                        --> use gazetteer_concat_confidence_score==True to add confidence based on frequency!
+        :param gazetteer_concat_confidence_score: if set to True, concatenates a confidence score to gazetteer features,
             based on absolute frequency in gazetteer, especially when using "rel", "one_hot" or "multi_hot"
         :param gazetteer_file: path to a csv file containing a gazetteer list with span strings in rows, label names in columns, counts in cells
         :param ignore_embeddings: simple baseline: just use gazetteer embedding, so ignore embeddings
@@ -94,11 +98,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             final_embedding_size += self.nr_gazetteer_tags
 
         self.gazetteer_concat_confidence_score = gazetteer_concat_confidence_score
-        if self.gazetteer_concat_confidence_score:
-            final_embedding_size += 1
 
-        #if self.gazetteer_count_type == "rel_add_freq_info":
-        #    final_embedding_size += 1
+        if (self.gazetteer_file and self.gazetteer_concat_confidence_score):
+            final_embedding_size += 1
 
         self.use_mlp = use_mlp
         self.mlp_hidden_dim = mlp_hidden_dim
@@ -140,6 +142,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
         if resolve_overlaps not in ["keep_overlaps", "no_boundary_clashes", "by_token", "prefer_longer"]:
             raise KeyError('resolve_overlaps has to be one of "keep_overlaps", "no_boundary_clashes", "by_token", "prefer_longer"')
+
+        if gazetteer_count_type not in ["abs", "rel", "one_hot", "multi_hot"]:
+            raise KeyError('gazetteer_count_type has to be one of "abs", "rel", "one_hot", "multi_hot"')
 
         self.aggregated_embedding = cases[pooling_operation]
 
@@ -185,7 +190,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 rel_vector = vector / torch.sum(vector)
             else:
                 rel_vector = vector
-            THRESHOLD = 0.3
+            THRESHOLD = 0.3  # TODO: what to choose?
             multi_hot = (rel_vector >= THRESHOLD).type(torch.int8)
             gaz_vector = multi_hot
 
@@ -322,24 +327,30 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 for span in sentence.get_spans(label_type):
                     span_tokens = span.tokens
                     span_score = span.get_label(label_type).score
+                    span_length = len(span_tokens)
                     span_prediction = span.get_label(label_type).value
-                    all_predicted_spans.append((span_tokens, span_prediction, span_score))
+                    all_predicted_spans.append((span_tokens, span_prediction, span_score, span_length))
 
                 sentence.remove_labels(label_type)  # first remove the predicted labels
 
-                # sort by confidence score
-                sorted_predicted_spans = sorted(all_predicted_spans, key=operator.itemgetter(2))
-                sorted_predicted_spans.reverse()
-                #for s in sorted_predicted_spans:
-                #    print(s)
+                if self.resolve_overlaps in ["by_token", "no_boundary_clashes"]:
+                    # sort by confidence score
+                    sorted_predicted_spans = sorted(all_predicted_spans, key=operator.itemgetter(2))  # by score
 
-                if self.resolve_overlaps == "by_token":
+                elif self.resolve_overlaps == "prefer_longer":
+                    # sort by length
+                    sorted_predicted_spans = sorted(all_predicted_spans, key=operator.itemgetter(3))  # by length
+
+                sorted_predicted_spans.reverse()
+
+
+                if self.resolve_overlaps in ["by_token", "prefer_longer"]:
                     # in short: if a token already was part of a higher ranked span, break
                     already_seen_token_indices: List[int] = []
 
                     # starting with highest scored span prediction
                     for predicted_span in sorted_predicted_spans:
-                        span_tokens, span_prediction, span_score = predicted_span
+                        span_tokens, span_prediction, span_score, span_length = predicted_span
 
                         # check whether any token in this span already has been labeled
                         tag_span = True
@@ -364,7 +375,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
                     for predicted_span in sorted_predicted_spans:
                         tag_span = True
-                        span_tokens, span_prediction, span_score = predicted_span
+                        span_tokens, span_prediction, span_score, span_length = predicted_span
                         start_candidate = span_tokens[0].idx
                         end_candidate = span_tokens[-1].idx
 
@@ -383,10 +394,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                                 [sentence.get_token(token.idx) for token in span_tokens]
                             )
                             predicted_span.add_label(label_type, value=span_prediction, score=span_score)
-
-                if self.resolve_overlaps == "prefer_longer":
-                    # TODO: somehow favour longer spans over shorter ones...? how to combine that with ranking by score
-                    raise NotImplementedError
 
 
     def _get_state_dict(self):
