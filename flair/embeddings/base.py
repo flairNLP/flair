@@ -481,8 +481,8 @@ class TransformerEmbedding(Embeddings[Sentence]):
         text = re.sub("</w>$", "", text)  # XLM models
         return text
 
-    def _get_processed_token_text(self, token: Token) -> str:
-        pieces = self.tokenizer.tokenize(token.text)
+    def _get_processed_token_text(self, token: str) -> str:
+        pieces = self.tokenizer.tokenize(token)
         token_text = ""
         for piece in pieces:
             token_text += self._remove_special_markup(piece)
@@ -573,8 +573,8 @@ class TransformerEmbedding(Embeddings[Sentence]):
     def create_from_state(cls, **state):
         return cls(**state)
 
-    def _reconstruct_word_ids_from_subtokens(self, sentence: Sentence, subtokens: List[str]):
-        word_iterator = iter(enumerate(map(self._get_processed_token_text, sentence)))
+    def _reconstruct_word_ids_from_subtokens(self, tokens: List[str], subtokens: List[str]):
+        word_iterator = iter(enumerate(map(self._get_processed_token_text, tokens)))
         token_id, token_text = next(word_iterator)
         word_ids: List[Optional[int]] = []
         reconstructed_token = ""
@@ -720,7 +720,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
                         j += 1
                     if not self.allow_long_sentences and self.truncate:
                         token_texts = token_texts[: self.tokenizer.model_max_length]
-                    reconstruct = self._reconstruct_word_ids_from_subtokens(sentence, token_texts)
+                    reconstruct = self._reconstruct_word_ids_from_subtokens(tokens, token_texts)
                     word_ids_list.append(reconstruct)
                     reconstruct_len = len(reconstruct)
                     if reconstruct_len > max_len:
