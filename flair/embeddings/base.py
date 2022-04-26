@@ -621,15 +621,33 @@ class TransformerEmbedding(Embeddings[Sentence]):
             log.error(f"subtokenized: '{subtokens}'")
         return word_ids
 
-    def _gather_flair_tokens(self, sentences: List[Sentence]):
+    def _gather_flair_tokens(self, sentences: List[Sentence]) -> Tuple[List[List[str]], List[int], List[int]]:
+        offsets = []
+        lengths = []
+        if self.context_length > 0:
+            # set context if not set already
+            previous_sentence = None
+            for sentence in sentences:
+                if sentence.is_context_set():
+                    continue
+                sentence._previous_sentence = previous_sentence
+                sentence._next_sentence = None
+                if previous_sentence:
+                    previous_sentence._next_sentence = sentence
+                previous_sentence = sentence
+
         sentence_tokens = []
         for sentence in sentences:
             # flair specific pre-tokenization
-            tokens = [token.text for token in sentence]
+            tokens, offset = self._expand_sentence_with_context(sentence)
             sentence_tokens.append(tokens)
-        return sentence_tokens
+            offsets.append(offset)
+            lengths.append(len(sentence))
+        return sentence_tokens, offsets, lengths
 
-    def _build_transformer_model_inputs(self, batch_encoding, sentences):
+    def _build_transformer_model_inputs(
+        self, batch_encoding, sentences: List[Sentence], offsets: List[int], lengths: List[int]
+    ):
         input_ids = batch_encoding["input_ids"].to(flair.device)
         model_kwargs = {"input_ids": input_ids}
 
@@ -707,7 +725,13 @@ class TransformerEmbedding(Embeddings[Sentence]):
                     _word_ids.extend([None] * (max_len - len(_word_ids)))
 
             word_ids = torch.tensor(
-                [[-100 if val is None else val for val in _word_ids] for _word_ids in word_ids_list],
+                [
+                    [
+                        -100 if (val is None or val < offset or val >= offset + length) else val - offset
+                        for val in _word_ids
+                    ]
+                    for _word_ids, offset, length in zip(word_ids_list, offsets, lengths)
+                ],
                 device=flair.device,
             )
 
@@ -837,7 +861,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
         return result
 
     def _prepare_tensors(self, sentences: List[Sentence]):
-        flair_tokens = self._gather_flair_tokens(sentences)
+        flair_tokens, offsets, lengths = self._gather_flair_tokens(sentences)
 
         # encode inputs
         batch_encoding = self.tokenizer(
@@ -850,12 +874,28 @@ class TransformerEmbedding(Embeddings[Sentence]):
             is_split_into_words=True,
         )
 
-        forward_kwargs = self._build_transformer_model_inputs(batch_encoding, sentences)
+        forward_kwargs = self._build_transformer_model_inputs(batch_encoding, sentences, offsets, lengths)
 
         return forward_kwargs
 
-    def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
+    def _expand_sentence_with_context(self, sentence) -> Tuple[List[str], int]:
+        expand_context = self.context_length > 0 and (
+            not self.training or random.randint(1, 100) > (self.context_dropout * 100)
+        )
 
+        left_context = []
+        right_context = []
+
+        if expand_context:
+            left_context = sentence.left_context(self.context_length, self.respect_document_boundaries)
+            right_context = sentence.right_context(self.context_length, self.respect_document_boundaries)
+
+        expanded_sentence = left_context + [t.text for t in sentence.tokens] + right_context
+
+        context_length = len(left_context)
+        return expanded_sentence, context_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
         tensors = self._prepare_tensors(sentences)
         gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
 
@@ -867,58 +907,3 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
             if self.token_embedding:
                 self._extract_token_embeddings(embeddings["token_embeddings"], sentences)
-
-    def _expand_sentence_with_context(self, sentence):
-        expand_context = not self.training or random.randint(1, 100) > (self.context_dropout * 100)
-
-        left_context = []
-        right_context = []
-
-        if expand_context:
-            left_context = sentence.left_context(self.context_length, self.respect_document_boundaries)
-            right_context = sentence.right_context(self.context_length, self.respect_document_boundaries)
-
-        expanded_sentence = Sentence(left_context + [t.text for t in sentence.tokens] + right_context)
-
-        context_length = len(left_context)
-        return expanded_sentence, context_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
-        expanded_sentences = []
-        context_offsets = []
-
-        if self.context_length > 0:
-            # set context if not set already
-            previous_sentence = None
-            for sentence in sentences:
-                if sentence.is_context_set():
-                    continue
-                sentence._previous_sentence = previous_sentence
-                sentence._next_sentence = None
-                if previous_sentence:
-                    previous_sentence._next_sentence = sentence
-                previous_sentence = sentence
-
-            for sentence in sentences:
-                # create expanded sentence and remember context offsets
-                expanded_sentence, context_offset = self._expand_sentence_with_context(sentence)
-                expanded_sentences.append(expanded_sentence)
-                context_offsets.append(context_offset)
-        else:
-            expanded_sentences.extend(sentences)
-
-        self._add_embeddings_to_sentences(expanded_sentences)
-
-        # move embeddings from context back to original sentence (if using context)
-        if self.context_length > 0:
-            for original_sentence, expanded_sentence, context_offset in zip(
-                sentences, expanded_sentences, context_offsets
-            ):
-                if self.token_embedding:
-                    for token_idx, token in enumerate(original_sentence):
-                        token.set_embedding(
-                            self.name,
-                            expanded_sentence[token_idx + context_offset].get_embedding(self.name),
-                        )
-                if self.document_embedding:
-                    original_sentence.set_embedding(self.name, expanded_sentence.get_embedding(self.name))
