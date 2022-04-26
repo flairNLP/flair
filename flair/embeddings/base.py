@@ -7,7 +7,7 @@ import tempfile
 import zipfile
 from abc import abstractmethod
 from io import BytesIO
-from typing import Dict, Generic, List, Optional, Sequence, Tuple, Union
+from typing import Dict, Generic, List, Optional, Sequence, Tuple, Union, cast
 
 import torch
 from torch.nn import Parameter, ParameterList
@@ -646,7 +646,12 @@ class TransformerEmbedding(Embeddings[Sentence]):
         return sentence_tokens, offsets, lengths
 
     def _build_transformer_model_inputs(
-        self, batch_encoding, sentences: List[Sentence], offsets: List[int], lengths: List[int]
+        self,
+        batch_encoding,
+        sentences: List[Sentence],
+        offsets: List[int],
+        lengths: List[int],
+        flair_tokens: List[List[str]],
     ):
         input_ids = batch_encoding["input_ids"].to(flair.device)
         model_kwargs = {"input_ids": input_ids}
@@ -675,7 +680,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
                 model_kwargs["lengths"] = lengths
 
         # set language IDs for XLM-style transformers
-        if self.use_lang_emb and self.tokenizer.lang2id is not None:
+        if self.use_lang_emb and hasattr(self.tokenizer, "lang2id") and self.tokenizer.lang2id is not None:
             model_kwargs["langs"] = torch.zeros_like(input_ids, dtype=input_ids.dtype)
             if not self.allow_long_sentences:
                 for s_id, sentence in enumerate(sentences):
@@ -700,9 +705,9 @@ class TransformerEmbedding(Embeddings[Sentence]):
                 # a fast tokenizer implementation, hence we need to fall back to our own reconstruction of word_ids.
                 word_ids_list = []
                 max_len = 0
-                for sentence in sentences:
-                    token_texts = self.tokenizer.tokenize(sentence.to_tokenized_string(), is_split_into_words=True)
-                    token_ids = self.tokenizer.convert_tokens_to_ids(token_texts)
+                for tokens in flair_tokens:
+                    token_texts = self.tokenizer.tokenize(" ".join(tokens), is_split_into_words=True)
+                    token_ids = cast(List[int], self.tokenizer.convert_tokens_to_ids(token_texts))
                     expanded_token_ids = self.tokenizer.build_inputs_with_special_tokens(token_ids)
                     j = 0
                     for i, token_id in enumerate(token_ids):
@@ -874,7 +879,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             is_split_into_words=True,
         )
 
-        forward_kwargs = self._build_transformer_model_inputs(batch_encoding, sentences, offsets, lengths)
+        forward_kwargs = self._build_transformer_model_inputs(batch_encoding, sentences, offsets, lengths, flair_tokens)
 
         return forward_kwargs
 
