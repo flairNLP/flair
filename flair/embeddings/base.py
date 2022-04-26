@@ -22,7 +22,7 @@ from transformers import (
 from transformers.tokenization_utils_base import LARGE_INTEGER
 
 import flair
-from flair.data import DT, Sentence, Token
+from flair.data import DT, Sentence
 
 log = logging.getLogger("flair")
 
@@ -613,11 +613,11 @@ class TransformerEmbedding(Embeddings[Sentence]):
             word_ids.append(None)
 
         # check if all tokens were matched to subtokens
-        if token_id + 1 != len(sentence) and not self.truncate:
+        if token_id + 1 != len(tokens) and not self.truncate:
             log.error(f"Reconstructed token: '{reconstructed_token}'")
-            log.error(f"Tokenization MISMATCH in sentence '{sentence.to_tokenized_string()}'")
-            log.error(f"Last matched: '{sentence[token_id]}'")
-            log.error(f"Last sentence: '{sentence[-1]}'")
+            log.error(f"Tokenization MISMATCH in sentence '{' '.join(tokens)}'")
+            log.error(f"Last matched: '{tokens[token_id]}'")
+            log.error(f"Last sentence: '{tokens[-1]}'")
             log.error(f"subtokenized: '{subtokens}'")
         return word_ids
 
@@ -680,11 +680,12 @@ class TransformerEmbedding(Embeddings[Sentence]):
                 model_kwargs["lengths"] = lengths
 
         # set language IDs for XLM-style transformers
-        if self.use_lang_emb and hasattr(self.tokenizer, "lang2id") and self.tokenizer.lang2id is not None:
+        if self.use_lang_emb and getattr(self.tokenizer, "lang2id") is not None:
             model_kwargs["langs"] = torch.zeros_like(input_ids, dtype=input_ids.dtype)
+            lang2id = getattr(self.tokenizer, "lang2id")
             if not self.allow_long_sentences:
                 for s_id, sentence in enumerate(sentences):
-                    lang_id = self.tokenizer.lang2id.get(sentence.get_language_code(), 0)
+                    lang_id = lang2id.get(sentence.get_language_code(), 0)
                     model_kwargs["langs"][s_id] = lang_id
             else:
                 sentence_part_lengths = torch.unique(
@@ -694,7 +695,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
                 )[1].tolist()
                 sentence_idx = 0
                 for sentence, part_length in zip(sentences, sentence_part_lengths):
-                    lang_id = self.tokenizer.lang2id.get(sentence.get_language_code(), 0)
+                    lang_id = lang2id.get(sentence.get_language_code(), 0)
                     model_kwargs["langs"][sentence_idx : sentence_idx + part_length] = lang_id
                     sentence_idx += part_length
         if self.token_embedding:
