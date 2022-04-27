@@ -261,7 +261,7 @@ def fill_mean_token_embeddings(
     for i in torch.arange(all_token_embeddings.shape[0]):
         for _id in torch.arange(int(word_ids[i].max()) + 1):
             all_token_embeddings[i, _id, :] = torch.nan_to_num(
-                sentence_hidden_states[i][word_ids[i] == _id].mean(dim=1)
+                sentence_hidden_states[i][word_ids[i] == _id].mean(dim=0)
             )
     return all_token_embeddings
 
@@ -730,6 +730,15 @@ class TransformerEmbedding(Embeddings[Sentence]):
                     # padding
                     _word_ids.extend([None] * (max_len - len(_word_ids)))
 
+            if self.allow_long_sentences:
+                new_offsets = []
+                new_lengths = []
+                for sent_id in batch_encoding["overflow_to_sample_mapping"]:
+                    new_offsets.append(offsets[sent_id])
+                    new_lengths.append(lengths[sent_id])
+                offsets = new_offsets
+                lengths = new_lengths
+
             word_ids = torch.tensor(
                 [
                     [
@@ -740,7 +749,6 @@ class TransformerEmbedding(Embeddings[Sentence]):
                 ],
                 device=flair.device,
             )
-
             model_kwargs["word_ids"] = word_ids
         return model_kwargs
 
