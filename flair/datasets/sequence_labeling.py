@@ -4138,10 +4138,10 @@ class NER_HIPE_2022(ColumnCorpus):
     def _prepare_corpus(
         file_in: Path, file_out: Path, eos_marker: str, document_separator: str, add_document_separator: bool
     ):
-        with open(file_in, "rt", encoding='utf-8') as f_p:
+        with open(file_in, "rt", encoding="utf-8") as f_p:
             lines = f_p.readlines()
 
-        with open(file_out, "wt", encoding='utf-8') as f_out:
+        with open(file_out, "wt", encoding="utf-8") as f_out:
             # Add missing newline after header
             f_out.write(lines[0] + "\n")
 
