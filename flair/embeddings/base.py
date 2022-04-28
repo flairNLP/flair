@@ -214,8 +214,8 @@ def combine_strided_tensors(
 
     for sentence_id in torch.arange(0, sentence_hidden_states.shape[0]):
         selected_sentences = hidden_states[overflow_to_sample_mapping == sentence_id]
-        start_part = selected_sentences[0, :half_stride + 1]
-        mid_part = selected_sentences[:, half_stride + 1: max_length - 1 - half_stride]
+        start_part = selected_sentences[0, : half_stride + 1]
+        mid_part = selected_sentences[:, half_stride + 1 : max_length - 1 - half_stride]
         mid_part = torch.reshape(mid_part, (mid_part.shape[0] * mid_part.shape[1],) + mid_part.shape[2:])
         end_part = selected_sentences[selected_sentences.shape[0] - 1, max_length - half_stride - 1 :]
         sentence_hidden_state = torch.cat((start_part, mid_part, end_part), dim=0)
