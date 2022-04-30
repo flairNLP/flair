@@ -4,6 +4,7 @@ import os
 import random
 import re
 import tempfile
+import typing
 import zipfile
 from abc import abstractmethod
 from io import BytesIO
@@ -831,9 +832,16 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
         if self.token_embedding:
             assert word_ids is not None
-            all_token_embeddings = torch.zeros(
-                word_ids.shape[0], word_ids.max() + 1, self.embedding_length_internal, device=flair.device
-            )  # type: ignore
+            if typing.TYPE_CHECKING:
+                all_token_embeddings = torch.zeros(
+                    word_ids.shape[0], int(word_ids.max() + 1), self.embedding_length_internal, device=flair.device
+                )
+            else:
+                # this is an "invalid signature" as it mixes tensors and int, but it is necessary
+                # that word_ids.max() won't be converted to int, such that torch.jit.trace still works properly
+                all_token_embeddings = torch.zeros(
+                    word_ids.shape[0], word_ids.max() + 1, self.embedding_length_internal, device=flair.device
+                )
             true_tensor = torch.ones_like(word_ids[:, :1], dtype=torch.bool)
             if self.subtoken_pooling == "first":
                 gain_mask = word_ids[:, 1:] != word_ids[:, : word_ids.shape[1] - 1]
