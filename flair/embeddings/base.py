@@ -196,19 +196,16 @@ def combine_strided_tensors(
     default_value: int,
 ) -> torch.Tensor:
     _, counts = torch.unique(overflow_to_sample_mapping, sorted=True, return_counts=True)
+    sentence_count = int(overflow_to_sample_mapping.max().item() + 1)
+    token_count = max_length + (max_length - 2) * int(counts.max().item() - 1)
     if hidden_states.dim() == 2:
-        shape: Tuple[int, ...] = (
-            int(overflow_to_sample_mapping.max().item() + 1),
-            max_length + (max_length - 2) * int(counts.max().item() - 1),
+        sentence_hidden_states = torch.zeros(
+            (sentence_count, token_count), device=flair.device, dtype=hidden_states.dtype
         )
-        sentence_hidden_states = torch.zeros(shape, device=flair.device, dtype=hidden_states.dtype)
     else:
-        shape = (
-            int(overflow_to_sample_mapping.max().item() + 1),
-            max_length + (max_length - 2) * int(counts.max().item() - 1),
-            hidden_states.shape[2],
+        sentence_hidden_states = torch.zeros(
+            (sentence_count, token_count, hidden_states.shape[2]), device=flair.device, dtype=hidden_states.dtype
         )
-        sentence_hidden_states = torch.zeros(shape, device=flair.device, dtype=hidden_states.dtype)
 
     sentence_hidden_states += default_value
 
@@ -653,17 +650,17 @@ class TransformerEmbedding(Embeddings[Sentence]):
         lengths: List[int],
         flair_tokens: List[List[str]],
     ):
-        input_ids = batch_encoding["input_ids"].to(flair.device)
+        input_ids = batch_encoding["input_ids"].to(flair.device, non_blocking=True)
         model_kwargs = {"input_ids": input_ids}
 
         # Models such as FNet do not have an attention_mask
         if "attention_mask" in batch_encoding:
-            model_kwargs["attention_mask"] = batch_encoding["attention_mask"].to(flair.device)
+            model_kwargs["attention_mask"] = batch_encoding["attention_mask"].to(flair.device, non_blocking=True)
 
         needs_length = self.document_embedding and not (self.cls_pooling == "cls" and self.initial_cls_token)
 
         if "overflow_to_sample_mapping" in batch_encoding:
-            model_kwargs["overflow_to_sample_mapping"] = batch_encoding["overflow_to_sample_mapping"].to(flair.device)
+            model_kwargs["overflow_to_sample_mapping"] = batch_encoding["overflow_to_sample_mapping"].to(flair.device, non_blocking=True)
             if needs_length:
                 unpacked_ids = combine_strided_tensors(
                     input_ids,
@@ -775,9 +772,9 @@ class TransformerEmbedding(Embeddings[Sentence]):
         input_ids: torch.Tensor,
         attention_mask: Optional[torch.Tensor] = None,
         overflow_to_sample_mapping: Optional[torch.Tensor] = None,
+        word_ids: Optional[torch.Tensor] = None,
         lengths: Optional[torch.Tensor] = None,
         langs: Optional[torch.Tensor] = None,
-        word_ids: Optional[torch.Tensor] = None,
     ):
         model_kwargs = {}
         if langs is not None:
@@ -833,8 +830,8 @@ class TransformerEmbedding(Embeddings[Sentence]):
         if self.token_embedding:
             assert word_ids is not None
             all_token_embeddings = torch.zeros(
-                word_ids.shape[0], int(word_ids.max()) + 1, self.embedding_length_internal, device=flair.device
-            )
+                word_ids.shape[0], word_ids.max() + 1, self.embedding_length_internal, device=flair.device
+            )  # type: ignore
             true_tensor = torch.ones_like(word_ids[:, :1], dtype=torch.bool)
             if self.subtoken_pooling == "first":
                 gain_mask = word_ids[:, 1:] != word_ids[:, : word_ids.shape[1] - 1]
