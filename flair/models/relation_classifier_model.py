@@ -4,18 +4,20 @@ from typing import Tuple, List, Set, Dict, Iterator, Sequence, NamedTuple, Union
 import torch
 
 import flair
-from flair.data import Dictionary, Sentence, Span, Relation, Label
+from flair.data import Dictionary, Token, Sentence, Span, Relation, Label
 from flair.embeddings import DocumentEmbeddings
 
 
 class _RelationArgument(NamedTuple):
-    """A `_RelationArgument` encapsulates either a relation's head or a tail span, including its label."""
+    """
+    A `_RelationArgument` encapsulates either a relation's head or a tail span, including its label.
+    This class servers as an internal helper class.
+    """
     span: Span
     label: Label
 
 
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
-#  - EntityPairRelationClassifier ?
 #  - MaskedRelationClassifier ?
 class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
@@ -28,6 +30,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                  zero_tag_value: str = 'O',
                  allow_unk_tag: bool = True,
                  train_on_gold_pairs_only: bool = False,
+                 mask_remainder: bool = True,
                  **classifierargs) -> None:
         """
         Initializes a RelationClassifier.
@@ -56,6 +59,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing
         :param train_on_gold_pairs_only: If `True`, skip out-of-class relations in training.
                                          If `False`, out-of-class relations are used in training as well.
+        :param mask_remainder: If `True`, also mask entities which are not part of the current entity pair
+                               If `False`, such entities will not be masked.
+                               (Setting this parameter to `True` may help to reduce the sentence's sequence length for long entities.)
         :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
         """
         # Set lable type and modify label dictionary
@@ -65,6 +71,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         if not allow_unk_tag:
             label_dictionary.remove_item('<unk>')
 
+        # Initialize super default classifier
         super().__init__(label_dictionary=label_dictionary,
                          final_embedding_size=document_embeddings.embedding_length,
                          **classifierargs)
@@ -82,31 +89,39 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         self.relations = relations
 
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
+        self.mask_remainder = mask_remainder
 
         # Control mask templates
-        self._head_mask: str = '[H-ENTITY]'
-        self._tail_mask: str = '[T-ENTITY]'
+        self._entity_mask: str = 'ENTITY'
+        self._head_mask: str = f'[H-{self._entity_mask}]'
+        self._tail_mask: str = f'[T-{self._entity_mask}]'
+        self._remainder_mask: str = f'[R-{self._entity_mask}]'
 
         # Auto-spawn on GPU, if available
         self.to(flair.device)
 
-    def _entity_pair_permutations(self, sentence: Sentence) -> Iterator[Tuple[_RelationArgument, _RelationArgument]]:
+    def _entity_pair_permutations(self, sentence: Sentence) -> Iterator[Tuple[_RelationArgument,
+                                                                              _RelationArgument,
+                                                                              List[_RelationArgument]]]:
         """
-        Yields all valid entity pair permutations.
+        Yields all valid entity pair permutations and
+        the set difference of all valid entities and the entity pair (the remainder).
         The permutations are constructed by a filtered cross-product
         under the specifications of `self.entity_label_types` and `self.relations`.
         :param sentence: A flair `Sentence` object with entity annotations
-        :return: Tuples of (<HEAD>, <TAIL>) `_RelationArguments`
+        :return: Tuples of (<HEAD>, <TAIL>, List[<REMAINDER>]) `_RelationArguments`
         """
-        entities: Iterator[_RelationArgument] = itertools.chain.from_iterable([  # Flatten nested 2D list
-            (
-                _RelationArgument(span=entity_span, label=entity_span.get_label(label_type=label_type))
-                for entity_span in sentence.get_spans(type=label_type)
-                # Only use entities labelled with the specified labels for each label type
-                if labels is None or entity_span.get_label(label_type=label_type).value in labels
-            )
-            for label_type, labels in self.entity_label_types.items()
-        ])
+        entities: List[_RelationArgument] = list(
+            itertools.chain.from_iterable([  # Flatten nested 2D list
+                (
+                    _RelationArgument(span=entity_span, label=entity_span.get_label(label_type=label_type))
+                    for entity_span in sentence.get_spans(type=label_type)
+                    # Only use entities labelled with the specified labels for each label type
+                    if labels is None or entity_span.get_label(label_type=label_type).value in labels
+                )
+                for label_type, labels in self.entity_label_types.items()
+            ])
+        )
 
         # Yield head and tail entity pairs from the cross product of all entities
         for head, tail in itertools.product(entities, repeat=2):
@@ -120,30 +135,60 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                                                   for pairs in self.relations.values()):
                 continue
 
-            yield head, tail
+            remainder: List[_RelationArgument] = [
+                entity
+                for entity in entities
+                if entity is not head and entity is not tail
+            ]
+
+            yield head, tail, remainder
 
     def _label_aware_head_mask(self, label: str) -> str:
-        return self._head_mask.replace('ENTITY', label)
+        return self._head_mask.replace(self._entity_mask, label)
 
     def _label_aware_tail_mask(self, label: str) -> str:
-        return self._tail_mask.replace('ENTITY', label)
+        return self._tail_mask.replace(self._entity_mask, label)
 
-    def _create_sentence_with_masked_spans(self, head: _RelationArgument, tail: _RelationArgument) -> Sentence:
+    def _label_aware_remainder_mask(self, label: str) -> str:
+        return self._remainder_mask.replace(self._entity_mask, label)
+
+    def _create_sentence_with_masked_spans(self,
+                                           head: _RelationArgument,
+                                           tail: _RelationArgument,
+                                           remainder: List[_RelationArgument]) -> Sentence:
         """
-        Returns a new `Sentence` object with masked head and tail spans.
-        The mask is constructed from the labels of the head and tail span.
+        Returns a new `Sentence` object with masked head, tail and remainder spans.
+        The mask is constructed from the labels of the head/tail/remainder span.
 
         Example:
-            For the `head=Google` and `tail=Larry Page` and
+            For the `head=Google`, `tail=Larry Page` and `remainder=[Sergey Brin]`
             the sentence "Larry Page and Sergey Brin founded Google .",
-            the masked sentence is "[T-PER] and Sergey Brin founded [H-ORG]"
+            the masked sentence is "[T-PER] and [R-PER] founded [H-ORG]"
 
         :param head: The head `_RelationArgument`
         :param tail: The tail `_RelationArgument`
         :return: The masked sentence
         """
+        # Some sanity checks
         original_sentence: Sentence = head.span.sentence
         assert original_sentence is tail.span.sentence, 'The head and tail need to come from the same sentence.'
+        assert all(original_sentence is entity.span.sentence for entity in remainder), \
+            'The remainder entities need to come from the same sentence as the head and tail.'
+
+        # Pre-compute non-leading head, tail and remainder tokens for entity masking
+        non_leading_head_tokens: List[Token] = head.span.tokens[1:]
+        non_leading_tail_tokens: List[Token] = tail.span.tokens[1:]
+        non_leading_remainder_tokens: List[Token] = [
+            token
+            for remainder_entity in remainder
+            for token in remainder_entity.span.tokens[1:]
+        ]
+
+        # Use a dictionary to find label annotations for a given leading remainder token.
+        leading_remainder_token_to_label: Dict[int, str] = {
+            remainder_entity.span[0].unlabeled_identifier: remainder_entity.label.value
+            for remainder_entity in remainder
+        }
 
         # We can not use the plaintext of the head/tail span in the sentence as the mask
         # since there may be multiple occurrences of the same entity mentioned in the sentence.
@@ -151,14 +196,20 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         masked_sentence_tokens: List[str] = []
         for token in original_sentence:
 
-            if token is head.span[0]:
+            remainder_label: Optional[str] = leading_remainder_token_to_label.get(token.unlabeled_identifier)
+            if remainder_label is not None:
+                masked_sentence_tokens.append(self._label_aware_remainder_mask(remainder_label))
+
+            elif token is head.span[0]:
                 masked_sentence_tokens.append(self._label_aware_head_mask(head.label.value))
 
             elif token is tail.span[0]:
                 masked_sentence_tokens.append(self._label_aware_tail_mask(tail.label.value))
 
-            elif (all(token is not non_leading_head_token for non_leading_head_token in head.span.tokens[1:]) and
-                  all(token is not non_leading_tail_token for non_leading_tail_token in tail.span.tokens[1:])):
+            elif all(token is not non_leading_entity_token
+                     for non_leading_entity_token in itertools.chain(non_leading_head_tokens,
+                                                                     non_leading_tail_tokens,
+                                                                     non_leading_remainder_tokens)):
                 masked_sentence_tokens.append(token.text)
 
         # TODO: Question: When I check the sentence with sentence.to_original_text(), the text is not consistently separated with whitespaces.
@@ -183,8 +234,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         :return: Encoded sentences and the corresponding relation in the original sentence
         """
         return [
-            (self._create_sentence_with_masked_spans(head, tail), Relation(first=head.span, second=tail.span))
-            for head, tail in self._entity_pair_permutations(sentence)
+            (self._create_sentence_with_masked_spans(head, tail, remainder if self.mask_remainder else []),
+             Relation(first=head.span, second=tail.span))
+            for head, tail, remainder in self._entity_pair_permutations(sentence)
         ]
 
     def forward_pass(self,
@@ -232,7 +284,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                         continue  # Skip zero tag value labels, if training on gold pairs only
                     gold_labels.append([gold_label])
 
-        # TODO: What should I return if the sentences contains no entity pairs? Is an empty tensor correct?
         masked_sentence_batch_embeddings: torch.Tensor = (
             torch.cat(masked_sentence_embeddings, dim=0) if masked_sentence_embeddings
             else torch.empty(0, self.document_embeddings.embedding_length)
@@ -250,7 +301,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             'entity_label_types': self.entity_label_types,
             'relations': self.relations,
             'zero_tag_value': self.zero_tag_value,
-            'train_on_gold_pairs_only': self.train_on_gold_pairs_only
+            'train_on_gold_pairs_only': self.train_on_gold_pairs_only,
+            'mask_remainder': self.mask_remainder
         }
         return model_state
 
@@ -265,6 +317,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             relations=state['relations'],
             zero_tag_value=state['zero_tag_value'],
             train_on_gold_pairs_only=state['train_on_gold_pairs_only'],
+            mask_remainder=state['mask_remainder'],
             **kwargs
         )
 
