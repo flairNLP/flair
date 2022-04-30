@@ -660,7 +660,9 @@ class TransformerEmbedding(Embeddings[Sentence]):
         needs_length = self.document_embedding and not (self.cls_pooling == "cls" and self.initial_cls_token)
 
         if "overflow_to_sample_mapping" in batch_encoding:
-            model_kwargs["overflow_to_sample_mapping"] = batch_encoding["overflow_to_sample_mapping"].to(flair.device, non_blocking=True)
+            model_kwargs["overflow_to_sample_mapping"] = batch_encoding["overflow_to_sample_mapping"].to(
+                flair.device, non_blocking=True
+            )
             if needs_length:
                 unpacked_ids = combine_strided_tensors(
                     input_ids,
