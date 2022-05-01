@@ -396,7 +396,7 @@ class TransformerEmbeddings(Embeddings[Sentence]):
             # legacy TransformerTokenEmbedding
             state["subtoken_pooling"] = state.pop("pooling_operation")
 
-        if "cls_operation" in state:
+        if "pooling" in state:
             # legacy TransformerDocumentEmbedding
             state["cls_pooling"] = state.pop("pooling")
 
