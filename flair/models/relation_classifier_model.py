@@ -20,6 +20,27 @@ class _RelationArgument(NamedTuple):
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
 #  - MaskedRelationClassifier ?
 class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
+    """
+    ---- Task ----
+    Relation Classification (RC) is the task of identifying the semantic relation between two entities in a text.
+    In contrast to (end-to-end) Relation Extraction (RE), RC requires pre-labelled entities.
+
+    Example:
+
+    For the `founded_by` relation from `ORG` (head) to `PER` (tail) and the sentence
+    "Larry Page and Sergey Brin founded Google .", we extract the relations
+    - founded_by(head='Google', tail='Larry Page') and
+    - founded_by(head='Google', tail='Sergey Brin').
+
+    ---- Architecture ----
+    The Relation Classifier Model builds upon a text classifier.
+    For a given data point with annotated entities, the model generates an encoded data point
+    for each entity pair in the cross product of all entities in the data point.
+    In the encoded representation, the entities in the current entity pair are masked with control tokens.
+    (For an example, see the docstring of the `_encode_sentence` function.)
+    For each encoded data point, the model takes its document embedding and puts the resulting text representation(s)
+    through a linear layer to get the class relation label.
+    """
 
     def __init__(self,
                  document_embeddings: DocumentEmbeddings,
