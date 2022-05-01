@@ -102,10 +102,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         if isinstance(entity_label_types, str):
             self.entity_label_types: Dict[str, Optional[Set[str]]] = {entity_label_types: None}
         elif isinstance(entity_label_types, Sequence):
-            self.entity_label_types: Dict[str, Optional[Set[str]]] = {entity_label_type: None
-                                                                      for entity_label_type in entity_label_types}
+            self.entity_label_types = {entity_label_type: None for entity_label_type in entity_label_types}
         else:
-            self.entity_label_types: Dict[str, Optional[Set[str]]] = entity_label_types
+            self.entity_label_types = entity_label_types
 
         self.relations = relations
 
@@ -206,7 +205,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         ]
 
         # Use a dictionary to find label annotations for a given leading remainder token.
-        leading_remainder_token_to_label: Dict[int, str] = {
+        leading_remainder_token_to_label: Dict[str, str] = {
             remainder_entity.span[0].unlabeled_identifier: remainder_entity.label.value
             for remainder_entity in remainder
         }
@@ -265,7 +264,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                      for_prediction: bool = False) -> Union[Tuple[torch.Tensor, List[List[str]]],
                                                             Tuple[torch.Tensor, List[List[str]], List[Relation]]]:
         if not isinstance(sentences, list):
-            sentences: List[Sentence] = [sentences]
+            sentences = [sentences]
 
         masked_sentence_embeddings: List[torch.Tensor] = []
         masked_sentence_batch_relations: List[Relation] = []
