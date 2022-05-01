@@ -5,7 +5,7 @@ import warnings
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 import torch.nn
 from torch.nn.modules.loss import _Loss
@@ -553,7 +553,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         self,
         sentences: Union[List[DT], DT],
         for_prediction: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DataPoint]]]:
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], Sequence[DataPoint]]]:
         """This method does a forward pass through the model given a list of data
         points as input.
         Returns the tuple (embeddings, labels) if return_label_candidates = False,
