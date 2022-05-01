@@ -1,10 +1,21 @@
 import itertools
-from typing import Tuple, List, Set, Dict, Iterator, Sequence, NamedTuple, Union, Optional, Any
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import torch
 
 import flair
-from flair.data import Dictionary, Token, Sentence, Span, Relation, Label
+from flair.data import Dictionary, Label, Relation, Sentence, Span, Token
 from flair.embeddings import DocumentEmbeddings
 
 
