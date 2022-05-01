@@ -56,6 +56,7 @@ from .token import (
     TransformerWordEmbeddings,
     WordEmbeddings,
 )
+from flair.embeddings.transformer import TransformerEmbeddings
 
 __all__ = [
     "Embeddings",
@@ -101,4 +102,5 @@ __all__ = [
     "TokenEmbeddings",
     "TransformerWordEmbeddings",
     "WordEmbeddings",
+    "TransformerEmbeddings",
 ]

@@ -8,8 +8,9 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 import flair
 from flair.data import Sentence
-from flair.embeddings.base import Embeddings, TransformerEmbedding
+from flair.embeddings.base import Embeddings
 from flair.embeddings.token import FlairEmbeddings, StackedEmbeddings, TokenEmbeddings
+from flair.embeddings.transformer import TransformerEmbeddings
 from flair.nn import LockedDropout, WordDropout
 
 log = logging.getLogger("flair")
@@ -23,7 +24,7 @@ class DocumentEmbeddings(Embeddings[Sentence]):
         return "sentence-level"
 
 
-class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbedding):
+class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
     def __init__(
         self,
         model: str = "bert-base-uncased",  # set parameters with different default values
@@ -41,7 +42,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbedding):
         :param layer_mean: If True, uses a scalar mix of layers as embedding
         :param fine_tune: If True, allows transformers to be fine-tuned during training
         """
-        TransformerEmbedding.__init__(
+        TransformerEmbeddings.__init__(
             self,
             model=model,
             layers=layers,

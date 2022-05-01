@@ -15,7 +15,8 @@ from torch import nn
 
 import flair
 from flair.data import Corpus, Dictionary, Sentence, Token, _iter_dataset
-from flair.embeddings.base import Embeddings, TransformerEmbedding
+from flair.embeddings.base import Embeddings
+from flair.embeddings.transformer import TransformerEmbeddings
 from flair.file_utils import cached_path, instance_lru_cache, open_inside_zip
 
 log = logging.getLogger("flair")
@@ -880,7 +881,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
                 self.word_embeddings[key] = self.word_embeddings[key].cpu()
 
 
-class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbedding):
+class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
     def __init__(
         self,
         model: str = "bert-base-uncased",
@@ -898,7 +899,7 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbedding):
         :param layer_mean: If True, uses a scalar mix of layers as embedding
         :param fine_tune: If True, allows transformers to be fine-tuned during training
         """
-        TransformerEmbedding.__init__(
+        TransformerEmbeddings.__init__(
             self,
             model=model,
             is_token_embedding=True,
