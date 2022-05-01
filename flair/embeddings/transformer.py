@@ -19,7 +19,7 @@ from transformers.tokenization_utils_base import LARGE_INTEGER
 
 import flair
 from flair.data import Sentence, log
-from flair.embeddings import Embeddings
+from flair.embeddings.base import Embeddings
 
 
 @torch.jit.script_if_tracing
