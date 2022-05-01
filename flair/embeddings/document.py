@@ -8,23 +8,21 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 import flair
 from flair.data import Sentence
-from flair.embeddings.base import Embeddings
+from flair.embeddings.base import DocumentEmbeddings
 from flair.embeddings.token import FlairEmbeddings, StackedEmbeddings, TokenEmbeddings
-from flair.embeddings.transformer import TransformerEmbeddings
+from flair.embeddings.transformer import (
+    TransformerEmbeddings,
+    TransformerOnnxDocumentEmbeddings,
+)
 from flair.nn import LockedDropout, WordDropout
 
 log = logging.getLogger("flair")
 
 
-class DocumentEmbeddings(Embeddings[Sentence]):
-    """Abstract base class for all document-level embeddings. Every new type of document embedding must implement these methods."""
-
-    @property
-    def embedding_type(self) -> str:
-        return "sentence-level"
-
-
 class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
+
+    onnx_cls = TransformerOnnxDocumentEmbeddings
+
     def __init__(
         self,
         model: str = "bert-base-uncased",  # set parameters with different default values

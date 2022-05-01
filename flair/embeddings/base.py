@@ -7,7 +7,7 @@ import torch
 from torch.nn import Parameter, ParameterList
 
 import flair
-from flair.data import DT
+from flair.data import DT, Sentence
 
 log = logging.getLogger("flair")
 
@@ -150,4 +150,26 @@ class ScalarMix(torch.nn.Module):
             pieces.append(weight * tensor)
         return self.gamma * sum(pieces)
 
+
+class DocumentEmbeddings(Embeddings[Sentence]):
+    """Abstract base class for all document-level embeddings. Every new type of document embedding must implement these methods."""
+
+    @property
+    def embedding_type(self) -> str:
+        return "sentence-level"
+
+
+class TokenEmbeddings(Embeddings[Sentence]):
+    """Abstract base class for all token-level embeddings. Ever new type of word embedding must implement these methods."""
+
+    @property
+    def embedding_type(self) -> str:
+        return "word-level"
+
+    def _everything_embedded(self, data_points: Sequence[Sentence]) -> bool:
+        for sentence in data_points:
+            for token in sentence.tokens:
+                if self.name not in token._embeddings.keys():
+                    return False
+        return True
 
