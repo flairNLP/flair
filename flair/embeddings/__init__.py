@@ -1,4 +1,6 @@
 # Expose base classses
+from flair.embeddings.transformer import TransformerEmbeddings
+
 from .base import Embeddings, ScalarMix
 
 # Expose document embedding classes
@@ -56,7 +58,6 @@ from .token import (
     TransformerWordEmbeddings,
     WordEmbeddings,
 )
-from flair.embeddings.transformer import TransformerEmbeddings
 
 __all__ = [
     "Embeddings",

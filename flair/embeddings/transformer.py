@@ -1,13 +1,20 @@
 import os
+import random
 import re
 import tempfile
 import zipfile
 from io import BytesIO
-import random
-from typing import List, Union, Optional, Tuple, cast
+from typing import List, Optional, Tuple, Union, cast
 
 import torch
-from transformers import PretrainedConfig, PreTrainedTokenizer, AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING
+from transformers import (
+    CONFIG_MAPPING,
+    AutoConfig,
+    AutoModel,
+    AutoTokenizer,
+    PretrainedConfig,
+    PreTrainedTokenizer,
+)
 from transformers.tokenization_utils_base import LARGE_INTEGER
 
 import flair
