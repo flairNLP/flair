@@ -59,8 +59,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing
         :param train_on_gold_pairs_only: If `True`, skip out-of-class relations in training.
                                          If `False`, out-of-class relations are used in training as well.
-        :param mask_remainder: If `True`, also mask entities which are not part of the current entity pair
-                               If `False`, such entities will not be masked.
+        :param mask_remainder: If `True`, also mask entities which are not part of the current entity pair,
+                               otherwise such entities will not be masked.
                                (Setting this parameter to `True` may help to reduce the sentence's sequence length for long entities.)
         :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
         """
