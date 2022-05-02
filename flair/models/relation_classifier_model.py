@@ -9,7 +9,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
-    Union
+    Union,
 )
 
 import torch
