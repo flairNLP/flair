@@ -4,7 +4,7 @@ import os
 import re
 from collections import Counter
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Union
 
 import gensim
 import numpy as np
