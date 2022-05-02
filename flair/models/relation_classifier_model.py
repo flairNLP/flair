@@ -9,7 +9,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
-    Union,
+    Union
 )
 
 import torch
@@ -131,31 +131,38 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         # Auto-spawn on GPU, if available
         self.to(flair.device)
 
+    def _valid_entities(self, sentence: Sentence) -> Iterator[_RelationArgument]:
+        """
+        Yields all valid entities, filtered under the specification of `self.entity_label_types`.
+        :param sentence: A flair `Sentence` object with entity annotations
+        :return: Valid entities as `_RelationArgument`
+        """
+        for label_type, valid_labels in self.entity_label_types.items():
+            for entity_span in sentence.get_spans(type=label_type):
+
+                entity_label: Label = entity_span.get_label(label_type=label_type)
+
+                # Only use entities labelled with the specified labels for each label type
+                if valid_labels is not None and entity_label.value not in valid_labels:
+                    continue
+
+                yield _RelationArgument(span=entity_span, label=entity_label)
+
     def _entity_pair_permutations(self, sentence: Sentence) -> Iterator[Tuple[_RelationArgument,
                                                                               _RelationArgument,
                                                                               List[_RelationArgument]]]:
         """
-        Yields all valid entity pair permutations and
+        Yields all valid entity pair permutations (relation candidates) and
         the set difference of all valid entities and the entity pair (the remainder).
         The permutations are constructed by a filtered cross-product
-        under the specifications of `self.entity_label_types` and `self.relations`.
+        under the specification of `self.entity_label_types` and `self.relations`.
         :param sentence: A flair `Sentence` object with entity annotations
         :return: Tuples of (<HEAD>, <TAIL>, List[<REMAINDER>]) `_RelationArguments`
         """
-        entities: List[_RelationArgument] = list(
-            itertools.chain.from_iterable([  # Flatten nested 2D list
-                (
-                    _RelationArgument(span=entity_span, label=entity_span.get_label(label_type=label_type))
-                    for entity_span in sentence.get_spans(type=label_type)
-                    # Only use entities labelled with the specified labels for each label type
-                    if labels is None or entity_span.get_label(label_type=label_type).value in labels
-                )
-                for label_type, labels in self.entity_label_types.items()
-            ])
-        )
+        valid_entities: List[_RelationArgument] = list(self._valid_entities(sentence))
 
         # Yield head and tail entity pairs from the cross product of all entities
-        for head, tail in itertools.product(entities, repeat=2):
+        for head, tail in itertools.product(valid_entities, repeat=2):
 
             # Remove identity relation entity pairs
             if head.span is tail.span:
@@ -168,7 +175,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
             remainder: List[_RelationArgument] = [
                 entity
-                for entity in entities
+                for entity in valid_entities
                 if entity is not head and entity is not tail
             ]
 
