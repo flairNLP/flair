@@ -24,6 +24,7 @@ class _Entity(NamedTuple):
     A `_Entity` encapsulates either a relation's head or a tail span, including its label.
     This class servers as an internal helper class.
     """
+
     span: Span
     label: Label
 
@@ -173,8 +174,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
             # Remove entity pairs with labels that do not match any
             # of the specified relations in `self.entity_pair_labels`
-            if (self.entity_pair_labels is not None and
-                    (head.label.value, tail.label.value) not in self.entity_pair_labels):
+            if (self.entity_pair_labels is not None
+                    and (head.label.value, tail.label.value) not in self.entity_pair_labels):
                 continue
 
             remainder: List[_Entity] = [

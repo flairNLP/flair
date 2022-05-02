@@ -14,7 +14,7 @@ from flair.trainers import ModelTrainer
 def test_train_load_use_relation_classifier(results_base_path: Path, tasks_base_path: Path) -> None:
     # ---- Test Training ----
     # Hyperparameters
-    transformer: str = 'distilbert-base-uncased'
+    transformer: str = "distilbert-base-uncased"
     num_epochs: int = 2
     learning_rate: float = 5e-5
     mini_batch_size: int = 8
@@ -82,12 +82,12 @@ def test_train_load_use_relation_classifier(results_base_path: Path, tasks_base_
     assert len(relations) == 2
 
     # Intel ----founded_by---> Gordon Moore
-    assert ([label.value for label in relations[0].labels] == ['founded_by'] and
-            relations[0].unlabeled_identifier == 'Intel (1)->Gordon Moore (13,14)')
+    assert [label.value for label in relations[0].labels] == ['founded_by']
+    assert relations[0].unlabeled_identifier == 'Intel (1)->Gordon Moore (13,14)'
 
     # Intel ----founded_by---> Robert Noyce
-    assert ([label.value for label in relations[1].labels] == ['founded_by'] and
-            relations[1].unlabeled_identifier == 'Intel (1)->Robert Noyce (16,17)')
+    assert [label.value for label in relations[1].labels] == ['founded_by']
+    assert relations[1].unlabeled_identifier == 'Intel (1)->Robert Noyce (16,17)'
 
     # Clean-up
     del loaded_model
