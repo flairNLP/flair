@@ -59,6 +59,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                  label_type: str,
                  entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
                  relations: Optional[Dict[str, Set[Tuple[str, str]]]] = None,
+                 entity_threshold: Optional[float] = None,
                  zero_tag_value: str = 'O',
                  allow_unk_tag: bool = True,
                  train_on_gold_pairs_only: bool = False,
@@ -67,7 +68,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         """
         Initializes a RelationClassifier.
 
-        :param document_embeddings: The embeddings used to embed each sentence
+        :param document_embeddings: The document embeddings used to embed each sentence
         :param label_dictionary: A Dictionary containing all predictable labels from the corpus
         :param label_type: The label type which is going to be predicted, in case a corpus has multiple annotations
         :param entity_label_types: A label type or sequence of label types of the required relation entities.
@@ -87,6 +88,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                           i.e. the model classifies the relation for each entity pair
                           in the cross product of all valid entity pairs.
 
+        :param entity_threshold: Only pre-labelled entities above this threshold are taken into account by the model.
         :param zero_tag_value: The label to use for out-of-class relations
         :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing
         :param train_on_gold_pairs_only: If `True`, skip out-of-class relations in training.
@@ -121,6 +123,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
         self.mask_remainder = mask_remainder
+        self.entity_threshold = entity_threshold
 
         # Control mask templates
         self._entity_mask: str = 'ENTITY'
@@ -144,6 +147,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
                 # Only use entities labelled with the specified labels for each label type
                 if valid_labels is not None and entity_label.value not in valid_labels:
+                    continue
+
+                # Only use entities above the specified threshold
+                if self.entity_threshold is not None and entity_label.score <= self.entity_threshold:
                     continue
 
                 yield _RelationArgument(span=entity_span, label=entity_label)
@@ -338,6 +345,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             'label_type': self.label_type,
             'entity_label_types': self.entity_label_types,
             'relations': self.relations,
+            'entity_threshold': self.entity_threshold,
             'zero_tag_value': self.zero_tag_value,
             'train_on_gold_pairs_only': self.train_on_gold_pairs_only,
             'mask_remainder': self.mask_remainder
@@ -353,6 +361,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             label_type=state['label_type'],
             entity_label_types=state['entity_label_types'],
             relations=state['relations'],
+            entity_threshold=state['entity_threshold'],
             zero_tag_value=state['zero_tag_value'],
             train_on_gold_pairs_only=state['train_on_gold_pairs_only'],
             mask_remainder=state['mask_remainder'],
