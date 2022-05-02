@@ -19,9 +19,9 @@ from flair.data import Dictionary, Label, Relation, Sentence, Span, Token
 from flair.embeddings import DocumentEmbeddings
 
 
-class _RelationArgument(NamedTuple):
+class _Entity(NamedTuple):
     """
-    A `_RelationArgument` encapsulates either a relation's head or a tail span, including its label.
+    A `_Entity` encapsulates either a relation's head or a tail span, including its label.
     This class servers as an internal helper class.
     """
     span: Span
@@ -66,7 +66,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                  mask_remainder: bool = True,
                  **classifierargs) -> None:
         """
-        Initializes a RelationClassifier.
+        Initializes a `RelationClassifier`.
 
         :param document_embeddings: The document embeddings used to embed each sentence
         :param label_dictionary: A Dictionary containing all predictable labels from the corpus
@@ -134,11 +134,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         # Auto-spawn on GPU, if available
         self.to(flair.device)
 
-    def _valid_entities(self, sentence: Sentence) -> Iterator[_RelationArgument]:
+    def _valid_entities(self, sentence: Sentence) -> Iterator[_Entity]:
         """
         Yields all valid entities, filtered under the specification of `self.entity_label_types`.
         :param sentence: A flair `Sentence` object with entity annotations
-        :return: Valid entities as `_RelationArgument`
+        :return: Valid entities as `_Entity`
         """
         for label_type, valid_labels in self.entity_label_types.items():
             for entity_span in sentence.get_spans(type=label_type):
@@ -153,20 +153,18 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                 if self.entity_threshold is not None and entity_label.score <= self.entity_threshold:
                     continue
 
-                yield _RelationArgument(span=entity_span, label=entity_label)
+                yield _Entity(span=entity_span, label=entity_label)
 
-    def _entity_pair_permutations(self, sentence: Sentence) -> Iterator[Tuple[_RelationArgument,
-                                                                              _RelationArgument,
-                                                                              List[_RelationArgument]]]:
+    def _entity_pair_permutations(self, sentence: Sentence) -> Iterator[Tuple[_Entity, _Entity, List[_Entity]]]:
         """
         Yields all valid entity pair permutations (relation candidates) and
         the set difference of all valid entities and the entity pair (the remainder).
         The permutations are constructed by a filtered cross-product
         under the specification of `self.entity_label_types` and `self.relations`.
         :param sentence: A flair `Sentence` object with entity annotations
-        :return: Tuples of (<HEAD>, <TAIL>, List[<REMAINDER>]) `_RelationArguments`
+        :return: Tuples of (<HEAD>, <TAIL>, List[<REMAINDER>]) `_Entity`s
         """
-        valid_entities: List[_RelationArgument] = list(self._valid_entities(sentence))
+        valid_entities: List[_Entity] = list(self._valid_entities(sentence))
 
         # Yield head and tail entity pairs from the cross product of all entities
         for head, tail in itertools.product(valid_entities, repeat=2):
@@ -180,7 +178,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                                                   for pairs in self.relations.values()):
                 continue
 
-            remainder: List[_RelationArgument] = [
+            remainder: List[_Entity] = [
                 entity
                 for entity in valid_entities
                 if entity is not head and entity is not tail
@@ -197,10 +195,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
     def _label_aware_remainder_mask(self, label: str) -> str:
         return self._remainder_mask.replace(self._entity_mask, label)
 
-    def _create_sentence_with_masked_spans(self,
-                                           head: _RelationArgument,
-                                           tail: _RelationArgument,
-                                           remainder: List[_RelationArgument]) -> Sentence:
+    def _create_sentence_with_masked_spans(self, head: _Entity, tail: _Entity, remainder: List[_Entity]) -> Sentence:
         """
         Returns a new `Sentence` object with masked head, tail and remainder spans.
         The mask is constructed from the labels of the head/tail/remainder span.
@@ -210,8 +205,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             the sentence "Larry Page and Sergey Brin founded Google .",
             the masked sentence is "[T-PER] and [R-PER] founded [H-ORG]"
 
-        :param head: The head `_RelationArgument`
-        :param tail: The tail `_RelationArgument`
+        :param head: The head `_Entity`
+        :param tail: The tail `_Entity`
         :return: The masked sentence
         """
         # Some sanity checks
