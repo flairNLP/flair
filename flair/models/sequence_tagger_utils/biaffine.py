@@ -31,42 +31,16 @@ class Biaffine(torch.nn.Module):
 
     def forward(self, features: torch.tensor):
         # input: [batch, longest_token_sequence_in_batch, ffnn_input_size]
-        batch_size = features.size()[0]
-        longest_token_sequence_in_batch = features.size()[1]
-        output_size = self.bilinear_map.size()[1]
         embed_start = self.ffnn_start(features)
-        embed_end = self.ffnn_start(features)
+        embed_end = self.ffnn_end(features)
         #  [batch, longest_token_sequence_in_batch, ffnn_output_size + 1]
-        vector_set_1 = torch.cat([embed_start, embed_start.new_ones(embed_start.shape[:-1]).unsqueeze(-1)], -1)
-        vector_set_2 = torch.cat([embed_end, embed_end.new_ones(embed_end.shape[:-1]).unsqueeze(-1)], -1)
+        embed_start = torch.cat([embed_start, embed_start.new_ones(embed_start.shape[:-1]).unsqueeze(-1)], -1)
+        embed_end = torch.cat([embed_end, embed_end.new_ones(embed_end.shape[:-1]).unsqueeze(-1)], -1)
 
-        vector_set_1_size = vector_set_1.size()[-1]
-        vector_set_2_size = vector_set_2.size()[-1]
-
-        # The matrix operations and reshapings for bilinear mapping.
-        # b: batch size (batch of buckets)
-        # v1, v2: values (size of vectors)
-        # n: tokens (size of bucket)
-        # r: labels (output size), e.g. 1 if unlabeled or number of edge labels.
-        # # [b, n, v1] -> [b*n, v1]
-        vector_set_1 = vector_set_1.view(-1, vector_set_1_size)
-
-        # [v1, r, v2] -> [v1, r*v2]
-        bilinear_mapping = self.bilinear_map.view(vector_set_1_size, -1)
-
-        # [b*n, v1] x [v1, r*v2] -> [b*n, r*v2]
-        bilinear_mapping = vector_set_1.matmul(bilinear_mapping)
-
-        # [b*n, r*v2] -> [b, n*r, v2]
-        bilinear_mapping = bilinear_mapping.view(batch_size, longest_token_sequence_in_batch*output_size, vector_set_2_size)
-
-        # [b, n*r, v2] x [b, n, v2]T -> [b, n*r, n]
-        vector_set_2_size = torch.conj(vector_set_2).transpose(2, 1)
-        output = bilinear_mapping.bmm(vector_set_2_size)
-        # [b, n*r, n] -> [b, n, r, n]
-        output = output.view(batch_size, longest_token_sequence_in_batch, output_size, longest_token_sequence_in_batch)
-        # [b, n, r, n] -> [b, n, n, r]
-        candidate = output.permute(0,1,3,2).contiguous()
+        output = torch.einsum('bxi,oij,byj->boxy', embed_start, self.bilinear_map, embed_end)
+        # remove dim 1 if n_out == 1
+        output = output.squeeze(1)
+        candidate = output.permute(0,2,3,1).contiguous()
 
         return candidate
 
@@ -78,9 +52,8 @@ class BiaffineDecoder:
 
         self.label_dictionary = tag_dictionary
 
-    def decode(self, features, batch, is_flat_ner, return_probabilities_for_all_classes):
-        # TODO all_tags, return_probabilities_for_all_classes
-        all_tags = []
+    def decode(self, features, batch, is_flat_ner):
+
         candidates = []
         outside = self.label_dictionary.get_idx_for_item('O')
 
@@ -91,8 +64,8 @@ class BiaffineDecoder:
                     candidates.append((sid,s,e))
         # Find all possible positions in prediction matrix
         top_spans = [[] for _ in range(len(batch))]
-        for i, ner in enumerate(features.argmax(axis=1)):
-            if ner != 0 and ner != outside:
+        for i, ner in enumerate(features.argmax(axis=-1)):
+            if ner != outside:
                 sid, s,e = candidates[i]
                 top_spans[sid].append((s, e, ner, features[i, ner]))
         # Sort by predicted score
@@ -117,14 +90,14 @@ class BiaffineDecoder:
             spans = []
             for ns, ne, ner, score in spr:
                 if ns < ne:
-                    spans.append(([ns+1, ne+1], score.item(), self.label_dictionary.get_item_for_index(ner.item())))
+                    spans.append(([ns, ne], score.item(),  self.label_dictionary.get_item_for_index(ner.item())))
                 else:
-                    spans.append(([ns+1], score.item(), self.label_dictionary.get_item_for_index(ner.item())))
+                    spans.append(([ns, ns], score.item(),  self.label_dictionary.get_item_for_index(ner.item())))
             predictions.append(spans)
 
-        return predictions, all_tags
+        return predictions
 
-    def get_labels4biaffine(self, sentences: Union[List[DataPoint], DataPoint]):
+    def get_labels(self, sentences: Union[List[DataPoint], DataPoint]):
 
         """
         :param sentences: list of Sentence
@@ -155,15 +128,16 @@ class BiaffineDecoder:
 
         gold_labels = []
         for sentence in sentences:
-            ner = {(label.span[0].idx-1, label.span[-1].idx-1):label.value for label in sentence.get_labels("ner")}
+            ner = {(label.data_point.tokens[0].idx-1, label.data_point.tokens[-1].idx-1):label.value for label in sentences[0].get_labels("ner")}
             for s in range(0, len(sentence)):
                 for e in range(s,len(sentence)):
-                    gold_labels.append([ner.get((s,e),"O")])
+                    gold_labels.append([ner.get((s,e),"0")])
 
         return gold_labels
 
-    def get_useful4biaffine(self, lengths, candidate):
+    def get_flat_scores(self, lengths, candidate):
 
+        # extracting useful predictions from the prediction matrix, and store all predictions in a one-dimensional tensor, corresponding to the labels
         # generate mask
         lengths = lengths.values
         longest_token_sequence_in_batch = max(lengths)
@@ -181,5 +155,3 @@ class BiaffineDecoder:
 
         return scores
 
-    # def get_label_weight(self, sentences: Union[List[DataPoint], DataPoint]):
-    #     all_label = self.get_labels4biaffine(sentences)
