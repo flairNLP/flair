@@ -16,7 +16,10 @@ from torch import nn
 import flair
 from flair.data import Corpus, Dictionary, Sentence, Token, _iter_dataset
 from flair.embeddings.base import TokenEmbeddings
-from flair.embeddings.transformer import TransformerEmbeddings, TransformerOnnxWordEmbeddings
+from flair.embeddings.transformer import (
+    TransformerEmbeddings,
+    TransformerOnnxWordEmbeddings,
+)
 from flair.file_utils import cached_path, instance_lru_cache, open_inside_zip
 
 log = logging.getLogger("flair")

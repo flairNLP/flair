@@ -172,4 +172,3 @@ class TokenEmbeddings(Embeddings[Sentence]):
                 if self.name not in token._embeddings.keys():
                     return False
         return True
-

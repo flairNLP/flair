@@ -46,11 +46,11 @@ def pad_sequence_embeddings(all_hidden_states: List[torch.Tensor]) -> torch.Tens
 
 @torch.jit.script_if_tracing
 def combine_strided_tensors(
-        hidden_states: torch.Tensor,
-        overflow_to_sample_mapping: torch.Tensor,
-        half_stride: int,
-        max_length: int,
-        default_value: int,
+    hidden_states: torch.Tensor,
+    overflow_to_sample_mapping: torch.Tensor,
+    half_stride: int,
+    max_length: int,
+    default_value: int,
 ) -> torch.Tensor:
     _, counts = torch.unique(overflow_to_sample_mapping, sorted=True, return_counts=True)
     sentence_count = int(overflow_to_sample_mapping.max().item() + 1)
@@ -70,9 +70,9 @@ def combine_strided_tensors(
         selected_sentences = hidden_states[overflow_to_sample_mapping == sentence_id]
         if selected_sentences.shape[0] > 1:
             start_part = selected_sentences[0, : half_stride + 1]
-            mid_part = selected_sentences[:, half_stride + 1: max_length - 1 - half_stride]
+            mid_part = selected_sentences[:, half_stride + 1 : max_length - 1 - half_stride]
             mid_part = torch.reshape(mid_part, (mid_part.shape[0] * mid_part.shape[1],) + mid_part.shape[2:])
-            end_part = selected_sentences[selected_sentences.shape[0] - 1, max_length - half_stride - 1:]
+            end_part = selected_sentences[selected_sentences.shape[0] - 1, max_length - half_stride - 1 :]
             sentence_hidden_state = torch.cat((start_part, mid_part, end_part), dim=0)
             sentence_hidden_states[sentence_id, : sentence_hidden_state.shape[0]] = torch.cat(
                 (start_part, mid_part, end_part), dim=0
@@ -85,8 +85,7 @@ def combine_strided_tensors(
 
 @torch.jit.script_if_tracing
 def fill_masked_elements(
-        all_token_embeddings: torch.Tensor, sentence_hidden_states: torch.Tensor, mask: torch.Tensor,
-        word_ids: torch.Tensor
+    all_token_embeddings: torch.Tensor, sentence_hidden_states: torch.Tensor, mask: torch.Tensor, word_ids: torch.Tensor
 ):
     for i in torch.arange(int(all_token_embeddings.shape[0])):
         all_token_embeddings[i, : int(word_ids[i].max()) + 1, :] = insert_missing_embeddings(
@@ -114,7 +113,7 @@ def insert_missing_embeddings(token_embeddings: torch.Tensor, word_id: torch.Ten
 
 @torch.jit.script_if_tracing
 def fill_mean_token_embeddings(
-        all_token_embeddings: torch.Tensor, sentence_hidden_states: torch.Tensor, word_ids: torch.Tensor
+    all_token_embeddings: torch.Tensor, sentence_hidden_states: torch.Tensor, word_ids: torch.Tensor
 ):
     for i in torch.arange(all_token_embeddings.shape[0]):
         for _id in torch.arange(int(word_ids[i].max()) + 1):
@@ -178,7 +177,7 @@ def gather_flair_tokens(embedding, sentences: List[Sentence]) -> Tuple[List[List
 
 def expand_sentence_with_context(embedding, sentence) -> Tuple[List[str], int]:
     expand_context = embedding.context_length > 0 and (
-            not embedding.training or random.randint(1, 100) > (embedding.context_dropout * 100)
+        not embedding.training or random.randint(1, 100) > (embedding.context_dropout * 100)
     )
 
     left_context = []
@@ -218,13 +217,13 @@ def prepare_tensors(embedding, sentences: List[Sentence], device: torch.device =
 
 
 def build_transformer_model_inputs(
-        embedding,
-        batch_encoding,
-        sentences: List[Sentence],
-        offsets: List[int],
-        lengths: List[int],
-        flair_tokens: List[List[str]],
-        device: torch.device,
+    embedding,
+    batch_encoding,
+    sentences: List[Sentence],
+    offsets: List[int],
+    lengths: List[int],
+    flair_tokens: List[List[str]],
+    device: torch.device,
 ):
     input_ids = batch_encoding["input_ids"].to(device, non_blocking=True)
     model_kwargs = {"input_ids": input_ids}
@@ -271,7 +270,7 @@ def build_transformer_model_inputs(
             sentence_idx = 0
             for sentence, part_length in zip(sentences, sentence_part_lengths):
                 lang_id = lang2id.get(sentence.get_language_code(), 0)
-                model_kwargs["langs"][sentence_idx: sentence_idx + part_length] = lang_id
+                model_kwargs["langs"][sentence_idx : sentence_idx + part_length] = lang_id
                 sentence_idx += part_length
     if embedding.token_embedding:
         if embedding.tokenizer.is_fast:
@@ -416,20 +415,20 @@ def reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens:
 
 class TransformerOnnxEmbeddings(Embeddings[Sentence]):
     def __init__(
-            self,
-            onnx_model: str,
-            name: str,
-            tokenizer: PreTrainedTokenizer,
-            embedding_length: int,
-            context_length: int,
-            respect_document_boundaries: bool,
-            stride: int,
-            allow_long_sentences: bool,
-            truncate: bool,
-            use_lang_emb: bool,
-            document_embedding=False,
-            token_embedding=False,
-            providers: List = [],
+        self,
+        onnx_model: str,
+        name: str,
+        tokenizer: PreTrainedTokenizer,
+        embedding_length: int,
+        context_length: int,
+        respect_document_boundaries: bool,
+        stride: int,
+        allow_long_sentences: bool,
+        truncate: bool,
+        use_lang_emb: bool,
+        document_embedding=False,
+        token_embedding=False,
+        providers: List = [],
     ):
         self.name = name
         super().__init__()
@@ -460,8 +459,9 @@ class TransformerOnnxEmbeddings(Embeddings[Sentence]):
         self.session = onnxruntime.InferenceSession(self.onnx_model, providers=self.providers)
 
     def optimize_model(self, optimize_model_path, **kwargs):
-        """Wrapper for onnxruntime.transformers.optimizer.optimize_model """
+        """Wrapper for onnxruntime.transformers.optimizer.optimize_model"""
         from onnxruntime.transformers.optimizer import optimize_model
+
         self.session._sess = None
         del self.session
         model = optimize_model(self.onnx_model, **kwargs)
@@ -471,12 +471,12 @@ class TransformerOnnxEmbeddings(Embeddings[Sentence]):
 
     def quantize_model(self, quantize_model_path, **kwargs):
         from onnxruntime.quantization import quantize_dynamic
+
         self.session._sess = None
         del self.session
         quantize_dynamic(self.onnx_model, quantize_model_path, use_external_data_format=True, **kwargs)
         self.onnx_model = quantize_model_path
         self.create_session()
-
 
     def __getstate__(self):
         tokenizer_data = tokenizer_bytes(self.tokenizer)
@@ -562,8 +562,12 @@ class TransformerOnnxEmbeddings(Embeddings[Sentence]):
 
     @classmethod
     def export_from_embedding(
-            cls, path: Union[str, Path], embedding: "TransformerEmbeddings", example_sentences: List[Sentence],
-            opset_version: int = 13, providers: List = None
+        cls,
+        path: Union[str, Path],
+        embedding: "TransformerEmbeddings",
+        example_sentences: List[Sentence],
+        opset_version: int = 13,
+        providers: List = None,
     ):
         path = str(path)
         example_tensors = prepare_tensors(embedding, example_sentences)
@@ -577,14 +581,17 @@ class TransformerOnnxEmbeddings(Embeddings[Sentence]):
         if providers is None:
             if flair.device.type == "cuda":
                 providers = [
-                    ('CUDAExecutionProvider', {
-                        'device_id': 0,
-                        'arena_extend_strategy': 'kNextPowerOfTwo',
-                        'gpu_mem_limit': 4 * 1024 * 1024 * 1024,
-                        'cudnn_conv_algo_search': 'EXHAUSTIVE',
-                        'do_copy_in_default_stream': True,
-                    }),
-                    'CPUExecutionProvider',
+                    (
+                        "CUDAExecutionProvider",
+                        {
+                            "device_id": 0,
+                            "arena_extend_strategy": "kNextPowerOfTwo",
+                            "gpu_mem_limit": 4 * 1024 * 1024 * 1024,
+                            "cudnn_conv_algo_search": "EXHAUSTIVE",
+                            "do_copy_in_default_stream": True,
+                        },
+                    ),
+                    "CPUExecutionProvider",
                 ]
             else:
                 providers = ["CPUExecutionProvider"]
@@ -611,25 +618,21 @@ class TransformerOnnxEmbeddings(Embeddings[Sentence]):
             truncate=embedding.truncate,
             use_lang_emb=embedding.use_lang_emb,
         )
-        return cls(
-            onnx_model=path,
-            providers=providers,
-            **kwargs
-        )
+        return cls(onnx_model=path, providers=providers, **kwargs)
 
 
 class TransformerOnnxWordEmbeddings(TokenEmbeddings, TransformerOnnxEmbeddings):
     def __init__(
-            self,
-            **kwargs,
+        self,
+        **kwargs,
     ):
         TransformerOnnxEmbeddings.__init__(self, **kwargs)
 
 
 class TransformerOnnxDocumentEmbeddings(DocumentEmbeddings, TransformerOnnxEmbeddings):
     def __init__(
-            self,
-            **kwargs,
+        self,
+        **kwargs,
     ):
         TransformerOnnxEmbeddings.__init__(self, **kwargs)
 
@@ -638,23 +641,23 @@ class TransformerEmbeddings(Embeddings[Sentence]):
     onnx_cls = TransformerOnnxEmbeddings
 
     def __init__(
-            self,
-            model: str = "bert-base-uncased",
-            fine_tune: bool = True,
-            layers: str = "-1",
-            layer_mean: bool = True,
-            subtoken_pooling: str = "first",
-            cls_pooling: str = "cls",
-            is_token_embedding: bool = True,
-            is_document_embedding: bool = True,
-            allow_long_sentences: bool = False,
-            use_context: Union[bool, int] = False,
-            respect_document_boundaries: bool = True,
-            context_dropout: float = 0.5,
-            saved_config: Optional[PretrainedConfig] = None,
-            tokenizer_data: Optional[BytesIO] = None,
-            name: Optional[str] = None,
-            **kwargs,
+        self,
+        model: str = "bert-base-uncased",
+        fine_tune: bool = True,
+        layers: str = "-1",
+        layer_mean: bool = True,
+        subtoken_pooling: str = "first",
+        cls_pooling: str = "cls",
+        is_token_embedding: bool = True,
+        is_document_embedding: bool = True,
+        allow_long_sentences: bool = False,
+        use_context: Union[bool, int] = False,
+        respect_document_boundaries: bool = True,
+        context_dropout: float = 0.5,
+        saved_config: Optional[PretrainedConfig] = None,
+        tokenizer_data: Optional[BytesIO] = None,
+        name: Optional[str] = None,
+        **kwargs,
     ):
         self.instance_parameters = self.get_instance_parameters(locals=locals())
         del self.instance_parameters["saved_config"]
@@ -777,7 +780,7 @@ class TransformerEmbeddings(Embeddings[Sentence]):
         normal_count = len(tokens_without_special)
 
         for begin_offset in range(len(tokens_with_special) - normal_count):
-            if tokens_with_special[begin_offset: begin_offset + normal_count] == tokens_without_special:
+            if tokens_with_special[begin_offset : begin_offset + normal_count] == tokens_without_special:
                 return begin_offset
         log.warning(
             f"Could not determine the begin offset of the tokenizer for transformer model {self.name}, assuming 0"
@@ -891,20 +894,20 @@ class TransformerEmbeddings(Embeddings[Sentence]):
     def _can_document_embedding_shortcut(self):
         # cls first pooling can be done without recreating sentence hidden states
         return (
-                self.document_embedding
-                and not self.token_embedding
-                and self.cls_pooling == "cls"
-                and self.initial_cls_token
+            self.document_embedding
+            and not self.token_embedding
+            and self.cls_pooling == "cls"
+            and self.initial_cls_token
         )
 
     def forward(
-            self,
-            input_ids: torch.Tensor,
-            attention_mask: Optional[torch.Tensor] = None,
-            overflow_to_sample_mapping: Optional[torch.Tensor] = None,
-            word_ids: Optional[torch.Tensor] = None,
-            lengths: Optional[torch.Tensor] = None,
-            langs: Optional[torch.Tensor] = None,
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: Optional[torch.Tensor] = None,
+        overflow_to_sample_mapping: Optional[torch.Tensor] = None,
+        word_ids: Optional[torch.Tensor] = None,
+        lengths: Optional[torch.Tensor] = None,
+        langs: Optional[torch.Tensor] = None,
     ):
         model_kwargs = {}
         if langs is not None:
@@ -985,8 +988,8 @@ class TransformerEmbeddings(Embeddings[Sentence]):
                     first_mask,
                     word_ids,
                 )
-                all_token_embeddings[:, :, sentence_hidden_states.shape[2]:] = fill_masked_elements(
-                    all_token_embeddings[:, :, sentence_hidden_states.shape[2]:],
+                all_token_embeddings[:, :, sentence_hidden_states.shape[2] :] = fill_masked_elements(
+                    all_token_embeddings[:, :, sentence_hidden_states.shape[2] :],
                     sentence_hidden_states,
                     last_mask,
                     word_ids,

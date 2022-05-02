@@ -1,7 +1,5 @@
 # Expose base classses
-from flair.embeddings.transformer import (
-    TransformerEmbeddings,
-)
+from flair.embeddings.transformer import TransformerEmbeddings
 
 from .base import Embeddings, ScalarMix
 
@@ -13,7 +11,8 @@ from .document import (
     DocumentPoolEmbeddings,
     DocumentRNNEmbeddings,
     DocumentTFIDFEmbeddings,
-    SentenceTransformerDocumentEmbeddings, TransformerDocumentEmbeddings,
+    SentenceTransformerDocumentEmbeddings,
+    TransformerDocumentEmbeddings,
 )
 
 # Expose image embedding classes
@@ -56,7 +55,8 @@ from .token import (
     PooledFlairEmbeddings,
     StackedEmbeddings,
     TokenEmbeddings,
-    WordEmbeddings, TransformerWordEmbeddings,
+    TransformerWordEmbeddings,
+    WordEmbeddings,
 )
 
 __all__ = [
