@@ -58,7 +58,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                  label_dictionary: Dictionary,
                  label_type: str,
                  entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
-                 relations: Optional[Dict[str, Set[Tuple[str, str]]]] = None,
+                 entity_pair_labels: Optional[Set[Tuple[str, str]]] = None,
                  entity_threshold: Optional[float] = None,
                  zero_tag_value: str = 'O',
                  allow_unk_tag: bool = True,
@@ -74,28 +74,26 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         :param entity_label_types: A label type or sequence of label types of the required relation entities.
                                    You can also specify a label filter in a dictionary with the label type as key and
                                    the valid entity labels as values in a set.
-                                   E.g. to use only 'PER' and 'ORG' labels from a NER-tagger: `{'ner': {'PER', 'ORG'}}`
-                                        to use all labels from 'ner', pass 'ner'.
-        :param relations: A dictionary filter of valid relation entity pair combinations
-                          to be used as relation candidates. Specify the relation as key and
-                          the valid entity pair labels in a set of tuples (<HEAD>, <TAIL>) as value.
-                          E.g. for the `born_in` relation, only relations from 'PER' to 'LOC' make sense.
-                          Relations from 'PER' to 'PER' are not meaningful.
-                          Therefore, it is advised to specify the valid relations as: `{'born_in': {('PER', 'ORG')}}`.
-
-                          This setting may help to reduce the number of relation candidates to be classified.
-                          Leaving this parameter as `None` (default) disables the relation-filter,
-                          i.e. the model classifies the relation for each entity pair
-                          in the cross product of all valid entity pairs.
-
+                                   E.g. to use only 'PER' and 'ORG' labels from a NER-tagger: `{'ner': {'PER', 'ORG'}}`.
+                                   To use all labels from 'ner', pass 'ner'.
+        :param entity_pair_labels: A set of valid relation entity pair combinations, used as relation candidates.
+                                   Specify valid entity pairs in a set of tuples of labels (<HEAD>, <TAIL>).
+                                   E.g. for the `born_in` relation, only relations from 'PER' to 'LOC' make sense.
+                                   Here, relations from 'PER' to 'PER' are not meaningful, so
+                                   it is advised to specify the `entity_pair_labels` as `{('PER', 'ORG')}`.
+                                   This setting may help to reduce the number of relation candidates.
+                                   Leaving this parameter as `None` (default) disables the relation-candidate-filter,
+                                   i.e. the model classifies the relation for each entity pair
+                                   in the cross product of *all* entity pairs (inefficient).
         :param entity_threshold: Only pre-labelled entities above this threshold are taken into account by the model.
         :param zero_tag_value: The label to use for out-of-class relations
-        :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing
+        :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
         :param train_on_gold_pairs_only: If `True`, skip out-of-class relations in training.
                                          If `False`, out-of-class relations are used in training as well.
         :param mask_remainder: If `True`, also mask entities which are not part of the current entity pair,
                                otherwise such entities will not be masked.
-                               (Setting this parameter to `True` may help to reduce the sentence's sequence length for long entities.)
+                               (Setting this parameter to `True` may help to
+                               reduce the sentence's sequence length for long entities.)
         :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
         """
         # Set lable type and modify label dictionary
@@ -119,7 +117,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         else:
             self.entity_label_types = entity_label_types
 
-        self.relations = relations
+        self.entity_pair_labels = entity_pair_labels
 
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
         self.mask_remainder = mask_remainder
@@ -160,7 +158,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         Yields all valid entity pair permutations (relation candidates) and
         the set difference of all valid entities and the entity pair (the remainder).
         The permutations are constructed by a filtered cross-product
-        under the specification of `self.entity_label_types` and `self.relations`.
+        under the specification of `self.entity_label_types` and `self.entity_pair_labels`.
         :param sentence: A flair `Sentence` object with entity annotations
         :return: Tuples of (<HEAD>, <TAIL>, List[<REMAINDER>]) `_Entity`s
         """
@@ -173,9 +171,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             if head.span is tail.span:
                 continue
 
-            # Remove entity pairs with labels that do not match any of the specified relations in `self.relations`
-            if self.relations is not None and all((head.label.value, tail.label.value) not in pairs
-                                                  for pairs in self.relations.values()):
+            # Remove entity pairs with labels that do not match any
+            # of the specified relations in `self.entity_pair_labels`
+            if (self.entity_pair_labels is not None and
+                    (head.label.value, tail.label.value) not in self.entity_pair_labels):
                 continue
 
             remainder: List[_Entity] = [
@@ -339,7 +338,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             'label_dictionary': self.label_dictionary,
             'label_type': self.label_type,
             'entity_label_types': self.entity_label_types,
-            'relations': self.relations,
+            'entity_pair_labels': self.entity_pair_labels,
             'entity_threshold': self.entity_threshold,
             'zero_tag_value': self.zero_tag_value,
             'train_on_gold_pairs_only': self.train_on_gold_pairs_only,
@@ -355,7 +354,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             label_dictionary=state['label_dictionary'],
             label_type=state['label_type'],
             entity_label_types=state['entity_label_types'],
-            relations=state['relations'],
+            entity_pair_labels=state['entity_pair_labels'],
             entity_threshold=state['entity_threshold'],
             zero_tag_value=state['zero_tag_value'],
             train_on_gold_pairs_only=state['train_on_gold_pairs_only'],

@@ -42,9 +42,9 @@ def test_train_load_use_relation_classifier(results_base_path: Path, tasks_base_
         label_dictionary=label_dictionary,
         label_type='relation',
         entity_label_types='ner',
-        relations={  # Define valid entity pair combinations, used as relation candidates
-            'founded_by': {('ORG', 'PER')},
-            'place_of_birth': {('LOC', 'PER')}
+        entity_pair_labels={  # Define valid entity pair combinations, used as relation candidates
+            ('ORG', 'PER'),  # founded_by
+            ('LOC', 'PER')  # place_of_birth
         }
     )
 
