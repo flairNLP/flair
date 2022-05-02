@@ -445,6 +445,10 @@ class TransformerOnnxEmbeddings(Embeddings[Sentence]):
         self.use_lang_emb = use_lang_emb
         self.providers = providers
         self.onnx_model = onnx_model
+        self.create_session()
+        self.eval()
+
+    def create_session(self):
         try:
             import onnxruntime
         except ImportError:
@@ -453,9 +457,26 @@ class TransformerOnnxEmbeddings(Embeddings[Sentence]):
                 "please run `pip install onnxruntime`"
             )
             raise
+        self.session = onnxruntime.InferenceSession(self.onnx_model, providers=self.providers)
 
-        self.session = onnxruntime.InferenceSession(onnx_model, providers=providers)
-        self.eval()
+    def optimize_model(self, optimize_model_path, **kwargs):
+        """Wrapper for onnxruntime.transformers.optimizer.optimize_model """
+        from onnxruntime.transformers.optimizer import optimize_model
+        self.session._sess = None
+        del self.session
+        model = optimize_model(self.onnx_model, **kwargs)
+        model.save_model_to_file(optimize_model_path, use_external_data_format=True)
+        self.onnx_model = optimize_model_path
+        self.create_session()
+
+    def quantize_model(self, quantize_model_path, **kwargs):
+        from onnxruntime.quantization import quantize_dynamic
+        self.session._sess = None
+        del self.session
+        quantize_dynamic(self.onnx_model, quantize_model_path, use_external_data_format=True, **kwargs)
+        self.onnx_model = quantize_model_path
+        self.create_session()
+
 
     def __getstate__(self):
         tokenizer_data = tokenizer_bytes(self.tokenizer)
