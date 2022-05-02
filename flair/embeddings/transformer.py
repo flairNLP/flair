@@ -140,9 +140,9 @@ def document_max_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths:
         result[i], _ = sentence_hidden_states[i, : sentence_lengths[i]].max(dim=0)  # type: ignore
 
 
-def extract_document_embeddings(self, sentence_hidden_states, sentences):
+def extract_document_embeddings(name, sentence_hidden_states, sentences):
     for document_emb, sentence in zip(sentence_hidden_states, sentences):
-        sentence.set_embedding(self.name, document_emb)
+        sentence.set_embedding(name, document_emb)
 
 
 def extract_token_embeddings(name, sentence_embeddings, sentences):
