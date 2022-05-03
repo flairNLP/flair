@@ -556,7 +556,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
             self.session = onnxruntime.InferenceSession(self.onnx_model, providers=self.providers)
         else:
             log.warning(
-                f"Could not find file '{self.onnx_model}' used in {self.__class__.name}."
+                f"Could not find file '{self.onnx_model}' used in {self.__class__.name}({self.name})."
                 "The embedding won't work unless a valid path is set."
             )
             self.session = None
