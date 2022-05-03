@@ -1,5 +1,11 @@
 # Expose base classses
-from flair.embeddings.transformer import TransformerEmbeddings
+from flair.embeddings.transformer import (
+    TransformerEmbeddings,
+    TransformerOnnxWordEmbeddings,
+    TransformerOnnxDocumentEmbeddings,
+    TransformerJitWordEmbeddings,
+    TransformerJitDocumentEmbeddings,
+)
 
 from .base import Embeddings, ScalarMix
 
@@ -104,4 +110,8 @@ __all__ = [
     "TransformerWordEmbeddings",
     "WordEmbeddings",
     "TransformerEmbeddings",
+    "TransformerOnnxWordEmbeddings",
+    "TransformerOnnxDocumentEmbeddings",
+    "TransformerJitWordEmbeddings",
+    "TransformerJitDocumentEmbeddings",
 ]
