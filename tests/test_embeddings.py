@@ -14,6 +14,7 @@ from flair.embeddings import (
     TransformerWordEmbeddings,
     WordEmbeddings,
 )
+from flair.embeddings.transformer import TransformerJitWordEmbeddings
 from flair.models import LanguageModel, SequenceTagger
 
 glove: TokenEmbeddings = WordEmbeddings("turian")
@@ -121,6 +122,85 @@ def test_transformer_word_embeddings():
 #     for (token_de, token_en, exp_sim) in zip(sent_de, sent_en, expected_similarities):
 #         sim = cos(token_de.embedding, token_en.embedding).item()
 #         assert abs(exp_sim - sim) < 1e-5
+
+
+@pytest.mark.integration
+def test_transformer_jit_embeddings(results_base_path):
+    base_embeddings = TransformerWordEmbeddings(
+        "distilbert-base-uncased", layers="-1,-2,-3,-4", layer_mean=False, allow_long_sentences=True
+    )
+    sentence: Sentence = Sentence("I love Berlin, but Vienna is where my hearth is.")
+
+    class JitWrapper(torch.nn.Module):
+        def __init__(self, embedding: TransformerWordEmbeddings):
+            super().__init__()
+            self.embedding = embedding
+
+        def forward(
+            self,
+            input_ids: torch.Tensor,
+            attention_mask: torch.Tensor,
+            overflow_to_sample_mapping: torch.Tensor,
+            word_ids: torch.Tensor,
+        ):
+            return self.embedding.forward(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                overflow_to_sample_mapping=overflow_to_sample_mapping,
+                word_ids=word_ids,
+            )["token_embeddings"]
+
+    base_embeddings.embed(sentence)
+    base_token_embedding = sentence[5].get_embedding().clone()
+    sentence.clear_embeddings()
+
+    tensors = base_embeddings.prepare_tensors([sentence])
+    # ensure that the prepared tensors is what we expect
+    assert sorted(tensors.keys()) == ["attention_mask", "input_ids", "overflow_to_sample_mapping", "word_ids"]
+
+    wrapper = JitWrapper(base_embeddings)
+    parameter_list = TransformerJitWordEmbeddings.parameter_to_list(base_embeddings, wrapper, [sentence])
+    script_module = torch.jit.trace(wrapper, parameter_list)
+    jit_embeddings = TransformerJitWordEmbeddings.create_from_embedding(script_module, base_embeddings)
+
+    jit_embeddings.embed(sentence)
+    jit_token_embedding = sentence[5].get_embedding().clone()
+    assert torch.isclose(base_token_embedding, jit_token_embedding).all()
+    sentence.clear_embeddings()
+
+    # use a SequenceTagger to save and reload the embedding in the manner it is supposed to work
+    example_tagger = SequenceTagger(embeddings=jit_embeddings, tag_dictionary=Dictionary(), tag_type="none")
+    results_base_path.mkdir(exist_ok=True, parents=True)
+    example_tagger.save(results_base_path / "tagger.pt")
+    del example_tagger
+    new_example_tagger = SequenceTagger.load(results_base_path / "tagger.pt")
+    loaded_jit_embedding = new_example_tagger.embeddings
+
+    loaded_jit_embedding.embed(sentence)
+    loaded_jit_token_embedding = sentence[5].get_embedding().clone()
+    sentence.clear_embeddings()
+    assert torch.isclose(jit_token_embedding, loaded_jit_token_embedding).all()
+
+
+def test_transformer_word_embeddings_forward_language_ids():
+    cos = torch.nn.CosineSimilarity(dim=0, eps=1e-10)
+
+    sent_en = Sentence(["This", "is", "a", "sentence"], language_code="en")
+    sent_de = Sentence(["Das", "ist", "ein", "Satz"], language_code="de")
+
+    embeddings = TransformerWordEmbeddings("xlm-mlm-ende-1024", layers="all", allow_long_sentences=False)
+
+    embeddings.embed([sent_de, sent_en])
+    expected_similarities = [
+        0.7102344036102295,
+        0.7598986625671387,
+        0.7437312602996826,
+        0.5584433674812317,
+    ]
+
+    for (token_de, token_en, exp_sim) in zip(sent_de, sent_en, expected_similarities):
+        sim = cos(token_de.embedding, token_en.embedding).item()
+        assert abs(exp_sim - sim) < 1e-5
 
 
 def test_transformer_weird_sentences():
