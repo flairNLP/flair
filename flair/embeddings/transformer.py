@@ -567,21 +567,23 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
             del self.session
         self.session = None
 
-    def optimize_model(self, optimize_model_path, **kwargs):
+    def optimize_model(self, optimize_model_path, use_external_data_format: bool = False, **kwargs):
         """Wrapper for onnxruntime.transformers.optimizer.optimize_model"""
         from onnxruntime.transformers.optimizer import optimize_model
 
         self.remove_session()
         model = optimize_model(self.onnx_model, **kwargs)
-        model.save_model_to_file(optimize_model_path, use_external_data_format=True)
+        model.save_model_to_file(optimize_model_path, use_external_data_format=use_external_data_format)
         self.onnx_model = optimize_model_path
         self.create_session()
 
-    def quantize_model(self, quantize_model_path, **kwargs):
+    def quantize_model(self, quantize_model_path, use_external_data_format: bool = False, **kwargs):
         from onnxruntime.quantization import quantize_dynamic
 
         self.remove_session()
-        quantize_dynamic(self.onnx_model, quantize_model_path, use_external_data_format=True, **kwargs)
+        quantize_dynamic(
+            self.onnx_model, quantize_model_path, use_external_data_format=use_external_data_format, **kwargs
+        )
         self.onnx_model = quantize_model_path
         self.create_session()
 
