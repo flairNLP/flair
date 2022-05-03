@@ -1,10 +1,10 @@
 # Expose base classses
 from flair.embeddings.transformer import (
     TransformerEmbeddings,
-    TransformerOnnxWordEmbeddings,
-    TransformerOnnxDocumentEmbeddings,
-    TransformerJitWordEmbeddings,
     TransformerJitDocumentEmbeddings,
+    TransformerJitWordEmbeddings,
+    TransformerOnnxDocumentEmbeddings,
+    TransformerOnnxWordEmbeddings,
 )
 
 from .base import Embeddings, ScalarMix
