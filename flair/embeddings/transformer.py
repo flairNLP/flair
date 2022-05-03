@@ -552,11 +552,20 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
                 "please run `pip install onnxruntime`"
             )
             raise
-        self.session = onnxruntime.InferenceSession(self.onnx_model, providers=self.providers)
+        if os.path.isfile(self.onnx_model):
+            self.session = onnxruntime.InferenceSession(self.onnx_model, providers=self.providers)
+        else:
+            log.warning(
+                f"Could not find file '{self.onnx_model}' used in {self.__class__.name}."
+                "The embedding won't work unless a valid path is set."
+            )
+            self.session = None
 
     def remove_session(self):
-        self.session._sess = None
-        del self.session
+        if self.session is not None:
+            self.session._sess = None
+            del self.session
+        self.session = None
 
     def optimize_model(self, optimize_model_path, **kwargs):
         """Wrapper for onnxruntime.transformers.optimizer.optimize_model"""
