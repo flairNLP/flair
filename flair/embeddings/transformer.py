@@ -262,6 +262,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         respect_document_boundaries: bool,
         stride: int,
         allow_long_sentences: bool,
+        fine_tune: bool,
         truncate: bool,
         use_lang_emb: bool,
         document_embedding=False,
@@ -282,6 +283,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         self.truncate = truncate
         self.use_lang_emb = use_lang_emb
         self.force_device = force_device
+        self.fine_tune = fine_tune
 
         if not self.token_embedding and not self.document_embedding:
             raise ValueError("either 'is_token_embedding' or 'is_document_embedding' needs to be set.")
@@ -299,6 +301,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             "stride": self.stride,
             "embedding_length": self.embedding_length_internal,
             "name": self.name,
+            "fine_tune": self.fine_tune,
             "use_lang_emb": self.use_lang_emb,
         }
 
@@ -517,7 +520,9 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         tensors = self.prepare_tensors(sentences, device=self.force_device)
-        embeddings = self._forward_tensors(tensors)
+        gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
+        with gradient_context:
+            embeddings = self._forward_tensors(tensors)
 
         if self.document_embedding:
             document_embedding = embeddings["document_embeddings"]
@@ -855,20 +860,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
         # most models have an initial BOS token, except for XLNet, T5 and GPT2
         self.initial_cls_token: bool = self._has_initial_cls_token()
-        super().__init__(
-            self.name,
-            self.tokenizer,
-            self.embedding_length_internal,
-            self.context_length,
-            self.context_dropout,
-            self.respect_document_boundaries,
-            self.stride,
-            self.allow_long_sentences,
-            self.truncate,
-            self.use_lang_emb,
-            self.document_embedding,
-            self.token_embedding,
-        )
+
+        super().__init__(**self.to_args())
         self.model = transformer_model
         self.to(flair.device)
         # when initializing, embeddings are in eval mode by default
