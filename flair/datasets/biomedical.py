@@ -432,7 +432,11 @@ def bigbio_dataset_to_annotated_flair_sentences(dataset, tokenizer, add_labels: 
                                     tokens.append(entity_token)
                                     tokens_text = "".join([t.text for t in tokens])
                                     entity_text = entity["text"][0].replace(" ", "")
-                                    assert tokens_text == entity_text
+                                    # Test if the text of the created tokens matches the entity
+                                    if tokens_text != entity_text:
+                                        print(
+                                            "Error when trying to split the sentence into the tokens from the dataset: Text of tokens does not match text of entity"
+                                        )
                                     break
 
                                 # Case: Begin does not match
@@ -529,14 +533,16 @@ def bigbio_dataset_to_annotated_flair_sentences(dataset, tokenizer, add_labels: 
                                 concept_name=entity["text"],
                                 ontology=gold_annotation["db_name"],
                             )
-                            sentence["text"].add_complex_label(typename=entity["type"] + "_GOLD", label=label)
+                            if add_labels:
+                                sentence["text"].add_complex_label(typename=entity["type"] + "_GOLD", label=label)
                         break
 
                 # if no matching sentence for the token was found
                 else:
                     raise Exception("Could not find position of the entity " + entity["id"])
 
-        sentences.append([sentence["text"] for sentence in sentences_with_offsets])
+        for sentence in sentences_with_offsets:
+            sentences.append(sentence["text"])
 
     return sentences
 
@@ -738,10 +744,10 @@ class HunerDataset(ColumnCorpus, ABC):
 
 
 class NLM_CHEM:
-    def __init__(self, path_to_dataset_loader, use_tokenizer):
+    def __init__(self, path_to_dataset_loader, use_tokenizer, split="validation"):
         print(Path("nlmchem.py"))
         dataset = load_dataset(path_to_dataset_loader, name="nlmchem_bigbio_kb", cache_dir=cache_root / "datasets")
-        self.dataset = dataset["validation"]
+        self.dataset = dataset[split]
         self.tokenizer = use_tokenizer
         self.sentences = bigbio_dataset_to_annotated_flair_sentences(
             self.dataset, tokenizer=use_tokenizer, add_labels=False
@@ -754,6 +760,7 @@ class NLM_CHEM:
         self.annotated_sentences = bigbio_dataset_to_annotated_flair_sentences(
             self.dataset, self.tokenizer, add_labels=True
         )
+        return self.annotated_sentences
 
 
 class BIO_INFER(ColumnCorpus):
