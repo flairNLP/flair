@@ -86,17 +86,13 @@ class TextPreprocess:
         self.punctuation = punctuation
         for ig_punc in ignore_punctuations:
             self.punctuation = self.punctuation.replace(ig_punc, "")
-        self.rmv_puncts_regex = re.compile(
-            r"[\s{}]+".format(re.escape(self.punctuation))
-        )
-
+        self.rmv_puncts_regex = re.compile(r"[\s{}]+".format(re.escape(self.punctuation)))
 
     def remove_punctuation(self, phrase):
         phrase = self.rmv_puncts_regex.split(phrase)
         phrase = " ".join(phrase).strip()
 
         return phrase
-
 
     def run(self, text):
         if self.lowercase:
@@ -116,8 +112,6 @@ class NamesDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         return {key: val[idx].clone().detach() for key, val in self.encodings.items()}
-        # This gave a warning
-        # return {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
 
     def __len__(self):
         return len(self.encodings.input_ids)
@@ -190,12 +184,10 @@ class BioSyn(object):
         # check file exists
         if not os.path.isfile(sparse_encoder_path):
             # download from huggingface hub and cache it
-            sparse_encoder_url = hf_hub_url(
-                model_name_or_path, filename="sparse_encoder.pk"
-            )
+            sparse_encoder_url = hf_hub_url(model_name_or_path, filename="sparse_encoder.pk")
             sparse_encoder_path = cached_download(
-                url=sparse_encoder_url,
-                cache_dir=flair.cache_root / "models" / model_name_or_path)
+                url=sparse_encoder_url, cache_dir=flair.cache_root / "models" / model_name_or_path
+            )
 
         self.sparse_encoder = SparseEncoder().load_encoder(path=sparse_encoder_path)
 
@@ -206,12 +198,9 @@ class BioSyn(object):
         # check file exists
         if not os.path.isfile(sparse_weight_path):
             # download from huggingface hub and cache it
-            sparse_weight_url = hf_hub_url(
-                model_name_or_path, filename="sparse_weight.pt"
-            )
+            sparse_weight_url = hf_hub_url(model_name_or_path, filename="sparse_weight.pt")
             sparse_weight_path = cached_download(
-                url=sparse_weight_url,
-                cache_dir=flair.cache_root / "models" / model_name_or_path
+                url=sparse_weight_url, cache_dir=flair.cache_root / "models" / model_name_or_path
             )
 
         self.sparse_weight = torch.load(sparse_weight_path)
@@ -238,9 +227,7 @@ class BioSyn(object):
         """
 
         def indexing_2d(arr, cols):
-            rows = np.repeat(
-                np.arange(0, cols.shape[0])[:, np.newaxis], cols.shape[1], axis=1
-            )
+            rows = np.repeat(np.arange(0, cols.shape[0])[:, np.newaxis], cols.shape[1], axis=1)
             return arr[rows, cols]
 
         # get topk indexes without sorting
@@ -249,10 +236,10 @@ class BioSyn(object):
         # get topk indexes with sorting
         topk_score_matrix = indexing_2d(score_matrix, topk_idxs)
         topk_argidxs = np.argsort(-topk_score_matrix)
-        topk_scores = np.sort(topk_score_matrix)
+        topk_scores = np.sort(-topk_score_matrix)
         topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
 
-        return topk_idxs, topk_scores
+        return topk_idxs, -topk_scores
 
     def embed_sparse(self, names, show_progress=False):
         """
@@ -309,42 +296,44 @@ class BioSyn(object):
         )
 
         with torch.no_grad():
-            for batch in tqdm(
-                name_dataloader, disable=not show_progress, desc="embedding dictionary"
-            ):
+            for batch in tqdm(name_dataloader, disable=not show_progress, desc="embedding dictionary"):
                 outputs = self.encoder(**batch)
-                batch_dense_embeds = (
-                    outputs[0][:, 0].cpu().detach().numpy()
-                )  # [CLS] representations
+                batch_dense_embeds = outputs[0][:, 0].cpu().detach().numpy()  # [CLS] representations
                 dense_embeds.append(batch_dense_embeds)
         dense_embeds = np.concatenate(dense_embeds, axis=0)
 
         return dense_embeds
 
-    def get_predictions(self, mention, dictionary, dict_sparse_embeds, dict_dense_embeds, topk, tgt_space_mean_vec=None):
+    def get_predictions(
+        self, mention, dictionary, dict_sparse_embeds, dict_dense_embeds, topk, tgt_space_mean_vec=None, threshold=None
+    ):
         # embed mention
         mention_sparse_embeds = self.embed_sparse(names=[mention])
         mention_dense_embeds = self.embed_dense(names=[mention])
 
-        # calcuate score matrix and get top 5
-        sparse_score_matrix = self.get_score_matrix(
-            query_embeds=mention_sparse_embeds, dict_embeds=dict_sparse_embeds
-        )
-        dense_score_matrix = self.get_score_matrix(
-            query_embeds=mention_dense_embeds, dict_embeds=dict_dense_embeds
-        )
+        # calcuate score matrix and get top k
+        sparse_score_matrix = self.get_score_matrix(query_embeds=mention_sparse_embeds, dict_embeds=dict_sparse_embeds)
+        dense_score_matrix = self.get_score_matrix(query_embeds=mention_dense_embeds, dict_embeds=dict_dense_embeds)
         sparse_weight = self.get_sparse_weight().item()
         hybrid_score_matrix = sparse_weight * sparse_score_matrix + dense_score_matrix
         hybrid_candidate_idxs, hybrid_candidate_scores = self.retrieve_candidate(
             score_matrix=hybrid_score_matrix, topk=topk
         )
-        # return dictionary[hybrid_candidate_idxs].squeeze(0)
-        return [np.append(dictionary[ind], score) for ind, score in zip(hybrid_candidate_idxs[0].tolist(), hybrid_candidate_scores[0].tolist())]
+
+        # Filter for only scores that are over thershold * maximum score
+        scores = []
+        if threshold is not None:
+            max_score = hybrid_candidate_scores[0].tolist()[0]
+            scores = filter(lambda score: (score >= threshold * max_score), hybrid_candidate_scores[0].tolist())
+        else:
+            scores = hybrid_candidate_scores[0].tolist()
+
+        return [np.append(dictionary[ind], score) for ind, score in zip(hybrid_candidate_idxs[0].tolist(), scores)]
 
 
 class SapBert(object):
     """
-    Wrapper class for BERT encoder
+    Wrapper class for BERT encoder for SapBert
     """
 
     # Same as BioSyn
@@ -358,35 +347,25 @@ class SapBert(object):
     # Differenece to BioSyn: not loading sparse encoder and weights
     def load_model(self, model_name_or_path):
         self.load_bert(model_name_or_path)
-        
+
         return self
 
     # Difference to load_dense_encoder in BioSyn: use_fast and do_lower_case
     def load_bert(self, path, lowercase=True):
-        self.tokenizer = AutoTokenizer.from_pretrained(path, 
-                use_fast=True, do_lower_case=lowercase)
+        self.tokenizer = AutoTokenizer.from_pretrained(path, use_fast=True, do_lower_case=lowercase)
         self.encoder = AutoModel.from_pretrained(path)
         if self.use_cuda:
             self.encoder = self.encoder.cuda()
 
         return self.encoder, self.tokenizer
-    
+
     # Difference to BioSyn: has parameters cosine and normalize and uses them, same when not cosine and not normalize
     def get_score_matrix(self, query_embeds, dict_embeds, cosine=False, normalise=False):
         """
         Return score matrix
-
-        Parameters
-        ----------
-        query_embeds : np.array
-            2d numpy array of query embeddings
-        dict_embeds : np.array
-            2d numpy array of query embeddings
-
-        Returns
-        -------
-        score_matrix : np.array
-            2d numpy array of scores
+        :param query_embeds: 2d numpy array of query embeddings
+        :param dict_embeds: 2d numpy array of query embeddings
+        :param score_matrix: 2d numpy array of scores
         """
         if cosine:
             score_matrix = cosine_similarity(query_embeds, dict_embeds)
@@ -394,69 +373,53 @@ class SapBert(object):
             score_matrix = np.matmul(query_embeds, dict_embeds.T)
 
         if normalise:
-            score_matrix = (score_matrix - score_matrix.min() ) / (score_matrix.max() - score_matrix.min())
-        
+            score_matrix = (score_matrix - score_matrix.min()) / (score_matrix.max() - score_matrix.min())
+
         return score_matrix
 
     # same as in BioSyn
     def retrieve_candidate(self, score_matrix, topk):
         """
         Return sorted topk idxes (descending order)
-
-        Parameters
-        ----------
-        score_matrix : np.array
-            2d numpy array of scores
-        topk : int
-            The number of candidates
-
-        Returns
-        -------
-        topk_idxs : np.array
-            2d numpy array of scores [# of query , # of dict]
+        :param score_matrix: 2d numpy array of scores
+        :param topk: number of candidates
+        :return topk_idxs: 2d numpy array of ids [# of query , # of dict]
+        :return topk_scores: 2d numpy array of top scores
         """
-        
+
         def indexing_2d(arr, cols):
-            rows = np.repeat(np.arange(0,cols.shape[0])[:, np.newaxis],cols.shape[1],axis=1)
+            rows = np.repeat(np.arange(0, cols.shape[0])[:, np.newaxis], cols.shape[1], axis=1)
             return arr[rows, cols]
 
         # get topk indexes without sorting
-        topk_idxs = np.argpartition(score_matrix,-topk)[:, -topk:]
+        topk_idxs = np.argpartition(score_matrix, -topk)[:, -topk:]
 
         # get topk indexes with sorting
         topk_score_matrix = indexing_2d(score_matrix, topk_idxs)
         topk_argidxs = np.argsort(-topk_score_matrix)
-        topk_scores = np.sort(topk_score_matrix)
+        topk_scores = np.sort(-topk_score_matrix)
         topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
 
-        return topk_idxs, topk_scores
+        return topk_idxs, -topk_scores
 
     # Not in BioSyn
     def retrieve_candidate_cuda(self, score_matrix, topk, batch_size=128, show_progress=False):
         """
         Return sorted topk idxes (descending order)
-
-        Parameters
-        ----------
-        score_matrix : np.array
-            2d numpy array of scores
-        topk : int
-            The number of candidates
-
-        Returns
-        -------
-        topk_idxs : np.array
-            2d numpy array of scores [# of query , # of dict]
+        :param score_matrix: 2d numpy array of scores
+        :param topk: number of candidates
+        :return res: d numpy array of ids [# of query , # of dict]
+        :return scores: numpy array of top scores
         """
 
         res = None
         scores = None
         for i in tqdm(np.arange(0, score_matrix.shape[0], batch_size), disable=not show_progress):
-            score_matrix_tmp = torch.tensor(score_matrix[i:i+batch_size]).cuda()
+            score_matrix_tmp = torch.tensor(score_matrix[i : i + batch_size]).cuda()
             sorted_values, matrix_sorted = torch.sort(score_matrix_tmp, dim=1, descending=True)
             matrix_sorted = matrix_sorted[:, :topk].cpu()
             sorted_values = sorted_values[:, :topk].cpu()
-            if res is None: 
+            if res is None:
                 res = matrix_sorted
                 scores = sorted_values
             else:
@@ -474,60 +437,62 @@ class SapBert(object):
     def embed_dense(self, names, show_progress=False, batch_size=2048, agg_mode="cls"):
         """
         Embedding data into dense representations
-
-        Parameters
-        ----------
-        names : np.array
-            An array of names
-
-        Returns
-        -------
-        dense_embeds : list
-            A list of dense embeddings
+        :param names: np.array of names
+        :param show_progress: bool to toggle progress bar
+        :param batch_size: batch size
+        :param agg_mode: options are 'cls', 'mean_all_tol' and 'mean'
+        :return dense_embeds: list of dense embeddings
         """
-        self.encoder.eval() # prevent dropout
-        
-        # Difference: batch size given as parameter
-        batch_size=batch_size
-        dense_embeds = []
+        self.encoder.eval()  # prevent dropout
 
+        # Difference: batch size given as parameter
+        batch_size = batch_size
+        dense_embeds = []
 
         with torch.no_grad():
             if show_progress:
                 iterations = tqdm(range(0, len(names), batch_size))
             else:
                 iterations = range(0, len(names), batch_size)
-                
+
             for start in iterations:
                 end = min(start + batch_size, len(names))
                 batch = names[start:end]
                 batch_tokenized_names = self.tokenizer.batch_encode_plus(
-                        batch, add_special_tokens=True, 
-                        truncation=True, max_length=self.max_length, 
-                        padding="max_length", return_tensors='pt')
+                    batch,
+                    add_special_tokens=True,
+                    truncation=True,
+                    max_length=self.max_length,
+                    padding="max_length",
+                    return_tensors="pt",
+                )
                 batch_tokenized_names_cuda = {}
-                for k,v in batch_tokenized_names.items(): 
+                for k, v in batch_tokenized_names.items():
                     batch_tokenized_names_cuda[k] = v.cuda()
-                
+
                 last_hidden_state = self.encoder(**batch_tokenized_names_cuda)[0]
                 if agg_mode == "cls":
-                    batch_dense_embeds = last_hidden_state[:,0,:] # [CLS]
+                    batch_dense_embeds = last_hidden_state[:, 0, :]  # [CLS]
                 elif agg_mode == "mean_all_tok":
-                    batch_dense_embeds = last_hidden_state.mean(1) # pooling
+                    batch_dense_embeds = last_hidden_state.mean(1)  # pooling
                 elif agg_mode == "mean":
-                    batch_dense_embeds = (last_hidden_state * batch_tokenized_names_cuda['attention_mask'].unsqueeze(-1)).sum(1) / batch_tokenized_names_cuda['attention_mask'].sum(-1).unsqueeze(-1)
+                    batch_dense_embeds = (
+                        last_hidden_state * batch_tokenized_names_cuda["attention_mask"].unsqueeze(-1)
+                    ).sum(1) / batch_tokenized_names_cuda["attention_mask"].sum(-1).unsqueeze(-1)
                 else:
-                    print ("no such agg_mode:", agg_mode)
+                    print("no such agg_mode:", agg_mode)
                     batch_dense_embeds = []
 
                 batch_dense_embeds = batch_dense_embeds.cpu().detach().numpy()
                 dense_embeds.append(batch_dense_embeds)
         dense_embeds = np.concatenate(dense_embeds, axis=0)
-        
+
         return dense_embeds
 
     # possible values for agg_mode: cls|mean_pool|nospec
-    def get_predictions(self, mention, dictionary, dict_sparse_embeds, dict_dense_embeds, topk, tgt_space_mean_vec=None, agg_mode="cls"):
+    def get_predictions(
+        self, mention, dictionary, dict_sparse_embeds, dict_dense_embeds, topk, tgt_space_mean_vec=None, agg_mode="cls"
+    ):
         mention_dense_embeds = self.embed_dense(names=[mention], agg_mode=agg_mode)
         # should I leave this in?
         if tgt_space_mean_vec is not None:
@@ -536,20 +501,20 @@ class SapBert(object):
         # get score matrix
         # same as in BioSyn, but wihtout the sparse encoder
         dense_score_matrix = self.get_score_matrix(
-                query_embeds=mention_dense_embeds, 
-                dict_embeds=dict_dense_embeds,
+            query_embeds=mention_dense_embeds,
+            dict_embeds=dict_dense_embeds,
         )
         score_matrix = dense_score_matrix
         # same as in BioSyn, but with options for batchsize and show_progress
         # TODO: Should differentiate based on cuda availability!
         candidate_idxs, candidate_scores = self.retrieve_candidate_cuda(
-                score_matrix = score_matrix, 
-                topk = topk,
-                batch_size=16,
-                show_progress=False
+            score_matrix=score_matrix, topk=topk, batch_size=16, show_progress=False
         )
         # build return value with array of [concept_name, cui, score]
-        return [np.append(dictionary[ind], score) for ind, score in zip(candidate_idxs[0].tolist(), candidate_scores[0].tolist())]#.squeeze()
+        return [
+            np.append(dictionary[ind], score)
+            for ind, score in zip(candidate_idxs[0].tolist(), candidate_scores[0].tolist())
+        ]  # .squeeze()
 
 
 class HunNen(object):
@@ -572,14 +537,14 @@ class HunNen(object):
         self.dict_sparse_embeds = dict_sparse_embeds
         self.dict_dense_embeds = dict_dense_embeds
         self.tgt_space_mean_vec = tgt_space_mean_vec
-        
+
     @classmethod
-    def load(cls, model_name, dictionary_path:  Union[str, Path], model_type, max_length=25):
+    def load(cls, model_name, dictionary_path: Union[str, Path], model_type, max_length=25):
         """
-        Load a model for biomedical named entity normalization using BioSyn on sentences annotated with 
+        Load a model for biomedical named entity normalization using BioSyn on sentences annotated with
         biomedical entity mentions
-        :param model_name: Name of pretrained model to use. Currently possible values for pretrained models are: 
-        sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease, 
+        :param model_name: Name of pretrained model to use. Currently possible values for pretrained models are:
+        sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease,
         biobert-ncbi-disease, biobert-bc5cdr-chemical, sapbert
         :param dictionary_path: Path to a file with each line in the format: cui||name, with one line for each
         name of a concept
@@ -587,12 +552,16 @@ class HunNen(object):
         # Use BioSyn
         if model_type.lower() == "biosyn":
             # modify name if it's one of the BioSyn huggingface models
-            if model_name in ["sapbert-bc5cdr-disease", "sapbert-ncbi-disease", "sapbert-bc5cdr-chemical", 
-            "biobert-bc5cdr-disease", "biobert-ncbi-disease", "biobert-bc5cdr-chemical"]:
+            if model_name in [
+                "sapbert-bc5cdr-disease",
+                "sapbert-ncbi-disease",
+                "sapbert-bc5cdr-chemical",
+                "biobert-bc5cdr-disease",
+                "biobert-ncbi-disease",
+                "biobert-bc5cdr-chemical",
+            ]:
                 model_name = "dmis-lab/biosyn-" + model_name
             model = BioSyn(max_length=max_length, use_cuda=torch.cuda.is_available())
-
-
 
         # Use SapBert
         elif model_type.lower() == "sapbert":
@@ -602,7 +571,7 @@ class HunNen(object):
 
         else:
             print("Invalid value for model_type. The only possible values are 'BioSyn' and 'SapBert'")
-            return        
+            return
 
         model.load_model(model_name_or_path=model_name)
         # cache or load dictionary
@@ -610,11 +579,11 @@ class HunNen(object):
             model, model_name, str(dictionary_path)
         )
 
-        return cls(model, dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec);
+        return cls(model, dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec)
 
-    def predict(self, sentences: Union[List[Sentence], Sentence], entity_type, topk = 10):
+    def predict(self, sentences: Union[List[Sentence], Sentence], entity_type, topk=10, threshold=None):
         """
-        On one or more sentences, predict the cui on all named entites annotated with a tag of type entity_type. 
+        On one or more sentences, predict the cui on all named entites annotated with a tag of type entity_type.
         Annotates the top k predictions.
         :param sentences: one or more sentences to run the predictions on
         :param entity_type: only entities with this tag will be annotated
@@ -623,7 +592,7 @@ class HunNen(object):
         # make sure its a list of sentences
         if not isinstance(sentences, list):
             sentences = [sentences]
-        
+
         for sentence in sentences:
             for entity in sentence.get_labels(entity_type):
                 # preprocess mention
@@ -631,18 +600,25 @@ class HunNen(object):
 
                 # get predictions from dictionary
                 predictions = self.model.get_predictions(
-                    mention, 
-                    self.dictionary, 
-                    self.dict_sparse_embeds, 
-                    self.dict_dense_embeds, 
+                    mention,
+                    self.dictionary,
+                    self.dict_sparse_embeds,
+                    self.dict_dense_embeds,
                     topk,
-                    self.tgt_space_mean_vec
+                    self.tgt_space_mean_vec,
+                    threshold,
                 )
 
                 for prediction in predictions:
-                    sentence.add_complex_label(typename=entity_type + "_nen", 
-                        label=EntityLinkingLabel(span=entity.span, cui = prediction[1], concept_name = prediction[0], score = prediction[2].astype(float)))
-
+                    sentence.add_complex_label(
+                        typename=entity_type + "_nen",
+                        label=EntityLinkingLabel(
+                            span=entity.span,
+                            cui=prediction[1],
+                            concept_name=prediction[0],
+                            score=prediction[2].astype(float),
+                        ),
+                    )
 
     @staticmethod
     def _cache_or_load_dictionary(entity_linker, model_name_or_path, dictionary_path, mean_centering=False):
@@ -670,12 +646,8 @@ class HunNen(object):
             dictionary = DictionaryDataset(dictionary_path=dictionary_path).data
             # dictionary_names = dictionary[:, 0]
             dictionary_names = [row[0] for row in dictionary]
-            dict_sparse_embeds = entity_linker.embed_sparse(
-                names=dictionary_names, show_progress=True
-            )
-            dict_dense_embeds = entity_linker.embed_dense(
-                names=dictionary_names, show_progress=True
-            )
+            dict_sparse_embeds = entity_linker.embed_sparse(names=dictionary_names, show_progress=True)
+            dict_dense_embeds = entity_linker.embed_dense(names=dictionary_names, show_progress=True)
 
             if mean_centering:
                 tgt_space_mean_vec = dict_dense_embeds.mean(0)
