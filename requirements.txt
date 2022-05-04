@@ -22,6 +22,6 @@ janome
 gdown==3.12.2
 huggingface-hub
 conllu>=4.0
-more-itertools~=8.8.0
+more-itertools
 wikipedia-api
 pptree
