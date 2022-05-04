@@ -159,9 +159,11 @@ def test_transformer_jit_embeddings(results_base_path):
     assert sorted(tensors.keys()) == ["attention_mask", "input_ids", "overflow_to_sample_mapping", "word_ids"]
 
     wrapper = JitWrapper(base_embeddings)
-    parameter_list = TransformerJitWordEmbeddings.parameter_to_list(base_embeddings, wrapper, [sentence])
+    parameter_names, parameter_list = TransformerJitWordEmbeddings.parameter_to_list(
+        base_embeddings, wrapper, [sentence]
+    )
     script_module = torch.jit.trace(wrapper, parameter_list)
-    jit_embeddings = TransformerJitWordEmbeddings.create_from_embedding(script_module, base_embeddings)
+    jit_embeddings = TransformerJitWordEmbeddings.create_from_embedding(script_module, base_embeddings, parameter_names)
 
     jit_embeddings.embed(sentence)
     jit_token_embedding = sentence[5].get_embedding().clone()

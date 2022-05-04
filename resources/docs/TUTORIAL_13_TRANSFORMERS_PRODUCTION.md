@@ -125,11 +125,11 @@ from flair.embeddings import TransformerJitWordEmbeddings
 wrapper = JitWrapper(model.embeddings)
 
 # create the parameters that will be passed to the jit model in the right order.
-parameter_list = TransformerJitWordEmbeddings.parameter_to_list(model.embeddings, wrapper, sentences)
+parameter_names, parameter_list = TransformerJitWordEmbeddings.parameter_to_list(model.embeddings, wrapper, sentences)
 
 # create the script module
 script_module = torch.jit.trace(wrapper, parameter_list)
 
 # replace the embeddings with jit embeddings.
-model.embeddings = TransformerJitWordEmbeddings.create_from_embedding(script_module, model.embeddings)
+model.embeddings = TransformerJitWordEmbeddings.create_from_embedding(script_module, model.embeddings, parameter_names)
 ```

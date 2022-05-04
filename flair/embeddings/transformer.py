@@ -678,7 +678,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
 
 
 class TransformerJitEmbeddings(TransformerBaseEmbeddings):
-    def __init__(self, jit_model: Union[bytes, ScriptModule], **kwargs):
+    def __init__(self, jit_model: Union[bytes, ScriptModule], param_names: List[str], **kwargs):
         super().__init__(**kwargs)
         if isinstance(jit_model, bytes):
             buffer = BytesIO(jit_model)
@@ -686,7 +686,9 @@ class TransformerJitEmbeddings(TransformerBaseEmbeddings):
             self.jit_model: ScriptModule = torch.jit.load(buffer, map_location=flair.device)
         else:
             self.jit_model = jit_model
+        self.param_names = param_names
 
+        self.to(flair.device)
         self.eval()
 
     def __getstate__(self):
@@ -694,10 +696,14 @@ class TransformerJitEmbeddings(TransformerBaseEmbeddings):
         buffer = BytesIO()
         torch.jit.save(self.jit_model, buffer)
         state["jit_model"] = buffer.getvalue()
+        state["param_names"] = self.param_names
         return state
 
     def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
-        embeddings = self.jit_model(**tensors)
+        parameters = []
+        for param in self.param_names:
+            parameters.append(tensors[param])
+        embeddings = self.jit_model(*parameters)
         if isinstance(embeddings, tuple):
             return {"document_embeddings": embeddings[0], "token_embeddings": embeddings[1]}
         elif self.token_embedding:
@@ -708,18 +714,19 @@ class TransformerJitEmbeddings(TransformerBaseEmbeddings):
             raise ValueError("either 'token_embedding' or 'document_embedding' needs to be set.")
 
     @classmethod
-    def create_from_embedding(cls, module: ScriptModule, embedding: "TransformerEmbeddings"):
-        return cls(jit_model=module, **embedding.to_args())
+    def create_from_embedding(cls, module: ScriptModule, embedding: "TransformerEmbeddings", param_names: List[str]):
+        return cls(jit_model=module, param_names=param_names, **embedding.to_args())
 
     @classmethod
     def parameter_to_list(
         cls, embedding: "TransformerEmbeddings", wrapper: torch.nn.Module, sentences: List[Sentence]
-    ) -> List[torch.Tensor]:
+    ) -> Tuple[List[str], List[torch.Tensor]]:
         tensors = embedding.prepare_tensors(sentences)
+        param_names = list(inspect.signature(wrapper.forward).parameters.keys())
         params = []
-        for param in inspect.signature(wrapper.forward).parameters.keys():
+        for param in param_names:
             params.append(tensors[param])
-        return params
+        return param_names, params
 
 
 class TransformerJitWordEmbeddings(TokenEmbeddings, TransformerJitEmbeddings):
