@@ -26,6 +26,9 @@ sentences = list(CONLL_03().test)[:5]
 
 ## TransformerOnnxEmbeddings
 
+To use OnnxEmbeddings, you need to install the [here](https://onnxruntime.ai/docs/execution-providers/)
+which can be done via `pip install onnx-runtime`
+
 To export the OnnxEmbeddings there is only one line to run:
 ```python
 model.embeddings = model.embeddings.export_onnx("flert-embeddings.onnx", sentences, providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
@@ -39,6 +42,9 @@ model.predict(sentences)
 ```
 ### Optimization
 
+To use the optimization, in addition to `onnx-runtime`, also `coloredlogs` and `onnx` need to be installed, this can be done via:
+`pip install onnx coloredlogs`
+
 One advantage of ONNX is, that it can apply hardware-specific optimizations, see [here](https://github.com/microsoft/onnxruntime/blob/master/onnxruntime/python/tools/transformers/README.md#optimizer-options)
 We can use the following code to optimize our transformer model and update our OnxEmbeddings to use the optimized model:
 ```python
@@ -50,6 +56,9 @@ This creates not only a new file called `flert-optimized-embeddings.onnx`, but a
 Our model is so large, that the exported ONNX-Model is more than the expected limit of 2GB. For smaller models, it is recommended to use `use_external_data_format=False` and have everything packed in a single file.
 
 ### Quantization
+
+To use the optimization, in addition to `onnx-runtime`, also `onnx` need to be installed, this can be done via:
+`pip install onnx`
 
 When you only have a CPU available, you might consider speeding up your model drastically, by using quantization:
 
