@@ -52,6 +52,21 @@ def test_load_use_tagger_keep_embedding():
 
 
 @pytest.mark.integration
+def test_all_tag_proba_embedding():
+    loaded_model: SequenceTagger = SequenceTagger.load("ner")
+
+    sentence = Sentence("I love Berlin")
+    loaded_model.predict(sentence, return_probabilities_for_all_classes=True)
+    for token in sentence:
+        assert len(token.get_tags_proba_dist(loaded_model.tag_type)) == len(loaded_model.label_dictionary)
+        score_sum = 0
+        for label in token.get_tags_proba_dist(loaded_model.tag_type):
+            assert label.data_point == token
+            score_sum += label.score
+        assert abs(score_sum - 1.0) < 1.0e-5
+
+
+@pytest.mark.integration
 def test_train_load_use_tagger(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
     tag_dictionary = corpus.make_label_dictionary("ner")

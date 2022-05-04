@@ -12,7 +12,7 @@ from torch.utils.data.dataset import Dataset
 
 import flair.embeddings
 import flair.nn
-from flair.data import Label, Sentence, _iter_dataset
+from flair.data import Sentence, _iter_dataset
 from flair.training_utils import MetricRegression, Result, store_embeddings
 
 log = logging.getLogger("flair")
@@ -476,30 +476,11 @@ class DistancePredictor(flair.nn.Model[Sentence]):
             log.warning("Ignore {} sentence(s) with no tokens.".format(len(sentences) - len(filtered_sentences)))
         return filtered_sentences
 
-    def _obtain_labels(self, scores: List[List[float]], predict_prob: bool = False) -> List[List[Label]]:
-        """
-        Predicts the labels of sentences.
-        :param scores: the prediction scores from the model
-        :return: list of predicted labels
-        """
-
-        if predict_prob:
-            return [self._predict_label_prob(s) for s in scores]
-
-        return [self._get_single_label(s) for s in scores]
-
     def _get_single_label(self, label_scores):  # -> List[Label]:
         softmax = torch.nn.functional.softmax(label_scores, dim=0)
         conf, idx = torch.max(softmax, 0)
 
         return idx.item()
-
-    def _predict_label_prob(self, label_scores) -> List[Label]:
-        softmax = torch.nn.functional.softmax(label_scores, dim=0)
-        label_probs = []
-        for idx, conf in enumerate(softmax):
-            label_probs.append(Label(str(idx), conf.item()))
-        return label_probs
 
     def __str__(self):
         return (

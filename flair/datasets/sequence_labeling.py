@@ -279,7 +279,7 @@ class MultiFileColumnCorpus(Corpus):
         in_memory: bool = True,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
-        default_whitespace_after: bool = True,
+        default_whitespace_after: int = 1,
         **corpusargs,
     ):
         """
@@ -446,7 +446,7 @@ class ColumnDataset(FlairDataset):
         encoding: str = "utf-8",
         skip_first_line: bool = False,
         label_name_map: Dict[str, str] = None,
-        default_whitespace_after: bool = True,
+        default_whitespace_after: int = 1,
     ):
         """
         Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
@@ -715,7 +715,7 @@ class ColumnDataset(FlairDataset):
 
                             # special handling for whitespace after
                             if feature == "SpaceAfter=No":
-                                token.whitespace_after = False
+                                token.whitespace_after = 0
                                 continue
 
                             if "=" in feature:
@@ -735,14 +735,14 @@ class ColumnDataset(FlairDataset):
                             token.add_label(label_name, label_value)
 
                 if column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == "-":
-                    token.whitespace_after = False
+                    token.whitespace_after = 0
         if last_token is None:
             start = 0
         else:
             assert last_token.end_pos is not None
             start = last_token.end_pos
-            if last_token.whitespace_after:
-                start += 1
+            if last_token.whitespace_after > 0:
+                start += last_token.whitespace_after
         token.start_pos = start
         token.end_pos = token.start_pos + len(token.text)
         return token
@@ -2596,7 +2596,7 @@ class NER_JAPANESE(ColumnCorpus):
             train_file="train.txt",
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            default_whitespace_after=False,
+            default_whitespace_after=0,
             **corpusargs,
         )
 

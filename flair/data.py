@@ -198,7 +198,7 @@ class Label:
     score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
-    def __init__(self, data_point, value: Optional[str], score: float = 1.0):
+    def __init__(self, data_point: "DataPoint", value: Optional[str], score: float = 1.0):
         self._value = value
         self._score = score
         self.data_point: DataPoint = data_point
@@ -468,7 +468,7 @@ class Token(_PartOfSentence):
         self,
         text: str,
         head_id: int = None,
-        whitespace_after: bool = True,
+        whitespace_after: int = 1,
         start_position: int = 0,
         sentence=None,
     ):
@@ -477,7 +477,7 @@ class Token(_PartOfSentence):
         self.form: str = text
         self._internal_index: Optional[int] = None
         self.head_id: Optional[int] = head_id
-        self.whitespace_after: bool = whitespace_after
+        self.whitespace_after: int = whitespace_after
 
         self.start_pos = start_position
         self.end_pos = start_position + len(text)
@@ -711,16 +711,18 @@ class Sentence(DataPoint):
             try:
                 word_offset = text.index(word, current_offset)
                 start_position = word_offset
+                delta_offset = start_position - current_offset
             except ValueError:
                 word_offset = previous_word_offset + 1
                 start_position = current_offset + 1 if current_offset > 0 else current_offset
+                delta_offset = start_position - current_offset
 
             if word:
-                token = Token(text=word, start_position=start_position, whitespace_after=True)
+                token = Token(text=word, start_position=start_position)
                 self.add_token(token)
 
-            if (previous_token is not None) and word_offset - 1 == previous_word_offset:
-                previous_token.whitespace_after = False
+            if previous_token is not None:
+                previous_token.whitespace_after = delta_offset
 
             current_offset = word_offset + len(word)
             previous_word_offset = current_offset - 1
@@ -728,7 +730,7 @@ class Sentence(DataPoint):
 
         # the last token has no whitespace after
         if len(self) > 0:
-            self.tokens[-1].whitespace_after = False
+            self.tokens[-1].whitespace_after = 0
 
         # log a warning if the dataset is empty
         if text == "":
@@ -785,9 +787,7 @@ class Sentence(DataPoint):
         token.sentence = self
         token._internal_index = len(self.tokens) + 1
         if token.start_position == 0 and len(self) > 0:
-            token.start_pos = (
-                len(self.to_original_text()) + 1 if self[-1].whitespace_after else len(self.to_original_text())
-            )
+            token.start_pos = len(self.to_original_text()) + self[-1].whitespace_after
             token.end_pos = token.start_pos + len(token.text)
 
         # append token to sentence
@@ -895,8 +895,8 @@ class Sentence(DataPoint):
         plain = ""
         for token in self.tokens:
             plain += token.text
-            if token.whitespace_after:
-                plain += " "
+            if token.whitespace_after > 0:
+                plain += token.whitespace_after * " "
         return plain.rstrip()
 
     def infer_space_after(self):
@@ -913,20 +913,20 @@ class Sentence(DataPoint):
             if token.text == '"':
                 quote_count += 1
                 if quote_count % 2 != 0:
-                    token.whitespace_after = False
+                    token.whitespace_after = 0
                 elif last_token is not None:
-                    last_token.whitespace_after = False
+                    last_token.whitespace_after = 0
 
             if last_token is not None:
 
                 if token.text in [".", ":", ",", ";", ")", "n't", "!", "?"]:
-                    last_token.whitespace_after = False
+                    last_token.whitespace_after = 0
 
                 if token.text.startswith("'"):
-                    last_token.whitespace_after = False
+                    last_token.whitespace_after = 0
 
             if token.text in ["("]:
-                token.whitespace_after = False
+                token.whitespace_after = 0
 
             last_token = token
         return self
