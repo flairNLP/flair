@@ -865,6 +865,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
         return sentences
 
+    @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
