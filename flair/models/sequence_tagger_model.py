@@ -425,7 +425,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return_loss=False,
         embedding_storage_mode="none",
         force_token_predictions: bool = False,
-    ): # type: ignore
+    ):  # type: ignore
         """
         Predicts labels for current batch with CRF or Softmax.
         :param sentences: List of sentences in batch
