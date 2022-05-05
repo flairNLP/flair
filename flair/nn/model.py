@@ -202,6 +202,10 @@ class Classifier(Model[DT], typing.Generic[DT]):
         import numpy as np
         import sklearn
 
+        # make sure <unk> is contained in gold_label_dictionary, if given
+        if gold_label_dictionary and not gold_label_dictionary.add_unk:
+            raise AssertionError("gold_label_dictionary must have add_unk set to true in initialization.")
+
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
