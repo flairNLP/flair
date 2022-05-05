@@ -420,12 +420,12 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         sentences: Union[List[Sentence], Sentence],
         mini_batch_size: int = 32,
         return_probabilities_for_all_classes: bool = False,
-        force_token_predictions: bool = False,
         verbose: bool = False,
         label_name: Optional[str] = None,
         return_loss=False,
         embedding_storage_mode="none",
-    ):
+        force_token_predictions: bool = False,
+    ): # type: ignore
         """
         Predicts labels for current batch with CRF or Softmax.
         :param sentences: List of sentences in batch
