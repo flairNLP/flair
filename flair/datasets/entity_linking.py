@@ -412,6 +412,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
+        dataset_name = dataset_name + "_ids" if use_ids_and_check_existence else dataset_name + "_raw"
 
         data_folder = base_path / dataset_name
 
