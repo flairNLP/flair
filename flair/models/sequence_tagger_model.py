@@ -420,6 +420,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         sentences: Union[List[Sentence], Sentence],
         mini_batch_size: int = 32,
         return_probabilities_for_all_classes: bool = False,
+        force_token_predictions: bool = False,
         verbose: bool = False,
         label_name: Optional[str] = None,
         return_loss=False,
@@ -506,7 +507,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 for sentence, sentence_predictions in zip(batch, predictions):
 
                     # BIOES-labels need to be converted to spans
-                    if self.predict_spans:
+                    if self.predict_spans and not force_token_predictions:
                         sentence_tags = [label[0] for label in sentence_predictions]
                         sentence_scores = [label[1] for label in sentence_predictions]
                         predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
