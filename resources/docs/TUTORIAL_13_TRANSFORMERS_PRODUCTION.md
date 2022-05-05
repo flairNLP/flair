@@ -87,6 +87,7 @@ model.embeddings.create_session()
 ## TransformerJitEmbeddings
 
 If you don't want to use ONNX, you might want to speed up your Embeddings using [TorchScript](https://pytorch.org/docs/stable/jit.html).
+**Notice:** if you want to use aws neutron instead of jit, you can do so by following the same tutorial. However, you need to aditionally force long sequences by setting `model.embeddings.force_max_length=True` before starting.
 To do so, we need to take a look of how the `TransformerEmbeddings` work:
 
 There are 3 parts:
@@ -94,8 +95,8 @@ There are 3 parts:
 * The `embeddings = embedding.forward(**tensors)` method calls the whole model and returns a dictionary of tensors. If the embedding is a `TokenEmbedding` it has a key `token_embeddings`. If the embedding is a `DocumentEmbedding it has a key `document_embeddings`. Notice that the embedding could be both at once and therefore return both values.
 * A mapping from the embeddings to the Tokens/Sentence objects.
 
-To use jit, we are not allowed to pass keyword arguments and we are also not allowed to pass `None`. Also if we want to use strict mode, we are not allowed to return a dictionary.
-To deal with these limitations we need to write a wrapper torch model, but first let's insepct the tensors: 
+To use jit, we are not allowed to pass keyword arguments, and we are also not allowed to pass `None`. Also, if we want to use strict mode, we are not allowed to return a dictionary.
+To deal with these limitations we need to write a wrapper torch model, but first lets inspect the tensors: 
 ```python
 tensors = model.embeddings.prepare_tensors(sentences)
 print(sorted(tensors.keys())) # ["attention_mask", "input_ids", "overflow_to_sample_mapping", "word_ids"] 

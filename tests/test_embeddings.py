@@ -184,6 +184,30 @@ def test_transformer_jit_embeddings(results_base_path):
     assert torch.isclose(jit_token_embedding, loaded_jit_token_embedding).all()
 
 
+def test_transformer_force_max_length():
+    sentence: Sentence = Sentence("I love Berlin, but Vienna is where my hearth is.")
+    short_embeddings = TransformerWordEmbeddings("distilbert-base-uncased", layers="-1,-2,-3,-4", layer_mean=False)
+    long_embeddings = TransformerWordEmbeddings(
+        "distilbert-base-uncased", layers="-1,-2,-3,-4", layer_mean=False, force_max_length=True
+    )
+    short_tensors = short_embeddings.prepare_tensors([sentence])
+    long_tensors = long_embeddings.prepare_tensors([sentence])
+    for tensor in short_tensors.values():
+        if tensor.dim() > 1:  # all tensors that have a sequence length need to be shorter
+            assert tensor.shape[1] < 512
+
+    for tensor in long_tensors.values():
+        if tensor.dim() > 1:  # all tensors that have a sequence length need to be exactly max length
+            assert tensor.shape[1] == 512
+    short_embeddings.embed(sentence)
+    short_embedding_0 = sentence[0].get_embedding()
+    sentence.clear_embeddings()
+    long_embeddings.embed(sentence)
+    long_embedding_0 = sentence[0].get_embedding()
+    # apparently the precision is not that high on cuda, hence the absolute tolerance needs to be higher.
+    assert torch.isclose(short_embedding_0, long_embedding_0, atol=1e-4).all()
+
+
 def test_transformer_word_embeddings_forward_language_ids():
     cos = torch.nn.CosineSimilarity(dim=0, eps=1e-10)
 

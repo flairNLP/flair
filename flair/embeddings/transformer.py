@@ -20,6 +20,7 @@ from transformers import (
     PreTrainedTokenizer,
 )
 from transformers.tokenization_utils_base import LARGE_INTEGER
+from transformers.utils import PaddingStrategy
 
 import flair
 from flair.data import Sentence, log
@@ -265,15 +266,16 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         fine_tune: bool,
         truncate: bool,
         use_lang_emb: bool,
-        document_embedding=False,
-        token_embedding=False,
+        document_embedding: bool = False,
+        token_embedding: bool = False,
         force_device: Optional[torch.device] = None,
+        force_max_length: bool = False,
     ):
         self.name = name
         super().__init__()
         self.document_embedding = document_embedding
         self.token_embedding = token_embedding
-        self.tokenizer = tokenizer
+        self.tokenizer: PreTrainedTokenizer = tokenizer
         self.embedding_length_internal = embedding_length
         self.context_length = context_length
         self.context_dropout = context_dropout
@@ -284,6 +286,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         self.use_lang_emb = use_lang_emb
         self.force_device = force_device
         self.fine_tune = fine_tune
+        self.force_max_length = force_max_length
 
         if not self.token_embedding and not self.document_embedding:
             raise ValueError("either 'is_token_embedding' or 'is_document_embedding' needs to be set.")
@@ -303,6 +306,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             "name": self.name,
             "fine_tune": self.fine_tune,
             "use_lang_emb": self.use_lang_emb,
+            "force_max_length": self.force_max_length,
         }
 
     def __getstate__(self):
@@ -368,7 +372,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             stride=self.stride,
             return_overflowing_tokens=self.allow_long_sentences,
             truncation=self.truncate,
-            padding=True,
+            padding=PaddingStrategy.MAX_LENGTH if self.force_max_length else PaddingStrategy.LONGEST,
             return_tensors="pt",
             is_split_into_words=True,
         )
@@ -781,6 +785,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         saved_config: Optional[PretrainedConfig] = None,
         tokenizer_data: Optional[BytesIO] = None,
         name: Optional[str] = None,
+        force_max_length: bool = False,
         **kwargs,
     ):
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -810,6 +815,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         transformer_model = transformer_model.to(flair.device)
 
         self.truncate = True
+        self.force_max_length = force_max_length
 
         if self.tokenizer.model_max_length > LARGE_INTEGER:
             allow_long_sentences = False
@@ -927,6 +933,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             "context_length": self.context_length,
             "respect_document_boundaries": self.respect_document_boundaries,
             "context_dropout": self.context_dropout,
+            "force_max_length": self.force_max_length,
         }
 
         return model_state
