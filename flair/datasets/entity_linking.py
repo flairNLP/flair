@@ -388,7 +388,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        check_existence: bool = False,
+        use_ids_and_check_existence: bool = False,
         **corpusargs,
     ):
         """
@@ -402,7 +402,8 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
         in_memory: If True, keeps dataset in memory giving speedups in training.
-        check_existence: If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be igrnored.
+        use_ids_and_check_existence: If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be ignored. This also means that one works with
+            current wikipedia-arcticle names and possibly alter some of the out-dated ones in the original dataset
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -411,6 +412,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
+        dataset_name = dataset_name + "_ids" if use_ids_and_check_existence else dataset_name + "_raw"
 
         data_folder = base_path / dataset_name
 
@@ -420,17 +422,17 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
 
         if not parsed_dataset.exists():
 
-            import wikipediaapi
-
-            wiki_wiki = wikipediaapi.Wikipedia(language="en")
-
             testa_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_testa", Path("datasets") / dataset_name)
             testb_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_testb", Path("datasets") / dataset_name)
             train_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_train", Path("datasets") / dataset_name)
 
-            # we use the wikiids in the data instead of directly utilizing the wikipedia urls.
-            # like this we can quickly check if the corresponding page exists
-            wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
+            if use_ids_and_check_existence:
+                # we use the wikiids in the data instead of directly utilizing the wikipedia urls.
+                # like this we can quickly check if the corresponding page exists
+                import wikipediaapi
+
+                wiki_wiki = wikipediaapi.Wikipedia(language="en")
+                wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
 
             for name, path in zip(
                 ["train", "testa", "testb"],
@@ -458,20 +460,21 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
                                 else:
                                     write.write(line_list[0] + "\tO\n")
                         else:  # line with annotation
-                            wikiname = wikiid_wikiname_dict[line_list[5].strip()]
-                            if wikiname != "O":
-                                write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
-                            else:
-                                # if there is a bad wikiid we can check if the given url in the data exists using wikipediaapi
-                                wikiname = line_list[4].split("/")[-1]
-                                if check_existence:
+                            if use_ids_and_check_existence:
+                                wikiname = wikiid_wikiname_dict[line_list[5].strip()]
+                                if wikiname != "O":
+                                    write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
+                                else:
+                                    # if there is a bad wikiid we can check if the given url in the data exists using wikipediaapi
+                                    wikiname = line_list[4].split("/")[-1]
                                     page = wiki_wiki.page(wikiname)
                                     if page.exists():
                                         write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
                                     else:  # neither the wikiid nor the url exist
                                         write.write(line_list[0] + "\tO\n")
-                                else:
-                                    write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
+                            else:  # write wikipedia names as given in the file
+                                wikiname = line_list[4].split("/")[-1]
+                                write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
 
                 # delete unprocessed file
                 os.remove(path)
