@@ -1,3 +1,4 @@
+import copy
 import shutil
 
 import pytest
@@ -109,7 +110,7 @@ def test_load_column_corpus_options(tasks_base_path):
 
 def test_load_germeval_data(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
+    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "ner_german_germeval", column_format={0: "text", 2: "ner"})
 
     assert len(corpus.train) == 2
     assert len(corpus.dev) == 1
@@ -149,7 +150,7 @@ def test_load_no_dev_data_explicit(tasks_base_path):
 
 
 def test_multi_corpus(tasks_base_path):
-    corpus_1 = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
+    corpus_1 = flair.datasets.ColumnCorpus(tasks_base_path / "ner_german_germeval", column_format={0: "text", 2: "ner"})
 
     corpus_2 = flair.datasets.ColumnCorpus(tasks_base_path / "fashion", column_format={0: "text", 2: "ner"})
     # get two corpora as one
@@ -190,14 +191,14 @@ def _assert_conllu_dataset(dataset):
     ]
 
     assert [token.whitespace_after for token in sent1.tokens] == [
-        True,
-        True,
-        True,
-        True,
-        True,
-        True,
-        False,
-        True,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
     ]
 
     ner_spans1 = sent1.get_labels("ner")
@@ -299,12 +300,12 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
     sent1: Sentence = dataset[0]
 
     assert [token.whitespace_after for token in sent1.tokens] == [
-        True,
-        True,
-        True,
-        True,
-        False,
-        True,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
     ]
 
     assert len(sent1.get_labels("Number")) == 4
@@ -488,8 +489,14 @@ def test_hipe_2022_corpus(tasks_base_path):
             }
         }
     }
+    hipe_stats["v2.1"] = copy.deepcopy(hipe_stats["v2.0"])
+    hipe_stats["v2.1"]["hipe2020"]["fr"]["train"] = {
+        "sents": 5743,
+        "docs": 158,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
 
-    def test_hipe_2022(dataset_version="v1.0", add_document_separator=True):
+    def test_hipe_2022(dataset_version="v2.1", add_document_separator=True):
         for dataset_name, languages in hipe_stats[dataset_version].items():
             for language in languages:
                 splits = languages[language]
@@ -503,7 +510,7 @@ def test_hipe_2022_corpus(tasks_base_path):
                 )
 
                 for split_name, stats in splits.items():
-                    split_description = f"{dataset_name}/{language}@{split_name}"
+                    split_description = f"{dataset_name}@{dataset_version}/{language}#{split_name}"
 
                     current_sents = stats["sents"]
                     current_docs = stats["docs"]
@@ -557,6 +564,8 @@ def test_hipe_2022_corpus(tasks_base_path):
     test_hipe_2022(dataset_version="v1.0", add_document_separator=False)
     test_hipe_2022(dataset_version="v2.0", add_document_separator=True)
     test_hipe_2022(dataset_version="v2.0", add_document_separator=False)
+    test_hipe_2022(dataset_version="v2.1", add_document_separator=True)
+    test_hipe_2022(dataset_version="v2.1", add_document_separator=False)
 
 
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):

@@ -14,7 +14,7 @@ flair_embeddings = FlairEmbeddings("news-forward-fast")
 
 @pytest.mark.integration
 def test_load_use_tagger():
-    loaded_model: SequenceTagger = SequenceTagger.load("ner")
+    loaded_model: SequenceTagger = SequenceTagger.load("ner-fast")
 
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
@@ -22,22 +22,32 @@ def test_load_use_tagger():
     loaded_model.predict(sentence)
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
-    del loaded_model
 
-    sentence.clear_embeddings()
-    sentence_empty.clear_embeddings()
+    # check that "Berlin" is predicted as LOC-Span
+    assert len(sentence.get_spans("ner")) == 1
+    assert sentence.get_spans("ner")[0].text == "Berlin"
+    assert sentence.get_spans("ner")[0].tag == "LOC"
+
+    # check that "Berlin" is predicted as S-LOC-Token when force_token_predictions=True
+    sentence = Sentence("I love Berlin")
+    loaded_model.predict(sentence, force_token_predictions=True)
+    assert sentence.get_token(3).text == "Berlin"
+    assert sentence.get_token(3).tag == "S-LOC"
+
+    del loaded_model
 
     loaded_model: SequenceTagger = SequenceTagger.load("pos")
 
     loaded_model.predict(sentence)
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
+
     del loaded_model
 
 
 @pytest.mark.integration
 def test_load_use_tagger_keep_embedding():
-    loaded_model: SequenceTagger = SequenceTagger.load("ner")
+    loaded_model: SequenceTagger = SequenceTagger.load("ner-fast")
 
     sentence = Sentence("I love Berlin")
     loaded_model.predict(sentence)
@@ -49,6 +59,21 @@ def test_load_use_tagger_keep_embedding():
         assert len(token.embedding.cpu().numpy()) > 0
 
     del loaded_model
+
+
+@pytest.mark.integration
+def test_all_tag_proba_embedding():
+    loaded_model: SequenceTagger = SequenceTagger.load("ner-fast")
+
+    sentence = Sentence("I love Berlin")
+    loaded_model.predict(sentence, return_probabilities_for_all_classes=True)
+    for token in sentence:
+        assert len(token.get_tags_proba_dist(loaded_model.tag_type)) == len(loaded_model.label_dictionary)
+        score_sum = 0
+        for label in token.get_tags_proba_dist(loaded_model.tag_type):
+            assert label.data_point == token
+            score_sum += label.score
+        assert abs(score_sum - 1.0) < 1.0e-5
 
 
 @pytest.mark.integration
