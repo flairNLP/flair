@@ -424,7 +424,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         label_name: Optional[str] = None,
         return_loss=False,
         embedding_storage_mode="none",
-    ):
+        force_token_predictions: bool = False,
+    ):  # type: ignore
         """
         Predicts labels for current batch with CRF or Softmax.
         :param sentences: List of sentences in batch
@@ -506,7 +507,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 for sentence, sentence_predictions in zip(batch, predictions):
 
                     # BIOES-labels need to be converted to spans
-                    if self.predict_spans:
+                    if self.predict_spans and not force_token_predictions:
                         sentence_tags = [label[0] for label in sentence_predictions]
                         sentence_scores = [label[1] for label in sentence_predictions]
                         predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
