@@ -27,6 +27,5 @@ jobs:
         with:
           path: ./cache
           key: cache-v1.1
-          # TODO: remove this comment in the follow up commit where the cache is already created.
       - name: Run tests
         run: pytest --runintegration -vv
