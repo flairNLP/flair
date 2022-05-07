@@ -108,6 +108,38 @@ def test_load_column_corpus_options(tasks_base_path):
     assert corpus.train[0].to_tokenized_string() == "This is New Berlin"
 
 
+def test_load_span_data(tasks_base_path):
+    # load column dataset with one entry
+    dataset = flair.datasets.ColumnDataset(
+        tasks_base_path / "span_labels" / "span_first.txt",
+        column_name_map={0: "text", 1: "ner"},
+    )
+
+    assert len(dataset) == 1
+    assert dataset[0][2].text == "RAB"
+    assert dataset[0][2].get_label("ner").value == "PARTA"
+
+    # load column dataset with two entries
+    dataset = flair.datasets.ColumnDataset(
+        tasks_base_path / "span_labels" / "span_second.txt",
+        column_name_map={0: "text", 1: "ner"},
+    )
+
+    assert len(dataset) == 2
+    assert dataset[1][2].text == "RAB"
+    assert dataset[1][2].get_label("ner").value == "PARTA"
+
+    # load column dataset with three entries
+    dataset = flair.datasets.ColumnDataset(
+        tasks_base_path / "span_labels" / "span_third.txt",
+        column_name_map={0: "text", 1: "ner"},
+    )
+
+    assert len(dataset) == 3
+    assert dataset[2][2].text == "RAB"
+    assert dataset[2][2].get_label("ner").value == "PARTA"
+
+
 def test_load_germeval_data(tasks_base_path):
     # get training, test and dev data
     corpus = flair.datasets.ColumnCorpus(tasks_base_path / "ner_german_germeval", column_format={0: "text", 2: "ner"})
@@ -124,6 +156,29 @@ def test_load_ud_english_data(tasks_base_path):
     assert len(corpus.train) == 6
     assert len(corpus.test) == 4
     assert len(corpus.dev) == 2
+
+    # check if Token labels are correct
+    sentence = corpus.train[0]
+    assert sentence[0].text == "From"
+    assert sentence[0].get_label("upos").value == "ADP"
+    assert sentence[1].text == "the"
+    assert sentence[1].get_label("upos").value == "DET"
+
+
+def test_load_up_english_data(tasks_base_path):
+    # get training, test and dev data
+    corpus = flair.datasets.UP_ENGLISH(tasks_base_path)
+
+    assert len(corpus.train) == 4
+    assert len(corpus.test) == 2
+    assert len(corpus.dev) == 2
+
+    # check if Token labels for frames are correct
+    sentence = corpus.dev[0]
+    assert sentence[2].text == "AP"
+    assert sentence[2].get_label("frame", zero_tag_value="no_label").value == "no_label"
+    assert sentence[3].text == "comes"
+    assert sentence[3].get_label("frame").value == "come.03"
 
 
 def test_load_no_dev_data(tasks_base_path):

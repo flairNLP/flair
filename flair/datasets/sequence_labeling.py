@@ -572,16 +572,30 @@ class ColumnDataset(FlairDataset):
             if skip_first_line:
                 file.readline()
 
-            sentence_1 = self._convert_lines_to_sentence(
-                self._read_next_sentence(file), word_level_tag_columns=column_name_map
-            )
-            # sentence_2 = self._convert_lines_to_sentence(self._read_next_sentence(file),
-            #                                              word_level_tag_columns=column_name_map)
+            # check the first 5 sentences
+            probe = []
+            for i in range(5):
+                sentence = self._convert_lines_to_sentence(
+                    self._read_next_sentence(file), word_level_tag_columns=column_name_map
+                )
+                if sentence:
+                    probe.append(sentence)
+                else:
+                    break
 
-            for sentence in [sentence_1]:
-                # go through all annotations
+            # go through all annotations and identify word- and span-level annotations
+            # - if a column has at least one BIES we know it's a Span label
+            # - if a column has at least one tag that is not BIOES, we know it's a Token label
+            # - problem cases are columns for which we see only O - in this case we default to Span
+            for sentence in probe:
                 for column in column_name_map:
-                    if column == self.text_column or column == self.head_id_column:
+
+                    # skip assigned columns
+                    if (
+                        column in self.word_level_tag_columns
+                        or column in self.span_level_tag_columns
+                        or column == self.head_id_column
+                    ):
                         continue
 
                     layer = column_name_map[column]
@@ -596,16 +610,20 @@ class ColumnDataset(FlairDataset):
                         continue
 
                     for token in sentence:
-                        if token.get_label(layer, "O").value != "O" and token.get_label(layer).value[0:2] not in [
-                            "B-",
-                            "I-",
-                            "E-",
-                            "S-",
-                        ]:
+                        # if at least one token has a BIES, we know it's a span label
+                        if token.get_label(layer).value[0:2] in ["B-", "I-", "E-", "S-"]:
+                            self.span_level_tag_columns[column] = layer
+                            break
+
+                        # if at least one token has a label other than BIOES, we know it's a token label
+                        elif token.get_label(layer, "O").value != "O":
                             self.word_level_tag_columns[column] = layer
                             break
-                    if column not in self.word_level_tag_columns:
-                        self.span_level_tag_columns[column] = layer
+
+            # all remaining columns that are not word-level are span-level
+            for column in column_name_map:
+                if column not in self.word_level_tag_columns:
+                    self.span_level_tag_columns[column] = column_name_map[column]
 
             for column in self.span_level_tag_columns:
                 log.debug(f"Column {column} ({self.span_level_tag_columns[column]}) is a span-level column.")
