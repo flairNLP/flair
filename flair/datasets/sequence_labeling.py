@@ -572,13 +572,16 @@ class ColumnDataset(FlairDataset):
             if skip_first_line:
                 file.readline()
 
-            sentence_1 = self._convert_lines_to_sentence(
-                self._read_next_sentence(file), word_level_tag_columns=column_name_map
-            )
-            # sentence_2 = self._convert_lines_to_sentence(self._read_next_sentence(file),
-            #                                              word_level_tag_columns=column_name_map)
+            probe_sentences = []
+            sentence_1 = self._convert_lines_to_sentence(self._read_next_sentence(file),
+                                                         word_level_tag_columns=column_name_map)
+            if sentence_1: probe_sentences.append(sentence_1)
 
-            for sentence in [sentence_1]:
+            sentence_2 = self._convert_lines_to_sentence(self._read_next_sentence(file),
+                                                         word_level_tag_columns=column_name_map)
+            if sentence_2: probe_sentences.append(sentence_2)
+
+            for sentence in probe_sentences:
                 # go through all annotations
                 for column in column_name_map:
                     if column == self.text_column or column == self.head_id_column:
@@ -588,30 +591,32 @@ class ColumnDataset(FlairDataset):
 
                     # the space after key is always word-levels
                     if column_name_map[column] == self.SPACE_AFTER_KEY:
-                        self.word_level_tag_columns[column] = layer
                         continue
 
                     if layer in self.FEATS:
-                        self.word_level_tag_columns[column] = layer
                         continue
 
                     for token in sentence:
-                        if token.get_label(layer, "O").value != "O" and token.get_label(layer).value[0:2] not in [
+                        if token.get_label(layer).value == "O" or token.get_label(layer).value[0:2] in [
                             "B-",
                             "I-",
                             "E-",
                             "S-",
                         ]:
-                            self.word_level_tag_columns[column] = layer
+                            self.span_level_tag_columns[column] = layer
                             break
-                    if column not in self.word_level_tag_columns:
-                        self.span_level_tag_columns[column] = layer
+
+            print(self.span_level_tag_columns)
+            # go through all annotations
+            for column in column_name_map:
+                if column not in self.span_level_tag_columns:
+                    self.word_level_tag_columns[column] = column_name_map[column]
 
             for column in self.span_level_tag_columns:
                 log.debug(f"Column {column} ({self.span_level_tag_columns[column]}) is a span-level column.")
 
-            # for column in self.word_level_tag_columns:
-            #     log.info(f"Column {column} ({self.word_level_tag_columns[column]}) is a word-level column.")
+            for column in self.word_level_tag_columns:
+                log.info(f"Column {column} ({self.word_level_tag_columns[column]}) is a word-level column.")
 
     def _read_next_sentence(self, file):
         lines = []

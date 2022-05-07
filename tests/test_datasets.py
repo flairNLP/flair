@@ -108,6 +108,19 @@ def test_load_column_corpus_options(tasks_base_path):
     assert corpus.train[0].to_tokenized_string() == "This is New Berlin"
 
 
+def test_load_span_data(tasks_base_path):
+    # get training, test and dev data
+    dataset = flair.datasets.ColumnDataset(
+        tasks_base_path / "span_labels" / "span_first.txt",
+        column_name_map={0: "text", 1: "ner"},
+    )
+
+    assert len(dataset) == 1
+
+    dataset[0].get_spans('ner')[0].t
+
+    assert corpus.train[0].to_tokenized_string() == "This is New Berlin"
+
 def test_load_germeval_data(tasks_base_path):
     # get training, test and dev data
     corpus = flair.datasets.ColumnCorpus(tasks_base_path / "ner_german_germeval", column_format={0: "text", 2: "ner"})
