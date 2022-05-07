@@ -1,0 +1,32 @@
+# newdoc id = weblog-blogspot.com_nominations_20041117172713_ENG_20041117_172713
+# sent_id = weblog-blogspot.com_nominations_20041117172713_ENG_20041117_172713-0001
+# text = From the AP comes this story :
+1	From	from	ADP	IN	_	3	case	3:case	_	_	_
+2	the	the	DET	DT	Definite=Def|PronType=Art	3	det	3:det	_	_	_
+3	AP	AP	PROPN	NNP	Number=Sing	4	obl	4:obl:from	_	_	ARG2
+4	comes	come	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	0:root	_	come.03	V
+5	this	this	DET	DT	Number=Sing|PronType=Dem	6	det	6:det	_	_	_
+6	story	story	NOUN	NN	Number=Sing	4	nsubj	4:nsubj	_	_	ARG1
+7	:	:	PUNCT	:	_	4	punct	4:punct	_	_	_
+
+# sent_id = weblog-blogspot.com_nominations_20041117172713_ENG_20041117_172713-0002
+# text = President Bush on Tuesday nominated two individuals to replace retiring jurists on federal courts in the Washington area.
+1	President	President	PROPN	NNP	Number=Sing	5	nsubj	5:nsubj	_	_	ARG0	_
+2	Bush	Bush	PROPN	NNP	Number=Sing	1	flat	1:flat	_	_	_	_
+3	on	on	ADP	IN	_	4	case	4:case	_	_	_	_
+4	Tuesday	Tuesday	PROPN	NNP	Number=Sing	5	obl	5:obl:on	_	_	ARGM-TMP	_
+5	nominated	nominate	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	0	root	0:root	_	nominate.01	V	_
+6	two	two	NUM	CD	NumType=Card	7	nummod	7:nummod	_	_	_	_
+7	individuals	individual	NOUN	NNS	Number=Plur	5	obj	5:obj	_	_	ARG1	ARG0
+8	to	to	PART	TO	_	9	mark	9:mark	_	_	_	_
+9	replace	replace	VERB	VB	VerbForm=Inf	5	advcl	5:advcl:to	_	replace.01	ARG2	V
+10	retiring	retire	VERB	VBG	VerbForm=Ger	11	amod	11:amod	_	_	_	_
+11	jurists	jurist	NOUN	NNS	Number=Plur	9	obj	9:obj	_	_	_	ARG1
+12	on	on	ADP	IN	_	14	case	14:case	_	_	_	_
+13	federal	federal	ADJ	JJ	Degree=Pos	14	amod	14:amod	_	_	_	_
+14	courts	court	NOUN	NNS	Number=Plur	11	nmod	11:nmod:on	_	_	_	_
+15	in	in	ADP	IN	_	18	case	18:case	_	_	_	_
+16	the	the	DET	DT	Definite=Def|PronType=Art	18	det	18:det	_	_	_	_
+17	Washington	Washington	PROPN	NNP	Number=Sing	18	compound	18:compound	_	_	_	_
+18	area	area	NOUN	NN	Number=Sing	14	nmod	14:nmod:in	SpaceAfter=No	_	_	_
+19	.	.	PUNCT	.	_	5	punct	5:punct	_	_	_	_

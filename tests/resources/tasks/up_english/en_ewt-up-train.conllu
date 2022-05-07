@@ -1,0 +1,92 @@
+# newdoc id = weblog-juancole.com_juancole_20051126063000_ENG_20051126_063000
+# sent_id = weblog-juancole.com_juancole_20051126063000_ENG_20051126_063000-0001
+# text = Al-Zaman : American forces killed Shaikh Abdullah al-Ani, the preacher at the mosque in the town of Qaim, near the Syrian border.
+1	Al	Al	PROPN	NNP	Number=Sing	0	root	0:root	SpaceAfter=No	_	_
+2	-	-	PUNCT	HYPH	_	1	punct	1:punct	SpaceAfter=No	_	_
+3	Zaman	Zaman	PROPN	NNP	Number=Sing	1	flat	1:flat	_	_	_
+4	:	:	PUNCT	:	_	1	punct	1:punct	_	_	_
+5	American	american	ADJ	JJ	Degree=Pos	6	amod	6:amod	_	_	_
+6	forces	force	NOUN	NNS	Number=Plur	7	nsubj	7:nsubj	_	_	ARG0
+7	killed	kill	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	1	parataxis	1:parataxis	_	kill.01	V
+8	Shaikh	Shaikh	PROPN	NNP	Number=Sing	7	obj	7:obj	_	_	ARG1
+9	Abdullah	Abdullah	PROPN	NNP	Number=Sing	8	flat	8:flat	_	_	_
+10	al	al	PROPN	NNP	Number=Sing	8	flat	8:flat	SpaceAfter=No	_	_
+11	-	-	PUNCT	HYPH	_	8	punct	8:punct	SpaceAfter=No	_	_
+12	Ani	Ani	PROPN	NNP	Number=Sing	8	flat	8:flat	SpaceAfter=No	_	_
+13	,	,	PUNCT	,	_	8	punct	8:punct	_	_	_
+14	the	the	DET	DT	Definite=Def|PronType=Art	15	det	15:det	_	_	_
+15	preacher	preacher	NOUN	NN	Number=Sing	8	appos	8:appos	_	_	_
+16	at	at	ADP	IN	_	18	case	18:case	_	_	_
+17	the	the	DET	DT	Definite=Def|PronType=Art	18	det	18:det	_	_	_
+18	mosque	mosque	NOUN	NN	Number=Sing	7	obl	7:obl:at	_	_	ARGM-LOC
+19	in	in	ADP	IN	_	21	case	21:case	_	_	_
+20	the	the	DET	DT	Definite=Def|PronType=Art	21	det	21:det	_	_	_
+21	town	town	NOUN	NN	Number=Sing	18	nmod	18:nmod:in	_	_	_
+22	of	of	ADP	IN	_	23	case	23:case	_	_	_
+23	Qaim	Qaim	PROPN	NNP	Number=Sing	21	nmod	21:nmod:of	SpaceAfter=No	_	_
+24	,	,	PUNCT	,	_	21	punct	21:punct	_	_	_
+25	near	near	ADP	IN	_	28	case	28:case	_	_	_
+26	the	the	DET	DT	Definite=Def|PronType=Art	28	det	28:det	_	_	_
+27	Syrian	syrian	ADJ	JJ	Degree=Pos	28	amod	28:amod	_	_	_
+28	border	border	NOUN	NN	Number=Sing	21	nmod	21:nmod:near	SpaceAfter=No	_	_
+29	.	.	PUNCT	.	_	1	punct	1:punct	_	_	_
+
+# sent_id = weblog-juancole.com_juancole_20051126063000_ENG_20051126_063000-0002
+# text = [This killing of a respected cleric will be causing us trouble for years to come.]
+1	[	[	PUNCT	-LRB-	_	10	punct	10:punct	SpaceAfter=No	_	_	_	_	_
+2	This	this	DET	DT	Number=Sing|PronType=Dem	3	det	3:det	_	_	_	_	_	_
+3	killing	killing	NOUN	NN	Number=Sing	10	nsubj	10:nsubj	_	kill.01	V	_	ARG0	_
+4	of	of	ADP	IN	_	7	case	7:case	_	_	_	_	_	_
+5	a	a	DET	DT	Definite=Ind|PronType=Art	7	det	7:det	_	_	_	_	_	_
+6	respected	respected	ADJ	JJ	Degree=Pos	7	amod	7:amod	_	_	_	_	_	_
+7	cleric	cleric	NOUN	NN	Number=Sing	3	nmod	3:nmod:of	_	_	ARG1	_	_	_
+8	will	will	AUX	MD	VerbForm=Fin	10	aux	10:aux	_	_	_	_	ARGM-MOD	_
+9	be	be	AUX	VB	VerbForm=Inf	10	aux	10:aux	_	be.03	_	V	_	_
+10	causing	cause	VERB	VBG	VerbForm=Ger	0	root	0:root	_	cause.01	_	_	V	_
+11	us	we	PRON	PRP	Case=Acc|Number=Plur|Person=1|PronType=Prs	10	iobj	10:iobj	_	_	_	_	ARGM-GOL	_
+12	trouble	trouble	NOUN	NN	Number=Sing	10	obj	10:obj	_	_	_	_	ARG1	_
+13	for	for	ADP	IN	_	14	case	14:case	_	_	_	_	_	_
+14	years	year	NOUN	NNS	Number=Plur	10	obl	10:obl:for	_	_	_	_	ARGM-TMP	ARG1
+15	to	to	PART	TO	_	16	mark	16:mark	_	_	_	_	_	_
+16	come	come	VERB	VB	VerbForm=Inf	14	acl	14:acl:to	SpaceAfter=No	come.01	_	_	_	V
+17	.	.	PUNCT	.	_	10	punct	10:punct	SpaceAfter=No	_	_	_	_	_
+18	]	]	PUNCT	-RRB-	_	10	punct	10:punct	_	_	_	_	_	_
+
+# sent_id = weblog-juancole.com_juancole_20051126063000_ENG_20051126_063000-0003
+# text = DPA: Iraqi authorities announced that they had busted up 3 terrorist cells operating in Baghdad.
+1	DPA	DPA	PROPN	NNP	Number=Sing	0	root	0:root	SpaceAfter=No	_	_	_	_	_
+2	:	:	PUNCT	:	_	1	punct	1:punct	_	_	_	_	_	_
+3	Iraqi	iraqi	ADJ	JJ	Degree=Pos	4	amod	4:amod	_	_	_	_	_	_
+4	authorities	authority	NOUN	NNS	Number=Plur	5	nsubj	5:nsubj	_	_	ARG0	_	_	_
+5	announced	announce	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	1	parataxis	1:parataxis	_	announce.01	V	_	_	_
+6	that	that	SCONJ	IN	_	9	mark	9:mark	_	_	_	_	_	_
+7	they	they	PRON	PRP	Case=Nom|Number=Plur|Person=3|PronType=Prs	9	nsubj	9:nsubj	_	_	_	_	ARG0	_
+8	had	have	AUX	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	9	aux	9:aux	_	have.01	_	V	_	_
+9	busted	bust	VERB	VBN	Tense=Past|VerbForm=Part	5	ccomp	5:ccomp	_	bust_up.04	ARG1	_	V	_
+10	up	up	ADP	RP	_	9	compound:prt	9:compound:prt	_	_	_	_	_	_
+11	3	3	NUM	CD	NumType=Card	13	nummod	13:nummod	_	_	_	_	_	_
+12	terrorist	terrorist	ADJ	JJ	Degree=Pos	13	amod	13:amod	_	_	_	_	_	_
+13	cells	cell	NOUN	NNS	Number=Plur	9	obj	9:obj	_	_	_	_	ARG1	ARG0
+14	operating	operate	VERB	VBG	VerbForm=Ger	13	acl	13:acl	_	operate.01	_	_	_	V
+15	in	in	ADP	IN	_	16	case	16:case	_	_	_	_	_	_
+16	Baghdad	Baghdad	PROPN	NNP	Number=Sing	14	obl	14:obl:in	SpaceAfter=No	_	_	_	_	ARGM-LOC
+17	.	.	PUNCT	.	_	1	punct	1:punct	_	_	_	_	_	_
+
+# sent_id = weblog-juancole.com_juancole_20051126063000_ENG_20051126_063000-0004
+# text = Two of them were being run by 2 officials of the Ministry of the Interior!
+1	Two	two	NUM	CD	NumType=Card	6	nsubj:pass	6:nsubj:pass	_	_	_	_	ARG1
+2	of	of	ADP	IN	_	3	case	3:case	_	_	_	_	_
+3	them	they	PRON	PRP	Case=Acc|Number=Plur|Person=3|PronType=Prs	1	nmod	1:nmod:of	_	_	_	_	_
+4	were	be	AUX	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	6	aux	6:aux	_	be.03	V	_	_
+5	being	be	AUX	VBG	VerbForm=Ger	6	aux:pass	6:aux:pass	_	be.03	_	V	_
+6	run	run	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	0:root	_	run.01	_	_	V
+7	by	by	ADP	IN	_	9	case	9:case	_	_	_	_	_
+8	2	2	NUM	CD	NumType=Card	9	nummod	9:nummod	_	_	_	_	_
+9	officials	official	NOUN	NNS	Number=Plur	6	obl	6:obl:by	_	_	_	_	ARG0
+10	of	of	ADP	IN	_	12	case	12:case	_	_	_	_	_
+11	the	the	DET	DT	Definite=Def|PronType=Art	12	det	12:det	_	_	_	_	_
+12	Ministry	Ministry	PROPN	NNP	Number=Sing	9	nmod	9:nmod:of	_	_	_	_	_
+13	of	of	ADP	IN	_	15	case	15:case	_	_	_	_	_
+14	the	the	DET	DT	Definite=Def|PronType=Art	15	det	15:det	_	_	_	_	_
+15	Interior	Interior	PROPN	NNP	Number=Sing	12	nmod	12:nmod:of	SpaceAfter=No	_	_	_	_
+16	!	!	PUNCT	.	_	6	punct	6:punct	_	_	_	_	_
