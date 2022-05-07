@@ -606,7 +606,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         if self.token_embedding:
             result["token_embeddings"] = torch.tensor(embeddings[-1], device=flair.device)
 
-        return embeddings
+        return result
 
     @classmethod
     def collect_dynamic_axes(cls, embedding: "TransformerEmbeddings", tensors):
