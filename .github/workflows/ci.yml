@@ -8,8 +8,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      TRANSFORMERS_CACHE: ~/cache/transformers
-      FLAIR_CACHE_ROOT: ~/cache/flair
+      TRANSFORMERS_CACHE: ./cache/transformers
+      FLAIR_CACHE_ROOT: ./cache/flair
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.6
@@ -25,8 +25,8 @@ jobs:
       - name: Cache downloaded models/datasets
         uses: actions/cache@v3
         with:
-          path: ~/cache
-          key: cache-v1
+          path: ./cache
+          key: cache-v1.1
           # TODO: remove this comment in the follow up commit where the cache is already created.
       - name: Run tests
         run: pytest --runintegration -vv
