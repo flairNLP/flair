@@ -7,6 +7,7 @@ from transformers import set_seed as hf_set_seed
 
 # global variable: cache_root
 cache_root = Path(os.getenv("FLAIR_CACHE_ROOT", Path(Path.home(), ".flair")))
+cache_root.mkdir(exist_ok=True, parents=True)
 
 # global variable: device
 if torch.cuda.is_available():
