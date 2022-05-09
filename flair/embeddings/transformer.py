@@ -402,9 +402,8 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         needs_length = self.document_embedding and not (self.cls_pooling == "cls" and self.initial_cls_token)
 
         if "overflow_to_sample_mapping" in batch_encoding:
-            model_kwargs["overflow_to_sample_mapping"] = batch_encoding["overflow_to_sample_mapping"].to(
-                device, non_blocking=True
-            )
+            cpu_overflow_to_sample_mapping = batch_encoding["overflow_to_sample_mapping"]
+            model_kwargs["overflow_to_sample_mapping"] = cpu_overflow_to_sample_mapping.to(device, non_blocking=True)
             if needs_length:
                 unpacked_ids = combine_strided_tensors(
                     input_ids,
@@ -416,6 +415,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 lengths = (unpacked_ids != self.tokenizer.pad_token_id).sum(dim=1)
                 model_kwargs["lengths"] = lengths
         else:
+            cpu_overflow_to_sample_mapping = None
             if needs_length:
                 lengths = (input_ids != self.tokenizer.pad_token_id).sum(dim=1)
                 model_kwargs["lengths"] = lengths
@@ -453,7 +453,8 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             if self.allow_long_sentences:
                 new_offsets = []
                 new_lengths = []
-                for sent_id in batch_encoding["overflow_to_sample_mapping"]:
+                assert cpu_overflow_to_sample_mapping is not None
+                for sent_id in cpu_overflow_to_sample_mapping:
                     new_offsets.append(offsets[sent_id])
                     new_lengths.append(lengths[sent_id])
                 offsets = new_offsets
