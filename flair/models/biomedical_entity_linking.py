@@ -305,7 +305,7 @@ class BioSyn(object):
         return dense_embeds
 
     def get_predictions(
-        self, mention, dictionary, dict_sparse_embeds, dict_dense_embeds, topk, tgt_space_mean_vec=None, threshold=None
+        self, mention, dictionary, dict_sparse_embeds, dict_dense_embeds, topk, tgt_space_mean_vec=None
     ):
         # embed mention
         mention_sparse_embeds = self.embed_sparse(names=[mention])
@@ -319,16 +319,10 @@ class BioSyn(object):
         hybrid_candidate_idxs, hybrid_candidate_scores = self.retrieve_candidate(
             score_matrix=hybrid_score_matrix, topk=topk
         )
+        ids = hybrid_candidate_idxs[0].tolist()
+        scores = hybrid_candidate_scores[0].tolist()
 
-        # Filter for only scores that are over thershold * maximum score
-        scores = []
-        if threshold is not None:
-            max_score = hybrid_candidate_scores[0].tolist()[0]
-            scores = filter(lambda score: (score >= threshold * max_score), hybrid_candidate_scores[0].tolist())
-        else:
-            scores = hybrid_candidate_scores[0].tolist()
-
-        return [np.append(dictionary[ind], score) for ind, score in zip(hybrid_candidate_idxs[0].tolist(), scores)]
+        return [np.append(dictionary[ind], score) for ind, score in zip(ids, scores)]
 
 
 class SapBert(object):
@@ -581,7 +575,7 @@ class HunNen(object):
 
         return cls(model, dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec)
 
-    def predict(self, sentences: Union[List[Sentence], Sentence], entity_type, topk=10, threshold=None):
+    def predict(self, sentences: Union[List[Sentence], Sentence], entity_type, topk=10):
         """
         On one or more sentences, predict the cui on all named entites annotated with a tag of type entity_type.
         Annotates the top k predictions.
@@ -606,7 +600,6 @@ class HunNen(object):
                     self.dict_dense_embeds,
                     topk,
                     self.tgt_space_mean_vec,
-                    threshold,
                 )
 
                 for prediction in predictions:
