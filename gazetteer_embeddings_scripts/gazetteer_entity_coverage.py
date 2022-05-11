@@ -9,8 +9,8 @@ label_dict = corpus.make_label_dictionary(label_type='ner')
 token_set_1 = set()
 token_set_2 = set()
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
-                                                               "ner_model_non_count_sensitive_gazetteers",
-                                                               partial_matching=False,
+                                                               "gazetteers/",
+                                                               partial_matching=True,
                                                                full_matching=True,
                                                                use_all_gazetteers=False,
                                                                label_dict=label_dict)
