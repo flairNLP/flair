@@ -1033,12 +1033,11 @@ class GazetteerEmbeddings(TokenEmbeddings):
                         sequence_feature_vectors[token.idx - 1][self.feature_list.index('O')] = 1
             if 'full_match' in self.matching_methods:
                 token_dict = {}
-                token_string = ''
                 for token in sentence.tokens:
                     token_dict[token.idx - 1] = [token.text, set()]
-                    token_string = token_string + f' {token.text}'
+                string_of_tokens = ' '.join(token.text for token in sentence.tokens)
                 for n in range(1, len(token_dict) + 1):
-                    string_window_split_list = split_on_window(token_string, n)
+                    string_window_split_list = split_on_window(string_of_tokens, n)
                     for string_split in string_window_split_list:
                         joined_string = ' '.join([list(d.values())[0] for d in string_split])
                         try:
