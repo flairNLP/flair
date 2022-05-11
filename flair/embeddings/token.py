@@ -1032,24 +1032,24 @@ class GazetteerEmbeddings(TokenEmbeddings):
                     except KeyError:
                         sequence_feature_vectors[token.idx - 1][self.feature_list.index('O')] = 1
             if 'full_match' in self.matching_methods:
-                temp_token_dict = {}
+                token_dict = {}
                 token_string = ''
                 for token in sentence.tokens:
-                    temp_token_dict[token.idx - 1] = [token.text, []]
+                    token_dict[token.idx - 1] = [token.text, set()]
                     token_string = token_string + f' {token.text}'
-                for n in range(1, len(temp_token_dict) + 1):
+                for n in range(1, len(token_dict) + 1):
                     string_window_split_list = split_on_window(token_string, n)
                     for string_split in string_window_split_list:
                         joined_string = ' '.join([list(d.values())[0] for d in string_split])
                         try:
                             for tag in self.gazetteers_dicts['full_match'][joined_string]:
                                 for t in [list(d.keys())[0] for d in string_split]:
-                                    temp_token_dict[t][1].append(tag)
+                                    token_dict[t][1].add(tag)
                         except KeyError:
                             pass
-                for t_key in temp_token_dict.keys():
-                    if len(temp_token_dict[t_key][1]) > 0:
-                        for tag in temp_token_dict[t_key][1]:
+                for t_key in token_dict.keys():
+                    if len(token_dict[t_key][1]) > 0:
+                        for tag in token_dict[t_key][1]:
                             sequence_feature_vectors[t_key][self.feature_list.index(tag)] = 1
                         sequence_feature_vectors[t_key][self.feature_list.index('O')] = 0
                     else:
