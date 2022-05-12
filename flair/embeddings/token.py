@@ -887,13 +887,15 @@ class GazetteerEmbeddings(TokenEmbeddings):
             label_dict: Dictionary = None,
             full_matching: bool = True,
             partial_matching: bool = True,
-            use_all_gazetteers: bool = False
+            use_all_gazetteers: bool = False,
+            tokenize_gazetteer_entries: bool = False
     ):
         super().__init__()
         self.name = "Gazetteer"
         self.use_all_gazetteers = use_all_gazetteers
         self.gazetteer_path = path_to_gazetteers
         self.labels = label_dict
+        self.tokenize_entries = tokenize_gazetteer_entries
         self.matching_methods = []
         if full_matching:
             self.matching_methods.append('full_match')
@@ -970,7 +972,10 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                 break
                             else:
                                 if 'partial_match' in self.matching_methods:
-                                    line_list = re.split(" ", line.rstrip("\n"))
+                                    if self.tokenize_entries:
+                                        line_list = [token.text for token in Sentence(line.rstrip("\n"))]
+                                    else:
+                                        line_list = re.split(" ", line.rstrip("\n"))
                                     line_list_filtered = [w for w in line_list if any(c.isalnum() for c in w) and
                                                           len(w) > 1 or len(line_list) == 1 and len(w) >= 1]
                                     for word in line_list_filtered:
@@ -1000,7 +1005,10 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                             except KeyError:
                                                 partial_matching_dict[word] = [f'S-{tag_key}']
                                 if 'full_match' in self.matching_methods:
-                                    line = line.rstrip("\n")
+                                    if self.tokenize_entries:
+                                        line = " ".join([token.text for token in Sentence(line.rstrip("\n"))])
+                                    else:
+                                        line = line.rstrip("\n")
                                     if len(line) > 0:
                                         try:
                                             if tag_key not in full_matching_dict[line]:
