@@ -46,11 +46,17 @@ if dict_from_csv['use_gazetter_embeddintgs'] == 'True':
             all_gazetteers = True
     except KeyError:
         pass
+    try:
+        if dict_from_csv['tokenize_gazetteer_entries'] == 'True':
+            tokenize_gazetteer_entries = True
+    except KeyError:
+        pass
     gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
                                                                    dict_from_csv['path_to_gazetteers'],
                                                                    partial_matching=partial,
                                                                    full_matching=full,
                                                                    label_dict=label_dict,
+                                                                   tokenize_gazetteer_entries=tokenize_gazetteer_entries,
                                                                    use_all_gazetteers=all_gazetteers)
     print(f'Getting gazetteers from {gazetteer_embedding.gazetteer_file_dict_list}')
     embeddings.append(gazetteer_embedding)
