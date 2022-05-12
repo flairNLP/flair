@@ -970,12 +970,13 @@ class GazetteerEmbeddings(TokenEmbeddings):
                         for line in src:
                             if len(line) == 0:
                                 break
-                            else:
+                            elif len(line.rstrip("\n")) > 0:
+                                line = line.rstrip("\n")
                                 if 'partial_match' in self.matching_methods:
                                     if self.tokenize_entries:
-                                        line_list = [token.text for token in Sentence(line.rstrip("\n"))]
+                                        line_list = [t.text for t in Sentence(line)]
                                     else:
-                                        line_list = re.split(" ", line.rstrip("\n"))
+                                        line_list = re.split(" ", line)
                                     line_list_filtered = [w for w in line_list if any(c.isalnum() for c in w) and
                                                           len(w) > 1 or len(line_list) == 1 and len(w) >= 1]
                                     for word in line_list_filtered:
@@ -1006,15 +1007,12 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                                 partial_matching_dict[word] = [f'S-{tag_key}']
                                 if 'full_match' in self.matching_methods:
                                     if self.tokenize_entries:
-                                        line = " ".join([token.text for token in Sentence(line.rstrip("\n"))])
-                                    else:
-                                        line = line.rstrip("\n")
-                                    if len(line) > 0:
-                                        try:
-                                            if tag_key not in full_matching_dict[line]:
-                                                full_matching_dict[line].append(tag_key)
-                                        except KeyError:
-                                            full_matching_dict[line] = [tag_key]
+                                        line = " ".join([t.text for t in Sentence(line)])
+                                    try:
+                                        if tag_key not in full_matching_dict[line]:
+                                            full_matching_dict[line].append(tag_key)
+                                    except KeyError:
+                                        full_matching_dict[line] = [tag_key]
         return {'partial_match': partial_matching_dict, 'full_match': full_matching_dict}
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
