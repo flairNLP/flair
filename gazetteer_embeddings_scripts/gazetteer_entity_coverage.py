@@ -12,6 +12,7 @@ gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteer
                                                                "gazetteers/",
                                                                partial_matching=True,
                                                                full_matching=True,
+                                                               tokenize_gazetteer_entries=True,
                                                                use_all_gazetteers=False,
                                                                label_dict=label_dict)
 for sentence in corpus.get_all_sentences():
