@@ -33,7 +33,6 @@ from .legacy import (
     OpenAIGPT2Embeddings,
     OpenAIGPTEmbeddings,
     RoBERTaEmbeddings,
-    TransformerXLEmbeddings,
     XLMEmbeddings,
     XLMRobertaEmbeddings,
     XLNetEmbeddings,
