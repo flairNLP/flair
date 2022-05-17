@@ -898,9 +898,9 @@ class GazetteerEmbeddings(TokenEmbeddings):
         self.tokenize_entries = tokenize_gazetteer_entries
         self.matching_methods = []
         if full_matching:
-            self.matching_methods.append('full_match')
+            self.matching_methods.append("full_match")
         if partial_matching:
-            self.matching_methods.append('partial_match')
+            self.matching_methods.append("partial_match")
 
         self.gazetteer_file_dict_list = self._get_gazetteers()
 
@@ -922,18 +922,18 @@ class GazetteerEmbeddings(TokenEmbeddings):
             if self.use_all_gazetteers:
                 for index in self.gazetteer_file_dict_list:
                     for pos in ['S', 'B', 'E', 'I']:
-                        tag_list.append(f'{pos}-{list(index.keys())[0]}')
+                        tag_list.append(f"{pos}-{list(index.keys())[0]}")
             else:
                 if self.labels is not None:
                     for tag in self.labels.get_items():
                         if tag == "<unk>":
                             continue
                         for pos in ['S', 'B', 'E', 'I']:
-                            tag_list.append(f'{pos}-{tag}')
+                            tag_list.append(f"{pos}-{tag}")
         if 'full_match' in self.matching_methods:
             if self.use_all_gazetteers:
                 for index in self.gazetteer_file_dict_list:
-                    tag_list.append(f'{list(index.keys())[0]}')
+                    tag_list.append(f"{list(index.keys())[0]}")
             else:
                 if self.labels is not None:
                     for tag in self.labels.get_items():
@@ -945,7 +945,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
     def _get_gazetteers(self):
         gazetteer_files = []
         if self.use_all_gazetteers:
-            files = list([f for f in os.listdir(self.gazetteer_path + '/') if re.match('.*[.]txt', f)])
+            files = list([f for f in os.listdir(self.gazetteer_path + '/') if re.match(".*[.]txt", f)])
             for index, file in enumerate(files):
                 gazetteer_files.append({str(index): [file]})
         else:
@@ -953,7 +953,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
                 for tag in self.labels.get_items():
                     if tag == "<unk>":
                         continue
-                    pattern = f'.*-?{tag}[-_].*[.]txt'
+                    pattern = f".*-?{tag}[-_].*[.]txt"
                     gazetteer_files.append({tag: list([f for f in os.listdir(self.gazetteer_path + '/')
                                                        if re.match(pattern, f)])})
         return gazetteer_files
@@ -976,7 +976,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                     if self.tokenize_entries:
                                         line_list = [t.text for t in Sentence(line)]
                                     else:
-                                        line_list = re.split(" ", line)
+                                        line_list = re.split(' ', line)
                                     line_list_filtered = [w for w in line_list if any(c.isalnum() for c in w) and
                                                           len(w) > 1 or len(line_list) == 1 and len(w) >= 1]
                                     for word in line_list_filtered:
@@ -1007,7 +1007,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                                 partial_matching_dict[word] = [f'S-{tag_key}']
                                 if 'full_match' in self.matching_methods:
                                     if self.tokenize_entries:
-                                        line = " ".join([t.text for t in Sentence(line)])
+                                        line = ' '.join([t.text for t in Sentence(line)])
                                     try:
                                         if tag_key not in full_matching_dict[line]:
                                             full_matching_dict[line].append(tag_key)
