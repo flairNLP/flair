@@ -891,7 +891,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
             tokenize_gazetteer_entries: bool = False
     ):
         super().__init__()
-        self.name = "Gazetteer"
+        self.name = "gazetteer"
         self.use_all_gazetteers = use_all_gazetteers
         self.gazetteer_path = path_to_gazetteers
         self.labels = label_dict
@@ -966,7 +966,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
             gazetteer_files = gazetteer_dict[tag_key]
             if len(gazetteer_files) > 0:
                 for gazetteer_file in gazetteer_files:
-                    with open(f'{self.gazetteer_path}/{gazetteer_file}', 'r', encoding='utf-8', errors='strict') as src:
+                    with open(f"{self.gazetteer_path}/{gazetteer_file}", 'r', encoding='utf-8', errors='strict') as src:
                         for line in src:
                             if len(line) == 0:
                                 break
