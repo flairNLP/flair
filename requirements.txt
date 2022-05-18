@@ -17,7 +17,7 @@ langdetect
 lxml
 ftfy
 sentencepiece==0.1.95
-konoha<5.0.0,>=4.0.0
+konoha<6.0.0,>=4.0.0
 janome
 gdown==4.4.0
 huggingface-hub
