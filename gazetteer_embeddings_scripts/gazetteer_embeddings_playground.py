@@ -16,7 +16,7 @@ sentence_list = [sentences_1, sentences_2]
 label_dict = corpus.make_label_dictionary(label_type='ner')
 
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers=
-                                                               "./gazetteers",
+                                                               "gazetteer-collection",
                                                                partial_matching=True,
                                                                full_matching=True,
                                                                label_dict=label_dict,
@@ -32,3 +32,18 @@ for sentence in sentence_list:
     for token in sentence:
         print(token)
         print(token.embedding)
+# import sys
+# import os.path
+# file_list_1 = []
+# for dirpath, dirnames, filenames in os.walk("/home/danielc/PycharmProjects/flair/gazetteer_embeddings_scripts/ner_model_non_count_sensitive_gazetteers"):
+#     for filename in [f for f in filenames if f.endswith(".txt")]:
+#         file_list_1.append(os.path.join(dirpath, filename))
+#
+# entities = set()
+# for file in file_list_1:
+#     with open(file, 'r') as src:
+#         for line in src:
+#             line = line.strip("\n")
+#             if len(line) > 0:
+#                 entities.add(line)
+# print(len(entities))
