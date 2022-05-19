@@ -37,6 +37,7 @@ if dict_from_csv['use_gazetter_embeddintgs'] == 'True':
     partial = False
     full = False
     all_gazetteers = False
+    tokenize_gazetteer_entries = False
     if dict_from_csv['partial_matching'] == 'True':
         partial = True
     if dict_from_csv['full_matching'] == 'True':
