@@ -4,6 +4,7 @@ pytest-isort
 pytest-flake8
 flake8-black
 flake8<4.0.0
+importlib-metadata<4.3
 types-Deprecated
 types-dataclasses
 types-tabulate
