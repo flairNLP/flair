@@ -86,16 +86,17 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 # without UNK, we cannot evaluate on data that contains labels not seen in test
                 # with UNK, the model learns less well if there are no UNK examples
                 self.label_dictionary = Dictionary(add_unk=allow_unk_predictions)
+                assert self.tag_format in ["BIOES", "BIO"]
                 for label in tag_dictionary.get_items():
                     if label == "<unk>":
                         continue
                     self.label_dictionary.add_item("O")
-                    if tag_format == "BIOES":
+                    if self.tag_format == "BIOES":
                         self.label_dictionary.add_item("S-" + label)
                         self.label_dictionary.add_item("B-" + label)
                         self.label_dictionary.add_item("E-" + label)
                         self.label_dictionary.add_item("I-" + label)
-                    if tag_format == "BIO":
+                    if self.tag_format == "BIO":
                         self.label_dictionary.add_item("B-" + label)
                         self.label_dictionary.add_item("I-" + label)
             else:
@@ -399,12 +400,17 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 sentence_labels = ["O"] * len(sentence)
                 for label in sentence.get_labels(self.label_type):
                     span: Span = label.data_point
-                    if len(span) == 1:
-                        sentence_labels[span[0].idx - 1] = "S-" + label.value
+                    if self.tag_format == "BIOES":
+                        if len(span) == 1:
+                            sentence_labels[span[0].idx - 1] = "S-" + label.value
+                        else:
+                            sentence_labels[span[0].idx - 1] = "B-" + label.value
+                            sentence_labels[span[-1].idx - 1] = "E-" + label.value
+                            for i in range(span[0].idx, span[-1].idx - 1):
+                                sentence_labels[i] = "I-" + label.value
                     else:
                         sentence_labels[span[0].idx - 1] = "B-" + label.value
-                        sentence_labels[span[-1].idx - 1] = "E-" + label.value
-                        for i in range(span[0].idx, span[-1].idx - 1):
+                        for i in range(span[0].idx, span[-1].idx):
                             sentence_labels[i] = "I-" + label.value
                 all_sentence_labels.extend(sentence_labels)
             labels = [[label] for label in all_sentence_labels]
