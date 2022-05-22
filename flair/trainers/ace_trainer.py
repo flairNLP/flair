@@ -1,8 +1,9 @@
+import collections
 import copy
 import inspect
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Type, Union, cast
 
 import numpy as np
 import torch
@@ -13,7 +14,7 @@ from tqdm import tqdm
 import flair
 from flair.data import Corpus, MultiCorpus, Sentence
 from flair.datasets import DataLoader
-from flair.embeddings import Embeddings, StackedEmbeddings
+from flair.embeddings import Embeddings, StackedEmbeddings, TokenEmbeddings
 from flair.models import (
     DependencyParser,
     EntityLinker,
@@ -44,7 +45,7 @@ class AceEmbeddings(Embeddings[Sentence]):
     def __init__(self, embeddings: List[Embeddings]):
         # this is not a torch.nn.ModuleList on purpose, so the embeddings won't be added as parameters to the model.
         self.embeddings = embeddings
-        self.active = torch.ones(len(embeddings), device=flair.device, dtype=bool)
+        self.active = torch.ones((len(embeddings),), device=flair.device, dtype=torch.bool)
         self.configurations: Dict[str, torch.Tensor] = {}
         self.rewards: Dict[str, float] = {}
         super().__init__()
@@ -77,7 +78,7 @@ class AceEmbeddings(Embeddings[Sentence]):
         pass
 
     @staticmethod
-    def state_to_key(state: List[bool]) -> str:
+    def state_to_key(state: torch.Tensor) -> str:
         return "".join([str(int(b)) for b in state])
 
     def create_log_prop_parameter(self) -> Variable:
@@ -108,7 +109,9 @@ class AceEmbeddings(Embeddings[Sentence]):
         self.active = log_prop_weights >= 0.0
 
         log.info(f"Final model with embeddings: {self.get_names()}")
-        return StackedEmbeddings([emb for (can_use, emb) in zip(self.active, self.embeddings)])
+        return StackedEmbeddings(
+            cast(List[TokenEmbeddings], [emb for (can_use, emb) in zip(self.active, self.embeddings)])
+        )
 
     def sample_config(self, log_prop_weights: torch.Tensor):
         one_prob = torch.sigmoid(log_prop_weights)
@@ -131,7 +134,7 @@ class AceEmbeddings(Embeddings[Sentence]):
             props = []
             n_embeddings = len(self.embeddings)
             for comb in torch.arange(1, 2**n_embeddings):
-                mask = 2 ** torch.arange(n_embeddings - 1, -1, -1, device=flair.device, dtype=int)
+                mask = 2 ** torch.arange(n_embeddings - 1, -1, -1, device=flair.device, dtype=torch.int)
                 val = comb.unsqueeze(-1).bitwise_and(mask).ne(0)
                 if self.state_to_key(val) in self.configurations:
                     continue
@@ -146,10 +149,10 @@ class AceEmbeddings(Embeddings[Sentence]):
 
     def adjust_init_state_dict(
         self, init: Dict[str, torch.Tensor], size: Dict[str, torch.Tensor]
-    ) -> Dict[str, torch.Tensor]:
+    ) -> OrderedDict[str, torch.Tensor]:
         """Take the state dict of a full embedding and remove the unused embeddings."""
-        assert sorted(init.keys()) == sorted([k for k in size.keys() if not "list_embedding_" in k])
-        result: Dict[str, torch.Tensor] = {}
+        assert sorted(init.keys()) == sorted([k for k in size.keys() if "list_embedding_" not in k])
+        result: OrderedDict[str, torch.Tensor] = collections.OrderedDict()
         total_embedding_size = sum(emb.embedding_length for emb in self.embeddings)
         curr_embedding_size = self.embedding_length
         for k in init.keys():
@@ -238,12 +241,12 @@ class AceTrainer:
         model_type: Union[str, Type[Model]] = None,
     ):
         if model_type is None:
-            label_type = model_args.get("label_type", model_args.get("tag_type", None))
+            label_type: Optional[str] = model_args.get("label_type", model_args.get("tag_type", None))
             if label_type is None:
                 raise ValueError("ModelType is not set and could not infer it via 'label_type' & 'tag_type'")
             model_type = label_type
 
-        if inspect.isclass(model_type):
+        if isinstance(model_type, type):
             self.model_type = model_type
         else:
             self.model_type = _label_type_model_mapping[model_type]
@@ -304,7 +307,7 @@ class AceTrainer:
 
         for emb in self.embeddings:
             emb.eval()
-            emb.fine_tune = False
+            emb.fine_tune = False  # type: ignore
             emb.static_embeddings = True
 
         for batch in tqdm(all_data_loader, desc="Computing Embeddings for ACE"):
@@ -333,7 +336,7 @@ class AceTrainer:
 
             ace_embeddings.save_configuration(score)
 
-            optim = controller_optimizer(params=[log_prop], lr=controller_learning_rate)
+            optim = controller_optimizer(params=[log_prop], lr=controller_learning_rate)  # type: ignore
 
             for episode in range(1, max_episodes):
                 if cancel:
@@ -353,7 +356,7 @@ class AceTrainer:
         except KeyboardInterrupt:
             cancel = True
         except Exception:
-            if create_file_logs:
+            if log_handler is not None:
                 log_handler.close()
                 log.removeHandler(log_handler)
             raise

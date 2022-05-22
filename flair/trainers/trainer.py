@@ -844,7 +844,7 @@ class ModelTrainer:
                 main_evaluation_metric=main_evaluation_metric,
                 gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
                 exclude_labels=exclude_labels,
-                embedding_storage_mode=test_embedding_storage_mode
+                embedding_storage_mode=test_embedding_storage_mode,
             )
         else:
             final_score = 0
