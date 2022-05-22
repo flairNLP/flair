@@ -151,7 +151,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         self.reproject_embeddings = reproject_embeddings
         if self.reproject_embeddings:
             embedding_output_dim = embedding_dim
-            if isinstance(self.reproject_embeddings, int):
+            if not isinstance(self.reproject_embeddings, bool):
                 embedding_output_dim = self.reproject_embeddings
 
             self.embedding2nn = torch.nn.Linear(embedding_dim, embedding_output_dim)
