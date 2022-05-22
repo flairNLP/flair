@@ -201,7 +201,7 @@ class WordEmbeddings(TokenEmbeddings):
         else:
             embeddings_path = Path(embeddings)
 
-        self.name: str = str(embeddings_path)
+        self.name: str = embeddings_path.stem
         self.static_embeddings = not fine_tune
         self.fine_tune = fine_tune
         self.force_cpu = force_cpu
@@ -651,7 +651,8 @@ class FlairEmbeddings(TokenEmbeddings):
 
             elif not Path(model).exists():
                 raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
-
+            else:
+                model = Path(model)
         from flair.models import LanguageModel
 
         if type(model) == LanguageModel:
@@ -659,7 +660,7 @@ class FlairEmbeddings(TokenEmbeddings):
             self.name = f"Task-LSTM-{self.lm.hidden_size}-{self.lm.nlayers}-{self.lm.is_forward_lm}"
         else:
             self.lm = LanguageModel.load_language_model(model)
-            self.name = str(model)
+            self.name = model.stem
 
         # embeddings are static if we don't do finetuning
         self.fine_tune = fine_tune
@@ -938,7 +939,7 @@ class FastTextEmbeddings(TokenEmbeddings):
 
         self.embeddings = embeddings_path
 
-        self.name: str = str(embeddings_path)
+        self.name: str = embeddings_path.stem
 
         self.static_embeddings = True
 
@@ -1499,7 +1500,7 @@ class NILCEmbeddings(WordEmbeddings):
         else:
             embeddings_path = Path(embeddings)
 
-        self.name: str = str(embeddings_path)
+        self.name: str = embeddings_path.stem
         self.static_embeddings = True
 
         log.info("Reading embeddings from %s" % embeddings_path)
