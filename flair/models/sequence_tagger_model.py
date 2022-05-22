@@ -38,7 +38,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         rnn_layers: int = 1,
         bidirectional: bool = True,
         use_crf: bool = True,
-        reproject_embeddings: bool = True,
+        reproject_embeddings: Union[bool, int] = True,
         dropout: float = 0.0,
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
@@ -62,7 +62,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         :param bidirectional: If True, RNN becomes bidirectional
         :param use_crf: If True, use a Conditional Random Field for prediction, else linear map to tag space.
         :param reproject_embeddings: If True, add a linear layer on top of embeddings, if you want to imitate
-            fine tune non-trainable embeddings.
+            fine tune non-trainable embeddings. If you set this to an integer, you can control
+            the dimensionality of the reprojection layer
         :param dropout: If > 0, then use dropout.
         :param word_dropout: If > 0, then use word dropout.
         :param locked_dropout: If > 0, then use locked dropout.
@@ -149,7 +150,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # ----- Model layers -----
         self.reproject_embeddings = reproject_embeddings
         if self.reproject_embeddings:
-            self.embedding2nn = torch.nn.Linear(embedding_dim, embedding_dim)
+            embedding_output_dim = embedding_dim
+            if isinstance(self.reproject_embeddings, int):
+                embedding_output_dim = self.reproject_embeddings
+
+            self.embedding2nn = torch.nn.Linear(embedding_dim, embedding_output_dim)
+
+            embedding_dim = embedding_output_dim
 
         # ----- RNN layer -----
         if use_rnn:
