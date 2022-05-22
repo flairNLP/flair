@@ -123,6 +123,7 @@ class ModelTrainer:
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
         scheduler_state_dict: Optional[Dict[str, Any]] = None,
         save_optimizer_state: bool = False,
+        test_embedding_storage_mode: str = "none",
         **kwargs,
     ) -> dict:
         """
@@ -291,9 +292,10 @@ class ModelTrainer:
         if optimizer_state_dict:
             optimizer.load_state_dict(optimizer_state_dict)
 
+        anneal_on_train = train_with_dev or self.corpus.dev is None or param_selection_mode
         # minimize training loss if training with dev data, else maximize dev score
-        anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
-        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.0
+        anneal_mode = "min" if anneal_on_train or anneal_against_dev_loss else "max"
+        best_validation_score = 100000000000 if anneal_on_train or anneal_against_dev_loss else 0.0
 
         dataset_size = _len_dataset(self.corpus.train)
         if train_with_dev:
@@ -372,6 +374,7 @@ class ModelTrainer:
 
         # this field stores the names of all dynamic embeddings in the model (determined after first forward pass)
         dynamic_embeddings = None
+        did_stop_per_user = False
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
@@ -702,7 +705,7 @@ class ModelTrainer:
                 # determine if this is the best model or if we need to anneal
                 current_epoch_has_best_model_so_far = False
                 # default mode: anneal against dev score
-                if not train_with_dev and not anneal_against_dev_loss:
+                if not anneal_on_train and not anneal_against_dev_loss:
                     if dev_score > best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_score
@@ -711,7 +714,7 @@ class ModelTrainer:
                         scheduler.step(dev_score, dev_eval_result.loss)
 
                 # alternative: anneal against dev loss
-                if not train_with_dev and anneal_against_dev_loss:
+                if not anneal_on_train and anneal_against_dev_loss:
                     if dev_eval_result.loss < best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_eval_result.loss
@@ -720,7 +723,7 @@ class ModelTrainer:
                         scheduler.step(dev_eval_result.loss)
 
                 # alternative: anneal against train loss
-                if train_with_dev:
+                if anneal_on_train:
                     if train_loss < best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = train_loss
@@ -822,6 +825,7 @@ class ModelTrainer:
                 log.info("Saving model ...")
                 self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
+            did_stop_per_user = True
         except Exception:
             if create_file_logs:
                 log_handler.close()
@@ -840,6 +844,7 @@ class ModelTrainer:
                 main_evaluation_metric=main_evaluation_metric,
                 gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
                 exclude_labels=exclude_labels,
+                embedding_storage_mode=test_embedding_storage_mode
             )
         else:
             final_score = 0
@@ -854,6 +859,7 @@ class ModelTrainer:
             "dev_score_history": dev_score_history,
             "train_loss_history": train_loss_history,
             "dev_loss_history": dev_loss_history,
+            "did_stop_per_user": did_stop_per_user,
         }
 
     def resume(
@@ -917,6 +923,7 @@ class ModelTrainer:
         num_workers: Optional[int] = 8,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
         exclude_labels: List[str] = [],
+        embedding_storage_mode: str = "none",
     ):
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
@@ -937,7 +944,7 @@ class ModelTrainer:
             mini_batch_size=eval_mini_batch_size,
             num_workers=num_workers,
             out_path=base_path / "test.tsv",
-            embedding_storage_mode="none",
+            embedding_storage_mode=embedding_storage_mode,
             main_evaluation_metric=main_evaluation_metric,
             gold_label_dictionary=gold_label_dictionary_for_eval,
             exclude_labels=exclude_labels,
