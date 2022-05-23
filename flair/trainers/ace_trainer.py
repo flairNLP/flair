@@ -107,6 +107,8 @@ class AceEmbeddings(Embeddings[Sentence]):
 
     def best_to_stacked(self, log_prop_weights: torch.Tensor):
         self.active = log_prop_weights >= 0.0
+        for emb in self.embeddings:
+            emb.to(flair.device)
 
         log.info(f"Final model with embeddings: {self.get_names()}")
         return StackedEmbeddings(
@@ -297,23 +299,29 @@ class AceTrainer:
         controller_learning_rate: float = 0.1,
         controller_optimizer: Type[Optimizer] = SGD,
         controller_loss_discount: float = 0.5,
+        controller_momentum: float = 0.0,
         max_episodes: int = 30,
         embedding_batch_size: int = 1,
         create_file_logs: bool = True,
     ):
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
-        all_data_loader = DataLoader(self.corpus.get_all_sentences(), batch_size=embedding_batch_size)
 
         for emb in self.embeddings:
             emb.eval()
             emb.fine_tune = False  # type: ignore
             emb.static_embeddings = True
+            emb.cpu()
 
-        for batch in tqdm(all_data_loader, desc="Computing Embeddings for ACE"):
-            for emb in self.embeddings:
+        for emb in self.embeddings:
+            all_data_loader = DataLoader(self.corpus.get_all_sentences(), batch_size=embedding_batch_size)
+            emb.to(flair.device)
+            for batch in tqdm(all_data_loader, desc=f"Computing Embeddings for ACE {emb.name}"):
                 emb.embed(batch)
                 store_embeddings(batch, "cpu")
+            emb.cpu()
+            if flair.device.type != "cpu":
+                torch.cuda.empty_cache()
 
         ace_embeddings = AceEmbeddings(self.embeddings)
         log_prop = ace_embeddings.create_log_prop_parameter()
@@ -336,7 +344,7 @@ class AceTrainer:
 
             ace_embeddings.save_configuration(score)
 
-            optim = controller_optimizer(params=[log_prop], lr=controller_learning_rate)  # type: ignore
+            optim = controller_optimizer(params=[log_prop], lr=controller_learning_rate, momentum=controller_momentum)  # type: ignore
 
             for episode in range(1, max_episodes):
                 if cancel:
