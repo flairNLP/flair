@@ -9,7 +9,7 @@ from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.metrics import normalized_mutual_info_score
 from tqdm import tqdm
 
-from flair.data import Corpus
+from flair.data import Corpus, _iter_dataset
 from flair.datasets import DataLoader
 from flair.embeddings import DocumentEmbeddings
 
@@ -51,7 +51,7 @@ class ClusteringModel:
         log.info("Start the prediction " + str(self.model) + " with " + str(len(X)) + " Datapoints.")
         predict = self.model.predict(X)
 
-        for idx, sentence in enumerate(corpus.get_all_sentences()):
+        for idx, sentence in enumerate(_iter_dataset(corpus.get_all_sentences())):
             sentence.set_label("cluster", str(predict[idx]))
 
         log.info("Finished prediction and labeled all sentences.")

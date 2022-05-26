@@ -405,7 +405,7 @@ class CoNLLWriter:
                             tag = "O"
                             in_entity = False
 
-                        whitespace_after = "+" if flair_token.whitespace_after else "-"
+                        whitespace_after = "+" if flair_token.whitespace_after > 0 else "-"
                         if len(token) > 0:
                             f.write(" ".join([token, tag, whitespace_after]) + "\n")
                             sentence_had_tokens = True
