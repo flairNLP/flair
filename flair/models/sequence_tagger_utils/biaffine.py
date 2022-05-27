@@ -23,7 +23,7 @@ class Biaffine(torch.nn.Module):
             torch.nn.Linear(ffnn_output_size, ffnn_output_size),
             torch.nn.Dropout(ffnn_dropout))
 
-        self.bilinear_map = torch.nn.Parameter(torch.Tensor(ffnn_output_size + 1, output_size, ffnn_output_size + 1))
+        self.bilinear_map = torch.nn.Parameter(torch.Tensor(output_size, ffnn_output_size + 1, ffnn_output_size + 1))
         if not init_from_state_dict:
             torch.nn.init.zeros_(self.bilinear_map)
 
