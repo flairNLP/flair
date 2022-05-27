@@ -233,7 +233,7 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
 
                 for sentence, sentence_predictions in zip(batch, predictions):
                     for predicted_span in sentence_predictions:
-                        span: Span = sentence[predicted_span[0] : predicted_span[-1] + 1]
+                        span: Span = sentence[predicted_span[0][0] : predicted_span[0][-1] + 1]
                         span.add_label(label_name, value=predicted_span[2], score=predicted_span[1])
 
                 store_embeddings(sentences, storage_mode=embedding_storage_mode)
