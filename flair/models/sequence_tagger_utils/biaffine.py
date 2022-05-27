@@ -54,7 +54,7 @@ class BiaffineDecoder:
     def decode(self, features, batch, is_flat_ner):
 
         candidates = []
-        outside = self.label_dictionary.get_item_for_index('O')
+        outside = self.label_dictionary.get_idx_for_item('O')
 
         # get prediction matrix
         for sid,sent in enumerate(batch):
