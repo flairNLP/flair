@@ -45,7 +45,6 @@ class Biaffine(torch.nn.Module):
         return candidate
 
 
-
 class BiaffineDecoder:
 
     def __init__(self, tag_dictionary: Dictionary):
@@ -55,7 +54,7 @@ class BiaffineDecoder:
     def decode(self, features, batch, is_flat_ner):
 
         candidates = []
-        outside = self.label_dictionary.get_idx_for_item('O')
+        outside = self.label_dictionary.get_item_for_index('O')
 
         # get prediction matrix
         for sid,sent in enumerate(batch):
@@ -131,7 +130,7 @@ class BiaffineDecoder:
             ner = {(label.data_point.tokens[0].idx-1, label.data_point.tokens[-1].idx-1):label.value for label in sentences[0].get_labels("ner")}
             for s in range(0, len(sentence)):
                 for e in range(s,len(sentence)):
-                    gold_labels.append([ner.get((s,e),"0")])
+                    gold_labels.append([ner.get((s,e),"O")])
 
         return gold_labels
 
