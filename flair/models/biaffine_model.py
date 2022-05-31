@@ -27,7 +27,6 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
             dropout: float = 0.0,
             ffnn_dropout: float = 0.2,
             is_flat_ner: bool = False,
-            train_initial_hidden_state: bool = False,
             loss_weights: Dict[str, float] = None,
             init_from_state_dict: bool = False,
     ):
@@ -36,7 +35,11 @@ class BiaffineTager(flair.nn.Classifier[Sentence]):
 
         self.tag_type = tag_type
 
-        self.label_dictionary = tag_dictionary
+        if init_from_state_dict:
+            self.label_dictionary = tag_dictionary
+        else:
+            tag_dictionary.add_item('O')
+            self.label_dictionary = tag_dictionary
         self.tagset_size = len(self.label_dictionary)
         log.info(f"SequenceTagger predicts: {self.label_dictionary}")
 
