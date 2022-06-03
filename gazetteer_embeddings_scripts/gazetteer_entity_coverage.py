@@ -11,7 +11,7 @@ with open('out.txt', 'w') as f:
 
         settings_dict = [[True, True, 'train'], [True, False, 'train'], [False, True, 'train'],
                         [True, True, 'test'], [True, False, 'test'], [False, True, 'test']]
-
+        print("CONLL_03")
         for setting in settings_dict:
             tokens = 0
             tokens_found = 0
@@ -51,6 +51,7 @@ with open('out.txt', 'w') as f:
             del token_set_1
             del token_set_2
 
+        print("WNUT_17")
         for setting in settings_dict:
             tokens = 0
             tokens_found = 0
