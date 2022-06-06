@@ -24,6 +24,7 @@ from flair.tokenization import SpaceTokenizer
 
 class _EncodedSentence(Sentence):
     """A wrapper of `Sentence` to type-check whether a sentence has been encoded for the relation classifier."""
+
     pass
 
 
@@ -62,18 +63,20 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
     through a linear layer to get the class relation label.
     """
 
-    def __init__(self,
-                 document_embeddings: DocumentEmbeddings,
-                 label_dictionary: Dictionary,
-                 label_type: str,
-                 entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
-                 entity_pair_labels: Optional[Set[Tuple[str, str]]] = None,
-                 entity_threshold: Optional[float] = None,
-                 zero_tag_value: str = 'O',
-                 allow_unk_tag: bool = True,
-                 cross_augmentation: bool = True,
-                 mask_remainder: bool = True,
-                 **classifierargs) -> None:
+    def __init__(
+        self,
+        document_embeddings: DocumentEmbeddings,
+        label_dictionary: Dictionary,
+        label_type: str,
+        entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
+        entity_pair_labels: Optional[Set[Tuple[str, str]]] = None,
+        entity_threshold: Optional[float] = None,
+        zero_tag_value: str = "O",
+        allow_unk_tag: bool = True,
+        cross_augmentation: bool = True,
+        mask_remainder: bool = True,
+        **classifierargs,
+    ) -> None:
         """
         Initializes a `RelationClassifier`.
 
@@ -115,9 +118,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             modified_label_dictionary.add_item(label)
 
         # Initialize super default classifier
-        super().__init__(label_dictionary=modified_label_dictionary,
-                         final_embedding_size=document_embeddings.embedding_length,
-                         **classifierargs)
+        super().__init__(
+            label_dictionary=modified_label_dictionary,
+            final_embedding_size=document_embeddings.embedding_length,
+            **classifierargs,
+        )
 
         self.document_embeddings = document_embeddings
 
@@ -135,10 +140,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         self.entity_threshold = entity_threshold
 
         # Control mask templates
-        self._entity_mask: str = 'ENTITY'
-        self._head_mask: str = f'[H-{self._entity_mask}]'
-        self._tail_mask: str = f'[T-{self._entity_mask}]'
-        self._remainder_mask: str = f'[R-{self._entity_mask}]'
+        self._entity_mask: str = "ENTITY"
+        self._head_mask: str = f"[H-{self._entity_mask}]"
+        self._tail_mask: str = f"[T-{self._entity_mask}]"
+        self._remainder_mask: str = f"[R-{self._entity_mask}]"
 
         # Auto-spawn on GPU, if available
         self.to(flair.device)
@@ -184,14 +189,14 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
             # Remove entity pairs with labels that do not match any
             # of the specified relations in `self.entity_pair_labels`
-            if (self.entity_pair_labels is not None
-                    and (head.label.value, tail.label.value) not in self.entity_pair_labels):
+            if (
+                self.entity_pair_labels is not None
+                and (head.label.value, tail.label.value) not in self.entity_pair_labels
+            ):
                 continue
 
             remainder: List[_Entity] = [
-                entity
-                for entity in valid_entities
-                if entity is not head and entity is not tail
+                entity for entity in valid_entities if entity is not head and entity is not tail
             ]
 
             yield head, tail, remainder
@@ -205,11 +210,13 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
     def _label_aware_remainder_mask(self, label: str) -> str:
         return self._remainder_mask.replace(self._entity_mask, label)
 
-    def _create_masked_sentence(self,
-                                head: _Entity,
-                                tail: _Entity,
-                                remainder: List[_Entity],
-                                gold_label: Optional[str] = None) -> _EncodedSentence:
+    def _create_masked_sentence(
+        self,
+        head: _Entity,
+        tail: _Entity,
+        remainder: List[_Entity],
+        gold_label: Optional[str] = None,
+    ) -> _EncodedSentence:
         """
         Returns a new `Sentence` object with masked head, tail and remainder spans.
         The label-aware mask is constructed from the head/tail/remainder span labels.
@@ -228,17 +235,16 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         """
         # Some sanity checks
         original_sentence: Sentence = head.span.sentence
-        assert original_sentence is tail.span.sentence, 'The head and tail need to come from the same sentence.'
-        assert all(original_sentence is entity.span.sentence for entity in remainder), \
-            'The remainder entities need to come from the same sentence as the head and tail.'
+        assert original_sentence is tail.span.sentence, "The head and tail need to come from the same sentence."
+        assert all(
+            original_sentence is entity.span.sentence for entity in remainder
+        ), "The remainder entities need to come from the same sentence as the head and tail."
 
         # Pre-compute non-leading head, tail and remainder tokens for entity masking
         non_leading_head_tokens: List[Token] = head.span.tokens[1:]
         non_leading_tail_tokens: List[Token] = tail.span.tokens[1:]
         non_leading_remainder_tokens: List[Token] = [
-            token
-            for remainder_entity in remainder
-            for token in remainder_entity.span.tokens[1:]
+            token for remainder_entity in remainder for token in remainder_entity.span.tokens[1:]
         ]
 
         # Use a dictionary to find label annotations for a given leading remainder token.
@@ -263,15 +269,18 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             elif token is tail.span[0]:
                 masked_sentence_tokens.append(self._label_aware_tail_mask(tail.label.value))
 
-            elif all(token is not non_leading_entity_token
-                     for non_leading_entity_token in itertools.chain(non_leading_head_tokens,
-                                                                     non_leading_tail_tokens,
-                                                                     non_leading_remainder_tokens)):
+            elif all(
+                token is not non_leading_entity_token
+                for non_leading_entity_token in itertools.chain(
+                    non_leading_head_tokens, non_leading_tail_tokens, non_leading_remainder_tokens
+                )
+            ):
                 masked_sentence_tokens.append(token.text)
 
         # Create masked sentence
-        masked_sentence: _EncodedSentence = _EncodedSentence(' '.join(masked_sentence_tokens),
-                                                             use_tokenizer=SpaceTokenizer())
+        masked_sentence: _EncodedSentence = _EncodedSentence(
+            " ".join(masked_sentence_tokens), use_tokenizer=SpaceTokenizer()
+        )
 
         if gold_label is not None:
             # Add gold relation annotation as sentence label
@@ -281,10 +290,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         return masked_sentence
 
-    def _encode_sentence(self,
-                         sentence: Sentence,
-                         for_prediction: bool = True) -> Union[Iterator[_EncodedSentence],
-                                                               Iterator[Tuple[_EncodedSentence, Relation]]]:
+    def _encode_sentence(
+        self,
+        sentence: Sentence,
+        for_prediction: bool = True,
+    ) -> Union[Iterator[_EncodedSentence], Iterator[Tuple[_EncodedSentence, Relation]]]:
         """
         Yields masked entity pair sentences annotated with their gold relation for all valid entity pair permutations.
         The created masked sentences are newly created sentences with no reference to the passed sentence.
@@ -326,7 +336,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                 head,
                 tail,
                 remainder if self.mask_remainder else [],
-                gold_label=gold_label
+                gold_label=gold_label,
             )
 
             yield (masked_sentence, original_relation) if for_prediction else masked_sentence
@@ -365,15 +375,14 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             train=self.transform_dataset(corpus.train),
             dev=self.transform_dataset(corpus.dev),
             test=self.transform_dataset(corpus.test) if transform_test else corpus.test,
-            name=corpus.name
+            name=corpus.name,
         )
 
     def forward_pass(
-            self,
-            sentences: Union[List[_EncodedSentence], _EncodedSentence],
-            for_prediction: bool = False
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]],
-               Tuple[torch.Tensor, List[List[str]], List[_EncodedSentence]]]:
+        self,
+        sentences: Union[List[_EncodedSentence], _EncodedSentence],
+        for_prediction: bool = False,
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[_EncodedSentence]]]:
         """
         This method does a forward pass through the model given a list of **encoded** sentences as input.
         To encode sentences, use the `transform` function of the `RelationClassifier`.
@@ -396,7 +405,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         # Shape: [len(sentences), embedding_size]
         sentence_embeddings_tensor: torch.Tensor = (
-            torch.stack(sentence_embeddings, dim=0) if sentence_embeddings
+            torch.stack(sentence_embeddings, dim=0)
+            if sentence_embeddings
             else torch.empty(0, self.document_embeddings.embedding_length, device=flair.device)
         )
 
@@ -408,15 +418,15 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         return sentence_embeddings_tensor, gold_labels
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size: int = 32,
-            return_probabilities_for_all_classes: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss: bool = False,
-            embedding_storage_mode: str = 'none',
-            entity_threshold: Optional[float] = None  # TODO: we could add the entity threshold here as well
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size: int = 32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss: bool = False,
+        embedding_storage_mode: str = "none",
+        entity_threshold: Optional[float] = None,  # TODO: we could add the entity threshold here as well
     ) -> Optional[Tuple[torch.Tensor, int]]:
         """
         # TODO: Add docstring
@@ -434,14 +444,16 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                 verbose=verbose,
                 label_name=prediction_label_type,
                 return_loss=return_loss,
-                embedding_storage_mode=embedding_storage_mode
+                embedding_storage_mode=embedding_storage_mode,
             )
 
         elif all(not isinstance(sentence, _EncodedSentence) for sentence in sentences):
 
-            sentences_with_relation: List[_EncodedSentence, Relation] = list(itertools.chain.from_iterable(
-                self._encode_sentence(sentence, for_prediction=True) for sentence in sentences
-            ))
+            sentences_with_relation: List[_EncodedSentence, Relation] = list(
+                itertools.chain.from_iterable(
+                    self._encode_sentence(sentence, for_prediction=True) for sentence in sentences
+                )
+            )
 
             loss: Optional[Tuple[torch.Tensor, int]] = super().predict(
                 [sentence_with_relation[0] for sentence_with_relation in sentences_with_relation],
@@ -450,7 +462,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                 verbose=verbose,
                 label_name=prediction_label_type,
                 return_loss=return_loss,
-                embedding_storage_mode=embedding_storage_mode
+                embedding_storage_mode=embedding_storage_mode,
             )
 
             for encoded_sentence, original_relation in sentences_with_relation:
@@ -458,7 +470,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                     original_relation.add_label(prediction_label_type, value=label.value, score=label.value)
 
         else:
-            raise ValueError('All passed sentences must be either uniformly encoded or not.')
+            raise ValueError("All passed sentences must be either uniformly encoded or not.")
 
         if return_loss:
             return loss
@@ -466,16 +478,16 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
     def _get_state_dict(self) -> Dict[str, Any]:
         model_state: Dict[str, Any] = {
             **super()._get_state_dict(),
-            'document_embeddings': self.document_embeddings,
-            'label_dictionary': self.label_dictionary,
-            'label_type': self.label_type,
-            'entity_label_types': self.entity_label_types,
-            'entity_pair_labels': self.entity_pair_labels,
-            'entity_threshold': self.entity_threshold,
-            'zero_tag_value': self.zero_tag_value,
-            'allow_unk_tag': self.allow_unk_tag,
-            'cross_augmentation': self.cross_augmentation,
-            'mask_remainder': self.mask_remainder
+            "document_embeddings": self.document_embeddings,
+            "label_dictionary": self.label_dictionary,
+            "label_type": self.label_type,
+            "entity_label_types": self.entity_label_types,
+            "entity_pair_labels": self.entity_pair_labels,
+            "entity_threshold": self.entity_threshold,
+            "zero_tag_value": self.zero_tag_value,
+            "allow_unk_tag": self.allow_unk_tag,
+            "cross_augmentation": self.cross_augmentation,
+            "mask_remainder": self.mask_remainder,
         }
         return model_state
 
@@ -483,17 +495,17 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
     def _init_model_with_state_dict(cls, state: Dict[str, Any], **kwargs):
         return super()._init_model_with_state_dict(
             state,
-            document_embeddings=state['document_embeddings'],
-            label_dictionary=state['label_dictionary'],
-            label_type=state['label_type'],
-            entity_label_types=state['entity_label_types'],
-            entity_pair_labels=state['entity_pair_labels'],
-            entity_threshold=state['entity_threshold'],
-            zero_tag_value=state['zero_tag_value'],
-            allow_unk_tag=state['allow_unk_tag'],
-            cross_augmentation=state['cross_augmentation'],
-            mask_remainder=state['mask_remainder'],
-            **kwargs
+            document_embeddings=state["document_embeddings"],
+            label_dictionary=state["label_dictionary"],
+            label_type=state["label_type"],
+            entity_label_types=state["entity_label_types"],
+            entity_pair_labels=state["entity_pair_labels"],
+            entity_threshold=state["entity_threshold"],
+            zero_tag_value=state["zero_tag_value"],
+            allow_unk_tag=state["allow_unk_tag"],
+            cross_augmentation=state["cross_augmentation"],
+            mask_remainder=state["mask_remainder"],
+            **kwargs,
         )
 
     @property
