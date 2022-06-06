@@ -202,7 +202,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             yield head, tail, remainder
 
     def _label_aware_head_mask(self, label: str) -> str:
-        return self._head_mask.replace(self._entity_mask, label)  # TODO: give option to non-label-aware masks
+        return self._head_mask.replace(self._entity_mask, label)
 
     def _label_aware_tail_mask(self, label: str) -> str:
         return self._tail_mask.replace(self._entity_mask, label)
