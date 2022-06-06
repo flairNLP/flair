@@ -13,10 +13,18 @@ from typing import (
 )
 
 import torch
+from torch.utils.data.dataset import Dataset
 
 import flair
-from flair.data import Dictionary, Label, Relation, Sentence, Span, Token
+from flair.data import Dictionary, Label, Relation, Sentence, Span, Token, Corpus
+from flair.datasets import FlairDatapointDataset
 from flair.embeddings import DocumentEmbeddings
+from flair.tokenization import SpaceTokenizer
+
+
+class _EncodedSentence(Sentence):
+    """A wrapper of `Sentence` to type-check whether a sentence has been encoded for the relation classifier."""
+    pass
 
 
 class _Entity(NamedTuple):
@@ -63,7 +71,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                  entity_threshold: Optional[float] = None,
                  zero_tag_value: str = 'O',
                  allow_unk_tag: bool = True,
-                 train_on_gold_pairs_only: bool = False,
+                 cross_augmentation: bool = True,
                  mask_remainder: bool = True,
                  **classifierargs) -> None:
         """
@@ -89,23 +97,25 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         :param entity_threshold: Only pre-labelled entities above this threshold are taken into account by the model.
         :param zero_tag_value: The label to use for out-of-class relations
         :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
-        :param train_on_gold_pairs_only: If `True`, skip out-of-class relations in training.
-                                         If `False`, out-of-class relations are used in training as well.
+        :param cross_augmentation: TODO: Add docstring
         :param mask_remainder: If `True`, also mask entities which are not part of the current entity pair,
                                otherwise such entities will not be masked.
                                (Setting this parameter to `True` may help to
                                reduce the sentence's sequence length for long entities.)
         :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
         """
-        # Set lable type and modify label dictionary
+        # Set lable type and prepare label dictionary
         self._label_type = label_type
-        self.zero_tag_value = zero_tag_value
-        label_dictionary.add_item(self.zero_tag_value)
-        if not allow_unk_tag:
-            label_dictionary.remove_item('<unk>')
+        self._zero_tag_value = zero_tag_value
+        self._allow_unk_tag = allow_unk_tag
+
+        modified_label_dictionary: Dictionary = Dictionary(add_unk=self._allow_unk_tag)
+        modified_label_dictionary.add_item(self._zero_tag_value)
+        for label in label_dictionary.get_items():
+            modified_label_dictionary.add_item(label)
 
         # Initialize super default classifier
-        super().__init__(label_dictionary=label_dictionary,
+        super().__init__(label_dictionary=modified_label_dictionary,
                          final_embedding_size=document_embeddings.embedding_length,
                          **classifierargs)
 
@@ -120,7 +130,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         self.entity_pair_labels = entity_pair_labels
 
-        self.train_on_gold_pairs_only = train_on_gold_pairs_only
+        self.cross_augmentation = cross_augmentation
         self.mask_remainder = mask_remainder
         self.entity_threshold = entity_threshold
 
@@ -161,7 +171,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         The permutations are constructed by a filtered cross-product
         under the specification of `self.entity_label_types` and `self.entity_pair_labels`.
         :param sentence: A flair `Sentence` object with entity annotations
-        :return: Tuples of (<HEAD>, <TAIL>, List[<REMAINDER>]) `_Entity`s
+        :return: Tuples of (<HEAD>, <TAIL>, List[<REMAINDER>]) `_Entity`s with span references to the passed sentence
         """
         valid_entities: List[_Entity] = list(self._valid_entities(sentence))
 
@@ -187,7 +197,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             yield head, tail, remainder
 
     def _label_aware_head_mask(self, label: str) -> str:
-        return self._head_mask.replace(self._entity_mask, label)
+        return self._head_mask.replace(self._entity_mask, label)  # TODO: give option to non-label-aware masks
 
     def _label_aware_tail_mask(self, label: str) -> str:
         return self._tail_mask.replace(self._entity_mask, label)
@@ -195,10 +205,15 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
     def _label_aware_remainder_mask(self, label: str) -> str:
         return self._remainder_mask.replace(self._entity_mask, label)
 
-    def _create_sentence_with_masked_spans(self, head: _Entity, tail: _Entity, remainder: List[_Entity]) -> Sentence:
+    def _create_masked_sentence(self,
+                                head: _Entity,
+                                tail: _Entity,
+                                remainder: List[_Entity],
+                                gold_label: Optional[str] = None) -> _EncodedSentence:
         """
         Returns a new `Sentence` object with masked head, tail and remainder spans.
-        The mask is constructed from the labels of the head/tail/remainder span.
+        The label-aware mask is constructed from the head/tail/remainder span labels.
+        If provided, the masked sentence also has the corresponding gold label annotation in `self.label_type`.
 
         Example:
             For the `head=Google`, `tail=Larry Page` and `remainder=[Sergey Brin]`
@@ -207,7 +222,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
         :param head: The head `_Entity`
         :param tail: The tail `_Entity`
-        :return: The masked sentence
+        :param remainder: The list of remainder `_Entity`s
+        :param gold_label: An optional gold label of the induced relation by the head and tail entity
+        :return: The masked sentence (with gold annotations)
         """
         # Some sanity checks
         original_sentence: Sentence = head.span.sentence
@@ -252,16 +269,29 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                                                                      non_leading_remainder_tokens)):
                 masked_sentence_tokens.append(token.text)
 
-        # TODO: Question: When I check the sentence with sentence.to_original_text(), the text is not consistently separated with whitespaces.
-        #   Does the TextClassifier use the original text in any way?
-        #   If not, I guess that only the tokens matter but not the whitespaces in between.
-        return Sentence(masked_sentence_tokens)
+        # Create masked sentence
+        masked_sentence: _EncodedSentence = _EncodedSentence(' '.join(masked_sentence_tokens),
+                                                             use_tokenizer=SpaceTokenizer())
 
-    def _encode_sentence(self, sentence: Sentence) -> List[Tuple[Sentence, Relation]]:
+        if gold_label is not None:
+            # Add gold relation annotation as sentence label
+            # Using the sentence label instead of annotating a separate `Relation` object is easier to manage since,
+            # during prediction, the forward pass does not need any knowledge about the entities in the sentence.
+            masked_sentence.add_label(typename=self.label_type, value=gold_label, score=1.0)
+
+        return masked_sentence
+
+    def _encode_sentence(self,
+                         sentence: Sentence,
+                         for_prediction: bool = True) -> Union[Iterator[_EncodedSentence],
+                                                               Iterator[Tuple[_EncodedSentence, Relation]]]:
         """
-        Returns masked entity pair sentences and their relation for all valid entity pair permutations.
+        Yields masked entity pair sentences annotated with their gold relation for all valid entity pair permutations.
         The created masked sentences are newly created sentences with no reference to the passed sentence.
-        The created relations have head and tail spans from the original passed sentence.
+        Important properties:
+            - Every sentence has exactly one masked head and tail entity token. Therefore, every encoded sentence has
+              **exactly** one induced relation annotation, the gold annotation or `self.zero_tag_value`.
+            - The created relations have head and tail spans from the original passed sentence.
 
         Example:
             For the `founded_by` relation from `ORG` to `PER` and
@@ -271,66 +301,167 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             - "Larry Page and [T-PER] founded [H-ORG]"  -> Relation(head='Google', tail='Sergey Brin').
 
         :param sentence: A flair `Sentence` object with entity annotations
-        :return: Encoded sentences and the corresponding relation in the original sentence
+        :param for_prediction: If `True`, encodes sentences for inference. Otherwise, for training.
+        :return: Encoded sentences annotated with their gold relation
+                 (and the corresponding relation in the original sentence, if `for_prediction` is `True`)
         """
-        return [
-            (self._create_sentence_with_masked_spans(head, tail, remainder if self.mask_remainder else []),
-             Relation(first=head.span, second=tail.span))
-            for head, tail, remainder in self._entity_pair_permutations(sentence)
-        ]
+        # Use a dictionary to find gold relation annotations for a given entity pair
+        relation_to_gold_label: Dict[str, str] = {
+            relation.unlabeled_identifier: relation.get_label(self.label_type, zero_tag_value=self.zero_tag_value).value
+            for relation in sentence.get_relations(self.label_type)
+        }
 
-    def forward_pass(self,
-                     sentences: Union[List[Sentence], Sentence],
-                     for_prediction: bool = False) -> Union[Tuple[torch.Tensor, List[List[str]]],
-                                                            Tuple[torch.Tensor, List[List[str]], List[Relation]]]:
+        for head, tail, remainder in self._entity_pair_permutations(sentence):
+            # Reference relation to the original sentence
+            original_relation: Relation = Relation(first=head.span, second=tail.span)
+
+            gold_label: Optional[str] = relation_to_gold_label.get(original_relation.unlabeled_identifier)
+            if gold_label is None:
+                if for_prediction or self.cross_augmentation:  # We need cross augmentation when predicting
+                    gold_label = self.zero_tag_value
+                else:
+                    continue  # Skip generated data points that do not express an originally annotated relation
+
+            masked_sentence: _EncodedSentence = self._create_masked_sentence(
+                head,
+                tail,
+                remainder if self.mask_remainder else [],
+                gold_label=gold_label
+            )
+
+            yield (masked_sentence, original_relation) if for_prediction else masked_sentence
+
+    def transform_sentence(self, sentences: Union[Sentence, List[Sentence]]) -> List[_EncodedSentence]:
+        """
+        :param sentences:
+        :return:
+        """
+
         if not isinstance(sentences, list):
             sentences = [sentences]
 
-        masked_sentence_embeddings: List[torch.Tensor] = []
-        masked_sentence_batch_relations: List[Relation] = []
+        return [
+            encoded_sentence
+            for sentence in sentences
+            for encoded_sentence in self._encode_sentence(sentence, for_prediction=False)
+        ]
+
+    def transform_dataset(self, dataset: Dataset[Sentence]) -> FlairDatapointDataset[_EncodedSentence]:
+        """
+
+        :param dataset:
+        :return:
+        """
+        return FlairDatapointDataset(self.transform_sentence(list(dataset)))
+
+    def transform_corpus(self, corpus: Corpus, transform_test: bool = False) -> Corpus:
+        """
+
+        :param corpus:
+        :param transform_test:
+        :return:
+        """
+        return Corpus(
+            train=self.transform_dataset(corpus.train),
+            dev=self.transform_dataset(corpus.dev),
+            test=self.transform_dataset(corpus.test) if transform_test else corpus.test,
+            name=corpus.name
+        )
+
+    def forward_pass(
+            self,
+            sentences: Union[List[_EncodedSentence], _EncodedSentence],
+            for_prediction: bool = False
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]],
+               Tuple[torch.Tensor, List[List[str]], List[_EncodedSentence]]]:
+        """
+        This method does a forward pass through the model given a list of **encoded** sentences as input.
+        To encode sentences, use the `transform` function of the `RelationClassifier`.
+        For more information on the forward pass, see the `forward_pass` method of the `DefaultClassifier`.
+        """
+        if not isinstance(sentences, list):
+            sentences = [sentences]
+
+        # Embed encoded sentences: The input sentences already have been encoded/masked beforehand.
+        self.document_embeddings.embed(sentences)
+        embedding_names: List[str] = self.document_embeddings.get_names()
+
+        sentence_embeddings: List[torch.Tensor] = []
         gold_labels: List[List[str]] = []
 
         for sentence in sentences:
-            # Encode the original sentence into a list of masked sentences and
-            # the corresponding relations in the original sentence for all valid entity pair permutations.
-            # Each masked sentence is one relation candidate.
-            encoded: List[Tuple[Sentence, Relation]] = self._encode_sentence(sentence)
+            gold_label: List[str] = [label.value for label in sentence.get_labels(self.label_type)]
+            gold_labels.append(gold_label)
+            sentence_embeddings.append(sentence.get_embedding(embedding_names))
 
-            # Process the encoded sentences, if there's at least one entity pair in the original sentence.
-            if encoded:
-                masked_sentences, relations = zip(*encoded)
-
-                masked_sentence_batch_relations.extend(relations)
-
-                # Embed masked sentences
-                self.document_embeddings.embed(list(masked_sentences))
-                encoded_sentence_embedding: torch.Tensor = torch.stack(
-                    [masked_sentence.get_embedding(self.document_embeddings.get_names())
-                     for masked_sentence in masked_sentences],
-                    dim=0,
-                )
-                masked_sentence_embeddings.append(encoded_sentence_embedding)
-
-                # Add gold labels for each masked sentence, if available.
-                # Use a dictionary to find relation annotations for a given entity pair relation.
-                relation_to_gold_label: Dict[str, str] = {
-                    relation.unlabeled_identifier: relation.get_label(self.label_type,
-                                                                      zero_tag_value=self.zero_tag_value).value
-                    for relation in sentence.get_relations(self.label_type)
-                }
-                for relation in relations:
-                    gold_label: str = relation_to_gold_label.get(relation.unlabeled_identifier, self.zero_tag_value)
-                    if gold_label == self.zero_tag_value and self.train_on_gold_pairs_only:
-                        continue  # Skip zero tag value labels, if training on gold pairs only
-                    gold_labels.append([gold_label])
-
-        masked_sentence_batch_embeddings: torch.Tensor = (
-            torch.cat(masked_sentence_embeddings, dim=0) if masked_sentence_embeddings
-            else torch.empty(0, self.document_embeddings.embedding_length)
+        # Shape: [len(sentences), embedding_size]
+        sentence_embeddings_tensor: torch.Tensor = (
+            torch.stack(sentence_embeddings, dim=0) if sentence_embeddings
+            else torch.empty(0, self.document_embeddings.embedding_length, device=flair.device)
         )
+
         if for_prediction:
-            return masked_sentence_batch_embeddings, gold_labels, masked_sentence_batch_relations
-        return masked_sentence_batch_embeddings, gold_labels
+            # Since the relation is encoded inside the sentence (as a simple label),
+            # the sentence itself is the data point open for prediction.
+            return sentence_embeddings_tensor, gold_labels, sentences
+
+        return sentence_embeddings_tensor, gold_labels
+
+    def predict(
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss: bool = False,
+            embedding_storage_mode: str = 'none',
+            entity_threshold: Optional[float] = None  # TODO: we could add the entity threshold here as well
+    ) -> Optional[Tuple[torch.Tensor, int]]:
+        """
+        # TODO: Add docstring
+        """
+        prediction_label_type: str = self.label_type if label_name is None else label_name
+
+        if not isinstance(sentences, list):
+            sentences = [sentences]
+
+        if all(isinstance(sentence, _EncodedSentence) for sentence in sentences):
+            loss: Optional[Tuple[torch.Tensor, int]] = super().predict(
+                sentences,
+                mini_batch_size=mini_batch_size,
+                return_probabilities_for_all_classes=return_probabilities_for_all_classes,
+                verbose=verbose,
+                label_name=prediction_label_type,
+                return_loss=return_loss,
+                embedding_storage_mode=embedding_storage_mode
+            )
+
+        elif all(not isinstance(sentence, _EncodedSentence) for sentence in sentences):
+
+            sentences_with_relation: List[_EncodedSentence, Relation] = list(itertools.chain.from_iterable(
+                self._encode_sentence(sentence, for_prediction=True) for sentence in sentences
+            ))
+
+            loss: Optional[Tuple[torch.Tensor, int]] = super().predict(
+                [sentence_with_relation[0] for sentence_with_relation in sentences_with_relation],
+                mini_batch_size=mini_batch_size,
+                return_probabilities_for_all_classes=return_probabilities_for_all_classes,
+                verbose=verbose,
+                label_name=prediction_label_type,
+                return_loss=return_loss,
+                embedding_storage_mode=embedding_storage_mode
+            )
+
+            for encoded_sentence, original_relation in sentences_with_relation:
+                for label in encoded_sentence.get_labels(prediction_label_type):
+                    original_relation.add_label(prediction_label_type, value=label.value, score=label.value)
+
+        else:
+            raise ValueError('All passed sentences must be either uniformly encoded or not.')
+
+        if return_loss:
+            return loss
 
     def _get_state_dict(self) -> Dict[str, Any]:
         model_state: Dict[str, Any] = {
@@ -342,7 +473,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             'entity_pair_labels': self.entity_pair_labels,
             'entity_threshold': self.entity_threshold,
             'zero_tag_value': self.zero_tag_value,
-            'train_on_gold_pairs_only': self.train_on_gold_pairs_only,
+            'allow_unk_tag': self.allow_unk_tag,
+            'cross_augmentation': self.cross_augmentation,
             'mask_remainder': self.mask_remainder
         }
         return model_state
@@ -358,7 +490,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             entity_pair_labels=state['entity_pair_labels'],
             entity_threshold=state['entity_threshold'],
             zero_tag_value=state['zero_tag_value'],
-            train_on_gold_pairs_only=state['train_on_gold_pairs_only'],
+            allow_unk_tag=state['allow_unk_tag'],
+            cross_augmentation=state['cross_augmentation'],
             mask_remainder=state['mask_remainder'],
             **kwargs
         )
@@ -366,3 +499,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
     @property
     def label_type(self) -> str:
         return self._label_type
+
+    @property
+    def zero_tag_value(self) -> str:
+        return self._zero_tag_value
+
+    @property
+    def allow_unk_tag(self) -> bool:
+        return self._allow_unk_tag
