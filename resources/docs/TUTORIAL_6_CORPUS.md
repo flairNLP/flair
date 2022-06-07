@@ -36,26 +36,21 @@ You can also access the Sentence objects in each split directly. For instance, l
 the training split of the English UD: 
 
 ```python
-# print the first Sentence in the training split
-print(corpus.test[0])
-```
-This prints: 
-```console
-Sentence: "What if Google Morphed Into GoogleOS ?" - 7 Tokens
-```
+# get the first Sentence in the training split
+sentence = corpus.test[0]
 
-The sentence is fully tagged with syntactic and morphological information. For instance, print the sentence with
-PoS tags: 
+# print with all annotations
+print(sentence)
 
-```python
-# print the first Sentence in the training split
-print(corpus.test[0].to_tagged_string('pos'))
+# print only with POS annotations (better readability)
+print(sentence.to_tagged_string('pos'))
 ```
 
-This should print: 
+The sentence is fully tagged with syntactic and morphological information. With the latter line, 
+you print out only the POS tags: 
 
 ```console
-What <WP> if <IN> Google <NNP> Morphed <VBD> Into <IN> GoogleOS <NNP> ? <.>
+Sentence: "What if Google Morphed Into GoogleOS ?" → ["What"/WP, "if"/IN, "Google"/NNP, "Morphed"/VBD, "Into"/IN, "GoogleOS"/NNP, "?"/.]
 ```
 
 So the corpus is tagged and ready for training.
@@ -124,10 +119,12 @@ Dictionary with 17 tags: PROPN, PUNCT, ADJ, NOUN, VERB, DET, ADP, AUX, PRON, PAR
 
 #### Dictionaries for other label types
 
-When calling `make_label_dictionary` in the example above, statistics on all label types in the same corpus are printed:
+If you don't know the label types in a corpus, just call `make_label_dictionary` with
+any random label name (e.g. `corpus.make_label_dictionary(label_type='abcd')`). This will print
+out statistics on all label types in the corpus:
 
 ```console
-Corpus contains the labels: upos (#204585), lemma (#204584), pos (#204584), dependency (#204584), number (#68023), verbform (#35412), prontype (#33584), person (#21187), tense (#20238), mood (#16547), degree (#13649), definite (#13300), case (#12091), numtype (#4266), gender (#4038), poss (#3039), voice (#1205), typo (#332), abbr (#126), reflex (#100), style (#33), foreign (#18)
+The corpus contains the following label types: 'lemma' (in 12543 sentences), 'upos' (in 12543 sentences), 'pos' (in 12543 sentences), 'dependency' (in 12543 sentences), 'number' (in 12036 sentences), 'verbform' (in 10122 sentences), 'prontype' (in 9744 sentences), 'person' (in 9381 sentences), 'mood' (in 8911 sentences), 'tense' (in 8747 sentences), 'degree' (in 7148 sentences), 'definite' (in 6851 sentences), 'case' (in 6486 sentences), 'gender' (in 2824 sentences), 'numtype' (in 2771 sentences), 'poss' (in 2516 sentences), 'voice' (in 1085 sentences), 'typo' (in 399 sentences), 'extpos' (in 185 sentences), 'abbr' (in 168 sentences), 'reflex' (in 98 sentences), 'style' (in 31 sentences), 'foreign' (in 5 sentences)
 ```
 
 This means that you can create dictionaries for any of these label types for the UD_ENGLISH corpus. Let's create dictionaries for regular part of speech tags
@@ -151,7 +148,7 @@ The method `make_label_dictionary` can be used for any corpus, including text cl
 ```python
 # create label dictionary for a text classification task
 corpus = flair.datasets.TREC_6()
-print(corpus.make_label_dictionary('question_class'))
+corpus.make_label_dictionary('question_class')
 ```
 
 ### The MultiCorpus Object

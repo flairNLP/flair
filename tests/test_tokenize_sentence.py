@@ -201,10 +201,10 @@ def test_create_sentence_using_scispacy_tokenizer():
     assert 58 == sentence.tokens[11].start_pos
     assert 64 == sentence.tokens[12].start_pos
 
-    assert sentence.tokens[4].whitespace_after
-    assert not sentence.tokens[5].whitespace_after
-    assert not sentence.tokens[6].whitespace_after
-    assert sentence.tokens[7].whitespace_after
+    assert sentence.tokens[4].whitespace_after == 1
+    assert sentence.tokens[5].whitespace_after != 1
+    assert sentence.tokens[6].whitespace_after != 1
+    assert sentence.tokens[7].whitespace_after == 1
 
 
 def test_split_text_segtok():

@@ -27,7 +27,7 @@ print(sentence.to_tagged_string())
 ```
 This should print:
 ~~~
-Behavioral <B-Disease> Abnormalities <E-Disease> in the Fmr1 <S-Gene> KO2 Mouse <S-Species> Model of Fragile <B-Disease> X <I-Disease> Syndrome <E-Disease>
+Sentence: "Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome" → ["Behavioral abnormalities"/Disease, "Fmr1"/Gene, "Mouse"/Species, "Fragile X Syndrome"/Disease]
 ~~~
 The output contains the words of the original text extended by tags indicating whether
 the word is the beginning (B), inside (I) or end (E) of an entity. 
@@ -45,8 +45,8 @@ for disease in sentence.get_spans("hunflair-disease"):
 ```
 This should print:
 ~~~
-Span [1,2]: "Behavioral abnormalities"   [− Labels: Disease (0.6736)]
-Span [10,11,12]: "Fragile X Syndrome"   [− Labels: Disease (0.99)]
+Span[0:2]: "Behavioral abnormalities" → Disease (0.6736)
+Span[9:12]: "Fragile X Syndrome" → Disease (0.99)
 ~~~
 
 Which indicates that "_Behavioral Abnormalities_" or "_Fragile X Syndrome_" are both disease. 
@@ -59,11 +59,10 @@ print(sentence.to_dict("hunflair-disease"))
 This should print:
 ~~~
 {
-    'text': 'Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome', 
-    'labels': [], 
-    'entities': [
-        { 'text': 'Behavioral abnormalities', 'start_pos': 0, 'end_pos': 24, 'labels': [Disease (0.6736)]}, 
-        {'text': 'Fragile X Syndrome', 'start_pos': 56, 'end_pos': 74, 'labels': [Disease (0.99)]}
+    'text': 'Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome',
+    'hunflair-disease': [
+        {'value': 'Disease', 'confidence': 0.6735622882843018},
+        {'value': 'Disease', 'confidence': 0.9900058706601461}
     ]
 }
 ~~~
@@ -72,15 +71,16 @@ You can retrieve all annotated entities of the other entity types in analogous w
 for cell lines,  `hunflair-chemical` for chemicals, `hunflair-gene` for genes and proteins, and `hunflair-species`
 for species. To get all entities in one you can run:
 ```python
-for entity in sentence.get_spans():
-    print(entity)
+for annotation_layer in sentence.annotation_layers.keys():
+    for entity in sentence.get_spans(annotation_layer):
+        print(entity)
 ```   
 This should print:
 ~~~
-Span [1,2]: "Behavioral abnormalities"   [− Labels: Disease (0.6736)]
-Span [10,11,12]: "Fragile X Syndrome"   [− Labels: Disease (0.99)]
-Span [5]: "Fmr1"   [− Labels: Gene (0.838)]
-Span [7]: "Mouse"   [− Labels: Species (0.9979)]
+Span[0:2]: "Behavioral abnormalities" → Disease (0.6736)
+Span[9:12]: "Fragile X Syndrome" → Disease (0.99)
+Span[4:5]: "Fmr1" → Gene (0.838)
+Span[6:7]: "Mouse" → Species (0.9979)
 ~~~
 
 ### Using a Biomedical Tokenizer
@@ -135,9 +135,9 @@ for sentence in sentences:
 ```
 This should print:
 ~~~
-Fragile <B-Disease> X <I-Disease> syndrome <E-Disease> ( FXS <S-Disease> ) is a developmental <B-Disease> disorder <E-Disease> caused by a mutation in the X - linked FMR1 <S-Gene> gene , coding for the FMRP <S-Gene> protein which is largely involved in synaptic function .
-FXS <S-Disease> patients present several behavioral <B-Disease> abnormalities <E-Disease> , including hyperactivity <S-Disease> , anxiety <S-Disease> , sensory hyper - responsiveness , and cognitive <B-Disease> deficits <E-Disease> .
-Autistic <B-Disease> symptoms <E-Disease> , e.g. , altered social interaction and communication , are also often observed : FXS <S-Disease> is indeed the most common monogenic cause of autism <S-Disease>.
+Sentence: "Fragile X syndrome ( FXS ) is a developmental disorder caused by a mutation in the X - linked FMR1 gene , coding for the FMRP protein which is largely involved in synaptic function ." → ["Fragile X syndrome"/Disease, "FXS"/Disease, "developmental disorder"/Disease, "FMR1"/Gene, "FMRP"/Gene]
+Sentence: "FXS patients present several behavioral abnormalities , including hyperactivity , anxiety , sensory hyper - responsiveness , and cognitive deficits ." → ["FXS"/Disease, "behavioral abnormalities"/Disease, "hyperactivity"/Disease, "anxiety"/Disease, "cognitive deficits"/Disease]
+Sentence: "Autistic symptoms , e.g. , altered social interaction and communication , are also often observed : FXS is indeed the most common monogenic cause of autism ." → ["Autistic symptoms"/Disease, "FXS"/Disease, "autism"/Disease]
 ~~~
 
 ### Next

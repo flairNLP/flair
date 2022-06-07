@@ -756,7 +756,7 @@ class FlairEmbeddings(TokenEmbeddings):
                     else:
                         embedding = all_hidden_states_in_lm[offset_without_whitespace, i, :]
 
-                    if self.tokenized_lm or token.whitespace_after:
+                    if self.tokenized_lm or token.whitespace_after > 0:
                         offset_forward += 1
                         offset_backward -= 1
 
@@ -865,6 +865,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
         return sentences
 
+    @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 

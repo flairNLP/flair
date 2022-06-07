@@ -174,7 +174,7 @@ class UniversalDependenciesDataset(FlairDataset):
                     token = Token(fields[1])
                     token.add_label("lemma", str(fields[2]))
                     if len(fields) > 9 and "SpaceAfter=No" in fields[9]:
-                        token.whitespace_after = False
+                        token.whitespace_after = 0
                     sentence.add_token(token)
                     token_idx += 1
 
@@ -195,7 +195,7 @@ class UniversalDependenciesDataset(FlairDataset):
                 token.add_label("dependency", str(fields[7]))
 
                 if len(fields) > 9 and "SpaceAfter=No" in fields[9]:
-                    token.whitespace_after = False
+                    token.whitespace_after = 0
 
                 # add morphological tags
                 for morph in str(fields[5]).split("|"):
@@ -220,7 +220,7 @@ class UniversalDependenciesDataset(FlairDataset):
                     # go through all tokens in subword and set whitespace_after information
                     for i in range(current_multiword_last_token - current_multiword_first_token):
                         # print(i)
-                        sentence[-(i + 1)].whitespace_after = False
+                        sentence[-(i + 1)].whitespace_after = 0
 
                 sentence.add_token(token)
 

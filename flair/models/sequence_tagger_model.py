@@ -424,7 +424,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         label_name: Optional[str] = None,
         return_loss=False,
         embedding_storage_mode="none",
-    ):
+        force_token_predictions: bool = False,
+    ):  # type: ignore
         """
         Predicts labels for current batch with CRF or Softmax.
         :param sentences: List of sentences in batch
@@ -494,7 +495,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
                 # make predictions
                 if self.use_crf:
-                    predictions, all_tags = self.viterbi_decoder.decode(features, return_probabilities_for_all_classes)
+                    predictions, all_tags = self.viterbi_decoder.decode(
+                        features, return_probabilities_for_all_classes, batch
+                    )
                 else:
                     predictions, all_tags = self._standard_inference(
                         features, batch, return_probabilities_for_all_classes
@@ -504,7 +507,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 for sentence, sentence_predictions in zip(batch, predictions):
 
                     # BIOES-labels need to be converted to spans
-                    if self.predict_spans:
+                    if self.predict_spans and not force_token_predictions:
                         sentence_tags = [label[0] for label in sentence_predictions]
                         sentence_scores = [label[1] for label in sentence_predictions]
                         predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
@@ -512,9 +515,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                             span: Span = sentence[predicted_span[0][0] : predicted_span[0][-1] + 1]
                             span.add_label(label_name, value=predicted_span[2], score=predicted_span[1])
 
-                    # token-labels can be added directly
+                    # token-labels can be added directly ("O" and legacy "_" predictions are skipped)
                     else:
                         for token, label in zip(sentence.tokens, sentence_predictions):
+                            if label[0] in ["O", "_"]:
+                                continue
                             token.add_label(typename=label_name, value=label[0], score=label[1])
 
                 # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
@@ -553,22 +558,23 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         if probabilities_for_all_classes:
             lengths = [len(sentence) for sentence in batch]
-            all_tags = self._all_scores_for_token(softmax_batch, lengths)
+            all_tags = self._all_scores_for_token(batch, softmax_batch, lengths)
 
         return predictions, all_tags
 
-    def _all_scores_for_token(self, scores: torch.Tensor, lengths: List[int]):
+    def _all_scores_for_token(self, sentences: List[Sentence], scores: torch.Tensor, lengths: List[int]):
         """
         Returns all scores for each tag in tag dictionary.
         :param scores: Scores for current sentence.
         """
         scores = scores.numpy()
+        tokens = [token for sentence in sentences for token in sentence]
         prob_all_tags = [
             [
-                Label(self.label_dictionary.get_item_for_index(score_id), score)
+                Label(token, self.label_dictionary.get_item_for_index(score_id), score)
                 for score_id, score in enumerate(score_dist)
             ]
-            for score_dist in scores
+            for score_dist, token in zip(scores, tokens)
         ]
 
         prob_tags_per_sentence = []
@@ -670,6 +676,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "chunk": "flair/chunk-english",
             "chunk-fast": "flair/chunk-english-fast",
             # Language-specific NER models
+            "ar-ner": "megantosh/flair-arabic-multi-ner",
+            "ar-pos": "megantosh/flair-arabic-dialects-codeswitch-egy-lev",
             "da-ner": "flair/ner-danish",
             "de-ner": "flair/ner-german",
             "de-ler": "flair/ner-german-legal",

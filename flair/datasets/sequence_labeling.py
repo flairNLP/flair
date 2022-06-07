@@ -279,7 +279,7 @@ class MultiFileColumnCorpus(Corpus):
         in_memory: bool = True,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
-        default_whitespace_after: bool = True,
+        default_whitespace_after: int = 1,
         **corpusargs,
     ):
         """
@@ -446,7 +446,7 @@ class ColumnDataset(FlairDataset):
         encoding: str = "utf-8",
         skip_first_line: bool = False,
         label_name_map: Dict[str, str] = None,
-        default_whitespace_after: bool = True,
+        default_whitespace_after: int = 1,
     ):
         """
         Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
@@ -572,16 +572,30 @@ class ColumnDataset(FlairDataset):
             if skip_first_line:
                 file.readline()
 
-            sentence_1 = self._convert_lines_to_sentence(
-                self._read_next_sentence(file), word_level_tag_columns=column_name_map
-            )
-            # sentence_2 = self._convert_lines_to_sentence(self._read_next_sentence(file),
-            #                                              word_level_tag_columns=column_name_map)
+            # check the first 5 sentences
+            probe = []
+            for i in range(5):
+                sentence = self._convert_lines_to_sentence(
+                    self._read_next_sentence(file), word_level_tag_columns=column_name_map
+                )
+                if sentence:
+                    probe.append(sentence)
+                else:
+                    break
 
-            for sentence in [sentence_1]:
-                # go through all annotations
+            # go through all annotations and identify word- and span-level annotations
+            # - if a column has at least one BIES we know it's a Span label
+            # - if a column has at least one tag that is not BIOES, we know it's a Token label
+            # - problem cases are columns for which we see only O - in this case we default to Span
+            for sentence in probe:
                 for column in column_name_map:
-                    if column == self.text_column or column == self.head_id_column:
+
+                    # skip assigned columns
+                    if (
+                        column in self.word_level_tag_columns
+                        or column in self.span_level_tag_columns
+                        or column == self.head_id_column
+                    ):
                         continue
 
                     layer = column_name_map[column]
@@ -596,19 +610,23 @@ class ColumnDataset(FlairDataset):
                         continue
 
                     for token in sentence:
-                        if token.get_label(layer, "O").value != "O" and token.get_label(layer).value[0:2] not in [
-                            "B-",
-                            "I-",
-                            "E-",
-                            "S-",
-                        ]:
+                        # if at least one token has a BIES, we know it's a span label
+                        if token.get_label(layer).value[0:2] in ["B-", "I-", "E-", "S-"]:
+                            self.span_level_tag_columns[column] = layer
+                            break
+
+                        # if at least one token has a label other than BIOES, we know it's a token label
+                        elif token.get_label(layer, "O").value != "O":
                             self.word_level_tag_columns[column] = layer
                             break
-                    if column not in self.word_level_tag_columns:
-                        self.span_level_tag_columns[column] = layer
+
+            # all remaining columns that are not word-level are span-level
+            for column in column_name_map:
+                if column not in self.word_level_tag_columns:
+                    self.span_level_tag_columns[column] = column_name_map[column]
 
             for column in self.span_level_tag_columns:
-                log.info(f"Column {column} ({self.span_level_tag_columns[column]}) is a span-level column.")
+                log.debug(f"Column {column} ({self.span_level_tag_columns[column]}) is a span-level column.")
 
             # for column in self.word_level_tag_columns:
             #     log.info(f"Column {column} ({self.word_level_tag_columns[column]}) is a word-level column.")
@@ -662,7 +680,8 @@ class ColumnDataset(FlairDataset):
                     for span_indices, score, label in predicted_spans:
                         span = sentence[span_indices[0] : span_indices[-1] + 1]
                         value = self._remap_label(label)
-                        span.add_label(span_level_tag_columns[span_column], value=value, score=score)
+                        if value != "O":
+                            span.add_label(span_level_tag_columns[span_column], value=value, score=score)
                 except Exception:
                     pass
 
@@ -681,7 +700,9 @@ class ColumnDataset(FlairDataset):
                     relation = Relation(
                         first=sentence[head_start - 1 : head_end], second=sentence[tail_start - 1 : tail_end]
                     )
-                    relation.add_label(typename="relation", value=label)
+                    remapped = self._remap_label(label)
+                    if remapped != "O":
+                        relation.add_label(typename="relation", value=remapped)
 
         if len(sentence) > 0:
             return sentence
@@ -712,14 +733,15 @@ class ColumnDataset(FlairDataset):
 
                             # special handling for whitespace after
                             if feature == "SpaceAfter=No":
-                                token.whitespace_after = False
+                                token.whitespace_after = 0
                                 continue
 
                             if "=" in feature:
                                 # add each other feature as label-value pair
                                 label_name = feature.split("=")[0]
                                 label_value = self._remap_label(feature.split("=")[1])
-                                token.add_label(label_name, label_value)
+                                if label_value != "O":
+                                    token.add_label(label_name, label_value)
 
                     else:
                         # get the task name (e.g. 'ner')
@@ -727,17 +749,18 @@ class ColumnDataset(FlairDataset):
                         # get the label value
                         label_value = self._remap_label(fields[column])
                         # add label
-                        token.add_label(label_name, label_value)
+                        if label_value != "O":
+                            token.add_label(label_name, label_value)
 
                 if column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == "-":
-                    token.whitespace_after = False
+                    token.whitespace_after = 0
         if last_token is None:
             start = 0
         else:
             assert last_token.end_pos is not None
             start = last_token.end_pos
-            if last_token.whitespace_after:
-                start += 1
+            if last_token.whitespace_after > 0:
+                start += last_token.whitespace_after
         token.start_pos = start
         token.end_pos = token.start_pos + len(token.text)
         return token
@@ -2591,7 +2614,7 @@ class NER_JAPANESE(ColumnCorpus):
             train_file="train.txt",
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            default_whitespace_after=False,
+            default_whitespace_after=0,
             **corpusargs,
         )
 
@@ -4129,6 +4152,33 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
 
 
 class NER_HIPE_2022(ColumnCorpus):
+    @staticmethod
+    def _prepare_corpus(
+        file_in: Path, file_out: Path, eos_marker: str, document_separator: str, add_document_separator: bool
+    ):
+        with open(file_in, "rt", encoding="utf-8") as f_p:
+            lines = f_p.readlines()
+
+        with open(file_out, "wt", encoding="utf-8") as f_out:
+            # Add missing newline after header
+            f_out.write(lines[0] + "\n")
+
+            for line in lines[1:]:
+                if line.startswith(" \t"):
+                    # Workaround for empty tokens
+                    continue
+
+                line = line.strip()
+
+                # Add "real" document marker
+                if add_document_separator and line.startswith(document_separator):
+                    f_out.write("-DOCSTART- O\n\n")
+
+                f_out.write(line + "\n")
+
+                if eos_marker in line:
+                    f_out.write("\n")
+
     def __init__(
         self,
         dataset_name: str,
@@ -4136,10 +4186,12 @@ class NER_HIPE_2022(ColumnCorpus):
         base_path: Union[str, Path] = None,
         tag_to_bioes: str = "ner",
         in_memory: bool = True,
-        version: str = "v1.0",
+        version: str = "v2.1",
+        branch_name: str = "main",
         dev_split_name="dev",
         add_document_separator=False,
         sample_missing_splits=False,
+        preproc_fn=None,
         **corpusargs,
     ):
         """
@@ -4152,11 +4204,13 @@ class NER_HIPE_2022(ColumnCorpus):
         :tag_to_bioes: Dataset will automatically transformed into BIOES format (internally).
         :in_memory: If True, keeps dataset in memory giving speedups in training.
         :version: Version of CLEF-HIPE dataset. Currently only v1.0 is supported and available.
+        :branch_name: Defines git branch name of HIPE data repository (main by default).
         :dev_split_name: Defines default name of development split (dev by default). Only the NewsEye dataset has
         currently two development splits: dev and dev2.
         :add_document_separator: If True, a special document seperator will be introduced. This is highly
         recommended when using our FLERT approach.
         :sample_missing_splits: If True, data is automatically sampled when certain data splits are None.
+        :preproc_fn: Function that is used for dataset preprocessing. If None, default preprocessing will be performed.
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -4180,19 +4234,27 @@ class NER_HIPE_2022(ColumnCorpus):
             }
         }
 
+        # v2.0 only adds new language and splits for AJMC dataset
+        hipe_available_splits["v2.0"] = hipe_available_splits["v1.0"].copy()
+        hipe_available_splits["v2.0"]["ajmc"] = {"de": ["train", "dev"], "en": ["train", "dev"], "fr": ["train", "dev"]}
+
+        hipe_available_splits["v2.1"] = hipe_available_splits["v2.0"].copy()
+
         eos_marker = "EndOfSentence"
         document_separator = "# hipe2022:document_id"
 
         # Special document marker for sample splits in AJMC dataset
-        if f"{version}/{dataset_name}" == "v1.0/ajmc":
+        if f"{dataset_name}" == "ajmc":
             document_separator = "# hipe2022:original_source"
 
         columns = {0: "text", 1: "ner"}
 
         dataset_base = self.__class__.__name__.lower()
-        data_folder = base_path / dataset_base / dataset_name / language
+        data_folder = base_path / dataset_base / version / dataset_name / language
 
-        data_url = f"https://github.com/hipe-eval/HIPE-2022-data/raw/main/data/{version}/{dataset_name}/{language}"
+        data_url = (
+            f"https://github.com/hipe-eval/HIPE-2022-data/raw/{branch_name}/data/{version}/{dataset_name}/{language}"
+        )
 
         dataset_splits = hipe_available_splits[version][dataset_name][language]
 
@@ -4213,10 +4275,12 @@ class NER_HIPE_2022(ColumnCorpus):
 
         dev_path = new_data_folder / dev_file
 
+        self.preproc_fn = self._prepare_corpus if not preproc_fn else preproc_fn
+
         if not dev_path.exists():
             for split in dataset_splits:
                 original_filename = f"HIPE-2022-{version}-{dataset_name}-{split}-{language}.tsv"
-                self.__prepare_corpus(
+                self.preproc_fn(
                     data_folder / "original" / original_filename,
                     new_data_folder / f"{split}.txt",
                     eos_marker,
@@ -4234,30 +4298,8 @@ class NER_HIPE_2022(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
             skip_first_line=True,
+            column_delimiter="\t",
             comment_symbol="# ",
             sample_missing_splits=sample_missing_splits,
             **corpusargs,
         )
-
-    @staticmethod
-    def __prepare_corpus(
-        file_in: Path, file_out: Path, eos_marker: str, document_separator: str, add_document_separator: bool
-    ):
-        with open(file_in, "rt") as f_p:
-            lines = f_p.readlines()
-
-        with open(file_out, "wt") as f_out:
-            # Add missing newline after header
-            f_out.write(lines[0] + "\n")
-
-            for line in lines[1:]:
-                line = line.rstrip()
-
-                # Add "real" document marker
-                if add_document_separator and line.startswith(document_separator):
-                    f_out.write("-DOCSTART- O\n\n")
-
-                f_out.write(line + "\n")
-
-                if eos_marker in line:
-                    f_out.write("\n")

@@ -1,3 +1,4 @@
+import copy
 import shutil
 
 import pytest
@@ -107,9 +108,41 @@ def test_load_column_corpus_options(tasks_base_path):
     assert corpus.train[0].to_tokenized_string() == "This is New Berlin"
 
 
+def test_load_span_data(tasks_base_path):
+    # load column dataset with one entry
+    dataset = flair.datasets.ColumnDataset(
+        tasks_base_path / "span_labels" / "span_first.txt",
+        column_name_map={0: "text", 1: "ner"},
+    )
+
+    assert len(dataset) == 1
+    assert dataset[0][2].text == "RAB"
+    assert dataset[0][2].get_label("ner").value == "PARTA"
+
+    # load column dataset with two entries
+    dataset = flair.datasets.ColumnDataset(
+        tasks_base_path / "span_labels" / "span_second.txt",
+        column_name_map={0: "text", 1: "ner"},
+    )
+
+    assert len(dataset) == 2
+    assert dataset[1][2].text == "RAB"
+    assert dataset[1][2].get_label("ner").value == "PARTA"
+
+    # load column dataset with three entries
+    dataset = flair.datasets.ColumnDataset(
+        tasks_base_path / "span_labels" / "span_third.txt",
+        column_name_map={0: "text", 1: "ner"},
+    )
+
+    assert len(dataset) == 3
+    assert dataset[2][2].text == "RAB"
+    assert dataset[2][2].get_label("ner").value == "PARTA"
+
+
 def test_load_germeval_data(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
+    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "ner_german_germeval", column_format={0: "text", 2: "ner"})
 
     assert len(corpus.train) == 2
     assert len(corpus.dev) == 1
@@ -123,6 +156,29 @@ def test_load_ud_english_data(tasks_base_path):
     assert len(corpus.train) == 6
     assert len(corpus.test) == 4
     assert len(corpus.dev) == 2
+
+    # check if Token labels are correct
+    sentence = corpus.train[0]
+    assert sentence[0].text == "From"
+    assert sentence[0].get_label("upos").value == "ADP"
+    assert sentence[1].text == "the"
+    assert sentence[1].get_label("upos").value == "DET"
+
+
+def test_load_up_english_data(tasks_base_path):
+    # get training, test and dev data
+    corpus = flair.datasets.UP_ENGLISH(tasks_base_path)
+
+    assert len(corpus.train) == 4
+    assert len(corpus.test) == 2
+    assert len(corpus.dev) == 2
+
+    # check if Token labels for frames are correct
+    sentence = corpus.dev[0]
+    assert sentence[2].text == "AP"
+    assert sentence[2].get_label("frame", zero_tag_value="no_label").value == "no_label"
+    assert sentence[3].text == "comes"
+    assert sentence[3].get_label("frame").value == "come.03"
 
 
 def test_load_no_dev_data(tasks_base_path):
@@ -149,7 +205,7 @@ def test_load_no_dev_data_explicit(tasks_base_path):
 
 
 def test_multi_corpus(tasks_base_path):
-    corpus_1 = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
+    corpus_1 = flair.datasets.ColumnCorpus(tasks_base_path / "ner_german_germeval", column_format={0: "text", 2: "ner"})
 
     corpus_2 = flair.datasets.ColumnCorpus(tasks_base_path / "fashion", column_format={0: "text", 2: "ner"})
     # get two corpora as one
@@ -190,14 +246,14 @@ def _assert_conllu_dataset(dataset):
     ]
 
     assert [token.whitespace_after for token in sent1.tokens] == [
-        True,
-        True,
-        True,
-        True,
-        True,
-        True,
-        False,
-        True,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
     ]
 
     ner_spans1 = sent1.get_labels("ner")
@@ -299,12 +355,12 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
     sent1: Sentence = dataset[0]
 
     assert [token.whitespace_after for token in sent1.tokens] == [
-        True,
-        True,
-        True,
-        True,
-        False,
-        True,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
     ]
 
     assert len(sent1.get_labels("Number")) == 4
@@ -373,53 +429,135 @@ def test_hipe_2022_corpus(tasks_base_path):
     # We have manually checked, that these numbers are correct:
     hipe_stats = {
         "v1.0": {
-            "ajmc": {"de": {"sample": {"sents": 119, "docs": 8}}, "en": {"sample": {"sents": 83, "docs": 5}}},
+            "ajmc": {
+                "de": {"sample": {"sents": 119, "docs": 8, "labels": ["date", "loc", "pers", "scope", "work"]}},
+                "en": {"sample": {"sents": 83, "docs": 5, "labels": ["date", "loc", "pers", "scope", "work"]}},
+            },
             "hipe2020": {
                 "de": {
-                    "train": {"sents": 3470 + 2, "docs": 103},  # 2 sentences with missing EOS marker
-                    "dev": {
-                        "sents": 1202,
-                        "docs": 33,
+                    "train": {
+                        "sents": 3470 + 2,  # 2 sentences with missing EOS marker
+                        "docs": 103,
+                        "labels": ["loc", "org", "pers", "prod", "time"],
                     },
+                    "dev": {"sents": 1202, "docs": 33, "labels": ["loc", "org", "pers", "prod", "time"]},
                 },
-                "en": {"dev": {"sents": 1045, "docs": 80}},
-                "fr": {"train": {"sents": 5743, "docs": 158}, "dev": {"sents": 1244, "docs": 43}},
+                "en": {"dev": {"sents": 1045, "docs": 80, "labels": ["loc", "org", "pers", "prod", "time"]}},
+                "fr": {
+                    "train": {"sents": 5743, "docs": 158, "labels": ["loc", "org", "pers", "prod", "time", "comp"]},
+                    "dev": {"sents": 1244, "docs": 43, "labels": ["loc", "org", "pers", "prod", "time"]},
+                },
             },
-            "letemps": {"fr": {"train": {"sents": 14051, "docs": 414}, "dev": {"sents": 1341, "docs": 51}}},
+            "letemps": {
+                "fr": {
+                    "train": {"sents": 14051, "docs": 414, "labels": ["loc", "org", "pers"]},
+                    "dev": {"sents": 1341, "docs": 51, "labels": ["loc", "org", "pers"]},
+                }
+            },
             "newseye": {
                 # +1 offset, because of missing EOS marker at EOD
                 "de": {
-                    "train": {"sents": 23646 + 1, "docs": 11},
-                    "dev": {"sents": 1110 + 1, "docs": 12},
-                    "dev2": {"sents": 1541 + 1, "docs": 12},
+                    "train": {"sents": 23646 + 1, "docs": 11, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev": {"sents": 1110 + 1, "docs": 12, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev2": {"sents": 1541 + 1, "docs": 12, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
                 },
                 "fi": {
-                    "train": {"sents": 1141 + 1, "docs": 24},
-                    "dev": {"sents": 140 + 1, "docs": 24},
-                    "dev2": {"sents": 104 + 1, "docs": 21},
+                    "train": {"sents": 1141 + 1, "docs": 24, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev": {"sents": 140 + 1, "docs": 24, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev2": {"sents": 104 + 1, "docs": 21, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
                 },
                 "fr": {
-                    "train": {"sents": 7106 + 1, "docs": 35},
-                    "dev": {"sents": 662 + 1, "docs": 35},
-                    "dev2": {"sents": 1016 + 1, "docs": 35},
+                    "train": {"sents": 7106 + 1, "docs": 35, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev": {"sents": 662 + 1, "docs": 35, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev2": {"sents": 1016 + 1, "docs": 35, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
                 },
                 "sv": {
-                    "train": {"sents": 1063 + 1, "docs": 21},
-                    "dev": {"sents": 126 + 1, "docs": 21},
-                    "dev2": {"sents": 136 + 1, "docs": 21},
+                    "train": {"sents": 1063 + 1, "docs": 21, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev": {"sents": 126 + 1, "docs": 21, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
+                    "dev2": {"sents": 136 + 1, "docs": 21, "labels": ["HumanProd", "LOC", "ORG", "PER"]},
                 },
             },
-            "sonar": {"de": {"dev": {"sents": 1603 + 10, "docs": 10}}},  # 10 sentences with missing EOS marker
-            "topres19th": {"en": {"train": {"sents": 5874, "docs": 309}, "dev": {"sents": 646, "docs": 34}}},
+            "sonar": {
+                "de": {
+                    "dev": {
+                        "sents": 1603 + 10,  # 10 sentences with missing EOS marker
+                        "docs": 10,
+                        "labels": ["LOC", "ORG", "PER"],
+                    }
+                }
+            },
+            "topres19th": {
+                "en": {
+                    "train": {"sents": 5874, "docs": 309, "labels": ["BUILDING", "LOC", "STREET"]},
+                    "dev": {"sents": 646, "docs": 34, "labels": ["BUILDING", "LOC", "STREET"]},
+                }
+            },
         }
     }
 
-    def test_hipe_2022(dataset_version="v1.0", add_document_separator=True):
+    hipe_stats["v2.0"] = hipe_stats["v1.0"].copy()
+    hipe_stats["v2.0"]["ajmc"] = {
+        "de": {
+            "train": {
+                "sents": 1022 + 2,  # 2 sentences with missing EOS marker
+                "docs": 76,
+                "labels": ["date", "loc", "object", "pers", "scope", "work"],
+            },
+            "dev": {"sents": 192, "docs": 14, "labels": ["loc", "object", "pers", "scope", "work"]},
+        },
+        "en": {
+            "train": {
+                "sents": 1153 + 1,  # 1 sentence with missing EOS marker
+                "docs": 60,
+                "labels": ["date", "loc", "object", "pers", "scope", "work"],
+            },
+            "dev": {
+                "sents": 251 + 1,  # 1 sentence with missing EOS marker
+                "docs": 14,
+                "labels": ["date", "loc", "pers", "scope", "work"],
+            },
+        },
+        "fr": {
+            "train": {
+                "sents": 893 + 1,  # 1 sentence with missing EOS marker
+                "docs": 72,
+                "labels": ["date", "loc", "object", "pers", "scope", "work"],
+            },
+            "dev": {
+                "sents": 201 + 1,  # 1 sentence with missing EOS marker
+                "docs": 17,
+                "labels": ["pers", "scope", "work"],
+            },
+        },
+    }
+    hipe_stats["v2.0"]["newseye"] = {
+        "de": {
+            "train": {"sents": 20839 + 1, "docs": 7, "labels": ["HumanProd", "LOC", "ORG", "PER"]}  # missing EOD marker
+        }
+    }
+    hipe_stats["v2.0"]["sonar"] = {
+        "de": {
+            "dev": {
+                "sents": 816 + 10,  # 9 sentences with missing EOS marker + missing EOD
+                "docs": 10,
+                "labels": ["LOC", "ORG", "PER"],
+            }
+        }
+    }
+    hipe_stats["v2.1"] = copy.deepcopy(hipe_stats["v2.0"])
+    hipe_stats["v2.1"]["hipe2020"]["fr"]["train"] = {
+        "sents": 5743,
+        "docs": 158,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+
+    def test_hipe_2022(dataset_version="v2.1", add_document_separator=True):
         for dataset_name, languages in hipe_stats[dataset_version].items():
             for language in languages:
                 splits = languages[language]
 
                 corpus = flair.datasets.NER_HIPE_2022(
+                    version=dataset_version,
                     dataset_name=dataset_name,
                     language=language,
                     dev_split_name="dev",
@@ -427,32 +565,62 @@ def test_hipe_2022_corpus(tasks_base_path):
                 )
 
                 for split_name, stats in splits.items():
-                    split_description = f"{dataset_name}/{language}@{split_name}"
+                    split_description = f"{dataset_name}@{dataset_version}/{language}#{split_name}"
 
-                    total_sentences = sum(stats.values()) if add_document_separator else stats["sents"]
+                    current_sents = stats["sents"]
+                    current_docs = stats["docs"]
+                    current_labels = set(stats["labels"] + ["<unk>"])
+
+                    total_sentences = current_sents + current_docs if add_document_separator else stats["sents"]
 
                     if split_name == "train":
                         assert (
                             len(corpus.train) == total_sentences
                         ), f"Sentence count mismatch for {split_description}: {len(corpus.train)} vs. {total_sentences}"
+
+                        gold_labels = set(corpus.make_label_dictionary(label_type="ner").get_items())
+
+                        assert (
+                            current_labels == gold_labels
+                        ), f"Label mismatch for {split_description}: {current_labels} vs. {gold_labels}"
+
                     elif split_name in ["dev", "sample"]:
                         assert (
                             len(corpus.dev) == total_sentences
                         ), f"Sentence count mismatch for {split_description}: {len(corpus.dev)} vs. {total_sentences}"
+
+                        corpus._train = corpus._dev
+                        gold_labels = set(corpus.make_label_dictionary(label_type="ner").get_items())
+
+                        assert (
+                            current_labels == gold_labels
+                        ), f"Label mismatch for {split_description}: {current_labels} vs. {gold_labels}"
                     elif split_name == "dev2":
                         corpus = flair.datasets.NER_HIPE_2022(
+                            version=dataset_version,
                             dataset_name=dataset_name,
                             language=language,
                             dev_split_name="dev2",
                             add_document_separator=add_document_separator,
                         )
 
+                        corpus._train = corpus._dev
+                        gold_labels = set(corpus.make_label_dictionary(label_type="ner").get_items())
+
                         assert (
                             len(corpus.dev) == total_sentences
                         ), f"Sentence count mismatch for {split_description}: {len(corpus.dev)} vs. {total_sentences}"
 
-    test_hipe_2022(add_document_separator=True)
-    test_hipe_2022(add_document_separator=False)
+                        assert (
+                            current_labels == gold_labels
+                        ), f"Label mismatch for {split_description}: {current_labels} vs. {gold_labels}"
+
+    test_hipe_2022(dataset_version="v1.0", add_document_separator=True)
+    test_hipe_2022(dataset_version="v1.0", add_document_separator=False)
+    test_hipe_2022(dataset_version="v2.0", add_document_separator=True)
+    test_hipe_2022(dataset_version="v2.0", add_document_separator=False)
+    test_hipe_2022(dataset_version="v2.1", add_document_separator=True)
+    test_hipe_2022(dataset_version="v2.1", add_document_separator=False)
 
 
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
@@ -494,13 +662,8 @@ def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
     dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl")
 
     assert len(dataset.sentences) == 5
-    assert dataset.sentences[0].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC>"
-    assert dataset.sentences[1].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC> ."
-    assert dataset.sentences[2].to_tagged_string() == "This is New <B-LOC> Berlin <I-LOC> . <I-LOC>"
-    assert (
-        dataset.sentences[3].to_tagged_string()
-        == "EU <B-ORG> rejects German <B-MISC> call to boycott British <B-MISC> lamb <I-MISC> ."
-    )
+    assert dataset.sentences[0].get_token(3).get_label("ner").value == "B-LOC"
+    assert dataset.sentences[0].get_token(4).get_label("ner").value == "I-LOC"
 
 
 def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):
