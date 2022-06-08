@@ -372,7 +372,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         """
         return FlairDatapointDataset(self.transform_sentence(list(dataset)))
 
-    def transform_corpus(self, corpus: Corpus, transform_test: bool = False) -> Corpus:
+    def transform_corpus(self, corpus: Corpus[Sentence], transform_test: bool = False) -> Corpus[_EncodedSentence]:
         """
 
         :param corpus:
@@ -380,9 +380,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         :return:
         """
         return Corpus(
-            train=self.transform_dataset(corpus.train),
-            dev=self.transform_dataset(corpus.dev),
-            test=self.transform_dataset(corpus.test) if transform_test else corpus.test,
+            train=self.transform_dataset(corpus.train) if corpus.train is not None else None,
+            dev=self.transform_dataset(corpus.dev) if corpus.dev is not None else None,
+            test=self.transform_dataset(corpus.test) if corpus.test is not None and transform_test else None,
             name=corpus.name,
         )
 
