@@ -399,6 +399,23 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         if not isinstance(sentences, list):
             sentences = [sentences]
 
+        # Ensure that all sentences are encoded properly
+        if any(not isinstance(sentence, _EncodedSentence) for sentence in sentences):
+            raise ValueError(
+                "Some of the passed sentences are not encoded "
+                "to be compatible with the relation classifier's forward pass.\n"
+                "Did you transform your raw sentences into encoded sentences? "
+                "Use the\n"
+                "\t- transform_sentence\n"
+                "\t- transform_dataset\n"
+                "\t- transform_corpus\n"
+                "functions to transform you data first. "
+                "When using the ModelTrainer to train a relation classification model, "
+                "be sure to pass a transformed corpus:\n"
+                "WRONG:   trainer: ModelTrainer = ModelTrainer(model=model, corpus=corpus)\n"
+                "CORRECT: trainer: ModelTrainer = ModelTrainer(model=model, corpus=model.transform_corpus(corpus))"
+            )
+
         # Embed encoded sentences: The input sentences already have been encoded/masked beforehand.
         self.document_embeddings.embed(sentences)
         embedding_names: List[str] = self.document_embeddings.get_names()
