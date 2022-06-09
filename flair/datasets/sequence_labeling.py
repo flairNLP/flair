@@ -4258,6 +4258,10 @@ class NER_HIPE_2022(ColumnCorpus):
 
         dataset_splits = hipe_available_splits[version][dataset_name][language]
 
+        if version == "v2.1":
+            # test datasets are only available for >= v2.1
+            dataset_splits.append("test")
+
         for split in dataset_splits:
             cached_path(
                 f"{data_url}/HIPE-2022-{version}-{dataset_name}-{split}-{language}.tsv", data_folder / "original"
