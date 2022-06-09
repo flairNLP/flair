@@ -495,7 +495,7 @@ def test_hipe_2022_corpus(tasks_base_path):
         }
     }
 
-    hipe_stats["v2.0"] = hipe_stats["v1.0"].copy()
+    hipe_stats["v2.0"] = copy.deepcopy(hipe_stats["v1.0"])
     hipe_stats["v2.0"]["ajmc"] = {
         "de": {
             "train": {
