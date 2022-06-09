@@ -25,7 +25,6 @@ def corpus(tasks_base_path: Path) -> ColumnCorpus:
 
 
 class TestTransform:
-
     @staticmethod
     def check_transformation_correctness(split: Optional[Dataset], ground_truth: List[Tuple[str, List[str]]]) -> None:
         """Ground truth is a list of tuples of (<Sentence Text>, <Relation Label Values>)"""
@@ -54,7 +53,7 @@ class TestTransform:
             mask_remainder=True,
         )
 
-        transformed_corpus = model.transform_corpus(corpus, transform_test=False)
+        transformed_corpus = model.transform_corpus(corpus)
 
         # Check sentence masking and relation label annotation
         ground_truth: List[Tuple[str, List[str]]] = [
@@ -70,13 +69,9 @@ class TestTransform:
             ("[T-PER] was born in [R-LOC] , [H-LOC] .", ["O"]),
         ]
 
-        # Check training and validation dataset (in this test they are the same)
-        for split in (transformed_corpus.train, transformed_corpus.dev):
+        # Check training, validation and test dataset (in this test they are the same)
+        for split in (transformed_corpus.train, transformed_corpus.dev, transformed_corpus.test):
             TestTransform.check_transformation_correctness(split, ground_truth)
-
-        # Check testing dataset (should be the same as in the original corpus because of "transform_test=False")
-        test_loader = DataLoader(transformed_corpus.test, batch_size=1, num_workers=1)
-        assert all(not isinstance(sentence, EncodedSentence) for sentence in map(itemgetter(0), test_loader))
 
     def test_transform_corpus_without_cross_augmentation_and_remainder(self, corpus: ColumnCorpus) -> None:
         label_dictionary = corpus.make_label_dictionary("relation")
@@ -94,7 +89,7 @@ class TestTransform:
             mask_remainder=False,
         )
 
-        transformed_corpus = model.transform_corpus(corpus, transform_test=False)
+        transformed_corpus = model.transform_corpus(corpus)
 
         # Check sentence masking and relation label annotation
         ground_truth: List[Tuple[str, List[str]]] = [
@@ -106,16 +101,12 @@ class TestTransform:
             # Entity pair permutations of: "Konrad Zuse was born in Berlin on 22 June 1910 ."
             ("[T-PER] was born in [H-LOC] on 22 June 1910 .", ["place_of_birth"]),
             # Entity pair permutations of: "Joseph Weizenbaum was born in Berlin , Germany ."
-            ("[T-PER] was born in [H-LOC] , Germany .", ["place_of_birth"])
+            ("[T-PER] was born in [H-LOC] , Germany .", ["place_of_birth"]),
         ]
 
-        # Check training and validation dataset (in this test they are the same)
-        for split in (transformed_corpus.train, transformed_corpus.dev):
+        # Check training, validation and test dataset (in this test they are the same)
+        for split in (transformed_corpus.train, transformed_corpus.dev, transformed_corpus.test):
             TestTransform.check_transformation_correctness(split, ground_truth)
-
-        # Check testing dataset (should be the same as in the original corpus because of "transform_test=False")
-        test_loader = DataLoader(transformed_corpus.test, batch_size=1, num_workers=1)
-        assert all(not isinstance(sentence, EncodedSentence) for sentence in map(itemgetter(0), test_loader))
 
 
 @pytest.mark.integration

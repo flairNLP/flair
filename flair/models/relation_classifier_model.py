@@ -389,17 +389,16 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
         """
         return FlairDatapointDataset(self.transform_sentence(list(dataset)))
 
-    def transform_corpus(self, corpus: Corpus[Sentence], transform_test: bool = False) -> Corpus[EncodedSentence]:
+    def transform_corpus(self, corpus: Corpus[Sentence]) -> Corpus[EncodedSentence]:
         """
 
         :param corpus:
-        :param transform_test:
         :return:
         """
         return Corpus(
             train=self.transform_dataset(corpus.train) if corpus.train is not None else None,
             dev=self.transform_dataset(corpus.dev) if corpus.dev is not None else None,
-            test=self.transform_dataset(corpus.test) if corpus.test is not None and transform_test else corpus.test,
+            test=self.transform_dataset(corpus.test) if corpus.test is not None else None,
             name=corpus.name,
             # If we sample missing splits, the encoded sentences that correspond to the same original sentences
             # may get distributed into different splits. For training purposes, this is always undesired.
