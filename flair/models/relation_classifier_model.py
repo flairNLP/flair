@@ -1,11 +1,23 @@
 import itertools
-from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Sequence, Set, Tuple, Union, cast
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 import torch
 from torch.utils.data.dataset import Dataset
 
 import flair
-from flair.data import Dictionary, Label, Relation, Sentence, Span, Token, Corpus
+from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
 from flair.datasets import FlairDatapointDataset
 from flair.embeddings import DocumentEmbeddings
 from flair.tokenization import SpaceTokenizer
