@@ -1,13 +1,121 @@
+from operator import itemgetter
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Tuple
 
 import pytest
+from torch.utils.data import Dataset
 
 from flair.data import Relation, Sentence
-from flair.datasets import ColumnCorpus
+from flair.datasets import ColumnCorpus, DataLoader
 from flair.embeddings import TransformerDocumentEmbeddings
 from flair.models import RelationClassifier
+from flair.models.relation_classifier_model import EncodedSentence
 from flair.trainers import ModelTrainer
+
+
+@pytest.fixture(scope="function")
+def corpus(tasks_base_path: Path) -> ColumnCorpus:
+    return ColumnCorpus(
+        data_folder=tasks_base_path / "conllu",
+        train_file="train.conllup",
+        dev_file="train.conllup",
+        test_file="train.conllup",
+        column_format={1: "text", 2: "pos", 3: "ner"},
+    )
+
+
+class TestTransform:
+
+    @staticmethod
+    def check_transformation_correctness(split: Optional[Dataset], ground_truth: List[Tuple[str, List[str]]]) -> None:
+        """Ground truth is a list of tuples of (<Sentence Text>, <Relation Label Values>)"""
+        assert split is not None
+
+        data_loader = DataLoader(split, batch_size=1, num_workers=1)
+        assert all(isinstance(sentence, EncodedSentence) for sentence in map(itemgetter(0), data_loader))
+        assert [
+            (sentence.to_tokenized_string(), [label.value for label in sentence.get_labels("relation")])
+            for sentence in map(itemgetter(0), data_loader)
+        ] == ground_truth
+
+    def test_transform_corpus_with_cross_augmentation_and_remainder(self, corpus: ColumnCorpus) -> None:
+        label_dictionary = corpus.make_label_dictionary("relation")
+        embeddings = TransformerDocumentEmbeddings(model="distilbert-base-uncased", layers="-1", fine_tune=True)
+        model: RelationClassifier = RelationClassifier(
+            document_embeddings=embeddings,
+            label_dictionary=label_dictionary,
+            label_type="relation",
+            entity_label_types="ner",
+            entity_pair_labels={  # Define valid entity pair combinations, used as relation candidates
+                ("ORG", "PER"),  # founded_by
+                ("LOC", "PER"),  # place_of_birth
+            },
+            cross_augmentation=True,
+            mask_remainder=True,
+        )
+
+        transformed_corpus = model.transform_corpus(corpus, transform_test=False)
+
+        # Check sentence masking and relation label annotation
+        ground_truth: List[Tuple[str, List[str]]] = [
+            # Entity pair permutations of: "Larry Page and Sergey Brin founded Google ."
+            ("[T-PER] and [R-PER] founded [H-ORG] .", ["founded_by"]),
+            ("[R-PER] and [T-PER] founded [H-ORG] .", ["founded_by"]),
+            # Entity pair permutations of: "Microsoft was founded by Bill Gates ."
+            ("[H-ORG] was founded by [T-PER] .", ["founded_by"]),
+            # Entity pair permutations of: "Konrad Zuse was born in Berlin on 22 June 1910 ."
+            ("[T-PER] was born in [H-LOC] on [R-DATE] .", ["place_of_birth"]),
+            # Entity pair permutations of: "Joseph Weizenbaum was born in Berlin , Germany ."
+            ("[T-PER] was born in [H-LOC] , [R-LOC] .", ["place_of_birth"]),
+            ("[T-PER] was born in [R-LOC] , [H-LOC] .", ["O"]),
+        ]
+
+        # Check training and validation dataset (in this test they are the same)
+        for split in (transformed_corpus.train, transformed_corpus.dev):
+            TestTransform.check_transformation_correctness(split, ground_truth)
+
+        # Check testing dataset (should be the same as in the original corpus because of "transform_test=False")
+        test_loader = DataLoader(transformed_corpus.test, batch_size=1, num_workers=1)
+        assert all(not isinstance(sentence, EncodedSentence) for sentence in map(itemgetter(0), test_loader))
+
+    def test_transform_corpus_without_cross_augmentation_and_remainder(self, corpus: ColumnCorpus) -> None:
+        label_dictionary = corpus.make_label_dictionary("relation")
+        embeddings = TransformerDocumentEmbeddings(model="distilbert-base-uncased", layers="-1", fine_tune=True)
+        model: RelationClassifier = RelationClassifier(
+            document_embeddings=embeddings,
+            label_dictionary=label_dictionary,
+            label_type="relation",
+            entity_label_types="ner",
+            entity_pair_labels={  # Define valid entity pair combinations, used as relation candidates
+                ("ORG", "PER"),  # founded_by
+                ("LOC", "PER"),  # place_of_birth
+            },
+            cross_augmentation=False,
+            mask_remainder=False,
+        )
+
+        transformed_corpus = model.transform_corpus(corpus, transform_test=False)
+
+        # Check sentence masking and relation label annotation
+        ground_truth: List[Tuple[str, List[str]]] = [
+            # Entity pair permutations of: "Larry Page and Sergey Brin founded Google ."
+            ("[T-PER] and Sergey Brin founded [H-ORG] .", ["founded_by"]),
+            ("Larry Page and [T-PER] founded [H-ORG] .", ["founded_by"]),
+            # Entity pair permutations of: "Microsoft was founded by Bill Gates ."
+            ("[H-ORG] was founded by [T-PER] .", ["founded_by"]),
+            # Entity pair permutations of: "Konrad Zuse was born in Berlin on 22 June 1910 ."
+            ("[T-PER] was born in [H-LOC] on 22 June 1910 .", ["place_of_birth"]),
+            # Entity pair permutations of: "Joseph Weizenbaum was born in Berlin , Germany ."
+            ("[T-PER] was born in [H-LOC] , Germany .", ["place_of_birth"])
+        ]
+
+        # Check training and validation dataset (in this test they are the same)
+        for split in (transformed_corpus.train, transformed_corpus.dev):
+            TestTransform.check_transformation_correctness(split, ground_truth)
+
+        # Check testing dataset (should be the same as in the original corpus because of "transform_test=False")
+        test_loader = DataLoader(transformed_corpus.test, batch_size=1, num_workers=1)
+        assert all(not isinstance(sentence, EncodedSentence) for sentence in map(itemgetter(0), test_loader))
 
 
 @pytest.mark.integration
