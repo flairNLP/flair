@@ -209,6 +209,7 @@ The following datasets are supported (**click category to expand**):
 | 'NER_GERMAN_GERMEVAL' | German  |  [GermEval 14 NER](https://sites.google.com/site/germeval2014ner/data/) corpus |
 | 'NER_GERMAN_LEGAL' | German | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents |
 | 'NER_GERMAN_POLITICS' | German | [NEMGP](https://www.thomas-zastrow.de/nlp/) corpus |
+| 'NER_HIPE_2022' | 5 languages | NER dataset for [HIPE-2022](https://hipe-eval.github.io/HIPE-2022/) (Identifying Historical People, Places and other Entities)
 | 'NER_HUNGARIAN' | Hungarian | NER on Hungarian business news |
 | 'NER_ICELANDIC' | Icelandic | NER on Icelandic |
 | 'NER_JAPANESE' | Japanese | [Japanese NER](https://github.com/Hironsan/IOB2Corpus) dataset automatically generated from Wikipedia |
