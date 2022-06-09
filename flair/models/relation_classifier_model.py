@@ -394,8 +394,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
         return Corpus(
             train=self.transform_dataset(corpus.train) if corpus.train is not None else None,
             dev=self.transform_dataset(corpus.dev) if corpus.dev is not None else None,
-            test=self.transform_dataset(corpus.test) if corpus.test is not None and transform_test else None,
+            test=self.transform_dataset(corpus.test) if corpus.test is not None and transform_test else corpus.test,
             name=corpus.name,
+            # If we sample missing splits, the encoded sentences that correspond to the same original sentences
+            # may get distributed into different splits. For training purposes, this is always undesired.
+            sample_missing_splits=False,
         )
 
     def forward_pass(
