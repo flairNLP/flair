@@ -18,7 +18,7 @@ from torch.utils.data.dataset import Dataset
 
 import flair
 from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
-from flair.datasets import FlairDatapointDataset
+from flair.datasets import FlairDatapointDataset, DataLoader
 from flair.embeddings import DocumentEmbeddings
 from flair.tokenization import SpaceTokenizer
 
@@ -387,7 +387,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
         :param dataset:
         :return:
         """
-        return FlairDatapointDataset(self.transform_sentence(list(dataset)))
+        data_loader: DataLoader = DataLoader(dataset, batch_size=1, num_workers=0)
+        original_sentences: List[Sentence] = [batch[0] for batch in iter(data_loader)]
+        return FlairDatapointDataset(self.transform_sentence(original_sentences))
 
     def transform_corpus(self, corpus: Corpus[Sentence]) -> Corpus[EncodedSentence]:
         """
