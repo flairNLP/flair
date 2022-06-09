@@ -113,8 +113,8 @@ class TestTransform:
 def test_train_load_use_relation_classifier(results_base_path: Path, tasks_base_path: Path) -> None:
     # ---- Test Training ----
     # Hyperparameters
-    transformer: str = "distilbert-base-uncased"
-    num_epochs: int = 5
+    transformer: str = "bert-base-uncased"
+    num_epochs: int = 10
     learning_rate: float = 5e-5
     mini_batch_size: int = 8
 
