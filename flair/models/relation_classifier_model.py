@@ -417,7 +417,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
             )
 
         # Embed encoded sentences: The input sentences already have been encoded/masked beforehand.
-        self.document_embeddings.embed(sentences)
+        self.document_embeddings.embed(list(sentences))
         embedding_names: List[str] = self.document_embeddings.get_names()
 
         sentence_embeddings: List[torch.Tensor] = []
@@ -463,7 +463,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
 
         loss: Optional[Tuple[torch.Tensor, int]]
         encoded_sentences: List[_EncodedSentence]
+
         if all(isinstance(sentence, _EncodedSentence) for sentence in sentences):
+            # Deal with the case where all sentences are encoded sentences
             # mypy does not infer the type of "sentences" restricted by the if statement
             encoded_sentences = cast(List[_EncodedSentence], sentences)
             loss = super().predict(
@@ -477,6 +479,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
             )
 
         elif all(not isinstance(sentence, _EncodedSentence) for sentence in sentences):
+            # Deal with the case where all sentences are standard (non-encoded) sentences
 
             sentences_with_relation_reference: List[Tuple[_EncodedSentence, Relation]] = list(
                 itertools.chain.from_iterable(self._encode_sentence_for_inference(sentence) for sentence in sentences)
@@ -493,6 +496,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
                 embedding_storage_mode=embedding_storage_mode,
             )
 
+            # For each encoded sentence, transfer its prediction onto the original relation
             for encoded_sentence, original_relation in sentences_with_relation_reference:
                 for label in encoded_sentence.get_labels(prediction_label_type):
                     original_relation.add_label(prediction_label_type, value=label.value, score=label.value)
