@@ -48,8 +48,8 @@ def test_train_load_use_relation_classifier(results_base_path: Path, tasks_base_
         }
     )
 
-    # Step 5: Initialize trainer
-    trainer: ModelTrainer = ModelTrainer(model, corpus)
+    # Step 5: Initialize trainer on transformed corpus
+    trainer: ModelTrainer = ModelTrainer(model=model, corpus=model.transform_corpus(corpus))
 
     # Step 6: Run fine-tuning
     trainer.fine_tune(
