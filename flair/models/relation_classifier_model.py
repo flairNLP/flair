@@ -1,5 +1,5 @@
 import itertools
-from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Sequence, Set, Tuple, Union, cast
 
 import torch
 from torch.utils.data.dataset import Dataset
@@ -29,7 +29,7 @@ class _Entity(NamedTuple):
 
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
 #  - MaskedRelationClassifier ?
-class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
+class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
     """
     ---- Task ----
     Relation Classification (RC) is the task of identifying the semantic relation between two entities in a text.
@@ -390,7 +390,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
         self,
         sentences: Union[List[_EncodedSentence], _EncodedSentence],
         for_prediction: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[_EncodedSentence]]]:
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], Sequence[_EncodedSentence]]]:
         """
         This method does a forward pass through the model given a list of **encoded** sentences as input.
         To encode sentences, use the `transform` function of the `RelationClassifier`.
@@ -444,7 +444,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence],
+        sentences: Union[List[Sentence], List[_EncodedSentence], Sentence, _EncodedSentence],
         mini_batch_size: int = 32,
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
@@ -462,9 +462,12 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
             sentences = [sentences]
 
         loss: Optional[Tuple[torch.Tensor, int]]
+        encoded_sentences: List[_EncodedSentence]
         if all(isinstance(sentence, _EncodedSentence) for sentence in sentences):
+            # mypy does not infer the type of "sentences" restricted by the if statement
+            encoded_sentences = cast(List[_EncodedSentence], sentences)
             loss = super().predict(
-                sentences,
+                encoded_sentences,
                 mini_batch_size=mini_batch_size,
                 return_probabilities_for_all_classes=return_probabilities_for_all_classes,
                 verbose=verbose,
@@ -479,7 +482,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence]):
                 itertools.chain.from_iterable(self._encode_sentence_for_inference(sentence) for sentence in sentences)
             )
 
-            encoded_sentences: List[_EncodedSentence] = [x[0] for x in sentences_with_relation_reference]
+            encoded_sentences = [x[0] for x in sentences_with_relation_reference]
             loss = super().predict(
                 encoded_sentences,
                 mini_batch_size=mini_batch_size,
