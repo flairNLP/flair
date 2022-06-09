@@ -23,8 +23,13 @@ from flair.embeddings import DocumentEmbeddings
 from flair.tokenization import SpaceTokenizer
 
 
-class _EncodedSentence(Sentence):
-    """A wrapper of `Sentence` to type-check whether a sentence has been encoded for the relation classifier."""
+class EncodedSentence(Sentence):
+    """
+    This class is a wrapper of the regular `Sentence` object
+    that expresses that a sentence is encoded and compatible with the relation classifier.
+    For inference, i.e. `predict` and `evaluate`, the relation classifier internally encodes the sentences.
+    Therefore, for these functions, it works with the regular flair sentence objects.
+    """
 
     pass
 
@@ -41,7 +46,7 @@ class _Entity(NamedTuple):
 
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
 #  - MaskedRelationClassifier ?
-class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
+class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
     """
     ---- Task ----
     Relation Classification (RC) is the task of identifying the semantic relation between two entities in a text.
@@ -234,7 +239,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
         tail: _Entity,
         remainder: List[_Entity],
         gold_label: Optional[str] = None,
-    ) -> _EncodedSentence:
+    ) -> EncodedSentence:
         """
         Returns a new `Sentence` object with masked head, tail and remainder spans.
         The label-aware mask is constructed from the head/tail/remainder span labels.
@@ -296,7 +301,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
                 masked_sentence_tokens.append(token.text)
 
         # Create masked sentence
-        masked_sentence: _EncodedSentence = _EncodedSentence(
+        masked_sentence: EncodedSentence = EncodedSentence(
             " ".join(masked_sentence_tokens), use_tokenizer=SpaceTokenizer()
         )
 
@@ -308,7 +313,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
 
         return masked_sentence
 
-    def _encode_sentence_for_inference(self, sentence: Sentence) -> Iterator[Tuple[_EncodedSentence, Relation]]:
+    def _encode_sentence_for_inference(self, sentence: Sentence) -> Iterator[Tuple[EncodedSentence, Relation]]:
         """
         Yields masked entity pair sentences annotated with their gold relation for all valid entity pair permutations.
         The created masked sentences are newly created sentences with no reference to the passed sentence.
@@ -329,7 +334,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
                  the corresponding relation in the original sentence
         """
         for head, tail, remainder, gold_label in self._entity_pair_permutations(sentence):
-            masked_sentence: _EncodedSentence = self._create_masked_sentence(
+            masked_sentence: EncodedSentence = self._create_masked_sentence(
                 head=head,
                 tail=tail,
                 remainder=remainder if self.mask_remainder else [],
@@ -338,7 +343,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
             original_relation: Relation = Relation(first=head.span, second=tail.span)
             yield masked_sentence, original_relation
 
-    def _encode_sentence_for_training(self, sentence: Sentence) -> Iterator[_EncodedSentence]:
+    def _encode_sentence_for_training(self, sentence: Sentence) -> Iterator[EncodedSentence]:
         """
         Same as `self._encode_sentence_for_inference`,
         with the option of disabling cross augmentation via `self.cross_augmentation`
@@ -352,7 +357,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
                 else:
                     continue  # Skip generated data points that do not express an originally annotated relation
 
-            masked_sentence: _EncodedSentence = self._create_masked_sentence(
+            masked_sentence: EncodedSentence = self._create_masked_sentence(
                 head=head,
                 tail=tail,
                 remainder=remainder if self.mask_remainder else [],
@@ -361,7 +366,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
 
             yield masked_sentence
 
-    def transform_sentence(self, sentences: Union[Sentence, List[Sentence]]) -> List[_EncodedSentence]:
+    def transform_sentence(self, sentences: Union[Sentence, List[Sentence]]) -> List[EncodedSentence]:
         """
         :param sentences:
         :return:
@@ -376,7 +381,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
             for encoded_sentence in self._encode_sentence_for_training(sentence)
         ]
 
-    def transform_dataset(self, dataset: Dataset[Sentence]) -> FlairDatapointDataset[_EncodedSentence]:
+    def transform_dataset(self, dataset: Dataset[Sentence]) -> FlairDatapointDataset[EncodedSentence]:
         """
 
         :param dataset:
@@ -384,7 +389,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
         """
         return FlairDatapointDataset(self.transform_sentence(list(dataset)))
 
-    def transform_corpus(self, corpus: Corpus[Sentence], transform_test: bool = False) -> Corpus[_EncodedSentence]:
+    def transform_corpus(self, corpus: Corpus[Sentence], transform_test: bool = False) -> Corpus[EncodedSentence]:
         """
 
         :param corpus:
@@ -403,9 +408,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
 
     def forward_pass(
         self,
-        sentences: Union[List[_EncodedSentence], _EncodedSentence],
+        sentences: Union[List[EncodedSentence], EncodedSentence],
         for_prediction: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], Sequence[_EncodedSentence]]]:
+    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], Sequence[EncodedSentence]]]:
         """
         This method does a forward pass through the model given a list of **encoded** sentences as input.
         To encode sentences, use the `transform` function of the `RelationClassifier`.
@@ -415,7 +420,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
             sentences = [sentences]
 
         # Ensure that all sentences are encoded properly
-        if any(not isinstance(sentence, _EncodedSentence) for sentence in sentences):
+        if any(not isinstance(sentence, EncodedSentence) for sentence in sentences):
             raise ValueError(
                 "Some of the passed sentences are not encoded "
                 "to be compatible with the relation classifier's forward pass.\n"
@@ -459,7 +464,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
 
     def predict(
         self,
-        sentences: Union[List[Sentence], List[_EncodedSentence], Sentence, _EncodedSentence],
+        sentences: Union[List[Sentence], List[EncodedSentence], Sentence, EncodedSentence],
         mini_batch_size: int = 32,
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
@@ -477,12 +482,12 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
             sentences = [sentences]
 
         loss: Optional[Tuple[torch.Tensor, int]]
-        encoded_sentences: List[_EncodedSentence]
+        encoded_sentences: List[EncodedSentence]
 
-        if all(isinstance(sentence, _EncodedSentence) for sentence in sentences):
+        if all(isinstance(sentence, EncodedSentence) for sentence in sentences):
             # Deal with the case where all sentences are encoded sentences
             # mypy does not infer the type of "sentences" restricted by the if statement
-            encoded_sentences = cast(List[_EncodedSentence], sentences)
+            encoded_sentences = cast(List[EncodedSentence], sentences)
             loss = super().predict(
                 encoded_sentences,
                 mini_batch_size=mini_batch_size,
@@ -493,10 +498,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[_EncodedSentence]):
                 embedding_storage_mode=embedding_storage_mode,
             )
 
-        elif all(not isinstance(sentence, _EncodedSentence) for sentence in sentences):
+        elif all(not isinstance(sentence, EncodedSentence) for sentence in sentences):
             # Deal with the case where all sentences are standard (non-encoded) sentences
 
-            sentences_with_relation_reference: List[Tuple[_EncodedSentence, Relation]] = list(
+            sentences_with_relation_reference: List[Tuple[EncodedSentence, Relation]] = list(
                 itertools.chain.from_iterable(self._encode_sentence_for_inference(sentence) for sentence in sentences)
             )
 
