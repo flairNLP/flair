@@ -18,7 +18,7 @@ from torch.utils.data.dataset import Dataset
 
 import flair
 from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
-from flair.datasets import FlairDatapointDataset, DataLoader
+from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import DocumentEmbeddings
 from flair.tokenization import SpaceTokenizer
 
