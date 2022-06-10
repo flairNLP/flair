@@ -1,6 +1,6 @@
 from operator import itemgetter
 from pathlib import Path
-from typing import List, Optional, Tuple, Set
+from typing import List, Optional, Set, Tuple
 
 import pytest
 from torch.utils.data import Dataset
