@@ -1,6 +1,6 @@
 from operator import itemgetter
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Set
 
 import pytest
 from torch.utils.data import Dataset
@@ -26,16 +26,19 @@ def corpus(tasks_base_path: Path) -> ColumnCorpus:
 
 class TestTransform:
     @staticmethod
-    def check_transformation_correctness(split: Optional[Dataset], ground_truth: List[Tuple[str, List[str]]]) -> None:
-        """Ground truth is a list of tuples of (<Sentence Text>, <Relation Label Values>)"""
+    def check_transformation_correctness(
+        split: Optional[Dataset],
+        ground_truth: Set[Tuple[str, Tuple[str, ...]]],
+    ) -> None:
+        """Ground truth is a set of tuples of (<Sentence Text>, <Relation Label Values>)"""
         assert split is not None
 
         data_loader = DataLoader(split, batch_size=1, num_workers=0)
         assert all(isinstance(sentence, EncodedSentence) for sentence in map(itemgetter(0), data_loader))
-        assert [
-            (sentence.to_tokenized_string(), [label.value for label in sentence.get_labels("relation")])
+        assert {
+            (sentence.to_tokenized_string(), tuple(label.value for label in sentence.get_labels("relation")))
             for sentence in map(itemgetter(0), data_loader)
-        ] == ground_truth
+        } == ground_truth
 
     def test_transform_corpus_with_cross_augmentation_and_remainder(self, corpus: ColumnCorpus) -> None:
         label_dictionary = corpus.make_label_dictionary("relation")
@@ -55,21 +58,21 @@ class TestTransform:
 
         transformed_corpus = model.transform_corpus(corpus)
 
-        # Check sentence masking and relation label annotation
-        ground_truth: List[Tuple[str, List[str]]] = [
+        # Check sentence masking and relation label annotation on
+        # training, validation and test dataset (in this test they are the same)
+        ground_truth: Set[Tuple[str, Tuple[str, ...]]] = {
             # Entity pair permutations of: "Larry Page and Sergey Brin founded Google ."
-            ("[T-PER] and [R-PER] founded [H-ORG] .", ["founded_by"]),
-            ("[R-PER] and [T-PER] founded [H-ORG] .", ["founded_by"]),
+            ("[T-PER] and [R-PER] founded [H-ORG] .", ("founded_by",)),
+            ("[R-PER] and [T-PER] founded [H-ORG] .", ("founded_by",)),
             # Entity pair permutations of: "Microsoft was founded by Bill Gates ."
-            ("[H-ORG] was founded by [T-PER] .", ["founded_by"]),
+            ("[H-ORG] was founded by [T-PER] .", ("founded_by",)),
             # Entity pair permutations of: "Konrad Zuse was born in Berlin on 22 June 1910 ."
-            ("[T-PER] was born in [H-LOC] on [R-DATE] .", ["place_of_birth"]),
-            # Entity pair permutations of: "Joseph Weizenbaum was born in Berlin , Germany ."
-            ("[T-PER] was born in [H-LOC] , [R-LOC] .", ["place_of_birth"]),
-            ("[T-PER] was born in [R-LOC] , [H-LOC] .", ["O"]),
-        ]
-
-        # Check training, validation and test dataset (in this test they are the same)
+            ("[T-PER] was born in [H-LOC] on [R-DATE] .", ("place_of_birth",)),
+            # Entity pair permutations of: "Joseph Weizenbaum , a professor at MIT , was born in Berlin , Germany."
+            ("[T-PER] , a professor at [H-ORG] , was born in [R-LOC] , [R-LOC] .", ("O",)),
+            ("[T-PER] , a professor at [R-ORG] , was born in [H-LOC] , [R-LOC] .", ("place_of_birth",)),
+            ("[T-PER] , a professor at [R-ORG] , was born in [R-LOC] , [H-LOC] .", ("place_of_birth",)),
+        }
         for split in (transformed_corpus.train, transformed_corpus.dev, transformed_corpus.test):
             TestTransform.check_transformation_correctness(split, ground_truth)
 
@@ -91,20 +94,20 @@ class TestTransform:
 
         transformed_corpus = model.transform_corpus(corpus)
 
-        # Check sentence masking and relation label annotation
-        ground_truth: List[Tuple[str, List[str]]] = [
+        # Check sentence masking and relation label annotation on
+        # training, validation and test dataset (in this test they are the same)
+        ground_truth: Set[Tuple[str, Tuple[str, ...]]] = {
             # Entity pair permutations of: "Larry Page and Sergey Brin founded Google ."
-            ("[T-PER] and Sergey Brin founded [H-ORG] .", ["founded_by"]),
-            ("Larry Page and [T-PER] founded [H-ORG] .", ["founded_by"]),
+            ("[T-PER] and Sergey Brin founded [H-ORG] .", ("founded_by",)),
+            ("Larry Page and [T-PER] founded [H-ORG] .", ("founded_by",)),
             # Entity pair permutations of: "Microsoft was founded by Bill Gates ."
-            ("[H-ORG] was founded by [T-PER] .", ["founded_by"]),
+            ("[H-ORG] was founded by [T-PER] .", ("founded_by",)),
             # Entity pair permutations of: "Konrad Zuse was born in Berlin on 22 June 1910 ."
-            ("[T-PER] was born in [H-LOC] on 22 June 1910 .", ["place_of_birth"]),
-            # Entity pair permutations of: "Joseph Weizenbaum was born in Berlin , Germany ."
-            ("[T-PER] was born in [H-LOC] , Germany .", ["place_of_birth"]),
-        ]
-
-        # Check training, validation and test dataset (in this test they are the same)
+            ("[T-PER] was born in [H-LOC] on 22 June 1910 .", ("place_of_birth",)),
+            # Entity pair permutations of: "Joseph Weizenbaum , a professor at MIT , was born in Berlin , Germany ."
+            ("[T-PER] , a professor at MIT , was born in [H-LOC] , Germany .", ("place_of_birth",)),
+            ("[T-PER] , a professor at MIT , was born in Berlin , [H-LOC] .", ("place_of_birth",)),
+        }
         for split in (transformed_corpus.train, transformed_corpus.dev, transformed_corpus.test):
             TestTransform.check_transformation_correctness(split, ground_truth)
 
@@ -113,10 +116,10 @@ class TestTransform:
 def test_train_load_use_relation_classifier(results_base_path: Path, tasks_base_path: Path) -> None:
     # ---- Test Training ----
     # Hyperparameters
-    transformer: str = "bert-base-uncased"
-    num_epochs: int = 10
-    learning_rate: float = 5e-5
-    mini_batch_size: int = 8
+    transformer: str = "distilbert-base-uncased"
+    num_epochs: int = 25
+    learning_rate: float = 4e-5
+    mini_batch_size: int = 4
 
     # Step 1: Create the training data
     # The relation extractor is *not* trained end-to-end.
@@ -145,6 +148,7 @@ def test_train_load_use_relation_classifier(results_base_path: Path, tasks_base_
             ("ORG", "PER"),  # founded_by
             ("LOC", "PER"),  # place_of_birth
         },
+        allow_unk_tag=False,
     )
 
     # Step 5: Initialize trainer on transformed corpus
@@ -157,6 +161,7 @@ def test_train_load_use_relation_classifier(results_base_path: Path, tasks_base_
         learning_rate=learning_rate,
         mini_batch_size=mini_batch_size,
         main_evaluation_metric=("macro avg", "f1-score"),
+        shuffle=False,
     )
 
     # Clean-up
@@ -202,11 +207,15 @@ def test_train_load_use_relation_classifier(results_base_path: Path, tasks_base_
 
     # Intel ----founded_by---> Gordon Moore
     assert [label.value for label in relations[0].labels] == ["founded_by"]
-    assert relations[0].unlabeled_identifier == "Intel (1)->Gordon Moore (13,14)"
+    assert (
+        relations[0].unlabeled_identifier == Relation(first=sentence[:1], second=sentence[12:14]).unlabeled_identifier
+    )
 
     # Intel ----founded_by---> Robert Noyce
     assert [label.value for label in relations[1].labels] == ["founded_by"]
-    assert relations[1].unlabeled_identifier == "Intel (1)->Robert Noyce (16,17)"
+    assert (
+        relations[1].unlabeled_identifier == Relation(first=sentence[:1], second=sentence[15:17]).unlabeled_identifier
+    )
 
     # Clean-up
     del loaded_model
