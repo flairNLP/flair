@@ -3,6 +3,9 @@ from typing import List, Union
 
 import csv
 import torch
+import time
+import json
+import numpy as np
 
 import flair.embeddings
 import flair.nn
@@ -29,10 +32,12 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         label_type: str = "ner",
         max_span_length: int = 5,
         concat_span_length_to_embedding: bool = False,
-        resolve_overlaps: str = "keep_overlaps",
+        resolve_overlaps: str = "by_token",
         gazetteer_file: str = None,
-        gazetteer_count_type: str = "rel",
-        gazetteer_concat_confidence_score: bool = True,
+        gazetteer_count_type: str = "rel_conf",
+        use_precomputed_gazetteer: str = None,
+        add_lower_case_lookup: bool = False,
+        min_gaz_count: int = 1,
         ignore_embeddings: bool = False,
         use_mlp: bool = False,
         mlp_hidden_dim: int = 1024, #TODO make flexible
@@ -43,7 +48,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         Initializes an SpanTagger
         :param word_embeddings: embeddings used to embed the words/sentences
         :param label_dictionary: dictionary that gives ids to all classes. Should contain <unk>
-        :param pooling_operation: either 'average', 'first', 'last' or 'first&last'. Specifies the way of how text representations of entity spans (with more than one word) are handled.
+        :param pooling_operation: either 'average', 'first', 'last' or 'first_last'. Specifies the way of how text representations of spans are handled.
         E.g. 'average' means that as text representation we take the average of the embeddings of the words in the span. 'first&last' concatenates
         the embedding of the first and the embedding of the last word.
         :param label_type: name of the label you use.
@@ -60,11 +65,10 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "one_hot": converted into one hot vector (using argmax)
             "multi_hot": converted into multi-hot-vector (using fixed threshold over relative frequency)
             "rel": normalized absolute counts (sum to 1)
-                note:   with "one_hot", "multi_hot" and "rel" frequency/confidence info get lost
-                        --> use gazetteer_concat_confidence_score==True to add confidence based on frequency!
-        :param gazetteer_concat_confidence_score: if set to True, concatenates a confidence score to gazetteer features,
-            based on absolute frequency in gazetteer, especially when using "rel", "one_hot" or "multi_hot"
+            "rel_conf": normalized absolute counts (sum to 1), concatenate confidence score based on frequency!
         :param gazetteer_file: path to a csv file containing a gazetteer list with span strings in rows, label names in columns, counts in cells
+        :param use_precomputed_gazetteer #TODO use an already precomputed gazetteer dictionary (e.g. with rel_conf vector), so give its json file path
+        :param min_gaz_count: the minimum sum count of a gazetteer entry to be kept in gazetteer, everything below gets deleted
         :param ignore_embeddings: simple baseline: just use gazetteer embedding, so ignore embeddings
         :param use_mlp: use a MLP as output layer (instead of default linear layer + xavier transformation), may be helpful for interactions with gazetteer
         :param mlp_hidden_dim: size of the hidden layer in output MLP
@@ -78,7 +82,10 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
         self.gazetteer_file = gazetteer_file
         self.gazetteer_count_type = gazetteer_count_type
+        self.min_gaz_count = min_gaz_count
+        self.add_lower_case_lookup = add_lower_case_lookup
         self.ignore_embeddings = ignore_embeddings
+        self.use_precomputed_gazetteer = use_precomputed_gazetteer
 
         if self.ignore_embeddings:
             final_embedding_size = 0
@@ -88,19 +95,84 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             final_embedding_size += 1
 
         if self.gazetteer_file:
-            print("Reading gazetteer file:", self.gazetteer_file)
-            self.gazetteer = {}
-            with open(self.gazetteer_file, mode='r') as inp:
-                reader = csv.reader(inp)
-                header = next(reader)  # header line
-                self.nr_gazetteer_tags = len(header) - 1  # nr of tags (exclude first column, i.e. span_string)
-                self.gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
+            if gazetteer_count_type not in ["abs", "rel", "rel_conf", "one_hot", "multi_hot"]:
+                raise KeyError('gazetteer_count_type has to be one of "abs", "rel", "rel_conf", "one_hot", "multi_hot"')
+
+            if self.use_precomputed_gazetteer:
+                print("---- Reading already precomputed gazetteer file:", self.use_precomputed_gazetteer)
+                with open(self.use_precomputed_gazetteer, 'r', encoding='utf8') as fp:
+                    self.gazetteer = json.load(fp)
+                print("---- Length of precomputed gazetteer:", len(self.gazetteer))
+
+            if not self.use_precomputed_gazetteer:
+                print("---- Reading raw gazetteer file:", self.gazetteer_file)
+                self.gazetteer = {}
+                with open(self.gazetteer_file, mode='r') as inp:
+                    print(f"---- Gazetteer file contains {sum(1 for line in inp)} lines...")
+                    inp.seek(0) # to start at beginning again
+                    reader = csv.reader(inp)
+                    header = next(reader)  # header line
+                    self.gazetteer = {row[0]: list(map(float, row[1:])) for row in reader
+                                      if np.sum(list(map(float, row[1:]))) >= self.min_gaz_count}  # read rest in dict
+
+                print(f"---- Length of used gazetteer after deleting entries with less than {self.min_gaz_count} counts:\t", len(self.gazetteer))
+
+                if not self.gazetteer_count_type == "abs":
+                    print("---- Converting the gazetteer counts into requested format:", self.gazetteer_count_type, "...")
+                    global_start = time.time()
+                    start = time.time()
+                    for nr, (key, vector) in enumerate(self.gazetteer.items()):
+                        now = time.time()
+
+                        if now-start >=30: # print progress every 30 seconds
+                            print("done with \t", round(nr / len(self.gazetteer)*100, 2), " % of gazetteer", end = "\n")
+                            start = time.time()
+
+                        if self.gazetteer_count_type == "one_hot":
+                            one_hot = np.zeros(len(vector))
+                            if torch.sum(vector) > 0:  # necessary to avoid torch.argmax returning id 0
+                                one_hot[np.argmax(vector)] = 1
+                            self.gazetteer[key] = one_hot.tolist()
+
+                        if self.gazetteer_count_type == "multi_hot":
+                            if torch.sum(vector) > 0:  # avoid zero division
+                                rel_vector = vector / np.sum(vector)
+                            else:
+                                rel_vector = vector
+                            THRESHOLD = 0.3  # TODO: what to choose?
+                            multi_hot = (rel_vector >= THRESHOLD).type(np.int8)
+                            self.gazetteer[key] = multi_hot.tolist()
+
+                        if self.gazetteer_count_type == "rel": # use relative counts and DON'T add confidence score
+                            if np.sum(vector) > 0:
+                                self.gazetteer[key] = (vector / np.sum(vector)).tolist()
+                            else:
+                                self.gazetteer[key] = vector.tolist()
+
+                        if self.gazetteer_count_type == "rel_conf": # use relative counts and add confidence score
+                            sum_count = np.sum(vector)
+                            DEFINED_MAX = 50  # TODO: what to choose here? make parameter
+                            confidence = np.array([min(sum_count / DEFINED_MAX, 1)])
+                            if sum_count > 0:
+                                self.gazetteer[key] = (np.concatenate((vector / sum_count, confidence), 0)).tolist()
+                            else:
+                                self.gazetteer[key] = (np.concatenate((vector, confidence), 0)).tolist()
+
+                    global_end = time.time()
+                    print(f"---- Converting took {round(global_end - global_start, 2)} seconds")
+
+                    # saved computed gazetteer, to be able to load later...
+                    #with open(f"{self.gazetteer_file}_{self.gazetteer_count_type}.json", 'w', encoding='utf8') as fp:
+                    #    json.dump(self.gazetteer, fp)
+                    print("f---- Done saving precomputed dict as: ", f"{self.gazetteer_file}_{self.gazetteer_count_type}.json")
+
+            self.nr_gazetteer_tags = len(
+                next(iter(self.gazetteer.values())))  # one entry in gaz to get nr of labels
+
             final_embedding_size += self.nr_gazetteer_tags
 
-        self.gazetteer_concat_confidence_score = gazetteer_concat_confidence_score
-
-        if (self.gazetteer_file and self.gazetteer_concat_confidence_score):
-            final_embedding_size += 1
+            if self.add_lower_case_lookup:  # one more time
+                final_embedding_size += self.nr_gazetteer_tags
 
         self.use_mlp = use_mlp
         self.mlp_hidden_dim = mlp_hidden_dim
@@ -143,9 +215,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         if resolve_overlaps not in ["keep_overlaps", "no_boundary_clashes", "by_token", "prefer_longer"]:
             raise KeyError('resolve_overlaps has to be one of "keep_overlaps", "no_boundary_clashes", "by_token", "prefer_longer"')
 
-        if gazetteer_count_type not in ["abs", "rel", "one_hot", "multi_hot"]:
-            raise KeyError('gazetteer_count_type has to be one of "abs", "rel", "one_hot", "multi_hot"')
-
         self.aggregated_embedding = cases[pooling_operation]
 
         self.to(flair.device)
@@ -162,43 +231,22 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
     def emb_mean(self, arg):
         return torch.mean(arg, 0)
 
-    def get_gazetteer_embedding(self, span_string: str,
-                                count_type="abs") -> torch.Tensor:
+    def get_gazetteer_embedding(self, span_string: str) -> torch.Tensor:
 
         if span_string in self.gazetteer:
-            vector = torch.Tensor(self.gazetteer[span_string]).to(flair.device)
+            gaz_vector = torch.Tensor(self.gazetteer[span_string]).to(flair.device)
         else:
-            vector = torch.zeros(self.nr_gazetteer_tags).to(flair.device)  # get same length zero vector
+            vector_length = self.nr_gazetteer_tags
+            gaz_vector = torch.zeros(vector_length).to(flair.device)  # get same length zero vector
 
-        if count_type == "abs":
-            gaz_vector = vector
-
-        if count_type == "rel":
-            if torch.sum(vector) > 0:  # avoid zero division
-                gaz_vector = vector / torch.sum(vector)
+        if self.add_lower_case_lookup:
+            if span_string.lower() in self.gazetteer:
+                gaz_vector_lower = torch.Tensor(self.gazetteer[span_string.lower()]).to(flair.device)
             else:
-                gaz_vector = vector
+                vector_length = self.nr_gazetteer_tags
+                gaz_vector_lower = torch.zeros(vector_length).to(flair.device)  # get same length zero vector
 
-        if count_type == "one_hot":
-            one_hot = torch.zeros(len(vector)).to(flair.device)
-            if torch.sum(vector) > 0:  # necessary to avoid torch.argmax returning id 0
-                one_hot[torch.argmax(vector)] = 1
-            gaz_vector = one_hot
-
-        if count_type == "multi_hot":
-            if torch.sum(vector) > 0:  # avoid zero division
-                rel_vector = vector / torch.sum(vector)
-            else:
-                rel_vector = vector
-            THRESHOLD = 0.3  # TODO: what to choose?
-            multi_hot = (rel_vector >= THRESHOLD).type(torch.int8)
-            gaz_vector = multi_hot
-
-        if self.gazetteer_concat_confidence_score:
-            sum_count = torch.sum(vector)
-            DEFINED_MAX = 50  # TODO: what to choose here? make parameter
-            confidence = torch.tensor([min(sum_count / DEFINED_MAX, 1)]).to(flair.device)
-            gaz_vector = torch.cat((gaz_vector, confidence), 0)
+            gaz_vector = torch.concat((gaz_vector, gaz_vector_lower), 0)
 
         return gaz_vector
 
@@ -274,7 +322,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
                 # if a gazetteer was given, concat the gazetteer embedding to the span_embedding
                 if self.gazetteer_file:
-                    gazetteer_vector = self.get_gazetteer_embedding(span.text, count_type=self.gazetteer_count_type)
+                    gazetteer_vector = self.get_gazetteer_embedding(span.text)
                     span_embedding = torch.cat((span_embedding, gazetteer_vector), 0)
 
                 embedding_list.append(span_embedding.unsqueeze(0))
@@ -407,7 +455,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "resolve_overlaps": self.resolve_overlaps,
             "gazetteer_file": self.gazetteer_file if self.gazetteer_file else None,
             "gazetteer_count_type": self.gazetteer_count_type,
-            "gazetteer_concat_confidence_score": self.gazetteer_concat_confidence_score,
+            "min_gaz_count": self.min_gaz_count,
+            "add_lower_case_lookup": self.add_lower_case_lookup,
             "max_span_length": self.max_span_length,
             "ignore_embeddings": self.ignore_embeddings,
             "use_mlp": self.use_mlp,
@@ -457,7 +506,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             resolve_overlaps=state["resolve_overlaps"],
             gazetteer_file=state["gazetteer_file"] if "gazetteer_file" in state else None,
             gazetteer_count_type=state["gazetteer_count_type"],
-            gazetteer_concat_confidence_score=state["gazetteer_concat_confidence_score"],
+            min_gaz_count = state["min_gaz_count"],
+            add_lower_case_lookup = state["add_lower_case_lookup"],
             ignore_embeddings=state["ignore_embeddings"],
             max_span_length=state["max_span_length"],
             use_mlp=state["use_mlp"],
