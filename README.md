@@ -163,6 +163,7 @@ If you use our new "FLERT" models or approach, please cite [this paper](https://
     eprint={2011.06993},
     archivePrefix={arXiv},
     primaryClass={cs.CL}
+}
 ```
 
 If you use our TARS approach for few-shot and zero-shot learning, please cite [this paper](https://kishaloyhalder.github.io/pdfs/tars_coling2020.pdf/):
