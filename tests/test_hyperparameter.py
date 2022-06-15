@@ -57,13 +57,13 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_text_classifier_param_selector(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="sentiment")
     label_type = "sentiment"
 
     search_space = SearchSpace()
 
     # document embeddings parameter
-    search_space.add(Parameter.TRANSFORMER_MODEL, hp.choice, options=["albert-base-v1"])
+    search_space.add(Parameter.TRANSFORMER_MODEL, hp.choice, options=["sshleifer/tiny-distilbert-base-cased"])
     search_space.add(Parameter.LAYERS, hp.choice, options=["-1", "-2"])
 
     # training parameter

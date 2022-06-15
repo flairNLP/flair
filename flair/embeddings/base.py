@@ -301,16 +301,17 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
     def _get_begin_offset_of_tokenizer(self) -> int:
         test_string = "a"
-        tokens = self.tokenizer.encode(test_string)
-        begin_offset = 0
+        tokens_with_special = self.tokenizer.encode(test_string)
+        tokens_without_special = self.tokenizer.encode(test_string, add_special_tokens=False)
+        normal_count = len(tokens_without_special)
 
-        for begin_offset, token in enumerate(tokens):
-            if (
-                self.tokenizer.decode([token]) == test_string
-                or self.tokenizer.decode([token]) == self.tokenizer.unk_token
-            ):
-                break
-        return begin_offset
+        for begin_offset in range(len(tokens_with_special) - normal_count):
+            if tokens_with_special[begin_offset : begin_offset + normal_count] == tokens_without_special:
+                return begin_offset
+        log.warning(
+            f"Could not determine the begin offset of the tokenizer for transformer model {self.name}, assuming 0"
+        )
+        return 0
 
     def _calculate_embedding_length(self) -> int:
         if not self.layer_mean:

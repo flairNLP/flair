@@ -247,8 +247,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
-        model_map["relations-fast"] = "/".join([hu_path, "relations-fast", "relations-fast.pt"])
-        model_map["relations"] = "/".join([hu_path, "relations", "relations.pt"])
+        model_map["relations"] = "/".join([hu_path, "relations", "relations-v11.pt"])
 
         cache_dir = Path("models")
         if model_name in model_map:

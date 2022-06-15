@@ -1,0 +1,36 @@
+# newdoc id = weblog-blogspot.com_zentelligence_20040423000200_ENG_20040423_000200
+# sent_id = weblog-blogspot.com_zentelligence_20040423000200_ENG_20040423_000200-0001
+# text = What if Google Morphed Into GoogleOS?
+1	What	what	PRON	WP	PronType=Int	0	root	0:root	_	_	_
+2	if	if	SCONJ	IN	_	4	mark	4:mark	_	_	_
+3	Google	Google	PROPN	NNP	Number=Sing	4	nsubj	4:nsubj	_	_	ARG1
+4	Morphed	morph	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	1	advcl	1:advcl:if	_	morph.01	V
+5	Into	into	ADP	IN	_	6	case	6:case	_	_	_
+6	GoogleOS	GoogleOS	PROPN	NNP	Number=Sing	4	obl	4:obl:into	SpaceAfter=No	_	ARG2
+7	?	?	PUNCT	.	_	4	punct	4:punct	_	_	_
+
+# sent_id = weblog-blogspot.com_zentelligence_20040423000200_ENG_20040423_000200-0002
+# text = What if Google expanded on its search-engine (and now e-mail) wares into a full-fledged operating system?
+1	What	what	PRON	WP	PronType=Int	0	root	0:root	_	_	_
+2	if	if	SCONJ	IN	_	4	mark	4:mark	_	_	_
+3	Google	Google	PROPN	NNP	Number=Sing	4	nsubj	4:nsubj	_	_	ARG0
+4	expanded	expand	VERB	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	1	advcl	1:advcl:if	_	expand.01	V
+5	on	on	ADP	IN	_	15	case	15:case	_	_	_
+6	its	its	PRON	PRP$	Gender=Neut|Number=Sing|Person=3|Poss=Yes|PronType=Prs	15	nmod:poss	15:nmod:poss	_	_	_
+7	search	search	NOUN	NN	Number=Sing	9	compound	9:compound	SpaceAfter=No	_	_
+8	-	-	PUNCT	HYPH	_	9	punct	9:punct	SpaceAfter=No	_	_
+9	engine	engine	NOUN	NN	Number=Sing	15	compound	15:compound	_	_	_
+10	(	(	PUNCT	-LRB-	_	9	punct	9:punct	SpaceAfter=No	_	_
+11	and	and	CCONJ	CC	_	13	cc	13:cc	_	_	_
+12	now	now	ADV	RB	_	13	advmod	13:advmod	_	_	_
+13	e-mail	e-mail	NOUN	NN	Number=Sing	9	conj	9:conj:and|15:compound	SpaceAfter=No	_	_
+14	)	)	PUNCT	-RRB-	_	15	punct	15:punct	_	_	_
+15	wares	wares	NOUN	NNS	Number=Plur	4	obl	4:obl:on	_	_	ARG1
+16	into	into	ADP	IN	_	22	case	22:case	_	_	_
+17	a	a	DET	DT	Definite=Ind|PronType=Art	22	det	22:det	_	_	_
+18	full	full	ADV	RB	_	20	advmod	20:advmod	SpaceAfter=No	_	_
+19	-	-	PUNCT	HYPH	_	20	punct	20:punct	SpaceAfter=No	_	_
+20	fledged	fledged	ADJ	JJ	Degree=Pos	22	amod	22:amod	_	_	_
+21	operating	operating	NOUN	NN	Number=Sing	22	compound	22:compound	_	_	_
+22	system	system	NOUN	NN	Number=Sing	4	obl	4:obl:into	SpaceAfter=No	_	ARG4
+23	?	?	PUNCT	.	_	4	punct	4:punct	_	_	_

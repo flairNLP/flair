@@ -7,17 +7,25 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      TRANSFORMERS_CACHE: ./cache/transformers
+      FLAIR_CACHE_ROOT: ./cache/flair
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.6
+      - name: Set up Python 3.7
         uses: actions/setup-python@v2
         with:
-          python-version: 3.6
+          python-version: 3.7
       - name: Install Flair dependencies
         run: pip install -e .
       - name: Install unittest dependencies
         run: pip install -r requirements-dev.txt
       - name: Show installed dependencies
         run: pip freeze
+      - name: Cache downloaded models/datasets
+        uses: actions/cache@v3
+        with:
+          path: ./cache
+          key: cache-v1.1
       - name: Run tests
         run: pytest --runintegration -vv
