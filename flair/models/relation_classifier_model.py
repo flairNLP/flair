@@ -28,7 +28,7 @@ class EncodedSentence(Sentence):
     This class is a wrapper of the regular `Sentence` object
     that expresses that a sentence is encoded and compatible with the relation classifier.
     For inference, i.e. `predict` and `evaluate`, the relation classifier internally encodes the sentences.
-    Therefore, for these functions, it works with the regular flair sentence objects.
+    Therefore, these functions work with the regular flair sentence objects.
     """
 
     pass
@@ -46,6 +46,7 @@ class _Entity(NamedTuple):
 
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
 #  - MaskedRelationClassifier ?
+#   This depends if this relation classification architecture should replace or offer as an alternative.
 class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
     """
     ---- Task ----
@@ -61,12 +62,14 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
 
     ---- Architecture ----
     The Relation Classifier Model builds upon a text classifier.
-    For a given data point with annotated entities, the model generates an encoded data point
-    for each entity pair in the cross product of all entities in the data point.
-    In the encoded representation, the entities in the current entity pair are masked with control tokens.
-    (For an example, see the docstring of the `_encode_sentence` function.)
-    For each encoded data point, the model takes its document embedding and puts the resulting text representation(s)
+    For a sentence with annotated entities, the model generates an encoded sentence
+    for each entity pair in the cross product of all entities in the original sentence.
+    In the encoded representation, the entities in the current entity pair are masked with special control tokens.
+    (For an example, see the docstring of the `_encode_sentence_for_training` function.)
+    Then, for each encoded sentence, the model takes its document embedding and puts the resulting text representation(s)
     through a linear layer to get the class relation label.
+
+    Note: Currently, the model has no multi-label support.
     """
 
     def __init__(
@@ -106,7 +109,12 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
         :param entity_threshold: Only pre-labelled entities above this threshold are taken into account by the model.
         :param zero_tag_value: The label to use for out-of-class relations
         :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
-        :param cross_augmentation: TODO: Add docstring
+        :param cross_augmentation: If `True`, use cross augmentation to transform `Sentence`s into `EncodedSentenece`s.
+                                   When cross augmentation is enabled, the transformation functions,
+                                   e.g. `transform_corpus`, generate an encoded sentence for each entity pair
+                                   in the cross product of all entities in the original sentence.
+                                   When disabling cross augmentation, the transform functions only generate
+                                   encoded sentences for each gold relation annotation in the original sentence.
         :param mask_remainder: If `True`, also mask entities which are not part of the current entity pair,
                                otherwise such entities will not be masked.
                                (Setting this parameter to `True` may help to
@@ -473,10 +481,21 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
         label_name: Optional[str] = None,
         return_loss: bool = False,
         embedding_storage_mode: str = "none",
-        entity_threshold: Optional[float] = None,  # TODO: we could add the entity threshold here as well
     ) -> Optional[Tuple[torch.Tensor, int]]:
         """
-        # TODO: Add docstring
+        Predicts the class labels for the given sentence(s).
+        Standard `Sentence` objects and `EncodedSentences` specific to the `RelationClassifier` are allowed as input.
+        The (relation) labels are directly added to the sentences.
+        :param sentences: A list of (encoded) sentences.
+        :param mini_batch_size: The mini batch size to use
+        :param return_probabilities_for_all_classes: Return probabilities for all classes instead of only best predicted
+        :param verbose: Set to display a progress bar
+        :param return_loss: Set to return loss
+        :param label_name: Set to change the predicted label type name
+        :param embedding_storage_mode: The default is 'none', which is always best.
+                                       Only set to 'cpu' or 'gpu' if you wish to predict
+                                       and keep the generated embeddings in CPU or GPU memory, respectively.
+        :return: The loss and the total number of classes, if `return_loss` is set
         """
         prediction_label_type: str = self.label_type if label_name is None else label_name
 
@@ -488,6 +507,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
 
         if all(isinstance(sentence, EncodedSentence) for sentence in sentences):
             # Deal with the case where all sentences are encoded sentences
+
             # mypy does not infer the type of "sentences" restricted by the if statement
             encoded_sentences = cast(List[EncodedSentence], sentences)
             loss = super().predict(
