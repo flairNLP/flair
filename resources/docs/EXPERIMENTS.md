@@ -286,8 +286,7 @@ from typing import List
 
 # 1. get the corpus
 corpus: Corpus = flair.datasets.ColumnCorpus('resources/tasks/onto-ner',
-                                             column_format={0: 'text', 1: 'pos', 2: 'upos', 3: 'ner'},
-                                             tag_to_bioes='ner')
+                                             column_format={0: 'text', 1: 'pos', 2: 'upos', 3: 'ner'})
 
 # 2. what tag do we want to predict?
 tag_type = 'ner'
