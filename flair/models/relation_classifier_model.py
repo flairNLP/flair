@@ -166,6 +166,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
     def _valid_entities(self, sentence: Sentence) -> Iterator[_Entity]:
         """
         Yields all valid entities, filtered under the specification of `self.entity_label_types`.
+
         :param sentence: A flair `Sentence` object with entity annotations
         :return: Valid entities as `_Entity`
         """
@@ -195,6 +196,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
         the relation gold label will be yielded along with the participating entities.
         The permutations are constructed by a filtered cross-product
         under the specification of `self.entity_label_types` and `self.entity_pair_labels`.
+
         :param sentence: A flair `Sentence` object with entity annotations
         :return: Tuples of (HEAD, TAIL, List[REMAINDER], gold_label).
                  The head, tail and remainder `_Entity`s have span references to the passed sentence.
@@ -377,10 +379,14 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
 
     def transform_sentence(self, sentences: Union[Sentence, List[Sentence]]) -> List[EncodedSentence]:
         """
-        :param sentences:
-        :return:
-        """
+        Transforms sentences into encoded sentences specific to the `RelationClassifier`.
+        For more information on the internal sentence transformation procedure,
+        see the `RelationClassifier` architecture docstring and
+        the `_encode_sentence_for_training` and `_encode_sentence_for_inference` docstrings.
 
+        :param sentences: A (list) of sentence(s) to transform
+        :return: A list of encoded sentences specific to the `RelationClassifier`
+        """
         if not isinstance(sentences, list):
             sentences = [sentences]
 
@@ -392,9 +398,14 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
 
     def transform_dataset(self, dataset: Dataset[Sentence]) -> FlairDatapointDataset[EncodedSentence]:
         """
+        Transforms a dataset into a dataset containing encoded sentences specific to the `RelationClassifier`.
+        The returned dataset is stored in memory.
+        For more information on the internal sentence transformation procedure,
+        see the `RelationClassifier` architecture docstring and
+        the `_encode_sentence_for_training` and `_encode_sentence_for_inference` docstrings.
 
-        :param dataset:
-        :return:
+        :param dataset: A dataset of sentences to transform
+        :return: A dataset of encoded sentences specific to the `RelationClassifier`
         """
         data_loader: DataLoader = DataLoader(dataset, batch_size=1, num_workers=0)
         original_sentences: List[Sentence] = [batch[0] for batch in iter(data_loader)]
@@ -402,9 +413,14 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
 
     def transform_corpus(self, corpus: Corpus[Sentence]) -> Corpus[EncodedSentence]:
         """
+        Transforms a corpus into a corpus containing encoded sentences specific to the `RelationClassifier`.
+        The splits of the returned corpus are stored in memory.
+        For more information on the internal sentence transformation procedure,
+        see the `RelationClassifier` architecture docstring and
+        the `_encode_sentence_for_training` and `_encode_sentence_for_inference` docstrings.
 
-        :param corpus:
-        :return:
+        :param corpus: A corpus of sentences to transform
+        :return: A corpus of encoded sentences specific to the `RelationClassifier`
         """
         return Corpus(
             train=self.transform_dataset(corpus.train) if corpus.train is not None else None,
@@ -486,6 +502,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
         Predicts the class labels for the given sentence(s).
         Standard `Sentence` objects and `EncodedSentences` specific to the `RelationClassifier` are allowed as input.
         The (relation) labels are directly added to the sentences.
+
         :param sentences: A list of (encoded) sentences.
         :param mini_batch_size: The mini batch size to use
         :param return_probabilities_for_all_classes: Return probabilities for all classes instead of only best predicted
