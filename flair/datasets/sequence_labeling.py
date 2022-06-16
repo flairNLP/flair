@@ -190,8 +190,8 @@ class JsonlDataset(FlairDataset):
 
         # Tag all other token as Outer (O)
         for token in sentence:
-            if token.get_label(self.label_type).value == "":
-                token.get_label(self.label_type, "O")
+            if token.get_label(self.label_type).value == "O":
+                token.set_label(self.label_type, "O")
 
     def _add_label_to_sentence(self, text: str, sentence: Sentence, start: int, end: int, label: str):
         """

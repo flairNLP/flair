@@ -648,7 +648,7 @@ def test_jsonl_dataset_should_use_label_type(tasks_base_path):
     """
     Tests whether the dataset respects the label_type parameter
     """
-    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl", label_type="pos")  # use other type
+    dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl", label_type="pos")  # use other type
 
     for sentence in dataset.sentences:
         assert sentence.has_label("pos")
@@ -659,11 +659,14 @@ def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
     """
     Tests reading a JsonlDataset containing multiple tagged entries
     """
-    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl")
+    dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl")
 
     assert len(dataset.sentences) == 5
-    assert dataset.sentences[0].get_token(3).get_label("ner").value == "B-LOC"
-    assert dataset.sentences[0].get_token(4).get_label("ner").value == "I-LOC"
+    expected_labels = ["O", "O", "B-LOC", "I-LOC"]
+    assert [[label.value for label in t.get_labels("ner")] for t in dataset.sentences[0]] == [
+        [e] for e in expected_labels
+    ]
+    assert [dataset.sentences[0].get_token(i).get_label("ner").value for i in range(1, 5)] == expected_labels
 
 
 def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):
