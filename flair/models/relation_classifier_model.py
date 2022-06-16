@@ -129,7 +129,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
         modified_label_dictionary: Dictionary = Dictionary(add_unk=self._allow_unk_tag)
         modified_label_dictionary.add_item(self._zero_tag_value)
         for label in label_dictionary.get_items():
-            if label != '<unk>':
+            if label != "<unk>":
                 modified_label_dictionary.add_item(label)
 
         # Initialize super default classifier
