@@ -983,20 +983,6 @@ class Sentence(DataPoint):
     def __repr__(self):
         return self.__str__()
 
-    def __copy__(self):
-        s = Sentence()
-        for token in self.tokens:
-            nt = Token(token.text)
-            for tag_type in token.tags:
-                nt.add_label(
-                    tag_type,
-                    token.get_tag(tag_type).value,
-                    token.get_tag(tag_type).score,
-                )
-
-            s.add_token(nt)
-        return s
-
     @property
     def start_position(self) -> int:
         return 0
@@ -1418,7 +1404,7 @@ class Corpus:
         for sent in sentences:
             for token in sent.tokens:
                 if label_type in token.annotation_layers.keys():
-                    label = token.get_tag(label_type)
+                    label = token.get_label(label_type)
                     label_count[label.value] += 1
         return label_count
 
@@ -1521,7 +1507,7 @@ class Corpus:
         tag_dictionary.add_item("O")
         for sentence in _iter_dataset(self.get_all_sentences()):
             for token in sentence.tokens:
-                tag_dictionary.add_item(token.get_tag(tag_type).value)
+                tag_dictionary.add_item(token.get_label(tag_type).value)
         tag_dictionary.add_item("<START>")
         tag_dictionary.add_item("<STOP>")
         return tag_dictionary
