@@ -27,7 +27,7 @@ For contributors looking to get deeper into the API we suggest cloning the repos
 tests for examples of how to call methods. Nearly all classes and methods are documented, so finding your way around
 the code should hopefully be easy.
 
-### setup
+### Setup
 
 You can either use [Pipenv](https://pipenv.readthedocs.io/) for this:
 
@@ -35,17 +35,20 @@ You can either use [Pipenv](https://pipenv.readthedocs.io/) for this:
 pipenv install --dev && pipenv shell
 ```
 
-or create a python environment of your preference and run
+Or create a python environment of your preference and run:
 ```bash
 pip install -r requirements-dev.txt
 ```
 
-Install `pre-commit` hooks after installing the dependencies:
+### Git pre-commit Hooks
+After installing the dependencies, install `pre-commit` hooks via:
 ```bash
 pre-commit install
 ```
 
-### tests
+This will automatically run code formatters black and isort for each git commit.
+
+### Tests
 
 To only run typechecks and check the code formatting execute:
 ```bash
@@ -64,15 +67,10 @@ pytest --runintegration
 The integration tests will train small models and therefore take more time.
 In general, it is recommended to ensure all basic tests are running through before testing the integration tests
 
-### code formatting
+### Code Formatting
 
 To ensure a standardized code style we use the formatter [black](https://github.com/ambv/black) and for standardizing imports we use [isort](https://github.com/PyCQA/isort).
 If your code is not formatted properly, the tests will fail.
-simply execute
-You can automatically format the code via `black --config pyproject.toml flair/ && isort flair/` in the flair root folder.
 
-### pre-commit hook
-
-If you want to automatically format your code on every commit, you can use [pre-commit](https://pre-commit.com/).
-Just install it via `pip install pre-commit` and execute `pre-commit install` in the root folder.
-This will add a hook to the repository, which reformats files on every commit.
+If you set up pre-commit hooks, every git commit will automatically run these formatters. Otherwise you can also manually run them, or let your IDE run them on every file save.
+Running from the command line works via `black flair/ && isort flair/` in the flair root folder.
