@@ -8,15 +8,15 @@ flair = {editable = true, path = "."}
 
 [dev-packages]
 pytest = "*"
-flake8 = "<4.0.0"
 pytest-mypy = "*"
 pytest-isort = "*"
-isort = "~=5.0.0"
 pytest-flake8 = "*"
 flake8-black = "*"
+flake8 = "*"
+types-Deprecated = "*"
+types-dataclasses = "*"
 types-tabulate = "*"
 types-requests = "*"
-types-Deprecated = "*"
 
 [requires]
 python_version = "3.6"
