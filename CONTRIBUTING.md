@@ -40,6 +40,11 @@ or create a python environment of your preference and run
 pip install -r requirements-dev.txt
 ```
 
+Install `pre-commit` hooks after installing the dependencies:
+```bash
+pre-commit install
+```
+
 ### tests
 
 To only run typechecks and check the code formatting execute:
