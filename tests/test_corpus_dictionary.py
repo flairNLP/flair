@@ -1,8 +1,10 @@
 import os
 
+import pytest
+
 import flair
 from flair.data import Corpus, Dictionary, Label, Sentence
-from flair.datasets import FlairDatapointDataset
+from flair.datasets import FlairDatapointDataset, SentenceDataset
 
 
 def test_dictionary_get_items_with_unk():
@@ -77,6 +79,11 @@ def test_dictionary_save_and_load():
 
     # clean up file
     os.remove(file_path)
+
+
+def test_deprecated_sentence_dataset():
+    with pytest.warns(DeprecationWarning):  # test to make sure the warning comes, but class works
+        SentenceDataset([Sentence("Short sentences are short")])
 
 
 def test_tagged_corpus_get_all_sentences():
