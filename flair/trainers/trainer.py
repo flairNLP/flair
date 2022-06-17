@@ -106,7 +106,7 @@ class ModelTrainer:
         sampler=None,
         use_amp: bool = False,
         amp_opt_level: str = "O1",
-        eval_on_train_fraction: float = 0.0,
+        eval_on_train_fraction: Union[float, str] = 0.0,
         eval_on_train_shuffle: bool = False,
         save_model_each_k_epochs: int = 0,
         tensorboard_comment: str = "",
