@@ -63,7 +63,7 @@ Token[4]: "."
 ## Tokenization
 
 When you create a `Sentence` as above, the text is **automatically tokenized** using the
-lightweight [segtok library](https://pypi.org/project/segtok/). 
+lightweight [segtok library](https://pypi.org/project/segtok/).
 
 ### Using no tokenizer
 
@@ -83,12 +83,12 @@ print(untokenized_sentence)
 print(len(untokenized_sentence))
 ```
 
-In this case, no tokenization is performed and the text is split on whitespaces, thus resulting in only 4 tokens here. 
+In this case, no tokenization is performed and the text is split on whitespaces, thus resulting in only 4 tokens here.
 
 ### Using a different tokenizer
 
 You can also pass custom tokenizers to the initialization method. For instance, if you want to tokenize a Japanese
-sentence you can use the 'janome' tokenizer instead, like this: 
+sentence you can use the 'janome' tokenizer instead, like this:
 
 ```python
 from flair.data import Sentence
@@ -111,8 +111,8 @@ Sentence: "私 は ベルリン が 好き"
 ```
 
 You can write your own tokenization routine. Check the code of `flair.data.Tokenizer` and its implementations
- (e.g. `flair.tokenization.SegtokTokenizer` or `flair.tokenization.SpacyTokenizer`) to get an idea of how to add 
- your own tokenization method.  
+ (e.g. `flair.tokenization.SegtokTokenizer` or `flair.tokenization.SpacyTokenizer`) to get an idea of how to add
+ your own tokenization method.
 
 ### Using pretokenized sequences
 You can alternatively pass a pretokenized sequence as list of words, e.g.
@@ -176,10 +176,10 @@ This shows that there are 5 tokens in the sentence, one of which has a label.
 
 ### Accessing Label information
 
-Each label is of class `Label` which next to the value has a score indicating confidence. Print like this: 
+Each label is of class `Label` which next to the value has a score indicating confidence. Print like this:
 
 ```python
-# get and print token 3 in the sentence 
+# get and print token 3 in the sentence
 token = sentence[3]
 print(token)
 
@@ -227,7 +227,7 @@ sentence = Sentence('France is the current world cup winner.').add_label('topic'
 print(sentence)
 ```
 
-This should print: 
+This should print:
 
 ```console
 Sentence: "France is the current world cup winner ." → sports (1.0)
@@ -247,7 +247,7 @@ sentence.add_label('topic', 'sports')
 sentence.add_label('topic', 'soccer')
 ```
 
-You might want to add different layers of annotation for the same sentence. Next to topic you might also want to predict the "language" of a sentence. In this case, add a label with a different label name: 
+You might want to add different layers of annotation for the same sentence. Next to topic you might also want to predict the "language" of a sentence. In this case, add a label with a different label name:
 
 ```python
 sentence = Sentence('France is the current world cup winner.')
@@ -262,17 +262,17 @@ sentence.add_label('language', 'English')
 print(sentence)
 ```
 
-This should print: 
+This should print:
 
 ```console
 Sentence: "France is the current world cup winner ." → sports (1.0); soccer (1.0); English (1.0)
 ```
 
-Indicating that this sentence now has three labels. 
+Indicating that this sentence now has three labels.
 
 ### Accessing a sentence's labels
 
-You can access these labels like this: 
+You can access these labels like this:
 
 ```python
 for label in sentence.labels:
@@ -296,7 +296,7 @@ France is the current world cup winner.
  - classified as "English" with score 1.0
 ```
 
-If you are interested only in the labels of one layer of annotation, you can access them like this: 
+If you are interested only in the labels of one layer of annotation, you can access them like this:
 
 ```python
 for label in sentence.get_labels('topic'):
