@@ -250,7 +250,7 @@ class ModelTrainer:
         log_train = True if monitor_train else False
         log_test = True if (not param_selection_mode and self.corpus.test and monitor_test) else False
         log_dev = False if train_with_dev or not self.corpus.dev else True
-        log_train_part = True if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0) else False
+        log_train_part = True if (eval_on_train_fraction == "dev" or float(eval_on_train_fraction) > 0.0) else False
 
         if log_train_part:
             train_part_size = (
