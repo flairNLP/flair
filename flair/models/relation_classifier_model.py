@@ -1,6 +1,10 @@
+import collections as co
 import itertools
+from operator import itemgetter
 from typing import (
     Any,
+    Counter,
+    DefaultDict,
     Dict,
     Iterator,
     List,
@@ -14,7 +18,7 @@ from typing import (
 )
 
 import torch
-from torch.utils.data.dataset import Dataset
+from torch.utils.data.dataset import ConcatDataset, Dataset
 
 import flair
 from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
@@ -62,12 +66,12 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
 
     ---- Architecture ----
     The Relation Classifier Model builds upon a text classifier.
-    For a sentence with annotated entities, the model generates an encoded sentence
-    for each entity pair in the cross product of all entities in the original sentence.
+    The model generates an encoded sentence for each entity pair
+    in the cross product of all entities in the original sentence.
     In the encoded representation, the entities in the current entity pair are masked with special control tokens.
     (For an example, see the docstring of the `_encode_sentence_for_training` function.)
-    Then, for each encoded sentence, the model takes its document embedding and puts the resulting text representation(s)
-    through a linear layer to get the class relation label.
+    Then, for each encoded sentence, the model takes its document embedding and puts the resulting
+    text representation(s) through a linear layer to get the class relation label.
 
     Note: Currently, the model has no multi-label support.
     """
@@ -609,3 +613,41 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
     @property
     def allow_unk_tag(self) -> bool:
         return self._allow_unk_tag
+
+
+def inspect_relations(
+    corpus: Corpus[Sentence],
+    relation_label_type: str,
+    entity_label_types: Optional[Union[Sequence[str], str]] = None,
+) -> DefaultDict[str, Counter[Tuple[str, str]]]:
+    if entity_label_types is not None and not isinstance(entity_label_types, Sequence):
+        entity_label_types = [entity_label_types]
+
+    # Dictionary of [<relation label>, <counter of relation entity labels (HEAD, TAIL)>]
+    relations: DefaultDict[str, Counter[Tuple[str, str]]] = co.defaultdict(co.Counter)
+
+    data_loader: DataLoader = DataLoader(
+        ConcatDataset(split for split in [corpus.train, corpus.dev, corpus.test] if split is not None),
+        batch_size=1,
+        num_workers=0,
+    )
+    for sentence in map(itemgetter(0), data_loader):
+        for relation in sentence.get_relations(relation_label_type):
+            entity_counter = relations[relation.get_label(relation_label_type).value]
+
+            head_relation_label: str
+            tail_relation_label: str
+            if entity_label_types is None:
+                head_relation_label = relation.first.get_label().value
+                tail_relation_label = relation.second.get_label().value
+            else:
+                head_relation_label = next(
+                    relation.first.get_label(label_type).value for label_type in entity_label_types
+                )
+                tail_relation_label = next(
+                    relation.second.get_label(label_type).value for label_type in entity_label_types
+                )
+
+            entity_counter.update([(head_relation_label, tail_relation_label)])
+
+    return relations
