@@ -157,6 +157,44 @@ def test_tagged_corpus_make_label_dictionary():
     assert "class_1" in label_dict.get_items()
     assert "class_2" in label_dict.get_items()
 
+    with pytest.warns(DeprecationWarning):  # test to make sure the warning comes, but function works
+        corpus.make_tag_dictionary("label")
+
+
+def test_obtain_statistics():
+    sentence_1 = Sentence("The snake hissed to the mountain goat")
+    sentence_1_labels = "  O   B-Ani O      O  O   B-Ani    E-Ani".split()
+    sentence_2 = Sentence("Saber    tooth tigers are extinct")
+    sentence_2_labels = "  B-Ani    I-Ani E-Ani  O   O".split()
+
+    for sentence, labels in [(sentence_1, sentence_1_labels), (sentence_2, sentence_2_labels)]:
+        assert len(sentence) == len(labels)
+        for token, label in zip(sentence, labels):
+            token.add_label("ner", label)
+    corpus = Corpus(
+        FlairDatapointDataset([sentence_1, sentence_2]),
+        FlairDatapointDataset([]),
+        FlairDatapointDataset([sentence_2]),
+    )
+    statistics = corpus.obtain_statistics("ner", pretty_print=False)
+    assert statistics == {
+        "TRAIN": {
+            "dataset": "TRAIN",
+            "total_number_of_documents": 2,
+            "number_of_documents_per_class": {"O": 6, "B-Ani": 3, "E-Ani": 2, "I-Ani": 1},
+            "number_of_tokens_per_tag": {"O": 6, "B-Ani": 3, "E-Ani": 2, "I-Ani": 1},
+            "number_of_tokens": {"total": 12, "min": 5, "max": 7, "avg": 6.0},
+        },
+        "TEST": {
+            "dataset": "TEST",
+            "total_number_of_documents": 1,
+            "number_of_documents_per_class": {"B-Ani": 1, "I-Ani": 1, "E-Ani": 1, "O": 2},
+            "number_of_tokens_per_tag": {"B-Ani": 1, "I-Ani": 1, "E-Ani": 1, "O": 2},
+            "number_of_tokens": {"total": 5, "min": 5, "max": 5, "avg": 5.0},
+        },
+        "DEV": {},
+    }
+
 
 def test_tagged_corpus_statistics():
     train_sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label("label", "class_1")
