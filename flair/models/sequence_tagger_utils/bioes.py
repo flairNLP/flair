@@ -1,14 +1,14 @@
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, List, Tuple
 
 
-def get_spans_from_bio(bioes_tags, bioes_scores=None):
+def get_spans_from_bio(bioes_tags, bioes_scores=None) -> List[Tuple[List[int], float, str]]:
     # add a dummy "O" to close final prediction
     bioes_tags.append("O")
     # return complex list
     found_spans = []
     # internal variables
-    current_tag_weights: Dict[str, float] = defaultdict(lambda: 0.0)
+    current_tag_weights: Dict[str, float] = defaultdict(float)
     previous_tag = "O-"
     current_span = []
     current_span_scores = []
@@ -33,7 +33,7 @@ def get_spans_from_bio(bioes_tags, bioes_scores=None):
             starts_new_span = True
 
         # single tags that change prediction start new spans
-        if bioes_tag[0:2] in ["S-"] and previous_tag[2:] != bioes_tag[2:]:
+        if bioes_tag[0:2] == "S-" and previous_tag[2:] != bioes_tag[2:]:
             starts_new_span = True
 
         # if an existing span is ended (either by reaching O or starting a new span)
@@ -48,7 +48,7 @@ def get_spans_from_bio(bioes_tags, bioes_scores=None):
             # reset for-loop variables for new span
             current_span = []
             current_span_scores = []
-            current_tag_weights = defaultdict(lambda: 0.0)
+            current_tag_weights = defaultdict(float)
 
         if in_span:
             current_span.append(idx)

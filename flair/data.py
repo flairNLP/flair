@@ -6,7 +6,7 @@ from collections import Counter, defaultdict
 from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import torch
 from deprecated import deprecated
@@ -944,16 +944,57 @@ class Sentence(DataPoint):
 
         return str
 
-    def to_dict(self, tag_type: str = None):
+    def to_dict(self, tag_type: Optional[str] = None, use_spans: bool = False) -> Dict[str, Any]:
+        """
+        returns dictionary representation of the sentence, including how it is tagged
+        :param tag_type: The type of labels to show, e.g. "ner". By default
+        show all labels.
+        :param use_spans: Decode BIO or BIOES token labels and show labeled
+        spans instead. Only possible if tag_type is specified. The printed
+        labels will contain start_pos and end_pos to indicate span bounds
+        such that span_text == sentence.to_original_text()[start_pos:end_pos]
+        :return: Dictionary representation of the sentence text and the labels,
+        for example:
+            { # with use_spans=False
+                "text": "Berlin is pretty",
+                "ner": [
+                    {"value": "B-City", "confidence": 1.0},
+                    {"value": "O", "confidence": 1.0},
+                    {"value": "O", "confidence": 1.0},
+                ],
+            }
+            or
+            { # with use_spans=True
+                "text": "Berlin is pretty",
+                "ner": [{"value": "City", "start_pos": 0, "end_pos": 7, "confidence": 1.0}],
+            }
+
+        """
+
         labels = []
 
         if tag_type:
-            labels = [label.to_dict() for label in self.get_labels(tag_type)]
+            if use_spans:
+                # We delay the import to avoid loading flair.models too early
+                from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
+
+                bioes_labels = [t.get_label("ner").value for t in self.tokens]
+                bioes_scores = [t.get_label("ner").score for t in self.tokens]
+                spans = get_spans_from_bio(bioes_labels, bioes_scores)
+                labels = [
+                    {
+                        "value": span_value,
+                        "start_pos": self.tokens[span_indices[0]].start_position,
+                        "end_pos": self.tokens[span_indices[-1]].end_position,
+                        "confidence": span_score,
+                    }
+                    for span_indices, span_score, span_value in spans
+                ]
+            else:
+                labels = [label.to_dict() for label in self.get_labels(tag_type)]
             return {"text": self.to_original_text(), tag_type: labels}
 
-        if self.labels:
-            labels = [label.to_dict() for label in self.labels]
-
+        labels = [label.to_dict() for label in self.labels]
         return {"text": self.to_original_text(), "all labels": labels}
 
     def get_span(self, start: int, stop: int):
