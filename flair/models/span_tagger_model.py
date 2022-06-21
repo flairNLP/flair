@@ -31,6 +31,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         pooling_operation: str = "first_last",
         label_type: str = "ner",
         max_span_length: int = 5,
+        delete_goldsubspans_in_training: bool = True,
         concat_span_length_to_embedding: bool = False,
         resolve_overlaps: str = "by_token",
         gazetteer_file: str = None,
@@ -55,6 +56,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         the embedding of the first and the embedding of the last word.
         :param label_type: name of the label you use.
         :param max_span_length: maximum length of spans (in tokens) that are considered
+        :param delete_goldsubspans_in_training: During training delete all spans that are subspans of gold labeled spans. Helpful for making gazetteer signal more clear.
         :param concat_span_length_to_embedding: if set to True span length (in tokens) is concatenated to span embeddings
         :param resolve_overlaps: one of
             'keep_overlaps' : overlapping predictions stay as they are (i.e. not using _post_process_predictions())
@@ -86,6 +88,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         final_embedding_size = word_embeddings.embedding_length * 2 \
             if pooling_operation == "first_last" else word_embeddings.embedding_length
 
+        self.delete_goldsubspans_in_training = delete_goldsubspans_in_training
         self.gazetteer_file = gazetteer_file
         self.gazetteer_untagged_label_name = gazetteer_untagged_label_name
         self.gazetteer_count_type = gazetteer_count_type
@@ -205,8 +208,12 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
                             observation_count = np.sum(vector)
                             sum_tagged = np.sum(cleaned_vector) # sum without counting the "O" counts
+                            untagged = observation_count - sum_tagged # nr of untagged
                             if observation_count > 0:
                                 tagged_ratio = np.array([sum_tagged / observation_count])
+                            #if untagged > 0:
+                            #    tagged_ratio = np.array([sum_tagged / untagged])
+
                             else:
                                 tagged_ratio = np.zeros(1)
 
@@ -353,20 +360,21 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 spans_sentence.extend([Span(tokens[n:n + span_len]) for n in range(len(tokens) - span_len + 1)])
 
             # delete spans that are subspans of labeled spans (to help make gazetteer training signal more clear)
-            goldspans = sentence.get_spans(self.label_type)
+            if self.delete_goldsubspans_in_training:
+                goldspans = sentence.get_spans(self.label_type)
 
-            # make list of all subspans of goldspans
-            gold_subspans = []
-            for goldspan in goldspans:
-                goldspan_tokens = [token for token in goldspan.tokens]
-                for span_len in range(1, self.max_span_length+1):
-                    gold_subspans.extend([Span(goldspan_tokens[n:n + span_len]) for n in range(len(goldspan_tokens) - span_len + 1)])
+                # make list of all subspans of goldspans
+                gold_subspans = []
+                for goldspan in goldspans:
+                    goldspan_tokens = [token for token in goldspan.tokens]
+                    for span_len in range(1, self.max_span_length+1):
+                        gold_subspans.extend([Span(goldspan_tokens[n:n + span_len]) for n in range(len(goldspan_tokens) - span_len + 1)])
 
-            gold_subspans = [span for span in gold_subspans if not span.has_label(self.label_type)] # FULL goldspans should be kept!
+                gold_subspans = [span for span in gold_subspans if not span.has_label(self.label_type)] # FULL goldspans should be kept!
 
-            # finally: remove the gold_subspans from spans_sentence
-            spans_sentence = [span for span in spans_sentence
-                              if span.unlabeled_identifier not in [s.unlabeled_identifier for s in gold_subspans]]
+                # finally: remove the gold_subspans from spans_sentence
+                spans_sentence = [span for span in spans_sentence
+                                  if span.unlabeled_identifier not in [s.unlabeled_identifier for s in gold_subspans]]
 
             # embed each span (concatenate embeddings of first and last token)
             for span in spans_sentence:
@@ -406,7 +414,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 # use the span gold labels
                 spans_labels.append([span.get_label(self.label_type).value])
 
-                # check if everything looks as it should
+                # check if everything looks as it should (for spans with gold label other than "O")
                 #if span.get_label(self.label_type).value != "O":
                 #    print(span, span_embedding, span.get_label(self.label_type).value)
 
@@ -529,6 +537,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "pooling_operation": self.pooling_operation,
             "loss_weights": self.weight_dict,
             "resolve_overlaps": self.resolve_overlaps,
+            "delete_goldsubspans_in_training": self.delete_goldsubspans_in_training,
             "gazetteer_file": self.gazetteer_file if self.gazetteer_file else None,
             "gazetteer_count_type": self.gazetteer_count_type,
             "add_lower_case_lookup": self.add_lower_case_lookup,
@@ -582,6 +591,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             pooling_operation=state["pooling_operation"],
             loss_weights=state["loss_weights"] if "loss_weights" in state else {"<unk>": 0.3},
             resolve_overlaps=state["resolve_overlaps"],
+            delete_goldsubspans_in_training=state["delete_goldsubspans_in_training"],
             gazetteer_file=state["gazetteer_file"] if "gazetteer_file" in state else None,
             gazetteer_count_type=state["gazetteer_count_type"],
             add_lower_case_lookup = state["add_lower_case_lookup"],
