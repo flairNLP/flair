@@ -34,8 +34,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         concat_span_length_to_embedding: bool = False,
         resolve_overlaps: str = "by_token",
         gazetteer_file: str = None,
-        gazetteer_untagged_label_name: str = None,
-        gazetteer_count_type: str = "rel_conf",
+        gazetteer_untagged_label_name: str = "untagged",
+        gazetteer_include_untagged: bool = False,
+        gazetteer_count_type: str = "norm_conf_ratio",
         use_precomputed_gazetteer: str = None,
         save_computed_gazetteer: str = None,
         add_lower_case_lookup: bool = False,
@@ -65,11 +66,15 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 note: look out for effects based on frequency differences between the entries!
             "one_hot": converted into one hot vector (using argmax)
             "multi_hot": converted into multi-hot-vector (using fixed threshold over relative frequency)
-            "rel": normalized absolute counts (sum to 1)
-            "rel_conf": normalized absolute counts (sum to 1), concatenate confidence score based on frequency!
+            "norm_by_sum": normalized by dividing by sum of vector (whether that means including or excluding O counts)
+            "norm_by_observations": normalized by dividing by total number of observations (requires O counts to be in gazetteer)
+            "norm_conf": normalize (by sum) and concatenate confidence score based on frequency
+            "norm_conf_ratio: normalize (by sum), concatenate confidence score and concatenate tagged/untagged ratio (requires O counts to be in gazetteer)
         :param gazetteer_file: path to a csv file containing a gazetteer list with span strings in rows, label names in columns, counts in cells
-        :param gazetteer_untagged_label_name: #TODO describe
+        :param gazetteer_untagged_label_name: give column name in gazetteer for "O" (untagged) counts (defaults to None, eg. not existing)
+        :param gazetteer_include_untagged: set to True if you want to include untagged in gazetteer feature value (if existing)
         :param use_precomputed_gazetteer #TODO use an already precomputed gazetteer dictionary (e.g. with rel_conf vector), so give its json file path
+        :param save_computed_gazetteer # TODO describe
         :param ignore_embeddings: simple baseline: just use gazetteer embedding, so ignore embeddings
         :param use_mlp: use a MLP as output layer (instead of default linear layer + xavier transformation), may be helpful for interactions with gazetteer
         :param mlp_hidden_dim: size of the hidden layer in output MLP
@@ -89,6 +94,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         self.use_precomputed_gazetteer = use_precomputed_gazetteer
         self.save_computed_gazetteer = save_computed_gazetteer
         self.gazetteer_untagged_label_name = gazetteer_untagged_label_name
+        self.gazetteer_include_untagged = gazetteer_include_untagged
 
         if self.ignore_embeddings:
             final_embedding_size = 0
@@ -98,10 +104,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             final_embedding_size += 1
 
         if self.gazetteer_file:
-            if gazetteer_count_type not in ["abs", "rel", "rel_conf", "one_hot", "multi_hot", "rel_freq_ratio", "rel_conf_ratio"]:
-                raise KeyError('gazetteer_count_type has to be one of "abs", "rel", "rel_conf", "one_hot", '
-                               '"multi_hot", "rel_freq_ratio", "rel_conf_ratio"')
-
             if self.use_precomputed_gazetteer:
                 print("---- Reading already precomputed gazetteer file:", self.use_precomputed_gazetteer)
                 with open(self.use_precomputed_gazetteer, 'r', encoding='utf8') as fp:
@@ -124,7 +126,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                     except:
                         self.O_id = -1
                     print("---- Entry names are:", self.gazetteer_entry_names)
-                    print("---- Position of 'O' counts in vector is:", self.O_id)
+                    print(f"---- Looked for O label (column named {self.gazetteer_untagged_label_name}), position in vector is:", self.O_id)
 
                     self.gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
 
@@ -138,71 +140,86 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                     for nr, (key, vector) in enumerate(self.gazetteer.items()):
                         now = time.time()
 
+                        if (not self.gazetteer_include_untagged) and (self.O_id != -1):
+                            cleaned_vector = vector[:self.O_id] + vector[self.O_id+1:]
+
+                        else:
+                            cleaned_vector = vector  # keep O counts in
+
                         if now-start >=30: # print progress every 30 seconds
                             print("done with \t", round(nr / len(self.gazetteer)*100, 2), " % of gazetteer", end = "\n")
                             start = time.time()
 
                         if self.gazetteer_count_type == "one_hot":
-                            one_hot = np.zeros(len(vector))
-                            if torch.sum(vector) > 0:  # necessary to avoid torch.argmax returning id 0
-                                one_hot[np.argmax(vector)] = 1
+                            one_hot = np.zeros(len(cleaned_vector))
+                            if torch.sum(cleaned_vector) > 0:  # necessary to avoid torch.argmax returning id 0
+                                one_hot[np.argmax(cleaned_vector)] = 1
                             rt_vector = one_hot
 
                         if self.gazetteer_count_type == "multi_hot":
-                            if torch.sum(vector) > 0:  # avoid zero division
-                                rel_vector = vector / np.sum(vector)
+                            if torch.sum(cleaned_vector) > 0:  # avoid zero division
+                                rel_vector = cleaned_vector / np.sum(cleaned_vector)
                             else:
-                                rel_vector = vector
+                                rel_vector = cleaned_vector
                             THRESHOLD = 0.3  # TODO: what to choose?
                             multi_hot = (rel_vector >= THRESHOLD).type(np.int8)
                             rt_vector = multi_hot
 
-                        if self.gazetteer_count_type == "rel": # use relative counts and DON'T add confidence score
-                            if np.sum(vector) > 0:
-                                rt_vector = (vector / np.sum(vector))
-                            else:
-                                rt_vector = vector
+                        if self.gazetteer_count_type == "norm_by_observations": # normalize by observation (spancount) (O label is needed), but dont use O label
+                            if self.O_id == -1:
+                                raise KeyError(
+                                    'Gazetteer does not include counts for O (untagged), so cannot be computed. \n Maybe column name was not given correctly?')
 
-                        if self.gazetteer_count_type == "rel_conf": # use relative counts and add confidence score
-                            sum_count = np.sum(vector)
+                            observation_count = np.sum(vector)
+                            sum_tagged = np.sum(cleaned_vector) # sum without counting the "O" counts
+
+                            if observation_count > 0:
+                                rt_vector = (cleaned_vector / observation_count)
+                            else:
+                                rt_vector = cleaned_vector
+
+                        if self.gazetteer_count_type == "norm_by_sum": # divide by sum (whether O is included or not)
+                            if np.sum(cleaned_vector) > 0:
+                                rt_vector = (cleaned_vector / np.sum(cleaned_vector))
+                            else:
+                                rt_vector = cleaned_vector
+
+                        if self.gazetteer_count_type == "norm_conf": # normalize and add confidence score
+                            observation_count = np.sum(vector)
+                            sum_tagged = np.sum(cleaned_vector) # sum without counting the "O" counts
+
                             DEFINED_MAX = 50  # TODO: what to choose here? make parameter
-                            confidence = np.array([min(sum_count / DEFINED_MAX, 1)])
-                            if sum_count > 0:
-                                rt_vector = (np.concatenate((vector / sum_count, confidence), 0))
-                            else:
-                                rt_vector = (np.concatenate((vector, confidence), 0))
+                            #confidence = np.array([min(observation_count / DEFINED_MAX, 1)])
+                            confidence = np.array([min(sum_tagged / DEFINED_MAX, 1)])
 
-                        if self.gazetteer_count_type == "rel_conf_ratio": # use relative counts, confidence score, add ratio tagged / abs_freq
+                            if sum_tagged > 0:
+                                rt_vector = (np.concatenate((cleaned_vector / sum_tagged, confidence), 0))
+                            else:
+                                rt_vector = (np.concatenate((cleaned_vector, confidence), 0))
+
+                        if self.gazetteer_count_type == "norm_conf_ratio": # use relative counts, confidence score, add ratio tagged / abs_freq
 
                             if self.O_id == -1:
                                 raise KeyError(
-                                    'Gazetteer does not include counts for O (untagged), so ratio cannot be computed. \n Maybe column name was not given correctily?')
+                                    'Gazetteer does not include counts for O (untagged), so ratio cannot be computed. \n Maybe column name was not given correctly?')
 
-                            sum_span = np.sum(vector)
-                            sum_tagged = sum_span - vector[self.O_id] # sum without counting the "O" counts
-                            if sum_span > 0:
-                                tagged_ratio = np.array([sum_tagged / sum_span])
+                            observation_count = np.sum(vector)
+                            sum_tagged = np.sum(cleaned_vector) # sum without counting the "O" counts
+                            if observation_count > 0:
+                                tagged_ratio = np.array([sum_tagged / observation_count])
                             else:
                                 tagged_ratio = np.zeros(1)
 
                             DEFINED_MAX = 50  # TODO: what to choose here? make parameter
-                            confidence = np.array([min(sum_span / DEFINED_MAX, 1)])
-
-                            del vector[self.O_id] # delete the O counts # TODO: should we keep this?
+                            #confidence = np.array([min(observation_count / DEFINED_MAX, 1)])
+                            confidence = np.array([min(sum_tagged / DEFINED_MAX, 1)])
 
                             if sum_tagged > 0:
-                                rt_vector = (np.concatenate((vector / sum_tagged, confidence, tagged_ratio), 0))
+                                rt_vector = (np.concatenate((cleaned_vector / sum_tagged, confidence, tagged_ratio), 0))
                             else:
-                                rt_vector = (np.concatenate((vector, confidence, tagged_ratio), 0))
+                                rt_vector = (np.concatenate((cleaned_vector, confidence, tagged_ratio), 0))
 
-
-                        #if self.gazetteer_count_type == "rel_freq_ratio":
-                        #    abs_freq_count = vector[-1] # last entry is abs_freq_count
-                        #    tag_counts = vector[:-1] # entries before are tag counts
-                        #    if abs_freq_count >0:
-                        #        rt_vector = (np.array(tag_counts) / abs_freq_count)
-                        #    else:
-                        #        rt_vector = np.zeros(len(tag_counts)) # use zero vector
+                        #print(key, vector, "\t", cleaned_vector, "\t", rt_vector)
 
                         self.gazetteer[key] = np.around(rt_vector, decimals = 5).tolist()
                         #print(self.gazetteer[key])
@@ -285,21 +302,29 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
     def get_gazetteer_embedding(self, span_string: str) -> torch.Tensor:
 
         if span_string in self.gazetteer:
-            gaz_vector = torch.Tensor(self.gazetteer[span_string]).to(flair.device)
+            gaz_vector = torch.Tensor(self.gazetteer[span_string])
         else:
             vector_length = self.size_gazetteer_vector
-            gaz_vector = torch.zeros(vector_length).to(flair.device)  # get same length zero vector
+            if self.gazetteer_include_untagged and self.O_id != -1: # if we have O in gazetteer, default O vector should also have 1
+                gaz_vector = torch.zeros(vector_length)
+                gaz_vector[self.O_id] = 1
+            else:
+                gaz_vector = torch.zeros(vector_length)  # get same length zero vector
 
         if self.add_lower_case_lookup:
             if span_string.lower() in self.gazetteer:
-                gaz_vector_lower = torch.Tensor(self.gazetteer[span_string.lower()]).to(flair.device)
+                gaz_vector_lower = torch.Tensor(self.gazetteer[span_string.lower()])
             else:
                 vector_length = self.size_gazetteer_vector
-                gaz_vector_lower = torch.zeros(vector_length).to(flair.device)  # get same length zero vector
+                if self.gazetteer_include_untagged and self.O_id != -1:  # if we have O in gazetteer, default O vector should also have 1
+                    gaz_vector_lower = torch.zeros(vector_length)
+                    gaz_vector_lower[self.O_id] = 1
+                else:
+                    gaz_vector_lower = torch.zeros(vector_length)  # get same length zero vector
 
             gaz_vector = torch.concat((gaz_vector, gaz_vector_lower), 0)
 
-        return gaz_vector
+        return gaz_vector.to(flair.device)
 
     def forward_pass(
         self,
@@ -514,6 +539,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "concat_span_length_to_embedding": self.concat_span_length_to_embedding,
             "use_precomputed_gazetteer": self.use_precomputed_gazetteer,
             "gazetteer_untagged_label_name": self.gazetteer_untagged_label_name,
+            "gazetteer_include_untagged": self.gazetteer_include_untagged,
             #"decoder": self.decoder,
 
         }
@@ -566,6 +592,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             concat_span_length_to_embedding=state["concat_span_length_to_embedding"],
             use_precomputed_gazetteer=state["use_precomputed_gazetteer"],
             gazetteer_untagged_label_name=state["gazetteer_untagged_label_name"],
+            gazetteer_include_untagged=state["gazetteer_include_untagged"],
             #decoder=state["decoder"],
 
             **kwargs,
