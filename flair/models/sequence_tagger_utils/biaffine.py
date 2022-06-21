@@ -127,7 +127,7 @@ class BiaffineDecoder:
 
         gold_labels = []
         for sentence in sentences:
-            ner = {(label.data_point.tokens[0].idx-1, label.data_point.tokens[-1].idx-1):label.value for label in sentences[0].get_labels("ner")}
+            ner = {(label.data_point.tokens[0].idx-1, label.data_point.tokens[-1].idx-1):label.value for label in sentence.get_labels("ner")}
             for s in range(0, len(sentence)):
                 for e in range(s,len(sentence)):
                     gold_labels.append([ner.get((s,e),"O")])
