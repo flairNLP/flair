@@ -41,6 +41,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         use_precomputed_gazetteer: str = None,
         save_computed_gazetteer: str = None,
         add_lower_case_lookup: bool = False,
+        add_substring_gazetteer_lookup: bool = False,
         ignore_embeddings: bool = False,
         use_mlp: bool = False,
         mlp_hidden_dim: int = 1024, #TODO make flexible
@@ -77,6 +78,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         :param gazetteer_include_untagged: set to True if you want to include untagged in gazetteer feature value (if existing)
         :param use_precomputed_gazetteer #TODO use an already precomputed gazetteer dictionary (e.g. with rel_conf vector), so give its json file path
         :param save_computed_gazetteer # TODO describe
+        :param add_lower_case_lookup # TODO describe
+        :param add_substring_gazetteer_lookup # TODO describe
         :param ignore_embeddings: simple baseline: just use gazetteer embedding, so ignore embeddings
         :param use_mlp: use a MLP as output layer (instead of default linear layer + xavier transformation), may be helpful for interactions with gazetteer
         :param mlp_hidden_dim: size of the hidden layer in output MLP
@@ -98,6 +101,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         self.save_computed_gazetteer = save_computed_gazetteer
         self.gazetteer_untagged_label_name = gazetteer_untagged_label_name
         self.gazetteer_include_untagged = gazetteer_include_untagged
+        self.add_substring_gazetteer_lookup = add_substring_gazetteer_lookup
+
 
         if self.ignore_embeddings:
             final_embedding_size = 0
@@ -249,6 +254,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             if self.add_lower_case_lookup:  # one more time
                 final_embedding_size += self.size_gazetteer_vector
 
+            if self.add_substring_gazetteer_lookup:
+                final_embedding_size += self.size_gazetteer_vector
+
         self.use_mlp = use_mlp
         self.mlp_hidden_dim = mlp_hidden_dim
 
@@ -319,8 +327,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 gaz_vector = torch.zeros(vector_length)  # get same length zero vector
 
         if self.add_lower_case_lookup:
-            if span_string.lower() in self.gazetteer:
-                gaz_vector_lower = torch.Tensor(self.gazetteer[span_string.lower()])
+            if span_string.title() in self.gazetteer: # "BARACK OBAMA" --> "Barack Obama"
+                gaz_vector_lower = torch.Tensor(self.gazetteer[span_string.title()])
             else:
                 vector_length = self.size_gazetteer_vector
                 if self.gazetteer_include_untagged and self.O_id != -1:  # if we have O in gazetteer, default O vector should also have 1
@@ -330,6 +338,23 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                     gaz_vector_lower = torch.zeros(vector_length)  # get same length zero vector
 
             gaz_vector = torch.concat((gaz_vector, gaz_vector_lower), 0)
+
+        if self.add_substring_gazetteer_lookup:
+            vector_length = self.size_gazetteer_vector
+            tokens = span_string.split()
+            subspans = []
+
+            for span_len in range(1, len(tokens) +1):
+                subspans.extend([" ".join(tokens[n:n + span_len]) for n in range(len(tokens) - span_len + 1)])
+
+            sub_mean_vector = torch.zeros(vector_length)
+            for sub in subspans:
+                if sub in self.gazetteer:
+                    sub_mean_vector += torch.Tensor(self.gazetteer[sub])
+            if len(subspans) >0:
+                sub_mean_vector = sub_mean_vector/len(subspans)
+
+            gaz_vector = torch.concat((gaz_vector, sub_mean_vector))
 
         return gaz_vector.to(flair.device)
 
@@ -541,6 +566,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "gazetteer_file": self.gazetteer_file if self.gazetteer_file else None,
             "gazetteer_count_type": self.gazetteer_count_type,
             "add_lower_case_lookup": self.add_lower_case_lookup,
+            "add_substring_gazetteer_lookup": self.add_substring_gazetteer_lookup,
             "max_span_length": self.max_span_length,
             "ignore_embeddings": self.ignore_embeddings,
             "use_mlp": self.use_mlp,
@@ -594,7 +620,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             delete_goldsubspans_in_training=state["delete_goldsubspans_in_training"],
             gazetteer_file=state["gazetteer_file"] if "gazetteer_file" in state else None,
             gazetteer_count_type=state["gazetteer_count_type"],
-            add_lower_case_lookup = state["add_lower_case_lookup"],
+            add_lower_case_lookup=state["add_lower_case_lookup"],
+            add_substring_gazetteer_lookup=state["add_substring_gazetteer_lookup"],
             ignore_embeddings=state["ignore_embeddings"],
             max_span_length=state["max_span_length"],
             use_mlp=state["use_mlp"],
