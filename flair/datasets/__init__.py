@@ -1,5 +1,11 @@
 # Expose base classses
-from .base import DataLoader, FlairDatapointDataset, MongoDataset, StringDataset
+from .base import (
+    DataLoader,
+    FlairDatapointDataset,
+    MongoDataset,
+    SentenceDataset,
+    StringDataset,
+)
 
 # Expose all biomedical data sets used for the evaluation of BioBERT
 # -
@@ -290,6 +296,7 @@ from .treebanks import (
 __all__ = [
     "DataLoader",
     "FlairDatapointDataset",
+    "SentenceDataset",
     "MongoDataset",
     "StringDataset",
     "ANAT_EM",

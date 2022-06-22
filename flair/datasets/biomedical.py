@@ -512,7 +512,6 @@ class HunerDataset(ColumnCorpus, ABC):
             dev_file=dev_file.name,
             test_file=test_file.name,
             column_format=columns,
-            tag_to_bioes="ner",
             in_memory=in_memory,
         )
 
@@ -572,7 +571,7 @@ class BIO_INFER(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(BIO_INFER, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BIO_INFER, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
@@ -733,7 +732,6 @@ class JNLPBA(ColumnCorpus):
         super(JNLPBA, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes="ner",
             in_memory=in_memory,
             comment_symbol="#",
         )
@@ -930,7 +928,7 @@ class CELL_FINDER(ColumnCorpus):
             writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             writer.write_to_conll(train_corpus, train_file)
 
-        super(CELL_FINDER, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(CELL_FINDER, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_and_prepare(cls, data_folder: Path) -> InternalBioNerDataset:
@@ -1084,7 +1082,7 @@ class MIRNA(ColumnCorpus):
             test_corpus = self.download_and_prepare_test(download_folder, sentence_separator)
             writer.write_to_conll(test_corpus, test_file)
 
-        super(MIRNA, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(MIRNA, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_and_prepare_train(cls, data_folder: Path, sentence_separator: str):
@@ -1415,7 +1413,7 @@ class CLL(ColumnCorpus):
             nersuite_folder = data_folder / "CLL-1.0.2" / "nersuite"
             KaewphanCorpusHelper.prepare_and_save_dataset(nersuite_folder, train_file)
 
-        super(CLL, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(CLL, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class HUNER_CELL_LINE_CLL(HunerDataset):
@@ -1489,7 +1487,7 @@ class GELLUS(ColumnCorpus):
             nersuite_test = data_folder / "GELLUS-1.0.3" / "nersuite" / "test"
             KaewphanCorpusHelper.prepare_and_save_dataset(nersuite_test, test_file)
 
-        super(GELLUS, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(GELLUS, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class HUNER_CELL_LINE_GELLUS(HunerDataset):
@@ -1569,7 +1567,7 @@ class LOCTEXT(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(full_dataset, train_file)
 
-        super(LOCTEXT, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(LOCTEXT, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -1713,7 +1711,7 @@ class CHEMDNER(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(CHEMDNER, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(CHEMDNER, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -1812,7 +1810,7 @@ class IEPA(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(all_data, train_file)
 
-        super(IEPA, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(IEPA, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -1894,7 +1892,7 @@ class LINNEAUS(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(dataset, train_file)
 
-        super(LINNEAUS, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(LINNEAUS, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_and_parse_dataset(data_dir: Path):
@@ -2008,7 +2006,7 @@ class CDR(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(CDR, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(CDR, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -2115,7 +2113,7 @@ class VARIOME(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(all_data, train_file)
 
-        super(VARIOME, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(VARIOME, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -2278,7 +2276,7 @@ class NCBI_DISEASE(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(NCBI_DISEASE, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(NCBI_DISEASE, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
@@ -2424,7 +2422,7 @@ class ScaiCorpus(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
 
-        super(ScaiCorpus, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(ScaiCorpus, self).__init__(data_folder, columns, in_memory=in_memory)
 
     def download_corpus(self, data_folder: Path) -> Path:
         raise NotImplementedError()
@@ -2637,7 +2635,7 @@ class OSIRIS(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(OSIRIS, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(OSIRIS, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
@@ -2760,7 +2758,7 @@ class S800(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(all_data, train_file)
 
-        super(S800, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(S800, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -2867,7 +2865,7 @@ class GPRO(ColumnCorpus):
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
 
-        super(GPRO, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(GPRO, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_train_corpus(cls, data_dir: Path) -> Path:
@@ -3005,7 +3003,7 @@ class DECA(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(DECA, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(DECA, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
@@ -3103,7 +3101,7 @@ class FSU(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(FSU, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(FSU, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
@@ -3278,7 +3276,7 @@ class CRAFT(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(CRAFT, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(CRAFT, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
@@ -3373,7 +3371,7 @@ class BIOSEMANTICS(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(full_dataset, train_file)
 
-        super(BIOSEMANTICS, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BIOSEMANTICS, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path) -> Path:
@@ -3509,7 +3507,7 @@ class BC2GM(ColumnCorpus):
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(BC2GM, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BC2GM, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path) -> Path:
@@ -3662,7 +3660,7 @@ class CEMP(ColumnCorpus):
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
 
-        super(CEMP, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(CEMP, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_train_corpus(cls, data_dir: Path) -> Path:
@@ -3814,7 +3812,7 @@ class CHEBI(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(full_dataset, train_file)
 
-        super(CHEBI, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(CHEBI, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path) -> Path:
@@ -3997,7 +3995,7 @@ class BioNLPCorpus(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(BioNLPCorpus, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BioNLPCorpus, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     @abstractmethod
@@ -4171,7 +4169,7 @@ class ANAT_EM(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(ANAT_EM, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(ANAT_EM, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     @abstractmethod
@@ -4338,7 +4336,7 @@ class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
                 BioBertHelper.download_corpora(common_path)
 
             BioBertHelper.convert_and_write(common_path / "BC4CHEMD", data_folder, tag_type=CHEMICAL_TAG)
-        super(BIOBERT_CHEMICAL_BC4CHEMD, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BIOBERT_CHEMICAL_BC4CHEMD, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_GENE_BC2GM(ColumnCorpus):
@@ -4372,7 +4370,7 @@ class BIOBERT_GENE_BC2GM(ColumnCorpus):
             if not (common_path / "BC2GM").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "BC2GM", data_folder, tag_type=GENE_TAG)
-        super(BIOBERT_GENE_BC2GM, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BIOBERT_GENE_BC2GM, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_GENE_JNLPBA(ColumnCorpus):
@@ -4406,7 +4404,7 @@ class BIOBERT_GENE_JNLPBA(ColumnCorpus):
             if not (common_path / "JNLPBA").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "JNLPBA", data_folder, tag_type=GENE_TAG)
-        super(BIOBERT_GENE_JNLPBA, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BIOBERT_GENE_JNLPBA, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
@@ -4440,7 +4438,7 @@ class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
             if not (common_path / "BC5CDR-chem").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "BC5CDR-chem", data_folder, tag_type=CHEMICAL_TAG)
-        super(BIOBERT_CHEMICAL_BC5CDR, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BIOBERT_CHEMICAL_BC5CDR, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
@@ -4474,7 +4472,7 @@ class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
             if not (common_path / "BC5CDR-disease").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "BC5CDR-disease", data_folder, tag_type=DISEASE_TAG)
-        super(BIOBERT_DISEASE_BC5CDR, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BIOBERT_DISEASE_BC5CDR, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_DISEASE_NCBI(ColumnCorpus):
@@ -4507,7 +4505,7 @@ class BIOBERT_DISEASE_NCBI(ColumnCorpus):
             if not (common_path / "NCBI-disease").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "NCBI-disease", data_folder, tag_type=DISEASE_TAG)
-        super(BIOBERT_DISEASE_NCBI, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BIOBERT_DISEASE_NCBI, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
@@ -4541,7 +4539,7 @@ class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
             if not (common_path / "linnaeus").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "linnaeus", data_folder, tag_type=SPECIES_TAG)
-        super(BIOBERT_SPECIES_LINNAEUS, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BIOBERT_SPECIES_LINNAEUS, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_SPECIES_S800(ColumnCorpus):
@@ -4575,7 +4573,7 @@ class BIOBERT_SPECIES_S800(ColumnCorpus):
             if not (common_path / "s800").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "s800", data_folder, tag_type=SPECIES_TAG)
-        super(BIOBERT_SPECIES_S800, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(BIOBERT_SPECIES_S800, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class CRAFT_V4(ColumnCorpus):
@@ -4633,7 +4631,7 @@ class CRAFT_V4(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(CRAFT_V4, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(CRAFT_V4, self).__init__(data_folder, columns, in_memory=in_memory)
 
     def filter_entities(self, corpus: InternalBioNerDataset) -> InternalBioNerDataset:
         return corpus
@@ -4933,7 +4931,7 @@ class AZDZ(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(AZDZ, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(AZDZ, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
@@ -5045,7 +5043,7 @@ class PDR(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(PDR, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
+        super(PDR, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
