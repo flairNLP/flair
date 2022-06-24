@@ -5,7 +5,6 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Type, Union, cast
 
-import numpy as np
 import torch
 from torch.autograd import Variable
 from torch.optim import SGD, Optimizer
@@ -364,6 +363,7 @@ class AceTrainer:
         final_model.save(base_path / "best-ace-model.pt")
 
         log.info("Evaluating on dev set using final model ...")
+        assert self.corpus.dev is not None
         final_model.evaluate(
             self.corpus.dev,
             gold_label_type=final_model.label_type,
