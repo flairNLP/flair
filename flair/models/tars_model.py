@@ -803,6 +803,9 @@ class TARSClassifier(FewshotClassifier):
         if multi_label is None:
             multi_label = self.is_current_task_multi_label()
 
+        if not multi_label:
+            label_threshold = 0.0
+
         # with torch.no_grad():
         if not sentences:
             return sentences
