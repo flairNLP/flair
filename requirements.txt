@@ -20,7 +20,7 @@ sentencepiece==0.1.95
 konoha<5.0.0,>=4.0.0
 janome
 gdown==4.4.0
-huggingface-hub
+huggingface-hub>=0.8.1
 conllu>=4.0
 more-itertools
 wikipedia-api
