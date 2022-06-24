@@ -363,6 +363,17 @@ class AceTrainer:
         final_model.eval()
         final_model.save(base_path / "best-ace-model.pt")
 
+        log.info("Evaluating on dev set using final model ...")
+        final_model.evaluate(
+            self.corpus.dev,
+            gold_label_type=final_model.label_type,
+            mini_batch_size=embedding_batch_size,
+            embedding_storage_mode="none",
+            main_evaluation_metric=inner_train_args.get("main_evaluation_metric", ("micro avg", "f1-score")),
+            gold_label_dictionary=inner_train_args.get("gold_label_dictionary_for_eval"),
+            exclude_labels=inner_train_args.get("exclude_labels", []),
+        )
+
         if self.corpus.test is not None:
             log.info("Testing using final model ...")
             test_results = final_model.evaluate(
