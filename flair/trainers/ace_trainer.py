@@ -102,7 +102,10 @@ class AceEmbeddings(Embeddings[Sentence]):
     def save_configuration(self, score: float):
         key = self.state_to_key(self.active)
         self.configurations[key] = self.active
-        self.rewards[key] = score
+        if key in self.rewards:
+            self.rewards[key] = max(score, self.rewards[key])
+        else:
+            self.rewards[key] = score
         log.info(f"Config with embeddings: {self.get_names()} achieved a score of {score}")
 
     def best_to_stacked(self, log_prop_weights: torch.Tensor):
@@ -120,33 +123,9 @@ class AceEmbeddings(Embeddings[Sentence]):
         m = torch.distributions.Bernoulli(one_prob)
         log.info(f"Embedding probabilities: {one_prob}")
         v = m.sample()
-        sample_tries = 1000
-        while v.sum().item() == 0 or self.state_to_key(v) in self.configurations:
-            sample_tries -= 1
-            if sample_tries == -1:
-                break
+        while v.sum().item() == 0 or self.active == v:
             v = m.sample()
         self.active = v
-        if sample_tries == -1:
-            log.warning(
-                "Bernoulli sampling won't work due to too good coverage of likely solutions."
-                "Using exhaustive prop instead."
-            )
-            all_possibilities = []
-            props = []
-            n_embeddings = len(self.embeddings)
-            for comb in torch.arange(1, 2**n_embeddings):
-                mask = 2 ** torch.arange(n_embeddings - 1, -1, -1, device=flair.device, dtype=torch.int)
-                val = comb.unsqueeze(-1).bitwise_and(mask).ne(0)
-                if self.state_to_key(val) in self.configurations:
-                    continue
-                all_possibilities.append(val)
-                p = torch.exp(m.log_prob(val)).item()
-                props.append(p)
-            np_props = np.array(props)
-            np_props /= np_props.sum()
-            idx = np.random.choice(np.arange(len(all_possibilities)), p=np_props)
-            self.active = all_possibilities[idx]
         log.info(f"Set new configuration, embeddings are: {self.get_names()}")
 
     def adjust_init_state_dict(
@@ -254,7 +233,7 @@ class AceTrainer:
             self.model_type = _label_type_model_mapping[model_type]
 
         self.embeddings_parameter = [
-            k for k in inspect.signature(self.model_type).parameters.keys() if "embedding" in k
+            k for k in inspect.signature(self.model_type.__init__).parameters.keys() if "embedding" in k
         ][0]
         self.corpus = corpus
         self.embeddings = embeddings
