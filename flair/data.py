@@ -1415,12 +1415,15 @@ class Corpus:
             _len_dataset(self.test) if self.test else 0,
         )
 
-    def make_label_dictionary(self, label_type: str, min_count: int = -1) -> Dictionary:
+    def make_label_dictionary(self, label_type: str, min_count: int = -1, add_unk: bool = True) -> Dictionary:
         """
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
         """
-        label_dictionary: Dictionary = Dictionary(add_unk=True)
+        if min_count > 0 and not add_unk:
+            raise ValueError("Cannot require a minimum count if no unk-token is created.")
+
+        label_dictionary: Dictionary = Dictionary(add_unk=add_unk)
         label_dictionary.span_labels = False
 
         assert self.train
