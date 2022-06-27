@@ -145,7 +145,7 @@ If you use the Flair framework for your experiments, please cite [this paper](ht
 
 ```
 @inproceedings{akbik2019flair,
-  title={FLAIR: An easy-to-use framework for state-of-the-art NLP},
+  title={{FLAIR}: An easy-to-use framework for state-of-the-art {NLP}},
   author={Akbik, Alan and Bergmann, Tanja and Blythe, Duncan and Rasul, Kashif and Schweter, Stefan and Vollgraf, Roland},
   booktitle={{NAACL} 2019, 2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics (Demonstrations)},
   pages={54--59},
@@ -157,12 +157,13 @@ If you use our new "FLERT" models or approach, please cite [this paper](https://
 
 ```
 @misc{schweter2020flert,
-    title={FLERT: Document-Level Features for Named Entity Recognition},
+    title={{FLERT}: Document-Level Features for Named Entity Recognition},
     author={Stefan Schweter and Alan Akbik},
     year={2020},
     eprint={2011.06993},
     archivePrefix={arXiv},
     primaryClass={cs.CL}
+}
 ```
 
 If you use our TARS approach for few-shot and zero-shot learning, please cite [this paper](https://kishaloyhalder.github.io/pdfs/tars_coling2020.pdf/):

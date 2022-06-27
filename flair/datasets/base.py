@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Generic, List, Union
 
 import torch.utils.data.dataloader
+from deprecated import deprecated
 from torch.utils.data.dataset import ConcatDataset, Subset
 
 from flair.data import DT, FlairDataset, Sentence, Tokenizer
@@ -74,27 +75,33 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
 
 class FlairDatapointDataset(FlairDataset, Generic[DT]):
     """
-    A simple Dataset object to wrap a List of Sentence
+    A simple Dataset object to wrap a List of Datapoints, for example Sentences
     """
 
-    def __init__(self, sentences: Union[DT, List[DT]]):
+    def __init__(self, datapoints: Union[DT, List[DT]]):
         """
-        Instantiate SentenceDataset
-        :param sentences: Sentence or List of Sentence that make up SentenceDataset
+        Instantiate FlairDatapointDataset
+        :param sentences: DT or List of DT that make up FlairDatapointDataset
         """
         # cast to list if necessary
-        if not isinstance(sentences, list):
-            sentences = [sentences]
-        self.sentences = sentences
+        if not isinstance(datapoints, list):
+            datapoints = [datapoints]
+        self.datapoints = datapoints
 
     def is_in_memory(self) -> bool:
         return True
 
     def __len__(self):
-        return len(self.sentences)
+        return len(self.datapoints)
 
     def __getitem__(self, index: int = 0) -> DT:
-        return self.sentences[index]
+        return self.datapoints[index]
+
+
+class SentenceDataset(FlairDatapointDataset):
+    @deprecated(version="0.11", reason="The 'SentenceDataset' class was renamed to 'FlairDatapointDataset'")
+    def __init__(self, sentences: Union[Sentence, List[Sentence]]):
+        super().__init__(sentences)
 
 
 class StringDataset(FlairDataset):
