@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import os
@@ -4118,10 +4119,13 @@ class NER_HIPE_2022(ColumnCorpus):
         }
 
         # v2.0 only adds new language and splits for AJMC dataset
-        hipe_available_splits["v2.0"] = hipe_available_splits["v1.0"].copy()
+        hipe_available_splits["v2.0"] = copy.deepcopy(hipe_available_splits["v1.0"])
         hipe_available_splits["v2.0"]["ajmc"] = {"de": ["train", "dev"], "en": ["train", "dev"], "fr": ["train", "dev"]}
 
-        hipe_available_splits["v2.1"] = hipe_available_splits["v2.0"].copy()
+        hipe_available_splits["v2.1"] = copy.deepcopy(hipe_available_splits["v2.0"])
+        for dataset_name_values in hipe_available_splits["v2.1"].values():
+            for splits in dataset_name_values.values():
+                splits.append("test")  # test datasets are only available for >= v2.1
 
         eos_marker = "EndOfSentence"
         document_separator = "# hipe2022:document_id"
@@ -4141,10 +4145,6 @@ class NER_HIPE_2022(ColumnCorpus):
 
         dataset_splits = hipe_available_splits[version][dataset_name][language]
 
-        if version == "v2.1":
-            # test datasets are only available for >= v2.1
-            dataset_splits.append("test")
-
         for split in dataset_splits:
             cached_path(
                 f"{data_url}/HIPE-2022-{version}-{dataset_name}-{split}-{language}.tsv", data_folder / "original"
@@ -4160,11 +4160,12 @@ class NER_HIPE_2022(ColumnCorpus):
             new_data_folder = new_data_folder / "with_doc_seperator"
             new_data_folder.mkdir(parents=True, exist_ok=True)
 
-        dev_path = new_data_folder / dev_file
-
         self.preproc_fn = self._prepare_corpus if not preproc_fn else preproc_fn
 
-        if not dev_path.exists():
+        if not all(  # Only reprocess if some files are not there yet
+            split_path.exists()
+            for split_path in [new_data_folder / f"{split_file}.txt" for split_file in dataset_splits]
+        ):
             for split in dataset_splits:
                 original_filename = f"HIPE-2022-{version}-{dataset_name}-{split}-{language}.tsv"
                 self.preproc_fn(
