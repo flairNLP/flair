@@ -1,3 +1,6 @@
+import pytest
+
+import flair
 from flair.data import Sentence
 from flair.datasets import ColumnCorpus
 from flair.embeddings import TransformerWordEmbeddings
@@ -5,8 +8,9 @@ from flair.models import RelationExtractor
 from flair.trainers import ModelTrainer
 
 
-# @pytest.mark.integration
+@pytest.mark.integration
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
+    flair.set_seed(123)
     corpus = ColumnCorpus(
         data_folder=tasks_base_path / "conllu",
         train_file="train.conllup",
