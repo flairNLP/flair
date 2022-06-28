@@ -422,8 +422,9 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
 
 def test_hipe_2022_corpus(tasks_base_path):
     """
-    This test covers the complete v1.0 version of the HIPE 2022,
-    including the version with document separator.
+    This test covers the complete HIPE 2022 dataset.
+    https://github.com/hipe-eval/HIPE-2022-data
+    Includes variant with document separator, and all versions of the dataset.
     """
 
     # We have manually checked, that these numbers are correct:

@@ -922,13 +922,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 model_folder = model_name
 
             # Lazy import
-            from huggingface_hub import cached_download, hf_hub_url
-
-            url = hf_hub_url(model_name, revision=revision, filename=hf_model_name)
+            from huggingface_hub.file_download import hf_hub_download
 
             try:
-                model_path = cached_download(
-                    url=url,
+                model_path = hf_hub_download(
+                    model_name,
+                    hf_model_name,
+                    revision=revision,
                     library_name="flair",
                     library_version=flair.__version__,
                     cache_dir=flair.cache_root / "models" / model_folder,
@@ -937,13 +937,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 # output information
                 log.error("-" * 80)
                 log.error(
-                    f"ACHTUNG: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
+                    f"ERROR: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
                 )
-                # log.error(f" - Error message: {e}")
                 log.error(" -> Please check https://huggingface.co/models?filter=flair for all available models.")
                 log.error(" -> Alternatively, point to a model file on your local drive.")
                 log.error("-" * 80)
                 Path(flair.cache_root / "models" / model_folder).rmdir()  # remove folder again if not valid
+                raise
 
         return model_path
 
