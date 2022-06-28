@@ -858,7 +858,6 @@ class TARSClassifier(FewshotClassifier):
 
                     all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
 
-                    best_label = None
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
 
