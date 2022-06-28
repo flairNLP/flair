@@ -971,7 +971,6 @@ class GazetteerEmbeddingsTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.maxDiff = None
-        pass
 
     def test_matching_methods_good1(self):
         with patch.object(GazetteerEmbeddings, '_get_gazetteers'), \
