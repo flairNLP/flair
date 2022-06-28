@@ -803,6 +803,9 @@ class TARSClassifier(FewshotClassifier):
         if multi_label is None:
             multi_label = self.is_current_task_multi_label()
 
+        if not multi_label:
+            label_threshold = 0.0
+
         # with torch.no_grad():
         if not sentences:
             return sentences
@@ -855,7 +858,6 @@ class TARSClassifier(FewshotClassifier):
 
                     all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
 
-                    best_label = None
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
 
