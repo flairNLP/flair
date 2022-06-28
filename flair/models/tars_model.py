@@ -440,12 +440,12 @@ class TARSTagger(FewshotClassifier):
         # init new TARS classifier
         model = super()._init_model_with_state_dict(
             state,
-            task_name=state["current_task"],
-            label_dictionary=state["tag_dictionary"],
-            label_type=state["tag_type"],
-            embeddings=state["tars_model"].embeddings,
-            num_negative_labels_to_sample=state["num_negative_labels_to_sample"],
-            prefix=state["prefix"],
+            task_name=state.get("current_task"),
+            label_dictionary=state.get("tag_dictionary"),
+            label_type=state.get("tag_type"),
+            embeddings=state.get("tars_model").embeddings,
+            num_negative_labels_to_sample=state.get("num_negative_labels_to_sample"),
+            prefix=state.get("prefix"),
             **kwargs,
         )
         # set all task information
@@ -735,21 +735,18 @@ class TARSClassifier(FewshotClassifier):
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
         # init new TARS classifier
-        label_dictionary = state["label_dictionary"]
-        label_type = "default_label" if not state["label_type"] else state["label_type"]
-
         model: TARSClassifier = super()._init_model_with_state_dict(
             state,
             task_name=state["current_task"],
-            label_dictionary=label_dictionary,
-            label_type=label_type,
-            embeddings=state["tars_model"].document_embeddings,
-            num_negative_labels_to_sample=state["num_negative_labels_to_sample"],
+            label_dictionary=state.get("label_dictionary"),
+            label_type=state.get("label_type", "default_label"),
+            embeddings=state.get("tars_model").document_embeddings,
+            num_negative_labels_to_sample=state.get("num_negative_labels_to_sample"),
             **kwargs,
         )
 
         # set all task information
-        model._task_specific_attributes = state["task_specific_attributes"]
+        model._task_specific_attributes = state.get("task_specific_attributes")
 
         return model
 
