@@ -104,7 +104,7 @@ print(corpus)
 label_type = 'ner'
 
 # 3. make the label dictionary from the corpus
-label_dict = corpus.make_label_dictionary(label_type=label_type)
+label_dict = corpus.make_label_dictionary(label_type=label_type, add_unk=False)
 print(label_dict)
 
 # 4. initialize embedding stack with Flair and GloVe
@@ -159,7 +159,7 @@ print(corpus)
 label_type = 'ner'
 
 # 3. make the label dictionary from the corpus
-label_dict = corpus.make_label_dictionary(label_type=label_type)
+label_dict = corpus.make_label_dictionary(label_type=label_type, add_unk=False)
 print(label_dict)
 
 # 4. initialize fine-tuneable transformer embeddings WITH document context

@@ -92,7 +92,7 @@ print(corpus)
 # 2. 우리는 예측하고 싶은 태그는 무엇인가요?
 tag_type = 'ner'
 # 3. 말뭉치에서 태그 사전 만들기
-tag_dictionary = corpus.make_label_dictionary(label_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(label_type=tag_type, add_unk=False)
 print(tag_dictionary.idx2item)
 # 4. 임베딩 초기화하기
 embedding_types: List[TokenEmbeddings] = [

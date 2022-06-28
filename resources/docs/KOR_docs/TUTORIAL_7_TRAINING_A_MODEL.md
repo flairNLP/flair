@@ -90,7 +90,7 @@ print(corpus)
 # 2. 어떤 레이블을 예측하고 싶으신가요?
 label_type = 'ner'
 # 3. 말뭉치에서 레이블 사전 만들기
-label_dict = corpus.make_label_dictionary(label_type=label_type)
+label_dict = corpus.make_label_dictionary(label_type=label_type, add_unk=False)
 print(label_dict)
 # 4. Flair 및 GloVe로 임베딩 스택 초기화하기
 embedding_types = [
@@ -137,7 +137,7 @@ print(corpus)
 # 2. 어떤 레이블을 예측하고 싶으신가요?
 label_type = 'ner'
 # 3. 말뭉치에서 레이블 사전 만들기
-label_dict = corpus.make_label_dictionary(label_type=label_type)
+label_dict = corpus.make_label_dictionary(label_type=label_type, add_unk=False)
 print(label_dict)
 # 4. 문서 컨텍스트로 미세 조정 가능한 변환기 임베딩 초기화
 embeddings = TransformerWordEmbeddings(
@@ -311,7 +311,7 @@ corpus: Corpus = WNUT_17().downsample(0.1)
 # 2. 어떤 레이블을 예측하고 싶으신가요?
 label_type = 'ner'
 # 3. 말뭉치에서 레이블 사전 만들기
-label_dict = corpus.make_label_dictionary(label_type=label_type)
+label_dict = corpus.make_label_dictionary(label_type=label_type, add_unk=False)
 # 4. 임베딩 초기화하기
 embedding_types: List[TokenEmbeddings] = [
     WordEmbeddings('glove')
