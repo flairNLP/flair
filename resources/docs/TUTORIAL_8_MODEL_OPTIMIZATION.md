@@ -121,10 +121,10 @@ label_type = 'question_class'
 # create the parameter selector
 param_selector = TextClassifierParamSelector(
     corpus,
-    label_type, 
-    False, 
-    'resources/results', 
-    max_epochs=50, 
+    label_type,
+    False,
+    'resources/results',
+    max_epochs=50,
     fine_tune=True,
     training_runs=3,
     optimization_value=OptimizationValue.DEV_SCORE

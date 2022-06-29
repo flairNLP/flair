@@ -1,5 +1,5 @@
 # Korean documentation for flairNLP
-flairNLP를 한국어로 이해하기 쉽게 번역한 튜토리얼 번역본입니다.    
+flairNLP를 한국어로 이해하기 쉽게 번역한 튜토리얼 번역본입니다.
 
 
 ![alt text](https://github.com/flairNLP/flair/blob/master/resources/docs/flair_logo_2020.png?raw=true)
@@ -9,21 +9,21 @@ flairNLP를 한국어로 이해하기 쉽게 번역한 튜토리얼 번역본입
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 
-**최첨단 NLP**를 위한 매우 간단한 프레임워크입니다. 
+**최첨단 NLP**를 위한 매우 간단한 프레임워크입니다.
 [Humboldt University of Berlin](https://www.informatik.hu-berlin.de/en/forschung-en/gebiete/ml-en/) 및 친구들에 의해 개발되었습니다.
 
 ---
 
 Flair는:
 
-* **강력한 NLP 라이브러리입니다.**    
+* **강력한 NLP 라이브러리입니다.**
  Flair를 사용하면 명명된 개체 인식(NER), 품사 태깅(PoS), [생체 의학 데이터](https://github.com/flairNLP/flair/blob/94393aa82444f28c5a1da6057b8ff57b3cb390e6/resources/docs/HUNFLAIR.md)에 대한 특별 지원과 같은 최첨단 자연어 처리(NLP) 모델을 텍스트에 적용할 수 있습니다.
  또한 빠르게 증가하는 언어를 지원하여 명확화 및 분류를 감지합니다.
 
-* **텍스트 임베딩 라이브러리입니다.**    
+* **텍스트 임베딩 라이브러리입니다.**
 Flair에는 제안된 **[Flair embeddings](https://www.aclweb.org/anthology/C18-1139/)**, BERT 임베딩 및 ELMo 임베딩을 포함하여 다양한 단어 및 문서 임베딩을 사용하고 결합할 수 있는 간단한 인터페이스가 있습니다.
 
-* **파이토치 NLP 프레임워크입니다.**    
+* **파이토치 NLP 프레임워크입니다.**
  우리의 프레임워크는 [PyTorch](https://pytorch.org/)를 기반으로 직접 구축되어 쉽게 자신의 모델을 훈련하고 Flair 임베딩 및 클래스를 사용하여 새로운 접근 방식을 실험할 수 있습니다.
 
  이제 [version 0.9](https://github.com/flairNLP/flair/releases)입니다!
@@ -45,7 +45,7 @@ Flair는 다양한 NLP 작업을 위한 최신 모델과 함께 제공됩니다.
 | Dutch  | Conll-03  (4-class)  |  **95.25**  | *93.7 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Dutch 4-class NER demo](https://huggingface.co/flair/ner-dutch-large)  |
 | Spanish  | Conll-03 (4-class)   |  **90.54** | *90.3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 18-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
 
-**New:** 
+**New:**
 대부분의 Flair 시퀀스 태깅 모델(명명된 엔티티 인식, 품사 태깅 등)이 이제  [__🤗 HuggingFace model hub__](https://huggingface.co/models?library=flair&sort=downloads)에서 호스팅됩니다! 모델을 검색하고 학습 방법에 대한 자세한 정보를 확인하고 각 모델을 온라인으로 시험해 볼 수도 있습니다!
 
 ## Quick Start
@@ -179,7 +179,7 @@ Flair 임베딩(PooledFlairEmbeddings)의 풀링 버전을 사용하는 경우 [
 
 질문이나 의견은 [Alan Akbik](http://alanakbik.github.io/)로 이메일을 보내주세요.
 
-한국어 번역에 대한 의견은    
+한국어 번역에 대한 의견은
 김한결(hannn0414@naver.com), 박태현(abnc7800@gmail.com), 최완규(wanq123@gachon.ac.kr)로 이메일을 보내주세요.
 
 ## Contributing
@@ -188,7 +188,7 @@ contributing에 관심을 가져주셔서 감사합니다! 참여하는 방법�
 [contributor guidelines](https://github.com/flairNLP/flair/blob/94393aa82444f28c5a1da6057b8ff57b3cb390e6/CONTRIBUTING.md)으로 시작한 다음
 특정 작업에 대해서는 [open issues](https://github.com/flairNLP/flair/issues)를 확인하세요.
 
-API에 대해 더 깊이 알고자 하는 기여자의 경우 레포지토리를 복제하고 메서드를 호출하는 방법에 대한 예제를 보려면 단위 테스트를 확인하는 것이 좋습니다. 
+API에 대해 더 깊이 알고자 하는 기여자의 경우 레포지토리를 복제하고 메서드를 호출하는 방법에 대한 예제를 보려면 단위 테스트를 확인하는 것이 좋습니다.
 거의 모든 클래스와 메서드가 문서화되어 있으므로 코드를 찾는 것이 쉬울 것입니다.
 
 ### 로컬에서 단위 테스트 실행

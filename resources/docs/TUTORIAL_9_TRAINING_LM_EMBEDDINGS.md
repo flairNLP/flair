@@ -100,7 +100,7 @@ Done!
 
 ## Non-Latin Alphabets
 
-If you train embeddings for a language that uses a non-latin alphabet such as Arabic or Japanese, you need to create your own character dictionary first. You can do this with the following code snippet: 
+If you train embeddings for a language that uses a non-latin alphabet such as Arabic or Japanese, you need to create your own character dictionary first. You can do this with the following code snippet:
 
 ```python
 
@@ -125,7 +125,7 @@ for file in files:
         tokens = 0
         for line in f:
 
-            processed += 1            
+            processed += 1
             chars = list(line)
             tokens += len(chars)
 
@@ -168,7 +168,7 @@ with open('/path/to/your_char_mappings', 'wb') as f:
     pickle.dump(mappings, f)
 ```
 
-You can then use this dictionary instead of the default one in your code for training the language model: 
+You can then use this dictionary instead of the default one in your code for training the language model:
 
 ```python
 import pickle
@@ -186,7 +186,7 @@ that if the training loss does not improve for 25 splits, it decreases the learn
 
 ## Fine-Tuning an Existing LM
 
-Sometimes it makes sense to fine-tune an existing language model instead of training from scratch. For instance, if you have a general LM for English and you would like to fine-tune for a specific domain. 
+Sometimes it makes sense to fine-tune an existing language model instead of training from scratch. For instance, if you have a general LM for English and you would like to fine-tune for a specific domain.
 
 To fine tune a `LanguageModel`, you only need to load an existing `LanguageModel` instead of instantiating a new one. The rest of the training code remains the same as above:
 
@@ -220,8 +220,8 @@ trainer.train('resources/taggers/language_model',
               learning_rate=20,
               patience=10,
               checkpoint=True)
-```              
-              
+```
+
 Note that when you fine-tune, you must use the same character dictionary as before and copy the direction (forward/backward).
 
 
@@ -229,6 +229,3 @@ Note that when you fine-tune, you must use the same character dictionary as befo
 
 If you train a good LM for a language or domain we don't yet have in Flair, consider contacting us! We would be happy
 to integrate more LMs into the library so that other people can use them!
-
-
-
