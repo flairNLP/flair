@@ -158,10 +158,10 @@ class ScalarMix(torch.nn.Module):
         normed_weights = torch.nn.functional.softmax(
             torch.cat([parameter for parameter in self.scalar_parameters]), dim=0
         )
-        normed_weights = torch.split(normed_weights, split_size_or_sections=1)
+        normed_weights_split = torch.split(normed_weights, split_size_or_sections=1)
 
         pieces = []
-        for weight, tensor in zip(normed_weights, tensors):
+        for weight, tensor in zip(normed_weights_split, tensors):
             pieces.append(weight * tensor)
         return self.gamma * sum(pieces)
 
