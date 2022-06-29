@@ -137,14 +137,11 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
     def _init_model_with_state_dict(cls, state, **kwargs):
         return super()._init_model_with_state_dict(
             state,
-            document_embeddings=state["document_embeddings"],
-            label_dictionary=state["label_dictionary"],
-            label_type=state["label_type"],
-            multi_label=state["multi_label"],
-            multi_label_threshold=0.5
-            if "multi_label_threshold" not in state.keys()
-            else state["multi_label_threshold"],
-            loss_weights=state["weight_dict"],
-            embed_separately=state["embed_separately"],
+            document_embeddings=state.get("document_embeddings"),
+            label_dictionary=state.get("label_dictionary"),
+            label_type=state.get("label_type"),
+            multi_label=state.get("multi_label_threshold", 0.5),
+            loss_weights=state.get("weight_dict"),
+            embed_separately=state.get("embed_separately"),
             **kwargs,
         )

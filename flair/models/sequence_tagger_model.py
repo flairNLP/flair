@@ -615,14 +615,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
 
-        """Initialize the model from a state dictionary."""
-        rnn_type = "LSTM" if "rnn_type" not in state.keys() else state["rnn_type"]
-        use_dropout = 0.0 if "use_dropout" not in state.keys() else state["use_dropout"]
-        use_word_dropout = 0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
-        use_locked_dropout = 0.0 if "use_locked_dropout" not in state.keys() else state["use_locked_dropout"]
-        reproject_embeddings = True if "reproject_embeddings" not in state.keys() else state["reproject_embeddings"]
-        weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
-
         if state["use_crf"]:
             if "transitions" in state["state_dict"]:
                 state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"]
@@ -630,20 +622,20 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return super()._init_model_with_state_dict(
             state,
-            embeddings=state["embeddings"],
-            tag_dictionary=state["tag_dictionary"],
+            embeddings=state.get("embeddings"),
+            tag_dictionary=state.get("tag_dictionary"),
             tag_format=state.get("tag_format", "BIOES"),
-            tag_type=state["tag_type"],
-            use_crf=state["use_crf"],
-            use_rnn=state["use_rnn"],
-            rnn_layers=state["rnn_layers"],
-            hidden_size=state["hidden_size"],
-            dropout=use_dropout,
-            word_dropout=use_word_dropout,
-            locked_dropout=use_locked_dropout,
-            rnn_type=rnn_type,
-            reproject_embeddings=reproject_embeddings,
-            loss_weights=weights,
+            tag_type=state.get("tag_type"),
+            use_crf=state.get("use_crf"),
+            use_rnn=state.get("use_rnn"),
+            rnn_layers=state.get("rnn_layers"),
+            hidden_size=state.get("hidden_size"),
+            dropout=state.get("use_dropout", 0.0),
+            word_dropout=state.get("use_word_dropout", 0.0),
+            locked_dropout=state.get("use_locked_dropout", 0.0),
+            rnn_type=state.get("rnn_type", "LSTM"),
+            reproject_embeddings=state.get("reproject_embeddings", True),
+            loss_weights=state.get("weight_dict"),
             init_from_state_dict=True,
             **kwargs,
         )
