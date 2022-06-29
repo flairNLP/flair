@@ -436,20 +436,19 @@ class _PartOfSentence(DataPoint, ABC):
 
     def add_label(self, typename: str, value: str, score: float = 1.0):
         super().add_label(typename, value, score)
-
-        label = Label(self, value, score)
-        if typename not in self.sentence.annotation_layers:
-            self.sentence.annotation_layers[typename] = [label]
-        else:
-            self.sentence.annotation_layers[typename].append(label)
+        self.sentence.annotation_layers.setdefault(typename, []).append(Label(self, value, score))
 
     def set_label(self, typename: str, value: str, score: float = 1.0):
+        if len(self.annotation_layers.get(typename, [])) > 0:
+            # First we remove any existing labels for this PartOfSentence in self.sentence
+            self.sentence.annotation_layers[typename] = [
+                label for label in self.sentence.annotation_layers.get(typename, []) if label.data_point != self
+            ]
+        self.sentence.annotation_layers.setdefault(typename, []).append(Label(self, value, score))
         super().set_label(typename, value, score)
-        self.sentence.annotation_layers[typename] = [Label(self, value, score)]
         return self
 
     def remove_labels(self, typename: str):
-
         # labels also need to be deleted at Sentence object
         for label in self.get_labels(typename):
             self.sentence.annotation_layers[typename].remove(label)
