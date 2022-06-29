@@ -1033,7 +1033,7 @@ class MultiTagger:
         """
         if any(["hunflair" in name for name in self.name_to_tagger.keys()]):
             if "spacy" not in sys.modules:
-                logging.warn(
+                logging.warning(
                     "We recommend to use SciSpaCy for tokenization and sentence splitting "
                     "if HunFlair is applied to biomedical text, e.g.\n\n"
                     "from flair.tokenization import SciSpacySentenceSplitter\n"
