@@ -7,16 +7,16 @@ clustering algorithms implemented:
 - BIRCH
 - Expectation Maximization
 
-Each of the implemented algorithm needs to have an instanced DocumentEmbedding. This embedding will 
+Each of the implemented algorithm needs to have an instanced DocumentEmbedding. This embedding will
 transform each text/document to a vector. With these vectors the clustering algorithm can be performed.
 
 ---------------------------
 
 k-Means
 ------
-k-Means is a classical and well known clustering algorithm. k-Means is a partitioning-based Clustering algorithm. 
-The user defines with the parameter *k* how many clusters the given data has. 
-So the choice of *k* is very important. 
+k-Means is a classical and well known clustering algorithm. k-Means is a partitioning-based Clustering algorithm.
+The user defines with the parameter *k* how many clusters the given data has.
+So the choice of *k* is very important.
 More about k-Means can be read on the official [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html).
 
 
@@ -47,8 +47,8 @@ clustering_model.evaluate(corpus, label_type="question_class")
 
 BIRCH
 ---------
-BIRCH (Balanced Iterative Reducing and Clustering using Hierarchies) is a hierarchical clustering algorithm. 
-BIRCH is specialized to handle large amounts of data. BIRCH scans the data a single time and builds an internal data 
+BIRCH (Balanced Iterative Reducing and Clustering using Hierarchies) is a hierarchical clustering algorithm.
+BIRCH is specialized to handle large amounts of data. BIRCH scans the data a single time and builds an internal data
 structure. This data structure contains the data but in a compressed way.
 More about BIRCH can be read on the official [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.Birch.html).
 
@@ -80,9 +80,9 @@ clustering_model.evaluate(corpus, label_type="question_class")
 
 Expectation Maximization
 --------------------------
-Expectation Maximization (EM) is a different class of clustering algorithms called soft clustering algorithms. 
-Here each point isn't directly assigned to a cluster by a hard decision. 
-Each data point has a probability to which cluster the data point belongs. The Expectation Maximization (EM) 
+Expectation Maximization (EM) is a different class of clustering algorithms called soft clustering algorithms.
+Here each point isn't directly assigned to a cluster by a hard decision.
+Each data point has a probability to which cluster the data point belongs. The Expectation Maximization (EM)
 algorithm is a soft clustering algorithm.
 More about EM can be read on the official [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture.html).
 
@@ -149,7 +149,7 @@ The code for loading a model.
 # load saved clustering model
 model = ClusteringModel.load(model_file="clustering_model.pt")
 
-# load a corpus 
+# load a corpus
 corpus = TREC_6(memory_mode='full').downsample(0.05)
 
 # predict the corpus
@@ -176,5 +176,5 @@ The result of the evaluation  can be seen below with the SentenceTransformerDocu
 | Clustering Algorithm     |    Dataset    |     NMI |
 |--------------------------|:-------------:|--------:|
 | k Means                  | StackOverflow | ~0.2122 |
-| BIRCH                    | StackOverflow | ~0,2424 | 
-| Expectation Maximization | 20News group  | ~0,2222 |  
+| BIRCH                    | StackOverflow | ~0,2424 |
+| Expectation Maximization | 20News group  | ~0,2222 |

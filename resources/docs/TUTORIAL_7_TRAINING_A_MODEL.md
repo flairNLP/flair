@@ -104,7 +104,7 @@ print(corpus)
 label_type = 'ner'
 
 # 3. make the label dictionary from the corpus
-label_dict = corpus.make_label_dictionary(label_type=label_type)
+label_dict = corpus.make_label_dictionary(label_type=label_type, add_unk=False)
 print(label_dict)
 
 # 4. initialize embedding stack with Flair and GloVe
@@ -159,7 +159,7 @@ print(corpus)
 label_type = 'ner'
 
 # 3. make the label dictionary from the corpus
-label_dict = corpus.make_label_dictionary(label_type=label_type)
+label_dict = corpus.make_label_dictionary(label_type=label_type, add_unk=False)
 print(label_dict)
 
 # 4. initialize fine-tuneable transformer embeddings WITH document context
@@ -393,7 +393,7 @@ are Flair- and Transformer-based embeddings. Depending on your setup, you can se
 
 ### Setting the Mini-Batch Size
 
-The most important is `mini_batch_size`: Set this to higher values if your GPU can handle it to get good speed-ups. However, if 
+The most important is `mini_batch_size`: Set this to higher values if your GPU can handle it to get good speed-ups. However, if
 your data set is very small don't set it too high, otherwise there won't be enough learning steps per epoch.
 
 A similar parameter is `mini_batch_chunk_size`: This parameter causes mini-batches to be further split into chunks, causing slow-downs
@@ -429,4 +429,3 @@ If you don't have training data (or only very little), our TARS approach might b
 tutorial on [few-shot and zero-shot classification](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)).
 
 Alternatively, you can look into [training your own embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md).
-

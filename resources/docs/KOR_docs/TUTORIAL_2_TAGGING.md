@@ -1,6 +1,6 @@
 # 튜토리얼 2: 텍스트 태깅
 
-튜토리얼 2부는 1부를 어느정도 학습하였다고 가정하고 진행하겠습니다. 
+튜토리얼 2부는 1부를 어느정도 학습하였다고 가정하고 진행하겠습니다.
 여기서는 사전 훈련된 모델을 사용하여 텍스트에 태그를 지정합니다.
 
 ## 사전 훈련된 모델을 사용하여 태깅
@@ -27,9 +27,9 @@ tagger.predict(sentence)
 print(sentence.to_tagged_string())
 ```
 
-출력 결과: 
+출력 결과:
 ```console
-George <B-PER> Washington <E-PER> went to Washington <S-LOC> . 
+George <B-PER> Washington <E-PER> went to Washington <S-LOC> .
 ```
 
 ### 주석이 달린 범위 받기
@@ -85,7 +85,7 @@ sentence = Sentence("George Washington went to Washington.")
 tagger.predict(sentence)
 
 print(sentence)
-``` 
+```
 
 이 문장에는 두 가지 유형의 주석이 있습니다. POS와 NER입니다.
 
@@ -130,7 +130,7 @@ NER 모델은 4개 언어(영어, 독일어, 네덜란드어 및 스페인어) �
 | '[ner-multi](https://huggingface.co/flair/ner-multi)' | NER (4-class) | Multilingual | Conll-03   |  **89.27**  (average F1) | (4 languages)
 | '[ner-multi-fast](https://huggingface.co/flair/ner-multi-fast)' | NER (4-class)|  Multilingual |  Conll-03   |  **87.91**  (average F1) | (4 languages)
 | '[pos-multi](https://huggingface.co/flair/upos-multi)' |  POS-tagging   |  Multilingual |  UD Treebanks  |  **96.41** (average acc.) |  (12 languages)
-| '[pos-multi-fast](https://huggingface.co/flair/upos-multi-fast)' |  POS-tagging |  Multilingual |  UD Treebanks  |  **92.88** (average acc.) | (12 languages) 
+| '[pos-multi-fast](https://huggingface.co/flair/upos-multi-fast)' |  POS-tagging |  Multilingual |  UD Treebanks  |  **92.88** (average acc.) | (12 languages)
 
 이러한 언어로 된 텍스트를 모델에 전달할 수 있습니다. 특히, NER는 프랑스어와 같이 훈련되지 않은 언어에도 적용되었습니다.
 
@@ -181,7 +181,7 @@ tagger.predict(sentence)
 print(sentence.to_tagged_string())
 ```
 
-출력 결과: 
+출력 결과:
 ```console
 George <B-PER> Washington <E-PER> ging nach Washington <S-LOC> .
 ```
@@ -205,9 +205,9 @@ for entity in sentence.get_labels('ner'):
     print(entity)
 ```
 
-출력 : 
+출력 :
 ```console
-LOC [برلين (2)] (0.9803) 
+LOC [برلين (2)] (0.9803)
 ```
 
 ### 다국어 텍스트 태그 지정
@@ -229,7 +229,7 @@ tagger.predict(sentence)
 print(sentence.to_tagged_string())
 ```
 
-출력 결과: 
+출력 결과:
 ```console
 George <PROPN> Washington <PROPN> went <VERB> to <ADP> Washington <PROPN> . <PUNCT>
 
@@ -261,7 +261,7 @@ tagger.predict(sentence_2)
 print(sentence_1.to_tagged_string())
 print(sentence_2.to_tagged_string())
 ```
-출력 결과: 
+출력 결과:
 
 ```console
 George returned <return.01> to Berlin to return <return.02> his hat .
@@ -357,7 +357,7 @@ POSITION이라는 라벨이 문장에 추가되어 이 문장이 긍정적인 �
 
 포함되지 않은 클래스에 레이블을 지정해야 하는 경우
 사전 훈련된 제로샷 분류기 TARS를 사용해 볼 수도 있습니다.
-([제로샷 튜토리얼](/resources/docs/KOR_docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)로 건너뛰기)    
+([제로샷 튜토리얼](/resources/docs/KOR_docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)로 건너뛰기)
 TARS는 임의 클래스에 대해 텍스트 분류를 수행할 수 있습니다.
 
 ## 다음

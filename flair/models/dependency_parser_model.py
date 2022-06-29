@@ -392,15 +392,15 @@ class DependencyParser(flair.nn.Model):
     def _init_model_with_state_dict(cls, state, **kwargs):
         return super()._init_model_with_state_dict(
             state,
-            token_embeddings=state["token_embeddings"],
-            relations_dictionary=state["relations_dictionary"],
-            use_rnn=state["use_rnn"],
-            lstm_hidden_size=state["lstm_hidden_size"],
-            mlp_arc_units=state["mlp_arc_units"],
-            mlp_rel_units=state["mlp_rel_units"],
-            lstm_layers=state["lstm_layers"],
-            mlp_dropout=state["mlp_dropout"],
-            lstm_dropout=state["lstm_dropout"],
+            token_embeddings=state.get("token_embeddings"),
+            relations_dictionary=state.get("relations_dictionary"),
+            use_rnn=state.get("use_rnn"),
+            lstm_hidden_size=state.get("lstm_hidden_size"),
+            mlp_arc_units=state.get("mlp_arc_units"),
+            mlp_rel_units=state.get("mlp_rel_units"),
+            lstm_layers=state.get("lstm_layers"),
+            mlp_dropout=state.get("mlp_dropout"),
+            lstm_dropout=state.get("lstm_dropout"),
             **kwargs,
         )
 

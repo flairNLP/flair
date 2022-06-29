@@ -80,7 +80,7 @@ print(untokenized_sentence)
 
 ### 다른 토크나이저를 사용하는 경우
 
-사용자 지정 토큰나이저를 초기화 방법에 전달할 수도 있습니다. 
+사용자 지정 토큰나이저를 초기화 방법에 전달할 수도 있습니다.
 예를 들어 일본어를 토큰화하려는 경우, 문장 대신 다음과 같이 'janome' 토큰나이저를 사용할 수 있습니다.
 
 ```python
@@ -103,7 +103,7 @@ print(japanese_sentence)
 Sentence: "私 は ベルリン が 好き"   [− Tokens: 5]
 ```
 
-다음과 같이 토큰화 루틴을 직접 작성할 수 있습니다. 
+다음과 같이 토큰화 루틴을 직접 작성할 수 있습니다.
 
 ### 사전 토큰화된 시퀀스 사용
 사전 토큰화된 시퀀스를 단어 목록으로 전달할 수 있습니다.
@@ -183,7 +183,7 @@ sentence = Sentence('France is the current world cup winner.').add_label('topic'
 print(sentence)
 ```
 
-출력 결과: 
+출력 결과:
 
 ```console
 Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0)]}]
@@ -218,7 +218,7 @@ sentence.add_label('language', 'English')
 print(sentence)
 ```
 
-출력 결과: 
+출력 결과:
 
 ```console
 Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0), soccer (1.0)], 'language': [English (1.0)]}]
@@ -259,7 +259,7 @@ for label in sentence.get_labels('topic'):
     print(label)
 ```
 
-위의 예제는 topic 라벨만 제공합니다 
+위의 예제는 topic 라벨만 제공합니다
 
 ## 다음 튜토리얼
 

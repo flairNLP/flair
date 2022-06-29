@@ -1,9 +1,9 @@
-pytest==6.2.5
+pytest
 pytest-mypy
 pytest-isort
 pytest-flake8
 flake8-black
-flake8<4.0.0
+flake8
 types-Deprecated
 types-dataclasses
 types-tabulate

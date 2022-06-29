@@ -126,7 +126,7 @@ embedding.embed(sentence)
 
 **참고**: 이 임베딩을 사용하기 위해서 `sentence-transformers`를 설치해야 합니다.
 
-`pip install sentence-transformers`. 
+`pip install sentence-transformers`.
 
 ## 다음 튜토리얼
 [나만의 모델을 훈련](/resources/docs/KOR_docs/TUTORIAL_7_TRAINING_A_MODEL.md)하기 위한 전제조건인 [말뭉치(corpus)를 로드](/resources/docs/KOR_docs/TUTORIAL_6_CORPUS.md)하는 튜토리얼이 준비되어 있습니다.

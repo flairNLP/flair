@@ -1,20 +1,20 @@
 # Tutorial 10: Few-Shot and Zero-Shot Classification (TARS)
 
-Task-aware representation of sentences (TARS) was introduced by [Halder et al. (2020)](https://kishaloyhalder.github.io/pdfs/tars_coling2020.pdf) as a simple and effective 
+Task-aware representation of sentences (TARS) was introduced by [Halder et al. (2020)](https://kishaloyhalder.github.io/pdfs/tars_coling2020.pdf) as a simple and effective
 method for **few-shot and even zero-shot learning for text classification**. This means you can classify
-text without (m)any training examples. 
+text without (m)any training examples.
 This model is implemented in Flair by the `TARSClassifier` class.
- 
-In this tutorial, we will show you different ways of using TARS: 
 
-    
+In this tutorial, we will show you different ways of using TARS:
+
+
 ## Use Case 1: Classify Text Without Training Data (Zero-Shot)
 
-In some cases, you might not have any training data for the text classification task you want to solve. In this case, 
+In some cases, you might not have any training data for the text classification task you want to solve. In this case,
 you can load our default TARS model and do zero-shot prediction. That is, you use the `predict_zero_shot` method
 of TARS and give it a list of label names. TARS will then try to match one of these labels to the text.
 
-For instance, say you want to predict whether text is "happy" or "sad" but you have no training data for this. 
+For instance, say you want to predict whether text is "happy" or "sad" but you have no training data for this.
 Just use TARS with this snippet:
 
 ```python
@@ -43,13 +43,13 @@ The output should look like:
 Sentence: "I am so glad you liked it !" → happy (0.8667)
 ```
 
-So the label "happy" was chosen for this sentence. 
+So the label "happy" was chosen for this sentence.
 
-Try it out with some other labels! Zero-shot prediction will sometimes (*but not always*) work remarkably well. 
+Try it out with some other labels! Zero-shot prediction will sometimes (*but not always*) work remarkably well.
 
 ## Use Case 2: Zero-shot Named Entity Recognition (NER) with TARS
 
-We extend the TARS zero-shot learning approach to sequence labeling and ship a pre-trained model for English NER. Try defining some classes and see if the model can find them: 
+We extend the TARS zero-shot learning approach to sequence labeling and ship a pre-trained model for English NER. Try defining some classes and see if the model can find them:
 
 ```python
 from flair.models import TARSTagger
@@ -76,7 +76,7 @@ for sentence in sentences:
     print(sentence.to_tagged_string("ner"))
 ```
 
-This should print: 
+This should print:
 
 ```console
 Sentence: "The Humboldt University of Berlin is situated near the Spree in Berlin , Germany" → ["Humboldt University of Berlin"/University, "Spree"/River, "Berlin"/City, "Germany"/Country]
@@ -90,15 +90,15 @@ Sentence: "Game of Thrones is my favorite series" → ["Game of Thrones"/TV Show
 
 
 So in these examples, we are finding entity classes such as "TV show" (_Game of Thrones_), "vehicle" (_Airbus A380_ and _Porsche Cayenne_), "soccer team" (_Bayern Munich_ and _Real Madrid_) and "river" (_Spree_), even though the model was never explicitly trained for this. Note that this is ongoing research and the examples are a bit cherry-picked. We expect the zero-shot model to improve quite a bit until the next release.
-## Use Case 3: Train a TARS model 
+## Use Case 3: Train a TARS model
 
 You can also train your own TARS model, either from scratch or by using the provided TARS model as a starting
 point. If you chose the latter, you might need only few training data to train a new task.
 
 ### How to train with one dataset
 
-Training with one dataset is almost exactly like training any other model in Flair. The only 
-difference is that it sometimes makes sense to rephrase label names into natural language descriptions. 
+Training with one dataset is almost exactly like training any other model in Flair. The only
+difference is that it sometimes makes sense to rephrase label names into natural language descriptions.
 For instance, the TREC dataset defines labels like "ENTY" that we rephrase to "question about entity".
 Better descriptions help TARS learn.
 
@@ -152,13 +152,13 @@ trainer.train(base_path='resources/taggers/trec',  # path to store the model art
               )
 ```
 
-This script starts from the TARS-base model, so a few epochs should be enough. But if you train a new TARS model from scratch instead 
+This script starts from the TARS-base model, so a few epochs should be enough. But if you train a new TARS model from scratch instead
 (see step 5a in the code snippet above) you will want to train for 10 or 20 epochs.
 
 
 ### How to train with multiple datasets
 
-TARS gets better at few-shot and zero-shot prediction if it learns from more than one classification task. 
+TARS gets better at few-shot and zero-shot prediction if it learns from more than one classification task.
 
 For instance, lets continue training the model we trained for TREC_6 with the GO_EMOTIONS dataset. The code
 again looks very similar. Just before you train on the new dataset, be sure to call `add_and_switch_to_new_task`.
@@ -198,16 +198,16 @@ trainer.train(base_path='resources/taggers/go_emotions', # path to store the mod
               )
 ```
 
-At the end of this training, the resulting model can make high quality predictions for 
+At the end of this training, the resulting model can make high quality predictions for
 both TREC_6 and GO_EMOTIONS and is an even better basis for few-shot learning than before.
 
 
 
 ## Switching between Tasks
 
-TARS can encapsulate the relationship between label names and the text in the underlying 
-language model. A single model can be trained on multiple corpora like above. For convenience, it 
-internally groups set of labels into different tasks. A user can look up what existing 
+TARS can encapsulate the relationship between label names and the text in the underlying
+language model. A single model can be trained on multiple corpora like above. For convenience, it
+internally groups set of labels into different tasks. A user can look up what existing
 tasks a TARS model was trained on, and then switch to one of them as needed.
 
 ```python

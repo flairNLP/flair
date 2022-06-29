@@ -159,17 +159,14 @@ class DistancePredictor(flair.nn.Model[Sentence]):
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
 
-        beta = 1.0 if "beta" not in state.keys() else state["beta"]
-        weight = 1 if "loss_max_weight" not in state.keys() else state["loss_max_weight"]
-
         return super()._init_model_with_state_dict(
             state,
-            word_embeddings=state["word_embeddings"],
-            max_distance=state["max_distance"],
-            beta=beta,
-            loss_max_weight=weight,
-            regression=state["regression"],
-            regr_loss_step=state["regr_loss_step"],
+            word_embeddings=state.get("word_embeddings"),
+            max_distance=state.get("max_distance"),
+            beta=state.get("beta", 1.0),
+            loss_max_weight=state.get("loss_max_weight", 1),
+            regression=state.get("regression"),
+            regr_loss_step=state.get("regr_loss_step"),
             **kwargs,
         )
 

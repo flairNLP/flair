@@ -227,10 +227,8 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-        label_name = state["label_name"] if "label_name" in state.keys() else None
-
         return super()._init_model_with_state_dict(
-            state, document_embeddings=state["document_embeddings"], label_name=label_name, **kwargs
+            state, document_embeddings=state.get("document_embeddings"), label_name=state.get("label_name"), **kwargs
         )
 
     @staticmethod
