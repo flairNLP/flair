@@ -48,4 +48,3 @@ sentence = Sentence('The grass is green .')
 # embed words in sentence
 embedding.embed(sentence)
 ```
-

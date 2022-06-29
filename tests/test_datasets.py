@@ -1,3 +1,4 @@
+import copy
 import shutil
 
 import pytest
@@ -107,9 +108,41 @@ def test_load_column_corpus_options(tasks_base_path):
     assert corpus.train[0].to_tokenized_string() == "This is New Berlin"
 
 
+def test_load_span_data(tasks_base_path):
+    # load column dataset with one entry
+    dataset = flair.datasets.ColumnDataset(
+        tasks_base_path / "span_labels" / "span_first.txt",
+        column_name_map={0: "text", 1: "ner"},
+    )
+
+    assert len(dataset) == 1
+    assert dataset[0][2].text == "RAB"
+    assert dataset[0][2].get_label("ner").value == "PARTA"
+
+    # load column dataset with two entries
+    dataset = flair.datasets.ColumnDataset(
+        tasks_base_path / "span_labels" / "span_second.txt",
+        column_name_map={0: "text", 1: "ner"},
+    )
+
+    assert len(dataset) == 2
+    assert dataset[1][2].text == "RAB"
+    assert dataset[1][2].get_label("ner").value == "PARTA"
+
+    # load column dataset with three entries
+    dataset = flair.datasets.ColumnDataset(
+        tasks_base_path / "span_labels" / "span_third.txt",
+        column_name_map={0: "text", 1: "ner"},
+    )
+
+    assert len(dataset) == 3
+    assert dataset[2][2].text == "RAB"
+    assert dataset[2][2].get_label("ner").value == "PARTA"
+
+
 def test_load_germeval_data(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
+    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "ner_german_germeval", column_format={0: "text", 2: "ner"})
 
     assert len(corpus.train) == 2
     assert len(corpus.dev) == 1
@@ -123,6 +156,29 @@ def test_load_ud_english_data(tasks_base_path):
     assert len(corpus.train) == 6
     assert len(corpus.test) == 4
     assert len(corpus.dev) == 2
+
+    # check if Token labels are correct
+    sentence = corpus.train[0]
+    assert sentence[0].text == "From"
+    assert sentence[0].get_label("upos").value == "ADP"
+    assert sentence[1].text == "the"
+    assert sentence[1].get_label("upos").value == "DET"
+
+
+def test_load_up_english_data(tasks_base_path):
+    # get training, test and dev data
+    corpus = flair.datasets.UP_ENGLISH(tasks_base_path)
+
+    assert len(corpus.train) == 4
+    assert len(corpus.test) == 2
+    assert len(corpus.dev) == 2
+
+    # check if Token labels for frames are correct
+    sentence = corpus.dev[0]
+    assert sentence[2].text == "AP"
+    assert sentence[2].get_label("frame", zero_tag_value="no_label").value == "no_label"
+    assert sentence[3].text == "comes"
+    assert sentence[3].get_label("frame").value == "come.03"
 
 
 def test_load_no_dev_data(tasks_base_path):
@@ -149,7 +205,7 @@ def test_load_no_dev_data_explicit(tasks_base_path):
 
 
 def test_multi_corpus(tasks_base_path):
-    corpus_1 = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
+    corpus_1 = flair.datasets.ColumnCorpus(tasks_base_path / "ner_german_germeval", column_format={0: "text", 2: "ner"})
 
     corpus_2 = flair.datasets.ColumnCorpus(tasks_base_path / "fashion", column_format={0: "text", 2: "ner"})
     # get two corpora as one
@@ -190,14 +246,14 @@ def _assert_conllu_dataset(dataset):
     ]
 
     assert [token.whitespace_after for token in sent1.tokens] == [
-        True,
-        True,
-        True,
-        True,
-        True,
-        True,
-        False,
-        True,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
     ]
 
     ner_spans1 = sent1.get_labels("ner")
@@ -299,12 +355,12 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
     sent1: Sentence = dataset[0]
 
     assert [token.whitespace_after for token in sent1.tokens] == [
-        True,
-        True,
-        True,
-        True,
-        False,
-        True,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
     ]
 
     assert len(sent1.get_labels("Number")) == 4
@@ -366,8 +422,9 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
 
 def test_hipe_2022_corpus(tasks_base_path):
     """
-    This test covers the complete v1.0 version of the HIPE 2022,
-    including the version with document separator.
+    This test covers the complete HIPE 2022 dataset.
+    https://github.com/hipe-eval/HIPE-2022-data
+    Includes variant with document separator, and all versions of the dataset.
     """
 
     # We have manually checked, that these numbers are correct:
@@ -439,7 +496,7 @@ def test_hipe_2022_corpus(tasks_base_path):
         }
     }
 
-    hipe_stats["v2.0"] = hipe_stats["v1.0"].copy()
+    hipe_stats["v2.0"] = copy.deepcopy(hipe_stats["v1.0"])
     hipe_stats["v2.0"]["ajmc"] = {
         "de": {
             "train": {
@@ -474,10 +531,8 @@ def test_hipe_2022_corpus(tasks_base_path):
             },
         },
     }
-    hipe_stats["v2.0"]["newseye"] = {
-        "de": {
-            "train": {"sents": 20839 + 1, "docs": 7, "labels": ["HumanProd", "LOC", "ORG", "PER"]}  # missing EOD marker
-        }
+    hipe_stats["v2.0"]["newseye"]["de"] = {
+        "train": {"sents": 20839 + 1, "docs": 7, "labels": ["HumanProd", "LOC", "ORG", "PER"]}  # missing EOD marker
     }
     hipe_stats["v2.0"]["sonar"] = {
         "de": {
@@ -488,8 +543,77 @@ def test_hipe_2022_corpus(tasks_base_path):
             }
         }
     }
+    hipe_stats["v2.1"] = copy.deepcopy(hipe_stats["v2.0"])
+    hipe_stats["v2.1"]["hipe2020"]["fr"]["train"] = {
+        "sents": 5743,
+        "docs": 158,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
 
-    def test_hipe_2022(dataset_version="v1.0", add_document_separator=True):
+    # Test data for v2.1 release
+    hipe_stats["v2.1"]["ajmc"]["de"]["test"] = {
+        "sents": 224,
+        "docs": 16,
+        "labels": ["loc", "object", "pers", "scope", "work"],
+    }
+    hipe_stats["v2.1"]["ajmc"]["en"]["test"] = {
+        "sents": 238,
+        "docs": 13,
+        "labels": ["date", "loc", "pers", "scope", "work"],
+    }
+    hipe_stats["v2.1"]["ajmc"]["fr"]["test"] = {
+        "sents": 188 + 1,  # 1 sentence with missing EOS marker
+        "docs": 15,
+        "labels": ["date", "loc", "pers", "scope", "work"],
+    }
+    hipe_stats["v2.1"]["hipe2020"]["de"]["test"] = {
+        "sents": 1215 + 2,  # 2 sentences with missing EOS marker
+        "docs": 49,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+    hipe_stats["v2.1"]["hipe2020"]["en"]["test"] = {
+        "sents": 553,
+        "docs": 46,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+    hipe_stats["v2.1"]["hipe2020"]["fr"]["test"] = {
+        "sents": 1462,
+        "docs": 43,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+    hipe_stats["v2.1"]["letemps"]["fr"]["test"] = {"sents": 2381, "docs": 51, "labels": ["loc", "org", "pers"]}
+    hipe_stats["v2.1"]["newseye"]["de"]["test"] = {
+        "sents": 3336 + 1,  # 1 missing EOD marker
+        "docs": 13,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["newseye"]["fi"]["test"] = {
+        "sents": 390 + 1,  # 1 missing EOD marker
+        "docs": 24,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["newseye"]["fr"]["test"] = {
+        "sents": 2534 + 1,  # 1 missing EOD marker
+        "docs": 35,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["newseye"]["sv"]["test"] = {
+        "sents": 342 + 1,  # 1 missing EOD marker
+        "docs": 21,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["sonar"]["de"]["test"] = {
+        "sents": 807 + 8 + 1,  # 8 missing EOS marker + missing EOD
+        "docs": 10,
+        "labels": ["LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["topres19th"]["en"]["test"] = {
+        "sents": 2001,
+        "docs": 112,
+        "labels": ["BUILDING", "LOC", "STREET"],
+    }
+
+    def test_hipe_2022(dataset_version="v2.1", add_document_separator=True):
         for dataset_name, languages in hipe_stats[dataset_version].items():
             for language in languages:
                 splits = languages[language]
@@ -503,7 +627,7 @@ def test_hipe_2022_corpus(tasks_base_path):
                 )
 
                 for split_name, stats in splits.items():
-                    split_description = f"{dataset_name}/{language}@{split_name}"
+                    split_description = f"{dataset_name}@{dataset_version}/{language}#{split_name}"
 
                     current_sents = stats["sents"]
                     current_docs = stats["docs"]
@@ -557,6 +681,8 @@ def test_hipe_2022_corpus(tasks_base_path):
     test_hipe_2022(dataset_version="v1.0", add_document_separator=False)
     test_hipe_2022(dataset_version="v2.0", add_document_separator=True)
     test_hipe_2022(dataset_version="v2.0", add_document_separator=False)
+    test_hipe_2022(dataset_version="v2.1", add_document_separator=True)
+    test_hipe_2022(dataset_version="v2.1", add_document_separator=False)
 
 
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
@@ -584,7 +710,7 @@ def test_jsonl_dataset_should_use_label_type(tasks_base_path):
     """
     Tests whether the dataset respects the label_type parameter
     """
-    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl", label_type="pos")  # use other type
+    dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl", label_type="pos")  # use other type
 
     for sentence in dataset.sentences:
         assert sentence.has_label("pos")
@@ -595,11 +721,14 @@ def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
     """
     Tests reading a JsonlDataset containing multiple tagged entries
     """
-    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl")
+    dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl")
 
     assert len(dataset.sentences) == 5
-    assert dataset.sentences[0].get_token(3).get_label("ner").value == "B-LOC"
-    assert dataset.sentences[0].get_token(4).get_label("ner").value == "I-LOC"
+    expected_labels = ["O", "O", "B-LOC", "I-LOC"]
+    assert [[label.value for label in t.get_labels("ner")] for t in dataset.sentences[0]] == [
+        [e] for e in expected_labels
+    ]
+    assert [dataset.sentences[0].get_token(i).get_label("ner").value for i in range(1, 5)] == expected_labels
 
 
 def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):

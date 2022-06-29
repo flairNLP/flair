@@ -163,11 +163,11 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     def _init_model_with_state_dict(cls, state, **kwargs):
         return super()._init_model_with_state_dict(
             state,
-            word_embeddings=state["word_embeddings"],
-            label_dictionary=state["label_dictionary"],
-            label_type=state["label_type"],
-            pooling_operation=state["pooling_operation"],
-            loss_weights=state["loss_weights"] if "loss_weights" in state else {"<unk>": 0.3},
+            word_embeddings=state.get("word_embeddings"),
+            label_dictionary=state.get("label_dictionary"),
+            label_type=state.get("label_type"),
+            pooling_operation=state.get("pooling_operation"),
+            loss_weights=state.get("loss_weights", {"<unk>": 0.3}),
             **kwargs,
         )
 

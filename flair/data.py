@@ -198,7 +198,7 @@ class Label:
     score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
-    def __init__(self, data_point, value: Optional[str], score: float = 1.0):
+    def __init__(self, data_point: "DataPoint", value: Optional[str], score: float = 1.0):
         self._value = value
         self._score = score
         self.data_point: DataPoint = data_point
@@ -436,20 +436,19 @@ class _PartOfSentence(DataPoint, ABC):
 
     def add_label(self, typename: str, value: str, score: float = 1.0):
         super().add_label(typename, value, score)
-
-        label = Label(self, value, score)
-        if typename not in self.sentence.annotation_layers:
-            self.sentence.annotation_layers[typename] = [label]
-        else:
-            self.sentence.annotation_layers[typename].append(label)
+        self.sentence.annotation_layers.setdefault(typename, []).append(Label(self, value, score))
 
     def set_label(self, typename: str, value: str, score: float = 1.0):
+        if len(self.annotation_layers.get(typename, [])) > 0:
+            # First we remove any existing labels for this PartOfSentence in self.sentence
+            self.sentence.annotation_layers[typename] = [
+                label for label in self.sentence.annotation_layers.get(typename, []) if label.data_point != self
+            ]
+        self.sentence.annotation_layers.setdefault(typename, []).append(Label(self, value, score))
         super().set_label(typename, value, score)
-        self.sentence.annotation_layers[typename] = [Label(self, value, score)]
         return self
 
     def remove_labels(self, typename: str):
-
         # labels also need to be deleted at Sentence object
         for label in self.get_labels(typename):
             self.sentence.annotation_layers[typename].remove(label)
@@ -468,7 +467,7 @@ class Token(_PartOfSentence):
         self,
         text: str,
         head_id: int = None,
-        whitespace_after: bool = True,
+        whitespace_after: int = 1,
         start_position: int = 0,
         sentence=None,
     ):
@@ -477,7 +476,7 @@ class Token(_PartOfSentence):
         self.form: str = text
         self._internal_index: Optional[int] = None
         self.head_id: Optional[int] = head_id
-        self.whitespace_after: bool = whitespace_after
+        self.whitespace_after: int = whitespace_after
 
         self.start_pos = start_position
         self.end_pos = start_position + len(text)
@@ -711,16 +710,18 @@ class Sentence(DataPoint):
             try:
                 word_offset = text.index(word, current_offset)
                 start_position = word_offset
+                delta_offset = start_position - current_offset
             except ValueError:
                 word_offset = previous_word_offset + 1
                 start_position = current_offset + 1 if current_offset > 0 else current_offset
+                delta_offset = start_position - current_offset
 
             if word:
-                token = Token(text=word, start_position=start_position, whitespace_after=True)
+                token = Token(text=word, start_position=start_position)
                 self.add_token(token)
 
-            if (previous_token is not None) and word_offset - 1 == previous_word_offset:
-                previous_token.whitespace_after = False
+            if previous_token is not None:
+                previous_token.whitespace_after = delta_offset
 
             current_offset = word_offset + len(word)
             previous_word_offset = current_offset - 1
@@ -728,7 +729,7 @@ class Sentence(DataPoint):
 
         # the last token has no whitespace after
         if len(self) > 0:
-            self.tokens[-1].whitespace_after = False
+            self.tokens[-1].whitespace_after = 0
 
         # log a warning if the dataset is empty
         if text == "":
@@ -785,9 +786,7 @@ class Sentence(DataPoint):
         token.sentence = self
         token._internal_index = len(self.tokens) + 1
         if token.start_position == 0 and len(self) > 0:
-            token.start_pos = (
-                len(self.to_original_text()) + 1 if self[-1].whitespace_after else len(self.to_original_text())
-            )
+            token.start_pos = len(self.to_original_text()) + self[-1].whitespace_after
             token.end_pos = token.start_pos + len(token.text)
 
         # append token to sentence
@@ -895,8 +894,8 @@ class Sentence(DataPoint):
         plain = ""
         for token in self.tokens:
             plain += token.text
-            if token.whitespace_after:
-                plain += " "
+            if token.whitespace_after > 0:
+                plain += token.whitespace_after * " "
         return plain.rstrip()
 
     def infer_space_after(self):
@@ -913,20 +912,20 @@ class Sentence(DataPoint):
             if token.text == '"':
                 quote_count += 1
                 if quote_count % 2 != 0:
-                    token.whitespace_after = False
+                    token.whitespace_after = 0
                 elif last_token is not None:
-                    last_token.whitespace_after = False
+                    last_token.whitespace_after = 0
 
             if last_token is not None:
 
                 if token.text in [".", ":", ",", ";", ")", "n't", "!", "?"]:
-                    last_token.whitespace_after = False
+                    last_token.whitespace_after = 0
 
                 if token.text.startswith("'"):
-                    last_token.whitespace_after = False
+                    last_token.whitespace_after = 0
 
             if token.text in ["("]:
-                token.whitespace_after = False
+                token.whitespace_after = 0
 
             last_token = token
         return self
@@ -982,20 +981,6 @@ class Sentence(DataPoint):
 
     def __repr__(self):
         return self.__str__()
-
-    def __copy__(self):
-        s = Sentence()
-        for token in self.tokens:
-            nt = Token(token.text)
-            for tag_type in token.tags:
-                nt.add_label(
-                    tag_type,
-                    token.get_tag(tag_type).value,
-                    token.get_tag(tag_type).score,
-                )
-
-            s.add_token(nt)
-        return s
 
     @property
     def start_position(self) -> int:
@@ -1418,7 +1403,7 @@ class Corpus:
         for sent in sentences:
             for token in sent.tokens:
                 if label_type in token.annotation_layers.keys():
-                    label = token.get_tag(label_type)
+                    label = token.get_label(label_type)
                     label_count[label.value] += 1
         return label_count
 
@@ -1429,12 +1414,15 @@ class Corpus:
             _len_dataset(self.test) if self.test else 0,
         )
 
-    def make_label_dictionary(self, label_type: str, min_count: int = -1) -> Dictionary:
+    def make_label_dictionary(self, label_type: str, min_count: int = -1, add_unk: bool = True) -> Dictionary:
         """
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
         """
-        label_dictionary: Dictionary = Dictionary(add_unk=True)
+        if min_count > 0 and not add_unk:
+            raise ValueError("Cannot require a minimum count if no unk-token is created.")
+
+        label_dictionary: Dictionary = Dictionary(add_unk=add_unk)
         label_dictionary.span_labels = False
 
         assert self.train
@@ -1521,7 +1509,7 @@ class Corpus:
         tag_dictionary.add_item("O")
         for sentence in _iter_dataset(self.get_all_sentences()):
             for token in sentence.tokens:
-                tag_dictionary.add_item(token.get_tag(tag_type).value)
+                tag_dictionary.add_item(token.get_label(tag_type).value)
         tag_dictionary.add_item("<START>")
         tag_dictionary.add_item("<STOP>")
         return tag_dictionary

@@ -12,7 +12,7 @@ A very simple framework for **state-of-the-art NLP**. Developed by [Humboldt Uni
 Flair is:
 
 * **A powerful NLP library.** Flair allows you to apply our state-of-the-art natural language processing (NLP)
-models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS), 
+models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS),
   special support for [biomedical data](/resources/docs/HUNFLAIR.md),
  sense disambiguation and classification, with support for a rapidly growing number of languages.
 
@@ -27,7 +27,7 @@ Now at [version 0.11](https://github.com/flairNLP/flair/releases)!
 
 ## State-of-the-Art Models
 
-Flair ships with state-of-the-art models for a range of NLP tasks. For instance, check out our latest NER models: 
+Flair ships with state-of-the-art models for a range of NLP tasks. For instance, check out our latest NER models:
 
 | Language | Dataset | Flair | Best published | Model card & demo
 |  ---  | ----------- | ---------------- | ------------- | ------------- |
@@ -37,7 +37,7 @@ Flair ships with state-of-the-art models for a range of NLP tasks. For instance,
 | Dutch  | Conll-03  (4-class)  |  **95.25**  | *93.7 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Dutch 4-class NER demo](https://huggingface.co/flair/ner-dutch-large)  |
 | Spanish  | Conll-03 (4-class)   |  **90.54** | *90.3 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 4-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
 
-**New:** Most Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are now hosted 
+**New:** Most Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are now hosted
 on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?library=flair&sort=downloads)! You can browse models, check detailed information on how they were trained, and even try each model out online!
 
 
@@ -145,7 +145,7 @@ If you use the Flair framework for your experiments, please cite [this paper](ht
 
 ```
 @inproceedings{akbik2019flair,
-  title={FLAIR: An easy-to-use framework for state-of-the-art NLP},
+  title={{FLAIR}: An easy-to-use framework for state-of-the-art {NLP}},
   author={Akbik, Alan and Bergmann, Tanja and Blythe, Duncan and Rasul, Kashif and Schweter, Stefan and Vollgraf, Roland},
   booktitle={{NAACL} 2019, 2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics (Demonstrations)},
   pages={54--59},
@@ -157,12 +157,13 @@ If you use our new "FLERT" models or approach, please cite [this paper](https://
 
 ```
 @misc{schweter2020flert,
-    title={FLERT: Document-Level Features for Named Entity Recognition},
+    title={{FLERT}: Document-Level Features for Named Entity Recognition},
     author={Stefan Schweter and Alan Akbik},
     year={2020},
     eprint={2011.06993},
     archivePrefix={arXiv},
     primaryClass={cs.CL}
+}
 ```
 
 If you use our TARS approach for few-shot and zero-shot learning, please cite [this paper](https://kishaloyhalder.github.io/pdfs/tars_coling2020.pdf/):

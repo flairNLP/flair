@@ -4,7 +4,7 @@ Here, we collect the best embedding configurations for each NLP task. If
 you achieve better numbers, let us know which exact configuration of Flair
 you used and we will add your experiment here!
 
-**Data.** For each experiment, you need to first get the evaluation dataset. Then execute the code as provided in this 
+**Data.** For each experiment, you need to first get the evaluation dataset. Then execute the code as provided in this
 documentation. Also check out the [tutorials](/resources/docs/TUTORIAL_1_BASICS.md) to get a better overview of
 how Flair works.
 
@@ -17,7 +17,7 @@ how Flair works.
 
 #### Data
 The [CoNLL-03 data set for English](https://www.clips.uantwerpen.be/conll2003/ner/) is probably the most
-well-known dataset to evaluate NER on. It contains 4 entity classes. Follows the steps on the task Web site to 
+well-known dataset to evaluate NER on. It contains 4 entity classes. Follows the steps on the task Web site to
 get the dataset and place train, test and dev data in `/resources/tasks/conll_03/` as follows:
 
 ```
@@ -26,7 +26,7 @@ resources/tasks/conll_03/eng.testb
 resources/tasks/conll_03/eng.train
 ```
 
-This allows the `CONLL_03()` corpus object to read the data into our data structures. Initialize the corpus as follows: 
+This allows the `CONLL_03()` corpus object to read the data into our data structures. Initialize the corpus as follows:
 
 ```python
 from flair.datasets import CONLL_03
@@ -37,7 +37,7 @@ This gives you a `Corpus` object that contains the data. Now, select `ner` as th
 
 #### Best Known Configuration
 
-The full code to get a state-of-the-art model for English NER is as follows: 
+The full code to get a state-of-the-art model for English NER is as follows:
 
 ```python
 from flair.data import Corpus
@@ -83,7 +83,7 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
-              train_with_dev=True,  
+              train_with_dev=True,
               max_epochs=150)
 ```
 
@@ -146,7 +146,7 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
-              train_with_dev=True,  
+              train_with_dev=True,
               max_epochs=150)
 ```
 
@@ -248,7 +248,7 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
-              train_with_dev=True,  
+              train_with_dev=True,
               max_epochs=150)
 ```
 
@@ -262,8 +262,8 @@ trainer.train('resources/taggers/example-ner',
 #### Data
 
 The [Ontonotes corpus](https://catalog.ldc.upenn.edu/docs/LDC2013T19/OntoNotes-Release-5.0.pdf) is one of the best resources
-for different types of NLP and contains rich NER annotation. Get the corpus and split it into train, test and dev 
-splits using the scripts provided by the [CoNLL-12 shared task](http://conll.cemantix.org/2012/data.html). 
+for different types of NLP and contains rich NER annotation. Get the corpus and split it into train, test and dev
+splits using the scripts provided by the [CoNLL-12 shared task](http://conll.cemantix.org/2012/data.html).
 
 Place train, test and dev data in CoNLL-03 format in  `resources/tasks/onto-ner/` as follows:
 
@@ -275,8 +275,8 @@ resources/tasks/onto-ner/eng.train
 
 #### Best Known Configuration
 
-Once you have the data, reproduce our experiments exactly like for CoNLL-03, just with a different dataset and with 
-FastText embeddings (they work better on this dataset). You also need to provide a `column_format` for the `ColumnCorpus` object indicating which column in the training file is the 'ner' information. The full code then is as follows: 
+Once you have the data, reproduce our experiments exactly like for CoNLL-03, just with a different dataset and with
+FastText embeddings (they work better on this dataset). You also need to provide a `column_format` for the `ColumnCorpus` object indicating which column in the training file is the 'ner' information. The full code then is as follows:
 
 ```python
 from flair.data import Corpus
@@ -286,8 +286,7 @@ from typing import List
 
 # 1. get the corpus
 corpus: Corpus = flair.datasets.ColumnCorpus('resources/tasks/onto-ner',
-                                             column_format={0: 'text', 1: 'pos', 2: 'upos', 3: 'ner'},
-                                             tag_to_bioes='ner')
+                                             column_format={0: 'text', 1: 'pos', 2: 'upos', 3: 'ner'})
 
 # 2. what tag do we want to predict?
 tag_type = 'ner'
@@ -319,7 +318,7 @@ trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,
-              train_with_dev=True,  
+              train_with_dev=True,
               # it's a big dataset so maybe set embeddings_storage_mode to 'none' (embeddings are not kept in memory)
               embeddings_storage_mode='none')
 ```
@@ -336,7 +335,7 @@ trainer.train('resources/taggers/example-ner',
 
 Get the [Penn treebank](https://catalog.ldc.upenn.edu/ldc99t42) and follow the guidelines
 in [Collins (2002)](http://www.cs.columbia.edu/~mcollins/papers/tagperc.pdf) to produce train, dev and test splits.
-Convert splits into CoNLLU-U format and place train, test and dev data in `/path/to/penn/` as follows: 
+Convert splits into CoNLLU-U format and place train, test and dev data in `/path/to/penn/` as follows:
 
 ```
 /path/to/penn/test.conll
@@ -344,8 +343,8 @@ Convert splits into CoNLLU-U format and place train, test and dev data in `/path
 /path/to/penn/valid.conll
 ```
 
-Then, run the experiments with extvec embeddings and contextual string embeddings. Also, select 'pos' as `tag_type`, 
-so the algorithm knows that POS tags and not NER are to be predicted from this data. 
+Then, run the experiments with extvec embeddings and contextual string embeddings. Also, select 'pos' as `tag_type`,
+so the algorithm knows that POS tags and not NER are to be predicted from this data.
 
 #### Best Known Configuration
 
@@ -386,7 +385,7 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-pos',
-              train_with_dev=True,  
+              train_with_dev=True,
               max_epochs=150)
 ```
 
@@ -401,8 +400,8 @@ Data is included in Flair and will get automatically downloaded when you run the
 
 
 #### Best Known Configuration
-Run the code with extvec embeddings and our proposed contextual string embeddings. Use 'np' as `tag_type`, 
-so the algorithm knows that chunking tags and not NER are to be predicted from this data. 
+Run the code with extvec embeddings and our proposed contextual string embeddings. Use 'np' as `tag_type`,
+so the algorithm knows that chunking tags and not NER are to be predicted from this data.
 
 ```python
 from flair.data import Corpus
@@ -442,6 +441,6 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-chunk',
-              train_with_dev=True,  
+              train_with_dev=True,
               max_epochs=150)
 ```

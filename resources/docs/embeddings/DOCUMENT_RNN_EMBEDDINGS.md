@@ -30,7 +30,7 @@ print(sentence.get_embedding())
 This will output a single embedding for the complete sentence. The embedding dimensionality depends on the number of
 hidden states you are using and whether the RNN is bidirectional or not.
 
-### RNN type 
+### RNN type
 
 If you want to use a different type of RNN, you need to set the `rnn_type` parameter in the constructor. So,
 to initialize a document RNN embedding with an LSTM, do:

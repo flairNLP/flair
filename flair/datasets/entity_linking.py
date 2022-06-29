@@ -388,7 +388,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        check_existence: bool = False,
+        use_ids_and_check_existence: bool = False,
         **corpusargs,
     ):
         """
@@ -402,7 +402,8 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
         in_memory: If True, keeps dataset in memory giving speedups in training.
-        check_existence: If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be igrnored.
+        use_ids_and_check_existence: If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be ignored. This also means that one works with
+            current wikipedia-arcticle names and possibly alter some of the out-dated ones in the original dataset
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -411,6 +412,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
+        dataset_name = dataset_name + "_ids" if use_ids_and_check_existence else dataset_name + "_raw"
 
         data_folder = base_path / dataset_name
 
@@ -420,17 +422,17 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
 
         if not parsed_dataset.exists():
 
-            import wikipediaapi
-
-            wiki_wiki = wikipediaapi.Wikipedia(language="en")
-
             testa_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_testa", Path("datasets") / dataset_name)
             testb_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_testb", Path("datasets") / dataset_name)
             train_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_train", Path("datasets") / dataset_name)
 
-            # we use the wikiids in the data instead of directly utilizing the wikipedia urls.
-            # like this we can quickly check if the corresponding page exists
-            wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
+            if use_ids_and_check_existence:
+                # we use the wikiids in the data instead of directly utilizing the wikipedia urls.
+                # like this we can quickly check if the corresponding page exists
+                import wikipediaapi
+
+                wiki_wiki = wikipediaapi.Wikipedia(language="en")
+                wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
 
             for name, path in zip(
                 ["train", "testa", "testb"],
@@ -458,20 +460,21 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
                                 else:
                                     write.write(line_list[0] + "\tO\n")
                         else:  # line with annotation
-                            wikiname = wikiid_wikiname_dict[line_list[5].strip()]
-                            if wikiname != "O":
-                                write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
-                            else:
-                                # if there is a bad wikiid we can check if the given url in the data exists using wikipediaapi
-                                wikiname = line_list[4].split("/")[-1]
-                                if check_existence:
+                            if use_ids_and_check_existence:
+                                wikiname = wikiid_wikiname_dict[line_list[5].strip()]
+                                if wikiname != "O":
+                                    write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
+                                else:
+                                    # if there is a bad wikiid we can check if the given url in the data exists using wikipediaapi
+                                    wikiname = line_list[4].split("/")[-1]
                                     page = wiki_wiki.page(wikiname)
                                     if page.exists():
                                         write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
                                     else:  # neither the wikiid nor the url exist
                                         write.write(line_list[0] + "\tO\n")
-                                else:
-                                    write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
+                            else:  # write wikipedia names as given in the file
+                                wikiname = line_list[4].split("/")[-1]
+                                write.write(line_list[0] + "\t" + line_list[1] + "-" + wikiname + "\n")
 
                 # delete unprocessed file
                 os.remove(path)
@@ -1180,7 +1183,6 @@ class WSD_UFSAC(MultiCorpus):
         in_memory: bool = True,
         cut_multisense: bool = True,
         columns={0: "text", 3: "sense"},
-        tag_to_bioes=None,
         banned_sentences: List[str] = None,
         sample_missing_splits_in_multicorpus: Union[bool, str] = True,
         sample_missing_splits_in_each_corpus: Union[bool, str] = True,
@@ -1206,7 +1208,6 @@ class WSD_UFSAC(MultiCorpus):
                                senses will be detected as one new sense. The default is True.
         :param columns: Columns to consider when loading the dataset. You can add 1: "lemma" or 2: "pos" to the default dict {0: "text", 3: "sense"}
             if you want to use additional pos and/or lemma for the words.
-        :param tag_to_bioes: whether to convert to BIOES tagging scheme
         :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
         :param sample_missing_splits_in_multicorpus: Whether to sample missing splits when loading the multicorpus (this is redundant if
                                                                                                                     sample_missing_splits_in_each_corpus is True)
@@ -1281,7 +1282,6 @@ class WSD_UFSAC(MultiCorpus):
                 column_format=columns,
                 test_file=test_file,  # corpus only has test data
                 in_memory=in_memory,
-                tag_to_bioes=tag_to_bioes,
                 column_delimiter="\t",
                 document_separator_token="-DOCSTART-",
                 banned_sentences=banned_sentences,
@@ -1304,7 +1304,6 @@ class WSD_UFSAC(MultiCorpus):
                 column_format=columns,
                 train_file=new_filename,
                 in_memory=in_memory,
-                tag_to_bioes=tag_to_bioes,
                 column_delimiter="\t",
                 document_separator_token="-DOCSTART-",
                 banned_sentences=banned_sentences,
@@ -1327,7 +1326,6 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
         sample_missing_splits: bool = True,
@@ -1381,7 +1379,6 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
             document_separator_token="-DOCSTART-",
             column_delimiter="\t",
             autofind_splits=False,
-            tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
             banned_sentences=banned_sentences,
             sample_missing_splits=sample_missing_splits,
@@ -1394,7 +1391,6 @@ class WSD_SEMCOR(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
         sample_missing_splits: Union[bool, str] = True,
@@ -1460,7 +1456,6 @@ class WSD_SEMCOR(ColumnCorpus):
             document_separator_token="-DOCSTART-",
             column_delimiter="\t",
             autofind_splits=False,
-            tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
             banned_sentences=banned_sentences,
             sample_missing_splits=sample_missing_splits,
@@ -1473,7 +1468,6 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
         sample_missing_splits: Union[bool, str] = True,
@@ -1536,7 +1530,6 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
             document_separator_token="-DOCSTART-",
             column_delimiter="\t",
             autofind_splits=False,
-            tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
             banned_sentences=banned_sentences,
             sample_missing_splits=sample_missing_splits,
@@ -1549,7 +1542,6 @@ class WSD_MASC(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
         sample_missing_splits: Union[bool, str] = True,
@@ -1616,7 +1608,6 @@ class WSD_MASC(ColumnCorpus):
             document_separator_token="-DOCSTART-",
             column_delimiter="\t",
             autofind_splits=False,
-            tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
             banned_sentences=banned_sentences,
             sample_missing_splits=sample_missing_splits,
@@ -1629,7 +1620,6 @@ class WSD_OMSTI(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
         sample_missing_splits: Union[bool, str] = True,
@@ -1697,7 +1687,6 @@ class WSD_OMSTI(ColumnCorpus):
             document_separator_token="-DOCSTART-",
             column_delimiter="\t",
             autofind_splits=False,
-            tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
             banned_sentences=banned_sentences,
             sample_missing_splits=sample_missing_splits,
@@ -1710,7 +1699,6 @@ class WSD_TRAINOMATIC(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        tag_to_bioes=None,
         label_name_map: Dict[str, str] = None,
         banned_sentences: List[str] = None,
         sample_missing_splits: Union[bool, str] = True,
@@ -1775,7 +1763,6 @@ class WSD_TRAINOMATIC(ColumnCorpus):
             document_separator_token="-DOCSTART-",
             column_delimiter="\t",
             autofind_splits=False,
-            tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
             banned_sentences=banned_sentences,
             sample_missing_splits=sample_missing_splits,

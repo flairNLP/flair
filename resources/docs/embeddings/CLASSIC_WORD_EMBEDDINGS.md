@@ -112,4 +112,3 @@ word_vectors.save('/path/to/converted')
 ```
 
 However, FastText embeddings have the functionality of returning vectors for out of vocabulary words using the sub-word information. If you want to use this then try `FastTextEmbeddings` class.
-

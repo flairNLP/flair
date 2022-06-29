@@ -355,14 +355,14 @@ class SimilarityLearner(flair.nn.Model[DataPair[DT, DT2]]):
 
         return super()._init_model_with_state_dict(
             state,
-            source_embeddings=state["input_modality_0_embedding"],
-            target_embeddings=state["input_modality_1_embedding"],
-            source_mapping=state["source_mapping"],
-            target_mapping=state["target_mapping"],
-            similarity_measure=state["similarity_measure"],
-            similarity_loss=state["similarity_loss"],
-            eval_device=state["eval_device"],
-            recall_at_points=state["recall_at_points"],
-            recall_at_points_weights=state["recall_at_points_weights"],
+            source_embeddings=state.get("input_modality_0_embedding"),
+            target_embeddings=state.get("input_modality_1_embedding"),
+            source_mapping=state.get("source_mapping"),
+            target_mapping=state.get("target_mapping"),
+            similarity_measure=state.get("similarity_measure"),
+            similarity_loss=state.get("similarity_loss"),
+            eval_device=state.get("eval_device"),
+            recall_at_points=state.get("recall_at_points"),
+            recall_at_points_weights=state.get("recall_at_points_weights"),
             **kwargs,
         )

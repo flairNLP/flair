@@ -372,7 +372,7 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
         )
         data_file = data_folder / "conll04-train.conllu"
 
-        if True or not data_file.is_file():
+        if not data_file.is_file():
             source_data_folder = data_folder / "original"
             cached_path(f"{conll04_url}train.txt", source_data_folder)
             cached_path(f"{conll04_url}dev.txt", source_data_folder)
