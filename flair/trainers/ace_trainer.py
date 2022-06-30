@@ -122,7 +122,7 @@ class AceEmbeddings(Embeddings[Sentence]):
         m = torch.distributions.Bernoulli(one_prob)
         log.info(f"Embedding probabilities: {one_prob}")
         v = m.sample()
-        while v.sum().item() == 0 or self.active == v:
+        while v.sum() == 0 or (self.active == v).all():
             v = m.sample()
         self.active = v
         log.info(f"Set new configuration, embeddings are: {self.get_names()}")
