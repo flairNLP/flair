@@ -10,7 +10,7 @@ sentence_list = [sentences_1, sentences_2]
 label_dict = corpus.make_label_dictionary(label_type='ner')
 # Example use of the GazetteerEmbeddings Class
 gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers= # the path to the gazetteer directory
-                                                               "gazetteer-collection",
+                                                               "ner_model_count_sensitive_gazetteers",
                                                                partial_matching=True,
                                                                full_matching=True,
                                                                label_dict=None, # label_dict only needed if selected set of gazetteers is used -> that would be the case if use_all_gazetteers=False
