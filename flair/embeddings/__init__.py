@@ -46,6 +46,7 @@ from .token import (
     ELMoEmbeddings,
     FastTextEmbeddings,
     FlairEmbeddings,
+    GazetteerEmbeddings,
     HashEmbeddings,
     MuseCrosslingualEmbeddings,
     NILCEmbeddings,
@@ -54,7 +55,6 @@ from .token import (
     StackedEmbeddings,
     TokenEmbeddings,
     TransformerWordEmbeddings,
-    GazetteerEmbeddings,
     WordEmbeddings,
 )
 
