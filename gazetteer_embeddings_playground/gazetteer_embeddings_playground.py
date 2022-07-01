@@ -1,7 +1,6 @@
+from flair.data import Sentence
 from flair.datasets import CONLL_03
 from flair.embeddings import StackedEmbeddings, GazetteerEmbeddings
-from flair.data import Sentence
-
 corpus = CONLL_03()
 sentences_1 = Sentence('Jack in the Box is an American fast-food restaurant chain founded in 1951.')
 sentences_2 = Sentence('The Land Tenure Reform Association (LTRA).')
