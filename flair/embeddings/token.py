@@ -1391,6 +1391,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
                 self.language_embeddings[language_code] = gensim.models.KeyedVectors.load(str(embeddings_file))
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+
                 word_embedding = self.get_cached_vec(language_code=language_code, word=token.text)
 
                 token.set_embedding(self.name, word_embedding)
