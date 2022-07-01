@@ -24,11 +24,11 @@ HTML_PAGE = """
 """  # noqa: E501
 
 
-def split_to_spans(s: Sentence):
+def split_to_spans(s: Sentence, label_name="ner"):
     orig = s.to_original_text()
     last_idx = 0
     spans = []
-    tagged_ents = s.get_labels("ner")
+    tagged_ents = s.get_labels(label_name)
     for ent in tagged_ents:
         if last_idx != ent.data_point.start_position:
             spans.append((orig[last_idx : ent.data_point.start_position], None))
@@ -52,6 +52,7 @@ def render_ner_html(
     },
     default_color: str = "#ddd",
     wrap_page=True,
+    label_name="ner",
 ) -> str:
     """
     :param sentences: single sentence or list of sentences to convert to HTML
@@ -65,7 +66,7 @@ def render_ner_html(
         sentences = [sentences]
     sentences_html = []
     for s in sentences:
-        spans = split_to_spans(s)
+        spans = split_to_spans(s, label_name=label_name)
         spans_html = list()
         for fragment, tag in spans:
             escaped_fragment = html.escape(fragment).replace("\n", "<br/>")
