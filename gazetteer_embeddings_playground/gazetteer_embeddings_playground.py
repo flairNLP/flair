@@ -23,6 +23,7 @@ gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteer
 # if use_all_gazetteers=False -> the gazetteer files need to have the entity type in the name and
 # need to be a .txt file, such as "LOC_entities.txt".
 # if tokenize_gazetteer_entries=True -> the entities of a gazetteer will be tokenized and then loaded into the dict
+# if tokenize_gazetteer_entries=False -> the entities of a gazetteer will be simply split by white space
 
 print(gazetteer_embedding.feature_list)
 
