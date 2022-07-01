@@ -1058,7 +1058,6 @@ class GazetteerEmbeddings(TokenEmbeddings):
                             sequence_feature_vectors[t_key][self.feature_list.index(tag)] = 1
                         sequence_feature_vectors[t_key][self.feature_list.index('O')] = 0
                     else:
-                        pass
                         # if the token has been found using partial matching, the vector has values set to 1
                         if 1 not in sequence_feature_vectors[t_key][1:]:
                             sequence_feature_vectors[t_key][self.feature_list.index('O')] = 1
