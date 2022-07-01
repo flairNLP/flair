@@ -888,7 +888,7 @@ class GazetteerEmbeddings(TokenEmbeddings):
         full_matching: bool = True,
         partial_matching: bool = True,
         use_all_gazetteers: bool = False,
-        tokenize_gazetteer_entries: bool = False
+        tokenize_gazetteer_entries: bool = False,
     ):
         super().__init__()
         self.name = "gazetteer"
@@ -977,9 +977,10 @@ class GazetteerEmbeddings(TokenEmbeddings):
                                         line_list = [t.text for t in Sentence(line)]
                                     else:
                                         line_list = re.split(' ', line)
-                                    line_list_filtered = [w for w in line_list if (any(c.isalnum() for c in w
-                                                                                       ) and len(w) > 1) or (
-                                                                          len(line_list) == 1 and len(w) >= 1)]
+                                    line_list_filtered = [w for w in line_list if (
+                                         any(c.isalnum() for c in w) and len(w) > 1) or (
+                                            len(line_list) == 1 and len(w) >= 1)
+                                    ]
                                     for word in line_list_filtered:
                                         word_index = line_list_filtered.index(word)
                                         if word_index == 0 and len(line_list_filtered) > 1:
