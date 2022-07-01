@@ -1,4 +1,5 @@
 import importlib.util
+import warnings
 
 import pytest
 import torch
@@ -163,7 +164,9 @@ def test_transformer_jit_embeddings(results_base_path):
     parameter_names, parameter_list = TransformerJitWordEmbeddings.parameter_to_list(
         base_embeddings, wrapper, [sentence]
     )
-    script_module = torch.jit.trace(wrapper, parameter_list)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        script_module = torch.jit.trace(wrapper, parameter_list)
     jit_embeddings = TransformerJitWordEmbeddings.create_from_embedding(script_module, base_embeddings, parameter_names)
 
     jit_embeddings.embed(sentence)
