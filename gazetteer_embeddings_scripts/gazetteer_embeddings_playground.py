@@ -9,12 +9,21 @@ sentence_list = [sentences_1, sentences_2]
 
 label_dict = corpus.make_label_dictionary(label_type='ner')
 # Example use of the GazetteerEmbeddings Class
-gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers= # the path to the gazetteer directory
-                                                               "ner_model_count_sensitive_gazetteers",
+gazetteer_embedding: GazetteerEmbeddings = GazetteerEmbeddings(path_to_gazetteers="gazetteers",
                                                                partial_matching=True,
                                                                full_matching=True,
-                                                               label_dict=None, # label_dict only needed if selected set of gazetteers is used -> that would be the case if use_all_gazetteers=False
-                                                               use_all_gazetteers=True) # use all gazetteers of a dir, -> label_dict can be left to None
+                                                               label_dict=None,
+                                                               use_all_gazetteers=True,
+                                                               tokenize_gazetteer_entries=False)
+
+
+# label_dict only needed if selected set of gazetteers is used -> that would be the case if use_all_gazetteers=False
+# if use_all_gazetteers=True, -> label_dict can be left to None, every gazetteer will be left as a single source of
+# information, all gazetteers will be included, regardless of their filename
+# if use_all_gazetteers=False -> the gazetteer files need to have the entity type in the name and
+# need to be a .txt file, such as "LOC_entities.txt".
+# if tokenize_gazetteer_entries=True -> the entities of a gazetteer will be tokenized and then loaded into the dict
+
 print(gazetteer_embedding.feature_list)
 
 stacked_embeddings = StackedEmbeddings([gazetteer_embedding])
