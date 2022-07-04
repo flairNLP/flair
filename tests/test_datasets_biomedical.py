@@ -40,23 +40,23 @@ def has_balanced_parantheses(text: str) -> bool:
 
 
 def gene_predicate(member):
-    return "HUNER_GENE_" in str(member) and inspect.isclass(member)
+    return inspect.isclass(member) and "HUNER_GENE_" in str(member)
 
 
 def chemical_predicate(member):
-    return "HUNER_CHEMICAL_" in str(member) and inspect.isclass(member)
+    return inspect.isclass(member) and "HUNER_CHEMICAL_" in str(member)
 
 
 def disease_predicate(member):
-    return "HUNER_DISEASE_" in str(member) and inspect.isclass(member)
+    return inspect.isclass(member) and "HUNER_DISEASE_" in str(member)
 
 
 def species_predicate(member):
-    return "HUNER_SPECIES_" in str(member) and inspect.isclass(member)
+    return inspect.isclass(member) and "HUNER_SPECIES_" in str(member)
 
 
 def cellline_predicate(member):
-    return "HUNER_CELL_LINE_" in str(member) and inspect.isclass(member)
+    return inspect.isclass(member) and "HUNER_CELL_LINE_" in str(member)
 
 
 CELLLINE_DATASETS = [
