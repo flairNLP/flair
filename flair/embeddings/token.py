@@ -906,6 +906,193 @@ class PooledFlairEmbeddings(TokenEmbeddings):
                 self.word_embeddings[key] = self.word_embeddings[key].cpu()
 
 
+class GazetteerEmbeddings(TokenEmbeddings):
+    def __init__(
+        self,
+        path_to_gazetteers: str,
+        label_dict: Dictionary = None,
+        full_matching: bool = True,
+        partial_matching: bool = True,
+        use_all_gazetteers: bool = False,
+        tokenize_gazetteer_entries: bool = False,
+    ):
+        super().__init__()
+        self.name = "gazetteer"
+        self.use_all_gazetteers = use_all_gazetteers
+        self.gazetteer_path = path_to_gazetteers
+        self.labels = label_dict
+        self.tokenize_entries = tokenize_gazetteer_entries
+        self.matching_methods = []
+        if full_matching:
+            self.matching_methods.append("full_match")
+        if partial_matching:
+            self.matching_methods.append("partial_match")
+
+        self.gazetteer_file_dict_list = self._get_gazetteers()
+
+        self.feature_list = self._set_feature_list()
+
+        log.info("processing gazetteers ...")
+        self.gazetteers_dicts = self._process_gazetteers()
+        log.info("Finished processing gazetteers!")
+
+        self.__embedding_length = len(self.feature_list)
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _set_feature_list(self):
+        tag_list = ['O']
+        if 'partial_match' in self.matching_methods:
+            if self.use_all_gazetteers:
+                for index in self.gazetteer_file_dict_list:
+                    for pos in ['S', 'B', 'E', 'I']:
+                        tag_list.append(f"{pos}-{list(index.keys())[0]}")
+            else:
+                if self.labels is not None:
+                    for tag in self.labels.get_items():
+                        if tag == "<unk>":
+                            continue
+                        for pos in ['S', 'B', 'E', 'I']:
+                            tag_list.append(f"{pos}-{tag}")
+        if 'full_match' in self.matching_methods:
+            if self.use_all_gazetteers:
+                for index in self.gazetteer_file_dict_list:
+                    tag_list.append(f"{list(index.keys())[0]}")
+            else:
+                if self.labels is not None:
+                    for tag in self.labels.get_items():
+                        if tag == "<unk>":
+                            continue
+                        tag_list.append(tag)
+        return tag_list
+
+    def _get_gazetteers(self):
+        gazetteer_files = []
+        if self.use_all_gazetteers:
+            files = list([f for f in os.listdir(self.gazetteer_path + '/') if re.match(".*[.]txt", f)])
+            for index, file in enumerate(files):
+                gazetteer_files.append({str(index): [file]})
+        else:
+            if self.labels is not None:
+                for tag in self.labels.get_items():
+                    if tag == "<unk>":
+                        continue
+                    pattern = f".*-?{tag}[-_].*[.]txt"
+                    gazetteer_files.append({tag: list([f for f in os.listdir(self.gazetteer_path + '/')
+                                                       if re.match(pattern, f)])})
+        return gazetteer_files
+
+    def _process_gazetteers(self):
+        partial_matching_dict = {}
+        full_matching_dict = {}
+        for gazetteer_dict in self.gazetteer_file_dict_list:
+            tag_key = list(gazetteer_dict.keys())[0]
+            gazetteer_files = gazetteer_dict[tag_key]
+            if len(gazetteer_files) > 0:
+                for gazetteer_file in gazetteer_files:
+                    with open(f"{self.gazetteer_path}/{gazetteer_file}", 'r', encoding='utf-8', errors='strict') as src:
+                        for line in src:
+                            if len(line) == 0:
+                                break
+                            elif len(line.rstrip("\n")) > 0:
+                                line = line.rstrip("\n")
+                                if 'partial_match' in self.matching_methods:
+                                    if self.tokenize_entries:
+                                        line_list = [t.text for t in Sentence(line)]
+                                    else:
+                                        line_list = re.split(' ', line)
+                                    line_list_filtered =\
+                                        [w for w in line_list if (any(c.isalnum() for c in w) and len(w) > 1) or (
+                                         len(line_list) == 1 and len(w) >= 1)]
+                                    for word in line_list_filtered:
+                                        word_index = line_list_filtered.index(word)
+                                        if word_index == 0 and len(line_list_filtered) > 1:
+                                            try:
+                                                if f'B-{tag_key}' not in partial_matching_dict[word]:
+                                                    partial_matching_dict[word].append(f'B-{tag_key}')
+                                            except KeyError:
+                                                partial_matching_dict[word] = [f'B-{tag_key}']
+                                        elif word_index == len(line_list_filtered) - 1 and len(line_list_filtered) > 1:
+                                            try:
+                                                if f'E-{tag_key}' not in partial_matching_dict[word]:
+                                                    partial_matching_dict[word].append(f'E-{tag_key}')
+                                            except KeyError:
+                                                partial_matching_dict[word] = [f'E-{tag_key}']
+                                        elif 0 < word_index < len(line_list_filtered) - 1:
+                                            try:
+                                                if f'I-{tag_key}' not in partial_matching_dict[word]:
+                                                    partial_matching_dict[word].append(f'I-{tag_key}')
+                                            except KeyError:
+                                                partial_matching_dict[word] = [f'I-{tag_key}']
+                                        elif word_index == 0 and len(line_list_filtered) == 1:
+                                            try:
+                                                if f'S-{tag_key}' not in partial_matching_dict[word]:
+                                                    partial_matching_dict[word].append(f'S-{tag_key}')
+                                            except KeyError:
+                                                partial_matching_dict[word] = [f'S-{tag_key}']
+                                if 'full_match' in self.matching_methods:
+                                    if self.tokenize_entries:
+                                        line = ' '.join([t.text for t in Sentence(line)])
+                                    try:
+                                        if tag_key not in full_matching_dict[line]:
+                                            full_matching_dict[line].append(tag_key)
+                                    except KeyError:
+                                        full_matching_dict[line] = [tag_key]
+        return {'partial_match': partial_matching_dict, 'full_match': full_matching_dict}
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        def split_on_window(sequence, limit=1):
+            results = []
+            split_sequence = sequence.split()
+            iteration_length = len(split_sequence) - (limit - 1)
+            max_window_indices = range(iteration_length)
+            for index in max_window_indices:
+                temp = []
+                for word in range(index, index + limit):
+                    temp.append({word: split_sequence[word]})
+                results.append(temp)
+            return results
+
+        for sentence in sentences:
+            sequence_feature_vectors = [[0] * len(self.feature_list) for count in range(len(sentence.tokens))]
+            if 'partial_match' in self.matching_methods:
+                for token in sentence.tokens:
+                    try:
+                        for tag in self.gazetteers_dicts['partial_match'][token.text]:
+                            sequence_feature_vectors[token.idx - 1][self.feature_list.index(tag)] = 1
+                    except KeyError:
+                        sequence_feature_vectors[token.idx - 1][self.feature_list.index('O')] = 1
+            if 'full_match' in self.matching_methods:
+                token_dict = {}
+                for token in sentence.tokens:
+                    token_dict[token.idx - 1] = [token.text, set()]
+                string_of_tokens = ' '.join(token.text for token in sentence.tokens)
+                for n in range(1, len(token_dict) + 1):
+                    string_window_split_list = split_on_window(string_of_tokens, n)
+                    for string_split in string_window_split_list:
+                        joined_string = ' '.join([list(d.values())[0] for d in string_split])
+                        try:
+                            for tag in self.gazetteers_dicts['full_match'][joined_string]:
+                                for t in [list(d.keys())[0] for d in string_split]:
+                                    token_dict[t][1].add(tag)
+                        except KeyError:
+                            pass
+                for t_key in token_dict.keys():
+                    if len(token_dict[t_key][1]) > 0:
+                        for tag in token_dict[t_key][1]:
+                            sequence_feature_vectors[t_key][self.feature_list.index(tag)] = 1
+                        sequence_feature_vectors[t_key][self.feature_list.index('O')] = 0
+                    else:
+                        # if the token has been found using partial matching, the vector has values set to 1
+                        if 1 not in sequence_feature_vectors[t_key][1:]:
+                            sequence_feature_vectors[t_key][self.feature_list.index('O')] = 1
+            for vector, token in zip(sequence_feature_vectors, sentence.tokens):
+                token.set_embedding(self.name, torch.tensor(vector, dtype=torch.int, device=flair.device))
+        return sentences
+
+
 class FastTextEmbeddings(TokenEmbeddings):
     """FastText Embeddings with oov functionality"""
 
