@@ -10,7 +10,7 @@ from flair.data import DataPoint, Dictionary, Sentence, Span
 log = logging.getLogger("flair")
 
 
-class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
+class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     """
     Entity Linking Model
     The model expects text/sentences with annotated entity mentions and predicts entities to these mentions.
@@ -38,6 +38,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
         super(EntityLinker, self).__init__(
             label_dictionary=label_dictionary,
+            embeddings=word_embeddings,
             final_embedding_size=word_embeddings.embedding_length * 2
             if pooling_operation == "first_last"
             else word_embeddings.embedding_length,
@@ -76,50 +77,20 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     def emb_mean(self, span, embedding_names):
         return torch.mean(torch.cat([token.get_embedding(embedding_names) for token in span], 0), 0)
 
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[DataPoint]:
-        entities: List[DataPoint] = []
+    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Span]:
+        entities: List[Span] = []
         for sentence in sentences:
             entities.extend(sentence.get_spans(self.label_type))
         return entities
 
-    def _get_labels(self, sentences: List[Sentence]) -> List[List[str]]:
-        span_labels = []
-        for sentence in sentences:
-            for entity in sentence.get_labels(self.label_type):
-                span_labels.append([entity.value])
-        return span_labels
+    def _get_label_of_datapoint(self, datapoint: Span) -> List[str]:
+        return [datapoint.get_label(self._label_type).value]
 
-    def _prepare_tensors(
-        self,
-        sentences: List[Sentence],
-    ) -> Tuple[torch.Tensor, ...]:
-        # filter sentences with no candidates (no candidates means nothing can be linked anyway)
-        filtered_sentences = []
-        for sentence in sentences:
-            if sentence.get_labels(self.label_type):
-                filtered_sentences.append(sentence)
+    def _filter_data_point(self, data_point: Sentence) -> bool:
+        return bool(data_point.get_labels(self.label_type))
 
-        # embed sentences and send through prediction head
-        if len(filtered_sentences) > 0:
-            # embed all tokens
-            self.word_embeddings.embed(filtered_sentences)
-
-        embedding_names = self.word_embeddings.get_names()
-
-        embedding_list = []
-        # get the embeddings of the entity mentions
-        for sentence in filtered_sentences:
-            entities = sentence.get_spans(self.label_type)
-
-            for entity in entities:
-                embedding_list.append(self.aggregated_embedding(entity, embedding_names).unsqueeze(0))
-
-        if len(embedding_list) > 0:
-            embedded_entity_pairs = torch.cat(embedding_list, 0)
-
-            return (embedded_entity_pairs,)
-        else:
-            return (torch.zeros(0, self.word_embeddings.embedding_length, device=flair.device),)
+    def _embed_prediction_data_point(self, prediction_data_point: Span) -> torch.Tensor:
+        return self.aggregated_embedding(prediction_data_point, self.word_embeddings.get_names()).unsqueeze(0)
 
     def _get_state_dict(self):
         model_state = {
