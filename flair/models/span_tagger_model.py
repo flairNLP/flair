@@ -6,6 +6,8 @@ import torch
 import time
 import json
 import numpy as np
+from pathlib import Path
+import os
 
 import flair.embeddings
 import flair.nn
@@ -257,6 +259,10 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             if self.add_substring_gazetteer_lookup:
                 final_embedding_size += self.size_gazetteer_vector
 
+                if self.gazetteer_count_type == "norm_conf_ratio":
+                    if self.delete_goldsubspans_in_training:
+                        final_embedding_size = final_embedding_size - 1 # we leave out the ratio in substring lookup, as it has no meaning here
+
         self.use_mlp = use_mlp
         self.mlp_hidden_dim = mlp_hidden_dim
 
@@ -321,38 +327,50 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         else:
             vector_length = self.size_gazetteer_vector
             if self.gazetteer_include_untagged and self.O_id != -1: # if we have O in gazetteer, default O vector should also have 1
-                gaz_vector = torch.zeros(vector_length)
+                #gaz_vector = torch.zeros(vector_length)
+                gaz_vector = torch.neg(torch.ones(vector_length))
                 gaz_vector[self.O_id] = 1
             else:
-                gaz_vector = torch.zeros(vector_length)  # get same length zero vector
+                #gaz_vector = torch.zeros(vector_length)
+                gaz_vector = torch.neg(torch.ones(vector_length))
 
         if self.add_lower_case_lookup:
             if span_string.title() in self.gazetteer: # "BARACK OBAMA" --> "Barack Obama"
                 gaz_vector_lower = torch.Tensor(self.gazetteer[span_string.title()])
             else:
                 vector_length = self.size_gazetteer_vector
-                if self.gazetteer_include_untagged and self.O_id != -1:  # if we have O in gazetteer, default O vector should also have 1
-                    gaz_vector_lower = torch.zeros(vector_length)
+                if self.gazetteer_include_untagged and self.O_id != -1:  # if we have "O" in gazetteer, default "O" vector should also have 1 there
+                    #gaz_vector_lower = torch.zeros(vector_length)
+                    gaz_vector_lower = torch.neg(torch.ones(vector_length))
                     gaz_vector_lower[self.O_id] = 1
                 else:
-                    gaz_vector_lower = torch.zeros(vector_length)  # get same length zero vector
+                    #gaz_vector_lower = torch.zeros(vector_length)  # get same length zero vector
+                    gaz_vector_lower = torch.neg(torch.ones(vector_length))
 
             gaz_vector = torch.concat((gaz_vector, gaz_vector_lower), 0)
 
         if self.add_substring_gazetteer_lookup:
-            vector_length = self.size_gazetteer_vector
             tokens = span_string.split()
             subspans = []
 
             for span_len in range(1, len(tokens) +1):
                 subspans.extend([" ".join(tokens[n:n + span_len]) for n in range(len(tokens) - span_len + 1)])
 
+            vector_length = self.size_gazetteer_vector
             sub_mean_vector = torch.zeros(vector_length)
+            counter_found = 0
             for sub in subspans:
                 if sub in self.gazetteer:
                     sub_mean_vector += torch.Tensor(self.gazetteer[sub])
-            if len(subspans) >0:
-                sub_mean_vector = sub_mean_vector/len(subspans)
+                    counter_found +=1
+            #if len(subspans) >0:
+            #    sub_mean_vector = sub_mean_vector/len(subspans)
+            if counter_found >0:
+                sub_mean_vector = sub_mean_vector/counter_found # TODO change back?
+
+            if self.gazetteer_count_type == "norm_conf_ratio":
+                if self.delete_goldsubspans_in_training:
+                    sub_mean_vector = sub_mean_vector[:-1]
 
             gaz_vector = torch.concat((gaz_vector, sub_mean_vector))
 
@@ -441,7 +459,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
                 # check if everything looks as it should (for spans with gold label other than "O")
                 #if span.get_label(self.label_type).value != "O":
-                #    print(span, span_embedding, span.get_label(self.label_type).value)
+                #    print(span, "\t", self.gazetteer[span.text]if span.text in self.gazetteer else "not in gazetteer", "\n", span_embedding, span.get_label(self.label_type).value)
 
             if for_prediction:
                 data_points.extend(spans_sentence)
@@ -606,6 +624,149 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
             lines.append(eval_line)
         return lines
+
+    def error_analysis(self, batch, gold_label_type, out_directory):
+        lines = []
+        lines_just_errors = []
+
+        #  counting errors in general and specifically where span is or is not in errors
+        count_true = 0
+        count_error = 0
+        count_gaz_true = 0
+        count_gaz_error = 0
+        count_nogaz_true = 0
+        count_nogaz_error = 0
+
+        list_gaz_error = []      #  listing errors where span is in gazetteer
+        list_no_gaz_error = []   #  listing errors where span is NOT in gazetteer
+
+        for datapoint in batch:
+
+            eval_line = f"\n{datapoint.to_original_text()}\n"
+
+            # first iterate over gold spans and see if matches predictions
+            printed = []
+            in_gazetteer = False
+            contains_error = False # gets set to True if one or more incorrect predictions in datapoint
+
+            for span in datapoint.get_spans(gold_label_type):
+                if self.gazetteer_file:
+                    gazetteer_vector = self.get_gazetteer_embedding(span.text)
+                    if span.text in self.gazetteer:
+                        in_gazetteer = True
+                    else:
+                        in_gazetteer = False
+                else:
+                    gazetteer_vector = torch.Tensor([0]) # dummy
+
+                symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
+                if span.get_label(gold_label_type).value == span.get_label("predicted").value:
+                    count_true += 1
+                else:
+                    count_error += 1
+                    contains_error = True
+                if self.gazetteer_file:
+                    if in_gazetteer:
+                        if span.get_label(gold_label_type).value == span.get_label("predicted").value:
+                            count_gaz_true += 1
+                        else:
+                            count_gaz_error += 1
+                            list_gaz_error.append((datapoint.to_original_text(),
+                                                   span.text,
+                                                   span.get_label(gold_label_type).value,
+                                                   span.get_label("predicted").value,
+                                                   str([round(e, 2) for e in gazetteer_vector.tolist()])
+                                                   ))
+                    else:
+                        if span.get_label(gold_label_type).value == span.get_label("predicted").value:
+                            count_nogaz_true += 1
+                        else:
+                            count_nogaz_error += 1
+                            list_no_gaz_error.append((datapoint.to_original_text(),
+                                                      span.text,
+                                                      span.get_label(gold_label_type).value,
+                                                      span.get_label("predicted").value,
+                                                      str([round(e, 2) for e in gazetteer_vector.tolist()])
+                                                      ))
+
+                printed.append(span)
+                eval_line += (
+                    f' - "{span.text}" / {span.get_label(gold_label_type).value}'
+                    f' --> {span.get_label("predicted").value} ({symbol})'
+                    f' \t gazetteer entry: {"📔" if in_gazetteer else "❔"} \t {[round(e, 2) for e in gazetteer_vector.tolist()]}\n'
+
+                )
+            # now add also the predicted spans that have *no* gold span equivalent
+            for span in datapoint.get_spans("predicted"):
+                if self.gazetteer_file:
+                    gazetteer_vector = self.get_gazetteer_embedding(span.text)
+                    if span.text in self.gazetteer:
+                        in_gazetteer = True
+                    else:
+                        in_gazetteer = False
+                else:
+                    gazetteer_vector = torch.Tensor([0])
+
+                if span.get_label("predicted").value != span.get_label(gold_label_type).value and span not in printed:
+                    count_error += 1
+                    contains_error = True
+                    if self.gazetteer_file:
+                        if in_gazetteer:
+                            count_gaz_error += 1
+                            list_gaz_error.append((datapoint.to_original_text(),
+                                                   span.text,
+                                                   span.get_label(gold_label_type).value,
+                                                   span.get_label("predicted").value,
+                                                   str([round(e, 2) for e in gazetteer_vector.tolist()])
+                                                   ))
+                        else:
+                            count_nogaz_error += 1
+                            list_no_gaz_error.append((datapoint.to_original_text(),
+                                                      span.text,
+                                                      span.get_label(gold_label_type).value,
+                                                      span.get_label("predicted").value,
+                                                      str([round(e, 2) for e in gazetteer_vector.tolist()])
+                                                      ))
+
+                    printed.append(span)
+                    eval_line += (
+                        f' - "{span.text}" / {span.get_label(gold_label_type).value}'
+                        f' --> {span.get_label("predicted").value} ("❌")'
+                        f' \t gazetteer entry: {"📔" if in_gazetteer else "❔"} \t {[round(e, 2) for e in gazetteer_vector.tolist()]} \n'
+
+                    )
+
+            lines.append(eval_line)
+            if contains_error:
+                lines_just_errors.append(eval_line)
+
+        error_counts_dict = {"count_true": count_true,
+                             "count_error": count_error,
+                             "count_gaz_true": count_gaz_true,
+                             "count_gaz_error": count_gaz_error,
+                             "count_nogaz_true": count_nogaz_true,
+                             "count_nogaz_error": count_nogaz_error
+                             }
+
+        if out_directory:
+            if not os.path.exists(out_directory):
+                os.makedirs(out_directory)
+            with open(Path(out_directory / "predictions.txt"), "w", encoding="utf-8") as outfile:
+                outfile.write("".join(lines))
+            with open(Path(out_directory / "predictions_just_errors.txt"), "w", encoding="utf-8") as outfile:
+                outfile.write("".join(lines_just_errors))
+            with open(Path(out_directory / "error_counts_dict"), "w", encoding="utf-8") as fp:
+                json.dump(error_counts_dict, fp)
+
+            if self.gazetteer_file:
+                with open(Path(out_directory / "errors_with_gaz_entry.txt"), 'w') as f:
+                    for t in list_gaz_error:
+                        f.write('\t'.join(str(s) for s in t) + '\n')
+                with open(Path(out_directory / "errors_without_gaz_entry.txt"), 'w') as f:
+                    for t in list_no_gaz_error:
+                        f.write('\t'.join(str(s) for s in t) + '\n')
+
+        return error_counts_dict
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
