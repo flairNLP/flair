@@ -745,6 +745,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                     continue
 
                 tensors = self._prepare_tensors(batch)
+                if tensors[0].size(0) == 0:
+                    continue
+
                 scores = self.forward(*tensors)
 
                 data_points = self._get_prediction_data_points(batch)
