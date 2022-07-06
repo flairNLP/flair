@@ -100,7 +100,7 @@ for file in files:
     with open(file, 'r', encoding='utf-8') as f:
         tokens = 0
         for line in f:
-            processed += 1            
+            processed += 1
             chars = list(line)
             tokens += len(chars)
             # 사전에 문자 추가
@@ -149,7 +149,7 @@ dictionary = Dictionary.load_from_file('/path/to/your_char_mappings')
 
 ## 기존 LM 미세 조정
 
-때로는 처음부터 훈련하는 대신 기존 언어 모델을 미세 조정하는 것이 합리적입니다. 예를 들어, 영어에 대한 일반 LM이 있고 특정 도메인에 대해 미세 조정하려는 경우입니다. 
+때로는 처음부터 훈련하는 대신 기존 언어 모델을 미세 조정하는 것이 합리적입니다. 예를 들어, 영어에 대한 일반 LM이 있고 특정 도메인에 대해 미세 조정하려는 경우입니다.
 
 `LanguageModel`을 미세 조정하려면 새 인스턴스를 생성하는 대신 기존 `LanguageModel`을 로드하기만 하면 됩니다. 나머지 훈련 코드는 위와 동일하게 유지됩니다.
 
@@ -177,8 +177,8 @@ trainer.train('resources/taggers/language_model',
               learning_rate=20,
               patience=10,
               checkpoint=True)
-```              
-              
+```
+
 미세조정 시에는 전과 동일한 문자사전을 사용해야 하며 방향(앞/뒤)을 복사해야 합니다.
 
 

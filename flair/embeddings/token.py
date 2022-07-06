@@ -4,7 +4,7 @@ import os
 import re
 from collections import Counter
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Union
 
 import gensim
 import numpy as np
@@ -15,25 +15,51 @@ from torch import nn
 
 import flair
 from flair.data import Corpus, Dictionary, Sentence, Token, _iter_dataset
-from flair.embeddings.base import Embeddings, TransformerEmbedding
+from flair.embeddings.base import TokenEmbeddings
+from flair.embeddings.transformer import (
+    TransformerEmbeddings,
+    TransformerOnnxWordEmbeddings,
+)
 from flair.file_utils import cached_path, instance_lru_cache, open_inside_zip
 
 log = logging.getLogger("flair")
 
 
-class TokenEmbeddings(Embeddings[Sentence]):
-    """Abstract base class for all token-level embeddings. Ever new type of word embedding must implement these methods."""
+class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
 
-    @property
-    def embedding_type(self) -> str:
-        return "word-level"
+    onnx_cls = TransformerOnnxWordEmbeddings
 
-    def _everything_embedded(self, data_points: Sequence[Sentence]) -> bool:
-        for sentence in data_points:
-            for token in sentence.tokens:
-                if self.name not in token._embeddings.keys():
-                    return False
-        return True
+    def __init__(
+        self,
+        model: str = "bert-base-uncased",
+        is_document_embedding: bool = False,
+        allow_long_sentences: bool = True,
+        **kwargs,
+    ):
+        """
+        Bidirectional transformer embeddings of words from various transformer architectures.
+        :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
+        options)
+        :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
+        :param subtoken_pooling: how to get from token piece embeddings to token embedding. Either take the first
+        subtoken ('first'), the last subtoken ('last'), both first and last ('first_last') or a mean over all ('mean')
+        :param layer_mean: If True, uses a scalar mix of layers as embedding
+        :param fine_tune: If True, allows transformers to be fine-tuned during training
+        """
+        TransformerEmbeddings.__init__(
+            self,
+            model=model,
+            is_token_embedding=True,
+            is_document_embedding=is_document_embedding,
+            allow_long_sentences=allow_long_sentences,
+            **kwargs,
+        )
+
+    @classmethod
+    def create_from_state(cls, **state):
+        # this parameter is fixed
+        del state["is_token_embedding"]
+        return cls(**state)
 
 
 class StackedEmbeddings(TokenEmbeddings):
@@ -878,40 +904,6 @@ class PooledFlairEmbeddings(TokenEmbeddings):
         if flair.device != "cpu":
             for key in self.word_embeddings:
                 self.word_embeddings[key] = self.word_embeddings[key].cpu()
-
-
-class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbedding):
-    def __init__(
-        self,
-        model: str = "bert-base-uncased",
-        is_document_embedding: bool = False,
-        allow_long_sentences: bool = True,
-        **kwargs,
-    ):
-        """
-        Bidirectional transformer embeddings of words from various transformer architectures.
-        :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
-        options)
-        :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
-        :param subtoken_pooling: how to get from token piece embeddings to token embedding. Either take the first
-        subtoken ('first'), the last subtoken ('last'), both first and last ('first_last') or a mean over all ('mean')
-        :param layer_mean: If True, uses a scalar mix of layers as embedding
-        :param fine_tune: If True, allows transformers to be fine-tuned during training
-        """
-        TransformerEmbedding.__init__(
-            self,
-            model=model,
-            is_token_embedding=True,
-            is_document_embedding=is_document_embedding,
-            allow_long_sentences=allow_long_sentences,
-            **kwargs,
-        )
-
-    @classmethod
-    def create_from_state(cls, **state):
-        # this parameter is fixed
-        del state["is_token_embedding"]
-        return cls(**state)
 
 
 class FastTextEmbeddings(TokenEmbeddings):

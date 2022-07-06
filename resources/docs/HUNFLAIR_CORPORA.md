@@ -4,11 +4,11 @@ Here you can find an overview about biomedical NER data sets integrated in *HunF
 __Content:__ [Overview](#overview) | [HUNER Data Sets](#huner-data-sets) | [BioBERT Evaluation Splits](#biobert-evaluation-splits)
 
 ## Overview
-*HunFlair* integrates 31 biomedical named entity recognition (NER) data sets and provides 
+*HunFlair* integrates 31 biomedical named entity recognition (NER) data sets and provides
 them in an unified format to foster the development and evaluation of new NER models. All
 data set implementations can be found in `flair.datasets.biomedical`.
 
-| Corpus          | Data Set Class | Entity Types | Reference   | 
+| Corpus          | Data Set Class | Entity Types | Reference   |
 | ---             | --- | ---  | ---    |
 | AnatEM | `ANAT_EM` | Anatomical entities | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3957068/), [Website](http://nactem.ac.uk/anatomytagger/#AnatEM)   |
 | Arizona Disease | `AZDZ` | Disease | [Website](http://diego.asu.edu/index.php)   |
@@ -43,16 +43,16 @@ data set implementations can be found in `flair.datasets.biomedical`.
 | Variome | `VARIOME` | Gene, Disease, Species  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3676157/)   |
 
 <sub>
-Note: The table just gives an overview about the entity types of the individual corpora. 
-Please refer to the original publications for annotation details. 
+Note: The table just gives an overview about the entity types of the individual corpora.
+Please refer to the original publications for annotation details.
 </sub>
 
 ## HUNER Data Sets
-Next to the integration of the biomedical data sets, *HunFlair* provides the fixed splits used by 
-[HUNER (Weber et al.)](https://academic.oup.com/bioinformatics/article/36/1/295/5523847) to 
+Next to the integration of the biomedical data sets, *HunFlair* provides the fixed splits used by
+[HUNER (Weber et al.)](https://academic.oup.com/bioinformatics/article/36/1/295/5523847) to
 improve comparability of evaluations
 
- | Entity Type  | Data Set Class   | Contained Data Sets | 
+ | Entity Type  | Data Set Class   | Contained Data Sets |
 | ---           | ---              | ---                 |
 | Cell Line    | `HUNER_CELL_LINE` | `HUNER_CELL_LINE_CELL_FINDER`, `HUNER_CELL_LINE_CLL`, `HUNER_CELL_LINE_GELLUS`, `HUNER_CELL_LINE_JNLPBA` |
 | Chemical     | `HUNER_CHEMICAL`  | `HUNER_CHEMICAL_CDR`, `HUNER_CHEMICAL_CEMP`, `HUNER_CHEMICAL_CHEBI`, `HUNER_CHEMICAL_CHEMDNER`, `HUNER_CHEMICAL_CRAFT_V4`, `HUNER_CHEMICAL_SCAI` |
@@ -61,7 +61,7 @@ improve comparability of evaluations
 | Species      | `HUNER_SPECIES`   | `HUNER_SPECIES_CELL_FINDER`, `HUNER_SPECIES_CHEBI`, `HUNER_SPECIES_CRAFT_V4`, `HUNER_SPECIES_LINNEAUS`, `HUNER_SPECIES_LOCTEXT`, `HUNER_SPECIES_MIRNA`, `HUNER_SPECIES_S800`, `HUNER_SPECIES_VARIOME`|
 
 ## BioBERT evaluation splits
-To ease comparison with BioBERT, *HunFlair* provides the splits used by 
+To ease comparison with BioBERT, *HunFlair* provides the splits used by
 [Lee et al.](https://academic.oup.com/bioinformatics/article/36/4/1234/5566506):
 `BIOBERT_GENE_BC4CHEMD`, `BIOBERT_GENE_BC2GM`, `BIOBERT_GENE_JNLPBA`, `BIOBERT_CHEMICAL_BC5CDR`,
 `BIOBERT_DISEASE_BC5CDR`, `BIOBERT_DISEASE_NCBI`, `BIOBERT_SPECIES_LINNAEUS`, and `BIOBERT_SPECIES_S800`
@@ -71,24 +71,4 @@ Note: To download and use the BioBERT corpora you need to install the package _g
 files are hosted in Google Drive:
 ~~~
 pip install googledrivedownloader
-~~~ 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+~~~

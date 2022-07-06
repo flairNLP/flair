@@ -10,7 +10,7 @@
 필요한 임베딩 클래스를 인스턴스화하고 `embed()`로 호출하여 텍스트를 임베딩합니다.
 우리의 방법으로 생산된 모든 임베딩은 PyTorch 벡터이기 때문에 즉시 훈련에 사용될 수 있고 미세 조정이 가능합니다.
 
-이 튜토리얼에서는 몇 가지 일반적인 임베딩을 소개하고 사용 방법을 보여줍니다. 
+이 튜토리얼에서는 몇 가지 일반적인 임베딩을 소개하고 사용 방법을 보여줍니다.
 이러한 임베딩에 대한 자세한 내용과 지원되는 모든 임베딩에 대한 개요는 [여기](/resources/docs/KOR_docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)를 참조하세요.
 
 ## 클래식 워드 임베딩
@@ -51,7 +51,7 @@ for token in sentence:
 `WordEmbedings` 클래스의 생성자에 대한 ID 문자열입니다. 일반적으로
 **두 글자로 된 언어 코드**는 임베딩을 시작하므로 영어의 'en'과
 독일어 등을 나타내는 'de'입니다. 기본적으로 Wikipedia를 통해 학습된 FastText 임베딩이 초기화됩니다.
-또한 '-crawl'로 인스턴스화하여 웹 크롤을 통해 언제든지 FastText 임베딩을 사용할 수 있습니다. 
+또한 '-crawl'로 인스턴스화하여 웹 크롤을 통해 언제든지 FastText 임베딩을 사용할 수 있습니다.
 따라서 독일 웹 크롤을 통해 학습된 임베딩을 사용하기 위해 'de-crawl'을 사용합니다.
 
 ```python
@@ -65,8 +65,8 @@ german_embedding = WordEmbeddings('de-crawl')
 ## Flair 임베딩
 
 상황별 문자열 임베딩은 [powerful embeddings](https://www.aclweb.org/anthology/C18-1139/)
-표준 단어 임베딩을 넘어서는 잠재적인 구문 분석 정보를 캡처합니다. 주요 차이점은 
-(1) 단어에 대한 명확한 개념 없이 훈련되고 따라서 기본적으로 단어를 문자 시퀀스로 모델링합니다. 
+표준 단어 임베딩을 넘어서는 잠재적인 구문 분석 정보를 캡처합니다. 주요 차이점은
+(1) 단어에 대한 명확한 개념 없이 훈련되고 따라서 기본적으로 단어를 문자 시퀀스로 모델링합니다.
 (2) 주변 텍스트에 의해 **contextualized**됩니다. 이는 *동일 단어의 문맥적 용도에 따라* 다른 임베딩이 있음을 의미합니다.
 
 Flair를 사용할 때, 표준 단어 임베딩과 같은 적절한 임베딩 클래스를 인스턴스화하기만 하면 이러한 임베딩을 사용할 수 있습니다.
@@ -84,9 +84,9 @@ sentence = Sentence('The grass is green .')
 flair_embedding_forward.embed(sentence)
 ```
 
-`FlairEmbedings` 클래스의 생성자에게 적절한 문자열을 전달하여 로드할 임베딩을 선택합니다. 
-지원되는 모든 언어에는 전진 및 후진 모델이 있습니다. 
-**2글자 언어 코드**에 이어 하이픈 및 **앞으로** 또는 **뒤로**를 사용하여 언어의 모델을 로드할 수 있습니다. 
+`FlairEmbedings` 클래스의 생성자에게 적절한 문자열을 전달하여 로드할 임베딩을 선택합니다.
+지원되는 모든 언어에는 전진 및 후진 모델이 있습니다.
+**2글자 언어 코드**에 이어 하이픈 및 **앞으로** 또는 **뒤로**를 사용하여 언어의 모델을 로드할 수 있습니다.
 독일어 Flair 모델을 앞뒤로 로드하려면 다음과 같이 하십시오.
 
 ```python
@@ -148,6 +148,6 @@ for token in sentence:
 
 단어들은 이제 세 가지 다른 임베딩의 연결을 사용하여 내장됩니다. 이는 결과 임베딩 벡터가 여전히 단일 PyTorch 벡터임을 의미합니다.
 
-## Next 
+## Next
 이러한 임베딩에 대한 자세한 내용과 지원되는 모든 단어 임베딩에 대한 전체 개요를 보려면 다음을 참조하십시오.
-[TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING](/resources/docs/KOR_docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md). 
+[TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING](/resources/docs/KOR_docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md).

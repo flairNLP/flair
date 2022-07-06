@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import os
@@ -190,8 +191,8 @@ class JsonlDataset(FlairDataset):
 
         # Tag all other token as Outer (O)
         for token in sentence:
-            if token.get_label(self.label_type).value == "":
-                token.get_label(self.label_type, "O")
+            if token.get_label(self.label_type).value == "O":
+                token.set_label(self.label_type, "O")
 
     def _add_label_to_sentence(self, text: str, sentence: Sentence, start: int, end: int, label: str):
         """
@@ -270,7 +271,6 @@ class MultiFileColumnCorpus(Corpus):
         train_files=None,
         test_files=None,
         dev_files=None,
-        tag_to_bioes=None,
         column_delimiter: str = r"\s+",
         comment_symbol: str = None,
         encoding: str = "utf-8",
@@ -289,7 +289,6 @@ class MultiFileColumnCorpus(Corpus):
         :param train_files: the name of the train files
         :param test_files: the name of the test files
         :param dev_files: the name of the dev files, if empty, dev data is sampled from train
-        :param tag_to_bioes: whether to convert to BIOES tagging scheme
         :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
         to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
@@ -307,7 +306,6 @@ class MultiFileColumnCorpus(Corpus):
                     ColumnDataset(
                         train_file,
                         column_format,
-                        tag_to_bioes,
                         encoding=encoding,
                         comment_symbol=comment_symbol,
                         column_delimiter=column_delimiter,
@@ -332,7 +330,6 @@ class MultiFileColumnCorpus(Corpus):
                     ColumnDataset(
                         test_file,
                         column_format,
-                        tag_to_bioes,
                         encoding=encoding,
                         comment_symbol=comment_symbol,
                         column_delimiter=column_delimiter,
@@ -357,7 +354,6 @@ class MultiFileColumnCorpus(Corpus):
                     ColumnDataset(
                         dev_file,
                         column_format,
-                        tag_to_bioes,
                         encoding=encoding,
                         comment_symbol=comment_symbol,
                         column_delimiter=column_delimiter,
@@ -398,7 +394,6 @@ class ColumnCorpus(MultiFileColumnCorpus):
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
-        :param tag_to_bioes: whether to convert to BIOES tagging scheme
         :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
         to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
@@ -437,7 +432,6 @@ class ColumnDataset(FlairDataset):
         self,
         path_to_column_file: Union[str, Path],
         column_name_map: Dict[int, str],
-        tag_to_bioes: str = None,
         column_delimiter: str = r"\s+",
         comment_symbol: str = None,
         banned_sentences: List[str] = None,
@@ -452,7 +446,6 @@ class ColumnDataset(FlairDataset):
         Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
         :param path_to_column_file: path to the file with the column-formatted data
         :param column_name_map: a map specifying the column format
-        :param tag_to_bioes: whether to convert to BIOES tagging scheme
         :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
         to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
@@ -466,7 +459,6 @@ class ColumnDataset(FlairDataset):
         path_to_column_file = Path(path_to_column_file)
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
-        self.tag_to_bioes = tag_to_bioes
         self.column_delimiter = column_delimiter
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
@@ -805,7 +797,6 @@ class CONLL_03(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         column_format={0: "text", 1: "pos", 3: "ner"},
         in_memory: bool = True,
         **corpusargs,
@@ -817,7 +808,6 @@ class CONLL_03(ColumnCorpus):
         parent directory where the conll_03 folder resides.
         If using entity linking, the conll03 dateset is reduced by about 20 Documents, which are not part of the yago dataset.
         :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
         POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -844,7 +834,6 @@ class CONLL_03(ColumnCorpus):
         super(CONLL_03, self).__init__(
             data_folder,
             column_format=column_format,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
             **corpusargs,
@@ -855,7 +844,6 @@ class CONLL_03_GERMAN(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -865,7 +853,6 @@ class CONLL_03_GERMAN(ColumnCorpus):
         'conll_03_german'. Then set the base_path parameter in the constructor to the path to the parent directory where
         the conll_03_german folder resides.
         :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03_german' folder) on your machine
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'lemma', 'pos' or 'np' to predict
         word lemmas, POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -895,7 +882,6 @@ class CONLL_03_GERMAN(ColumnCorpus):
         super(CONLL_03_GERMAN, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
             **corpusargs,
@@ -906,7 +892,6 @@ class CONLL_03_DUTCH(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -915,7 +900,6 @@ class CONLL_03_DUTCH(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -954,7 +938,6 @@ class CONLL_03_DUTCH(ColumnCorpus):
             train_file="train.txt",
             dev_file="dev.txt",
             test_file="test.txt",
-            tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
@@ -976,7 +959,6 @@ class CONLL_03_SPANISH(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -985,7 +967,6 @@ class CONLL_03_SPANISH(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, should not be changed
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
@@ -1011,7 +992,6 @@ class CONLL_03_SPANISH(ColumnCorpus):
         super(CONLL_03_SPANISH, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
             **corpusargs,
@@ -1022,7 +1002,6 @@ class CONLL_2000(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "np",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1031,7 +1010,6 @@ class CONLL_2000(ColumnCorpus):
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: 'np' by default, should not be changed, but you can set 'pos' instead to predict POS tags
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
         if not base_path:
@@ -1075,7 +1053,6 @@ class CONLL_2000(ColumnCorpus):
         super(CONLL_2000, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -1085,7 +1062,6 @@ class WNUT_17(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1111,7 +1087,6 @@ class WNUT_17(ColumnCorpus):
         super(WNUT_17, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -1156,7 +1131,6 @@ class NER_ARABIC_ANER(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -1169,7 +1143,6 @@ class NER_ARABIC_ANER(ColumnCorpus):
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
@@ -1197,7 +1170,6 @@ class NER_ARABIC_ANER(ColumnCorpus):
         super(NER_ARABIC_ANER, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
@@ -1209,7 +1181,6 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -1229,7 +1200,6 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
         Recall-Oriented Learning of Named Entities in Arabic Wikipedia. Proceedings of EACL."
 
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
@@ -1257,7 +1227,6 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
         super(NER_ARABIC_AQMAR, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
@@ -1269,7 +1238,6 @@ class NER_BASQUE(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1310,7 +1278,6 @@ class NER_BASQUE(ColumnCorpus):
         super(NER_BASQUE, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -1320,7 +1287,6 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -1330,7 +1296,6 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -1366,7 +1331,6 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
         super(NER_CHINESE_WEIBO, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
             train_file="weiboNER_2nd_conll_format.train",
@@ -1381,7 +1345,6 @@ class NER_DANISH_DANE(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1427,7 +1390,6 @@ class NER_DANISH_DANE(ColumnCorpus):
         super(NER_DANISH_DANE, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             comment_symbol="#",
             **corpusargs,
@@ -1438,7 +1400,6 @@ class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1447,7 +1408,6 @@ class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
         in BIO format. The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
@@ -1476,7 +1436,6 @@ class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
             columns,
             train_file=train_file,
             test_file=test_file,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -1486,7 +1445,6 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1495,7 +1453,6 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
         in BIO format. The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
@@ -1524,7 +1481,6 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
             columns,
             train_file=train_file,
             test_file=test_file,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -1535,7 +1491,6 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
     Initialize corpus of SEC-fillings annotated with English NER tags. See paper "Domain Adaption of Named Entity
     Recognition to Support Credit Risk Assessment" by Alvarado et al, 2015: https://aclanthology.org/U15-1010/
     :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
-    :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
     POS tags or chunks respectively
     :param in_memory: If True, keeps dataset in memory giving speedups in training.
     :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -1544,7 +1499,6 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1570,7 +1524,6 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
         super(NER_ENGLISH_SEC_FILLINGS, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
             train_file="FIN5.txt",
@@ -1584,7 +1537,6 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1593,7 +1545,6 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -1619,7 +1570,6 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
         super(NER_ENGLISH_RESTAURANT, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
             **corpusargs,
@@ -1630,7 +1580,6 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1639,7 +1588,6 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -1714,7 +1662,6 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
             train_file="train.txt",
             test_file="test.txt",
             dev_file="dev.txt",
-            tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             banned_sentences=banned_sentences,
             in_memory=in_memory,
@@ -1727,7 +1674,6 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1739,7 +1685,6 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
@@ -1766,7 +1711,6 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
         super(NER_ENGLISH_TWITTER, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             train_file="ner.txt",
             in_memory=in_memory,
@@ -1832,7 +1776,6 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1842,7 +1785,6 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -1894,7 +1836,6 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
             data_folder,
             columns,
             train_file="webpages_ner.txt",
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -1904,7 +1845,6 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -1914,7 +1854,6 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, since it is the only option of the WNUT corpus.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
@@ -1960,7 +1899,6 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
         super(NER_ENGLISH_WNUT_2020, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
@@ -1972,7 +1910,6 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -1982,7 +1919,6 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, should not be changed
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
@@ -2006,7 +1942,6 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
         super(NER_ENGLISH_WIKIGOLD, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
             train_file="wikigold.conll.txt",
@@ -2019,7 +1954,6 @@ class NER_FINNISH(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2050,7 +1984,6 @@ class NER_FINNISH(ColumnCorpus):
         super(NER_FINNISH, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             skip_first_line=True,
             **corpusargs,
@@ -2069,7 +2002,6 @@ class NER_GERMAN_BIOFID(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2095,7 +2027,6 @@ class NER_GERMAN_BIOFID(ColumnCorpus):
         super(NER_GERMAN_BIOFID, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -2105,7 +2036,6 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2114,7 +2044,6 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: 'ner' by default, should not be changed.
         :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
@@ -2157,7 +2086,6 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
         super(NER_GERMAN_EUROPARL, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
             train_file="ep-96-04-16.conll",
@@ -2229,7 +2157,6 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2262,7 +2189,6 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
         super(NER_GERMAN_LEGAL, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             train_file="ler.conll",
             **corpusargs,
@@ -2273,7 +2199,6 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2282,7 +2207,6 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
         machine. Obtain the corpus from https://sites.google.com/site/germeval2014ner/data and put it into some folder.
         Then point the base_path parameter in the constructor to this folder
         :param base_path: Path to the GermEval corpus on your machine
-        :param tag_to_bioes: 'ner' by default, should not be changed.
         :param in_memory:If True, keeps dataset in memory giving speedups in training.
         """
         if not base_path:
@@ -2322,7 +2246,6 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
         super(NER_GERMAN_GERMEVAL, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             comment_symbol="#",
             in_memory=in_memory,
             **corpusargs,
@@ -2333,7 +2256,6 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         column_delimiter: str = r"\s+",
         in_memory: bool = True,
         **corpusargs,
@@ -2344,7 +2266,6 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
         dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -2384,7 +2305,6 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
             train_file="train.txt",
             dev_file="dev.txt",
             test_file="test.txt",
-            tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
             **corpusargs,
@@ -2454,7 +2374,6 @@ class NER_HUNGARIAN(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -2464,7 +2383,6 @@ class NER_HUNGARIAN(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -2495,7 +2413,6 @@ class NER_HUNGARIAN(ColumnCorpus):
             columns,
             train_file="hun_ner_corpus.txt",
             column_delimiter="\t",
-            tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
             label_name_map={"0": "O"},
@@ -2508,7 +2425,6 @@ class NER_ICELANDIC(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2517,7 +2433,6 @@ class NER_ICELANDIC(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -2560,7 +2475,6 @@ class NER_ICELANDIC(ColumnCorpus):
             data_folder,
             columns,
             train_file="icelandic_ner.txt",
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -2570,7 +2484,6 @@ class NER_JAPANESE(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2579,7 +2492,6 @@ class NER_JAPANESE(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
         if not base_path:
@@ -2612,7 +2524,6 @@ class NER_JAPANESE(ColumnCorpus):
             data_folder,
             columns,
             train_file="train.txt",
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             default_whitespace_after=0,
             **corpusargs,
@@ -2650,7 +2561,6 @@ class NER_MASAKHANE(MultiCorpus):
         self,
         languages: Union[str, List[str]] = "luo",
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2660,7 +2570,6 @@ class NER_MASAKHANE(MultiCorpus):
         with the languages you require. If you pass "all", all languages will be initialized.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
@@ -2723,7 +2632,6 @@ class NER_MASAKHANE(MultiCorpus):
             corp = ColumnCorpus(
                 data_folder=language_folder,
                 column_format=columns,
-                tag_to_bioes=tag_to_bioes,
                 encoding="utf-8",
                 in_memory=in_memory,
                 name=language,
@@ -2742,7 +2650,6 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
         self,
         task: str = "multi",
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         use_dev_as_test: bool = True,
         **corpusargs,
@@ -2754,7 +2661,6 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
         parent directory where the multiconer folder resides. You can also create the multiconer in
         the {FLAIR_CACHE_ROOT}/datasets folder to leave the path empty.
         :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
         POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
@@ -2820,7 +2726,6 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
             dev_files=dev_files,
             test_files=test_files,
             column_format=columns,
-            tag_to_bioes=tag_to_bioes,
             comment_symbol="# id ",
             in_memory=in_memory,
             **corpusargs,
@@ -2832,7 +2737,6 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         self,
         languages: Union[str, List[str]] = "en",
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = False,
         **corpusargs,
     ):
@@ -2850,7 +2754,6 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         base_path : Union[str, Path], optional
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
-        tag_to_bioes : str, optional
             The data is in bio-format. It will by default (with the string "ner" as value) be transformed
             into the bioes format. If you dont want that set it to None.
 
@@ -2925,7 +2828,6 @@ class NER_MULTI_WIKIANN(MultiCorpus):
                 data_folder=language_folder,
                 column_format=columns,
                 train_file=file_name + "_new",
-                tag_to_bioes=tag_to_bioes,
                 in_memory=in_memory,
                 **corpusargs,
             )
@@ -3258,7 +3160,6 @@ class NER_MULTI_XTREME(MultiCorpus):
         self,
         languages: Union[str, List[str]] = "en",
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = False,
         **corpusargs,
     ):
@@ -3276,7 +3177,6 @@ class NER_MULTI_XTREME(MultiCorpus):
         base_path : Union[str, Path], optional
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
-        tag_to_bioes : str, optional
             The data is in bio-format. It will by default (with the string "ner" as value) be transformed
             into the bioes format. If you dont want that set it to None.
 
@@ -3391,7 +3291,6 @@ class NER_MULTI_XTREME(MultiCorpus):
             corp = ColumnCorpus(
                 data_folder=language_folder,
                 column_format=columns,
-                tag_to_bioes=tag_to_bioes,
                 in_memory=in_memory,
                 **corpusargs,
             )
@@ -3419,7 +3318,6 @@ class NER_MULTI_WIKINER(MultiCorpus):
         self,
         languages: Union[str, List[str]] = "en",
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = False,
         **corpusargs,
     ):
@@ -3452,7 +3350,6 @@ class NER_MULTI_WIKINER(MultiCorpus):
             corp = ColumnCorpus(
                 data_folder=language_folder,
                 column_format=columns,
-                tag_to_bioes=tag_to_bioes,
                 in_memory=in_memory,
                 **corpusargs,
             )
@@ -3498,7 +3395,6 @@ class NER_SWEDISH(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -3536,7 +3432,6 @@ class NER_SWEDISH(ColumnCorpus):
         super(NER_SWEDISH, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -3589,7 +3484,6 @@ class NER_TURKU(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -3598,7 +3492,6 @@ class NER_TURKU(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -3632,7 +3525,6 @@ class NER_TURKU(ColumnCorpus):
             test_file=test_file,
             train_file=train_file,
             column_delimiter="\t",
-            tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
@@ -3644,7 +3536,6 @@ class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "keyword",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -3670,7 +3561,6 @@ class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
         super(KEYPHRASE_SEMEVAL2017, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -3680,7 +3570,6 @@ class KEYPHRASE_INSPEC(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "keyword",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -3709,7 +3598,6 @@ class KEYPHRASE_INSPEC(ColumnCorpus):
         super(KEYPHRASE_INSPEC, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -3719,7 +3607,6 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "keyword",
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -3744,7 +3631,6 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
         super(KEYPHRASE_SEMEVAL2010, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
@@ -4184,7 +4070,6 @@ class NER_HIPE_2022(ColumnCorpus):
         dataset_name: str,
         language: str,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
         in_memory: bool = True,
         version: str = "v2.1",
         branch_name: str = "main",
@@ -4201,7 +4086,6 @@ class NER_HIPE_2022(ColumnCorpus):
         :language: Language for a supported dataset.
         :base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :tag_to_bioes: Dataset will automatically transformed into BIOES format (internally).
         :in_memory: If True, keeps dataset in memory giving speedups in training.
         :version: Version of CLEF-HIPE dataset. Currently only v1.0 is supported and available.
         :branch_name: Defines git branch name of HIPE data repository (main by default).
@@ -4235,10 +4119,13 @@ class NER_HIPE_2022(ColumnCorpus):
         }
 
         # v2.0 only adds new language and splits for AJMC dataset
-        hipe_available_splits["v2.0"] = hipe_available_splits["v1.0"].copy()
+        hipe_available_splits["v2.0"] = copy.deepcopy(hipe_available_splits["v1.0"])
         hipe_available_splits["v2.0"]["ajmc"] = {"de": ["train", "dev"], "en": ["train", "dev"], "fr": ["train", "dev"]}
 
-        hipe_available_splits["v2.1"] = hipe_available_splits["v2.0"].copy()
+        hipe_available_splits["v2.1"] = copy.deepcopy(hipe_available_splits["v2.0"])
+        for dataset_name_values in hipe_available_splits["v2.1"].values():
+            for splits in dataset_name_values.values():
+                splits.append("test")  # test datasets are only available for >= v2.1
 
         eos_marker = "EndOfSentence"
         document_separator = "# hipe2022:document_id"
@@ -4273,11 +4160,12 @@ class NER_HIPE_2022(ColumnCorpus):
             new_data_folder = new_data_folder / "with_doc_seperator"
             new_data_folder.mkdir(parents=True, exist_ok=True)
 
-        dev_path = new_data_folder / dev_file
-
         self.preproc_fn = self._prepare_corpus if not preproc_fn else preproc_fn
 
-        if not dev_path.exists():
+        if not all(  # Only reprocess if some files are not there yet
+            split_path.exists()
+            for split_path in [new_data_folder / f"{split_file}.txt" for split_file in dataset_splits]
+        ):
             for split in dataset_splits:
                 original_filename = f"HIPE-2022-{version}-{dataset_name}-{split}-{language}.tsv"
                 self.preproc_fn(
@@ -4294,7 +4182,6 @@ class NER_HIPE_2022(ColumnCorpus):
             train_file=train_file,
             dev_file=dev_file,
             test_file=test_file,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
             skip_first_line=True,

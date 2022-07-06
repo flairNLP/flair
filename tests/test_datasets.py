@@ -422,8 +422,9 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
 
 def test_hipe_2022_corpus(tasks_base_path):
     """
-    This test covers the complete v1.0 version of the HIPE 2022,
-    including the version with document separator.
+    This test covers the complete HIPE 2022 dataset.
+    https://github.com/hipe-eval/HIPE-2022-data
+    Includes variant with document separator, and all versions of the dataset.
     """
 
     # We have manually checked, that these numbers are correct:
@@ -495,7 +496,7 @@ def test_hipe_2022_corpus(tasks_base_path):
         }
     }
 
-    hipe_stats["v2.0"] = hipe_stats["v1.0"].copy()
+    hipe_stats["v2.0"] = copy.deepcopy(hipe_stats["v1.0"])
     hipe_stats["v2.0"]["ajmc"] = {
         "de": {
             "train": {
@@ -530,10 +531,8 @@ def test_hipe_2022_corpus(tasks_base_path):
             },
         },
     }
-    hipe_stats["v2.0"]["newseye"] = {
-        "de": {
-            "train": {"sents": 20839 + 1, "docs": 7, "labels": ["HumanProd", "LOC", "ORG", "PER"]}  # missing EOD marker
-        }
+    hipe_stats["v2.0"]["newseye"]["de"] = {
+        "train": {"sents": 20839 + 1, "docs": 7, "labels": ["HumanProd", "LOC", "ORG", "PER"]}  # missing EOD marker
     }
     hipe_stats["v2.0"]["sonar"] = {
         "de": {
@@ -549,6 +548,69 @@ def test_hipe_2022_corpus(tasks_base_path):
         "sents": 5743,
         "docs": 158,
         "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+
+    # Test data for v2.1 release
+    hipe_stats["v2.1"]["ajmc"]["de"]["test"] = {
+        "sents": 224,
+        "docs": 16,
+        "labels": ["loc", "object", "pers", "scope", "work"],
+    }
+    hipe_stats["v2.1"]["ajmc"]["en"]["test"] = {
+        "sents": 238,
+        "docs": 13,
+        "labels": ["date", "loc", "pers", "scope", "work"],
+    }
+    hipe_stats["v2.1"]["ajmc"]["fr"]["test"] = {
+        "sents": 188 + 1,  # 1 sentence with missing EOS marker
+        "docs": 15,
+        "labels": ["date", "loc", "pers", "scope", "work"],
+    }
+    hipe_stats["v2.1"]["hipe2020"]["de"]["test"] = {
+        "sents": 1215 + 2,  # 2 sentences with missing EOS marker
+        "docs": 49,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+    hipe_stats["v2.1"]["hipe2020"]["en"]["test"] = {
+        "sents": 553,
+        "docs": 46,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+    hipe_stats["v2.1"]["hipe2020"]["fr"]["test"] = {
+        "sents": 1462,
+        "docs": 43,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+    hipe_stats["v2.1"]["letemps"]["fr"]["test"] = {"sents": 2381, "docs": 51, "labels": ["loc", "org", "pers"]}
+    hipe_stats["v2.1"]["newseye"]["de"]["test"] = {
+        "sents": 3336 + 1,  # 1 missing EOD marker
+        "docs": 13,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["newseye"]["fi"]["test"] = {
+        "sents": 390 + 1,  # 1 missing EOD marker
+        "docs": 24,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["newseye"]["fr"]["test"] = {
+        "sents": 2534 + 1,  # 1 missing EOD marker
+        "docs": 35,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["newseye"]["sv"]["test"] = {
+        "sents": 342 + 1,  # 1 missing EOD marker
+        "docs": 21,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["sonar"]["de"]["test"] = {
+        "sents": 807 + 8 + 1,  # 8 missing EOS marker + missing EOD
+        "docs": 10,
+        "labels": ["LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["topres19th"]["en"]["test"] = {
+        "sents": 2001,
+        "docs": 112,
+        "labels": ["BUILDING", "LOC", "STREET"],
     }
 
     def test_hipe_2022(dataset_version="v2.1", add_document_separator=True):
@@ -648,7 +710,7 @@ def test_jsonl_dataset_should_use_label_type(tasks_base_path):
     """
     Tests whether the dataset respects the label_type parameter
     """
-    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl", label_type="pos")  # use other type
+    dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl", label_type="pos")  # use other type
 
     for sentence in dataset.sentences:
         assert sentence.has_label("pos")
@@ -659,11 +721,14 @@ def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
     """
     Tests reading a JsonlDataset containing multiple tagged entries
     """
-    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl")
+    dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl")
 
     assert len(dataset.sentences) == 5
-    assert dataset.sentences[0].get_token(3).get_label("ner").value == "B-LOC"
-    assert dataset.sentences[0].get_token(4).get_label("ner").value == "I-LOC"
+    expected_labels = ["O", "O", "B-LOC", "I-LOC"]
+    assert [[label.value for label in t.get_labels("ner")] for t in dataset.sentences[0]] == [
+        [e] for e in expected_labels
+    ]
+    assert [dataset.sentences[0].get_token(i).get_label("ner").value for i in range(1, 5)] == expected_labels
 
 
 def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):

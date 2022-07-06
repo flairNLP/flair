@@ -34,7 +34,7 @@ print(sentence.embedding)
 
 This prints out the embedding of the document. Since the document embedding is derived from word embeddings, its dimensionality depends on the dimensionality of word embeddings you are using.
 
-You have the following optional constructor arguments: 
+You have the following optional constructor arguments:
 
 | Argument             | Default             | Description
 | -------------------- | ------------------- | ------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ document_embeddings = DocumentPoolEmbeddings([glove_embedding],  pooling='min')
 ### Fine-tune mode
 
 You can also choose which fine-tuning operation you want, i.e. which transformation to apply before word embeddings get
-pooled. The default operation is 'linear' transformation, but if you only use simple word embeddings that are 
+pooled. The default operation is 'linear' transformation, but if you only use simple word embeddings that are
 not task-trained you should probably use a 'nonlinear' transformation instead:
 
 ```python
@@ -63,7 +63,7 @@ embeddings = WordEmbeddings('glove')
 document_embeddings = DocumentPoolEmbeddings([embeddings], fine_tune_mode='nonlinear')
 ```
 
-If on the other hand you use word embeddings that are task-trained (such as simple one hot encoded embeddings), you 
+If on the other hand you use word embeddings that are task-trained (such as simple one hot encoded embeddings), you
 are often better off doing no transformation at all. Do this by passing 'none':
 
 ```python
