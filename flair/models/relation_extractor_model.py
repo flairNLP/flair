@@ -37,7 +37,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         relation_representation_length = 2 * embeddings.embedding_length
         if self.pooling_operation == "first_last":
             relation_representation_length *= 2
-        self.relation_representation_length = relation_representation_length
         super(RelationExtractor, self).__init__(**classifierargs, final_embedding_size=relation_representation_length)
 
         # set embeddings
