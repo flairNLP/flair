@@ -592,7 +592,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         raise NotImplementedError()
 
     def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
-        filtered_data_points = [dt for dt in data_points if not self._filter_data_point(dt)]
+        filtered_data_points = [dt for dt in data_points if self._filter_data_point(dt)]
         if not filtered_data_points:
             return (torch.zeros(0, self.final_embedding_size, device=flair.device),)
         if self._embeddings is not None:
@@ -684,6 +684,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
 
         # make a forward pass to produce embedded data points and labels
+        breakpoint()
         predict_data_points = self._get_prediction_data_points(sentences)
         labels = self._prepare_label_tensor(predict_data_points)
 
