@@ -83,9 +83,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             entities.extend(sentence.get_spans(self.label_type))
         return entities
 
-    def _get_label_of_datapoint(self, datapoint: Span) -> List[str]:
-        return [datapoint.get_label(self._label_type).value]
-
     def _filter_data_point(self, data_point: Sentence) -> bool:
         return bool(data_point.get_labels(self.label_type))
 

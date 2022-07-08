@@ -604,11 +604,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
         return (embedded_data_pairs,)
 
-    def forward_pass(
+    def _transform_embeddings(
         self,
         *args: torch.Tensor,
     ) -> torch.Tensor:
-        """This method does a forward pass through the model given a list of tensors as input.
+        """This method does applies a transformation through the model given a list of tensors as input.
         Returns the embeddings that will ran trough a linear decoder layer to calculate logits.
 
         If it is not overwritten, it will act as identity function for of the first tensor.
@@ -616,7 +616,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         return args[0]
 
     def forward(self, *args: torch.Tensor) -> torch.Tensor:
-        emb = self.forward_pass(*args)
+        emb = self._transform_embeddings(*args)
         emb = emb.unsqueeze(1)
         emb = self.dropout(emb)
         emb = self.locked_dropout(emb)
@@ -637,12 +637,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         """
         raise NotImplementedError
 
-    @abstractmethod
     def _get_label_of_datapoint(self, data_point: DT2) -> List[str]:
         """Extracts the labels from the data points.
         Each data point might return a list of strings, representing multiple labels.
         """
-        raise NotImplementedError
+        return [data_point.get_label(self.label_type).value]
 
     @property
     def multi_label_threshold(self):
