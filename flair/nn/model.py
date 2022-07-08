@@ -520,7 +520,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         self,
         label_dictionary: Dictionary,
         final_embedding_size: int,
-        embeddings: Embeddings[DT],
+        embeddings: Optional[Embeddings[DT]] = None,
         dropout: float = 0.0,
         locked_dropout: float = 0.0,
         word_dropout: float = 0.0,
@@ -594,11 +594,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
     def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
         filtered_data_points = [dt for dt in data_points if not self._filter_data_point(dt)]
         if not filtered_data_points:
-            return (torch.zeros(0, self.word_embeddings.embedding_length, device=flair.device),)
-        self._embeddings.embed(filtered_data_points)
+            return (torch.zeros(0, self.final_embedding_size, device=flair.device),)
+        if self._embeddings is not None:
+            self._embeddings.embed(filtered_data_points)
         embedding_list = []
         for prediction_data_point in self._get_prediction_data_points(filtered_data_points):
-            embedding_list.append(self._embed_prediction_data_point(prediction_data_point))
+            embedding_list.append(self._embed_prediction_data_point(prediction_data_point).unsqueeze(0))
 
         embedded_data_pairs = torch.cat(embedding_list, 0)
 
@@ -711,7 +712,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         sentences = [sentence for sentence in typing.cast(List[Sentence], data_points) if len(sentence) > 0]
 
         # reverse sort all sequences by their length
-        reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
+        reordered_sentences = sorted(sentences, key=len, reverse=True)
 
         return typing.cast(List[DT], reordered_sentences)
 
