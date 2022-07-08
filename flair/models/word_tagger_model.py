@@ -5,13 +5,13 @@ import torch
 import torch.nn
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Sentence
+from flair.data import DataPoint, Dictionary, Sentence, Token
 from flair.embeddings import TokenEmbeddings
 
 log = logging.getLogger("flair")
 
 
-class WordTagger(flair.nn.DefaultClassifier[Sentence]):
+class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
     """
     This is a simple class of models that tags individual words in text.
     """
@@ -31,7 +31,7 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
         :param beta: Parameter for F-beta score for evaluation and training annealing
         """
         super().__init__(
-            label_dictionary=tag_dictionary, final_embedding_size=embeddings.embedding_length, **classifierargs
+            label_dictionary=tag_dictionary, final_embedding_size=embeddings.embedding_length, **classifierargs, embeddings=embeddings,
         )
 
         # embeddings
@@ -62,23 +62,12 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
             **kwargs,
         )
 
-    def _prepare_tensors(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, ...]:
-        self.embeddings.embed(sentences)
-        all_tokens = [token for sentence in sentences for token in sentence]
-
+    def _embed_prediction_data_point(self, prediction_data_point: Token) -> torch.Tensor:
         names = self.embeddings.get_names()
-        all_embeddings = [token.get_embedding(names) for token in all_tokens]
+        return prediction_data_point.get_embedding(names)
 
-        embedded_tokens = torch.stack(all_embeddings)
-        return (embedded_tokens,)
-
-    def _get_labels(self, sentences: List[Sentence]) -> List[List[str]]:
-        all_tokens = [token for sentence in sentences for token in sentence]
-        labels = [[token.get_label(self.label_type).value] for token in all_tokens]
-        return labels
-
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[DataPoint]:
-        tokens: List[DataPoint] = []
+    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Token]:
+        tokens: List[Token] = []
 
         for sentence in sentences:
             tokens.extend(sentence)
