@@ -6,7 +6,8 @@ import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Relation, Sentence, Span
+from flair.data import Relation, Sentence
+from flair.embeddings import Embeddings
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -77,7 +78,9 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
                 entity_pairs.append(Relation(span_1, span_2))
         return entity_pairs
 
-    # TODO: as the get_labels logic was removed, I have to still test if it works to just use `relation.get_labels(...)`
+    @property
+    def _inner_embeddings(self) -> Embeddings[Sentence]:
+        return self.embeddings
 
     def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Relation]:
         entity_pairs: List[Relation] = []
@@ -166,7 +169,3 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
 
         return model_name
-
-
-def create_position_string(head: Span, tail: Span) -> str:
-    return f"{head.unlabeled_identifier} -> {tail.unlabeled_identifier}"
