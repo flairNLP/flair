@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DT, Dictionary, Sentence, DT2
+from flair.data import DT, DT2, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
 from flair.file_utils import Tqdm
