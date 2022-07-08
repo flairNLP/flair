@@ -12,7 +12,7 @@ from flair.file_utils import cached_path
 log = logging.getLogger("flair")
 
 
-class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
+class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
     """
     Text Classification Model
     The model takes word embeddings, puts them into an RNN to obtain a text
@@ -40,7 +40,8 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         """
 
         super(TextClassifier, self).__init__(
-            **classifierargs, final_embedding_size=document_embeddings.embedding_length
+            **classifierargs, final_embedding_size=document_embeddings.embedding_length,
+            embeddings=document_embeddings,
         )
 
         self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
@@ -50,25 +51,12 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         # auto-spawn on GPU if available
         self.to(flair.device)
 
-    def _get_labels(self, sentences: List[Sentence]) -> List[List[str]]:
-        return [[label.value for label in sentence.get_labels(self.label_type)] for sentence in sentences]
-
-    def _prepare_tensors(self, data_points: List[Sentence]) -> Tuple[torch.Tensor, ...]:
-        sentences = data_points
-
-        # embed sentences
-        self.document_embeddings.embed(sentences)
-
-        # make tensor for all embedded sentences in batch
+    def _embed_prediction_data_point(self, prediction_data_point: Sentence) -> torch.Tensor:
         embedding_names = self.document_embeddings.get_names()
-        text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
-        text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
-        return (text_embedding_tensor,)
+        return prediction_data_point.get_embedding(embedding_names)
 
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[DataPoint]:
-        result: List[DataPoint] = []
-        result.extend(sentences)
-        return result
+    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Sentence]:
+        return sentences
 
     def _get_state_dict(self):
         model_state = {
