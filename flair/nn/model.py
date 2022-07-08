@@ -753,7 +753,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             if len(reordered_sentences) == 0:
                 return sentences
 
-            if len(sentences) > mini_batch_size:
+            if len(reordered_sentences) > mini_batch_size:
                 batches: Union[DataLoader, List[List[DT]]] = DataLoader(
                     dataset=FlairDatapointDataset(reordered_sentences),
                     batch_size=mini_batch_size,
