@@ -92,18 +92,19 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
     def _embed_prediction_data_point(self, prediction_data_point: Relation) -> torch.Tensor:
         span_1 = prediction_data_point.first
         span_2 = prediction_data_point.second
+        embedding_names = self.embeddings.get_names()
 
         if self.pooling_operation == "first_last":
             return torch.cat(
                 [
-                    span_1.tokens[0].get_embedding(),
-                    span_1.tokens[-1].get_embedding(),
-                    span_2.tokens[0].get_embedding(),
-                    span_2.tokens[-1].get_embedding(),
+                    span_1.tokens[0].get_embedding(embedding_names),
+                    span_1.tokens[-1].get_embedding(embedding_names),
+                    span_2.tokens[0].get_embedding(embedding_names),
+                    span_2.tokens[-1].get_embedding(embedding_names),
                 ]
             )
         else:
-            return torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
+            return torch.cat([span_1.tokens[0].get_embedding(embedding_names), span_2.tokens[0].get_embedding(embedding_names)])
 
     def _print_predictions(self, batch, gold_label_type):
         lines = []
