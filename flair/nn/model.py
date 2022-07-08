@@ -550,6 +550,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         # set up multi-label logic
         self.multi_label = multi_label
         self.multi_label_threshold = multi_label_threshold
+        self.final_embedding_size = final_embedding_size
         self.inverse_model = inverse_model
 
         # init dropouts
@@ -684,7 +685,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
 
         # make a forward pass to produce embedded data points and labels
-        breakpoint()
         predict_data_points = self._get_prediction_data_points(sentences)
         labels = self._prepare_label_tensor(predict_data_points)
 
@@ -694,7 +694,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
         embedded_tensor = self._prepare_tensors(sentences)
         scores = self.forward(*embedded_tensor)
-        
+
         # calculate the loss
         return self._calculate_loss(scores, labels)
 
