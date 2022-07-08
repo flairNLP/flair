@@ -640,7 +640,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         """Extracts the labels from the data points.
         Each data point might return a list of strings, representing multiple labels.
         """
-        return [data_point.get_label(self.label_type).value]
+        if self.multi_label:
+            return [label.value for label in data_point.get_labels(self.label_type)]
+        else:
+            return [data_point.get_label(self.label_type).value]
 
     @property
     def multi_label_threshold(self):
