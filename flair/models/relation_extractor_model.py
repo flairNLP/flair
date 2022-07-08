@@ -12,7 +12,7 @@ from flair.file_utils import cached_path
 log = logging.getLogger("flair")
 
 
-class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
+class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
     def __init__(
         self,
         embeddings: flair.embeddings.TokenEmbeddings,
@@ -54,68 +54,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
         self.to(flair.device)
 
-    def add_entity_markers(self, sentence, span_1, span_2):
-
-        text = ""
-
-        entity_one_is_first = None
-        offset = 0
-        for token in sentence:
-            if token == span_2[0]:
-                if entity_one_is_first is None:
-                    entity_one_is_first = False
-                offset += 1
-                text += " <e2>"
-                span_2_startid = offset
-            if token == span_1[0]:
-                offset += 1
-                text += " <e1>"
-                if entity_one_is_first is None:
-                    entity_one_is_first = True
-                span_1_startid = offset
-
-            text += " " + token.text
-
-            if token == span_1[-1]:
-                offset += 1
-                text += " </e1>"
-            if token == span_2[-1]:
-                offset += 1
-                text += " </e2>"
-
-            offset += 1
-
-        expanded_sentence = Sentence(text, use_tokenizer=False)
-
-        expanded_span_1 = Span([expanded_sentence[span_1_startid - 1]])
-        expanded_span_2 = Span([expanded_sentence[span_2_startid - 1]])
-
-        return (
-            expanded_sentence,
-            (
-                expanded_span_1,
-                expanded_span_2,
-            )
-            if entity_one_is_first
-            else (expanded_span_2, expanded_span_1),
-        )
-
-    def _get_labels(self, sentences: List[Sentence]) -> List[List[str]]:
-        labels = []
-        for sentence in sentences:
-
-            relation_dict = {}
-            for label in sentence.get_labels(self.label_type):
-                relation_dict[create_position_string(label.data_point.first, label.data_point.second)] = label.value
-
-            for relation in self._get_valid_relations(sentence):
-                position_string = create_position_string(relation.first, relation.second)
-
-                # get gold label for this relation if one exists or O otherwise
-                label = relation_dict.get(position_string, "O")
-                labels.append([label])
-        return labels
-
     def _get_valid_relations(self, sentence: Sentence) -> List[Relation]:
         entity_pairs = []
         entity_spans = sentence.get_spans(self.entity_label_type)
@@ -139,46 +77,30 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
                 entity_pairs.append(Relation(span_1, span_2))
         return entity_pairs
 
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[DataPoint]:
-        entity_pairs: List[DataPoint] = []
+    # TODO: as the get_labels logic was removed, I have to still test if it works to just use `relation.get_labels(...)`
+
+    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Relation]:
+        entity_pairs: List[Relation] = []
 
         for sentence in sentences:
             entity_pairs.extend(self._get_valid_relations(sentence))
         return entity_pairs
 
-    def _prepare_tensors(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, ...]:
-        entity_pairs = []
+    def _embed_prediction_data_point(self, prediction_data_point: Relation) -> torch.Tensor:
+        span_1 = prediction_data_point.first
+        span_2 = prediction_data_point.second
 
-        for sentence in sentences:
-            entity_pairs.extend(self._get_valid_relations(sentence))
-
-        self.embeddings.embed(sentences)
-        relation_embeddings = []
-
-        # get embeddings
-        for entity_pair in entity_pairs:
-            span_1 = entity_pair.first
-            span_2 = entity_pair.second
-
-            if self.pooling_operation == "first_last":
-                embedding = torch.cat(
-                    [
-                        span_1.tokens[0].get_embedding(),
-                        span_1.tokens[-1].get_embedding(),
-                        span_2.tokens[0].get_embedding(),
-                        span_2.tokens[-1].get_embedding(),
-                    ]
-                )
-            else:
-                embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
-
-            relation_embeddings.append(embedding)
-        if relation_embeddings:
-            embedding_tensor = torch.stack(relation_embeddings)
+        if self.pooling_operation == "first_last":
+            return torch.cat(
+                [
+                    span_1.tokens[0].get_embedding(),
+                    span_1.tokens[-1].get_embedding(),
+                    span_2.tokens[0].get_embedding(),
+                    span_2.tokens[-1].get_embedding(),
+                ]
+            )
         else:
-            embedding_tensor = torch.zeros(0, self.relation_representation_length)
-
-        return (embedding_tensor,)
+            return torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
 
     def _print_predictions(self, batch, gold_label_type):
         lines = []
