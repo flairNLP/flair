@@ -1,11 +1,10 @@
 import logging
-from typing import List, Tuple
+from typing import List
 
 import torch
-import torch.nn
 
 import flair.nn
-from flair.data import DataPoint, Dictionary, Sentence, Token
+from flair.data import Dictionary, Sentence, Token
 from flair.embeddings import TokenEmbeddings
 
 log = logging.getLogger("flair")
@@ -31,7 +30,10 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
         :param beta: Parameter for F-beta score for evaluation and training annealing
         """
         super().__init__(
-            label_dictionary=tag_dictionary, final_embedding_size=embeddings.embedding_length, **classifierargs, embeddings=embeddings,
+            label_dictionary=tag_dictionary,
+            final_embedding_size=embeddings.embedding_length,
+            **classifierargs,
+            embeddings=embeddings,
         )
 
         # embeddings

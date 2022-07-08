@@ -1,12 +1,12 @@
 import logging
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import DataPoint, Sentence
+from flair.data import Sentence
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -40,7 +40,8 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         """
 
         super(TextClassifier, self).__init__(
-            **classifierargs, final_embedding_size=document_embeddings.embedding_length,
+            **classifierargs,
+            final_embedding_size=document_embeddings.embedding_length,
             embeddings=document_embeddings,
         )
 

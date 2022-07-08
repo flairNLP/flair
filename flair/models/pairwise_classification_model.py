@@ -1,10 +1,10 @@
-from typing import List, Tuple
+from typing import List
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import DataPoint, Sentence, TextPair
+from flair.data import Sentence, TextPair
 
 
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
@@ -65,7 +65,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
     def label_type(self):
         return self._label_type
 
-    def _get_prediction_data_points(self, sentences: List[TextPair]) -> List[DataPoint]:
+    def _get_prediction_data_points(self, sentences: List[TextPair]) -> List[TextPair]:
         return sentences
 
     def _embed_prediction_data_point(self, prediction_data_point: TextPair) -> torch.Tensor:
@@ -77,13 +77,15 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
                     prediction_data_point.first.get_embedding(embedding_names),
                     prediction_data_point.second.get_embedding(embedding_names),
                 ],
-                0
+                0,
             )
         else:
             concatenated_sentence = Sentence(
-                    prediction_data_point.first.to_tokenized_string() + self.sep + prediction_data_point.second.to_tokenized_string(),
-                    use_tokenizer=False,
-                )
+                prediction_data_point.first.to_tokenized_string()
+                + self.sep
+                + prediction_data_point.second.to_tokenized_string(),
+                use_tokenizer=False,
+            )
             self.document_embeddings.embed(concatenated_sentence)
             return concatenated_sentence.get_embedding(embedding_names)
 
