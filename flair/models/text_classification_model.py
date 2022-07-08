@@ -7,6 +7,7 @@ import torch
 import flair.embeddings
 import flair.nn
 from flair.data import Sentence
+from flair.embeddings import Embeddings
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -42,7 +43,6 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         super(TextClassifier, self).__init__(
             **classifierargs,
             final_embedding_size=document_embeddings.embedding_length,
-            embeddings=document_embeddings,
         )
 
         self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
@@ -70,6 +70,10 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
             "weight_dict": self.weight_dict,
         }
         return model_state
+
+    @property
+    def _inner_embeddings(self) -> Embeddings[Sentence]:
+        return self.document_embeddings
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):

@@ -5,7 +5,7 @@ import torch
 
 import flair.nn
 from flair.data import Dictionary, Sentence, Token
-from flair.embeddings import TokenEmbeddings
+from flair.embeddings import Embeddings, TokenEmbeddings
 
 log = logging.getLogger("flair")
 
@@ -33,7 +33,6 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
             label_dictionary=tag_dictionary,
             final_embedding_size=embeddings.embedding_length,
             **classifierargs,
-            embeddings=embeddings,
         )
 
         # embeddings
@@ -63,6 +62,10 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
             tag_type=state.get("tag_type"),
             **kwargs,
         )
+
+    @property
+    def _embeddings(self) -> Embeddings[Sentence]:
+        return self._embeddings
 
     def _embed_prediction_data_point(self, prediction_data_point: Token) -> torch.Tensor:
         names = self.embeddings.get_names()

@@ -6,6 +6,7 @@ import torch
 import flair.embeddings
 import flair.nn
 from flair.data import Dictionary, Sentence, Span
+from flair.embeddings import Embeddings
 
 log = logging.getLogger("flair")
 
@@ -38,7 +39,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
 
         super(EntityLinker, self).__init__(
             label_dictionary=label_dictionary,
-            embeddings=word_embeddings,
             final_embedding_size=word_embeddings.embedding_length * 2
             if pooling_operation == "first_last"
             else word_embeddings.embedding_length,
@@ -76,6 +76,10 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
 
     def emb_mean(self, span, embedding_names):
         return torch.mean(torch.cat([token.get_embedding(embedding_names) for token in span], 0), 0)
+
+    @property
+    def _inner_embeddings(self) -> Embeddings[Sentence]:
+        return self.word_embeddings
 
     def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Span]:
         entities: List[Span] = []

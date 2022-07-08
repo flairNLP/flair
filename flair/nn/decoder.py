@@ -185,7 +185,7 @@ class PrototypicalDecoder(torch.nn.Module):
 
             for batch in tqdm(dataloader):
 
-                logits, labels = encoder.forward_pass(batch)  # type: ignore
+                logits, labels = encoder.get_scores_and_labels(batch)
 
                 if len(labels) > 0:
                     # decode embeddings into prototype space

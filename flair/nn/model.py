@@ -512,15 +512,13 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
     flair.nn.Model. All features shared by all classifiers are implemented here,
     including the loss calculation and the predict() method. Currently, the
     TextClassifier, RelationExtractor, TextPairClassifier and
-    SimpleSequenceTagger implement this class. You only need to implement the
-    forward_pass() method to implement this base class.
+    SimpleSequenceTagger implement this class.
     """
 
     def __init__(
         self,
         label_dictionary: Dictionary,
         final_embedding_size: int,
-        embeddings: Optional[Embeddings[DT]] = None,
         dropout: float = 0.0,
         locked_dropout: float = 0.0,
         word_dropout: float = 0.0,
@@ -544,8 +542,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             self.decoder = torch.nn.Linear(final_embedding_size, len(self.label_dictionary))
             torch.nn.init.xavier_uniform_(self.decoder.weight)
             self._custom_decoder = False
-
-        self._embeddings = embeddings
 
         # set up multi-label logic
         self.multi_label = multi_label
@@ -592,12 +588,16 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
     def _embed_prediction_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
         raise NotImplementedError()
 
+    @property
+    def _inner_embeddings(self) -> Optional[Embeddings[DT]]:
+        return None
+
     def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
         filtered_data_points = [dt for dt in data_points if self._filter_data_point(dt)]
         if not filtered_data_points:
             return (torch.zeros(0, self.final_embedding_size, device=flair.device),)
-        if self._embeddings is not None:
-            self._embeddings.embed(filtered_data_points)
+        if self._inner_embeddings is not None:
+            self._inner_embeddings.embed(filtered_data_points)
         embedding_list = []
         for prediction_data_point in self._get_prediction_data_points(filtered_data_points):
             embedding_list.append(self._embed_prediction_data_point(prediction_data_point).unsqueeze(0))
@@ -633,10 +633,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
     @abstractmethod
     def _get_prediction_data_points(self, sentences: List[DT]) -> List[DT2]:
-        """Returns the data_points to which labels are added (either Sentence, Span or Token objects)
-
-        the labels are aligned with the result of a forward pass, hence the order matters.
-        """
+        """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
         raise NotImplementedError
 
     def _get_label_of_datapoint(self, data_point: DT2) -> List[str]:
@@ -658,6 +655,13 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                 raise Exception('multi_label_threshold dict should have a "default" key')
         else:
             self._multi_label_threshold = {"default": x}
+
+    def get_scores_and_labels(self, batch: List[DT]) -> Tuple[torch.Tensor, List[List[str]]]:
+        predict_data_points = self._get_prediction_data_points(batch)
+        labels = [self._get_label_of_datapoint(dp) for dp in predict_data_points]
+        embedded_tensor = self._prepare_tensors(batch)
+        logits = self._transform_embeddings(*embedded_tensor)
+        return logits, labels
 
     def _prepare_label_tensor(self, prediction_data_points: List[DT2]) -> torch.Tensor:
         labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points]
