@@ -74,7 +74,10 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
                 ):
                     continue
 
-                entity_pairs.append(Relation(span_1, span_2))
+                relation = Relation(span_1, span_2)
+                if self.training and self.train_on_gold_pairs_only and relation.get_label(self.label_type).value == "O":
+                    continue
+                entity_pairs.append(relation)
         return entity_pairs
 
     @property

@@ -527,6 +527,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         loss_weights: Dict[str, float] = None,
         decoder: Optional[torch.nn.Module] = None,
         inverse_model: bool = False,
+        train_on_gold_pairs_only: bool = False,
     ):
 
         super().__init__()
@@ -577,6 +578,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+        self.train_on_gold_pairs_only = train_on_gold_pairs_only
 
     def _filter_data_point(self, data_point: DT) -> bool:
         """Specify if a data point should be kept. That way you can remove for example empty texts.
@@ -862,6 +864,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             "multi_label",
             "multi_label_threshold",
             "loss_weights",
+            "train_on_gold_pairs_only",
             "inverse_model",
         ]:
             if arg not in kwargs and arg in state:
@@ -879,6 +882,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         state["multi_label"] = self.multi_label
         state["multi_label_threshold"] = self.multi_label_threshold
         state["loss_weights"] = self.loss_weights
+        state["train_on_gold_pairs_only"] = self.train_on_gold_pairs_only
         state["inverse_model"] = self.inverse_model
         if self._custom_decoder:
             state["decoder"] = self.decoder
