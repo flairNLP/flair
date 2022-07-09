@@ -64,7 +64,7 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
         )
 
     @property
-    def _embeddings(self) -> Embeddings[Sentence]:
+    def _inner_embeddings(self) -> Embeddings[Sentence]:
         return self._embeddings
 
     def _embed_prediction_data_point(self, prediction_data_point: Token) -> torch.Tensor:
