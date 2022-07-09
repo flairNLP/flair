@@ -106,7 +106,9 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
                 ]
             )
         else:
-            return torch.cat([span_1.tokens[0].get_embedding(embedding_names), span_2.tokens[0].get_embedding(embedding_names)])
+            return torch.cat(
+                [span_1.tokens[0].get_embedding(embedding_names), span_2.tokens[0].get_embedding(embedding_names)]
+            )
 
     def _print_predictions(self, batch, gold_label_type):
         lines = []
