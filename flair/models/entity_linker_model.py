@@ -91,7 +91,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         return bool(data_point.get_labels(self.label_type))
 
     def _embed_prediction_data_point(self, prediction_data_point: Span) -> torch.Tensor:
-        return self.aggregated_embedding(prediction_data_point, self.word_embeddings.get_names()).unsqueeze(0)
+        return self.aggregated_embedding(prediction_data_point, self.word_embeddings.get_names())
 
     def _get_state_dict(self):
         model_state = {
