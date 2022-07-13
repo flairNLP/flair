@@ -663,13 +663,13 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
     def get_scores_and_labels(self, batch: List[DT]) -> Tuple[torch.Tensor, List[List[str]]]:
         predict_data_points = self._get_prediction_data_points(batch)
-        labels = [self._get_label_of_datapoint(dp) for dp in predict_data_points]
+        labels = [self._get_label_of_datapoint(dp) for dp in predict_data_points if self._filter_data_point(dp)]
         embedded_tensor = self._prepare_tensors(batch)
         logits = self._transform_embeddings(*embedded_tensor)
         return logits, labels
 
     def _prepare_label_tensor(self, prediction_data_points: List[DT2]) -> torch.Tensor:
-        labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points]
+        labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points if self._filter_data_point(dp)]
         if self.multi_label:
             return torch.tensor(
                 [
