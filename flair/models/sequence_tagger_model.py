@@ -86,16 +86,17 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 # without UNK, we cannot evaluate on data that contains labels not seen in test
                 # with UNK, the model learns less well if there are no UNK examples
                 self.label_dictionary = Dictionary(add_unk=allow_unk_predictions)
+                assert self.tag_format in ["BIOES", "BIO"]
                 for label in tag_dictionary.get_items():
                     if label == "<unk>":
                         continue
                     self.label_dictionary.add_item("O")
-                    if tag_format == "BIOES":
+                    if self.tag_format == "BIOES":
                         self.label_dictionary.add_item("S-" + label)
                         self.label_dictionary.add_item("B-" + label)
                         self.label_dictionary.add_item("E-" + label)
                         self.label_dictionary.add_item("I-" + label)
-                    if tag_format == "BIO":
+                    if self.tag_format == "BIO":
                         self.label_dictionary.add_item("B-" + label)
                         self.label_dictionary.add_item("I-" + label)
             else:
@@ -399,12 +400,17 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 sentence_labels = ["O"] * len(sentence)
                 for label in sentence.get_labels(self.label_type):
                     span: Span = label.data_point
-                    if len(span) == 1:
-                        sentence_labels[span[0].idx - 1] = "S-" + label.value
+                    if self.tag_format == "BIOES":
+                        if len(span) == 1:
+                            sentence_labels[span[0].idx - 1] = "S-" + label.value
+                        else:
+                            sentence_labels[span[0].idx - 1] = "B-" + label.value
+                            sentence_labels[span[-1].idx - 1] = "E-" + label.value
+                            for i in range(span[0].idx, span[-1].idx - 1):
+                                sentence_labels[i] = "I-" + label.value
                     else:
                         sentence_labels[span[0].idx - 1] = "B-" + label.value
-                        sentence_labels[span[-1].idx - 1] = "E-" + label.value
-                        for i in range(span[0].idx, span[-1].idx - 1):
+                        for i in range(span[0].idx, span[-1].idx):
                             sentence_labels[i] = "I-" + label.value
                 all_sentence_labels.extend(sentence_labels)
             labels = [[label] for label in all_sentence_labels]
@@ -591,6 +597,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "embeddings": self.embeddings,
             "hidden_size": self.hidden_size,
             "tag_dictionary": self.label_dictionary,
+            "tag_format": self.tag_format,
             "tag_type": self.tag_type,
             "use_crf": self.use_crf,
             "use_rnn": self.use_rnn,
@@ -608,14 +615,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
 
-        """Initialize the model from a state dictionary."""
-        rnn_type = "LSTM" if "rnn_type" not in state.keys() else state["rnn_type"]
-        use_dropout = 0.0 if "use_dropout" not in state.keys() else state["use_dropout"]
-        use_word_dropout = 0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
-        use_locked_dropout = 0.0 if "use_locked_dropout" not in state.keys() else state["use_locked_dropout"]
-        reproject_embeddings = True if "reproject_embeddings" not in state.keys() else state["reproject_embeddings"]
-        weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
-
         if state["use_crf"]:
             if "transitions" in state["state_dict"]:
                 state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"]
@@ -623,19 +622,20 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return super()._init_model_with_state_dict(
             state,
-            embeddings=state["embeddings"],
-            tag_dictionary=state["tag_dictionary"],
-            tag_type=state["tag_type"],
-            use_crf=state["use_crf"],
-            use_rnn=state["use_rnn"],
-            rnn_layers=state["rnn_layers"],
-            hidden_size=state["hidden_size"],
-            dropout=use_dropout,
-            word_dropout=use_word_dropout,
-            locked_dropout=use_locked_dropout,
-            rnn_type=rnn_type,
-            reproject_embeddings=reproject_embeddings,
-            loss_weights=weights,
+            embeddings=state.get("embeddings"),
+            tag_dictionary=state.get("tag_dictionary"),
+            tag_format=state.get("tag_format", "BIOES"),
+            tag_type=state.get("tag_type"),
+            use_crf=state.get("use_crf"),
+            use_rnn=state.get("use_rnn"),
+            rnn_layers=state.get("rnn_layers"),
+            hidden_size=state.get("hidden_size"),
+            dropout=state.get("use_dropout", 0.0),
+            word_dropout=state.get("use_word_dropout", 0.0),
+            locked_dropout=state.get("use_locked_dropout", 0.0),
+            rnn_type=state.get("rnn_type", "LSTM"),
+            reproject_embeddings=state.get("reproject_embeddings", True),
+            loss_weights=state.get("weight_dict"),
             init_from_state_dict=True,
             **kwargs,
         )
@@ -916,13 +916,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 model_folder = model_name
 
             # Lazy import
-            from huggingface_hub import cached_download, hf_hub_url
-
-            url = hf_hub_url(model_name, revision=revision, filename=hf_model_name)
+            from huggingface_hub.file_download import hf_hub_download
 
             try:
-                model_path = cached_download(
-                    url=url,
+                model_path = hf_hub_download(
+                    model_name,
+                    hf_model_name,
+                    revision=revision,
                     library_name="flair",
                     library_version=flair.__version__,
                     cache_dir=flair.cache_root / "models" / model_folder,
@@ -931,13 +931,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 # output information
                 log.error("-" * 80)
                 log.error(
-                    f"ACHTUNG: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
+                    f"ERROR: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
                 )
-                # log.error(f" - Error message: {e}")
                 log.error(" -> Please check https://huggingface.co/models?filter=flair for all available models.")
                 log.error(" -> Alternatively, point to a model file on your local drive.")
                 log.error("-" * 80)
                 Path(flair.cache_root / "models" / model_folder).rmdir()  # remove folder again if not valid
+                raise
 
         return model_path
 
@@ -1027,7 +1027,7 @@ class MultiTagger:
         """
         if any(["hunflair" in name for name in self.name_to_tagger.keys()]):
             if "spacy" not in sys.modules:
-                logging.warn(
+                logging.warning(
                     "We recommend to use SciSpaCy for tokenization and sentence splitting "
                     "if HunFlair is applied to biomedical text, e.g.\n\n"
                     "from flair.tokenization import SciSpacySentenceSplitter\n"

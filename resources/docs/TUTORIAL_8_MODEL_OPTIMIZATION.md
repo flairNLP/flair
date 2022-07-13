@@ -121,10 +121,10 @@ label_type = 'question_class'
 # create the parameter selector
 param_selector = TextClassifierParamSelector(
     corpus,
-    label_type, 
-    False, 
-    'resources/results', 
-    max_epochs=50, 
+    label_type,
+    False,
+    'resources/results',
+    max_epochs=50,
     fine_tune=True,
     training_runs=3,
     optimization_value=OptimizationValue.DEV_SCORE
@@ -168,7 +168,7 @@ print(corpus)
 tag_type = 'ner'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_label_dictionary(label_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(label_type=tag_type, add_unk=False)
 print(tag_dictionary.idx2item)
 
 # 4. initialize embeddings
