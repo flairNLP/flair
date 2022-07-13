@@ -662,14 +662,15 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             self._multi_label_threshold = {"default": x}
 
     def get_scores_and_labels(self, batch: List[DT]) -> Tuple[torch.Tensor, List[List[str]]]:
+        batch = [dp for dp in batch if self._filter_data_point(dp)]
         predict_data_points = self._get_prediction_data_points(batch)
-        labels = [self._get_label_of_datapoint(dp) for dp in predict_data_points if self._filter_data_point(dp)]
+        labels = [self._get_label_of_datapoint(pdp) for pdp in predict_data_points]
         embedded_tensor = self._prepare_tensors(batch)
         logits = self._transform_embeddings(*embedded_tensor)
         return logits, labels
 
     def _prepare_label_tensor(self, prediction_data_points: List[DT2]) -> torch.Tensor:
-        labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points if self._filter_data_point(dp)]
+        labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points]
         if self.multi_label:
             return torch.tensor(
                 [
@@ -694,6 +695,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
 
         # make a forward pass to produce embedded data points and labels
+        sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
         predict_data_points = self._get_prediction_data_points(sentences)
         labels = self._prepare_label_tensor(predict_data_points)
 
@@ -778,6 +780,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
             for batch in batches:
+
+                batch = [dp for dp in batch if self._filter_data_point(dp)]
+
                 # stop if all sentences are empty
                 if not batch:
                     continue
