@@ -6,8 +6,8 @@
 
 Flair에는 잘 알려진 하이퍼 매개변수 선택 도구인 [hyperopt](https://github.com/hyperopt/hyperopt)에 대한 래퍼가 포함되어 있습니다.
 
-먼저 말뭉치를 로드해야 합니다. 다음 예에서 사용된 [AGNews corpus](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)를 로드하려면 
-먼저 다운로드하여 올바른 형식으로 변환하세요.   
+먼저 말뭉치를 로드해야 합니다. 다음 예에서 사용된 [AGNews corpus](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)를 로드하려면
+먼저 다운로드하여 올바른 형식으로 변환하세요.
 자세한 내용은 [tutorial 6](/resources/docs/KOR_docs/TUTORIAL_6_CORPUS.md)을 확인하세요.
 
 ```python
@@ -69,15 +69,15 @@ param_selector.optimize(search_space, max_evals=100)
 ## 최고의 학습률 찾기
 
 
-학습률은 가장 중요한 하이퍼 매개변수 중 하나이며 기본적으로 모델의 아키텍처와 모델이 사용하는 교육 데이터를 통한 손실 환경의 토폴로지에 따라 다릅니다.   
+학습률은 가장 중요한 하이퍼 매개변수 중 하나이며 기본적으로 모델의 아키텍처와 모델이 사용하는 교육 데이터를 통한 손실 환경의 토폴로지에 따라 다릅니다.
 최적의 학습은 훈련 속도를 향상시키고 더 나은 성능의 모델을 제공할 것입니다. Leslie Smith가 설명한 간단한 기술
-[Cyclical Learning Rates for Training](https://arxiv.org/abs/1506.01186) 논문은 매우 낮은 학습률로 시작하여 
+[Cyclical Learning Rates for Training](https://arxiv.org/abs/1506.01186) 논문은 매우 낮은 학습률로 시작하여
 SGD의 모든 배치 업데이트에서 학습률을 기하급수적으로 증가시키는 모델을 학습시키는 것입니다. 우리는 손실을 플로팅하여
-학습률과 관련하여 일반적으로 세 가지 별개의 단계를 관찰할 것입니다:   
-낮은 학습률의 경우 손실이 개선되지 않으며, 손실이 가장 급격하게 떨어지는 최적의 학습률 범위와 학습률이 너무 커지면 손실이 폭발하는 최종 단계입니다. 
-이러한 플롯을 사용하면 최적의 학습률을 선택하는 것이 최적의 단계에서 가장 높은 것을 선택하는 것만큼 쉽습니다. 
+학습률과 관련하여 일반적으로 세 가지 별개의 단계를 관찰할 것입니다:
+낮은 학습률의 경우 손실이 개선되지 않으며, 손실이 가장 급격하게 떨어지는 최적의 학습률 범위와 학습률이 너무 커지면 손실이 폭발하는 최종 단계입니다.
+이러한 플롯을 사용하면 최적의 학습률을 선택하는 것이 최적의 단계에서 가장 높은 것을 선택하는 것만큼 쉽습니다.
 
-이러한 실험을 실행하려면 초기화된 'ModelTrainer'로 시작하고 학습률과 손실을 기록할 파일 이름과 'base_path'와 함께 'find_learning_rate()'를 호출하십시오. 
+이러한 실험을 실행하려면 초기화된 'ModelTrainer'로 시작하고 학습률과 손실을 기록할 파일 이름과 'base_path'와 함께 'find_learning_rate()'를 호출하십시오.
 그런 다음 `Plotter`의 `plot_learning_rate()` 함수를 통해 생성된 결과를 플롯하고 `learning_rate.png` 이미지를 보고 최적의 학습률을 선택하세요:
 
 ```python
@@ -92,7 +92,7 @@ print(corpus)
 # 2. 우리는 예측하고 싶은 태그는 무엇인가요?
 tag_type = 'ner'
 # 3. 말뭉치에서 태그 사전 만들기
-tag_dictionary = corpus.make_label_dictionary(label_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(label_type=tag_type, add_unk=False)
 print(tag_dictionary.idx2item)
 # 4. 임베딩 초기화하기
 embedding_types: List[TokenEmbeddings] = [

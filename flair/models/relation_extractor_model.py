@@ -226,13 +226,13 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
         return super()._init_model_with_state_dict(
             state,
-            embeddings=state["embeddings"],
-            label_dictionary=state["label_dictionary"],
-            label_type=state["label_type"],
-            entity_label_type=state["entity_label_type"],
-            loss_weights=state["weight_dict"],
-            pooling_operation=state["pooling_operation"],
-            entity_pair_filters=state["entity_pair_filters"],
+            embeddings=state.get("embeddings"),
+            label_dictionary=state.get("label_dictionary"),
+            label_type=state.get("label_type"),
+            entity_label_type=state.get("entity_label_type"),
+            loss_weights=state.get("weight_dict"),
+            pooling_operation=state.get("pooling_operation"),
+            entity_pair_filters=state.get("entity_pair_filters"),
             **kwargs,
         )
 
@@ -247,8 +247,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence]):
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
-        model_map["relations-fast"] = "/".join([hu_path, "relations-fast", "relations-fast.pt"])
-        model_map["relations"] = "/".join([hu_path, "relations", "relations.pt"])
+        model_map["relations"] = "/".join([hu_path, "relations", "relations-v11.pt"])
 
         cache_dir = Path("models")
         if model_name in model_map:

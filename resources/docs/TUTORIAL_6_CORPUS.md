@@ -7,10 +7,10 @@ library.
 ## The Corpus Object
 
 The `Corpus` represents a dataset that you use to train a model. It consists of a list of `train` sentences,
-a list of `dev` sentences, and a list of `test` sentences, which correspond to the training, validation and testing 
+a list of `dev` sentences, and a list of `test` sentences, which correspond to the training, validation and testing
 split during model training.
 
-The following example snippet instantiates the Universal Dependency Treebank for English as a corpus object: 
+The following example snippet instantiates the Universal Dependency Treebank for English as a corpus object:
 
 ```python
 import flair.datasets
@@ -18,7 +18,7 @@ corpus = flair.datasets.UD_ENGLISH()
 ```
 
 The first time you call this snippet, it triggers a download of the Universal Dependency Treebank for English onto your
-hard drive. It then reads the train, test and dev splits into the `Corpus` which it returns. Check the length of 
+hard drive. It then reads the train, test and dev splits into the `Corpus` which it returns. Check the length of
 the three splits to see how many Sentences are there:
 
 ```python
@@ -32,30 +32,25 @@ print(len(corpus.test))
 print(len(corpus.dev))
 ```
 
-You can also access the Sentence objects in each split directly. For instance, let us look at the first Sentence in 
-the training split of the English UD: 
+You can also access the Sentence objects in each split directly. For instance, let us look at the first Sentence in
+the training split of the English UD:
 
 ```python
-# print the first Sentence in the training split
-print(corpus.test[0])
-```
-This prints: 
-```console
-Sentence: "What if Google Morphed Into GoogleOS ?" - 7 Tokens
-```
+# get the first Sentence in the training split
+sentence = corpus.test[0]
 
-The sentence is fully tagged with syntactic and morphological information. For instance, print the sentence with
-PoS tags: 
+# print with all annotations
+print(sentence)
 
-```python
-# print the first Sentence in the training split
-print(corpus.test[0].to_tagged_string('pos'))
+# print only with POS annotations (better readability)
+print(sentence.to_tagged_string('pos'))
 ```
 
-This should print: 
+The sentence is fully tagged with syntactic and morphological information. With the latter line,
+you print out only the POS tags:
 
 ```console
-What <WP> if <IN> Google <NNP> Morphed <VBD> Into <IN> GoogleOS <NNP> ? <.>
+Sentence: "What if Google Morphed Into GoogleOS ?" → ["What"/WP, "if"/IN, "Google"/NNP, "Morphed"/VBD, "Into"/IN, "GoogleOS"/NNP, "?"/.]
 ```
 
 So the corpus is tagged and ready for training.
@@ -63,7 +58,7 @@ So the corpus is tagged and ready for training.
 ### Helper functions
 
 A `Corpus` contains a bunch of useful helper functions.
-For instance, you can downsample the data by calling `downsample()` and passing a ratio. So, if you normally get a 
+For instance, you can downsample the data by calling `downsample()` and passing a ratio. So, if you normally get a
 corpus like this:
 
 ```python
@@ -101,11 +96,11 @@ Corpus: 1255 train + 201 dev + 208 test sentences
 ### Creating label dictionaries
 
 For many learning tasks you need to create a "dictionary" that contains all the labels you want to predict.
-You can generate this dictionary directly out of the `Corpus` by calling the method `make_label_dictionary` 
-and passing the desired `label_type`. 
+You can generate this dictionary directly out of the `Corpus` by calling the method `make_label_dictionary`
+and passing the desired `label_type`.
 
-For instance, the UD_ENGLISH corpus instantiated above has multiple layers of annotation like regular 
-POS tags ('pos'), universal POS tags ('upos'), morphological tags ('tense', 'number'..) and so on. 
+For instance, the UD_ENGLISH corpus instantiated above has multiple layers of annotation like regular
+POS tags ('pos'), universal POS tags ('upos'), morphological tags ('tense', 'number'..) and so on.
 Create label dictionaries for universal POS tags by passing `label_type='upos'` like this:
 
 ```python
@@ -124,14 +119,16 @@ Dictionary with 17 tags: PROPN, PUNCT, ADJ, NOUN, VERB, DET, ADP, AUX, PRON, PAR
 
 #### Dictionaries for other label types
 
-When calling `make_label_dictionary` in the example above, statistics on all label types in the same corpus are printed:
+If you don't know the label types in a corpus, just call `make_label_dictionary` with
+any random label name (e.g. `corpus.make_label_dictionary(label_type='abcd')`). This will print
+out statistics on all label types in the corpus:
 
 ```console
-Corpus contains the labels: upos (#204585), lemma (#204584), pos (#204584), dependency (#204584), number (#68023), verbform (#35412), prontype (#33584), person (#21187), tense (#20238), mood (#16547), degree (#13649), definite (#13300), case (#12091), numtype (#4266), gender (#4038), poss (#3039), voice (#1205), typo (#332), abbr (#126), reflex (#100), style (#33), foreign (#18)
+The corpus contains the following label types: 'lemma' (in 12543 sentences), 'upos' (in 12543 sentences), 'pos' (in 12543 sentences), 'dependency' (in 12543 sentences), 'number' (in 12036 sentences), 'verbform' (in 10122 sentences), 'prontype' (in 9744 sentences), 'person' (in 9381 sentences), 'mood' (in 8911 sentences), 'tense' (in 8747 sentences), 'degree' (in 7148 sentences), 'definite' (in 6851 sentences), 'case' (in 6486 sentences), 'gender' (in 2824 sentences), 'numtype' (in 2771 sentences), 'poss' (in 2516 sentences), 'voice' (in 1085 sentences), 'typo' (in 399 sentences), 'extpos' (in 185 sentences), 'abbr' (in 168 sentences), 'reflex' (in 98 sentences), 'style' (in 31 sentences), 'foreign' (in 5 sentences)
 ```
 
 This means that you can create dictionaries for any of these label types for the UD_ENGLISH corpus. Let's create dictionaries for regular part of speech tags
-and a morphological number tagging task: 
+and a morphological number tagging task:
 
 ```python
 # create label dictionary for a regular POS tagging task
@@ -141,7 +138,7 @@ pos_dictionary = corpus.make_label_dictionary(label_type='pos')
 tense_dictionary = corpus.make_label_dictionary(label_type='number')
 ```
 
-If you print these dictionaries, you will find that the POS dictionary contains 50 tags and the number dictionary only 2 for this corpus (singular and plural). 
+If you print these dictionaries, you will find that the POS dictionary contains 50 tags and the number dictionary only 2 for this corpus (singular and plural).
 
 
 #### Dictionaries for other corpora types
@@ -151,7 +148,7 @@ The method `make_label_dictionary` can be used for any corpus, including text cl
 ```python
 # create label dictionary for a text classification task
 corpus = flair.datasets.TREC_6()
-print(corpus.make_label_dictionary('question_class'))
+corpus.make_label_dictionary('question_class')
 ```
 
 ### The MultiCorpus Object
@@ -171,14 +168,14 @@ from flair.data import MultiCorpus
 multi_corpus = MultiCorpus([english_corpus, german_corpus, dutch_corpus])
 ```
 
-The `MultiCorpus` inherits from `Corpus`, so you can use it like any other corpus to train your models. 
+The `MultiCorpus` inherits from `Corpus`, so you can use it like any other corpus to train your models.
 
 ## Datasets included in Flair
 
-Flair supports many datasets out of the box. It automatically downloads and sets up the 
-data the first time you call the corresponding constructor ID. 
+Flair supports many datasets out of the box. It automatically downloads and sets up the
+data the first time you call the corresponding constructor ID.
 
-The following datasets are supported (**click category to expand**): 
+The following datasets are supported (**click category to expand**):
 
 <details>
   <summary>Named Entity Recognition (NER) datasets</summary>
@@ -195,23 +192,24 @@ The following datasets are supported (**click category to expand**):
 | 'NER_ARABIC_AQMAR' | Arabic  |  [American and Qatari Modeling of Arabic](http://www.cs.cmu.edu/~ark/AQMAR/) 4-class NER (modified) |
 | 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
 | 'NER_CHINESE_WEIBO' | Chinese  | [Weibo NER corpus](https://paperswithcode.com/sota/chinese-named-entity-recognition-on-weibo-ner/).  |
-| 'NER_DANISH_DANE' | Danish | [DaNE dataset](https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank) | 
+| 'NER_DANISH_DANE' | Danish | [DaNE dataset](https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank) |
 | 'NER_ENGLISH_MOVIE_SIMPLE' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - simple NER |
 | 'NER_ENGLISH_MOVIE_COMPLEX' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - complex NER |
-| 'NER_ENGLISH_PERSON' | English | [PERSON_NER](https://github.com/das-sudeshna/genid) NER with person names | 
+| 'NER_ENGLISH_PERSON' | English | [PERSON_NER](https://github.com/das-sudeshna/genid) NER with person names |
 | 'NER_ENGLISH_RESTAURANT' | English  |  [NER dataset for restaurant reviews](https://groups.csail.mit.edu/sls/downloads/restaurant/) |
-| 'NER_ENGLISH_SEC_FILLINGS' | English | [SEC-fillings](https://github.com/juand-r/entity-recognition-datasets) with 4-class NER labels from (Alvarado et al, 2015)[https://aclanthology.org/U15-1010/] here | 
+| 'NER_ENGLISH_SEC_FILLINGS' | English | [SEC-fillings](https://github.com/juand-r/entity-recognition-datasets) with 4-class NER labels from (Alvarado et al, 2015)[https://aclanthology.org/U15-1010/] here |
 | 'NER_ENGLISH_STACKOVERFLOW' | English  | NER on StackOverflow posts |
 | 'NER_ENGLISH_TWITTER' | English  |  [Twitter NER dataset](https://github.com/aritter/twitter_nlp/) |
 | 'NER_ENGLISH_WIKIGOLD' | English  |  [Wikigold](https://github.com/juand-r/entity-recognition-datasets/tree/master/data/wikigold) a manually annotated collection of Wikipedia text |
 | 'NER_ENGLISH_WNUT_2020' | English  |  [WNUT-20](https://github.com/jeniyat/WNUT_2020_NER) named entity extraction |
 | 'NER_ENGLISH_WEBPAGES' | English  | 4-class NER on web pages from [Ratinov and Roth (2009)](https://aclanthology.org/W09-1119/) |
-| 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) | 
+| 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) |
 | 'NER_GERMAN_BIOFID' | German  |  [CoNLL-03](https://www.aclweb.org/anthology/K19-1081/) Biodiversity literature NER |
-| 'NER_GERMAN_EUROPARL' | German | [German Europarl dataset](https://nlpado.de/~sebastian/software/ner_german.shtml) NER in German EU parliament speeches | 
+| 'NER_GERMAN_EUROPARL' | German | [German Europarl dataset](https://nlpado.de/~sebastian/software/ner_german.shtml) NER in German EU parliament speeches |
 | 'NER_GERMAN_GERMEVAL' | German  |  [GermEval 14 NER](https://sites.google.com/site/germeval2014ner/data/) corpus |
 | 'NER_GERMAN_LEGAL' | German | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents |
 | 'NER_GERMAN_POLITICS' | German | [NEMGP](https://www.thomas-zastrow.de/nlp/) corpus |
+| 'NER_HIPE_2022' | 5 languages | NER dataset for [HIPE-2022](https://hipe-eval.github.io/HIPE-2022/) (Identifying Historical People, Places and other Entities)
 | 'NER_HUNGARIAN' | Hungarian | NER on Hungarian business news |
 | 'NER_ICELANDIC' | Icelandic | NER on Icelandic |
 | 'NER_JAPANESE' | Japanese | [Japanese NER](https://github.com/Hironsan/IOB2Corpus) dataset automatically generated from Wikipedia |
@@ -283,10 +281,10 @@ We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 <details>
   <summary>Universal Proposition Banks (UP) datasets</summary>
 
-#### Universal Proposition Banks 
+#### Universal Proposition Banks
 
 We also support loading the [Universal Proposition Banks](https://github.com/System-T/UniversalPropositions)
-for the purpose of training multilingual frame detection systems. 
+for the purpose of training multilingual frame detection systems.
 
 | Object | Languages | Description |
 | -------------    | ------------- |------------- |
@@ -414,7 +412,7 @@ import flair.datasets
 corpus = flair.datasets.IMDB()
 ```
 
-This downloads and sets up everything you need to train your model. 
+This downloads and sets up everything you need to train your model.
 
 
 ## Reading Your Own Sequence Labeling Dataset
@@ -436,7 +434,7 @@ stayed V O
 home N O
 ```
 
-The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. Empty line separates sentences. To read such a 
+The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. Empty line separates sentences. To read such a
 dataset, define the column structure as a dictionary and instantiate a `ColumnCorpus`.
 
 ```python
@@ -482,21 +480,21 @@ Sam <N> Houston <N> stayed <V> home <N>
 
 ## Reading a Text Classification Dataset
 
-If you want to use your own text classification dataset, there are currently two methods to go about this: 
-load specified text and labels from a simple CSV file or format your data to the 
+If you want to use your own text classification dataset, there are currently two methods to go about this:
+load specified text and labels from a simple CSV file or format your data to the
 [FastText format](https://fasttext.cc/docs/en/supervised-tutorial.html).
 
 #### Load from simple CSV file
 
 Many text classification datasets are distributed as simple CSV files in which each row corresponds to a data point and
-columns correspond to text, labels, and other metadata.  You can load a CSV format classification dataset using 
+columns correspond to text, labels, and other metadata.  You can load a CSV format classification dataset using
 `CSVClassificationCorpus` by passing in a column format (like in `ColumnCorpus` above).  This column format indicates
 which column(s) in the CSV holds the text and which field(s) the label(s). By default, Python's CSV library assumes that
 your files are in Excel CSV format, but [you can specify additional parameters](https://docs.python.org/3/library/csv.html#csv-fmt-params)
 if you use custom delimiters or quote characters.
 
 Note: You will need to save your split CSV data files in the `data_folder` path with each file titled appropriately i.e.
-`train.csv` `test.csv` `dev.csv`.   This is because the corpus initializers will automatically search for the train, 
+`train.csv` `test.csv` `dev.csv`.   This is because the corpus initializers will automatically search for the train,
 dev, test splits in a folder.
 
 ```python
@@ -514,7 +512,7 @@ corpus: Corpus = CSVClassificationCorpus(data_folder,
                                          column_name_map,
                                          skip_header=True,
                                          delimiter='\t',    # tab-separated files
-) 
+)
 ```
 
 
@@ -526,14 +524,14 @@ __label__<label_1> <text>
 __label__<label_1> __label__<label_2> <text>
 ```
 
-As previously mentioned, to create a `Corpus` for a text classification task, you need to have three files (train, dev, and test) in the 
+As previously mentioned, to create a `Corpus` for a text classification task, you need to have three files (train, dev, and test) in the
 above format located in one folder. This data folder structure could, for example, look like this for the IMDB task:
 ```text
 /resources/tasks/imdb/train.txt
 /resources/tasks/imdb/dev.txt
 /resources/tasks/imdb/test.txt
 ```
-Now create a `ClassificationCorpus` by pointing to this folder (`/resources/tasks/imdb`). 
+Now create a `ClassificationCorpus` by pointing to this folder (`/resources/tasks/imdb`).
 Thereby, each line in a file is converted to a `Sentence` object annotated with the labels.
 
 Attention: A text in a line can have multiple sentences. Thus, a `Sentence` object can actually consist of multiple
@@ -550,26 +548,26 @@ data_folder = '/path/to/data/folder'
 corpus: Corpus = ClassificationCorpus(data_folder,
                                       test_file='test.txt',
                                       dev_file='dev.txt',
-                                      train_file='train.txt',                                       
+                                      train_file='train.txt',
                                       label_type='topic',
                                       )
 ```
 
-Note again that our corpus initializers have methods to automatically look for train, dev and test splits in a folder. So in 
-most cases you don't need to specify the file names yourself. Often, this is enough: 
+Note again that our corpus initializers have methods to automatically look for train, dev and test splits in a folder. So in
+most cases you don't need to specify the file names yourself. Often, this is enough:
 
 ```python
 # this is the folder in which train, test and dev files reside
 data_folder = '/path/to/data/folder'
 
-# load corpus by pointing to folder. Train, dev and test gets identified automatically. 
-corpus: Corpus = ClassificationCorpus(data_folder,                                                                            
+# load corpus by pointing to folder. Train, dev and test gets identified automatically.
+corpus: Corpus = ClassificationCorpus(data_folder,
                                       label_type='topic',
                                       )
 ```
 
 Since the FastText format does not have columns, you must manually define a name for the annotations. In this
-example we chose `label_type='topic'` to denote that we are loading a corpus with topic labels. 
+example we chose `label_type='topic'` to denote that we are loading a corpus with topic labels.
 
 ## Next
 

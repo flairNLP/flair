@@ -1,5 +1,5 @@
 # 튜토리얼 6 : 훈련 데이터 불러오기
-이번 튜토리얼은 모델을 훈련하기 위해 말뭉치(corpus)를 로드하는 내용을 다룹니다. 
+이번 튜토리얼은 모델을 훈련하기 위해 말뭉치(corpus)를 로드하는 내용을 다룹니다.
 이번 튜토리얼은 여러분이 라이브러리의 [기본 유형](/resources/docs/KOR_docs/TUTORIAL_1_BASICS.md)에 익숙하다 가정하고 진행됩니다.
 
 ## 말뭉치 오브젝트
@@ -28,7 +28,7 @@ print(len(corpus.dev))
 # training split의 처음 문장을 출력합니다.
 print(corpus.test[0])
 ```
-결과입니다 : 
+결과입니다 :
 ```console
 Sentence: "What if Google Morphed Into GoogleOS ?" - 7 Tokens
 ```
@@ -38,14 +38,14 @@ Sentence: "What if Google Morphed Into GoogleOS ?" - 7 Tokens
 # 훈련중인 split에서 첫 번째 문장을 출력합니다.
 print(corpus.test[0].to_tagged_string('pos'))
 ```
-결과입니다 : 
+결과입니다 :
 ```console
 What <WP> if <IN> Google <NNP> Morphed <VBD> Into <IN> GoogleOS <NNP> ? <.>
 ```
 이 말뭉치는 tag되어 있고 훈련에 사용할 수 있습니다.
 
 ### 도움을 주는 함수들
-`corpus`는 유용한 도움 함수들이 많이 포함되어 있습니다. `downsample()`을 호출하고 비율을 정해 데이터를 다운샘플링 할 수 있습니다. 
+`corpus`는 유용한 도움 함수들이 많이 포함되어 있습니다. `downsample()`을 호출하고 비율을 정해 데이터를 다운샘플링 할 수 있습니다.
 우선 말뭉치를 얻습니다.
 ```python
 import flair.datasets
@@ -144,20 +144,20 @@ Flair는 많은 데이터셋을 지원합니다. 사용자가 해당 생성자 I
 | 'NER_ARABIC_AQMAR' | Arabic  |  [American and Qatari Modeling of Arabic](http://www.cs.cmu.edu/~ark/AQMAR/) 4-class NER (modified) |
 | 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
 | 'NER_CHINESE_WEIBO' | Chinese  | [Weibo NER corpus](https://paperswithcode.com/sota/chinese-named-entity-recognition-on-weibo-ner/).  |
-| 'NER_DANISH_DANE' | Danish | [DaNE dataset](https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank) | 
+| 'NER_DANISH_DANE' | Danish | [DaNE dataset](https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank) |
 | 'NER_ENGLISH_MOVIE_SIMPLE' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - simple NER |
 | 'NER_ENGLISH_MOVIE_COMPLEX' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - complex NER |
-| 'NER_ENGLISH_PERSON' | English | [PERSON_NER](https://github.com/das-sudeshna/genid) NER with person names | 
+| 'NER_ENGLISH_PERSON' | English | [PERSON_NER](https://github.com/das-sudeshna/genid) NER with person names |
 | 'NER_ENGLISH_RESTAURANT' | English  |  [NER dataset for restaurant reviews](https://groups.csail.mit.edu/sls/downloads/restaurant/) |
-| 'NER_ENGLISH_SEC_FILLINGS' | English | [SEC-fillings](https://github.com/juand-r/entity-recognition-datasets) with 4-class NER labels from (Alvarado et al, 2015)[https://aclanthology.org/U15-1010/] here | 
+| 'NER_ENGLISH_SEC_FILLINGS' | English | [SEC-fillings](https://github.com/juand-r/entity-recognition-datasets) with 4-class NER labels from (Alvarado et al, 2015)[https://aclanthology.org/U15-1010/] here |
 | 'NER_ENGLISH_STACKOVERFLOW' | English  | NER on StackOverflow posts |
 | 'NER_ENGLISH_TWITTER' | English  |  [Twitter NER dataset](https://github.com/aritter/twitter_nlp/) |
 | 'NER_ENGLISH_WIKIGOLD' | English  |  [Wikigold](https://github.com/juand-r/entity-recognition-datasets/tree/master/data/wikigold) a manually annotated collection of Wikipedia text |
 | 'NER_ENGLISH_WNUT_2020' | English  |  [WNUT-20](https://github.com/jeniyat/WNUT_2020_NER) named entity extraction |
 | 'NER_ENGLISH_WEBPAGES' | English  | 4-class NER on web pages from [Ratinov and Roth (2009)](https://aclanthology.org/W09-1119/) |
-| 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) | 
+| 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) |
 | 'NER_GERMAN_BIOFID' | German  |  [CoNLL-03](https://www.aclweb.org/anthology/K19-1081/) Biodiversity literature NER |
-| 'NER_GERMAN_EUROPARL' | German | [German Europarl dataset](https://nlpado.de/~sebastian/software/ner_german.shtml) NER in German EU parliament speeches | 
+| 'NER_GERMAN_EUROPARL' | German | [German Europarl dataset](https://nlpado.de/~sebastian/software/ner_german.shtml) NER in German EU parliament speeches |
 | 'NER_GERMAN_GERMEVAL' | German  |  [GermEval 14 NER](https://sites.google.com/site/germeval2014ner/data/) corpus |
 | 'NER_GERMAN_LEGAL' | German | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents |
 | 'NER_GERMAN_POLITICS' | German | [NEMGP](https://www.thomas-zastrow.de/nlp/) corpus |
@@ -232,10 +232,10 @@ We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 <details>
   <summary>Universal Proposition Banks (UP) datasets</summary>
 
-#### Universal Proposition Banks 
+#### Universal Proposition Banks
 
 We also support loading the [Universal Proposition Banks](https://github.com/System-T/UniversalPropositions)
-for the purpose of training multilingual frame detection systems. 
+for the purpose of training multilingual frame detection systems.
 
 | Object | Languages | Description |
 | -------------    | ------------- |------------- |
@@ -405,14 +405,14 @@ len(corpus.train)
 print(corpus.train[0].to_tagged_string('ner'))
 print(corpus.train[1].to_tagged_string('pos'))
 ```
-이는 아래와 같은 결과를 보여줍니다 : 
+이는 아래와 같은 결과를 보여줍니다 :
 ```console
 George <B-PER> Washington <I-PER> went to Washington <B-LOC> .
 
 Sam <N> Houston <N> stayed <V> home <N>
 ```
 
-## Text Classification dataset 
+## Text Classification dataset
 자신의 text Classification dataset을 사용하는 두 가지 방법이 있습니다.
 텍스트와 레이블을 simple CSV 파일 혹은 [FastText 형식](https://fasttext.cc/docs/en/supervised-tutorial.html)으로 데이터를 포맷하면 됩니다.
 
@@ -434,7 +434,7 @@ corpus: Corpus = CSVClassificationCorpus(data_folder,
                                          column_name_map,
                                          skip_header=True,
                                          delimiter='\t',    # tab-separated files
-) 
+)
 ```
 
 #### FastText 형식으로 로드하기
@@ -445,7 +445,7 @@ __label__<label_1> <text>
 __label__<label_1> __label__<label_2> <text>
 ```
 앞에서 언급한 바와 같이 text classification을 하기 위한 `Corpus`를 만들기 위해선 훈련, 개발, 테스트 세 개의 파일이 필요합니다.
-아래의 코드는 IMDB작업을 하는 예시입니다 : 
+아래의 코드는 IMDB작업을 하는 예시입니다 :
 ```text
 /resources/tasks/imdb/train.txt
 /resources/tasks/imdb/dev.txt
@@ -466,7 +466,7 @@ data_folder = '/path/to/data/folder'
 corpus: Corpus = ClassificationCorpus(data_folder,
                                       test_file='test.txt',
                                       dev_file='dev.txt',
-                                      train_file='train.txt',                                       
+                                      train_file='train.txt',
                                       label_type='topic',
                                       )
 ```
@@ -475,8 +475,8 @@ corpus: Corpus = ClassificationCorpus(data_folder,
 # 훈련, 테스트, 개발 파일이 있는 폴더의 경로입니다.
 data_folder = '/path/to/data/folder'
 
-# 폴더에서 자동으로 훈련, 개발, 테스트 split을 식별합니다. 
-corpus: Corpus = ClassificationCorpus(data_folder,                                                                            
+# 폴더에서 자동으로 훈련, 개발, 테스트 split을 식별합니다.
+corpus: Corpus = ClassificationCorpus(data_folder,
                                       label_type='topic',
                                       )
 ```

@@ -6,7 +6,7 @@ tag your text.
 
 ## Tagging with Pre-Trained Sequence Tagging Models
 
-Let's use a pre-trained model for named entity recognition (NER). 
+Let's use a pre-trained model for named entity recognition (NER).
 This model was trained over the English CoNLL-03 task and can recognize 4 different entity
 types.
 
@@ -19,19 +19,24 @@ All you need to do is use the `predict()` method of the tagger on a sentence. Th
 in the sentence. Lets use a sentence with two named entities:
 
 ```python
+from flair.data import Sentence
+
 sentence = Sentence('George Washington went to Washington.')
 
 # predict NER tags
 tagger.predict(sentence)
 
 # print sentence with predicted tags
-print(sentence.to_tagged_string())
+print(sentence)
 ```
 
-This should print: 
+This should print:
 ```console
-George <B-PER> Washington <E-PER> went to Washington <S-LOC> . 
+Sentence: "George Washington went to Washington ." → ["George Washington"/PER, "Washington"/LOC]
 ```
+
+Showing us that two entities are labeled in this sentence: "George Washington" as PER (person) and "Washington"
+as LOC (location.)
 
 ### Getting Annotated Spans
 
@@ -46,39 +51,85 @@ for entity in sentence.get_spans('ner'):
 
 This should print:
 ```console
-Span [1,2]: "George Washington"   [− Labels: PER (0.9968)]
-Span [5]: "Washington"   [− Labels: LOC (0.9994)]
+Span[0:2]: "George Washington" → PER (0.9989)
+Span[4:5]: "Washington" → LOC (0.9942)
 ```
 
 Which indicates that "George Washington" is a person (PER) and "Washington" is
-a location (LOC). Each such `Span` has a text, its position in the sentence and `Label` 
-with a value and a score (confidence in the prediction). 
-You can also get additional information, such as the position offsets of
-each entity in the sentence by calling:
+a location (LOC). Each such `Span` has a text, its position in the sentence and `Label`
+with a value and a score (confidence in the prediction).
+
+Let us iterate over the spans again and access these fields:
 
 ```python
-print(sentence.to_dict(tag_type='ner'))
+# iterate over each entity
+for entity in sentence.get_spans('ner'):
+
+    # print entity text, start_position and end_position
+    print(f'entity.text is: "{entity.text}"')
+    print(f'entity.start_position is: "{entity.start_position}"')
+    print(f'entity.end_position is: "{entity.end_position}"')
+
+    # also print the value and score of its "ner"-label
+    print(f'entity "ner"-label value is: "{entity.get_label("ner").value}"')
+    print(f'entity "ner"-label score is: "{entity.get_label("ner").score}"\n')
 ```
 
 This should print:
 ```console
-{'text': 'George Washington went to Washington.',
-    'entities': [
-        {'text': 'George Washington', 'start_pos': 0, 'end_pos': 17, 'type': 'PER', 'confidence': 0.999},
-        {'text': 'Washington', 'start_pos': 26, 'end_pos': 36, 'type': 'LOC', 'confidence': 0.998}
-    ]}
+entity.text is: "George Washington"
+entity.start_position is: "0"
+entity.end_position is: "17"
+entity "ner"-label value is: "PER"
+entity "ner"-label score is: "0.998886227607727"
+
+entity.text is: "Washington"
+entity.start_position is: "26"
+entity.end_position is: "36"
+entity "ner"-label value is: "LOC"
+entity "ner"-label score is: "0.9942097663879395"
+```
+
+### Getting Any Labels
+
+Not all our taggers predict on the `Span`-level: Part-of-Speech taggers for instance predict on the `Token`-level,
+while relation extractors predict on the `Relation`-level. If you don't know what objects are predicted
+by a specific tagger, the best way to access predictions is through the generic `get_labels()` method:
+
+```python
+for label in sentence.get_labels('ner'):
+    print(label)
+```
+
+The printout is identical in this case to `sentence.get_spans('ner')`:
+
+```console
+Span[0:2]: "George Washington" → PER (0.9989)
+Span[4:5]: "Washington" → LOC (0.9942)
+```
+
+You can access the label's value and score, and even access the data point object to which the label attaches:
+
+```python
+# iterate over all 'ner'-labels in the sentence
+for label in sentence.get_labels('ner'):
+    # print label value and score
+    print(f'label.value is: "{label.value}"')
+    print(f'label.score is: "{label.score}"')
+    # access the data point to which label attaches and print its text
+    print(f'the text of label.data_point is: "{label.data_point.text}"\n')
 ```
 
 
-### Multi-Tagging 
+### Multi-Tagging
 
-Sometimes you want to predict several types of annotation at once, for instance NER and part-of-speech (POS) tags. 
-For this, you can use our new `MultiTagger` object, like this: 
+Sometimes you want to predict several types of annotation at once, for instance NER and part-of-speech (POS) tags.
+For this, you can use our new `MultiTagger` object, like this:
 
 ```python
 from flair.models import MultiTagger
 
-# load tagger for POS and NER 
+# load tagger for POS and NER
 tagger = MultiTagger.load(['pos', 'ner'])
 
 # make example sentence
@@ -88,16 +139,44 @@ sentence = Sentence("George Washington went to Washington.")
 tagger.predict(sentence)
 
 print(sentence)
-``` 
+```
 
-The sentence now has two types of annotation: POS and NER. 
+The sentence now has two types of annotation: POS and NER. Print them using `get_labels()`:
+
+```python
+for label in sentence.get_labels('pos'):
+    print(label)
+
+for label in sentence.get_labels('ner'):
+    print(label)
+```
+
+This should print first the POS tags, then the NER spans:
+
+```console
+Token[0]: "George" → NNP (1.0)
+Token[1]: "Washington" → NNP (1.0)
+Token[2]: "went" → VBD (1.0)
+Token[3]: "to" → IN (0.7628)
+Token[4]: "Washington" → NNP (1.0)
+Token[5]: "." → . (1.0)
+
+Span[0:2]: "George Washington" → PER (0.9989)
+Span[4:5]: "Washington" → LOC (0.9942)
+```
+
+You can alternatively just print all labels of the sentence at the same time, regardless of type:
+```python
+for label in sentence.labels:
+    print(label)
+```
 
 ### List of Pre-Trained Sequence Tagger Models
 
 You choose which pre-trained model you load by passing the appropriate
-string to the `load()` method of the `SequenceTagger` class. 
+string to the `load()` method of the `SequenceTagger` class.
 
-A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads). 
+A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads).
 At least the following pre-trained models are provided (click on an ID link to get more info
 for the model and an online demo):
 
@@ -125,7 +204,7 @@ for the model and an online demo):
 
 #### Multilingual Models
 
-We distribute new models that are capable of handling text in multiple languages within a singular model. 
+We distribute new models that are capable of handling text in multiple languages within a singular model.
 
 The NER models are trained over 4 languages (English, German, Dutch and Spanish) and the PoS models over 12 languages (English, German, French, Italian, Dutch, Polish, Spanish, Swedish, Danish, Norwegian, Finnish and Czech).
 
@@ -134,7 +213,7 @@ The NER models are trained over 4 languages (English, German, Dutch and Spanish)
 | '[ner-multi](https://huggingface.co/flair/ner-multi)' | NER (4-class) | Multilingual | Conll-03   |  **89.27**  (average F1) | (4 languages)
 | '[ner-multi-fast](https://huggingface.co/flair/ner-multi-fast)' | NER (4-class)|  Multilingual |  Conll-03   |  **87.91**  (average F1) | (4 languages)
 | '[pos-multi](https://huggingface.co/flair/upos-multi)' |  POS-tagging   |  Multilingual |  UD Treebanks  |  **96.41** (average acc.) |  (12 languages)
-| '[pos-multi-fast](https://huggingface.co/flair/upos-multi-fast)' |  POS-tagging |  Multilingual |  UD Treebanks  |  **92.88** (average acc.) | (12 languages) 
+| '[pos-multi-fast](https://huggingface.co/flair/upos-multi-fast)' |  POS-tagging |  Multilingual |  UD Treebanks  |  **92.88** (average acc.) | (12 languages)
 
 You can pass text in any of these languages to the model. In particular, the NER also kind of works for languages it was not trained on, such as French.
 
@@ -182,12 +261,12 @@ sentence = Sentence('George Washington ging nach Washington.')
 tagger.predict(sentence)
 
 # print sentence with predicted tags
-print(sentence.to_tagged_string())
+print(sentence)
 ```
 
-This should print: 
+This should print:
 ```console
-George <B-PER> Washington <E-PER> ging nach Washington <S-LOC> .
+Sentence: "George Washington ging nach Washington ." → ["George Washington"/PER, "Washington"/LOC]
 ```
 
 ### Tagging an Arabic sentence
@@ -210,14 +289,14 @@ for entity in sentence.get_labels('ner'):
     print(entity)
 ```
 
-This should print: 
+This should print:
 ```console
-LOC [برلين (2)] (0.9803) 
+Span[1:2]: "برلين" → LOC (0.9803)
 ```
 
 ### Tagging Multilingual Text
 
-If you have text in many languages (such as English and German), you can use our new multilingual models: 
+If you have text in many languages (such as English and German), you can use our new multilingual models:
 
 ```python
 
@@ -231,14 +310,16 @@ sentence = Sentence('George Washington went to Washington. Dort kaufte er einen 
 tagger.predict(sentence)
 
 # print sentence with predicted tags
-print(sentence.to_tagged_string())
+print(sentence)
 ```
 
-This should print: 
+This should print (line breaks added for readability):
 ```console
-George <PROPN> Washington <PROPN> went <VERB> to <ADP> Washington <PROPN> . <PUNCT>
+Sentence: "George Washington went to Washington . Dort kaufte er einen Hut ."
 
-Dort <ADV> kaufte <VERB> er <PRON> einen <DET> Hut <NOUN> . <PUNCT>
+→ ["George"/PROPN, "Washington"/PROPN, "went"/VERB, "to"/ADP, "Washington"/PROPN, "."/PUNCT]
+
+→ ["Dort"/ADV, "kaufte"/VERB, "er"/PRON, "einen"/DET, "Hut"/NOUN, "."/PUNCT]
 ```
 
 So, both 'went' and 'kaufte' are identified as VERBs in these sentences.
@@ -247,7 +328,7 @@ So, both 'went' and 'kaufte' are identified as VERBs in these sentences.
 
 For English, we provide a pre-trained model that detects semantic frames in text, trained using Propbank 3.0 frames.
 This provides a sort of word sense disambiguation for frame evoking words, and we are curious what researchers might
-do with this. 
+do with this.
 
 Here's an example:
 
@@ -256,30 +337,31 @@ Here's an example:
 tagger = SequenceTagger.load('frame')
 
 # make English sentence
-sentence_1 = Sentence('George returned to Berlin to return his hat.')
-sentence_2 = Sentence('He had a look at different hats.')
+sentence = Sentence('George returned to Berlin to return his hat.')
 
 # predict NER tags
-tagger.predict(sentence_1)
-tagger.predict(sentence_2)
+tagger.predict(sentence)
 
-# print sentence with predicted tags
-print(sentence_1.to_tagged_string())
-print(sentence_2.to_tagged_string())
+# go through tokens and print predicted frame (if one is predicted)
+for token in sentence:
+    print(token)
 ```
-This should print: 
+This should print:
 
 ```console
-George returned <return.01> to Berlin to return <return.02> his hat .
-
-He had <have.LV> a look <look.01> at different hats .
+Token[0]: "George"
+Token[1]: "returned" → return.01 (0.9951)
+Token[2]: "to"
+Token[3]: "Berlin"
+Token[4]: "to"
+Token[5]: "return" → return.02 (0.6361)
+Token[6]: "his"
+Token[7]: "hat"
+Token[8]: "."
 ```
 
-As we can see, the frame detector makes a distinction in sentence 1 between two different meanings of the word 'return'.
+As we can see, the frame detector makes a distinction in the sentence between two different meanings of the word 'return'.
 'return.01' means returning to a location, while 'return.02' means giving something back.
-
-Similarly, in sentence 2 the frame detector finds a light verb construction in which 'have' is the light verb and
-'look' is a frame evoking word.
 
 ## Tagging a List of Sentences
 
@@ -307,7 +389,7 @@ tagger.predict(sentences)
 
 # iterate through sentences and print predicted labels
 for sentence in sentences:
-    print(sentence.to_tagged_string())
+    print(sentence)
 ```
 
 Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
@@ -343,7 +425,7 @@ print(sentence)
 
 This should print:
 ```console
-Sentence: "enormously entertaining for moviegoers of any age."   [− Tokens: 8  − Sentence-Labels: {'class': [POSITIVE (0.9976)]}]
+Sentence: "enormously entertaining for moviegoers of any age ." → POSITIVE (0.9976)
 ```
 
 The label POSITIVE is added to the sentence, indicating that this sentence has positive sentiment.
@@ -364,13 +446,13 @@ are provided:
 
 ## Experimental: Relation Extraction
 
-Relations hold between two entities. For instance, a text like "George was born in Washington" 
+Relations hold between two entities. For instance, a text like "George was born in Washington"
 names two entities and also expresses that there is a born_in relationship between
-both. 
+both.
 
-We added two experimental relation extraction models, 
-trained over a modified version of TACRED: `relations` and `relations-fast`. 
-Use these models together with an entity tagger, like so: 
+We added an experimental relation extraction model
+trained over a modified version of TACRED: `relations`.
+Use this models together with an entity tagger, like so:
 ```python
 from flair.data import Sentence
 from flair.models import RelationExtractor, SequenceTagger
@@ -388,7 +470,7 @@ for entity in entities:
     print(entity)
 
 # 3. load relation extractor
-extractor: RelationExtractor = RelationExtractor.load('relations-fast')
+extractor: RelationExtractor = RelationExtractor.load('relations')
 
 # predict relations
 extractor.predict(sentence)
@@ -399,13 +481,13 @@ for relation in relations:
     print(relation)
 ```
 
-This should print: 
+This should print:
 
 ~~~
-PER [George (1)] (0.9971)
-LOC [Washington (5)] (0.9847)
+Span[0:1]: "George" → PER (0.9971)
+Span[4:5]: "Washington" → LOC (0.9847)
 
-born_in [George (1) -> Washington (5)] (0.9998)
+Relation[0:1][4:5]: "George -> Washington" → born_in (1.0)
 ~~~
 
 Indicating that a born_in relationship holds between "George" and "Washington"!
@@ -413,11 +495,11 @@ Indicating that a born_in relationship holds between "George" and "Washington"!
 ## Tagging new classes without training data
 
 In case you need to label classes that are not included you can also try
-our pre-trained zero-shot classifier TARS 
+our pre-trained zero-shot classifier TARS
 (skip ahead to the [zero-shot tutorial](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)).
-TARS can perform text classification for arbitrary classes. 
+TARS can perform text classification for arbitrary classes.
 
-## Next 
+## Next
 
 Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
-text. 
+text.

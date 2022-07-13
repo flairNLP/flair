@@ -256,7 +256,7 @@ class SciSpacyTokenizer(Tokenizer):
         sentence = self.model(text)
         words: List[str] = []
         for word in sentence:
-            word.append(word)
+            words.append(word.text)
         return words
 
     @property

@@ -1,15 +1,15 @@
 # HunFlair Tutorial 2: Training NER models
 
-This part of the tutorial shows how you can train your own biomedical named entity recognition models 
+This part of the tutorial shows how you can train your own biomedical named entity recognition models
 using state-of-the-art word embeddings.
 
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of Flair
-and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) and 
-[flair embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md) work. 
+and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) and
+[flair embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md) work.
 You should also know how to [load a corpus](/resources/docs/TUTORIAL_6_CORPUS.md).
 
 ## Train a biomedical NER model from scratch
-Here is example code for a biomedical NER model trained over `NCBI_DISEASE` corpus, using word embeddings 
+Here is example code for a biomedical NER model trained over `NCBI_DISEASE` corpus, using word embeddings
 and flair embeddings based on biomedical abstracts from PubMed and full-texts from PMC.
 ```python
 from flair.datasets import NCBI_DISEASE
@@ -19,7 +19,7 @@ corpus = NCBI_DISEASE()
 print(corpus)
 
 # 2. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_label_dictionary(label_type="ner")
+tag_dictionary = corpus.make_label_dictionary(label_type="ner", add_unk=False)
 
 # 3. initialize embeddings
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
@@ -62,7 +62,7 @@ trainer.train(
     mini_batch_size=32
 )
 ```
-Once the model is trained you can use it to predict tags for new sentences. 
+Once the model is trained you can use it to predict tags for new sentences.
 Just call the predict method of the model.
 ```python
 # load the model you trained
@@ -82,12 +82,12 @@ If the model works well, it will correctly tag "breast cancer" as disease in thi
 Women who smoke 20 cigarettes a day are four times more likely to develop breast <B-Disease> cancer <E-Disease> .
 ~~~
 
-## Fine-tuning HunFlair models 
-Next to training a model completely from scratch, there is also the opportunity to just fine-tune 
-the *HunFlair* models (or any other pre-trained model) to your target domain / corpus. 
-This can be advantageous because the pre-trained models are based on a much broader data base, 
+## Fine-tuning HunFlair models
+Next to training a model completely from scratch, there is also the opportunity to just fine-tune
+the *HunFlair* models (or any other pre-trained model) to your target domain / corpus.
+This can be advantageous because the pre-trained models are based on a much broader data base,
 which may allows a better and faster adaptation to the target domain. In the following example
-we fine-tune the `hunflar-disease` model to the `NCBI_DISEASE`:   
+we fine-tune the `hunflar-disease` model to the `NCBI_DISEASE`:
 ```python
 # 1. load your target corpus
 from flair.datasets import NCBI_DISEASE
@@ -112,7 +112,7 @@ trainer.train(
 ```
 ## Training HunFlair from scratch
 *HunFlair* consists of distinct models for the entity types cell line, chemical, disease, gene/protein
-and species. For each entity multiple corpora are used to train the model for the specific entity. The 
+and species. For each entity multiple corpora are used to train the model for the specific entity. The
 following code examples illustrates the training process of *HunFlair* for *cell line*:
 
 ```python
@@ -134,7 +134,7 @@ embedding_types = [
 embeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # 3. initialize sequence tagger
-tag_dictionary = corpus.make_label_dictionary(label_type="ner")
+tag_dictionary = corpus.make_label_dictionary(label_type="ner", add_unk=False)
 
 tagger = SequenceTagger(
     hidden_size=256,
@@ -150,14 +150,12 @@ from flair.trainers import ModelTrainer
 trainer = ModelTrainer(tagger, corpus)
 
 trainer.train(
-    base_path="taggers/hunflair-cell-line", 
-    train_with_dev=False, 
+    base_path="taggers/hunflair-cell-line",
+    train_with_dev=False,
     max_epochs=200,
-    learning_rate=0.1, 
+    learning_rate=0.1,
     mini_batch_size=32
 )
 ```
-Analogously, distinct models can be trained for chemicals, diseases, genes/proteins and species using 
-`HUNER_CHEMICALS`, `HUNER_DISEASE`, `HUNER_GENE`, `HUNER_SPECIES` respectively. 
-
-
+Analogously, distinct models can be trained for chemicals, diseases, genes/proteins and species using
+`HUNER_CHEMICALS`, `HUNER_DISEASE`, `HUNER_GENE`, `HUNER_SPECIES` respectively.

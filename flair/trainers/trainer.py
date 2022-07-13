@@ -106,13 +106,14 @@ class ModelTrainer:
         sampler=None,
         use_amp: bool = False,
         amp_opt_level: str = "O1",
-        eval_on_train_fraction: float = 0.0,
+        eval_on_train_fraction: Union[float, str] = 0.0,
         eval_on_train_shuffle: bool = False,
         save_model_each_k_epochs: int = 0,
         tensorboard_comment: str = "",
         use_swa: bool = False,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
+        exclude_labels: List[str] = [],
         create_file_logs: bool = True,
         create_loss_file: bool = True,
         epoch: int = 0,
@@ -249,7 +250,7 @@ class ModelTrainer:
         log_train = True if monitor_train else False
         log_test = True if (not param_selection_mode and self.corpus.test and monitor_test) else False
         log_dev = False if train_with_dev or not self.corpus.dev else True
-        log_train_part = True if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0) else False
+        log_train_part = True if (eval_on_train_fraction == "dev" or float(eval_on_train_fraction) > 0.0) else False
 
         if log_train_part:
             train_part_size = (
@@ -584,6 +585,7 @@ class ModelTrainer:
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
+                        exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
@@ -599,6 +601,7 @@ class ModelTrainer:
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
+                        exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{train_part_eval_result.loss}" f"\t{train_part_eval_result.log_line}"
 
@@ -627,6 +630,7 @@ class ModelTrainer:
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
+                        exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{dev_eval_result.loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -669,6 +673,7 @@ class ModelTrainer:
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
+                        exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{test_eval_result.loss}\t{test_eval_result.log_line}"
                     log.info(
@@ -834,6 +839,7 @@ class ModelTrainer:
                 num_workers=num_workers,
                 main_evaluation_metric=main_evaluation_metric,
                 gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
+                exclude_labels=exclude_labels,
             )
         else:
             final_score = 0
@@ -910,6 +916,7 @@ class ModelTrainer:
         main_evaluation_metric: Tuple[str, str],
         num_workers: Optional[int] = 8,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
+        exclude_labels: List[str] = [],
     ):
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
@@ -933,6 +940,7 @@ class ModelTrainer:
             embedding_storage_mode="none",
             main_evaluation_metric=main_evaluation_metric,
             gold_label_dictionary=gold_label_dictionary_for_eval,
+            exclude_labels=exclude_labels,
         )
 
         log.info(test_results.log_line)
@@ -952,6 +960,8 @@ class ModelTrainer:
                         out_path=base_path / f"{subcorpus.name}-test.tsv",
                         embedding_storage_mode="none",
                         main_evaluation_metric=main_evaluation_metric,
+                        gold_label_dictionary=gold_label_dictionary_for_eval,
+                        exclude_labels=exclude_labels,
                     )
                     log.info(subcorpus.name)
                     log.info(subcorpus_results.log_line)

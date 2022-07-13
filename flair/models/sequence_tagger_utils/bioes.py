@@ -9,7 +9,7 @@ def get_spans_from_bio(bioes_tags, bioes_scores=None):
     found_spans = []
     # internal variables
     current_tag_weights: Dict[str, float] = defaultdict(lambda: 0.0)
-    previous_tag = "O"
+    previous_tag = "O-"
     current_span = []
     current_span_scores = []
     for idx, bioes_tag in enumerate(bioes_tags):
@@ -24,11 +24,16 @@ def get_spans_from_bio(bioes_tags, bioes_scores=None):
         # does this prediction start a new span?
         starts_new_span = False
 
+        # begin and single tags start new spans
         if bioes_tag[0:2] in ["B-", "S-"]:
             starts_new_span = True
 
+        # in IOB format, an I tag starts a span if it follows an O or is a different span
+        if bioes_tag[0:2] == "I-" and previous_tag[2:] != bioes_tag[2:]:
+            starts_new_span = True
+
         # single tags that change prediction start new spans
-        if bioes_tag[0:2] in ["S-"] and previous_tag[2:] != bioes_tag[2:] and in_span:
+        if bioes_tag[0:2] in ["S-"] and previous_tag[2:] != bioes_tag[2:]:
             starts_new_span = True
 
         # if an existing span is ended (either by reaching O or starting a new span)
