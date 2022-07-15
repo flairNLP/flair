@@ -736,6 +736,13 @@ def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):
     assert len(corpus.get_all_sentences()) == 11
 
 
+def test_jsonl_corpus_loads_spans(tasks_base_path):
+    corpus = JsonlCorpus(tasks_base_path / "jsonl")
+    assert corpus.train is not None
+    example = corpus.train[0]
+    assert len(example.get_spans("ner")) > 0
+
+
 TRAIN_FILE = "tests/resources/tasks/jsonl/train.jsonl"
 TESTA_FILE = "tests/resources/tasks/jsonl/testa.jsonl"
 TESTB_FILE = "tests/resources/tasks/jsonl/testa.jsonl"
