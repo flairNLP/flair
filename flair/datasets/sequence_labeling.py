@@ -189,11 +189,6 @@ class JsonlDataset(FlairDataset):
         for label in labels:
             self._add_label_to_sentence(raw_text, sentence, label[0], label[1], label[2])
 
-        # Tag all other token as Outer (O)
-        for token in sentence:
-            if token.get_label(self.label_type).value == "O":
-                token.set_label(self.label_type, "O")
-
     def _add_label_to_sentence(self, text: str, sentence: Sentence, start: int, end: int, label: str):
         """
         Adds a NE label to a given sentence.
@@ -239,11 +234,7 @@ class JsonlDataset(FlairDataset):
                         Ann: {annotated_part}\nRaw: {text}\nCo: {start_idx}, {end_idx}"
             )
 
-        # Add IOB tags
-        prefix = "B"
-        for token in sentence[start_idx : end_idx + 1]:
-            token.add_label(self.label_type, f"{prefix}-{label}")
-            prefix = "I"
+        sentence[start_idx : end_idx + 1].add_label(self.label_type, label)
 
     def is_in_memory(self) -> bool:
         """
