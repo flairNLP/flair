@@ -510,6 +510,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
         decoder: Optional[torch.nn.Module] = None,
+        inverse_model: bool = False
     ):
 
         super().__init__()
@@ -534,6 +535,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
         self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
         self.word_dropout = flair.nn.WordDropout(word_dropout)
+
+        self.inverse_model = inverse_model
 
         # loss weights and loss function
         self.weight_dict = loss_weights
@@ -602,7 +605,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         scores = self.decoder(embedded_data_points)
 
         # calculate the loss
-        return self._calculate_loss(scores, labels)
+        if not self.inverse_model:
+            return self._calculate_loss(scores, labels)
+        else:
+            return (self._calculate_loss(scores, labels)[0] * -1, self._calculate_loss(scores, labels)[1])
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
 

@@ -325,6 +325,7 @@ class CSVClassificationCorpus(Corpus):
         data_folder: Union[str, Path],
         column_name_map: Dict[int, str],
         label_type: str,
+        name: str = "csv_corpus",
         train_file=None,
         test_file=None,
         dev_file=None,
@@ -409,7 +410,7 @@ class CSVClassificationCorpus(Corpus):
             else None
         )
 
-        super(CSVClassificationCorpus, self).__init__(train, dev, test, name=str(data_folder))
+        super(CSVClassificationCorpus, self).__init__(train, dev, test, name=name)
 
 
 class CSVClassificationDataset(FlairDataset):
