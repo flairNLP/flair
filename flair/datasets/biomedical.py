@@ -367,6 +367,7 @@ def big_bio_dataset_to_internal(dataset):
 
 def bigbio_dataset_to_flair_sentences(dataset, tokenizer):
     """
+    converts a bigbio dataset to flair sentences without any annotations or labels
     :param dataset: Hugging face dataset in the bigbio schmema
     :param tokenizer: The tokenizer to use when converting to flair sentences
     :return: The text from the hugging face dataset as a list of flair Sentence objects without labels
@@ -378,8 +379,11 @@ def bigbio_dataset_to_flair_sentences(dataset, tokenizer):
     return sentences
 
 
-def bigbio_dataset_to_annotated_flair_sentences(dataset, tokenizer, add_labels: Boolean):
+def bigbio_dataset_to_annotated_flair_sentences(
+    dataset, tokenizer, add_labels: Boolean, ner_only: Boolean = False, label_name=None
+):
     """
+    converts a dataset in the bigbio format for nen to annotated flair sentences
     :param dataset: Hugging face dataset in the bigbio schmema
     :param tokenizer: The tokenizer to use when converting to flair sentences
     :return: The text from the hugging face dataset as a list of flair Sentence objects
@@ -395,7 +399,6 @@ def bigbio_dataset_to_annotated_flair_sentences(dataset, tokenizer, add_labels: 
             }  # +1 so range includes the end value
             for passage in row["passages"]
         ]
-        # # count number of annotated entities to later comopare to number of found entities
 
         # look for tokens in sentence for all entities
         for entity in row["entities"]:
@@ -419,7 +422,7 @@ def bigbio_dataset_to_annotated_flair_sentences(dataset, tokenizer, add_labels: 
 
                             # end of entity found
                             if token.end_position == relative_offset_end:
-                                tokens_text = "".join([t.text for t in tokens])
+                                tokens_text = "".join([t.text for t in tokens]).replace(" ", "")
                                 entity_text = entity["text"][0].replace(" ", "")
                                 assert tokens_text == entity_text
                                 break
@@ -559,22 +562,35 @@ def bigbio_dataset_to_annotated_flair_sentences(dataset, tokenizer, add_labels: 
 
                     # if specified by add_labels, add the found entities to the sentences
                     for gold_annotation in entity["normalized"]:
-                        label = EntityLinkingLabel(
-                            span=Span(tokens),
-                            cui=gold_annotation["db_id"],
-                            concept_name=entity["text"],
-                            ontology=gold_annotation["db_name"],
-                        )
+                        # determine which labels to add
                         if add_labels:
-                            sentence["text"].add_complex_label(typename=entity["type"] + "_GOLD", label=label)
+                            # use the label name given as an argument or else the entity type from the bigbio dataset
+                            label_type = label_name if (label_name is not None) else entity["type"]
+                            # add only named entity recogintion labels
+                            if ner_only:
+                                label = SpanLabel(span=Span(tokens), value=entity["type"])
+                                sentence["text"].add_complex_label(label_type + "_GOLD", label=label)
+                            # add named entity normalization labels
+                            else:
+                                label = EntityLinkingLabel(
+                                    span=Span(tokens),
+                                    cui=gold_annotation["db_id"],
+                                    concept_name=entity["text"],
+                                    ontology=gold_annotation["db_name"],
+                                )
+                                sentence["text"].add_complex_label(typename=label_type + "_GOLD", label=label)
+                    # if using a ner dataset without normatilzations
+                    if len(entity["normalized"]) == 0 and add_labels:
+                        label_type = label_name if (label_name is not None) else entity["type"]
+                        label = SpanLabel(span=Span(tokens), value=entity["type"])
+                        sentence["text"].add_complex_label(label_type + "_GOLD", label=label)
                     break
 
             # if no matching sentence for the token was found
             else:
                 raise Exception("Could not find position of the entity " + entity["id"])
 
-        for sentence in sentences_with_offsets:
-            sentences.append(sentence["text"])
+        sentences.append([sentence["text"] for sentence in sentences_with_offsets])
 
     return sentences
 
@@ -777,7 +793,6 @@ class HunerDataset(ColumnCorpus, ABC):
 
 class NLM_CHEM:
     def __init__(self, path_to_dataset_loader, use_tokenizer, split="validation"):
-        print(Path("nlmchem.py"))
         dataset = load_dataset(path_to_dataset_loader, name="nlmchem_bigbio_kb", cache_dir=cache_root / "datasets")
         self.dataset = dataset[split]
         self.tokenizer = use_tokenizer
@@ -790,9 +805,9 @@ class NLM_CHEM:
     def get_sentences(self):
         return self.sentences
 
-    def get_annotated_sentences(self):
+    def get_annotated_sentences(self, ner_only: Boolean = False):
         self.annotated_sentences = bigbio_dataset_to_annotated_flair_sentences(
-            self.dataset, self.tokenizer, add_labels=True
+            self.dataset, self.tokenizer, add_labels=True, ner_only=ner_only
         )
         return self.annotated_sentences
 
