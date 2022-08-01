@@ -8,8 +8,18 @@ import numpy as np
 import flair
 from flair.data import Span
 from flair.embeddings import Embeddings, TokenEmbeddings
+from flair.nn import DefaultClassifier
 
 log = logging.getLogger("flair")
+
+# class LogitEmbeddings(TokenEmbeddings):
+#
+#     def __init__(self,
+#                  classifier: DefaultClassifier,
+#                  ):
+#         self.classifier_model = classifier
+
+
 
 
 class SpanGazetteerEmbeddings(Embeddings[Span]):

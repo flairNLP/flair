@@ -7,8 +7,6 @@ import flair.embeddings
 import flair.nn
 from flair.data import Dictionary, Sentence
 
-log = logging.getLogger("flair")
-
 
 class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     """
