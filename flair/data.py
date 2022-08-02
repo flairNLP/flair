@@ -7,7 +7,7 @@ from collections import Counter, defaultdict
 from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, List, Optional, Union, cast, Iterable
+from typing import Dict, List, Optional, Union, cast, Iterable, Tuple
 
 import torch
 from deprecated import deprecated

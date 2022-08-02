@@ -947,25 +947,6 @@ class ModelTrainer:
         log.info(test_results.detailed_results)
         log_line(log)
 
-        # if we are training over multiple datasets, do evaluation for each
-        if isinstance(self.corpus, MultiCorpus):
-            for subcorpus in self.corpus.corpora:
-                log_line(log)
-                if subcorpus.test:
-                    subcorpus_results = self.model.evaluate(
-                        subcorpus.test,
-                        gold_label_type=self.model.label_type,
-                        mini_batch_size=eval_mini_batch_size,
-                        num_workers=num_workers,
-                        out_path=base_path / f"{subcorpus.name}-test.tsv",
-                        embedding_storage_mode="none",
-                        main_evaluation_metric=main_evaluation_metric,
-                        gold_label_dictionary=gold_label_dictionary_for_eval,
-                        exclude_labels=exclude_labels,
-                    )
-                    log.info(subcorpus.name)
-                    log.info(subcorpus_results.log_line)
-
         # get and return the final test score of best model
         final_score = test_results.main_score
 
