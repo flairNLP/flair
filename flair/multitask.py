@@ -13,6 +13,6 @@ def make_multitask_model_and_corpus(mapping: Iterable[Tuple[Model, Corpus]]) -> 
     for task_id, map in enumerate(mapping):
         models.append(map[0])
         corpora.append(map[1])
-        ids.append(f'Task_{task_id}')
+        ids.append(f"Task_{task_id}")
 
     return MultitaskModel(models, ids), MultiCorpus(corpora, ids)

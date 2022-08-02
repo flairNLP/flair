@@ -7,7 +7,7 @@ from collections import Counter, defaultdict
 from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, List, Optional, Union, cast, Iterable, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import torch
 from deprecated import deprecated
@@ -465,12 +465,12 @@ class Token(_PartOfSentence):
     """
 
     def __init__(
-            self,
-            text: str,
-            head_id: int = None,
-            whitespace_after: int = 1,
-            start_position: int = 0,
-            sentence=None,
+        self,
+        text: str,
+        head_id: int = None,
+        whitespace_after: int = 1,
+        start_position: int = 0,
+        sentence=None,
     ):
         super().__init__(sentence=sentence)
 
@@ -655,11 +655,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-            self,
-            text: Union[str, List[str]],
-            use_tokenizer: Union[bool, Tokenizer] = True,
-            language_code: str = None,
-            start_position: int = 0,
+        self,
+        text: Union[str, List[str]],
+        use_tokenizer: Union[bool, Tokenizer] = True,
+        language_code: str = None,
+        start_position: int = 0,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -1174,12 +1174,12 @@ class Image(DataPoint):
 
 class Corpus:
     def __init__(
-            self,
-            train: Dataset = None,
-            dev: Dataset = None,
-            test: Dataset = None,
-            name: str = "corpus",
-            sample_missing_splits: Union[bool, str] = True,
+        self,
+        train: Dataset = None,
+        dev: Dataset = None,
+        test: Dataset = None,
+        name: str = "corpus",
+        sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1218,11 +1218,11 @@ class Corpus:
         return self._test
 
     def downsample(
-            self,
-            percentage: float = 0.1,
-            downsample_train=True,
-            downsample_dev=True,
-            downsample_test=True,
+        self,
+        percentage: float = 0.1,
+        downsample_train=True,
+        downsample_dev=True,
+        downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:
@@ -1460,7 +1460,7 @@ class Corpus:
                 unked_count += count
 
         if len(label_dictionary.idx2item) == 0 or (
-                len(label_dictionary.idx2item) == 1 and "<unk>" in label_dictionary.get_items()
+            len(label_dictionary.idx2item) == 1 and "<unk>" in label_dictionary.get_items()
         ):
             log.error(f"ERROR: You specified label_type='{label_type}' which is not in this dataset!")
             contained_labels = ", ".join(
@@ -1574,7 +1574,7 @@ class ConcatFlairDataset(Dataset):
         super(ConcatFlairDataset, self).__init__()
         self.datasets = list(datasets)
         self.ids = list(ids)
-        assert len(self.datasets) > 0, 'datasets should not be an empty iterable'  # type: ignore[arg-type]
+        assert len(self.datasets) > 0, "datasets should not be an empty iterable"  # type: ignore[arg-type]
         for d in self.datasets:
             assert not isinstance(d, IterableDataset), "ConcatSentenceDataset does not support IterableDataset"
         self.cumulative_sizes = self.cumsum(self.datasets)
@@ -1593,7 +1593,7 @@ class ConcatFlairDataset(Dataset):
         else:
             sample_idx = idx - self.cumulative_sizes[dataset_idx - 1]
         sentence = self.datasets[dataset_idx][sample_idx]
-        sentence.set_label('multitask_id', self.ids[dataset_idx])
+        sentence.set_label("multitask_id", self.ids[dataset_idx])
         return sentence
 
     @property

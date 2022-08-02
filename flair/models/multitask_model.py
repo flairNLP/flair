@@ -1,12 +1,12 @@
 import logging
-from pathlib import Path
-from typing import Union, List, Dict, Tuple, Optional
 import random
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
 
 from torch.utils.data.dataset import Dataset
 
 import flair.nn
-from flair.data import Sentence, Dictionary, MultiCorpus
+from flair.data import Dictionary, MultiCorpus, Sentence
 from flair.training_utils import Result
 
 log = logging.getLogger("flair")

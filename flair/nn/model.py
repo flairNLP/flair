@@ -510,7 +510,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
         decoder: Optional[torch.nn.Module] = None,
-        inverse_model: bool = False
+        inverse_model: bool = False,
     ):
 
         super().__init__()
