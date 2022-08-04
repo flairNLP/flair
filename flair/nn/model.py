@@ -1,5 +1,6 @@
 import itertools
 import logging
+import random
 import typing
 import warnings
 from abc import abstractmethod
@@ -510,7 +511,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
         decoder: Optional[torch.nn.Module] = None,
-        inverse_model: bool = False,
+        inverse_model: Optional[str] = None,
     ):
 
         super().__init__()
@@ -530,13 +531,19 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         # set up multi-label logic
         self.multi_label = multi_label
         self.multi_label_threshold = multi_label_threshold
+        self.inverse_model = inverse_model
+
+        if inverse_model and inverse_model == 'predict_opposite':
+            self.multi_label = True
+        if inverse_model and inverse_model == 'predict_opposite_random':
+            self.multi_label = True
+        if inverse_model and inverse_model == 'negative_gradient_multitask':
+            self.multi_label = True
 
         # init dropouts
         self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
         self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
         self.word_dropout = flair.nn.WordDropout(word_dropout)
-
-        self.inverse_model = inverse_model
 
         # loss weights and loss function
         self.weight_dict = loss_weights
@@ -604,13 +611,35 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         # push embedded_data_points through decoder to get the scores
         scores = self.decoder(embedded_data_points)
 
-        # calculate the loss
-        if not self.inverse_model:
-            return self._calculate_loss(scores, labels)
-        else:
+        if self.inverse_model == 'negative_gradient' or self.inverse_model == 'negative_gradient_multitask':
             return (self._calculate_loss(scores, labels)[0] * -1, self._calculate_loss(scores, labels)[1])
+        else:
+            return self._calculate_loss(scores, labels)
+
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
+
+        if self.inverse_model == 'predict_opposite_random':
+            labels = torch.tensor(
+                [
+                    [0 if label in all_labels_for_point else round(random.random()) for label in self.label_dictionary.get_items()]
+                    for all_labels_for_point in labels
+                ],
+                dtype=torch.float,
+                device=flair.device,
+            )
+            return self.loss_function(scores, labels), len(labels)
+
+        if self.inverse_model == 'predict_opposite':
+            labels = torch.tensor(
+                [
+                    [0 if label in all_labels_for_point else 1 for label in self.label_dictionary.get_items()]
+                    for all_labels_for_point in labels
+                ],
+                dtype=torch.float,
+                device=flair.device,
+            )
+            return self.loss_function(scores, labels), len(labels)
 
         if self.multi_label:
             labels = torch.tensor(
