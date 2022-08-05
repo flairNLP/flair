@@ -511,7 +511,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             multi_label_threshold: float = 0.5,
             loss_weights: Dict[str, float] = None,
             decoder: Optional[torch.nn.Module] = None,
-            inverse_model: Optional[str] = None,
+            inverse_model: bool = False,
     ):
 
         super().__init__()
@@ -519,7 +519,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
 
-        if inverse_model == "gradient_reversal":
+        if inverse_model:
             from pytorch_revgrad import RevGrad
             self.gradient_reversal = RevGrad()
 
@@ -536,13 +536,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         self.multi_label = multi_label
         self.multi_label_threshold = multi_label_threshold
         self.inverse_model = inverse_model
-
-        if inverse_model and inverse_model == 'predict_opposite':
-            self.multi_label = True
-        if inverse_model and inverse_model == 'predict_opposite_random':
-            self.multi_label = True
-        if inverse_model and inverse_model == 'negative_gradient_multitask':
-            self.multi_label = True
 
         # init dropouts
         self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
@@ -612,7 +605,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         embedded_data_points = self.word_dropout(embedded_data_points)
         embedded_data_points = embedded_data_points.squeeze(1)
 
-        if self.inverse_model == "gradient_reversal":
+        if self.inverse_model:
             embedded_data_points = self.gradient_reversal(embedded_data_points)
 
         # push embedded_data_points through decoder to get the scores
