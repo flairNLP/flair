@@ -45,14 +45,14 @@ class Model(torch.nn.Module, typing.Generic[DT]):
 
     @abstractmethod
     def evaluate(
-        self,
-        data_points: Union[List[DT], Dataset],
-        gold_label_type: str,
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
-        **kwargs,
+            self,
+            data_points: Union[List[DT], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: Optional[int] = 8,
+            **kwargs,
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
@@ -188,17 +188,17 @@ class Classifier(Model[DT], typing.Generic[DT]):
     evaluation routines and compute the same numbers."""
 
     def evaluate(
-        self,
-        data_points: Union[List[DT], Dataset],
-        gold_label_type: str,
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
-        gold_label_dictionary: Optional[Dictionary] = None,
-        **kwargs,
+            self,
+            data_points: Union[List[DT], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: Optional[int] = 8,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
+            gold_label_dictionary: Optional[Dictionary] = None,
+            **kwargs,
     ) -> Result:
         import numpy as np
         import sklearn
@@ -423,11 +423,11 @@ class Classifier(Model[DT], typing.Generic[DT]):
             classification_report_dict = {}
 
         detailed_result = (
-            "\nResults:"
-            f"\n- F-score (micro) {micro_f_score}"
-            f"\n- F-score (macro) {macro_f_score}"
-            f"\n- Accuracy {accuracy_score}"
-            "\n\nBy class:\n" + classification_report
+                "\nResults:"
+                f"\n- F-score (micro) {micro_f_score}"
+                f"\n- F-score (macro) {macro_f_score}"
+                f"\n- Accuracy {accuracy_score}"
+                "\n\nBy class:\n" + classification_report
         )
 
         # line for log file
@@ -450,14 +450,14 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
     @abstractmethod
     def predict(
-        self,
-        sentences: Union[List[DT], DT],
-        mini_batch_size: int = 32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none",
+            self,
+            sentences: Union[List[DT], DT],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
@@ -501,23 +501,27 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
     """
 
     def __init__(
-        self,
-        label_dictionary: Dictionary,
-        final_embedding_size: int,
-        dropout: float = 0.0,
-        locked_dropout: float = 0.0,
-        word_dropout: float = 0.0,
-        multi_label: bool = False,
-        multi_label_threshold: float = 0.5,
-        loss_weights: Dict[str, float] = None,
-        decoder: Optional[torch.nn.Module] = None,
-        inverse_model: Optional[str] = None,
+            self,
+            label_dictionary: Dictionary,
+            final_embedding_size: int,
+            dropout: float = 0.0,
+            locked_dropout: float = 0.0,
+            word_dropout: float = 0.0,
+            multi_label: bool = False,
+            multi_label_threshold: float = 0.5,
+            loss_weights: Dict[str, float] = None,
+            decoder: Optional[torch.nn.Module] = None,
+            inverse_model: Optional[str] = None,
     ):
 
         super().__init__()
 
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
+
+        if inverse_model == "gradient_reversal":
+            from pytorch_revgrad import RevGrad
+            self.gradient_reversal = RevGrad()
 
         # initialize the decoder
         if decoder is not None:
@@ -564,9 +568,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
     def forward_pass(
-        self,
-        sentences: Union[List[DT], DT],
-        for_prediction: bool = False,
+            self,
+            sentences: Union[List[DT], DT],
+            for_prediction: bool = False,
     ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DataPoint]]]:
         """This method does a forward pass through the model given a list of data
         points as input.
@@ -608,38 +612,15 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         embedded_data_points = self.word_dropout(embedded_data_points)
         embedded_data_points = embedded_data_points.squeeze(1)
 
+        if self.inverse_model == "gradient_reversal":
+            embedded_data_points = self.gradient_reversal(embedded_data_points)
+
         # push embedded_data_points through decoder to get the scores
         scores = self.decoder(embedded_data_points)
 
-        if self.inverse_model == 'negative_gradient' or self.inverse_model == 'negative_gradient_multitask':
-            return (self._calculate_loss(scores, labels)[0] * -1, self._calculate_loss(scores, labels)[1])
-        else:
-            return self._calculate_loss(scores, labels)
-
+        return self._calculate_loss(scores, labels)
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
-
-        if self.inverse_model == 'predict_opposite_random':
-            labels = torch.tensor(
-                [
-                    [0 if label in all_labels_for_point else round(random.random()) for label in self.label_dictionary.get_items()]
-                    for all_labels_for_point in labels
-                ],
-                dtype=torch.float,
-                device=flair.device,
-            )
-            return self.loss_function(scores, labels), len(labels)
-
-        if self.inverse_model == 'predict_opposite':
-            labels = torch.tensor(
-                [
-                    [0 if label in all_labels_for_point else 1 for label in self.label_dictionary.get_items()]
-                    for all_labels_for_point in labels
-                ],
-                dtype=torch.float,
-                device=flair.device,
-            )
-            return self.loss_function(scores, labels), len(labels)
 
         if self.multi_label:
             labels = torch.tensor(
@@ -682,14 +663,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         return typing.cast(List[DT], reordered_sentences)
 
     def predict(
-        self,
-        sentences: Union[List[DT], DT],
-        mini_batch_size: int = 32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none",
+            self,
+            sentences: Union[List[DT], DT],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
@@ -798,9 +779,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
     def __str__(self):
         return (
-            super(flair.nn.Model, self).__str__().rstrip(")")
-            + f"  (weights): {self.weight_dict}\n"
-            + f"  (weight_tensor) {self.loss_weights}\n)"
+                super(flair.nn.Model, self).__str__().rstrip(")")
+                + f"  (weights): {self.weight_dict}\n"
+                + f"  (weight_tensor) {self.loss_weights}\n)"
         )
 
     @classmethod
