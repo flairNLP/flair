@@ -520,9 +520,6 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
     def __extract_token_embeddings(self, sentence_embeddings, sentences):
         for token_embeddings, sentence in zip(sentence_embeddings, sentences):
-            # trailing whitespace do not work in some models
-            if len(token_embeddings) < len(sentence):
-                [token.set_embedding(self.name, torch.zeros(token_embeddings.size(1))) for token in sentence]
             for token_embedding, token in zip(token_embeddings, sentence):
                 token.set_embedding(self.name, token_embedding)
 
