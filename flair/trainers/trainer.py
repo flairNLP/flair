@@ -897,23 +897,23 @@ class ModelTrainer:
         **trainer_args,
     ):
 
-        # If set, add a factor to the learning rate of all parameters with 'decoder' in name
+        # If set, add a factor to the learning rate of all parameters with 'embeddings' not in name
         if decoder_lr_factor != 1.0:
             optimizer = optimizer(
                 [
                     {
-                        "params": [param for name, param in self.model.named_parameters() if "decoder" in name],
+                        "params": [param for name, param in self.model.named_parameters() if "embeddings" not in name],
                         "lr": learning_rate * decoder_lr_factor,
                     },
                     {
-                        "params": [param for name, param in self.model.named_parameters() if "decoder" not in name],
+                        "params": [param for name, param in self.model.named_parameters() if "embeddings" in name],
                         "lr": learning_rate,
                     },
                 ]
             )
             log.info(
-                f"Increasing learning rate to {learning_rate * decoder_lr_factor} for the following "
-                f"parameters: {[name for name, param in self.model.named_parameters() if 'decoder' in name]}"
+                f"Modifying learning rate to {learning_rate * decoder_lr_factor} for the following "
+                f"parameters: {[name for name, param in self.model.named_parameters() if 'embeddings' not in name]}"
             )
 
         return self.train(
