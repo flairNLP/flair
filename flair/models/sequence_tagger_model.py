@@ -916,13 +916,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 model_folder = model_name
 
             # Lazy import
-            from huggingface_hub.file_download import hf_hub_download
+            import huggingface_hub
 
             try:
-                model_path = hf_hub_download(
-                    model_name,
-                    hf_model_name,
+                model_path = huggingface_hub.hf_hub_download(
+                    repo_id = model_name,
                     revision=revision,
+                    filename=hf_model_name,
                     library_name="flair",
                     library_version=flair.__version__,
                     cache_dir=flair.cache_root / "models" / model_folder,
