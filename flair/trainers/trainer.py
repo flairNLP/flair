@@ -194,6 +194,9 @@ class ModelTrainer:
             training_parameters[parameter] = local_variables[parameter]
         model_card["training_parameters"] = training_parameters
 
+        if epoch >= max_epochs:
+            log.warning(f"Starting at epoch {epoch + 1}/{max_epochs}. No training will be done.")
+
         # add model card to model
         self.model.model_card = model_card
         assert self.corpus.train
@@ -859,6 +862,7 @@ class ModelTrainer:
     def resume(
         self,
         model: Model,
+        additional_epochs: Optional[int] = None,
         **trainer_args,
     ):
 
@@ -878,6 +882,11 @@ class ModelTrainer:
         # surface nested arguments
         kwargs = args_used_to_train_model["kwargs"]
         del args_used_to_train_model["kwargs"]
+
+        if additional_epochs is not None:
+            args_used_to_train_model["max_epochs"] = (
+                args_used_to_train_model.pop("epoch", kwargs.pop("epoch", 0)) + additional_epochs
+            )
 
         # resume training with these parameters
         self.train(**args_used_to_train_model, **kwargs)
