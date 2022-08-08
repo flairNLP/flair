@@ -809,7 +809,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             # load tokenizer from inmemory zip-file
             self.tokenizer = self._tokenizer_from_bytes(tokenizer_data)
 
-        def is_supported_t5_model(config: AutoConfig) -> bool:
+        def is_supported_t5_model(config: PretrainedConfig) -> bool:
             t5_supported_model_types = ["t5", "mt5", "longt5"]
             return getattr(config, "model_type", "") in t5_supported_model_types
 
