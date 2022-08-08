@@ -809,11 +809,24 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             # load tokenizer from inmemory zip-file
             self.tokenizer = self._tokenizer_from_bytes(tokenizer_data)
 
+        def is_supported_t5_model(config: AutoConfig) -> bool:
+            t5_supported_model_types = ["t5", "mt5", "longt5"]
+            return getattr(config, "model_type", "") in t5_supported_model_types
+
         if saved_config is None:
             config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
-            transformer_model = AutoModel.from_pretrained(model, config=config)
+
+            if is_supported_t5_model(config):
+                from transformers import T5EncoderModel
+                transformer_model = T5EncoderModel.from_pretrained(model, config=config)
+            else:
+                transformer_model = AutoModel.from_pretrained(model, config=config)
         else:
-            transformer_model = AutoModel.from_config(saved_config, **kwargs)
+            if is_supported_t5_model(saved_config):
+                from transformers import T5EncoderModel
+                transformer_model = T5EncoderModel.from_config(saved_config, **kwargs)
+            else:
+                transformer_model = AutoModel.from_config(saved_config, **kwargs)
         transformer_model = transformer_model.to(flair.device)
 
         self.truncate = True
