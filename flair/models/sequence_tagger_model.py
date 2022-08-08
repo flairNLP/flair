@@ -1,5 +1,6 @@
 import logging
 import sys
+import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 from urllib.error import HTTPError
@@ -920,12 +921,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
             try:
                 model_path = hf_hub_download(
-                    model_name,
-                    hf_model_name,
+                    repo_id=model_name,
+                    filename=hf_model_name,
                     revision=revision,
                     library_name="flair",
                     library_version=flair.__version__,
                     cache_dir=flair.cache_root / "models" / model_folder,
+                    use_auth_token=True,
                 )
             except HTTPError:
                 # output information
@@ -940,6 +942,82 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 raise
 
         return model_path
+
+    def _generate_model_card(self, repo_id):
+        return f"""---
+tags:
+    - flair
+    - token-classification
+    - sequence-tagger-model
+---
+
+### Demo: How to use in Flair
+
+Requires:
+- **[Flair](https://github.com/flairNLP/flair/)** (`pip install flair`)
+
+```python
+from flair.data import Sentence
+from flair.models import SequenceTagger
+
+# load tagger
+tagger = SequenceTagger.load("{repo_id}")
+
+# make example sentence
+sentence = Sentence("On September 1st George won 1 dollar while watching Game of Thrones.")
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence
+print(sentence)
+
+# print predicted NER spans
+print('The following NER tags are found:')
+
+# iterate over entities and print
+for entity in sentence.get_spans('ner'):
+    print(entity)
+```"""
+
+    def push_to_hub(self, repo_id: str, private: bool = None, commit_message: str = "Add new SequenceTagger model."):
+        """
+        Uploads the Sequence Tagger model to a Hugging Face Hub repository.
+        :param repo_id: A namespace (user or an organization) and a repo name separated by a `/`.
+        :param private: Whether the repository is private.
+        :param commit_message: Message to commit while pushing.
+        :return: The url of the repository.
+        """
+        # Lazy import
+        from huggingface_hub import create_repo, upload_folder
+
+        repo_url = create_repo(
+            repo_id=repo_id,
+            private=private,
+            exist_ok=True,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_dir = Path(tmp_dir)
+
+            # Save model weight
+            local_model_path = tmp_dir / "pytorch_model.bin"
+            self.save(local_model_path)
+
+            # Generate and save model card
+            model_card_content = self._generate_model_card()
+            readme_path = tmp_dir / "README.md"
+            if not readme_path.exists():
+                with readme_path.open("w", encoding="utf-8") as f:
+                    f.write(model_card_content)
+
+            upload_folder(
+                repo_id=repo_id,
+                folder_path=tmp_dir,
+                path_in_repo="",
+                commit_message=commit_message,
+            )
+            return repo_url
 
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
