@@ -826,7 +826,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             if is_supported_t5_model(saved_config):
                 from transformers import T5EncoderModel
 
-                transformer_model = T5EncoderModel.from_config(saved_config, **kwargs)
+                transformer_model = T5EncoderModel(saved_config, **kwargs)
             else:
                 transformer_model = AutoModel.from_config(saved_config, **kwargs)
         transformer_model = transformer_model.to(flair.device)
