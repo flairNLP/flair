@@ -927,7 +927,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     library_name="flair",
                     library_version=flair.__version__,
                     cache_dir=flair.cache_root / "models" / model_folder,
-                    use_auth_token=True,
                 )
             except HTTPError:
                 # output information
