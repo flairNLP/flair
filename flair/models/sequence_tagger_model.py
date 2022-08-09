@@ -998,22 +998,22 @@ for entity in sentence.get_spans('ner'):
         )
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_dir = Path(tmp_dir)
+            tmp_path = Path(tmp_dir)
 
             # Save model weight
-            local_model_path = tmp_dir / "pytorch_model.bin"
+            local_model_path = tmp_path / "pytorch_model.bin"
             self.save(local_model_path)
 
             # Generate and save model card
-            model_card_content = self._generate_model_card()
-            readme_path = tmp_dir / "README.md"
+            model_card_content = self._generate_model_card(repo_id)
+            readme_path = tmp_path / "README.md"
             if not readme_path.exists():
                 with readme_path.open("w", encoding="utf-8") as f:
                     f.write(model_card_content)
 
             upload_folder(
                 repo_id=repo_id,
-                folder_path=tmp_dir,
+                folder_path=tmp_path,
                 path_in_repo="",
                 commit_message=commit_message,
             )
