@@ -365,6 +365,39 @@ def test_train_resume_tagger(results_base_path, tasks_base_path):
 
 
 @pytest.mark.integration
+def test_train_resume_tagger_with_additional_epochs(results_base_path, tasks_base_path):
+
+    corpus_1 = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
+    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path).downsample(0.1)
+
+    corpus = MultiCorpus([corpus_1, corpus_2])
+    tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)
+
+    model: SequenceTagger = SequenceTagger(
+        hidden_size=64,
+        embeddings=turian_embeddings,
+        tag_dictionary=tag_dictionary,
+        tag_type="ner",
+        use_crf=False,
+    )
+
+    # train model for 2 epochs
+    trainer = ModelTrainer(model, corpus)
+    trainer.train(results_base_path, max_epochs=1, shuffle=False, checkpoint=True)
+
+    del model
+
+    # load the checkpoint model and train until epoch 4
+    checkpoint_model = SequenceTagger.load(results_base_path / "checkpoint.pt")
+    trainer.resume(model=checkpoint_model, additional_epochs=1)
+
+    assert checkpoint_model.model_card["training_parameters"]["max_epochs"] == 2
+
+    # clean up results directory
+    del trainer
+
+
+@pytest.mark.integration
 def test_find_learning_rate(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
     tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)

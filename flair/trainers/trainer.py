@@ -194,6 +194,9 @@ class ModelTrainer:
             training_parameters[parameter] = local_variables[parameter]
         model_card["training_parameters"] = training_parameters
 
+        if epoch >= max_epochs:
+            log.warning(f"Starting at epoch {epoch + 1}/{max_epochs}. No training will be done.")
+
         # add model card to model
         self.model.model_card = model_card
         assert self.corpus.train
@@ -859,6 +862,7 @@ class ModelTrainer:
     def resume(
         self,
         model: Model,
+        additional_epochs: Optional[int] = None,
         **trainer_args,
     ):
 
@@ -879,6 +883,11 @@ class ModelTrainer:
         kwargs = args_used_to_train_model["kwargs"]
         del args_used_to_train_model["kwargs"]
 
+        if additional_epochs is not None:
+            args_used_to_train_model["max_epochs"] = (
+                args_used_to_train_model.pop("epoch", kwargs.pop("epoch", 0)) + additional_epochs
+            )
+
         # resume training with these parameters
         self.train(**args_used_to_train_model, **kwargs)
 
@@ -897,23 +906,23 @@ class ModelTrainer:
         **trainer_args,
     ):
 
-        # If set, add a factor to the learning rate of all parameters with 'decoder' in name
+        # If set, add a factor to the learning rate of all parameters with 'embeddings' not in name
         if decoder_lr_factor != 1.0:
             optimizer = optimizer(
                 [
                     {
-                        "params": [param for name, param in self.model.named_parameters() if "decoder" in name],
+                        "params": [param for name, param in self.model.named_parameters() if "embeddings" not in name],
                         "lr": learning_rate * decoder_lr_factor,
                     },
                     {
-                        "params": [param for name, param in self.model.named_parameters() if "decoder" not in name],
+                        "params": [param for name, param in self.model.named_parameters() if "embeddings" in name],
                         "lr": learning_rate,
                     },
                 ]
             )
             log.info(
-                f"Increasing learning rate to {learning_rate * decoder_lr_factor} for the following "
-                f"parameters: {[name for name, param in self.model.named_parameters() if 'decoder' in name]}"
+                f"Modifying learning rate to {learning_rate * decoder_lr_factor} for the following "
+                f"parameters: {[name for name, param in self.model.named_parameters() if 'embeddings' not in name]}"
             )
 
         return self.train(
