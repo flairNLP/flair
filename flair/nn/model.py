@@ -510,6 +510,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         multi_label: bool = False,
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
+        loss_factor: float = 1.0,
         decoder: Optional[torch.nn.Module] = None,
         inverse_model: bool = False,
     ):
@@ -537,6 +538,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         self.multi_label = multi_label
         self.multi_label_threshold = multi_label_threshold
         self.inverse_model = inverse_model
+        self.loss_factor = loss_factor
 
         # init dropouts
         self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
@@ -638,7 +640,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 device=flair.device,
             )
 
-        return self.loss_function(scores, labels), len(labels)
+        loss = self.loss_function(scores, labels)
+        if self.loss_factor != 1.0:
+            loss = loss * self.loss_factor
+        return loss, len(labels)
 
     def _sort_data(self, data_points: List[DT]) -> List[DT]:
 
