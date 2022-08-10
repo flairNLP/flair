@@ -81,6 +81,7 @@ class MultitaskModel(flair.nn.Model):
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
+        return_loss: bool = True,
     ) -> Result:
         """
         :param sentences: batch of sentences
@@ -107,6 +108,7 @@ class MultitaskModel(flair.nn.Model):
                 main_evaluation_metric=main_evaluation_metric,
                 exclude_labels=exclude_labels,
                 gold_label_dictionary=gold_label_dictionary,
+                return_loss=return_loss,
             )
 
             log.info(

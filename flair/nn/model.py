@@ -52,6 +52,7 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
         num_workers: Optional[int] = 8,
+        return_loss=True,
         **kwargs,
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
@@ -198,6 +199,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
+        return_loss: bool = True,
         **kwargs,
     ) -> Result:
         import numpy as np
@@ -239,14 +241,15 @@ class Classifier(Model[DT], typing.Generic[DT]):
                     embedding_storage_mode=embedding_storage_mode,
                     mini_batch_size=mini_batch_size,
                     label_name="predicted",
-                    return_loss=True,
+                    return_loss=return_loss,
                 )
 
-                if isinstance(loss_and_count, tuple):
-                    average_over += loss_and_count[1]
-                    eval_loss += loss_and_count[0]
-                else:
-                    eval_loss += loss_and_count
+                if return_loss:
+                    if isinstance(loss_and_count, tuple):
+                        average_over += loss_and_count[1]
+                        eval_loss += loss_and_count[0]
+                    else:
+                        eval_loss += loss_and_count
 
                 # get the gold labels
                 for datapoint in batch:

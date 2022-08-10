@@ -970,6 +970,7 @@ class ModelTrainer:
             main_evaluation_metric=main_evaluation_metric,
             gold_label_dictionary=gold_label_dictionary_for_eval,
             exclude_labels=exclude_labels,
+            return_loss=False,
         )
 
         log.info(test_results.log_line)
