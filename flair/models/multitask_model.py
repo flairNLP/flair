@@ -31,7 +31,8 @@ class MultitaskModel(flair.nn.Model):
         self.tasks = list()
         label_types = dict()
         for task_id, model in zip(task_ids, models):
-            self.__setattr__(task_id, model)
+            self.add_module(task_id, model)
+            # self.__setattr__(task_id, model)
             self.tasks.append(task_id)
             label_types[task_id] = model.label_type
         self._label_type = label_types

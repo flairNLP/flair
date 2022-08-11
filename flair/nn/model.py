@@ -564,7 +564,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         if self.multi_label:
             self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
         else:
-            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction='sum')
 
     def forward_pass(
         self,
@@ -644,8 +644,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             )
 
         loss = self.loss_function(scores, labels)
-        if self.loss_factor != 1.0:
-            loss = loss * self.loss_factor
         return loss, len(labels)
 
     def _sort_data(self, data_points: List[DT]) -> List[DT]:
