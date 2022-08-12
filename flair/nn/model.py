@@ -30,7 +30,6 @@ def find_index(ind, liste):
     return new_ind
 
 
-
 class Model(torch.nn.Module, typing.Generic[DT]):
     """Abstract base class for all downstream task models in Flair,
     such as SequenceTagger and TextClassifier.
@@ -597,12 +596,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
     def forward_loss(self, sentences: Union[List[DT], DT]) -> Tuple[torch.Tensor, int]:
 
-        #print(sentences)
-
         # make a forward pass to produce embedded data points and labels
         embedded_data_points, labels, data_points = self.forward_pass(sentences, for_prediction=True)  # type: ignore
-
-        #print(embedded_data_points.size())
 
         # no loss can be calculated if there are no labels
         if not any(labels):
@@ -619,32 +614,18 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         mentions = [span.text for span in data_points]
         logits, ids_of_candidates_from_batch = self.decoder(embedded_data_points, mentions)
 
-        #print(mentions)
-        #print(logits.size())
-        #print(ids_of_candidates_from_batch)
-
         # mask logits of entities not in candidate list
         if ids_of_candidates_from_batch:
 
-            #print(ids_of_candidates_from_batch)
-
             gold_label_ids_from_label_dict = [self.label_dictionary.get_idx_for_item(label[0]) for label in labels]
-            #print(gold_label_ids_from_label_dict)
 
             translated_gold_label_ids = torch.tensor([find_index(x, ids_of_candidates_from_batch) for x in gold_label_ids_from_label_dict], device=flair.device) # compute gold indices w.r.t. the restricted id set
-            #print(translated_gold_label_ids)
+
             logits_of_batch_candidates = logits[:, torch.tensor(ids_of_candidates_from_batch)] # take only the logits of the restricted id set
-            #print(logits_of_batch_candidates.size())
-            #assert 0
+
             # compute crossentropy loss
-            #print(logits_of_batch_candidates)
-            #print(logits_of_batch_candidates.size())
             logsoftmax = self.logsotfmax(logits_of_batch_candidates)
-            #print(logsoftmax)
-            #print(logsoftmax.size())
-            #print(translated_gold_label_ids)
-            #print(translated_gold_label_ids.size())
-            #assert 0
+
             return self.nllloss(logsoftmax, translated_gold_label_ids), len(labels)
 
 

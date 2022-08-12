@@ -201,7 +201,6 @@ class CandidateGenerationMethod():
 
         self.punc_remover = re.compile(r"[\W]+")
 
-
         even_more_simpler_mentions_candidate_dict = {}
         for mention in candidate_dict:
             # create mention without blanks
@@ -247,7 +246,6 @@ class CandidateDecoder(torch.nn.Module):
              entity_dictionary,
              candidate_generation_method
     ):
-        # TODO: It would be nice if the candidate generation method would return indices directly
         super().__init__()
 
         self.entity_dictionary = entity_dictionary # index for each entity (title or id)
@@ -259,29 +257,19 @@ class CandidateDecoder(torch.nn.Module):
 
         self.candidate_generation_method = candidate_generation_method
 
-        #self.to(flair.device)
-
     def forward(self,mention_embeddings, mentions):
 
         # create the restricted set of entities for which we compute the scores batch-wise
         scoring_entity_set = self.candidate_generation_method.get_candidates(mentions)
 
-        #print(scoring_entity_set)
-
         # if no entity set is given, score over all entities
         if scoring_entity_set:
             indices_of_scoring_entities = [self.entity_dictionary.get_idx_for_item(entity) for entity in scoring_entity_set]
 
-            #print(indices_of_scoring_entities)
-
-        #project mentions in entity representation
-        #print(mentions)
-        #print(mention_embeddings.size())
+        # project mentions in entity representation
         projected_mention_embeddings = self.mention_to_entity(mention_embeddings)
-        #print(projected_mention_embeddings.size())
         # compute scores
         logits = self.entity_embeddings(projected_mention_embeddings)
-        #print(logits.size())
         # if not scoring over all entities we return the corresponding indices
         if scoring_entity_set:
             return logits, indices_of_scoring_entities
