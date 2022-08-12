@@ -640,7 +640,6 @@ class ColumnDataset(FlairDataset):
     def _convert_lines_to_sentence(
         self, lines, word_level_tag_columns: Dict[int, str], span_level_tag_columns: Optional[Dict[int, str]] = None
     ):
-
         sentence: Sentence = Sentence(text=[])
         token: Optional[Token] = None
         filtered_lines = []
@@ -664,18 +663,19 @@ class ColumnDataset(FlairDataset):
         # add span labels
         if span_level_tag_columns:
             for span_column in span_level_tag_columns:
-                try:
-                    bioes_tags = [
-                        re.split(self.column_delimiter, line.rstrip())[span_column] for line in filtered_lines
-                    ]
-                    predicted_spans = get_spans_from_bio(bioes_tags)
-                    for span_indices, score, label in predicted_spans:
-                        span = sentence[span_indices[0] : span_indices[-1] + 1]
-                        value = self._remap_label(label)
-                        if value != "O":
-                            span.add_label(span_level_tag_columns[span_column], value=value, score=score)
-                except Exception:
-                    pass
+                bioes_tags=[]
+                for line in filtered_lines:
+                    split_list=re.split(self.column_delimiter, line.rstrip())
+                    if span_column < len(split_list):
+                        bioes_tags.append(split_list[span_column])
+                    else:
+                        bioes_tags.append('O')
+                predicted_spans = get_spans_from_bio(bioes_tags)
+                for span_indices, score, label in predicted_spans:
+                    span = sentence[span_indices[0] : span_indices[-1] + 1]
+                    value = self._remap_label(label)
+                    if value != "O":
+                        span.add_label(span_level_tag_columns[span_column], value=value, score=score)
 
         for comment in comments:
             # parse relations if they are set

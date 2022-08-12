@@ -21,6 +21,15 @@ from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
 
+def find_index(ind, liste):
+    try:
+        new_ind = liste.index(ind)
+    except ValueError:
+        new_ind = len(liste)
+        liste.append(ind)
+    return new_ind
+
+
 
 class Model(torch.nn.Module, typing.Generic[DT]):
     """Abstract base class for all downstream task models in Flair,
@@ -553,6 +562,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
+        self.softmax = torch.nn.Softmax(dim=1)
+        self.logsotfmax = torch.nn.LogSoftmax(dim=1)
+        self.nllloss = torch.nn.NLLLoss()
+
     def forward_pass(
         self,
         sentences: Union[List[DT], DT],
@@ -584,8 +597,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
     def forward_loss(self, sentences: Union[List[DT], DT]) -> Tuple[torch.Tensor, int]:
 
+        #print(sentences)
+
         # make a forward pass to produce embedded data points and labels
-        embedded_data_points, labels = self.forward_pass(sentences)  # type: ignore
+        embedded_data_points, labels, data_points = self.forward_pass(sentences, for_prediction=True)  # type: ignore
+
+        #print(embedded_data_points.size())
 
         # no loss can be calculated if there are no labels
         if not any(labels):
@@ -599,10 +616,40 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         embedded_data_points = embedded_data_points.squeeze(1)
 
         # push embedded_data_points through decoder to get the scores
-        scores = self.decoder(embedded_data_points)
+        mentions = [span.text for span in data_points]
+        logits, ids_of_candidates_from_batch = self.decoder(embedded_data_points, mentions)
+
+        #print(mentions)
+        #print(logits.size())
+        #print(ids_of_candidates_from_batch)
+
+        # mask logits of entities not in candidate list
+        if ids_of_candidates_from_batch:
+
+            #print(ids_of_candidates_from_batch)
+
+            gold_label_ids_from_label_dict = [self.label_dictionary.get_idx_for_item(label[0]) for label in labels]
+            #print(gold_label_ids_from_label_dict)
+
+            translated_gold_label_ids = torch.tensor([find_index(x, ids_of_candidates_from_batch) for x in gold_label_ids_from_label_dict], device=flair.device) # compute gold indices w.r.t. the restricted id set
+            #print(translated_gold_label_ids)
+            logits_of_batch_candidates = logits[:, torch.tensor(ids_of_candidates_from_batch)] # take only the logits of the restricted id set
+            #print(logits_of_batch_candidates.size())
+            #assert 0
+            # compute crossentropy loss
+            #print(logits_of_batch_candidates)
+            #print(logits_of_batch_candidates.size())
+            logsoftmax = self.logsotfmax(logits_of_batch_candidates)
+            #print(logsoftmax)
+            #print(logsoftmax.size())
+            #print(translated_gold_label_ids)
+            #print(translated_gold_label_ids.size())
+            #assert 0
+            return self.nllloss(logsoftmax, translated_gold_label_ids), len(labels)
+
 
         # calculate the loss
-        return self._calculate_loss(scores, labels)
+        return self._calculate_loss(logits, labels)
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
 
@@ -707,18 +754,19 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 )
                 # if anything could possibly be predicted
                 if len(data_points) > 0:
-                    scores = self.decoder(embedded_data_points)
+                    mentions = [span.text for span in data_points]
+                    logits, ids_of_candidates_of_batch = self.decoder(embedded_data_points, mentions)
 
                     # remove previously predicted labels of this type
                     for data_point in data_points:
                         data_point.remove_labels(label_name)
 
                     if return_loss:
-                        overall_loss += self._calculate_loss(scores, gold_labels)[0]
+                        overall_loss += self._calculate_loss(logits, gold_labels)[0]
                         label_count += len(data_points)
 
                     if self.multi_label:
-                        sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
+                        sigmoided = torch.sigmoid(logits)  # size: (n_sentences, n_classes)
                         n_labels = sigmoided.size(1)
                         for s_idx, data_point in enumerate(data_points):
                             for l_idx in range(n_labels):
@@ -730,7 +778,19 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                                 if label_score > label_threshold or return_probabilities_for_all_classes:
                                     data_point.add_label(typename=label_name, value=label_value, score=label_score)
                     else:
-                        softmax = torch.nn.functional.softmax(scores, dim=-1)
+                        if ids_of_candidates_of_batch:
+                            # ids w.r.t. label_dictionary
+                            label_ids = [self.label_dictionary.get_idx_for_item(label[0]) for label in gold_labels]
+
+                            # logits only of batch candidates
+                            relevant_logits = logits[:, torch.tensor(
+                                ids_of_candidates_of_batch)]  # take only the logits of the restricted id set
+
+                            # compute crossentropy loss
+                            softmax = self.softmax(relevant_logits)
+
+                        else:
+                            softmax = torch.nn.functional.softmax(logits, dim=-1)
 
                         if return_probabilities_for_all_classes:
                             n_labels = softmax.size(1)
@@ -744,7 +804,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                         else:
                             conf, idx = torch.max(softmax, dim=-1)
                             for data_point, c, i in zip(data_points, conf, idx):
-                                label_value = self.label_dictionary.get_item_for_index(i.item())
+                                if ids_of_candidates_of_batch:
+                                    # the indices are w.r.t. to the id set of the batch candidates
+                                    id_with_respect_to_label_dict=ids_of_candidates_of_batch[i.item()]
+                                    label_value = self.label_dictionary.get_item_for_index(id_with_respect_to_label_dict)
+                                else:
+                                    label_value = self.label_dictionary.get_item_for_index(i.item())
                                 if label_value == "O":
                                     continue
                                 data_point.add_label(typename=label_name, value=label_value, score=c.item())

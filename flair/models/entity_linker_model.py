@@ -174,3 +174,116 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
     @property
     def label_type(self):
         return self._label_type
+
+
+class CandidateGenerationMethod():
+
+    def __init__(self, candidate_dict):
+        self.candidate_dict = candidate_dict
+
+        # create a dictionary where blanks are removed
+        # this leads to some distinct mentions being the same afterwards
+        # thus we unify their lists
+        simpler_mentions_candidate_dict = {}
+        for mention in candidate_dict:
+            # create mention without blanks
+            simplified_mention=mention.replace(' ','').lower()
+            # the simplified mention already occurred from another mention
+            if simplified_mention in simpler_mentions_candidate_dict:
+                candidates = set(simpler_mentions_candidate_dict[simplified_mention])
+                candidates.update(candidate_dict[mention])
+                simpler_mentions_candidate_dict[simplified_mention] = list(candidates)
+            # its the first occurrence of the simplified mention
+            else:
+                simpler_mentions_candidate_dict[simplified_mention] = candidate_dict[mention]
+
+        self.simpler_mentions_candidate_dict = simpler_mentions_candidate_dict
+
+        self.punc_remover = re.compile(r"[\W]+")
+
+
+        even_more_simpler_mentions_candidate_dict = {}
+        for mention in candidate_dict:
+            # create mention without blanks
+            simplified_mention=self.punc_remover.sub("", mention.lower())
+            # the simplified mention already occurred from another mention
+            if simplified_mention in even_more_simpler_mentions_candidate_dict:
+                candidates = set(even_more_simpler_mentions_candidate_dict[simplified_mention])
+                candidates.update(candidate_dict[mention])
+                even_more_simpler_mentions_candidate_dict[simplified_mention] = list(candidates)
+            # its the first occurrence of the simplified mention
+            else:
+                even_more_simpler_mentions_candidate_dict[simplified_mention] = candidate_dict[mention]
+
+        self.even_more_simpler_mentions_candidate_dict = even_more_simpler_mentions_candidate_dict
+
+    def get_candidates(self, mentions):
+        candidate_set = set()
+        for mention in mentions:
+            try:
+               candidate_set.update(self.candidate_dict[mention])
+            except KeyError:
+                # check if mention without blanks exists
+                try:
+                    mention_without_blanks = mention.replace(' ','').lower()
+                    candidate_set.update(self.simpler_mentions_candidate_dict[mention_without_blanks])
+                except KeyError:
+                    # check if even more simplified mention exists
+                    even_more_simplified_mention = self.punc_remover.sub("", mention.lower())
+                    try:
+                        candidate_set.update(self.even_more_simpler_mentions_candidate_dict[even_more_simplified_mention])
+                    except KeyError:
+                        #possible 'fixes': sample 15 random entities or sample candidates with string similarity (like 15 most similar)
+                        pass
+                        #print('Unknown mention: '+ mention)
+        return candidate_set
+
+
+class CandidateDecoder(torch.nn.Module):
+
+    def __init__(self,
+             entity_embedding_size: int,
+             mention_embedding_size: int,
+             entity_dictionary,
+             candidate_generation_method
+    ):
+        # TODO: It would be nice if the candidate generation method would return indices directly
+        super().__init__()
+
+        self.entity_dictionary = entity_dictionary # index for each entity (title or id)
+
+        self.mention_to_entity = torch.nn.Linear(mention_embedding_size, entity_embedding_size) # project mention embedding to entity embedding space
+
+        self.entity_embeddings = torch.nn.Linear(entity_embedding_size ,len(entity_dictionary), bias=False) # each entity is represented by a vector
+        # TODO: more sophisticated way than random for initialization for entity vectors??
+
+        self.candidate_generation_method = candidate_generation_method
+
+        #self.to(flair.device)
+
+    def forward(self,mention_embeddings, mentions):
+
+        # create the restricted set of entities for which we compute the scores batch-wise
+        scoring_entity_set = self.candidate_generation_method.get_candidates(mentions)
+
+        #print(scoring_entity_set)
+
+        # if no entity set is given, score over all entities
+        if scoring_entity_set:
+            indices_of_scoring_entities = [self.entity_dictionary.get_idx_for_item(entity) for entity in scoring_entity_set]
+
+            #print(indices_of_scoring_entities)
+
+        #project mentions in entity representation
+        #print(mentions)
+        #print(mention_embeddings.size())
+        projected_mention_embeddings = self.mention_to_entity(mention_embeddings)
+        #print(projected_mention_embeddings.size())
+        # compute scores
+        logits = self.entity_embeddings(projected_mention_embeddings)
+        #print(logits.size())
+        # if not scoring over all entities we return the corresponding indices
+        if scoring_entity_set:
+            return logits, indices_of_scoring_entities
+        else:
+            return logits, None

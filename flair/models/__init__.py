@@ -1,6 +1,6 @@
 from .clustering import ClusteringModel
 from .dependency_parser_model import DependencyParser
-from .entity_linker_model import EntityLinker
+from .entity_linker_model import EntityLinker, CandidateGenerationMethod, CandidateDecoder
 from .language_model import LanguageModel
 from .lemmatizer_model import Lemmatizer
 from .pairwise_classification_model import TextPairClassifier
