@@ -68,6 +68,15 @@ def test_stacked_embeddings():
     del embeddings
 
 
+def test_transformer_word_embeddings_also_set_trainling_whitespaces():
+    embeddings = TransformerWordEmbeddings("distilbert-base-uncased")
+
+    sentence: Sentence = Sentence(["hello", " ", "hm", " "])
+    embeddings.embed(sentence)
+    for token in sentence:
+        assert len(token.get_embedding()) > 0
+
+
 def test_transformer_word_embeddings():
     embeddings = TransformerWordEmbeddings("distilbert-base-uncased", layers="-1,-2,-3,-4", layer_mean=False)
 
@@ -141,12 +150,14 @@ def test_transformer_jit_embeddings(results_base_path):
         def forward(
             self,
             input_ids: torch.Tensor,
+            lengths: torch.LongTensor,
             attention_mask: torch.Tensor,
             overflow_to_sample_mapping: torch.Tensor,
             word_ids: torch.Tensor,
         ):
             return self.embedding.forward(
                 input_ids=input_ids,
+                lengths=lengths,
                 attention_mask=attention_mask,
                 overflow_to_sample_mapping=overflow_to_sample_mapping,
                 word_ids=word_ids,
@@ -158,7 +169,13 @@ def test_transformer_jit_embeddings(results_base_path):
 
     tensors = base_embeddings.prepare_tensors([sentence])
     # ensure that the prepared tensors is what we expect
-    assert sorted(tensors.keys()) == ["attention_mask", "input_ids", "overflow_to_sample_mapping", "word_ids"]
+    assert sorted(tensors.keys()) == [
+        "attention_mask",
+        "input_ids",
+        "lengths",
+        "overflow_to_sample_mapping",
+        "word_ids",
+    ]
 
     wrapper = JitWrapper(base_embeddings)
     parameter_names, parameter_list = TransformerJitWordEmbeddings.parameter_to_list(

@@ -2,6 +2,7 @@ pytest>=7.0.0
 pytest-mypy
 pytest-isort
 pytest-flake8
+flake8<5.0.0
 flake8-black
 types-Deprecated
 types-dataclasses
