@@ -337,7 +337,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
     def __tokenizer_bytes(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             files = list(self.tokenizer.save_pretrained(temp_dir))
-            if self.tokenizer.is_fast:
+            if self.tokenizer.is_fast and self.tokenizer.slow_tokenizer_class:
                 vocab_files = self.tokenizer.slow_tokenizer_class.vocab_files_names.values()
                 files = [f for f in files if all(v not in f for v in vocab_files)]
             zip_data = BytesIO()
