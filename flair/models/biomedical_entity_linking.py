@@ -1,7 +1,9 @@
 import os
+import stat
 import re
 import pickle
 import logging
+from xmlrpc.client import Boolean
 import numpy as np
 import pandas as pd
 import torch
@@ -16,8 +18,11 @@ from huggingface_hub import hf_hub_url, cached_download
 from string import punctuation
 import flair
 from flair.data import Sentence, EntityLinkingLabel
+from flair.file_utils import cached_path
 from typing import List, Union
 from pathlib import Path
+import subprocess
+import tempfile
 
 log = logging.getLogger("flair")
 
@@ -531,66 +536,76 @@ class HunNen(object):
         self.dict_sparse_embeds = dict_sparse_embeds
         self.dict_dense_embeds = dict_dense_embeds
         self.tgt_space_mean_vec = tgt_space_mean_vec
+        self.text_preprocessor = TextPreprocess()
 
     @classmethod
-    def load(cls, model_name, dictionary_path: Union[str, Path], model_type, max_length=25):
+    def load(cls, model_name, dictionary_path: Union[str, Path] = None, model_type = "biosyn", max_length=25):
         """
-        Load a model for biomedical named entity normalization using BioSyn on sentences annotated with
+        Load a model for biomedical named entity normalization using BioSyn or SapBert on sentences annotated with
         biomedical entity mentions
-        :param model_name: Name of pretrained model to use. Currently possible values for pretrained models are:
-        sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease,
+        :param model_name: Name of pretrained model to use. Possible values for pretrained models are:
+        chemical, disease, sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease,
         biobert-ncbi-disease, biobert-bc5cdr-chemical, sapbert
-        :param dictionary_path: Path to a file with each line in the format: cui||name, with one line for each
-        name of a concept
+        :param dictionary_path: Name of one of the provided dictionaries listing all possible ids and their synonyms
+        or a path to a dictionary file with each line in the format: id||name, with one line for each name of a concept.
+        Possible values for dictionaries are: chemical, ctd-chemical, disease, bc5cdr-disease, gene, cnbci-gene,
+        taxonomy and ncbi-taxonomy
         """
-        # Use BioSyn
-        if model_type.lower() == "biosyn":
-            # modify name if it's one of the BioSyn huggingface models
-            if model_name in [
-                "sapbert-bc5cdr-disease",
-                "sapbert-ncbi-disease",
-                "sapbert-bc5cdr-chemical",
-                "biobert-bc5cdr-disease",
-                "biobert-ncbi-disease",
-                "biobert-bc5cdr-chemical",
-            ]:
-                model_name = "dmis-lab/biosyn-" + model_name
+        model_type = model_type.lower()
+        model_name = model_name.lower()
+        model_path = model_name
+
+        # if a provided model is used,
+        # modify model name to huggingface path
+        if model_name in [
+            "sapbert-bc5cdr-disease",
+            "sapbert-ncbi-disease",
+            "sapbert-bc5cdr-chemical",
+            "biobert-bc5cdr-disease",
+            "biobert-ncbi-disease",
+            "biobert-bc5cdr-chemical",
+        ]:
+            model_path = "dmis-lab/biosyn-" + model_name
+        elif model_name == "sapbert":
+            model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
+        elif model_name == "disease":
+            model_path = "dmis-lab/biosyn-sapbert-bc5cdr-disease"
+        elif model_name == "chemical":
+            model_path = "dmis-lab/biosyn-sapbert-bc5cdr-chemical"
+
+        # Use BioSyn or SapBert
+        if model_type == "biosyn":
             model = BioSyn(max_length=max_length, use_cuda=torch.cuda.is_available())
-
-        # Use SapBert
-        elif model_type.lower() == "sapbert":
-            if model_name == "sapbert":
-                model_name = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
+        elif model_type == "sapbert":
             model = SapBert(max_length=max_length, use_cuda=torch.cuda.is_available())
-
         else:
-            print("Invalid value for model_type. The only possible values are 'BioSyn' and 'SapBert'")
-            return
+            log.error("Invalid value for model_type. The only possible values are 'biosyn' and 'sapbert'")
+            raise ValueError("Invalid value for model_type")
 
-        model.load_model(model_name_or_path=model_name)
-        # cache or load dictionary
+
+        model.load_model(model_name_or_path=model_path)
         dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec = cls._cache_or_load_dictionary(
             model, model_name, str(dictionary_path)
         )
 
         return cls(model, dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec)
 
-    def predict(self, sentences: Union[List[Sentence], Sentence], entity_type, topk=10):
+    def predict(self, sentences: Union[List[Sentence], Sentence], input_entity_annotation_layer :str = None, topk: int =1, use_Ab3P: Boolean = True):
         """
-        On one or more sentences, predict the cui on all named entites annotated with a tag of type entity_type.
+        On one or more sentences, predict the cui on all named entites annotated with a tag of type input_entity_annotation_layer.
         Annotates the top k predictions.
         :param sentences: one or more sentences to run the predictions on
-        :param entity_type: only entities with this tag will be annotated
+        :param input_entity_annotation_layer: only entities with in this annotation layer will be annotated
         :param topk: number of predicted cui candidates to add to annotation
+        :param abbreviation_dict: dictionary with abbreviations and their expanded form or a boolean value indicating whether 
+        abbreviations should be expanded using Ab3P
         """
-        # make sure its a list of sentences
+        # make sure sentences is a list of sentences
         if not isinstance(sentences, list):
             sentences = [sentences]
 
         for sentence in sentences:
-            for entity in sentence.get_labels(entity_type):
-                # preprocess mention
-                mention = TextPreprocess().run(entity.span.text)
+            for entity in sentence.get_labels(input_entity_annotation_layer):                
 
                 # get predictions from dictionary
                 predictions = self.model.get_predictions(
@@ -602,13 +617,25 @@ class HunNen(object):
                     self.tgt_space_mean_vec,
                 )
 
+                # add predictions to entity
+                label_name = (input_entity_annotation_layer + "_nen") if (input_entity_annotation_layer is not None) else "nen"
                 for prediction in predictions:
+                    # if concept unique id is made up of mulitple ids, seperated by '|'
+                    # seperate it into cui and additional_labels
+                    cui = prediction[1]
+                    if "|" in cui:
+                        labels = cui.split("|")
+                        cui = labels[0]
+                        additional_labels = labels[1:]
+                    else:
+                        additional_labels = None
                     sentence.add_complex_label(
-                        typename=entity_type + "_nen",
+                        typename=label_name,
                         label=EntityLinkingLabel(
                             span=entity.span,
-                            cui=prediction[1],
+                            id=cui,
                             concept_name=prediction[0],
+                            additional_ids=additional_labels,
                             score=prediction[2].astype(float),
                         ),
                     )
@@ -634,10 +661,10 @@ class HunNen(object):
                 cached_dictionary["dict_sparse_embeds"],
                 cached_dictionary["dict_dense_embeds"],
             )
-
-        else:
+        
             dictionary = DictionaryDataset(dictionary_path=dictionary_path).data
-            # dictionary_names = dictionary[:, 0]
+            
+            # embed dictionary
             dictionary_names = [row[0] for row in dictionary]
             dict_sparse_embeds = entity_linker.embed_sparse(names=dictionary_names, show_progress=True)
             dict_dense_embeds = entity_linker.embed_dense(names=dictionary_names, show_progress=True)

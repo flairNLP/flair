@@ -309,20 +309,28 @@ class RelationLabel(Label):
 
 
 class EntityLinkingLabel(Label):
-    def __init__(self, span, cui: Optional[str], concept_name, ontology=None, score: float = 1):
-        super().__init__(cui, score)
+    def __init__(self, span, id: Optional[str], concept_name, additional_ids: Optional[Union[List[str], str]], score: float = 1.0):
+        super().__init__(id, score)
         self.span = span
-        self.ontology = ontology
         self.concept_name = concept_name
+        if isinstance(additional_ids, str):
+            additional_ids = [additional_ids]
+        self.additional_ids = additional_ids
 
     def spawn(self, value: str, score: float = 1):
-        return EntityLinkingLabel(self.span, value, self.ontology, self.concept_name, score)
+        return EntityLinkingLabel(self.span, value, self.concept_name, self.additional_ids, score)
 
     def __str__(self):
-        return f"{self._value} {self.concept_name} [{self.span.id_text}] ({round(self._score, 4)})"
+        if self.additional_ids is None:
+            return f"{self._value}  {self.concept_name} ({round(self._score, 2)})"
+        else:
+            return f"{self._value} ({', '.join(self.additional_ids)})  {self.concept_name} ({round(self._score, 2)})"
 
     def __repr__(self):
-        return f"{self._value} {self.concept_name} [{self.span.id_text}] ({round(self._score, 4)})"
+        if self.additional_ids is None:
+            return f"{self._value} {self.concept_name} [{self.span.id_text}] ({round(self._score, 2)})"
+        else: 
+            return f"{self._value} ({', '.join(self.additional_ids)}) {self.concept_name} [{self.span.id_text}] ({round(self._score, 2)})"
 
     def __len__(self):
         return len(self.span)
