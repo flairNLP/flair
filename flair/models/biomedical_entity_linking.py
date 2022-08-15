@@ -128,6 +128,78 @@ class NamesDataset(torch.utils.data.Dataset):
         return len(self.encodings.input_ids)
 
 
+class Ab3P:
+    def __init__(self, ab3p_path, word_data_dir) -> None:
+        self.ab3p_path = ab3p_path
+        self.word_data_dir = word_data_dir
+
+    @classmethod
+    def load(cls):
+        data_dir = os.path.join(flair.cache_root, "ab3p")
+        if not os.path.exists(data_dir):
+            os.mkdir(os.path.join(data_dir))
+        word_data_dir = os.path.join(data_dir, "word_data/")
+        if not os.path.exists(word_data_dir):
+            os.mkdir(word_data_dir)
+        ab3p_path = cls.download_ab3p(data_dir, word_data_dir)
+        return cls(ab3p_path, word_data_dir)
+
+    @classmethod
+    def download_ab3p(cls, data_dir, word_data_dir):
+        # download word data for Ab3P if not already downloaded
+        ab3p_url = "https://raw.githubusercontent.com/dmis-lab/BioSyn/master/Ab3P/WordData/"
+        ab3p_files = ["Ab3P_prec.dat", "Lf1chSf", "SingTermFreq.dat", "cshset_wrdset3.ad", "cshset_wrdset3.ct", 
+        "cshset_wrdset3.ha", "cshset_wrdset3.nm", "cshset_wrdset3.str", "hshset_Lf1chSf.ad", "hshset_Lf1chSf.ha", 
+        "hshset_Lf1chSf.nm", "hshset_Lf1chSf.str", "hshset_stop.ad", "hshset_stop.ha", "hshset_stop.nm", 
+        "hshset_stop.str", "stop"]
+        for file in ab3p_files:
+            data_path = cached_path(ab3p_url + file, word_data_dir)
+        # download ab3p executable
+        ab3p_path = cached_path("https://github.com/dmis-lab/BioSyn/raw/master/Ab3P/identify_abbr", data_dir)
+        os.chmod(ab3p_path, stat.S_IEXEC)
+        return ab3p_path
+
+
+    def build_abbreviation_dict(self, sentences) -> dict:
+        abbreviation_dict = {}
+        # tempfile to store the data to pass to the ab3p executable
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as temp_file:
+            for sentence in sentences:
+                temp_file.write(sentence.to_tokenized_string() + "\n")
+            temp_file.flush()
+            # temporarily create path file in the current working directory for Ab3P
+            with open(os.path.join(os.getcwd(), "path_Ab3P"), "w") as path_file:
+                path_file.write(self.word_data_dir + "\n")
+            # run ab3p with the temp file containing the dataset
+            try:
+                result = subprocess.run([self.ab3p_path, temp_file.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            except:
+                log.error("""The abbreviation resolver Ab3P could not be run on your system. To ensure maximum accuracy, please
+                install Ab3P yourself. See https://github.com/ncbi-nlp/Ab3P""")
+            else:
+                line = result.stdout.decode('utf-8')
+                if "Path file for type cshset does not exist!" in line:
+                    log.error("Error when using Ab3P for abbreviation resolution. A file named path_Ab3p needs to exist in your current directory containing the path to the WordData directory for Ab3P to work!")
+                elif "Cannot open" in line:
+                    log.error("Error when using Ab3P for abbreviation resolution. Could not open the WordData directory for Ab3P!")
+                elif "failed to open" in line:
+                    log.error("Error when using Ab3P for abbreviation resolution. Could not open the WordData directory for Ab3P!")
+
+                lines = line.split("\n")
+                for line in lines:
+                    if len(line.split("|"))==3:
+                        sf, lf, _ = line.split("|")
+                        sf = sf.strip().lower()
+                        lf = lf.strip().lower()
+                        abbreviation_dict[sf] = lf
+            finally:
+                # remove the path file
+                os.remove(os.path.join(os.getcwd(), "path_Ab3P"))
+
+        return abbreviation_dict
+
+
+
 class DictionaryDataset:
     """
     A class used to load dictionary data
@@ -633,8 +705,25 @@ class HunNen(object):
         if not isinstance(sentences, list):
             sentences = [sentences]
 
+        # use Ab3P to build abbreviation dictionary
+        if use_Ab3P:
+            ab3p = Ab3P.load()
+            abbreviation_dict = ab3p.build_abbreviation_dict(sentences)
+
         for sentence in sentences:
             for entity in sentence.get_labels(input_entity_annotation_layer):
+                # preprocess mention
+                if abbreviation_dict is not None:
+                    parsed_tokens = []
+                    for token in entity.span:
+                        token = self.text_preprocessor.run(token.text)
+                        if token in abbreviation_dict:
+                            parsed_tokens.append(abbreviation_dict[token.lower()])
+                        elif len(token) is not 0:
+                            parsed_tokens.append(token)
+                    mention = " ".join(parsed_tokens)
+                else:
+                    mention = self.text_preprocessor.run(entity.span.text)
 
                 # get predictions from dictionary
                 predictions = self.model.get_predictions(
