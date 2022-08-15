@@ -442,7 +442,7 @@ def test_transformers_keep_tokenizer_when_saving(results_base_path):
 
 
 def test_transformers_keep_tokenizer_bloom_when_saving(results_base_path):
-    embeddings = TransformerWordEmbeddings("bigscience/bloom-560m")
+    embeddings = TransformerWordEmbeddings("Muennighoff/bloom-tiny-random")
     results_base_path.mkdir(exist_ok=True, parents=True)
     initial_tagger_path = results_base_path / "initial_tokenizer.pk"
     reloaded_tagger_path = results_base_path / "reloaded_tokenizer.pk"
