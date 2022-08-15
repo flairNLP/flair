@@ -24,8 +24,11 @@ markers = [
     "integration",
 ]
 [tool.mypy]
-exclude = "flair/embeddings/legacy.py"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module="flair.embeddings.legacy"
+ignore_errors = true
 
 [tool.isort]
 profile = "black"
