@@ -18,6 +18,12 @@ from huggingface_hub import hf_hub_url, cached_download
 from string import punctuation
 import flair
 from flair.data import Sentence, EntityLinkingLabel
+from flair.datasets import (
+	NEL_CTD_CHEMICAL_DICT, 
+	NEL_CTD_DISEASE_DICT, 
+	NEL_NCBI_GENE_DICT, 
+	NEL_NCBI_TAXONOMY_DICT,
+)
 from flair.file_utils import cached_path
 from typing import List, Union
 from pathlib import Path
@@ -584,6 +590,29 @@ class HunNen(object):
 
 
         model.load_model(model_name_or_path=model_path)
+
+        # determine dictionary to use
+        if model_name in ["sapbert-bc5cdr-disease", 
+            "sapbert-ncbi-disease", 
+            "biobert-bc5cdr-disease",
+            "biobert-ncbi-disease",
+            "disease"] or dictionary_path in ["ctd-disease","disease"]:
+            dictionary_path = "ctd-disease"
+        elif model_name in ["sapbert-bc5cdr-chemical",
+            "biobert-bc5cdr-chemical", 
+            "chemical"] or dictionary_path in ["ctd-chemical","chemical"]:
+            dictionary_path = "ctd-chemical"
+        elif dictionary_path in ["gene", "ncbi-gene"]:
+            dictionary_path = "ncbi-gene"
+        elif dictionary_path in ["taxonomy", "ncbi-taxonomy"]:
+            dictionary_path = "ncbi-taxonomy"
+        elif dictionary_path is None:
+            log.error("""When using a custom model, you need to specify a dictionary. 
+            Available options are: 'disease', 'chemical', 'gene' and 'taxonomy'.
+            Or provide a path to a dictionary file.""")
+            raise ValueError("Invalid dictionary")
+
+        # embed dictionary
         dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec = cls._cache_or_load_dictionary(
             model, model_name, str(dictionary_path)
         )
@@ -605,7 +634,7 @@ class HunNen(object):
             sentences = [sentences]
 
         for sentence in sentences:
-            for entity in sentence.get_labels(input_entity_annotation_layer):                
+            for entity in sentence.get_labels(input_entity_annotation_layer):
 
                 # get predictions from dictionary
                 predictions = self.model.get_predictions(
@@ -661,8 +690,20 @@ class HunNen(object):
                 cached_dictionary["dict_sparse_embeds"],
                 cached_dictionary["dict_dense_embeds"],
             )
-        
-            dictionary = DictionaryDataset(dictionary_path=dictionary_path).data
+        # Else, embed the dictionary
+        else:
+            # use provided dictionary
+            if dictionary_path == "ctd-disease":
+                dictionary = NEL_CTD_DISEASE_DICT().data
+            elif dictionary_path == "ctd-chemical":
+                dictionary = NEL_CTD_CHEMICAL_DICT().data
+            elif dictionary_path == "ncbi-gene":
+                dictionary = NEL_NCBI_GENE_DICT().data
+            elif dictionary_path == "ncbi-taxonomy":
+                dictionary = NEL_NCBI_TAXONOMY_DICT().data
+            # use custom dictionary file
+            else:
+                dictionary = DictionaryDataset(dictionary_path=dictionary_path).data
             
             # embed dictionary
             dictionary_names = [row[0] for row in dictionary]
