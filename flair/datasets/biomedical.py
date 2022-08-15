@@ -16,6 +16,8 @@ from xmlrpc.client import Boolean
 from datasets import load_dataset
 from flair.data import EntityLinkingLabel, Sentence, SpanLabel
 from flair import cache_root
+import numpy as np
+from string import punctuation
 
 import ftfy
 from lxml import etree
@@ -522,6 +524,525 @@ class HunerDataset(ColumnCorpus, ABC):
             documents={k: dataset.documents[k] for k in ids},
             entities_per_document={k: dataset.entities_per_document[k] for k in ids},
         )
+
+
+class NEL_CTD_DISEASE_DICT:
+    """
+    Dictionary for Named Entity Linking on Diseases
+    """
+    
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine"""
+
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+        
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+        data_folder = base_path / dataset_name
+        dataset_file = data_folder / f"{dataset_name}_parsed.txt"
+
+        # check if there is a parsed_dict file in cache
+        if dataset_file.exists():
+            data = []
+            with open(dataset_file, mode="r", encoding="utf-8") as f:
+                lines = f.readlines()
+                for line in lines:
+                    line = line.strip()
+                    if line == "":
+                        continue
+                    cui, name = line.split("||")
+                    name = name.lower()
+                    data.append((name, cui))
+
+            data = np.array(data)
+            self._dictionary = data
+
+        # if no cached dataset exists, download dataset
+        else:
+            data_file = self.download_dataset(data_folder)
+            data = self.parse_dataset(data_file)
+            # cache dataset
+            with open(dataset_file, "w", encoding="utf-8") as f:
+                for name, cui in data:
+                    f.write(f"{cui}||{name}\n")	
+
+            self._dictionary = data
+            
+    @property
+    def data(self):
+        return self._dictionary
+
+    @classmethod
+    def download_dataset(cls, data_dir: Path) -> Path:
+        data_url = "https://ctdbase.org/reports/CTD_diseases.tsv.gz"
+        data_path = cached_path(data_url, data_dir)
+        unpack_file(data_path, unpack_to=data_dir/"CTD_diseases.tsv")
+
+        return data_dir/"CTD_diseases.tsv"
+
+    @classmethod
+    def parse_dataset(cls, original_file: Path):
+        CTD_DISEASES_COLUMNS = [
+            "symbol",
+            "identifier",
+            "alternative_identifiers",
+            "definition",
+            "parent_identifiers",
+            "tree_numbers",
+            "parent_tree_numbers",
+            "synonyms",
+            "slim_mappings",
+        ]
+
+        with open(original_file, mode="r", encoding="utf-8") as f:
+            data = []
+            # parse every line
+            with open(original_file, mode="r", encoding="utf-8") as f:
+                for line in f:
+
+                    if line.startswith("#"):
+                        continue
+
+                    # parse line
+                    values = line.strip().split("\t")
+                    row = dict(zip(CTD_DISEASES_COLUMNS, values))
+
+                    entries = []
+
+                    original_identifiers = [row["identifier"]]
+
+                    original_identifiers += [
+                        i for i in row.get("alternative_identifiers", "").split("|") if i != ""
+                    ]
+                    identifier = "|".join(original_identifiers)
+
+                    if original_identifiers == "MESH:C":
+                        return None
+
+                    if row.get("symbol") is not None:
+                        entries.append((identifier, row["symbol"]))
+
+                    synonyms = [s for s in row.get("synonyms", "").split("|") if s != ""]
+
+                    for synonym in synonyms:
+                        entries.append((identifier, synonym))
+
+                    # empty entry
+                    if entries == None:
+                        continue
+
+                    # regex for removing punctuation
+                    punctuation_regex = re.compile(r'[\s{}]+'.format(re.escape(punctuation)))
+
+                    for identifier, synonym in entries:
+
+                        # remove punctuation from synoym and make lowercase
+                        synonym = punctuation_regex.split(synonym)
+                        synonym = " ".join(synonym).strip()
+                        synonym = synonym.lower()
+
+                        data.append((synonym, identifier))
+
+            data = np.array(data)
+            return data
+
+
+class NEL_CTD_CHEMICAL_DICT:
+    """
+    Dictionary for Named Entity Linking on Chemicals
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine"""
+
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+        
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+        data_folder = base_path / dataset_name
+        dataset_file = data_folder / f"{dataset_name}_parsed.txt"
+
+        # check if there is a parsed_dict file in cache
+        if dataset_file.exists():
+            data = []
+            with open(dataset_file, mode="r", encoding="utf-8") as f:
+                lines = f.readlines()
+                for line in lines:
+                    line = line.strip()
+                    if line == "":
+                        continue
+                    cui, name = line.split("||")
+                    name = name.lower()
+                    data.append((name, cui))
+
+            self._dictionary = np.array(data)
+
+        # if no cached dataset exists, download dataset
+        else:
+            data_file = self.download_dataset(data_folder)
+            data = self.parse_dataset(data_file)
+            # cache dataset
+            with open(dataset_file, "w", encoding="utf-8") as f:
+                for name, cui in data:
+                    f.write(f"{cui}||{name}\n")		
+
+            self._dictionary = data
+
+    @property
+    def data(self):
+        return self._dictionary
+
+    @classmethod
+    def download_dataset(cls, data_dir: Path) -> Path:
+        data_url = "https://ctdbase.org/reports/CTD_chemicals.tsv.gz"
+        data_path = cached_path(data_url, data_dir)
+        unpack_file(data_path, unpack_to=data_dir/"CTD_chemicals.tsv")
+
+        return data_dir/"CTD_chemicals.tsv"
+
+    @classmethod
+    def parse_dataset(cls, original_file: Path):
+        CTD_CHEMICALS_COLUMNS = [
+            "symbol",
+            "identifier",
+            "casrn",
+            "definition",
+            "parent_identifiers",
+            "tree_numbers",
+            "parent_tree_numbers",
+            "synonyms",
+        ]
+
+        with open(original_file, mode="r", encoding="utf-8") as f:
+            data = []
+            for line in f:
+
+                if line.startswith("#"):
+                    continue
+
+                # parse line
+                values = line.strip().split("\t")
+                row: dict = dict(zip(CTD_CHEMICALS_COLUMNS, values))
+
+                identifier = row["identifier"]
+
+                entries = []
+
+                if row.get("symbol") is not None:
+                    entries.append((identifier, row["symbol"]))
+
+                synonyms = [s for s in row.get("synonyms", "").split("|") if s != ""]
+
+                for synonym in synonyms:
+
+                    if synonym == row.get("symbol"):
+                        continue
+
+                    entries.append((identifier, synonym))
+
+                # regex for removing punctuation
+                punctuation_regex = re.compile(r'[\s{}]+'.format(re.escape(punctuation)))
+
+                for identifier, synonym in entries:
+                    # The MeSH ID below was used by MeSH when this chemical was part of the MeSH controlled vocabulary.
+                    if identifier == "MESH:D013749":
+                        continue
+                    
+                    # remove punctuation from synoym and make lowercase
+                    synonym = punctuation_regex.split(synonym)
+                    synonym = " ".join(synonym).strip()
+                    synonym = synonym.lower()
+                    data.append((synonym, identifier))
+
+            data = np.array(data)
+            return data            
+
+
+class NEL_NCBI_GENE_DICT:
+    """
+    Dictionary for Named Entity Linking on Genes
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine"""
+
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+        
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+        data_folder = base_path / dataset_name
+        dataset_file = data_folder / f"{dataset_name}_parsed.txt"
+
+        # check if there is a parsed_dict file in cache
+        if dataset_file.exists():
+            data = []
+            with open(dataset_file, mode="r", encoding="utf-8") as f:
+                lines = f.readlines()
+                for line in lines:
+                    line = line.strip()
+                    if line == "":
+                        continue
+                    cui, name = line.split("||")
+                    name = name.lower()
+                    data.append((name, cui))
+
+            data = np.array(data)
+            self._dictionary = data
+
+        # if no cached dataset exists, download dataset
+        else:
+            data_file = self.download_dataset(data_folder)
+            data = self.parse_dataset(data_file)
+            # cache dataset
+            with open(dataset_file, "w", encoding="utf-8") as f:
+                for name, cui in data:
+                    f.write(f"{cui}||{name}\n")		
+
+            self._dictionary = data
+
+    @property
+    def data(self):
+        return self._dictionary
+
+    @classmethod
+    def download_dataset(cls, data_dir: Path) -> Path:
+        data_url = "https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz"
+        data_path = cached_path(data_url, data_dir)
+        unpack_file(data_path,  unpack_to=data_dir/"Homo_sapiens.gene_info")
+
+        return data_dir/"Homo_sapiens.gene_info"
+
+    @classmethod
+    def parse_dataset(cls, original_file: Path):
+        NCBI_GENE_SYNONYMS_FIELDS = tuple(
+            [
+                "Symbol_from_nomenclature_authority",
+                "Full_name_from_nomenclature_authority",
+                "description",
+                "Synonyms",
+                "Other_designations",
+            ]
+        )
+
+        with open(original_file, mode="r", encoding="utf-8") as f:
+            data = []
+            header = f.readline()
+            header = header.strip().split("\t")
+            for line in f:
+
+                if line.startswith("#"):
+                    continue
+
+                # parse line
+                values = line.strip().split("\t")
+                row: dict = dict(zip(header, values))
+
+                # parse row
+                entries = []
+                identifier = row["GeneID"]
+                symbol = row["Symbol"]
+
+                if not cls._names_to_skip(symbol):
+                    entries.append((str(identifier), symbol))
+
+                # get synonyms
+                synonyms = set()
+
+                for field in NCBI_GENE_SYNONYMS_FIELDS:
+
+                    names = row.get(field, "-")
+                    if names in ["-", symbol]:
+                        continue
+
+                    names_list = [name.replace("'", "") for name in names.split("|")]
+                    names_list = [n for n in names_list if not cls._names_to_skip(n)]
+
+                    synonyms.update(names_list)
+
+                for name in synonyms:
+                    entries.append((str(identifier), name))
+
+                # regex for removing punctuation
+                punctuation_regex = re.compile(r'[\s{}]+'.format(re.escape(punctuation)))
+
+                for identifier, synonym in entries:
+                    # remove punctuation from synoym and make lowercase
+                    synonym = punctuation_regex.split(synonym)
+                    synonym = " ".join(synonym).strip()
+                    synonym = synonym.lower()
+
+                    data.append((synonym, identifier))
+        
+        data = np.array(data)
+        return data
+
+    @classmethod
+    def _names_to_skip(cls, name: str) -> bool:
+        """
+        Determine if a name should be skipped
+        """
+        UNCHARACTERIZED_PATTERN = re.compile(r"LOC\d")
+        EMPTY_ENTRY_TEXT = [
+            "when different from all specified ones in Gene.",
+            "Record to support submission of GeneRIFs for a gene not in Gene",
+        ]
+
+        newentry = name == "NEWENTRY"
+        empty = name == ""
+        loc = bool(UNCHARACTERIZED_PATTERN.search(name))
+        text_comment = any(e in name for e in EMPTY_ENTRY_TEXT)
+
+        return any([newentry, empty, loc, text_comment])
+
+
+class NEL_NCBI_TAXONOMY_DICT:
+    """
+    Dictionary for Named Entity Linking on Organisms
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine"""
+
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+        
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+        data_folder = base_path / dataset_name
+        dataset_file = data_folder / f"{dataset_name}_parsed.txt"
+
+        # check if there is a parsed_dict file in cache
+        if dataset_file.exists():
+            data = []
+            with open(dataset_file, mode="r", encoding="utf-8") as f:
+                lines = f.readlines()
+                for line in lines:
+                    line = line.strip()
+                    if line == "":
+                        continue
+                    cui, name = line.split("||")
+                    name = name.lower()
+                    data.append((name, cui))
+
+            data = np.array(data)
+            self._dictionary = data
+
+        # if no cached dataset exists, download dataset
+        else:
+            data_file = self.download_dataset(data_folder)
+            data = self.parse_dataset(data_file)
+            # cache dataset
+            with open(dataset_file, "w", encoding="utf-8") as f:
+                for name, cui in data:
+                    f.write(f"{cui}||{name}\n")	
+
+            self._dictionary = data
+
+    @property
+    def data(self):
+        return self._dictionary
+
+    @classmethod
+    def download_dataset(cls, data_dir: Path) -> Path:
+        data_url = "https://ftp.ncbi.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
+        data_path = cached_path(data_url, data_dir)
+        unpack_file(data_path, data_dir)
+
+        return data_dir/"names.dmp"
+
+    @classmethod
+    def parse_dataset(cls, original_file: Path):
+        NCBI_TAXONOMY_SYNONYMS_FIELDS = [
+            "scientific name",
+            "common name",
+            "equivalent name",
+            "synonym",
+            "acronym",
+            "blast name",
+            "genbank",
+            "genbank common name",
+            "genbank synonym",
+            "genbank acronym",
+            "includes",
+        ]
+
+        data = []
+        with open(original_file, mode="r", encoding="utf-8") as f:
+
+            # regex for removing punctuation
+            punctuation_regex = re.compile(r'[\s{}]+'.format(re.escape(punctuation)))
+            
+            curr_identifier = None
+            names = []
+
+            for line in f:
+
+                # parse line
+                parsed_line = {}
+                elements = [e.strip() for e in line.strip().split("|")]
+                parsed_line["identifier"] = elements[0] if elements[2] == "" else elements[2]
+                parsed_line["name"] = elements[1]
+                parsed_line["field"] = elements[3]  #
+
+                if parsed_line["name"] in ["all", "root"]:
+                    continue
+
+                if parsed_line["field"] in ["authority", "in-part"]:
+                    continue
+
+                if parsed_line["field"] not in NCBI_TAXONOMY_SYNONYMS_FIELDS:
+                    raise ValueError(f"Field {parsed_line.field} unknown!")
+
+                if curr_identifier is None:
+                    curr_identifier = parsed_line["identifier"]
+
+                if curr_identifier == parsed_line["identifier"]:
+                    synonym = parsed_line["name"]
+                    names.append(synonym)
+
+                elif curr_identifier != parsed_line["identifier"]:
+
+                    for name in names:
+                        # remove punctuation from synoym and make lowercase
+                        name = punctuation_regex.split(synonym)
+                        name = " ".join(name).strip().lower()
+                        
+                        data.append((name, curr_identifier))
+
+                    curr_identifier = parsed_line["identifier"]
+                    names = []
+                    synonym = parsed_line["name"]
+                    names.append(synonym)
+
+        data = np.array(data)
+        return data
 
 
 class BIO_INFER(ColumnCorpus):
