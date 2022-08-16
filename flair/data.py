@@ -1511,12 +1511,22 @@ class Corpus:
 
 
 class MultiCorpus(Corpus):
-    def __init__(self, corpora: List[Corpus], ids: List[str], name: str = "multicorpus", **corpusargs):
+    def __init__(
+        self,
+        corpora: List[Corpus],
+        task_ids: Optional[List[str]] = None,
+        name: str = "multicorpus",
+        **corpusargs,
+    ):
+
         self.corpora: List[Corpus] = corpora
+
+        ids = task_ids if task_ids else [f"Task_{i}" for i in range(len(corpora))]
 
         train_parts = []
         dev_parts = []
         test_parts = []
+        print(self.corpora)
         for corpus in self.corpora:
             if corpus.train:
                 train_parts.append(corpus.train)

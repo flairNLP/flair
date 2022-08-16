@@ -3,16 +3,14 @@ import random
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
-from torch.utils.data.dataset import Dataset
-
 import flair.nn
-from flair.data import Dictionary, MultiCorpus, Sentence
+from flair.data import Sentence
 from flair.training_utils import Result
 
 log = logging.getLogger("flair")
 
 
-class MultitaskModel(flair.nn.Model):
+class MultitaskModel(flair.nn.Classifier):
     """
     Multitask Model class which acts as wrapper for creating custom multitask models.
     Takes different tasks as input, parameter sharing is done by objects in flair,
@@ -22,18 +20,19 @@ class MultitaskModel(flair.nn.Model):
     model.
     """
 
-    def __init__(self, models: List, task_ids: List = None):
+    def __init__(self, models: List[flair.nn.Classifier], task_ids: Optional[List[str]] = None):
         """
         :param models: Key (Task ID) - Value (flair.nn.Model) Pairs to stack model
         """
         super(MultitaskModel, self).__init__()
 
-        self.tasks = list()
+        task_ids_internal: List[str] = task_ids if task_ids else [f"Task_{i}" for i in range(len(models))]
+
+        self.tasks: Dict[str, flair.nn.Classifier] = {}
         label_types = dict()
-        for task_id, model in zip(task_ids, models):
+        for task_id, model in zip(task_ids_internal, models):
             self.add_module(task_id, model)
-            # self.__setattr__(task_id, model)
-            self.tasks.append(task_id)
+            self.tasks[task_id] = model
             label_types[task_id] = model.label_type
         self._label_type = label_types
         self.to(flair.device)
@@ -48,11 +47,19 @@ class MultitaskModel(flair.nn.Model):
         batch_split = self.split_batch_to_task_ids(sentences)
         loss = 0
         count = 0
-        for model, split in batch_split.items():
-            task_loss, task_count = self.__getattr__(model).forward_loss([sentences[i] for i in split])
+        for task_id, split in batch_split.items():
+            task_loss, task_count = self.tasks[task_id].forward_loss([sentences[i] for i in split])
             loss += task_loss
             count += task_count
         return loss, count
+
+    def predict(
+        self,
+        sentences,
+        **predictargs,
+    ):
+        for task_id in self.tasks.keys():
+            self.tasks[task_id].predict(sentences, **predictargs)
 
     @staticmethod
     def split_batch_to_task_ids(sentences: Union[List[Sentence], Sentence]) -> Dict:
@@ -73,16 +80,11 @@ class MultitaskModel(flair.nn.Model):
 
     def evaluate(
         self,
-        data_points: Union[List[Sentence], Dataset],
+        data_points,
         gold_label_type: str,
         out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: int = 8,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
-        gold_label_dictionary: Optional[Dictionary] = None,
-        return_loss: bool = True,
+        **evalargs,
     ) -> Result:
         """
         :param sentences: batch of sentences
@@ -98,22 +100,16 @@ class MultitaskModel(flair.nn.Model):
         loss = 0
         main_score = 0
         all_detailed_results = ""
-        for task, split in batch_split.items():
-            result = self.__getattr__(task).evaluate(
+
+        for task_id, split in batch_split.items():
+            result = self.tasks[task_id].evaluate(
                 data_points=[data_points[i] for i in split],
-                gold_label_type=gold_label_type[task],
-                out_path=f"{out_path}_{task}.txt",
-                embedding_storage_mode=embedding_storage_mode,
-                mini_batch_size=mini_batch_size,
-                num_workers=num_workers,
-                main_evaluation_metric=main_evaluation_metric,
-                exclude_labels=exclude_labels,
-                gold_label_dictionary=gold_label_dictionary,
-                return_loss=return_loss,
+                gold_label_type=gold_label_type[task_id],
+                out_path=f"{out_path}_{task_id}.txt",
             )
 
             log.info(
-                f"{task} - {self.__getattr__(task)._get_name()} - "
+                f"{task_id} - {self.tasks[task_id]._get_name()} - "
                 f"loss: {result.loss} - {main_evaluation_metric[1]} "
                 f"({main_evaluation_metric[0]})  {round(result.main_score, 4)}"
             )
@@ -123,10 +119,10 @@ class MultitaskModel(flair.nn.Model):
             all_detailed_results += (
                 50 * "-"
                 + "\n\n"
-                + task
+                + task_id
                 + " - "
                 + "Label type: "
-                + self.label_type.get(task)
+                + self.label_type.get(task_id)
                 + "\n\n"
                 + result.detailed_results
             )
@@ -159,13 +155,15 @@ class MultitaskModel(flair.nn.Model):
         """
         Initializes the model based on given state dict.
         """
-        models = {}
+        models = []
+        tasks = []
 
         for task, task_state in state.items():
             if task != "model_card":
-                models[task] = task_state["class"]._init_model_with_state_dict(task_state["state_dict"])
+                models.append(task_state["class"]._init_model_with_state_dict(task_state["state_dict"]))
+                tasks.append(task)
 
-        model = MultitaskModel(models=models)
+        model = MultitaskModel(models=models, task_ids=tasks)
         return model
 
     @property

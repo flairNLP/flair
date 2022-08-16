@@ -513,20 +513,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         multi_label: bool = False,
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
-        loss_factor: float = 1.0,
         decoder: Optional[torch.nn.Module] = None,
-        inverse_model: bool = False,
+        inverse_model: Union[bool, float] = False,
     ):
 
         super().__init__()
 
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
-
-        if inverse_model:
-            from pytorch_revgrad import RevGrad
-
-            self.gradient_reversal = RevGrad()
 
         # initialize the decoder
         if decoder is not None:
@@ -541,7 +535,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         self.multi_label = multi_label
         self.multi_label_threshold = multi_label_threshold
         self.inverse_model = inverse_model
-        self.loss_factor = loss_factor
 
         # init dropouts
         self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
@@ -549,6 +542,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         self.word_dropout = flair.nn.WordDropout(word_dropout)
 
         # loss weights and loss function
+        self.loss_factor = 1.0
         self.weight_dict = loss_weights
         # Initialize the weight tensor
         if loss_weights is not None:
@@ -561,10 +555,19 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         else:
             self.loss_weights = None
 
+        # set up gradient reversal if so specified
+        if inverse_model:
+            from pytorch_revgrad import RevGrad
+
+            self.gradient_reversal = RevGrad()
+            # if inverse model is a float, use it as a loss factor
+            if type(inverse_model) == float:
+                self.loss_factor = inverse_model
+
         if self.multi_label:
             self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
         else:
-            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction='sum')
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
 
     def forward_pass(
         self,
@@ -643,7 +646,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 device=flair.device,
             )
 
-        loss = self.loss_function(scores, labels)
+        loss = self.loss_factor * self.loss_function(scores, labels)
         return loss, len(labels)
 
     def _sort_data(self, data_points: List[DT]) -> List[DT]:
@@ -795,6 +798,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             "multi_label",
             "multi_label_threshold",
             "loss_weights",
+            "inverse_model",
         ]:
             if arg not in kwargs and arg in state:
                 kwargs[arg] = state[arg]
@@ -811,6 +815,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         state["multi_label"] = self.multi_label
         state["multi_label_threshold"] = self.multi_label_threshold
         state["loss_weights"] = self.loss_weights
+        state["inverse_model"] = self.inverse_model
         if self._custom_decoder:
             state["decoder"] = self.decoder
 
