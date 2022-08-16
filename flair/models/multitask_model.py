@@ -20,7 +20,12 @@ class MultitaskModel(flair.nn.Classifier):
     model.
     """
 
-    def __init__(self, models: List[flair.nn.Classifier], task_ids: Optional[List[str]] = None):
+    def __init__(
+        self,
+        models: List[flair.nn.Classifier],
+        task_ids: Optional[List[str]] = None,
+        loss_factors: Optional[List[float]] = None,
+    ):
         """
         :param models: Key (Task ID) - Value (flair.nn.Model) Pairs to stack model
         """
@@ -29,10 +34,16 @@ class MultitaskModel(flair.nn.Classifier):
         task_ids_internal: List[str] = task_ids if task_ids else [f"Task_{i}" for i in range(len(models))]
 
         self.tasks: Dict[str, flair.nn.Classifier] = {}
+        self.loss_factors: Dict[str, float] = {}
+
+        if not loss_factors:
+            loss_factors = [1.0] * len(models)
+
         label_types = dict()
-        for task_id, model in zip(task_ids_internal, models):
+        for task_id, model, loss_factor in zip(task_ids_internal, models, loss_factors):
             self.add_module(task_id, model)
             self.tasks[task_id] = model
+            self.loss_factors[task_id] = loss_factor
             label_types[task_id] = model.label_type
         self._label_type = label_types
         self.to(flair.device)
@@ -49,7 +60,7 @@ class MultitaskModel(flair.nn.Classifier):
         count = 0
         for task_id, split in batch_split.items():
             task_loss, task_count = self.tasks[task_id].forward_loss([sentences[i] for i in split])
-            loss += task_loss
+            loss += self.loss_factors[task_id] * task_loss
             count += task_count
         return loss, count
 

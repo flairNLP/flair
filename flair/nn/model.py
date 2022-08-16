@@ -514,7 +514,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
         decoder: Optional[torch.nn.Module] = None,
-        inverse_model: Union[bool, float] = False,
+        inverse_model: bool = False,
     ):
 
         super().__init__()
@@ -542,7 +542,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         self.word_dropout = flair.nn.WordDropout(word_dropout)
 
         # loss weights and loss function
-        self.loss_factor = 1.0
         self.weight_dict = loss_weights
         # Initialize the weight tensor
         if loss_weights is not None:
@@ -560,9 +559,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             from pytorch_revgrad import RevGrad
 
             self.gradient_reversal = RevGrad()
-            # if inverse model is a float, use it as a loss factor
-            if type(inverse_model) == float:
-                self.loss_factor = inverse_model
 
         if self.multi_label:
             self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
@@ -646,7 +642,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 device=flair.device,
             )
 
-        loss = self.loss_factor * self.loss_function(scores, labels)
+        loss = self.loss_function(scores, labels)
         return loss, len(labels)
 
     def _sort_data(self, data_points: List[DT]) -> List[DT]:
