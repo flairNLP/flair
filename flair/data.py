@@ -1174,7 +1174,7 @@ class Image(DataPoint):
         pass
 
 
-class Corpus:
+class Corpus(typing.Generic[T_co]):
     def __init__(
         self,
         train: Optional[Dataset[T_co]] = None,
