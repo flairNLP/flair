@@ -441,6 +441,20 @@ def test_transformers_keep_tokenizer_when_saving(results_base_path):
     reloaded_tagger.save(reloaded_tagger_path)
 
 
+def test_transformers_keep_tokenizer_bloom_when_saving(results_base_path):
+    embeddings = TransformerWordEmbeddings("Muennighoff/bloom-tiny-random")
+    results_base_path.mkdir(exist_ok=True, parents=True)
+    initial_tagger_path = results_base_path / "initial_tokenizer.pk"
+    reloaded_tagger_path = results_base_path / "reloaded_tokenizer.pk"
+
+    initial_tagger = SequenceTagger(embeddings, Dictionary(), "ner")
+
+    initial_tagger.save(initial_tagger_path)
+    reloaded_tagger = SequenceTagger.load(initial_tagger_path)
+
+    reloaded_tagger.save(reloaded_tagger_path)
+
+
 def test_transformer_subword_token_mapping():
     sentence = Sentence("El pasto es verde.")
     embeddings = TransformerWordEmbeddings("PlanTL-GOB-ES/roberta-base-biomedical-es", layers="-1")
