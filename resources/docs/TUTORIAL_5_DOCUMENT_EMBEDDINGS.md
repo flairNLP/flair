@@ -43,6 +43,8 @@ document_embeddings = DocumentPoolEmbeddings([glove_embedding])
 Now, create an example sentence and call the embedding's `embed()` method.
 
 ```python
+from flair.data import Sentence
+
 # create an example sentence
 sentence = Sentence('The grass is green . And the sky is blue .')
 

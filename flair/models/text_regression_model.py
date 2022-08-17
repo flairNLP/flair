@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 import flair
 import flair.embeddings
-from flair.data import Sentence
+from flair.data import Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.training_utils import MetricRegression, Result, store_embeddings
 
@@ -147,6 +147,10 @@ class TextRegressor(flair.nn.Model[Sentence]):
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
         num_workers: Optional[int] = 8,
+        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        exclude_labels: List[str] = [],
+        gold_label_dictionary: Optional[Dictionary] = None,
+        return_loss: bool = True,
         **kwargs,
     ) -> Result:
 
