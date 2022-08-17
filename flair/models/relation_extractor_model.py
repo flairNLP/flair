@@ -21,6 +21,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         entity_label_type: str,
         entity_pair_filters: List[Tuple[str, str]] = None,
         pooling_operation: str = "first_last",
+        train_on_gold_pairs_only: bool = False,
         **classifierargs,
     ):
         """
@@ -29,6 +30,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         :param label_dictionary: dictionary of labels you want to predict
         :param beta: Parameter for F-beta score for evaluation and training annealing
         :param loss_weights: Dictionary of weights for labels for the loss function
+        :param train_on_gold_pairs_only: Set true to not train to predict no relation.
         (if any label's weight is unspecified it will default to 1.0)
         """
 
@@ -45,6 +47,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         # set relation and entity label types
         self._label_type = label_type
         self.entity_label_type = entity_label_type
+        self.train_on_gold_pairs_only = train_on_gold_pairs_only
 
         # whether to use gold entity pairs, and whether to filter entity pairs by type
         if entity_pair_filters is not None:
@@ -138,6 +141,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
             "weight_dict": self.weight_dict,
             "pooling_operation": self.pooling_operation,
             "entity_pair_filters": self.entity_pair_filters,
+            "train_on_gold_pairs_only": self.train_on_gold_pairs_only,
         }
         return model_state
 
@@ -153,6 +157,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
             loss_weights=state.get("weight_dict"),
             pooling_operation=state.get("pooling_operation"),
             entity_pair_filters=state.get("entity_pair_filters"),
+            train_on_gold_pairs_only=state.get("train_on_gold_pairs_only", False),
             **kwargs,
         )
 
