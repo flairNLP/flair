@@ -24,3 +24,4 @@ conllu>=4.0
 more-itertools
 wikipedia-api
 pptree
+pytorch_revgrad

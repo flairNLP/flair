@@ -51,6 +51,10 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
         num_workers: Optional[int] = 8,
+        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        exclude_labels: List[str] = [],
+        gold_label_dictionary: Optional[Dictionary] = None,
+        return_loss: bool = True,
         **kwargs,
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
@@ -197,6 +201,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
+        return_loss: bool = True,
         **kwargs,
     ) -> Result:
         import numpy as np
@@ -238,14 +243,15 @@ class Classifier(Model[DT], typing.Generic[DT]):
                     embedding_storage_mode=embedding_storage_mode,
                     mini_batch_size=mini_batch_size,
                     label_name="predicted",
-                    return_loss=True,
+                    return_loss=return_loss,
                 )
 
-                if isinstance(loss_and_count, tuple):
-                    average_over += loss_and_count[1]
-                    eval_loss += loss_and_count[0]
-                else:
-                    eval_loss += loss_and_count
+                if return_loss:
+                    if isinstance(loss_and_count, tuple):
+                        average_over += loss_and_count[1]
+                        eval_loss += loss_and_count[0]
+                    else:
+                        eval_loss += loss_and_count
 
                 # get the gold labels
                 for datapoint in batch:
@@ -510,6 +516,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         multi_label_threshold: float = 0.5,
         loss_weights: Dict[str, float] = None,
         decoder: Optional[torch.nn.Module] = None,
+        inverse_model: bool = False,
     ):
 
         super().__init__()
@@ -529,6 +536,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         # set up multi-label logic
         self.multi_label = multi_label
         self.multi_label_threshold = multi_label_threshold
+        self.inverse_model = inverse_model
 
         # init dropouts
         self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
@@ -548,10 +556,16 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         else:
             self.loss_weights = None
 
+        # set up gradient reversal if so specified
+        if inverse_model:
+            from pytorch_revgrad import RevGrad
+
+            self.gradient_reversal = RevGrad()
+
         if self.multi_label:
             self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
         else:
-            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
 
     def forward_pass(
         self,
@@ -598,10 +612,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         embedded_data_points = self.word_dropout(embedded_data_points)
         embedded_data_points = embedded_data_points.squeeze(1)
 
+        if self.inverse_model:
+            embedded_data_points = self.gradient_reversal(embedded_data_points)
+
         # push embedded_data_points through decoder to get the scores
         scores = self.decoder(embedded_data_points)
 
-        # calculate the loss
         return self._calculate_loss(scores, labels)
 
     def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
@@ -628,7 +644,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 device=flair.device,
             )
 
-        return self.loss_function(scores, labels), len(labels)
+        loss = self.loss_function(scores, labels)
+        return loss, len(labels)
 
     def _sort_data(self, data_points: List[DT]) -> List[DT]:
 
@@ -779,6 +796,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             "multi_label",
             "multi_label_threshold",
             "loss_weights",
+            "inverse_model",
         ]:
             if arg not in kwargs and arg in state:
                 kwargs[arg] = state[arg]
@@ -795,6 +813,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         state["multi_label"] = self.multi_label
         state["multi_label_threshold"] = self.multi_label_threshold
         state["loss_weights"] = self.loss_weights
+        state["inverse_model"] = self.inverse_model
         if self._custom_decoder:
             state["decoder"] = self.decoder
 
