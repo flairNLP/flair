@@ -1575,9 +1575,9 @@ class ConcatFlairDataset(Dataset):
     def cumsum(sequence):
         r, s = [], 0
         for e in sequence:
-            l = len(e)
-            r.append(l + s)
-            s += l
+            length_of_e = len(e)
+            r.append(length_of_e + s)
+            s += length_of_e
         return r
 
     def __init__(self, datasets: Iterable[Dataset], ids: Iterable[str]) -> None:

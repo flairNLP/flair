@@ -58,7 +58,7 @@ class MultitaskModel(flair.nn.Classifier):
         :return: loss
         """
         batch_split = self.split_batch_to_task_ids(sentences)
-        loss = torch.tensor(0.0)
+        loss = torch.tensor(0.0, device=flair.device)
         count = 0
         for task_id, split in batch_split.items():
             task_loss, task_count = self.tasks[task_id].forward_loss([sentences[i] for i in split])
@@ -116,7 +116,7 @@ class MultitaskModel(flair.nn.Classifier):
 
         batch_split = self.split_batch_to_task_ids(data_points)
 
-        loss = torch.tensor(0.0)
+        loss = torch.tensor(0.0, device=flair.device)
         main_score = 0.0
         all_detailed_results = ""
 
