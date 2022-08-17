@@ -27,7 +27,7 @@ from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
 
 import flair
 import flair.nn
-from flair.data import Corpus, Dictionary, MultiCorpus, _len_dataset
+from flair.data import Corpus, Dictionary, _len_dataset
 from flair.datasets import DataLoader
 from flair.optim import ExpAnnealLR, LinearSchedulerWithWarmup
 from flair.training_utils import (

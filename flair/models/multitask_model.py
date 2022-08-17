@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import flair.nn
-from flair.data import Sentence
+from flair.data import Dictionary, Sentence
 from flair.training_utils import Result
 
 log = logging.getLogger("flair")
@@ -83,10 +83,10 @@ class MultitaskModel(flair.nn.Classifier):
         batch_to_task_mapping = {}
         for sentence_id, sentence in enumerate(sentences):
             multitask_id = random.choice(sentence.get_labels("multitask_id"))
-            if not multitask_id.value in batch_to_task_mapping:
-                batch_to_task_mapping[multitask_id.value] = [sentence_id]
-            elif multitask_id.value in batch_to_task_mapping:
+            if multitask_id.value in batch_to_task_mapping:
                 batch_to_task_mapping[multitask_id.value].append(sentence_id)
+            elif multitask_id.value not in batch_to_task_mapping:
+                batch_to_task_mapping[multitask_id.value] = [sentence_id]
         return batch_to_task_mapping
 
     def evaluate(
@@ -94,7 +94,13 @@ class MultitaskModel(flair.nn.Classifier):
         data_points,
         gold_label_type: str,
         out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
+        mini_batch_size: int = 32,
+        num_workers: Optional[int] = 8,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        exclude_labels: List[str] = [],
+        gold_label_dictionary: Optional[Dictionary] = None,
+        return_loss: bool = True,
         **evalargs,
     ) -> Result:
         """
@@ -117,6 +123,14 @@ class MultitaskModel(flair.nn.Classifier):
                 data_points=[data_points[i] for i in split],
                 gold_label_type=gold_label_type[task_id],
                 out_path=f"{out_path}_{task_id}.txt",
+                embedding_storage_mode=embedding_storage_mode,
+                mini_batch_size=mini_batch_size,
+                num_workers=mini_batch_size,
+                main_evaluation_metric=main_evaluation_metric,
+                exclude_labels=exclude_labels,
+                gold_label_dictionary=gold_label_dictionary,
+                return_loss=return_loss,
+                **evalargs,
             )
 
             log.info(

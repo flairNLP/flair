@@ -1,6 +1,5 @@
 import itertools
 import logging
-import random
 import typing
 import warnings
 from abc import abstractmethod
@@ -52,7 +51,10 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
         num_workers: Optional[int] = 8,
-        return_loss=True,
+        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        exclude_labels: List[str] = [],
+        gold_label_dictionary: Optional[Dictionary] = None,
+        return_loss: bool = True,
         **kwargs,
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
