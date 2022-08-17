@@ -3,6 +3,8 @@ import random
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
+import torch
+
 import flair.nn
 from flair.data import Dictionary, Sentence
 from flair.training_utils import Result
@@ -56,7 +58,7 @@ class MultitaskModel(flair.nn.Classifier):
         :return: loss
         """
         batch_split = self.split_batch_to_task_ids(sentences)
-        loss = 0
+        loss = torch.tensor(0.0)
         count = 0
         for task_id, split in batch_split.items():
             task_loss, task_count = self.tasks[task_id].forward_loss([sentences[i] for i in split])
@@ -80,7 +82,7 @@ class MultitaskModel(flair.nn.Classifier):
         :param sentences: batch of sentences
         :return: Key-value pairs as (task_id, list of sentences ids in batch)
         """
-        batch_to_task_mapping = {}
+        batch_to_task_mapping: Dict[str, List[int]] = {}
         for sentence_id, sentence in enumerate(sentences):
             multitask_id = random.choice(sentence.get_labels("multitask_id"))
             if multitask_id.value in batch_to_task_mapping:
@@ -114,8 +116,8 @@ class MultitaskModel(flair.nn.Classifier):
 
         batch_split = self.split_batch_to_task_ids(data_points)
 
-        loss = 0
-        main_score = 0
+        loss = torch.tensor(0.0)
+        main_score = 0.0
         all_detailed_results = ""
 
         for task_id, split in batch_split.items():
@@ -152,7 +154,7 @@ class MultitaskModel(flair.nn.Classifier):
                 + result.detailed_results
             )
 
-        result.loss = loss / len(batch_split)
+        result.loss = loss.item() / len(batch_split)
         result.main_score = main_score / len(batch_split)
 
         # the detailed result is the combination of all detailed results
