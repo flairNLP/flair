@@ -21,7 +21,15 @@ import torch
 from torch.utils.data.dataset import ConcatDataset, Dataset
 
 import flair
-from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token, DT, DT2
+from flair.data import (
+    Corpus,
+    Dictionary,
+    Label,
+    Relation,
+    Sentence,
+    Span,
+    Token,
+)
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import DocumentEmbeddings, Embeddings
 from flair.tokenization import SpaceTokenizer
@@ -51,7 +59,7 @@ class _Entity(NamedTuple):
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
 #  - MaskedRelationClassifier ?
 #   This depends if this relation classification architecture should replace or offer as an alternative.
-class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, Relation]):
+class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSentence]):
     """
     ---- Task ----
     Relation Classification (RC) is the task of identifying the semantic relation between two entities in a text.
@@ -446,7 +454,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, Relation]):
 
     def _get_prediction_data_points(self, sentences: List[EncodedSentence]) -> List[EncodedSentence]:
 
-        # # Ensure that all sentences are encoded properly
+        # Ensure that all sentences are encoded properly
         if any(not isinstance(sentence, EncodedSentence) for sentence in sentences):
             raise ValueError(
                 "Some of the passed sentences are not encoded "
