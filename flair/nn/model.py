@@ -14,8 +14,9 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DT, DataPoint, Dictionary, Sentence
+from flair.data import DT, DT2, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
+from flair.embeddings import Embeddings
 from flair.file_utils import Tqdm
 from flair.training_utils import Result, store_embeddings
 
@@ -37,7 +38,17 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         raise NotImplementedError
 
     @abstractmethod
-    def forward_loss(self, data_points: Union[List[DT], DT]) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
+    def forward(self, *args: torch.Tensor) -> torch.Tensor:
+        """Performs a forward pass on input tensors for backpropagation or prediction."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
+        """Creates the input tensors that will be passed trough the forward call."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def forward_loss(self, data_points: List[DT]) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
         """Performs a forward pass and returns a loss tensor for backpropagation.
         Implement this to enable training."""
         raise NotImplementedError
@@ -495,14 +506,13 @@ class Classifier(Model[DT], typing.Generic[DT]):
         return lines
 
 
-class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
+class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
     """Default base class for all Flair models that do classification, both
     single- and multi-label. It inherits from flair.nn.Classifier and thus from
     flair.nn.Model. All features shared by all classifiers are implemented here,
     including the loss calculation and the predict() method. Currently, the
     TextClassifier, RelationExtractor, TextPairClassifier and
-    SimpleSequenceTagger implement this class. You only need to implement the
-    forward_pass() method to implement this base class.
+    SimpleSequenceTagger implement this class.
     """
 
     def __init__(
@@ -517,6 +527,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         loss_weights: Dict[str, float] = None,
         decoder: Optional[torch.nn.Module] = None,
         inverse_model: bool = False,
+        train_on_gold_pairs_only: bool = False,
     ):
 
         super().__init__()
@@ -536,6 +547,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         # set up multi-label logic
         self.multi_label = multi_label
         self.multi_label_threshold = multi_label_threshold
+        self.final_embedding_size = final_embedding_size
         self.inverse_model = inverse_model
 
         # init dropouts
@@ -566,21 +578,74 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+        self.train_on_gold_pairs_only = train_on_gold_pairs_only
 
-    def forward_pass(
+    def _filter_data_point(self, data_point: DT) -> bool:
+        """Specify if a data point should be kept. That way you can remove for example empty texts.
+        Return true if the data point should be kept and false if it should be removed.
+        """
+        return True
+
+    @abstractmethod
+    def _embed_prediction_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
+        raise NotImplementedError()
+
+    @property
+    def _inner_embeddings(self) -> Optional[Embeddings[DT]]:
+        return None
+
+    def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
+        filtered_data_points = [dt for dt in data_points if self._filter_data_point(dt)]
+        if not filtered_data_points:
+            return (torch.zeros(0, self.final_embedding_size, device=flair.device),)
+        if self._inner_embeddings is not None:
+            self._inner_embeddings.embed(filtered_data_points)
+        embedding_list = []
+        for prediction_data_point in self._get_prediction_data_points(filtered_data_points):
+            embedding_list.append(self._embed_prediction_data_point(prediction_data_point).unsqueeze(0))
+
+        embedded_data_pairs = torch.cat(embedding_list, 0)
+
+        return (embedded_data_pairs,)
+
+    def _transform_embeddings(
         self,
-        sentences: Union[List[DT], DT],
-        for_prediction: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], Sequence[DataPoint]]]:
-        """This method does a forward pass through the model given a list of data
-        points as input.
-        Returns the tuple (embeddings, labels) if return_label_candidates = False,
-        where scores are a tensor of logits produced by the decoder and labels
-        are the string labels for each data point.
-        Returns the tuple (embeddings, labels, data_points) if return_label_candidates = True,
-        where data_points are the data points to which labels are added (commonly
-        either Sentence, Span or Token objects)."""
+        *args: torch.Tensor,
+    ) -> torch.Tensor:
+        """This method does applies a transformation through the model given a list of tensors as input.
+        Returns the embeddings that will ran trough a linear decoder layer to calculate logits.
+
+        If it is not overwritten, it will act as identity function for of the first tensor.
+        """
+        return args[0]
+
+    def forward(self, *args: torch.Tensor) -> torch.Tensor:
+        emb = self._transform_embeddings(*args)
+        emb = emb.unsqueeze(1)
+        emb = self.dropout(emb)
+        emb = self.locked_dropout(emb)
+        emb = self.word_dropout(emb)
+        emb = emb.squeeze(1)
+
+        if self.inverse_model:
+            emb = self.gradient_reversal(emb)
+
+        scores = self.decoder(emb)
+        return scores
+
+    @abstractmethod
+    def _get_prediction_data_points(self, sentences: List[DT]) -> List[DT2]:
+        """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
         raise NotImplementedError
+
+    def _get_label_of_datapoint(self, data_point: DT2) -> List[str]:
+        """Extracts the labels from the data points.
+        Each data point might return a list of strings, representing multiple labels.
+        """
+        if self.multi_label:
+            return [label.value for label in data_point.get_labels(self.label_type)]
+        else:
+            return [data_point.get_label(self.label_type).value]
 
     @property
     def multi_label_threshold(self):
@@ -596,34 +661,18 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         else:
             self._multi_label_threshold = {"default": x}
 
-    def forward_loss(self, sentences: Union[List[DT], DT]) -> Tuple[torch.Tensor, int]:
+    def get_scores_and_labels(self, batch: List[DT]) -> Tuple[torch.Tensor, List[List[str]]]:
+        batch = [dp for dp in batch if self._filter_data_point(dp)]
+        predict_data_points = self._get_prediction_data_points(batch)
+        labels = [self._get_label_of_datapoint(pdp) for pdp in predict_data_points]
+        embedded_tensor = self._prepare_tensors(batch)
+        logits = self._transform_embeddings(*embedded_tensor)
+        return logits, labels
 
-        # make a forward pass to produce embedded data points and labels
-        embedded_data_points, labels = self.forward_pass(sentences)  # type: ignore
-
-        # no loss can be calculated if there are no labels
-        if not any(labels):
-            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
-
-        # use dropout
-        embedded_data_points = embedded_data_points.unsqueeze(1)
-        embedded_data_points = self.dropout(embedded_data_points)
-        embedded_data_points = self.locked_dropout(embedded_data_points)
-        embedded_data_points = self.word_dropout(embedded_data_points)
-        embedded_data_points = embedded_data_points.squeeze(1)
-
-        if self.inverse_model:
-            embedded_data_points = self.gradient_reversal(embedded_data_points)
-
-        # push embedded_data_points through decoder to get the scores
-        scores = self.decoder(embedded_data_points)
-
-        return self._calculate_loss(scores, labels)
-
-    def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
-
+    def _prepare_label_tensor(self, prediction_data_points: List[DT2]) -> torch.Tensor:
+        labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points]
         if self.multi_label:
-            labels = torch.tensor(
+            return torch.tensor(
                 [
                     [1 if label in all_labels_for_point else 0 for label in self.label_dictionary.get_items()]
                     for all_labels_for_point in labels
@@ -631,9 +680,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 dtype=torch.float,
                 device=flair.device,
             )
-
         else:
-            labels = torch.tensor(
+            return torch.tensor(
                 [
                     self.label_dictionary.get_idx_for_item(label[0])
                     if len(label) > 0
@@ -644,8 +692,25 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
                 device=flair.device,
             )
 
-        loss = self.loss_function(scores, labels)
-        return loss, len(labels)
+    def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
+
+        # make a forward pass to produce embedded data points and labels
+        sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
+        predict_data_points = self._get_prediction_data_points(sentences)
+        labels = self._prepare_label_tensor(predict_data_points)
+
+        # no loss can be calculated if there are no labels
+        if labels.size(0) == 0:
+            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+
+        embedded_tensor = self._prepare_tensors(sentences)
+        scores = self.forward(*embedded_tensor)
+
+        # calculate the loss
+        return self._calculate_loss(scores, labels)
+
+    def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
+        return self.loss_function(scores, labels), labels.size(0)
 
     def _sort_data(self, data_points: List[DT]) -> List[DT]:
 
@@ -659,7 +724,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         sentences = [sentence for sentence in typing.cast(List[Sentence], data_points) if len(sentence) > 0]
 
         # reverse sort all sequences by their length
-        reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
+        reordered_sentences = sorted(sentences, key=len, reverse=True)
 
         return typing.cast(List[DT], reordered_sentences)
 
@@ -699,7 +764,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             if len(reordered_sentences) == 0:
                 return sentences
 
-            if len(sentences) > mini_batch_size:
+            if len(reordered_sentences) > mini_batch_size:
                 batches: Union[DataLoader, List[List[DT]]] = DataLoader(
                     dataset=FlairDatapointDataset(reordered_sentences),
                     batch_size=mini_batch_size,
@@ -715,22 +780,30 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
             for batch in batches:
+
+                batch = [dp for dp in batch if self._filter_data_point(dp)]
+
                 # stop if all sentences are empty
                 if not batch:
                     continue
 
-                embedded_data_points, gold_labels, data_points = self.forward_pass(  # type: ignore
-                    batch, for_prediction=True
-                )
+                data_points = self._get_prediction_data_points(batch)
+
+                if not data_points:
+                    continue
+
+                tensors = self._prepare_tensors(batch)
+
+                scores = self.forward(*tensors)
+
                 # if anything could possibly be predicted
                 if len(data_points) > 0:
-                    scores = self.decoder(embedded_data_points)
-
                     # remove previously predicted labels of this type
-                    for data_point in data_points:
-                        data_point.remove_labels(label_name)
+                    for sentence in data_points:
+                        sentence.remove_labels(label_name)
 
                     if return_loss:
+                        gold_labels = self._prepare_label_tensor(data_points)
                         overall_loss += self._calculate_loss(scores, gold_labels)[0]
                         label_count += len(data_points)
 
@@ -796,6 +869,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
             "multi_label",
             "multi_label_threshold",
             "loss_weights",
+            "train_on_gold_pairs_only",
             "inverse_model",
         ]:
             if arg not in kwargs and arg in state:
@@ -813,6 +887,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
         state["multi_label"] = self.multi_label
         state["multi_label_threshold"] = self.multi_label_threshold
         state["loss_weights"] = self.loss_weights
+        state["train_on_gold_pairs_only"] = self.train_on_gold_pairs_only
         state["inverse_model"] = self.inverse_model
         if self._custom_decoder:
             state["decoder"] = self.decoder

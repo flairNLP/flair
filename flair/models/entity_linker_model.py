@@ -1,16 +1,17 @@
 import logging
-from typing import List, Union
+from typing import Callable, Dict, List
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Dictionary, Sentence
+from flair.data import Dictionary, Sentence, Span
+from flair.embeddings import Embeddings
 
 log = logging.getLogger("flair")
 
 
-class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
+class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     """
     Entity Linking Model
     The model expects text/sentences with annotated entity mentions and predicts entities to these mentions.
@@ -48,7 +49,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
         self.pooling_operation = pooling_operation
         self._label_type = label_type
 
-        cases = {
+        cases: Dict[str, Callable[[Span, List[str]], torch.Tensor]] = {
             "average": self.emb_mean,
             "first": self.emb_first,
             "last": self.emb_last,
@@ -62,75 +63,35 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
         self.to(flair.device)
 
-    def emb_first(self, arg):
-        return arg[0]
+    def emb_first(self, span: Span, embedding_names):
+        return span.tokens[0].get_embedding(embedding_names)
 
-    def emb_last(self, arg):
-        return arg[-1]
+    def emb_last(self, span: Span, embedding_names):
+        return span.tokens[-1].get_embedding(embedding_names)
 
-    def emb_firstAndLast(self, arg):
-        return torch.cat((arg[0], arg[-1]), 0)
+    def emb_firstAndLast(self, span: Span, embedding_names):
+        return torch.cat(
+            (span.tokens[0].get_embedding(embedding_names), span.tokens[-1].get_embedding(embedding_names)), 0
+        )
 
-    def emb_mean(self, arg):
-        return torch.mean(arg, 0)
+    def emb_mean(self, span, embedding_names):
+        return torch.mean(torch.cat([token.get_embedding(embedding_names) for token in span], 0), 0)
 
-    def forward_pass(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        for_prediction: bool = False,
-    ):
+    @property
+    def _inner_embeddings(self) -> Embeddings[Sentence]:
+        return self.word_embeddings
 
-        if not isinstance(sentences, list):
-            sentences = [sentences]
-
-        # filter sentences with no candidates (no candidates means nothing can be linked anyway)
-        filtered_sentences = []
+    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Span]:
+        entities: List[Span] = []
         for sentence in sentences:
-            if sentence.get_labels(self.label_type):
-                filtered_sentences.append(sentence)
+            entities.extend(sentence.get_spans(self.label_type))
+        return entities
 
-        # fields to return
-        data_points = []
-        span_labels = []
-        embedded_entity_pairs = None
+    def _filter_data_point(self, data_point: Sentence) -> bool:
+        return bool(data_point.get_labels(self.label_type))
 
-        # embed sentences and send through prediction head
-        if len(filtered_sentences) > 0:
-            # embed all tokens
-            self.word_embeddings.embed(filtered_sentences)
-
-            embedding_names = self.word_embeddings.get_names()
-
-            embedding_list = []
-            # get the embeddings of the entity mentions
-            for sentence in filtered_sentences:
-                entities = sentence.get_spans(self.label_type)
-
-                for entity in entities:
-
-                    # get the label of the entity
-                    span_labels.append([entity.get_label(self.label_type).value])
-
-                    if self.pooling_operation == "first_last":
-                        mention_emb = torch.cat(
-                            (
-                                entity.tokens[0].get_embedding(embedding_names),
-                                entity.tokens[-1].get_embedding(embedding_names),
-                            ),
-                            0,
-                        )
-                    embedding_list.append(mention_emb.unsqueeze(0))
-
-                if for_prediction:
-                    data_points.extend(entities)
-
-            if len(embedding_list) > 0:
-                embedded_entity_pairs = torch.cat(embedding_list, 0)
-
-        if for_prediction:
-            return embedded_entity_pairs, span_labels, data_points
-
-        return embedded_entity_pairs, span_labels
+    def _embed_prediction_data_point(self, prediction_data_point: Span) -> torch.Tensor:
+        return self.aggregated_embedding(prediction_data_point, self.word_embeddings.get_names())
 
     def _get_state_dict(self):
         model_state = {

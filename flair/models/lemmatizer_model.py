@@ -243,13 +243,11 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         output_vectors = self.character_decoder(output)
         return output_vectors, hidden
 
-    def encode(self, sentences: List[Sentence]):
-
+    def _prepare_tensors(  # type: ignore[override]
+        self, sentences: List[Sentence]
+    ) -> Tuple[Optional[torch.Tensor], ...]:
         # get all tokens
         tokens = [token for sentence in sentences for token in sentence]
-
-        # variable to store initial hidden states for decoder
-        initial_hidden_for_decoder = []
 
         # encode input characters by sending them through RNN
         if self.encode_characters:
@@ -267,9 +265,35 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                 extra += 1
             if self.end_symbol:
                 extra += 1
-            lengths = torch.tensor([len(token.text) + extra for token in tokens])
+            lengths = torch.tensor([len(token.text) + extra for token in tokens], device=flair.device)
+        else:
+            encoder_input_indices = None
+            lengths = None
 
-            # embed character one-hots
+        if self.encoder_embeddings:
+            # embed sentences
+            self.encoder_embeddings.embed(sentences)
+
+            # create initial hidden state tensor for batch (num_layers, batch_size, hidden_size)
+            token_embedding_hidden = torch.stack(
+                self.rnn_layers * [torch.stack([token.get_embedding() for token in tokens])]
+            )
+        else:
+            token_embedding_hidden = None
+
+        return encoder_input_indices, lengths, token_embedding_hidden
+
+    def forward(  # type: ignore[override]
+        self,
+        encoder_input_indices: Optional[torch.Tensor],
+        lengths: Optional[torch.Tensor],
+        token_embedding_hidden: Optional[torch.Tensor],
+    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+        # variable to store initial hidden states for decoder
+        initial_hidden_for_decoder = []
+
+        # encode input characters by sending them through RNN
+        if encoder_input_indices is not None and lengths is not None:
             input_vectors = self.encoder_character_embedding(encoder_input_indices)
 
             # test packing and padding
@@ -306,20 +330,17 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         else:
             all_encoder_outputs = None
         # use token embedding as initial hidden state for decoder
-        if self.encoder_embeddings:
-            # embed sentences
-            self.encoder_embeddings.embed(sentences)
-
-            # create initial hidden state tensor for batch (num_layers, batch_size, hidden_size)
-            token_embedding_hidden = torch.stack(
-                self.rnn_layers * [torch.stack([token.get_embedding() for token in tokens])]
-            )
+        if token_embedding_hidden is not None:
             initial_hidden_for_decoder.append(token_embedding_hidden)
 
         # concatenate everything together and project to appropriate size for decoder
-        initial_hidden_for_decoder = self.emb_to_hidden(torch.cat(initial_hidden_for_decoder, dim=2))
+        initial_hidden = self.emb_to_hidden(torch.cat(initial_hidden_for_decoder, dim=2))
 
-        return initial_hidden_for_decoder, all_encoder_outputs
+        return initial_hidden, all_encoder_outputs
+
+    def encode(self, sentences: List[Sentence]):
+        tensors = self._prepare_tensors(sentences)
+        return self.forward(*tensors)
 
     def encode_token(self, token: Token):
 

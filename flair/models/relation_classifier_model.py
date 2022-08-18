@@ -21,9 +21,9 @@ import torch
 from torch.utils.data.dataset import ConcatDataset, Dataset
 
 import flair
-from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
+from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token, DT, DT2
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.embeddings import DocumentEmbeddings
+from flair.embeddings import DocumentEmbeddings, Embeddings
 from flair.tokenization import SpaceTokenizer
 
 
@@ -51,7 +51,7 @@ class _Entity(NamedTuple):
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
 #  - MaskedRelationClassifier ?
 #   This depends if this relation classification architecture should replace or offer as an alternative.
-class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
+class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, Relation]):
     """
     ---- Task ----
     Relation Classification (RC) is the task of identifying the semantic relation between two entities in a text.
@@ -436,20 +436,17 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
             sample_missing_splits=False,
         )
 
-    def forward_pass(
-        self,
-        sentences: Union[List[EncodedSentence], EncodedSentence],
-        for_prediction: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], Sequence[EncodedSentence]]]:
-        """
-        This method does a forward pass through the model given a list of **encoded** sentences as input.
-        To encode sentences, use the `transform` function of the `RelationClassifier`.
-        For more information on the forward pass, see the `forward_pass` method of the `DefaultClassifier`.
-        """
-        if not isinstance(sentences, list):
-            sentences = [sentences]
+    @property
+    def _inner_embeddings(self) -> Embeddings[Sentence]:
+        return self.document_embeddings
 
-        # Ensure that all sentences are encoded properly
+    def _embed_prediction_data_point(self, prediction_data_point: Sentence) -> torch.Tensor:
+        embedding_names = self.document_embeddings.get_names()
+        return prediction_data_point.get_embedding(embedding_names)
+
+    def _get_prediction_data_points(self, sentences: List[EncodedSentence]) -> List[EncodedSentence]:
+
+        # # Ensure that all sentences are encoded properly
         if any(not isinstance(sentence, EncodedSentence) for sentence in sentences):
             raise ValueError(
                 "Some of the passed sentences are not encoded "
@@ -465,32 +462,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence]):
                 "WRONG:   trainer: ModelTrainer = ModelTrainer(model=model, corpus=corpus)\n"
                 "CORRECT: trainer: ModelTrainer = ModelTrainer(model=model, corpus=model.transform_corpus(corpus))"
             )
-
-        # Embed encoded sentences: The input sentences already have been encoded/masked beforehand.
-        self.document_embeddings.embed(list(sentences))
-        embedding_names: List[str] = self.document_embeddings.get_names()
-
-        sentence_embeddings: List[torch.Tensor] = []
-        gold_labels: List[List[str]] = []
-
-        for sentence in sentences:
-            gold_label: List[str] = [label.value for label in sentence.get_labels(self.label_type)]
-            gold_labels.append(gold_label)
-            sentence_embeddings.append(sentence.get_embedding(embedding_names))
-
-        # Shape: [len(sentences), embedding_size]
-        sentence_embeddings_tensor: torch.Tensor = (
-            torch.stack(sentence_embeddings, dim=0)
-            if sentence_embeddings
-            else torch.empty(0, self.document_embeddings.embedding_length, device=flair.device)
-        )
-
-        if for_prediction:
-            # Since the relation is encoded inside the sentence (as a simple label),
-            # the sentence itself is the data point open for prediction.
-            return sentence_embeddings_tensor, gold_labels, sentences
-
-        return sentence_embeddings_tensor, gold_labels
+        return sentences
 
     def predict(
         self,

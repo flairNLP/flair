@@ -1,17 +1,16 @@
 import logging
-from typing import List, Union
+from typing import List
 
 import torch
-import torch.nn
 
 import flair.nn
-from flair.data import Dictionary, Sentence
-from flair.embeddings import TokenEmbeddings
+from flair.data import Dictionary, Sentence, Token
+from flair.embeddings import Embeddings, TokenEmbeddings
 
 log = logging.getLogger("flair")
 
 
-class WordTagger(flair.nn.DefaultClassifier[Sentence]):
+class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
     """
     This is a simple class of models that tags individual words in text.
     """
@@ -31,7 +30,9 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
         :param beta: Parameter for F-beta score for evaluation and training annealing
         """
         super().__init__(
-            label_dictionary=tag_dictionary, final_embedding_size=embeddings.embedding_length, **classifierargs
+            label_dictionary=tag_dictionary,
+            final_embedding_size=embeddings.embedding_length,
+            **classifierargs,
         )
 
         # embeddings
@@ -62,31 +63,20 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence]):
             **kwargs,
         )
 
-    def forward_pass(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        for_prediction: bool = False,
-    ):
-        if not isinstance(sentences, list):
-            sentences = [sentences]
+    @property
+    def _inner_embeddings(self) -> Embeddings[Sentence]:
+        return self.embeddings
 
-        self.embeddings.embed(sentences)
-
+    def _embed_prediction_data_point(self, prediction_data_point: Token) -> torch.Tensor:
         names = self.embeddings.get_names()
+        return prediction_data_point.get_embedding(names)
 
-        # get all tokens in this mini-batch
-        all_tokens = [token for sentence in sentences for token in sentence]
+    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Token]:
+        tokens: List[Token] = []
 
-        all_embeddings = [token.get_embedding(names) for token in all_tokens]
-
-        embedded_tokens = torch.stack(all_embeddings)
-
-        labels = [[token.get_label(self.label_type).value] for token in all_tokens]
-
-        if for_prediction:
-            return embedded_tokens, labels, all_tokens
-
-        return embedded_tokens, labels
+        for sentence in sentences:
+            tokens.extend(sentence)
+        return tokens
 
     @property
     def label_type(self):
