@@ -462,7 +462,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence, EncodedSentence]):
                 "WRONG:   trainer: ModelTrainer = ModelTrainer(model=model, corpus=corpus)\n"
                 "CORRECT: trainer: ModelTrainer = ModelTrainer(model=model, corpus=model.transform_corpus(corpus))"
             )
-        return sentences # type: ignore
+        return sentences  # type: ignore
 
     def predict(
         self,
@@ -504,7 +504,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence, EncodedSentence]):
             # mypy does not infer the type of "sentences" restricted by the if statement
             encoded_sentences = cast(List[EncodedSentence], sentences)
             loss = super().predict(
-                encoded_sentences, # type: ignore
+                encoded_sentences,  # type: ignore
                 mini_batch_size=mini_batch_size,
                 return_probabilities_for_all_classes=return_probabilities_for_all_classes,
                 verbose=verbose,
@@ -522,7 +522,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence, EncodedSentence]):
 
             encoded_sentences = [x[0] for x in sentences_with_relation_reference]
             loss = super().predict(
-                encoded_sentences, # type: ignore
+                encoded_sentences,  # type: ignore
                 mini_batch_size=mini_batch_size,
                 return_probabilities_for_all_classes=return_probabilities_for_all_classes,
                 verbose=verbose,
