@@ -579,8 +579,8 @@ class GLUE_MNLI(DataPairCorpus):
                     str(data_folder / "MNLI" / temp_file),
                 )
 
-                with open(data_folder / "MNLI" / dev_filename, "a") as out_file, open(
-                    data_folder / "MNLI" / temp_file
+                with open(data_folder / "MNLI" / dev_filename, "a", encoding="utf-8") as out_file, open(
+                    data_folder / "MNLI" / temp_file, encoding="utf-8"
                 ) as in_file:
                     for line in in_file:
                         fields = line.split("\t")

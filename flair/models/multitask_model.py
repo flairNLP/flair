@@ -1,12 +1,12 @@
 import logging
 import random
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 
 import flair.nn
-from flair.data import Dictionary, Sentence
+from flair.data import DT, Dictionary, Sentence
 from flair.training_utils import Result
 
 log = logging.getLogger("flair")
@@ -49,6 +49,12 @@ class MultitaskModel(flair.nn.Classifier):
             label_types[task_id] = model.label_type
         self._label_type = label_types
         self.to(flair.device)
+
+    def forward(self, *args) -> torch.Tensor:
+        raise NotImplementedError("`forward` is not used for multitask learning")
+
+    def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
+        raise NotImplementedError("`_prepare_tensors` is not used for multitask learning")
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]):
         """
@@ -119,6 +125,7 @@ class MultitaskModel(flair.nn.Classifier):
         loss = torch.tensor(0.0, device=flair.device)
         main_score = 0.0
         all_detailed_results = ""
+        all_classification_report: Dict[str, Dict[str, Any]] = dict()
 
         for task_id, split in batch_split.items():
             result = self.tasks[task_id].evaluate(
@@ -153,14 +160,16 @@ class MultitaskModel(flair.nn.Classifier):
                 + "\n\n"
                 + result.detailed_results
             )
+            all_classification_report[task_id] = result.classification_report
 
-        result.loss = loss.item() / len(batch_split)
-        result.main_score = main_score / len(batch_split)
-
-        # the detailed result is the combination of all detailed results
-        result.detailed_results = all_detailed_results
-
-        return result
+        return Result(
+            loss=loss.item() / len(batch_split),
+            main_score=main_score / len(batch_split),
+            detailed_results=all_detailed_results,
+            log_header="",
+            log_line="",
+            classification_report=all_classification_report,
+        )
 
     def _get_state_dict(self):
         """

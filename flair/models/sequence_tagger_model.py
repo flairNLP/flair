@@ -261,36 +261,39 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return RNN
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
 
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
+        sentences = sorted(sentences, key=len, reverse=True)
+        gold_labels = self._prepare_label_tensor(sentences)
+        sentence_tensor, lengths = self._prepare_tensors(sentences)
 
         # forward pass to get scores
-        scores, gold_labels = self.forward(sentences)  # type: ignore
+        scores = self.forward(sentence_tensor, lengths)
 
         # calculate loss given scores and labels
         return self._calculate_loss(scores, gold_labels)
 
-    def forward(self, sentences: Union[List[Sentence], Sentence]):
-        """
-        Forward propagation through network. Returns gold labels of batch in addition.
-        :param sentences: Batch of current sentences
-        """
-        if not isinstance(sentences, list):
-            sentences = [sentences]
+    def _prepare_tensors(self, data_points: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, torch.LongTensor]:
+        if not isinstance(data_points, list):
+            sentences = [data_points]
+        else:
+            sentences = data_points
         self.embeddings.embed(sentences)
 
         # make a zero-padded tensor for the whole sentence
         lengths, sentence_tensor = self._make_padded_tensor_for_batch(sentences)
 
-        # sort tensor in decreasing order based on lengths of sentences in batch
-        sorted_lengths, length_indices = lengths.sort(dim=0, descending=True)
-        sentences = [sentences[i] for i in length_indices]
-        sentence_tensor = sentence_tensor[length_indices]
+        return sentence_tensor, lengths
 
-        # ----- Forward Propagation -----
+    def forward(self, sentence_tensor: torch.Tensor, lengths: torch.LongTensor):  # type: ignore[override]
+        """
+        Forward propagation through network.
+        :param sentence_tensor: A tensor representing the batch of sentences.
+        :param lengths: A IntTensor representing the lengths of the respective sentences.
+        """
         if self.use_dropout:
             sentence_tensor = self.dropout(sentence_tensor)
         if self.use_word_dropout:
@@ -302,7 +305,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = pack_padded_sequence(sentence_tensor, sorted_lengths, batch_first=True, enforce_sorted=False)
+            packed = pack_padded_sequence(sentence_tensor, lengths, batch_first=True)
             rnn_output, hidden = self.rnn(packed)
             sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
 
@@ -319,34 +322,20 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # -- A tensor of shape (aggregated sequence length for all sentences in batch, tagset size) for linear layer
         if self.use_crf:
             features = self.crf(features)
-            scores = (features, sorted_lengths, self.crf.transitions)
+            scores = (features, lengths, self.crf.transitions)
         else:
-            scores = self._get_scores_from_features(features, sorted_lengths)
+            scores = self._get_scores_from_features(features, lengths)
 
-        # get the gold labels
-        gold_labels = self._get_gold_labels(sentences)
+        return scores
 
-        return scores, gold_labels
+    def _calculate_loss(self, scores: torch.Tensor, labels: torch.LongTensor) -> Tuple[torch.Tensor, int]:
 
-    def _calculate_loss(self, scores, labels) -> Tuple[torch.Tensor, int]:
-
-        if not any(labels):
+        if labels.size(0) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
-
-        labels = torch.tensor(
-            [
-                self.label_dictionary.get_idx_for_item(label[0])
-                if len(label) > 0
-                else self.label_dictionary.get_idx_for_item("O")
-                for label in labels
-            ],
-            dtype=torch.long,
-            device=flair.device,
-        )
 
         return self.loss_function(scores, labels), len(labels)
 
-    def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.LongTensor, torch.Tensor]:
         names = self.embeddings.get_names()
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         longest_token_sequence_in_batch: int = max(lengths)
@@ -371,7 +360,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 self.embeddings.embedding_length,
             ]
         )
-        return torch.tensor(lengths, dtype=torch.long), sentence_tensor
+        return torch.LongTensor(lengths), sentence_tensor
 
     @staticmethod
     def _get_scores_from_features(features: torch.Tensor, lengths: torch.Tensor):
@@ -388,7 +377,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return scores
 
-    def _get_gold_labels(self, sentences: Union[List[Sentence], Sentence]):
+    def _get_gold_labels(self, sentences: List[Sentence]) -> List[str]:
         """
         Extracts gold labels from each sentence.
         :param sentences: List of sentences in batch
@@ -413,12 +402,21 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                         for i in range(span[0].idx, span[-1].idx):
                             sentence_labels[i] = "I-" + label.value
                 all_sentence_labels.extend(sentence_labels)
-            labels = [[label] for label in all_sentence_labels]
+            labels = all_sentence_labels
 
         # all others are regular labels for each token
         else:
-            labels = [[token.get_label(self.label_type, "O").value] for sentence in sentences for token in sentence]
+            labels = [token.get_label(self.label_type, "O").value for sentence in sentences for token in sentence]
 
+        return labels
+
+    def _prepare_label_tensor(self, sentences: List[Sentence]):
+        gold_labels = self._get_gold_labels(sentences)
+        labels = torch.tensor(
+            [self.label_dictionary.get_idx_for_item(label) for label in gold_labels],
+            dtype=torch.long,
+            device=flair.device,
+        )
         return labels
 
     def predict(
@@ -457,7 +455,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             sentences = [sentence for sentence in sentences if len(sentence) > 0]
 
             # reverse sort all sequences by their length
-            reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
+            reordered_sentences = sorted(sentences, key=len, reverse=True)
 
             if len(reordered_sentences) == 0:
                 return sentences
@@ -471,18 +469,16 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 dataloader = tqdm(dataloader, desc="Batch inference")
 
             overall_loss = torch.zeros(1, device=flair.device)
-            batch_no = 0
             label_count = 0
             for batch in dataloader:
-
-                batch_no += 1
 
                 # stop if all sentences are empty
                 if not batch:
                     continue
 
                 # get features from forward propagation
-                features, gold_labels = self.forward(batch)
+                sentence_tensor, lengths = self._prepare_tensors(batch)
+                features = self.forward(sentence_tensor, lengths)
 
                 # remove previously predicted labels of this type
                 for sentence in batch:
@@ -490,14 +486,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
                 # if return_loss, get loss value
                 if return_loss:
+                    gold_labels = self._prepare_label_tensor(batch)
                     loss = self._calculate_loss(features, gold_labels)
                     overall_loss += loss[0]
                     label_count += loss[1]
-
-                # Sort batch in same way as forward propagation
-                lengths = torch.LongTensor([len(sentence) for sentence in batch])
-                _, sort_indices = lengths.sort(dim=0, descending=True)
-                batch = [batch[i] for i in sort_indices]
 
                 # make predictions
                 if self.use_crf:

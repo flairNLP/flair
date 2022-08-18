@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List
 
 import torch
 
@@ -7,7 +7,7 @@ import flair.nn
 from flair.data import Sentence, TextPair
 
 
-class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
+class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
     """
     Text Pair Classification Model for tasks such as Recognizing Textual Entailment, build upon TextClassifier.
     The model takes document embeddings and puts resulting text representation(s) into a linear layer to get the
@@ -65,60 +65,29 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair]):
     def label_type(self):
         return self._label_type
 
-    def forward_pass(
-        self,
-        datapairs: Union[List[TextPair], TextPair],
-        for_prediction: bool = False,
-    ):
+    def _get_prediction_data_points(self, sentences: List[TextPair]) -> List[TextPair]:
+        return sentences
 
-        if not isinstance(datapairs, list):
-            datapairs = [datapairs]
-
+    def _embed_prediction_data_point(self, prediction_data_point: TextPair) -> torch.Tensor:
         embedding_names = self.document_embeddings.get_names()
-
-        if self.embed_separately:  # embed both sentences seperately, concatenate the resulting vectors
-            first_elements = [pair.first for pair in datapairs]
-            second_elements = [pair.second for pair in datapairs]
-
-            self.document_embeddings.embed(first_elements)
-            self.document_embeddings.embed(second_elements)
-
-            text_embedding_list = [
-                torch.cat(
-                    [
-                        a.get_embedding(embedding_names),
-                        b.get_embedding(embedding_names),
-                    ],
-                    0,
-                ).unsqueeze(0)
-                for (a, b) in zip(first_elements, second_elements)
-            ]
-
-        else:  # concatenate the sentences and embed together
-            concatenated_sentences = [
-                Sentence(
-                    pair.first.to_tokenized_string() + self.sep + pair.second.to_tokenized_string(),
-                    use_tokenizer=False,
-                )
-                for pair in datapairs
-            ]
-
-            self.document_embeddings.embed(concatenated_sentences)
-
-            text_embedding_list = [
-                sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in concatenated_sentences
-            ]
-
-        text_pair_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
-
-        labels = []
-        for pair in datapairs:
-            labels.append([label.value for label in pair.get_labels(self.label_type)])
-
-        if for_prediction:
-            return text_pair_embedding_tensor, labels, datapairs
-
-        return text_pair_embedding_tensor, labels
+        if self.embed_separately:
+            self.document_embeddings.embed([prediction_data_point.first, prediction_data_point.second])
+            return torch.cat(
+                [
+                    prediction_data_point.first.get_embedding(embedding_names),
+                    prediction_data_point.second.get_embedding(embedding_names),
+                ],
+                0,
+            )
+        else:
+            concatenated_sentence = Sentence(
+                prediction_data_point.first.to_tokenized_string()
+                + self.sep
+                + prediction_data_point.second.to_tokenized_string(),
+                use_tokenizer=False,
+            )
+            self.document_embeddings.embed(concatenated_sentence)
+            return concatenated_sentence.get_embedding(embedding_names)
 
     def _get_state_dict(self):
         model_state = {

@@ -230,7 +230,7 @@ def get_from_cache(url: str, cache_dir: Path) -> Path:
         req = requests.get(url, stream=True, headers={"User-Agent": "Flair"})
         content_length = req.headers.get("Content-Length")
         total = int(content_length) if content_length is not None else None
-        progress = Tqdm.tqdm(unit="B", total=total)
+        progress = Tqdm.tqdm(unit="B", total=total, unit_scale=True, unit_divisor=1024)
         with open(temp_filename, "wb") as temp_file:
             for chunk in req.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
