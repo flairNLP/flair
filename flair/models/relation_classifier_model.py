@@ -21,15 +21,7 @@ import torch
 from torch.utils.data.dataset import ConcatDataset, Dataset
 
 import flair
-from flair.data import (
-    Corpus,
-    Dictionary,
-    Label,
-    Relation,
-    Sentence,
-    Span,
-    Token,
-)
+from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import DocumentEmbeddings, Embeddings
 from flair.tokenization import SpaceTokenizer
@@ -59,7 +51,7 @@ class _Entity(NamedTuple):
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
 #  - MaskedRelationClassifier ?
 #   This depends if this relation classification architecture should replace or offer as an alternative.
-class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSentence]):
+class RelationClassifier(flair.nn.DefaultClassifier[Sentence, EncodedSentence]):
     """
     ---- Task ----
     Relation Classification (RC) is the task of identifying the semantic relation between two entities in a text.
@@ -452,7 +444,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         embedding_names = self.document_embeddings.get_names()
         return prediction_data_point.get_embedding(embedding_names)
 
-    def _get_prediction_data_points(self, sentences: List[EncodedSentence]) -> List[EncodedSentence]:
+    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[EncodedSentence]:
 
         # Ensure that all sentences are encoded properly
         if any(not isinstance(sentence, EncodedSentence) for sentence in sentences):
@@ -470,7 +462,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                 "WRONG:   trainer: ModelTrainer = ModelTrainer(model=model, corpus=corpus)\n"
                 "CORRECT: trainer: ModelTrainer = ModelTrainer(model=model, corpus=model.transform_corpus(corpus))"
             )
-        return sentences
+        return sentences # type: ignore
 
     def predict(
         self,
@@ -512,7 +504,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             # mypy does not infer the type of "sentences" restricted by the if statement
             encoded_sentences = cast(List[EncodedSentence], sentences)
             loss = super().predict(
-                encoded_sentences,
+                encoded_sentences, # type: ignore
                 mini_batch_size=mini_batch_size,
                 return_probabilities_for_all_classes=return_probabilities_for_all_classes,
                 verbose=verbose,
@@ -530,7 +522,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
             encoded_sentences = [x[0] for x in sentences_with_relation_reference]
             loss = super().predict(
-                encoded_sentences,
+                encoded_sentences, # type: ignore
                 mini_batch_size=mini_batch_size,
                 return_probabilities_for_all_classes=return_probabilities_for_all_classes,
                 verbose=verbose,
