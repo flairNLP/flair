@@ -5,7 +5,7 @@ import warnings
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import torch.nn
 from torch.nn.modules.loss import _Loss
