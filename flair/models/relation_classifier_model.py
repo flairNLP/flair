@@ -51,7 +51,7 @@ class _Entity(NamedTuple):
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
 #  - MaskedRelationClassifier ?
 #   This depends if this relation classification architecture should replace or offer as an alternative.
-class RelationClassifier(flair.nn.DefaultClassifier[Sentence, EncodedSentence]):
+class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSentence]):
     """
     ---- Task ----
     Relation Classification (RC) is the task of identifying the semantic relation between two entities in a text.
@@ -437,14 +437,22 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence, EncodedSentence]):
         )
 
     @property
-    def _inner_embeddings(self) -> Embeddings[Sentence]:
-        return self.document_embeddings
+    def _inner_embeddings(self) -> Embeddings[EncodedSentence]:
+        # TODO: The DocumentEmbeddings class is not generic and only accepts Sentence objects.
+        #   Since the EncodedSentence behaves the same as a standard Sentence, we may perform a safe type-cast here.
+        #   Another solution would be to introduce a type-variable bound to Sentence as generic for the DocumentEmbeddings.
+        #   But this would require to change to all other usages of the DocumentEmbeddings.
+        return cast(Embeddings[EncodedSentence], self.document_embeddings)
 
-    def _embed_prediction_data_point(self, prediction_data_point: Sentence) -> torch.Tensor:
-        embedding_names = self.document_embeddings.get_names()
+    def _embed_prediction_data_point(self, prediction_data_point: EncodedSentence) -> torch.Tensor:
+        embedding_names: List[str] = self.document_embeddings.get_names()
         return prediction_data_point.get_embedding(embedding_names)
 
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[EncodedSentence]:
+    def _get_prediction_data_points(self, sentences: List[EncodedSentence]) -> List[EncodedSentence]:
+        """
+        Returns the encoded sentences to which labels are added.
+        To encode sentences, use the `transform` function of the `RelationClassifier`.
+        """
 
         # Ensure that all sentences are encoded properly
         if any(not isinstance(sentence, EncodedSentence) for sentence in sentences):
@@ -462,7 +470,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence, EncodedSentence]):
                 "WRONG:   trainer: ModelTrainer = ModelTrainer(model=model, corpus=corpus)\n"
                 "CORRECT: trainer: ModelTrainer = ModelTrainer(model=model, corpus=model.transform_corpus(corpus))"
             )
-        return sentences  # type: ignore
+
+        return sentences
 
     def predict(
         self,
@@ -504,7 +513,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence, EncodedSentence]):
             # mypy does not infer the type of "sentences" restricted by the if statement
             encoded_sentences = cast(List[EncodedSentence], sentences)
             loss = super().predict(
-                encoded_sentences,  # type: ignore
+                encoded_sentences,
                 mini_batch_size=mini_batch_size,
                 return_probabilities_for_all_classes=return_probabilities_for_all_classes,
                 verbose=verbose,
@@ -522,7 +531,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[Sentence, EncodedSentence]):
 
             encoded_sentences = [x[0] for x in sentences_with_relation_reference]
             loss = super().predict(
-                encoded_sentences,  # type: ignore
+                encoded_sentences,
                 mini_batch_size=mini_batch_size,
                 return_probabilities_for_all_classes=return_probabilities_for_all_classes,
                 verbose=verbose,
