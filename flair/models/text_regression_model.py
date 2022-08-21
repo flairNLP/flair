@@ -33,7 +33,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
         nn.init.xavier_uniform_(self.decoder.weight)
 
-        self.loss_function = nn.MSELoss(reduction="sum")
+        self.loss_function = nn.MSELoss(reduction="none")
 
         # auto-spawn on GPU if available
         self.to(flair.device)
@@ -59,11 +59,12 @@ class TextRegressor(flair.nn.Model[Sentence]):
         text_embedding_tensor = self._prepare_tensors(sentences)
         scores = self.forward(*text_embedding_tensor)
 
-        return self.loss_function(scores.squeeze(1), labels), len(sentences)
+        return self.loss_function(scores.squeeze(1), labels).unsqueeze(1), len(sentences)
 
     def _labels_to_tensor(self, sentences: List[Sentence]):
         indices = [
-            torch.tensor([float(label.value) for label in sentence.labels], dtype=torch.float) for sentence in sentences
+            torch.tensor([float(sentence.get_label(self.label_name).value)], dtype=torch.float)
+            for sentence in sentences
         ]
 
         vec = torch.cat(indices, 0).to(flair.device)

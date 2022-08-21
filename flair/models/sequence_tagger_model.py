@@ -187,7 +187,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         self.loss_function = (
             ViterbiLoss(self.label_dictionary)
             if use_crf
-            else torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+            else torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="none")
         )
 
         # if using CRF, we also require a CRF and a Viterbi decoder
@@ -468,7 +468,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if verbose:
                 dataloader = tqdm(dataloader, desc="Batch inference")
 
-            overall_loss = torch.zeros(1, device=flair.device)
+            losses: List[torch.Tensor] = []
             label_count = 0
             for batch in dataloader:
 
@@ -488,7 +488,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 if return_loss:
                     gold_labels = self._prepare_label_tensor(batch)
                     loss = self._calculate_loss(features, gold_labels)
-                    overall_loss += loss[0]
+                    losses.append(loss[0])
                     label_count += loss[1]
 
                 # make predictions
@@ -528,7 +528,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 store_embeddings(sentences, storage_mode=embedding_storage_mode)
 
             if return_loss:
-                return overall_loss, label_count
+                return torch.cat(losses, 0).detach().cpu().numpy(), label_count
 
     def _standard_inference(self, features: torch.Tensor, batch: List[Sentence], probabilities_for_all_classes: bool):
         """

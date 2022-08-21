@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DT, DT2, Dictionary, Sentence
+from flair.data import DT, DT2, Dictionary, Sentence, _PartOfSentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
 from flair.file_utils import Tqdm
@@ -260,9 +260,9 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 if return_loss:
                     if isinstance(loss_and_count, tuple):
                         average_over += loss_and_count[1]
-                        eval_loss += loss_and_count[0]
+                        eval_loss += loss_and_count[0].sum()
                     else:
-                        eval_loss += loss_and_count
+                        eval_loss += loss_and_count.sum()
 
                 # get the gold labels
                 for datapoint in batch:
@@ -575,9 +575,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             self.gradient_reversal = RevGrad()
 
         if self.multi_label:
-            self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights, reduction="sum")
+            self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights, reduction="none")
         else:
-            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="none")
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
 
     def _filter_data_point(self, data_point: DT) -> bool:
@@ -706,11 +706,30 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         embedded_tensor = self._prepare_tensors(sentences)
         scores = self.forward(*embedded_tensor)
 
+        losses, count = self._calculate_loss(scores, labels)
+
         # calculate the loss
-        return self._calculate_loss(scores, labels)
+        return self._map_loss_to_data_point(losses, sentences, predict_data_points), count
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
-        return self.loss_function(scores, labels), labels.size(0)
+        losses = self.loss_function(scores, labels)
+        while losses.dim() > 1:
+            losses = losses.mean(1)
+        return losses, labels.size(0)
+
+    def _map_loss_to_data_point(
+        self, losses: torch.Tensor, data_points: List[DT], prediction_data_points: List[DT2]
+    ) -> torch.Tensor:
+        mapped_loss = torch.zeros(len(data_points), device=losses.device)
+        for i, pred_dp in enumerate(prediction_data_points):
+            if pred_dp in data_points:
+                mapping_idx = data_points.index(typing.cast(DT, pred_dp))
+            elif isinstance(pred_dp, _PartOfSentence):
+                mapping_idx = data_points.index(typing.cast(DT, pred_dp.sentence))
+            else:
+                raise ValueError(f"could not map {type(pred_dp)}")
+            mapped_loss[mapping_idx] = losses[i]
+        return mapped_loss
 
     def _sort_data(self, data_points: List[DT]) -> List[DT]:
 
@@ -777,7 +796,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             else:
                 batches = [reordered_sentences]
 
-            overall_loss = torch.zeros(1, device=flair.device)
+            per_sample_losses: List[torch.Tensor] = []
             label_count = 0
             for batch in batches:
 
@@ -804,7 +823,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
                     if return_loss:
                         gold_labels = self._prepare_label_tensor(data_points)
-                        overall_loss += self._calculate_loss(scores, gold_labels)[0]
+                        per_sample_losses.append(
+                            self._map_loss_to_data_point(
+                                self._calculate_loss(scores, gold_labels)[0], batch, data_points
+                            )
+                        )
                         label_count += len(data_points)
 
                     if self.multi_label:
@@ -842,7 +865,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             if return_loss:
-                return overall_loss, label_count
+                return torch.cat(per_sample_losses, 0).detach().cpu().numpy(), label_count
 
     def _get_label_threshold(self, label_value):
         label_threshold = self.multi_label_threshold["default"]

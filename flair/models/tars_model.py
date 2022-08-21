@@ -508,7 +508,7 @@ class TARSTagger(FewshotClassifier):
         if verbose:
             dataloader = tqdm(dataloader)
 
-        overall_loss = 0
+        losses: List[np.ndarray] = []
         overall_count = 0
         with torch.no_grad():
             for batch in dataloader:
@@ -525,7 +525,7 @@ class TARSTagger(FewshotClassifier):
                     sentence.remove_labels(label_name)
 
                     all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
-
+                    sentence_loss = np.zeros(1)
                     all_detected = {}
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
@@ -536,12 +536,14 @@ class TARSTagger(FewshotClassifier):
                             return_loss=True,
                         )
 
-                        overall_loss += loss_and_count[0].item()
+                        sentence_loss += loss_and_count[0]
                         overall_count += loss_and_count[1]
 
                         for predicted in tars_sentence.get_labels(label_name):
                             predicted.value = label
                             all_detected[predicted] = predicted.score
+
+                    losses.append(sentence_loss)
 
                     if most_probable_first:
                         import operator
@@ -581,7 +583,7 @@ class TARSTagger(FewshotClassifier):
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
         if return_loss:
-            return overall_loss, overall_count
+            return np.concatenate(losses), overall_count
 
     def _print_predictions(self, batch, gold_label_type):
 
@@ -838,7 +840,7 @@ class TARSClassifier(FewshotClassifier):
             progressbar.set_description("Batch inference")
             dataloader = progressbar
 
-        overall_loss = 0
+        losses: List[np.ndarray] = []
         overall_count = 0
         batch_no = 0
         with torch.no_grad():
@@ -858,6 +860,7 @@ class TARSClassifier(FewshotClassifier):
                     sentence.remove_labels(label_name)
 
                     all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
+                    sentence_loss = np.zeros(1)
 
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
@@ -869,7 +872,7 @@ class TARSClassifier(FewshotClassifier):
                             return_probabilities_for_all_classes=True if label_threshold < 0.5 else False,
                         )
 
-                        overall_loss += loss_and_count[0].item()
+                        sentence_loss += loss_and_count[0]
                         overall_count += loss_and_count[1]
 
                         # add all labels that according to TARS match the text and are above threshold
@@ -881,6 +884,7 @@ class TARSClassifier(FewshotClassifier):
                                 # do not add labels below confidence threshold
                                 sentence.add_label(label_name, label, predicted_tars_label.score)
 
+                    losses.append(sentence_loss)
                     # only use label with highest confidence if enforcing single-label predictions
                     if not multi_label:
                         if len(sentence.get_labels(label_name)) > 0:
@@ -903,4 +907,4 @@ class TARSClassifier(FewshotClassifier):
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
         if return_loss:
-            return overall_loss, overall_count
+            return np.concatenate(losses), overall_count

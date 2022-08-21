@@ -56,7 +56,7 @@ class MultitaskModel(flair.nn.Classifier):
     def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
         raise NotImplementedError("`_prepare_tensors` is not used for multitask learning")
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
         """
         Abstract forward loss implementation of flair.nn.Model's interface.
         Calls the respective forward loss of each model.
@@ -64,11 +64,11 @@ class MultitaskModel(flair.nn.Classifier):
         :return: loss
         """
         batch_split = self.split_batch_to_task_ids(sentences)
-        loss = torch.tensor(0.0, device=flair.device)
+        loss = torch.zeros((len(sentences)), device=flair.device)
         count = 0
         for task_id, split in batch_split.items():
             task_loss, task_count = self.tasks[task_id].forward_loss([sentences[i] for i in split])
-            loss += self.loss_factors[task_id] * task_loss
+            loss[split] += self.loss_factors[task_id] * task_loss
             count += task_count
         return loss, count
 
@@ -81,7 +81,7 @@ class MultitaskModel(flair.nn.Classifier):
             self.tasks[task_id].predict(sentences, **predictargs)
 
     @staticmethod
-    def split_batch_to_task_ids(sentences: Union[List[Sentence], Sentence]) -> Dict:
+    def split_batch_to_task_ids(sentences: List[Sentence]) -> Dict:
         """
         Splits a batch of sentences to its respective model. If single sentence is assigned to several tasks
         (i.e. same corpus but different tasks), then the model assignment for this batch is randomly choosen.

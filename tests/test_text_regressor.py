@@ -10,7 +10,7 @@ from flair.trainers import ModelTrainer
 
 
 def init(tasks_base_path) -> Tuple[Corpus, TextRegressor, ModelTrainer]:
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "regression")
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "regression", label_type="label")
 
     glove_embedding: WordEmbeddings = WordEmbeddings("glove")
     document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(

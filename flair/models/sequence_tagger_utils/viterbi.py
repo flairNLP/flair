@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torch.nn
 from torch.nn.functional import softmax
-from torch.nn.utils.rnn import pack_padded_sequence
 
 import flair
 from flair.data import Dictionary, Label, List, Sentence
@@ -48,12 +47,16 @@ class ViterbiLoss(torch.nn.Module):
         # scores_at_targets[range(features.shape[0]), lengths.values -1]
         # Squeeze crf scores matrices in 1-dim shape and gather scores at targets by matrix indices
         scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets_matrix_indices)
-        scores_at_targets = pack_padded_sequence(scores_at_targets, lengths, batch_first=True)[0]
+        mask = torch.arange(seq_len, dtype=lengths.dtype, device=lengths.device).repeat(
+            batch_size, 1
+        ) < lengths.unsqueeze(1)
+        scores_at_targets *= mask.unsqueeze(2).to(flair.device)
+        scores_at_targets = scores_at_targets.sum((1, 2))
         transitions_to_stop = transitions[
             np.repeat(self.stop_tag, features.shape[0]),
             [target[length - 1] for target, length in zip(targets, lengths)],
         ]
-        gold_score = scores_at_targets.sum() + transitions_to_stop.sum()
+        gold_score = scores_at_targets + transitions_to_stop
 
         scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device)
 
@@ -74,10 +77,9 @@ class ViterbiLoss(torch.nn.Module):
                     features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t].unsqueeze(1), dim=2
                 )
 
-        all_paths_scores = self._log_sum_exp(scores_upto_t + transitions[self.stop_tag].unsqueeze(0), dim=1).sum()
+        all_paths_scores = self._log_sum_exp(scores_upto_t + transitions[self.stop_tag].unsqueeze(0), dim=1)
 
         viterbi_loss = all_paths_scores - gold_score
-
         return viterbi_loss
 
     @staticmethod

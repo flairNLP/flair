@@ -142,7 +142,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         )
 
         # loss and softmax
-        self.loss = nn.CrossEntropyLoss(reduction="sum")
+        self.loss = nn.CrossEntropyLoss(reduction="none")
         # self.unreduced_loss = nn.CrossEntropyLoss(reduction='none')  # for prediction
         self.softmax = nn.Softmax(dim=2)
 
@@ -393,7 +393,9 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
         target.unsqueeze_(1)  # (batch_size, 1, max_label_seq_length + 1)
 
-        return self.loss(scores_in_correct_format, target), len(labels)
+        loss = self.loss(scores_in_correct_format, target).sum((1, 2, 3))
+
+        return loss, len(labels)
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
         scores, labels = self.forward_pass(sentences)
@@ -439,7 +441,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         # for printing
         line_to_print = ""
 
-        overall_loss = 0.0
+        losses: List[torch.Tensor] = []
         number_tokens_in_total = 0
 
         with torch.no_grad():
@@ -650,7 +652,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                         tokens_in_batch[i].add_tag(tag_type=label_name, tag_value=predicted_lemma)
 
                 if return_loss:
-                    overall_loss += self.forward_loss(batch)[0].item()
+                    losses.append(self.forward_loss(batch)[0])
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
@@ -658,7 +660,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                 log.info(line_to_print)
 
             if return_loss:
-                return overall_loss, number_tokens_in_total
+                return torch.cat(losses, 0).detach().cpu().numpy(), number_tokens_in_total
 
     def _get_state_dict(self):
         model_state = {

@@ -502,6 +502,7 @@ class ModelTrainer:
                         # forward pass
                         loss, datapoint_count = self.model.forward_loss(batch_step)
                         average_over += datapoint_count
+                        loss = loss.sum()
 
                         # Backward
                         if use_amp:
@@ -1020,6 +1021,7 @@ class ModelTrainer:
 
                 # forward pass
                 loss, datapoint_count = self.model.forward_loss(batch)
+                loss = loss.sum()
 
                 # update optimizer and scheduler
                 optimizer.zero_grad()

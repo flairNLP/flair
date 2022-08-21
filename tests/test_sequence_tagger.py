@@ -77,6 +77,18 @@ def test_all_tag_proba_embedding():
 
 
 @pytest.mark.integration
+def test_loss_per_sentence():
+    loaded_model: SequenceTagger = SequenceTagger.load("ner-fast")
+
+    sentence1 = Sentence("I love Berlin")
+    sentence2 = Sentence("I love vienna even more")
+
+    loss, count = loaded_model.predict([sentence1, sentence2], return_loss=True)
+
+    assert loss.shape == (2,)
+
+
+@pytest.mark.integration
 def test_train_load_use_tagger(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
     tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)
