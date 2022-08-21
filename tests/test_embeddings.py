@@ -188,7 +188,7 @@ def test_transformer_jit_embeddings(results_base_path):
 
     jit_embeddings.embed(sentence)
     jit_token_embedding = sentence[5].get_embedding().clone()
-    assert torch.isclose(base_token_embedding, jit_token_embedding).all()
+    assert torch.isclose(base_token_embedding, jit_token_embedding, atol=3e-6).all()
     sentence.clear_embeddings()
 
     # use a SequenceTagger to save and reload the embedding in the manner it is supposed to work
@@ -202,7 +202,7 @@ def test_transformer_jit_embeddings(results_base_path):
     loaded_jit_embedding.embed(sentence)
     loaded_jit_token_embedding = sentence[5].get_embedding().clone()
     sentence.clear_embeddings()
-    assert torch.isclose(jit_token_embedding, loaded_jit_token_embedding).all()
+    assert torch.isclose(jit_token_embedding, loaded_jit_token_embedding, atol=3e-6).all()
 
 
 def test_transformer_force_max_length():
