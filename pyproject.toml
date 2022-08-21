@@ -18,6 +18,7 @@ flake8-ignore = ["E203", "W503"]  # See https://github.com/PyCQA/pycodestyle/iss
 addopts = "--flake8 --mypy --ignore flair/embeddings/legacy.py --isort"
 filterwarnings = [
     "error",  # Convert all warnings to errors
+    "ignore:operator \\(\\) profile_node",
     "ignore:the imp module is deprecated:DeprecationWarning:past"  # ignore DeprecationWarning from hyperopt dependency
 ]
 markers = [
