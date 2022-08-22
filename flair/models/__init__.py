@@ -1,4 +1,4 @@
-from .biomedical_entity_linking import HunNen
+from .biomedical_entity_linking import BiomedicalEntityLinking
 from .dependency_parser_model import DependencyParser
 from .entity_linker_model import EntityLinker
 from .language_model import LanguageModel
@@ -26,5 +26,5 @@ __all__ = [
     "TARSClassifier",
     "TARSTagger",
     "TextClassifier",
-    "HunNen",
+    "BiomedicalEntityLinking",
 ]

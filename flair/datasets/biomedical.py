@@ -583,12 +583,16 @@ class NamedEntityLinkingDictionary:
         return self._dictionary
 
     @classmethod
+    def get_database_name(self):
+        raise NotImplementedError()
+
+    @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @classmethod
     def parse_dataset(cls, original_file: Path):
-        raise NotImplementedError
+        raise NotImplementedError()
     
 
 class NEL_CTD_DISEASE_DICT(NamedEntityLinkingDictionary):
@@ -604,6 +608,9 @@ class NEL_CTD_DISEASE_DICT(NamedEntityLinkingDictionary):
         :param base_path: Path to the corpus on your machine"""
         super(NEL_CTD_DISEASE_DICT, self).__init__(base_path=base_path)
             
+    @classmethod
+    def get_database_name(self):
+        return ["MESH", "DO:DOID"]
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
@@ -693,6 +700,9 @@ class NEL_CTD_CHEMICAL_DICT(NamedEntityLinkingDictionary):
         :param base_path: Path to the corpus on your machine"""
         super(NEL_CTD_CHEMICAL_DICT, self).__init__(base_path=base_path)
             
+    @classmethod
+    def get_database_name(self):
+        return ["MESH"]
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
@@ -772,6 +782,10 @@ class NEL_NCBI_GENE_DICT(NamedEntityLinkingDictionary):
         """
         :param base_path: Path to the corpus on your machine"""
         super(NEL_NCBI_GENE_DICT, self).__init__(base_path=base_path)
+
+    @classmethod
+    def get_database_name(self):
+        return ["NCBI"]
             
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
@@ -876,6 +890,10 @@ class NEL_NCBI_TAXONOMY_DICT(NamedEntityLinkingDictionary):
         """
         :param base_path: Path to the corpus on your machine"""
         super(NEL_NCBI_TAXONOMY_DICT, self).__init__(base_path = base_path)
+
+    @classmethod
+    def get_database_name(self):
+        return ["NCBI"]
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:

@@ -150,7 +150,7 @@ class Ab3P:
         self.word_data_dir = word_data_dir
 
     @classmethod
-    def load(cls, ab3p_path: Path = None)):
+    def load(cls, ab3p_path: Path = None):
         data_dir = os.path.join(flair.cache_root, "ab3p")
         if not os.path.exists(data_dir):
             os.mkdir(os.path.join(data_dir))
@@ -735,10 +735,11 @@ class BiomedicalEntityLinking:
         self,
         model,
         dictionary: np.ndarray,
+        database_name: str,
         dict_sparse_embeds: np.ndarray,
         dict_dense_embeds: np.ndarray,
         tgt_space_mean_vec: np.ndarray,
-        ab3p_path: Path
+        ab3p_path: Path,
     ) -> None:
         """
         Initalize HunNen class, called by classmethod load
@@ -749,6 +750,7 @@ class BiomedicalEntityLinking:
         """
         self.model = model
         self.dictionary = dictionary
+        self.database_name = database_name
         self.dict_sparse_embeds = dict_sparse_embeds
         self.dict_dense_embeds = dict_dense_embeds
         self.tgt_space_mean_vec = tgt_space_mean_vec
@@ -791,7 +793,7 @@ class BiomedicalEntityLinking:
             "biobert-ncbi-disease",
             "biobert-bc5cdr-chemical",
             "biosyn-biobert-bc2gn",
-            "biosyn-sapbert-bc2gn"
+            "biosyn-sapbert-bc2gn",
         ]:
             model_path = "dmis-lab/biosyn-" + model_name
         elif model_name == "disease" and model_type == "biosyn":
@@ -801,7 +803,7 @@ class BiomedicalEntityLinking:
         elif model_name == "gene" and model_type == "biosyn":
             model_path = "dmis-lab/biosyn-sapbert-bc2gn"
         # Sapbert
-        elif model_name == "sapbert" or model_type =="sapbert":
+        elif model_name == "sapbert" or model_type == "sapbert":
             model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
             model_type = "sapbert"
         elif model_name == "disease" and model_type == "sapbert":
@@ -809,7 +811,9 @@ class BiomedicalEntityLinking:
         elif model_name == "chemical" and model_type == "sapbert":
             model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
         elif model_name == "gene" and model_type == "sapbert":
-            raise ValueError("SapBERT is not trained for gene entity linking. You can use BioSyn instead.") 
+            raise ValueError(
+                "SapBERT is not trained for gene entity linking. You can use BioSyn instead."
+            )
 
         # Use BioSyn or SapBert
         if model_type == "biosyn":
@@ -817,7 +821,9 @@ class BiomedicalEntityLinking:
         elif model_type == "sapbert":
             model = SapBert(max_length=max_length, use_cuda=torch.cuda.is_available())
         else:
-            raise ValueError("Invalid value for model_type. The only possible values are 'biosyn' and 'sapbert'")
+            raise ValueError(
+                "Invalid value for model_type. The only possible values are 'biosyn' and 'sapbert'"
+            )
 
         model.load_model(model_name_or_path=model_path)
 
@@ -831,7 +837,7 @@ class BiomedicalEntityLinking:
         if dictionary_path is "taxonomy":
             dictionary_path = "ncbi-taxonomy"
         if dictionary_path is None:
-        # disease
+            # disease
             if model_name in [
                 "sapbert-bc5cdr-disease",
                 "sapbert-ncbi-disease",
@@ -848,11 +854,7 @@ class BiomedicalEntityLinking:
             ]:
                 dictionary_path = "ctd-chemical"
             # gene
-            elif model_name in [
-                "gene", 
-                "biosyn-biobert-bc2gn",
-                "biosyn-sapbert-bc2gn"
-            ]:
+            elif model_name in ["gene", "biosyn-biobert-bc2gn", "biosyn-sapbert-bc2gn"]:
                 dictionary_path = "ncbi-gene"
             # error
             else:
@@ -862,7 +864,7 @@ class BiomedicalEntityLinking:
                     Available options are: 'disease', 'chemical', 'gene' and 'taxonomy'.
                     Or provide a path to a dictionary file."""
                     )
-                else: 
+                else:
                     log.error(
                         """When using a custom model you need to specify a dictionary. 
                     Available options are: 'disease', 'chemical', 'gene' and 'taxonomy'.
@@ -873,13 +875,20 @@ class BiomedicalEntityLinking:
         # embed dictionary
         (
             dictionary,
+            database_name,
             dict_sparse_embeds,
             dict_dense_embeds,
             tgt_space_mean_vec,
         ) = cls._cache_or_load_dictionary(model, model_name, str(dictionary_path))
 
         return cls(
-            model, dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec, ab3p_path
+            model,
+            dictionary,
+            database_name,
+            dict_sparse_embeds,
+            dict_dense_embeds,
+            tgt_space_mean_vec,
+            ab3p_path,
         )
 
     def predict(
@@ -948,6 +957,15 @@ class BiomedicalEntityLinking:
                         additional_labels = labels[1:]
                     else:
                         additional_labels = None
+                    # determine database:
+                    if ":" in cui:
+                        cui_parts = cui.split(":")
+                        database_name = ":".join(cui_parts[0:-1])
+                        cui = cui_parts[-1]
+                    elif isinstance(self.database_name, str):
+                        database_name = self.database_name
+                    else:
+                        database_name = None
                     sentence.add_complex_label(
                         typename=label_name,
                         label=EntityLinkingLabel(
@@ -955,6 +973,7 @@ class BiomedicalEntityLinking:
                             id=cui,
                             concept_name=prediction[0],
                             additional_ids=additional_labels,
+                            database=database_name,
                             score=prediction[2].astype(float),
                         ),
                     )
@@ -993,15 +1012,20 @@ class BiomedicalEntityLinking:
             # use provided dictionary
             if dictionary_path == "ctd-disease":
                 dictionary = NEL_CTD_DISEASE_DICT().data
+                database = NEL_CTD_DISEASE_DICT.get_database_name()
             elif dictionary_path == "ctd-chemical":
                 dictionary = NEL_CTD_CHEMICAL_DICT().data
+                database = NEL_CTD_CHEMICAL_DICT.get_database_name()
             elif dictionary_path == "ncbi-gene":
                 dictionary = NEL_NCBI_GENE_DICT().data
+                database = NEL_NCBI_GENE_DICT.get_database_name()
             elif dictionary_path == "ncbi-taxonomy":
                 dictionary = NEL_NCBI_TAXONOMY_DICT().data
+                database = NEL_NCBI_TAXONOMY_DICT.get_datbase_name()
             # use custom dictionary file
             else:
                 dictionary = DictionaryDataset(dictionary_path=dictionary_path).data
+                database = None
 
             # embed dictionary
             dictionary_names = [row[0] for row in dictionary]
@@ -1029,4 +1053,20 @@ class BiomedicalEntityLinking:
                 "Saving dictionary into cached file {}".format(cached_dictionary_path)
             )
 
-        return dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec
+        # determine dictionary name
+        if dictionary_path == "ctd-disease":
+            database = NEL_CTD_DISEASE_DICT.get_database_name()
+        elif dictionary_path == "ctd-chemical":
+            database = NEL_CTD_CHEMICAL_DICT.get_database_name()
+        elif dictionary_path == "ncbi-gene":
+            database = NEL_NCBI_GENE_DICT.get_database_name()
+        elif dictionary_path == "ncbi-taxonomy":
+            database = NEL_NCBI_TAXONOMY_DICT.get_datbase_name()
+
+        return (
+            dictionary,
+            database,
+            dict_sparse_embeds,
+            dict_dense_embeds,
+            tgt_space_mean_vec,
+        )

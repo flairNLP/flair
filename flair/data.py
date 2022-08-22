@@ -83,7 +83,9 @@ class Dictionary:
         elif self.add_unk:
             return 0
         else:
-            log.error(f"The string '{item}' is not in dictionary! Dictionary contains only: {self.get_items()}")
+            log.error(
+                f"The string '{item}' is not in dictionary! Dictionary contains only: {self.get_items()}"
+            )
             log.error(
                 "You can create a Dictionary that handles unknown items with an <unk>-key by setting add_unk = True in the construction."
             )
@@ -96,7 +98,9 @@ class Dictionary:
         :return: List of ID of strings
         """
         if not hasattr(self, "item2idx_not_encoded"):
-            d = dict([(key.decode("UTF-8"), value) for key, value in self.item2idx.items()])
+            d = dict(
+                [(key.decode("UTF-8"), value) for key, value in self.item2idx.items()]
+            )
             self.item2idx_not_encoded = defaultdict(int, d)
 
         if not items:
@@ -139,7 +143,9 @@ class Dictionary:
         self.__dict__ = d
         # set 'add_unk' if the dictionary was created with a version of Flair older than 0.9
         if "add_unk" not in self.__dict__.keys():
-            self.__dict__["add_unk"] = True if b"<unk>" in self.__dict__["idx2item"] else False
+            self.__dict__["add_unk"] = (
+                True if b"<unk>" in self.__dict__["idx2item"] else False
+            )
 
     @classmethod
     def load_from_file(cls, filename: Union[str, Path]):
@@ -165,19 +171,27 @@ class Dictionary:
 
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/characters"
         if name == "chars" or name == "common-chars":
-            char_dict = cached_path(f"{hu_path}/common_characters", cache_dir="datasets")
+            char_dict = cached_path(
+                f"{hu_path}/common_characters", cache_dir="datasets"
+            )
             return Dictionary.load_from_file(char_dict)
 
         if name == "chars-large" or name == "common-chars-large":
-            char_dict = cached_path(f"{hu_path}/common_characters_large", cache_dir="datasets")
+            char_dict = cached_path(
+                f"{hu_path}/common_characters_large", cache_dir="datasets"
+            )
             return Dictionary.load_from_file(char_dict)
 
         if name == "chars-xl" or name == "common-chars-xl":
-            char_dict = cached_path(f"{hu_path}/common_characters_xl", cache_dir="datasets")
+            char_dict = cached_path(
+                f"{hu_path}/common_characters_xl", cache_dir="datasets"
+            )
             return Dictionary.load_from_file(char_dict)
 
         if name == "chars-lemmatizer" or name == "common-chars-lemmatizer":
-            char_dict = cached_path(f"{hu_path}/common_characters_lemmatizer", cache_dir="datasets")
+            char_dict = cached_path(
+                f"{hu_path}/common_characters_lemmatizer", cache_dir="datasets"
+            )
             return Dictionary.load_from_file(char_dict)
 
         return Dictionary.load_from_file(name)
@@ -185,7 +199,11 @@ class Dictionary:
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, Dictionary):
             return False
-        return self.item2idx == o.item2idx and self.idx2item == o.idx2item and self.add_unk == o.add_unk
+        return (
+            self.item2idx == o.item2idx
+            and self.idx2item == o.idx2item
+            and self.add_unk == o.add_unk
+        )
 
     def __str__(self):
         tags = ", ".join(self.get_item_for_index(i) for i in range(min(len(self), 50)))
@@ -217,7 +235,9 @@ class Label:
     @value.setter
     def value(self, value):
         if not value and value != "":
-            raise ValueError("Incorrect label value provided. Label value needs to be set.")
+            raise ValueError(
+                "Incorrect label value provided. Label value needs to be set."
+            )
         else:
             self._value = value
 
@@ -270,7 +290,11 @@ class SpanLabel(Label):
         return len(self.span)
 
     def __eq__(self, other):
-        return self.value == other.value and self.score == other.score and self.span.id_text == other.span.id_text
+        return (
+            self.value == other.value
+            and self.score == other.score
+            and self.span.id_text == other.span.id_text
+        )
 
     @property
     def identifier(self):
@@ -309,28 +333,44 @@ class RelationLabel(Label):
 
 
 class EntityLinkingLabel(Label):
-    def __init__(self, span, id: Optional[str], concept_name, additional_ids: Optional[Union[List[str], str]], score: float = 1.0):
+    def __init__(
+        self,
+        span,
+        id: Optional[str],
+        concept_name: str,
+        additional_ids: Optional[Union[List[str], str]],
+        database: Optional[str],
+        score: float = 1.0,
+    ):
         super().__init__(id, score)
         self.span = span
         self.concept_name = concept_name
         if isinstance(additional_ids, str):
             additional_ids = [additional_ids]
         self.additional_ids = additional_ids
+        self.database = database
 
-    def spawn(self, value: str, score: float = 1):
-        return EntityLinkingLabel(self.span, value, self.concept_name, self.additional_ids, score)
+    def spawn(self, value: str, score: float = 1.0):
+        return EntityLinkingLabel(
+            self.span,
+            value,
+            self.concept_name,
+            self.additional_ids,
+            self.database,
+            score,
+        )
 
     def __str__(self):
         if self.additional_ids is None:
-            return f"{self._value}  {self.concept_name} ({round(self._score, 2)})"
+            return f"{self.database}:{self._value}  {self.concept_name} ({round(self._score, 2)})"
         else:
-            return f"{self._value} ({', '.join(self.additional_ids)})  {self.concept_name} ({round(self._score, 2)})"
+            return f"{self.database}:{self._value} ({', '.join(self.additional_ids)})  {self.concept_name} ({round(self._score, 2)})"
 
     def __repr__(self):
         if self.additional_ids is None:
-            return f"{self._value} {self.concept_name} [{self.span.id_text}] ({round(self._score, 2)})"
-        else: 
-            return f"{self._value} ({', '.join(self.additional_ids)}) {self.concept_name} [{self.span.id_text}] ({round(self._score, 2)})"
+            return f"{self.database}:{self._value} {self.concept_name} [{self.span.id_text}] ({round(self._score, 2)})"
+        else:
+            return f"{self.database}:{self._value} ({', '.join(self.additional_ids)}) {self.concept_name} [{self.span.id_text}] ({round(self._score, 2)})"
 
     def __len__(self):
         return len(self.span)
@@ -377,7 +417,9 @@ class DataPoint:
 
         return torch.tensor([], device=flair.device)
 
-    def get_each_embedding(self, embedding_names: Optional[List[str]] = None) -> List[torch.Tensor]:
+    def get_each_embedding(
+        self, embedding_names: Optional[List[str]] = None
+    ) -> List[torch.Tensor]:
         embeddings = []
         for embed_name in sorted(self._embeddings.keys()):
             if embedding_names and embed_name not in embedding_names:
@@ -390,7 +432,9 @@ class DataPoint:
         for name, vector in self._embeddings.items():
             if str(vector.device) != str(device):
                 if pin_memory:
-                    self._embeddings[name] = vector.to(device, non_blocking=True).pin_memory()
+                    self._embeddings[name] = vector.to(
+                        device, non_blocking=True
+                    ).pin_memory()
                 else:
                     self._embeddings[name] = vector.to(device, non_blocking=True)
 
@@ -413,7 +457,10 @@ class DataPoint:
 
     def add_complex_label(self, typename: str, label: Label):
 
-        if typename in self.annotation_layers and label in self.annotation_layers[typename]:
+        if (
+            typename in self.annotation_layers
+            and label in self.annotation_layers[typename]
+        ):
             return self
 
         if typename not in self.annotation_layers:
@@ -435,7 +482,11 @@ class DataPoint:
         if typename is None:
             return self.labels
 
-        return self.annotation_layers[typename] if typename in self.annotation_layers else []
+        return (
+            self.annotation_layers[typename]
+            if typename in self.annotation_layers
+            else []
+        )
 
     @property
     def labels(self) -> List[Label]:
@@ -471,7 +522,9 @@ class Token(DataPoint):
         self.whitespace_after: bool = whitespace_after
 
         self.start_pos = start_position
-        self.end_pos = start_position + len(text) if start_position is not None else None
+        self.end_pos = (
+            start_position + len(text) if start_position is not None else None
+        )
 
         self.sentence: Optional[Sentence] = None
         self._embeddings: Dict = {}
@@ -512,10 +565,18 @@ class Token(DataPoint):
         return self.get_embedding()
 
     def __str__(self) -> str:
-        return "Token: {} {}".format(self.idx, self.text) if self.idx is not None else "Token: {}".format(self.text)
+        return (
+            "Token: {} {}".format(self.idx, self.text)
+            if self.idx is not None
+            else "Token: {}".format(self.text)
+        )
 
     def __repr__(self) -> str:
-        return "Token: {} {}".format(self.idx, self.text) if self.idx is not None else "Token: {}".format(self.text)
+        return (
+            "Token: {} {}".format(self.idx, self.text)
+            if self.idx is not None
+            else "Token: {}".format(self.text)
+        )
 
 
 class Span(DataPoint):
@@ -618,7 +679,9 @@ class Span(DataPoint):
 
     def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
         assert self.tokens[0].sentence is not None
-        self.tokens[0].sentence.add_complex_label(tag_type, SpanLabel(self, value=tag_value, score=confidence))
+        self.tokens[0].sentence.add_complex_label(
+            tag_type, SpanLabel(self, value=tag_value, score=confidence)
+        )
 
 
 class Tokenizer(ABC):
@@ -670,7 +733,9 @@ class Sentence(DataPoint):
         self.language_code: Optional[str] = language_code
 
         self.start_pos = start_position
-        self.end_pos = start_position + len(text) if start_position is not None else None
+        self.end_pos = (
+            start_position + len(text) if start_position is not None else None
+        )
 
         # the tokenizer used for this sentence
         if isinstance(use_tokenizer, Tokenizer):
@@ -695,14 +760,19 @@ class Sentence(DataPoint):
 
         # if text is passed, instantiate sentence with tokens (words)
         if isinstance(text, (list, tuple)):
-            [self.add_token(self._restore_windows_1252_characters(token)) for token in text]
+            [
+                self.add_token(self._restore_windows_1252_characters(token))
+                for token in text
+            ]
         else:
             text = self._restore_windows_1252_characters(text)
             [self.add_token(token) for token in tokenizer.tokenize(text)]
 
         # log a warning if the dataset is empty
         if text == "":
-            log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
+            log.warning(
+                "Warning: An empty Sentence was created! Are there empty strings in your dataset?"
+            )
 
         self.tokenized: Optional[str] = None
 
@@ -777,7 +847,11 @@ class Sentence(DataPoint):
             if tag_value[0:2] in ["B-", "S-"]:
                 starts_new_span = True
 
-            if previous_tag_value[0:2] in ["S-"] and previous_tag_value[2:] != tag_value[2:] and in_span:
+            if (
+                previous_tag_value[0:2] in ["S-"]
+                and previous_tag_value[2:] != tag_value[2:]
+                and in_span
+            ):
                 starts_new_span = True
 
             if (starts_new_span or not in_span) and len(current_span) > 0:
@@ -785,7 +859,9 @@ class Sentence(DataPoint):
                 span_score = sum(scores) / len(scores)
                 if span_score > min_score:
                     span = Span(current_span)
-                    value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
+                    value = sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[
+                        0
+                    ][0]
                     self.add_complex_label(
                         typename=label_type,
                         label=SpanLabel(span=span, value=value, score=span_score),
@@ -835,7 +911,9 @@ class Sentence(DataPoint):
             token.clear_embeddings(embedding_names)
 
     @lru_cache(maxsize=1)  # cache last context, as training repeats calls
-    def left_context(self, context_length: int, respect_document_boundaries: bool = True):
+    def left_context(
+        self, context_length: int, respect_document_boundaries: bool = True
+    ):
         sentence = self
         left_context: List[str] = []
         while True:
@@ -853,7 +931,9 @@ class Sentence(DataPoint):
         return left_context
 
     @lru_cache(maxsize=1)  # cache last context, as training repeats calls
-    def right_context(self, context_length: int, respect_document_boundaries: bool = True):
+    def right_context(
+        self, context_length: int, respect_document_boundaries: bool = True
+    ):
         sentence = self
         right_context: List[str] = []
         while True:
@@ -990,10 +1070,18 @@ class Sentence(DataPoint):
         tokenized_string = self.to_tokenized_string()
 
         # add Sentence labels to output if they exist
-        sentence_labels = f"  − Sentence-Labels: {self.annotation_layers}" if self.annotation_layers != {} else ""
+        sentence_labels = (
+            f"  − Sentence-Labels: {self.annotation_layers}"
+            if self.annotation_layers != {}
+            else ""
+        )
 
         # add Token labels to output if they exist
-        token_labels = f'  − Token-Labels: "{tagged_string}"' if tokenized_string != tagged_string else ""
+        token_labels = (
+            f'  − Token-Labels: "{tagged_string}"'
+            if tokenized_string != tagged_string
+            else ""
+        )
 
         return f'Sentence: "{tokenized_string}"   [− Tokens: {len(self)}{token_labels}{sentence_labels}]'
 
@@ -1017,10 +1105,18 @@ class Sentence(DataPoint):
         tokenized_string = self.to_tokenized_string()
 
         # add Sentence labels to output if they exist
-        sentence_labels = f"  − Sentence-Labels: {self.annotation_layers}" if self.annotation_layers != {} else ""
+        sentence_labels = (
+            f"  − Sentence-Labels: {self.annotation_layers}"
+            if self.annotation_layers != {}
+            else ""
+        )
 
         # add Token labels to output if they exist
-        token_labels = f'  − Token-Labels: "{tagged_string}"' if tokenized_string != tagged_string else ""
+        token_labels = (
+            f'  − Token-Labels: "{tagged_string}"'
+            if tokenized_string != tagged_string
+            else ""
+        )
 
         return f'Sentence: "{tokenized_string}"   [− Tokens: {len(self)}{token_labels}{sentence_labels}]'
 
@@ -1083,7 +1179,9 @@ class Sentence(DataPoint):
         Return True or False depending on whether context is set (for instance in dataloader or elsewhere)
         :return: True if context is set, else False
         """
-        return self._previous_sentence is not None or self._position_in_dataset is not None
+        return (
+            self._previous_sentence is not None or self._position_in_dataset is not None
+        )
 
     def get_labels(self, label_type: str = None):
 
@@ -1097,9 +1195,15 @@ class Sentence(DataPoint):
 
         # otherwise check if the label exists on the token-level
         # in this case, create span-labels and return those
-        if label_type in set().union(*(token.annotation_layers.keys() for token in self)):
+        if label_type in set().union(
+            *(token.annotation_layers.keys() for token in self)
+        ):
             return [
-                SpanLabel(Span([token]), token.get_tag(label_type).value, token.get_tag(label_type).score)
+                SpanLabel(
+                    Span([token]),
+                    token.get_tag(label_type).value,
+                    token.get_tag(label_type).score,
+                )
                 for token in self
                 if label_type in token.annotation_layers
             ]
@@ -1184,13 +1288,23 @@ class Corpus:
             raise RuntimeError("No data provided when initializing corpus object.")
 
         # sample test data from train if none is provided
-        if test is None and sample_missing_splits and train and not sample_missing_splits == "only_dev":
+        if (
+            test is None
+            and sample_missing_splits
+            and train
+            and not sample_missing_splits == "only_dev"
+        ):
             train_length = _len_dataset(train)
             test_size: int = round(train_length / 10)
             test, train = randomly_split_into_two_datasets(train, test_size)
 
         # sample dev data from train if none is provided
-        if dev is None and sample_missing_splits and train and not sample_missing_splits == "only_test":
+        if (
+            dev is None
+            and sample_missing_splits
+            and train
+            and not sample_missing_splits == "only_test"
+        ):
             train_length = _len_dataset(train)
             dev_size: int = round(train_length / 10)
             dev, train = randomly_split_into_two_datasets(train, dev_size)
@@ -1311,7 +1425,9 @@ class Corpus:
 
         tokens: List[str] = []
         for token, freq in tokens_and_frequencies.most_common():
-            if (min_freq != -1 and freq < min_freq) or (max_tokens != -1 and len(tokens) == max_tokens):
+            if (min_freq != -1 and freq < min_freq) or (
+                max_tokens != -1 and len(tokens) == max_tokens
+            ):
                 break
             tokens.append(token)
         return tokens
@@ -1329,7 +1445,9 @@ class Corpus:
         splits = randomly_split_into_two_datasets(dataset, sampled_size)
         return splits[0]
 
-    def obtain_statistics(self, label_type: str = None, pretty_print: bool = True) -> Union[dict, str]:
+    def obtain_statistics(
+        self, label_type: str = None, pretty_print: bool = True
+    ) -> Union[dict, str]:
         """
         Print statistics about the class distribution (only labels of sentences are taken into account) and sentence
         sizes.
@@ -1454,15 +1572,21 @@ class Corpus:
             log.error(
                 f"Corpus contains only the labels: {', '.join([f'{label[0]} (#{label[1]})' for label in all_label_types.most_common()])}"
             )
-            log.error(f"You specified as label_type='{label_type}' which is not in this dataset!")
+            log.error(
+                f"You specified as label_type='{label_type}' which is not in this dataset!"
+            )
 
             raise Exception
 
         log.info(
             f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}"
         )
-        log.info(f"{erfasst_count} instances in dict, {unked_count} instances are UNK'ed")
-        log.info(f"Most commonly observed '{label_type}'-labels are {label_occurrence.most_common(20)}")
+        log.info(
+            f"{erfasst_count} instances in dict, {unked_count} instances are UNK'ed"
+        )
+        log.info(
+            f"Most commonly observed '{label_type}'-labels are {label_occurrence.most_common(20)}"
+        )
         log.info(f"Created (for label '{label_type}') {label_dictionary}")
 
         return label_dictionary
@@ -1528,7 +1652,12 @@ class MultiCorpus(Corpus):
             f"{len(self.dev) if self.dev else 0} dev + "
             f"{len(self.test) if self.test else 0} test sentences\n - "
         )
-        output += "\n - ".join([f"{type(corpus).__name__} {str(corpus)} - {corpus.name}" for corpus in self.corpora])
+        output += "\n - ".join(
+            [
+                f"{type(corpus).__name__} {str(corpus)} - {corpus.name}"
+                for corpus in self.corpora
+            ]
+        )
         return output
 
 
