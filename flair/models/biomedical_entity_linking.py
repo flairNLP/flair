@@ -150,14 +150,15 @@ class Ab3P:
         self.word_data_dir = word_data_dir
 
     @classmethod
-    def load(cls):
+    def load(cls, ab3p_path: Path = None)):
         data_dir = os.path.join(flair.cache_root, "ab3p")
         if not os.path.exists(data_dir):
             os.mkdir(os.path.join(data_dir))
         word_data_dir = os.path.join(data_dir, "word_data/")
         if not os.path.exists(word_data_dir):
             os.mkdir(word_data_dir)
-        ab3p_path = cls.download_ab3p(data_dir, word_data_dir)
+        if ab3p_path is None:
+            ab3p_path = cls.download_ab3p(data_dir, word_data_dir)
         return cls(ab3p_path, word_data_dir)
 
     @classmethod
@@ -737,6 +738,7 @@ class BiomedicalEntityLinking:
         dict_sparse_embeds: np.ndarray,
         dict_dense_embeds: np.ndarray,
         tgt_space_mean_vec: np.ndarray,
+        ab3p_path: Path
     ) -> None:
         """
         Initalize HunNen class, called by classmethod load
@@ -751,6 +753,7 @@ class BiomedicalEntityLinking:
         self.dict_dense_embeds = dict_dense_embeds
         self.tgt_space_mean_vec = tgt_space_mean_vec
         self.text_preprocessor = TextPreprocess()
+        self.ab3p_path = ab3p_path
 
     @classmethod
     def load(
@@ -759,6 +762,7 @@ class BiomedicalEntityLinking:
         dictionary_path: Union[str, Path] = None,
         model_type="biosyn",
         max_length=25,
+        ab3p_path: Path = None,
     ):
         """
         Load a model for biomedical named entity normalization using BioSyn or SapBert on sentences annotated with
@@ -842,7 +846,7 @@ class BiomedicalEntityLinking:
         ) = cls._cache_or_load_dictionary(model, model_name, str(dictionary_path))
 
         return cls(
-            model, dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec
+            model, dictionary, dict_sparse_embeds, dict_dense_embeds, tgt_space_mean_vec, ab3p_path
         )
 
     def predict(
@@ -867,7 +871,7 @@ class BiomedicalEntityLinking:
 
         # use Ab3P to build abbreviation dictionary
         if use_Ab3P:
-            ab3p = Ab3P.load()
+            ab3p = Ab3P.load(self.ab3p_path)
             abbreviation_dict = ab3p.build_abbreviation_dict(sentences)
 
         for sentence in sentences:
