@@ -768,8 +768,8 @@ class BiomedicalEntityLinking:
         Load a model for biomedical named entity normalization using BioSyn or SapBert on sentences annotated with
         biomedical entity mentions
         :param model_name: Name of pretrained model to use. Possible values for pretrained models are:
-        chemical, disease, sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease,
-        biobert-ncbi-disease, biobert-bc5cdr-chemical, sapbert
+        chemical, disease, gene, sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease,
+        biobert-ncbi-disease, biobert-bc5cdr-chemical, biosyn-biobert-bc2gn, biosyn-sapbert-bc2gn, sapbert
         :param dictionary_path: Name of one of the provided dictionaries listing all possible ids and their synonyms
         or a path to a dictionary file with each line in the format: id||name, with one line for each name of a concept.
         Possible values for dictionaries are: chemical, ctd-chemical, disease, bc5cdr-disease, gene, cnbci-gene,
@@ -781,6 +781,8 @@ class BiomedicalEntityLinking:
 
         # if a provided model is used,
         # modify model name to huggingface path
+
+        # BioSyn
         if model_name in [
             "sapbert-bc5cdr-disease",
             "sapbert-ncbi-disease",
@@ -788,14 +790,26 @@ class BiomedicalEntityLinking:
             "biobert-bc5cdr-disease",
             "biobert-ncbi-disease",
             "biobert-bc5cdr-chemical",
+            "biosyn-biobert-bc2gn",
+            "biosyn-sapbert-bc2gn"
         ]:
             model_path = "dmis-lab/biosyn-" + model_name
-        elif model_name == "sapbert":
-            model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
-        elif model_name == "disease":
+        elif model_name == "disease" and model_type == "biosyn":
             model_path = "dmis-lab/biosyn-sapbert-bc5cdr-disease"
-        elif model_name == "chemical":
+        elif model_name == "chemical" and model_type == "biosyn":
             model_path = "dmis-lab/biosyn-sapbert-bc5cdr-chemical"
+        elif model_name == "gene" and model_type == "biosyn":
+            model_path = "dmis-lab/biosyn-sapbert-bc2gn"
+        # Sapbert
+        elif model_name == "sapbert" or model_type =="sapbert":
+            model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
+            model_type = "sapbert"
+        elif model_name == "disease" and model_type == "sapbert":
+            model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
+        elif model_name == "chemical" and model_type == "sapbert":
+            model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
+        elif model_name == "gene" and model_type == "sapbert":
+            raise ValueError("SapBERT is not trained for gene entity linking. You can use BioSyn instead.") 
 
         # Use BioSyn or SapBert
         if model_type == "biosyn":
@@ -803,39 +817,58 @@ class BiomedicalEntityLinking:
         elif model_type == "sapbert":
             model = SapBert(max_length=max_length, use_cuda=torch.cuda.is_available())
         else:
-            log.error(
-                "Invalid value for model_type. The only possible values are 'biosyn' and 'sapbert'"
-            )
-            raise ValueError("Invalid value for model_type")
+            raise ValueError("Invalid value for model_type. The only possible values are 'biosyn' and 'sapbert'")
 
         model.load_model(model_name_or_path=model_path)
 
         # determine dictionary to use
-        if model_name in [
-            "sapbert-bc5cdr-disease",
-            "sapbert-ncbi-disease",
-            "biobert-bc5cdr-disease",
-            "biobert-ncbi-disease",
-            "disease",
-        ] or dictionary_path in ["ctd-disease", "disease"]:
+        if dictionary_path is "disease":
             dictionary_path = "ctd-disease"
-        elif model_name in [
-            "sapbert-bc5cdr-chemical",
-            "biobert-bc5cdr-chemical",
-            "chemical",
-        ] or dictionary_path in ["ctd-chemical", "chemical"]:
+        if dictionary_path is "chemical":
             dictionary_path = "ctd-chemical"
-        elif dictionary_path in ["gene", "ncbi-gene"]:
+        if dictionary_path is "gene":
             dictionary_path = "ncbi-gene"
-        elif dictionary_path in ["taxonomy", "ncbi-taxonomy"]:
+        if dictionary_path is "taxonomy":
             dictionary_path = "ncbi-taxonomy"
-        elif dictionary_path is None:
-            log.error(
-                """When using a custom model, you need to specify a dictionary. 
-            Available options are: 'disease', 'chemical', 'gene' and 'taxonomy'.
-            Or provide a path to a dictionary file."""
-            )
-            raise ValueError("Invalid dictionary")
+        if dictionary_path is None:
+        # disease
+            if model_name in [
+                "sapbert-bc5cdr-disease",
+                "sapbert-ncbi-disease",
+                "biobert-bc5cdr-disease",
+                "biobert-ncbi-disease",
+                "disease",
+            ]:
+                dictionary_path = "ctd-disease"
+            # chemical
+            elif model_name in [
+                "sapbert-bc5cdr-chemical",
+                "biobert-bc5cdr-chemical",
+                "chemical",
+            ]:
+                dictionary_path = "ctd-chemical"
+            # gene
+            elif model_name in [
+                "gene", 
+                "biosyn-biobert-bc2gn",
+                "biosyn-sapbert-bc2gn"
+            ]:
+                dictionary_path = "ncbi-gene"
+            # error
+            else:
+                if model == "sapbert":
+                    log.error(
+                        """When using the sapbert model, you need to specify a dictionary. 
+                    Available options are: 'disease', 'chemical', 'gene' and 'taxonomy'.
+                    Or provide a path to a dictionary file."""
+                    )
+                else: 
+                    log.error(
+                        """When using a custom model you need to specify a dictionary. 
+                    Available options are: 'disease', 'chemical', 'gene' and 'taxonomy'.
+                    Or provide a path to a dictionary file."""
+                    )
+                raise ValueError("Invalid dictionary")
 
         # embed dictionary
         (
