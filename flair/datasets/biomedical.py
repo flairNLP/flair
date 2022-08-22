@@ -525,12 +525,11 @@ class HunerDataset(ColumnCorpus, ABC):
             entities_per_document={k: dataset.entities_per_document[k] for k in ids},
         )
 
-
-class NEL_CTD_DISEASE_DICT:
+class NamedEntityLinkingDictionary:
     """
-    Dictionary for Named Entity Linking on Diseases
+    Base class for dictionaries for named entity linking.
+    Dictionary contains all entities in the corpus and their associated ids.
     """
-    
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -550,19 +549,7 @@ class NEL_CTD_DISEASE_DICT:
 
         # check if there is a parsed_dict file in cache
         if dataset_file.exists():
-            data = []
-            with open(dataset_file, mode="r", encoding="utf-8") as f:
-                lines = f.readlines()
-                for line in lines:
-                    line = line.strip()
-                    if line == "":
-                        continue
-                    cui, name = line.split("||")
-                    name = name.lower()
-                    data.append((name, cui))
-
-            data = np.array(data)
-            self._dictionary = data
+            self._dictionary = self.parse_dictionary(dataset_file)
 
         # if no cached dataset exists, download dataset
         else:
@@ -575,9 +562,48 @@ class NEL_CTD_DISEASE_DICT:
 
             self._dictionary = data
             
+    @classmethod
+    def parse_dictionary(cls, dataset_file: Path):
+        data = []
+        with open(dataset_file, mode="r", encoding="utf-8") as f:
+            lines = f.readlines()
+            for line in lines:
+                line = line.strip()
+                if line == "":
+                    continue
+                cui, name = line.split("||")
+                name = name.lower()
+                data.append((name, cui))
+
+        data = np.array(data)
+        return data
+
     @property
     def data(self):
         return self._dictionary
+
+    @classmethod
+    def download_dataset(cls, data_dir: Path) -> Path:
+        raise NotImplementedError
+
+    @classmethod
+    def parse_dataset(cls, original_file: Path):
+        raise NotImplementedError
+    
+
+class NEL_CTD_DISEASE_DICT(NamedEntityLinkingDictionary):
+    """
+    Dictionary for Named Entity Linking on Diseases
+    """
+    
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine"""
+        super(NEL_CTD_DISEASE_DICT, self).__init__(base_path=base_path)
+            
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
@@ -654,7 +680,7 @@ class NEL_CTD_DISEASE_DICT:
             return data
 
 
-class NEL_CTD_CHEMICAL_DICT:
+class NEL_CTD_CHEMICAL_DICT(NamedEntityLinkingDictionary):
     """
     Dictionary for Named Entity Linking on Chemicals
     """
@@ -665,46 +691,8 @@ class NEL_CTD_CHEMICAL_DICT:
     ):
         """
         :param base_path: Path to the corpus on your machine"""
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
-        
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-        data_folder = base_path / dataset_name
-        dataset_file = data_folder / f"{dataset_name}_parsed.txt"
-
-        # check if there is a parsed_dict file in cache
-        if dataset_file.exists():
-            data = []
-            with open(dataset_file, mode="r", encoding="utf-8") as f:
-                lines = f.readlines()
-                for line in lines:
-                    line = line.strip()
-                    if line == "":
-                        continue
-                    cui, name = line.split("||")
-                    name = name.lower()
-                    data.append((name, cui))
-
-            self._dictionary = np.array(data)
-
-        # if no cached dataset exists, download dataset
-        else:
-            data_file = self.download_dataset(data_folder)
-            data = self.parse_dataset(data_file)
-            # cache dataset
-            with open(dataset_file, "w", encoding="utf-8") as f:
-                for name, cui in data:
-                    f.write(f"{cui}||{name}\n")		
-
-            self._dictionary = data
-
-    @property
-    def data(self):
-        return self._dictionary
+        super(NEL_CTD_CHEMICAL_DICT, self).__init__(base_path=base_path)
+            
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
@@ -772,7 +760,7 @@ class NEL_CTD_CHEMICAL_DICT:
             return data            
 
 
-class NEL_NCBI_GENE_DICT:
+class NEL_NCBI_GENE_DICT(NamedEntityLinkingDictionary):
     """
     Dictionary for Named Entity Linking on Genes
     """
@@ -783,48 +771,8 @@ class NEL_NCBI_GENE_DICT:
     ):
         """
         :param base_path: Path to the corpus on your machine"""
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
-        
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-        data_folder = base_path / dataset_name
-        dataset_file = data_folder / f"{dataset_name}_parsed.txt"
-
-        # check if there is a parsed_dict file in cache
-        if dataset_file.exists():
-            data = []
-            with open(dataset_file, mode="r", encoding="utf-8") as f:
-                lines = f.readlines()
-                for line in lines:
-                    line = line.strip()
-                    if line == "":
-                        continue
-                    cui, name = line.split("||")
-                    name = name.lower()
-                    data.append((name, cui))
-
-            data = np.array(data)
-            self._dictionary = data
-
-        # if no cached dataset exists, download dataset
-        else:
-            data_file = self.download_dataset(data_folder)
-            data = self.parse_dataset(data_file)
-            # cache dataset
-            with open(dataset_file, "w", encoding="utf-8") as f:
-                for name, cui in data:
-                    f.write(f"{cui}||{name}\n")		
-
-            self._dictionary = data
-
-    @property
-    def data(self):
-        return self._dictionary
-
+        super(NEL_NCBI_GENE_DICT, self).__init__(base_path=base_path)
+            
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
         data_url = "https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz"
@@ -916,7 +864,7 @@ class NEL_NCBI_GENE_DICT:
         return any([newentry, empty, loc, text_comment])
 
 
-class NEL_NCBI_TAXONOMY_DICT:
+class NEL_NCBI_TAXONOMY_DICT(NamedEntityLinkingDictionary):
     """
     Dictionary for Named Entity Linking on Organisms
     """
@@ -927,47 +875,7 @@ class NEL_NCBI_TAXONOMY_DICT:
     ):
         """
         :param base_path: Path to the corpus on your machine"""
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
-        
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-        data_folder = base_path / dataset_name
-        dataset_file = data_folder / f"{dataset_name}_parsed.txt"
-
-        # check if there is a parsed_dict file in cache
-        if dataset_file.exists():
-            data = []
-            with open(dataset_file, mode="r", encoding="utf-8") as f:
-                lines = f.readlines()
-                for line in lines:
-                    line = line.strip()
-                    if line == "":
-                        continue
-                    cui, name = line.split("||")
-                    name = name.lower()
-                    data.append((name, cui))
-
-            data = np.array(data)
-            self._dictionary = data
-
-        # if no cached dataset exists, download dataset
-        else:
-            data_file = self.download_dataset(data_folder)
-            data = self.parse_dataset(data_file)
-            # cache dataset
-            with open(dataset_file, "w", encoding="utf-8") as f:
-                for name, cui in data:
-                    f.write(f"{cui}||{name}\n")	
-
-            self._dictionary = data
-
-    @property
-    def data(self):
-        return self._dictionary
+        super(NEL_NCBI_TAXONOMY_DICT, self).__init__(base_path = base_path)
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
@@ -1007,9 +915,9 @@ class NEL_NCBI_TAXONOMY_DICT:
                 # parse line
                 parsed_line = {}
                 elements = [e.strip() for e in line.strip().split("|")]
-                parsed_line["identifier"] = elements[0] if elements[2] == "" else elements[2]
-                parsed_line["name"] = elements[1]
-                parsed_line["field"] = elements[3]  #
+                parsed_line["identifier"] = elements[0]
+                parsed_line["name"] = elements[1] if elements[2] == "" else elements[2]
+                parsed_line["field"] = elements[3] 
 
                 if parsed_line["name"] in ["all", "root"]:
                     continue
@@ -1031,7 +939,7 @@ class NEL_NCBI_TAXONOMY_DICT:
 
                     for name in names:
                         # remove punctuation from synoym and make lowercase
-                        name = punctuation_regex.split(synonym)
+                        name = punctuation_regex.split(name)
                         name = " ".join(name).strip().lower()
                         
                         data.append((name, curr_identifier))
