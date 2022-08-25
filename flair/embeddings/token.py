@@ -1106,9 +1106,9 @@ class HashEmbeddings(TokenEmbeddings):
             return int(hash_function.hexdigest(), 16) % self.__num_embeddings
 
         context_idxs = [[get_idx_for_item(t.text) for t in sentence.tokens] for sentence in sentences]
+        context_idxs = [item for sublist in context_idxs for item in sublist]
 
         hash_sentences = torch.tensor(context_idxs, dtype=torch.long).to(flair.device)
-
         embedded = self.embedding_layer.forward(hash_sentences)
 
         index = 0
