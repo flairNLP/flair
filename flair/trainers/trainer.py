@@ -123,6 +123,7 @@ class ModelTrainer:
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
         scheduler_state_dict: Optional[Dict[str, Any]] = None,
         save_optimizer_state: bool = False,
+        append_to_existing: bool = False,
         **kwargs,
     ) -> dict:
         """
@@ -268,7 +269,7 @@ class ModelTrainer:
                 train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
         # prepare loss logging file and set up header
-        loss_txt = init_output_file(base_path, "loss.tsv") if create_loss_file else None
+        loss_txt = init_output_file(base_path, "loss.tsv", append=append_to_existing) if create_loss_file else None
 
         weight_extractor = WeightExtractor(base_path)
 
@@ -379,32 +380,33 @@ class ModelTrainer:
         # At any point you can hit Ctrl + C to break out of training early.
         try:
             if create_file_logs:
-                log_handler = add_file_handler(log, base_path / "training.log")
+                log_handler = add_file_handler(log, base_path / "training.log", append=append_to_existing)
             else:
                 log_handler = None
 
             lr_info = ",".join([f"{lr:.6f}" for lr in current_learning_rate])
 
-            log_line(log)
-            log.info(f'Model: "{self.model}"')
-            log_line(log)
-            log.info(f'Corpus: "{self.corpus}"')
-            log_line(log)
-            log.info("Parameters:")
-            log.info(f' - learning_rate: "{lr_info}"')
-            log.info(f' - mini_batch_size: "{mini_batch_size}"')
-            log.info(f' - patience: "{patience}"')
-            log.info(f' - anneal_factor: "{anneal_factor}"')
-            log.info(f' - max_epochs: "{max_epochs}"')
-            log.info(f' - shuffle: "{shuffle}"')
-            log.info(f' - train_with_dev: "{train_with_dev}"')
-            log.info(f' - batch_growth_annealing: "{batch_growth_annealing}"')
-            log_line(log)
-            log.info(f'Model training base path: "{base_path}"')
-            log_line(log)
-            log.info(f"Device: {flair.device}")
-            log_line(log)
-            log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
+            if not append_to_existing:
+                log_line(log)
+                log.info(f'Model: "{self.model}"')
+                log_line(log)
+                log.info(f'Corpus: "{self.corpus}"')
+                log_line(log)
+                log.info("Parameters:")
+                log.info(f' - learning_rate: "{lr_info}"')
+                log.info(f' - mini_batch_size: "{mini_batch_size}"')
+                log.info(f' - patience: "{patience}"')
+                log.info(f' - anneal_factor: "{anneal_factor}"')
+                log.info(f' - max_epochs: "{max_epochs}"')
+                log.info(f' - shuffle: "{shuffle}"')
+                log.info(f' - train_with_dev: "{train_with_dev}"')
+                log.info(f' - batch_growth_annealing: "{batch_growth_annealing}"')
+                log_line(log)
+                log.info(f'Model training base path: "{base_path}"')
+                log_line(log)
+                log.info(f"Device: {flair.device}")
+                log_line(log)
+                log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
 
             previous_learning_rate = current_learning_rate
 
@@ -761,7 +763,7 @@ class ModelTrainer:
                     with open(loss_txt, "a") as f:
 
                         # make headers on first epoch
-                        if epoch == 1:
+                        if epoch == 1 and not append_to_existing:
                             f.write("EPOCH\tTIMESTAMP\tBAD_EPOCHS" "\tLEARNING_RATE\tTRAIN_LOSS")
 
                             if log_train:
