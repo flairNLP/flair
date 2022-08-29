@@ -36,7 +36,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         delete_goldsubspans_in_training: bool = True,
         concat_span_length_to_embedding: bool = False,
         resolve_overlaps: str = "by_token",
+        gazetteer_vector_method: str = "gaz-lookup",
         gazetteer_file: str = None,
+        gazetteer_feature_model = None,
         gazetteer_untagged_label_name: str = "untagged",
         gazetteer_include_untagged: bool = False,
         gazetteer_count_type: str = "norm_conf_ratio",
@@ -75,7 +77,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "norm_by_observations": normalized by dividing by total number of observations (requires O counts to be in gazetteer)
             "norm_conf": normalize (by sum) and concatenate confidence score based on frequency
             "norm_conf_ratio: normalize (by sum), concatenate confidence score and concatenate tagged/untagged ratio (requires O counts to be in gazetteer)
+        :param gazetteer_vector_method # TODO describe
         :param gazetteer_file: path to a csv file containing a gazetteer list with span strings in rows, label names in columns, counts in cells
+        :param gazetteer_feature_model: # TODO describe
         :param gazetteer_untagged_label_name: give column name in gazetteer for "O" (untagged) counts (defaults to None, eg. not existing)
         :param gazetteer_include_untagged: set to True if you want to include untagged in gazetteer feature value (if existing)
         :param use_precomputed_gazetteer #TODO use an already precomputed gazetteer dictionary (e.g. with rel_conf vector), so give its json file path
@@ -94,6 +98,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             if pooling_operation == "first_last" else word_embeddings.embedding_length
 
         self.delete_goldsubspans_in_training = delete_goldsubspans_in_training
+        self.gazetteer_vector_method = gazetteer_vector_method
         self.gazetteer_file = gazetteer_file
         self.gazetteer_untagged_label_name = gazetteer_untagged_label_name
         self.gazetteer_count_type = gazetteer_count_type
@@ -112,6 +117,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
         self.concat_span_length_to_embedding = concat_span_length_to_embedding
         if self.concat_span_length_to_embedding:
             final_embedding_size += 1
+
+        #if self.gazetteer_feature_model:
+        #    self.gazetteer_feature_model = self.gazetteer_feature_model
 
         if self.gazetteer_file:
             if self.use_precomputed_gazetteer:
@@ -233,6 +241,24 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                             else:
                                 rt_vector = (np.concatenate((cleaned_vector, confidence, tagged_ratio), 0))
 
+                        if self.gazetteer_count_type == "norm_conf_ratioNGrams":
+                            # TODO: this needs the new version of the gazetteer which already includes a ratio column
+                            # TODO: this ratio was calculated considering also the appearance of n-grams in the spans
+                            cleaned_vector = np.array(vector[0:4]) # just the MISC, ORG, PER, LOC counts
+                            observation_count = np.array(vector[4]) # abs_span_freq
+                            sum_tagged = np.sum(vector[0:4])  # sum of MISC, ORG, PER, LOC
+                            tagged_ratio = np.array(vector[6]).reshape((1,)) # this is precomputed in gaz file
+
+                            DEFINED_MAX = 50  # TODO: what to choose here? make parameter
+                            # confidence = np.array([min(observation_count / DEFINED_MAX, 1)])
+                            confidence = np.array([min(sum_tagged / DEFINED_MAX, 1)])
+                            #print((cleaned_vector / sum_tagged).shape, confidence.shape, tagged_ratio.shape)
+
+                            if sum_tagged > 0:
+                                rt_vector = (np.concatenate((cleaned_vector / sum_tagged, confidence, tagged_ratio), 0))
+                            else:
+                                rt_vector = (np.concatenate((cleaned_vector, confidence, tagged_ratio), 0))
+
                         #print(key, vector, "\t", cleaned_vector, "\t", rt_vector)
 
                         self.gazetteer[key] = np.around(rt_vector, decimals = 5).tolist()
@@ -248,20 +274,26 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                             json.dump(self.gazetteer, fp)
                         print("f---- Done saving precomputed dict as: ", f"{self.save_computed_gazetteer}")
 
-            self.size_gazetteer_vector = len(
-                next(iter(self.gazetteer.values())))  # one entry in gaz to get its size
+            if self.gazetteer:
+                self.size_gazetteer_vector = len(
+                    next(iter(self.gazetteer.values())))  # one entry in gaz to get its size
 
-            final_embedding_size += self.size_gazetteer_vector
+                if self.add_lower_case_lookup and self.gazetteer_vector_method == "gaz-lookup":  # one more time
+                    final_embedding_size += self.size_gazetteer_vector
 
-            if self.add_lower_case_lookup:  # one more time
-                final_embedding_size += self.size_gazetteer_vector
+                if self.add_substring_gazetteer_lookup and self.gazetteer_vector_method == "gaz-lookup":
+                    final_embedding_size += self.size_gazetteer_vector
 
-            if self.add_substring_gazetteer_lookup:
-                final_embedding_size += self.size_gazetteer_vector
+                    # if self.gazetteer_count_type == "norm_conf_ratio":
+                    #    if self.delete_goldsubspans_in_training:
+                    #        final_embedding_size = final_embedding_size - 1 # we leave out the ratio in substring lookup, as it has no meaning here
 
-                if self.gazetteer_count_type == "norm_conf_ratio":
-                    if self.delete_goldsubspans_in_training:
-                        final_embedding_size = final_embedding_size - 1 # we leave out the ratio in substring lookup, as it has no meaning here
+            if self.gazetteer_vector_method != "none":
+                if self.gazetteer:
+                    final_embedding_size += self.size_gazetteer_vector
+                else:
+                    final_embedding_size += 6  # Todo: make flexible depending on model prediction format
+
 
         self.use_mlp = use_mlp
         self.mlp_hidden_dim = mlp_hidden_dim
@@ -283,6 +315,10 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             decoder=decoder,
             **classifierargs,
         )
+
+        self.gazetteer_feature_model = gazetteer_feature_model
+        if self.gazetteer_feature_model:
+            self.gazetteer_feature_model.eval() # TODO good? so not further fine tuned
 
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
@@ -320,59 +356,84 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
     def emb_mean(self, arg):
         return torch.mean(arg, 0)
 
-    def get_gazetteer_embedding(self, span_string: str) -> torch.Tensor:
+    def get_gazetteer_embedding(self, span_string: str, method = "gaz-lookup") -> torch.Tensor:
 
-        if span_string in self.gazetteer:
-            gaz_vector = torch.Tensor(self.gazetteer[span_string])
-        else:
-            vector_length = self.size_gazetteer_vector
-            if self.gazetteer_include_untagged and self.O_id != -1: # if we have O in gazetteer, default O vector should also have 1
-                #gaz_vector = torch.zeros(vector_length)
-                gaz_vector = torch.neg(torch.ones(vector_length))
-                gaz_vector[self.O_id] = 1
+        if method == "none":
+            return None
+
+        if method == "gaz-model" and self.gazetteer_feature_model:
+            """
+            always use the gaz prediction model, so even if string is in original gazetteer
+            """
+            gaz_vector = self.gazetteer_feature_model.predict([span_string]).squeeze()
+            gaz_vector = gaz_vector.detach() # TODO good?
+            #print(span_string, gaz_vector)
+
+        if method == "gaz-lookup+model" and self.gazetteer_feature_model and self.gazetteer:
+            """
+            only use the char rnn if span_string is not in gazetteer
+            """
+            if span_string in self.gazetteer:
+                gaz_vector = torch.Tensor(self.gazetteer[span_string])
             else:
-                #gaz_vector = torch.zeros(vector_length)
-                gaz_vector = torch.neg(torch.ones(vector_length))
+                gaz_vector = self.gazetteer_feature_model.predict([span_string]).squeeze()
+                gaz_vector = gaz_vector.detach() # TODO good?
 
-        if self.add_lower_case_lookup:
-            if span_string.title() in self.gazetteer: # "BARACK OBAMA" --> "Barack Obama"
-                gaz_vector_lower = torch.Tensor(self.gazetteer[span_string.title()])
+        if method == "gaz-lookup" and self.gazetteer_file:
+
+            if span_string in self.gazetteer:
+                gaz_vector = torch.Tensor(self.gazetteer[span_string])
             else:
                 vector_length = self.size_gazetteer_vector
-                if self.gazetteer_include_untagged and self.O_id != -1:  # if we have "O" in gazetteer, default "O" vector should also have 1 there
-                    #gaz_vector_lower = torch.zeros(vector_length)
-                    gaz_vector_lower = torch.neg(torch.ones(vector_length))
-                    gaz_vector_lower[self.O_id] = 1
+                if self.gazetteer_include_untagged and self.O_id != -1: # if we have O in gazetteer, default O vector should also have 1
+                    #gaz_vector = torch.zeros(vector_length)
+                    gaz_vector = torch.neg(torch.ones(vector_length))
+                    gaz_vector[self.O_id] = 1
                 else:
-                    #gaz_vector_lower = torch.zeros(vector_length)  # get same length zero vector
-                    gaz_vector_lower = torch.neg(torch.ones(vector_length))
+                    #gaz_vector = torch.zeros(vector_length)
+                    gaz_vector = torch.neg(torch.ones(vector_length))
 
-            gaz_vector = torch.concat((gaz_vector, gaz_vector_lower), 0)
+            if self.add_lower_case_lookup:
+                if span_string.title() in self.gazetteer: # "BARACK OBAMA" --> "Barack Obama"
+                    gaz_vector_lower = torch.Tensor(self.gazetteer[span_string.title()])
+                else:
+                    vector_length = self.size_gazetteer_vector
+                    if self.gazetteer_include_untagged and self.O_id != -1:  # if we have "O" in gazetteer, default "O" vector should also have 1 there
+                        #gaz_vector_lower = torch.zeros(vector_length)
+                        gaz_vector_lower = torch.neg(torch.ones(vector_length))
+                        gaz_vector_lower[self.O_id] = 1
+                    else:
+                        #gaz_vector_lower = torch.zeros(vector_length)  # get same length zero vector
+                        gaz_vector_lower = torch.neg(torch.ones(vector_length))
 
-        if self.add_substring_gazetteer_lookup:
-            tokens = span_string.split()
-            subspans = []
+                gaz_vector = torch.concat((gaz_vector, gaz_vector_lower), 0)
 
-            for span_len in range(1, len(tokens) +1):
-                subspans.extend([" ".join(tokens[n:n + span_len]) for n in range(len(tokens) - span_len + 1)])
+            if self.add_substring_gazetteer_lookup:
+                tokens = span_string.split()
+                subspans = []
 
-            vector_length = self.size_gazetteer_vector
-            sub_mean_vector = torch.zeros(vector_length)
-            counter_found = 0
-            for sub in subspans:
-                if sub in self.gazetteer:
-                    sub_mean_vector += torch.Tensor(self.gazetteer[sub])
-                    counter_found +=1
-            #if len(subspans) >0:
-            #    sub_mean_vector = sub_mean_vector/len(subspans)
-            if counter_found >0:
-                sub_mean_vector = sub_mean_vector/counter_found # TODO change back?
+                for span_len in range(1, len(tokens) +1):
+                    subspans.extend([" ".join(tokens[n:n + span_len]) for n in range(len(tokens) - span_len + 1)])
 
-            if self.gazetteer_count_type == "norm_conf_ratio":
-                if self.delete_goldsubspans_in_training:
-                    sub_mean_vector = sub_mean_vector[:-1]
+                vector_length = self.size_gazetteer_vector
+                sub_mean_vector = torch.zeros(vector_length)
+                counter_found = 0
+                for sub in subspans:
+                    if sub in self.gazetteer:
+                        sub_mean_vector += torch.Tensor(self.gazetteer[sub])
+                        counter_found +=1
+                if len(subspans) >0:
+                    sub_mean_vector = sub_mean_vector/len(subspans)
 
-            gaz_vector = torch.concat((gaz_vector, sub_mean_vector))
+                #if counter_found >0:
+                #    sub_mean_vector = sub_mean_vector/counter_found # TODO change back?
+
+                #if self.gazetteer_count_type == "norm_conf_ratio":
+                #    if self.delete_goldsubspans_in_training:
+                #        #sub_mean_vector = sub_mean_vector[:-1] # taking the last (ratio) wouldn't really make sense here, right?
+                #        sub_mean_vector = sub_mean_vector
+
+                gaz_vector = torch.concat((gaz_vector, sub_mean_vector))
 
         return gaz_vector.to(flair.device)
 
@@ -403,7 +464,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 spans_sentence.extend([Span(tokens[n:n + span_len]) for n in range(len(tokens) - span_len + 1)])
 
             # delete spans that are subspans of labeled spans (to help make gazetteer training signal more clear)
-            if self.delete_goldsubspans_in_training:
+            if self.delete_goldsubspans_in_training and self.training:
                 goldspans = sentence.get_spans(self.label_type)
 
                 # make list of all subspans of goldspans
@@ -448,8 +509,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                     span_embedding = torch.cat((span_embedding, length_as_tensor), 0)
 
                 # if a gazetteer was given, concat the gazetteer embedding to the span_embedding
-                if self.gazetteer_file:
-                    gazetteer_vector = self.get_gazetteer_embedding(span.text)
+                if self.gazetteer_vector_method != "none":
+                    gazetteer_vector = self.get_gazetteer_embedding(span.text, method=self.gazetteer_vector_method)
                     span_embedding = torch.cat((span_embedding, gazetteer_vector), 0)
 
                 embedding_list.append(span_embedding.unsqueeze(0))
@@ -458,8 +519,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                 spans_labels.append([span.get_label(self.label_type).value])
 
                 # check if everything looks as it should (for spans with gold label other than "O")
-                #if span.get_label(self.label_type).value != "O":
-                #    print(span, "\t", self.gazetteer[span.text]if span.text in self.gazetteer else "not in gazetteer", "\n", span_embedding, span.get_label(self.label_type).value)
+                #if span.get_label(self.label_type).value == "PER":
+                #print(span.text, "\t", span_embedding, span.get_label(self.label_type).value)
 
             if for_prediction:
                 data_points.extend(spans_sentence)
@@ -472,8 +533,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             #    print(span, label, data_point)
             return spans_embedded, spans_labels, data_points
 
-        #for (span, label) in zip(spans_embedded, spans_labels):
-        #    print(span, label)
+        #for (emb, label) in zip(spans_embedded, spans_labels):
+        #    print(emb, label)
 
         return spans_embedded, spans_labels
 
@@ -514,9 +575,10 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
 
                 elif self.resolve_overlaps == "prefer_longer":
                     # sort by length
-                    sorted_predicted_spans = sorted(all_predicted_spans, key=operator.itemgetter(3))  # by length
+                    sorted_predicted_spans = sorted(all_predicted_spans, key=operator.itemgetter(3,2))  # by firstly length and secondly score
 
                 sorted_predicted_spans.reverse()
+                #print(sorted_predicted_spans)
 
 
                 if self.resolve_overlaps in ["by_token", "prefer_longer"]:
@@ -581,7 +643,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             "loss_weights": self.weight_dict,
             "resolve_overlaps": self.resolve_overlaps,
             "delete_goldsubspans_in_training": self.delete_goldsubspans_in_training,
+            "gazetteer_vector_method": self.gazetteer_vector_method,
             "gazetteer_file": self.gazetteer_file if self.gazetteer_file else None,
+            "gazetteer_feature_model": self.gazetteer_feature_model if self.gazetteer_feature_model else None,
             "gazetteer_count_type": self.gazetteer_count_type,
             "add_lower_case_lookup": self.add_lower_case_lookup,
             "add_substring_gazetteer_lookup": self.add_substring_gazetteer_lookup,
@@ -650,12 +714,13 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             contains_error = False # gets set to True if one or more incorrect predictions in datapoint
 
             for span in datapoint.get_spans(gold_label_type):
-                if self.gazetteer_file:
-                    gazetteer_vector = self.get_gazetteer_embedding(span.text)
-                    if span.text in self.gazetteer:
-                        in_gazetteer = True
-                    else:
-                        in_gazetteer = False
+                if self.gazetteer_vector_method != "none":
+                    gazetteer_vector = self.get_gazetteer_embedding(span.text, method=self.gazetteer_vector_method)
+                    if self.gazetteer:
+                        if span.text in self.gazetteer:
+                            in_gazetteer = True
+                        else:
+                            in_gazetteer = False
                 else:
                     gazetteer_vector = torch.Tensor([0]) # dummy
 
@@ -675,7 +740,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                                                    span.text,
                                                    span.get_label(gold_label_type).value,
                                                    span.get_label("predicted").value,
-                                                   str([round(e, 2) for e in gazetteer_vector.tolist()])
+                                                   str([round(e, 2) for e in gazetteer_vector.tolist()]),
+                                                   str(round(span.get_label("predicted").score,2))
                                                    ))
                     else:
                         if span.get_label(gold_label_type).value == span.get_label("predicted").value:
@@ -686,24 +752,26 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                                                       span.text,
                                                       span.get_label(gold_label_type).value,
                                                       span.get_label("predicted").value,
-                                                      str([round(e, 2) for e in gazetteer_vector.tolist()])
+                                                      str([round(e, 2) for e in gazetteer_vector.tolist()]),
+                                                      str(round(span.get_label("predicted").score,2))
                                                       ))
 
                 printed.append(span)
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                     f' --> {span.get_label("predicted").value} ({symbol})'
-                    f' \t gazetteer entry: {"📔" if in_gazetteer else "❔"} \t {[round(e, 2) for e in gazetteer_vector.tolist()]}\n'
+                    f' \t gazetteer entry: {"📔" if in_gazetteer else "❔"} \t {[round(e, 2) for e in gazetteer_vector.tolist()]} \t {round(span.get_label("predicted").score,2)} \n'
 
                 )
             # now add also the predicted spans that have *no* gold span equivalent
             for span in datapoint.get_spans("predicted"):
-                if self.gazetteer_file:
-                    gazetteer_vector = self.get_gazetteer_embedding(span.text)
-                    if span.text in self.gazetteer:
-                        in_gazetteer = True
-                    else:
-                        in_gazetteer = False
+                if self.gazetteer_vector_method != "none":
+                    gazetteer_vector = self.get_gazetteer_embedding(span.text, method=self.gazetteer_vector_method)
+                    if self.gazetteer:
+                        if span.text in self.gazetteer:
+                            in_gazetteer = True
+                        else:
+                            in_gazetteer = False
                 else:
                     gazetteer_vector = torch.Tensor([0])
 
@@ -717,7 +785,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                                                    span.text,
                                                    span.get_label(gold_label_type).value,
                                                    span.get_label("predicted").value,
-                                                   str([round(e, 2) for e in gazetteer_vector.tolist()])
+                                                   str([round(e, 2) for e in gazetteer_vector.tolist()]),
+                                                   str(round(span.get_label("predicted").score,2))
                                                    ))
                         else:
                             count_nogaz_error += 1
@@ -725,14 +794,15 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
                                                       span.text,
                                                       span.get_label(gold_label_type).value,
                                                       span.get_label("predicted").value,
-                                                      str([round(e, 2) for e in gazetteer_vector.tolist()])
+                                                      str([round(e, 2) for e in gazetteer_vector.tolist()]),
+                                                      str(round(span.get_label("predicted").score,2))
                                                       ))
 
                     printed.append(span)
                     eval_line += (
                         f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                         f' --> {span.get_label("predicted").value} ("❌")'
-                        f' \t gazetteer entry: {"📔" if in_gazetteer else "❔"} \t {[round(e, 2) for e in gazetteer_vector.tolist()]} \n'
+                        f' \t gazetteer entry: {"📔" if in_gazetteer else "❔"} \t {[round(e, 2) for e in gazetteer_vector.tolist()]} \t {round(span.get_label("predicted").score,2)} \n'
 
                     )
 
@@ -779,7 +849,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence]):
             loss_weights=state["loss_weights"] if "loss_weights" in state else {"<unk>": 0.3},
             resolve_overlaps=state["resolve_overlaps"],
             delete_goldsubspans_in_training=state["delete_goldsubspans_in_training"],
+            gazetteer_vector_method=state["gazetteer_vector_method"],
             gazetteer_file=state["gazetteer_file"] if "gazetteer_file" in state else None,
+            gazetteer_feature_model=state["gazetteer_feature_model"] if "gazetteer_feature_model" in state else None,
             gazetteer_count_type=state["gazetteer_count_type"],
             add_lower_case_lookup=state["add_lower_case_lookup"],
             add_substring_gazetteer_lookup=state["add_substring_gazetteer_lookup"],
