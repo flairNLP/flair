@@ -1,18 +1,19 @@
 import logging
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import List
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import DataPoint, Sentence
+from flair.data import Sentence
+from flair.embeddings import Embeddings
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
 
 
-class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
+class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
     """
     Text Classification Model
     The model takes word embeddings, puts them into an RNN to obtain a text
@@ -40,7 +41,8 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         """
 
         super(TextClassifier, self).__init__(
-            **classifierargs, final_embedding_size=document_embeddings.embedding_length
+            **classifierargs,
+            final_embedding_size=document_embeddings.embedding_length,
         )
 
         self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
@@ -50,32 +52,12 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
         # auto-spawn on GPU if available
         self.to(flair.device)
 
-    def forward_pass(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        for_prediction: bool = False,
-    ) -> Union[Tuple[torch.Tensor, List[List[str]]], Tuple[torch.Tensor, List[List[str]], List[DataPoint]]]:
-        if not isinstance(sentences, list):
-            sentences = [sentences]
-
-        # embed sentences
-        self.document_embeddings.embed(sentences)
-
-        # make tensor for all embedded sentences in batch
+    def _embed_prediction_data_point(self, prediction_data_point: Sentence) -> torch.Tensor:
         embedding_names = self.document_embeddings.get_names()
-        text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
-        text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
+        return prediction_data_point.get_embedding(embedding_names)
 
-        labels: List[List[str]] = []
-        for sentence in sentences:
-            labels.append([label.value for label in sentence.get_labels(self.label_type)])
-
-        if for_prediction:
-            sentences_for_prediction: List[DataPoint] = []
-            sentences_for_prediction.extend(sentences)
-            return text_embedding_tensor, labels, sentences_for_prediction
-
-        return text_embedding_tensor, labels
+    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Sentence]:
+        return sentences
 
     def _get_state_dict(self):
         model_state = {
@@ -88,6 +70,10 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence]):
             "weight_dict": self.weight_dict,
         }
         return model_state
+
+    @property
+    def _inner_embeddings(self) -> Embeddings[Sentence]:
+        return self.document_embeddings
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):

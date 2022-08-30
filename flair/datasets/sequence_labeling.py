@@ -189,11 +189,6 @@ class JsonlDataset(FlairDataset):
         for label in labels:
             self._add_label_to_sentence(raw_text, sentence, label[0], label[1], label[2])
 
-        # Tag all other token as Outer (O)
-        for token in sentence:
-            if token.get_label(self.label_type).value == "O":
-                token.set_label(self.label_type, "O")
-
     def _add_label_to_sentence(self, text: str, sentence: Sentence, start: int, end: int, label: str):
         """
         Adds a NE label to a given sentence.
@@ -239,11 +234,7 @@ class JsonlDataset(FlairDataset):
                         Ann: {annotated_part}\nRaw: {text}\nCo: {start_idx}, {end_idx}"
             )
 
-        # Add IOB tags
-        prefix = "B"
-        for token in sentence[start_idx : end_idx + 1]:
-            token.add_label(self.label_type, f"{prefix}-{label}")
-            prefix = "I"
+        sentence[start_idx : end_idx + 1].add_label(self.label_type, label)
 
     def is_in_memory(self) -> bool:
         """
@@ -4188,5 +4179,64 @@ class NER_HIPE_2022(ColumnCorpus):
             column_delimiter="\t",
             comment_symbol="# ",
             sample_missing_splits=sample_missing_splits,
+            **corpusargs,
+        )
+
+
+class NER_ICDAR_EUROPEANA(ColumnCorpus):
+    def __init__(
+        self,
+        language: str,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ):
+        """
+        Initialize the ICDAR Europeana NER dataset. The dataset is based on the French and Dutch Europeana NER corpora
+        from the Europeana Newspapers NER dataset (https://lab.kb.nl/dataset/europeana-newspapers-ner), with additional
+        preprocessing steps being performed (sentence splitting, punctuation normalizing, training/development/test splits).
+        The resulting dataset is released in the "Data Centric Domain Adaptation for Historical Text with OCR Errors" ICDAR paper
+        by Luisa März, Stefan Schweter, Nina Poerner, Benjamin Roth and Hinrich Schütze.
+        :param language: Language for a supported dataset. Supported languages are "fr" (French) and "nl" (Dutch).
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
+        """
+
+        supported_languages = ["fr", "nl"]
+
+        if language not in supported_languages:
+            log.error(f"Language '{language}' is not in list of supported languages!")
+            log.error(f"Supported are '{supported_languages}'!")
+            raise Exception()
+
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name / language
+
+        # download data if necessary
+        github_path = "https://raw.githubusercontent.com/stefan-it/historic-domain-adaptation-icdar/main/data"
+
+        for split in ["train", "dev", "test"]:
+            cached_path(f"{github_path}/{language}/{split}.txt", data_folder)
+
+        super(NER_ICDAR_EUROPEANA, self).__init__(
+            data_folder,
+            columns,
+            in_memory=in_memory,
+            train_file="train.txt",
+            dev_file="dev.txt",
+            test_file="test.txt",
+            comment_symbol="# ",
+            column_delimiter="\t",
             **corpusargs,
         )

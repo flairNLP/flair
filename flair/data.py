@@ -1,3 +1,4 @@
+import bisect
 import logging
 import re
 import typing
@@ -6,11 +7,11 @@ from collections import Counter, defaultdict
 from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, List, Optional, Union, cast
+from typing import Dict, Iterable, List, Optional, Union, cast
 
 import torch
 from deprecated import deprecated
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, IterableDataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
 import flair
@@ -497,7 +498,7 @@ class Token(_PartOfSentence):
 
     @property
     def unlabeled_identifier(self) -> str:
-        return f'Token[{self.idx-1}]: "{self.text}"'
+        return f'Token[{self.idx - 1}]: "{self.text}"'
 
     def add_tags_proba_dist(self, tag_type: str, tags: List[Label]):
         self.tags_proba_dist[tag_type] = tags
@@ -570,7 +571,7 @@ class Span(_PartOfSentence):
 
     @property
     def unlabeled_identifier(self) -> str:
-        return f'Span[{self.tokens[0].idx -1}:{self.tokens[-1].idx}]: "{self.text}"'
+        return f'Span[{self.tokens[0].idx - 1}:{self.tokens[-1].idx}]: "{self.text}"'
 
     def __repr__(self):
         return self.__str__()
@@ -611,8 +612,8 @@ class Relation(_PartOfSentence):
     def unlabeled_identifier(self) -> str:
         return (
             f"Relation"
-            f"[{self.first.tokens[0].idx-1}:{self.first.tokens[-1].idx}]"
-            f"[{self.second.tokens[0].idx-1}:{self.second.tokens[-1].idx}]"
+            f"[{self.first.tokens[0].idx - 1}:{self.first.tokens[-1].idx}]"
+            f"[{self.second.tokens[0].idx - 1}:{self.second.tokens[-1].idx}]"
             f': "{self.text}"'
         )
 
@@ -1171,12 +1172,6 @@ class Image(DataPoint):
         pass
 
 
-class FlairDataset(Dataset):
-    @abstractmethod
-    def is_in_memory(self) -> bool:
-        pass
-
-
 class Corpus:
     def __init__(
         self,
@@ -1516,12 +1511,22 @@ class Corpus:
 
 
 class MultiCorpus(Corpus):
-    def __init__(self, corpora: List[Corpus], name: str = "multicorpus", **corpusargs):
+    def __init__(
+        self,
+        corpora: List[Corpus],
+        task_ids: Optional[List[str]] = None,
+        name: str = "multicorpus",
+        **corpusargs,
+    ):
+
         self.corpora: List[Corpus] = corpora
+
+        ids = task_ids if task_ids else [f"Task_{i}" for i in range(len(corpora))]
 
         train_parts = []
         dev_parts = []
         test_parts = []
+        print(self.corpora)
         for corpus in self.corpora:
             if corpus.train:
                 train_parts.append(corpus.train)
@@ -1531,9 +1536,9 @@ class MultiCorpus(Corpus):
                 test_parts.append(corpus.test)
 
         super(MultiCorpus, self).__init__(
-            ConcatDataset(train_parts) if len(train_parts) > 0 else None,
-            ConcatDataset(dev_parts) if len(dev_parts) > 0 else None,
-            ConcatDataset(test_parts) if len(test_parts) > 0 else None,
+            ConcatFlairDataset(train_parts, ids) if len(train_parts) > 0 else None,
+            ConcatFlairDataset(dev_parts, ids) if len(dev_parts) > 0 else None,
+            ConcatFlairDataset(test_parts, ids) if len(test_parts) > 0 else None,
             name=name,
             **corpusargs,
         )
@@ -1547,6 +1552,63 @@ class MultiCorpus(Corpus):
         )
         output += "\n - ".join([f"{type(corpus).__name__} {str(corpus)} - {corpus.name}" for corpus in self.corpora])
         return output
+
+
+class FlairDataset(Dataset):
+    @abstractmethod
+    def is_in_memory(self) -> bool:
+        pass
+
+
+class ConcatFlairDataset(Dataset):
+    r"""Dataset as a concatenation of multiple datasets.
+
+    This class is useful to assemble different existing datasets.
+
+    Args:
+        datasets (sequence): List of datasets to be concatenated
+    """
+    datasets: List[Dataset]
+    cumulative_sizes: List[int]
+
+    @staticmethod
+    def cumsum(sequence):
+        r, s = [], 0
+        for e in sequence:
+            length_of_e = len(e)
+            r.append(length_of_e + s)
+            s += length_of_e
+        return r
+
+    def __init__(self, datasets: Iterable[Dataset], ids: Iterable[str]) -> None:
+        super(ConcatFlairDataset, self).__init__()
+        self.datasets = list(datasets)
+        self.ids = list(ids)
+        assert len(self.datasets) > 0, "datasets should not be an empty iterable"  # type: ignore[arg-type]
+        for d in self.datasets:
+            assert not isinstance(d, IterableDataset), "ConcatSentenceDataset does not support IterableDataset"
+        self.cumulative_sizes = self.cumsum(self.datasets)
+
+    def __len__(self):
+        return self.cumulative_sizes[-1]
+
+    def __getitem__(self, idx):
+        if idx < 0:
+            if -idx > len(self):
+                raise ValueError("absolute value of index should not exceed dataset length")
+            idx = len(self) + idx
+        dataset_idx = bisect.bisect_right(self.cumulative_sizes, idx)
+        if dataset_idx == 0:
+            sample_idx = idx
+        else:
+            sample_idx = idx - self.cumulative_sizes[dataset_idx - 1]
+        sentence = self.datasets[dataset_idx][sample_idx]
+        sentence.set_label("multitask_id", self.ids[dataset_idx])
+        return sentence
+
+    @property
+    def cummulative_sizes(self):
+        return self.cumulative_sizes
 
 
 def iob2(tags):

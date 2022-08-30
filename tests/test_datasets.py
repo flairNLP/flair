@@ -685,6 +685,24 @@ def test_hipe_2022_corpus(tasks_base_path):
     test_hipe_2022(dataset_version="v2.1", add_document_separator=False)
 
 
+def test_icdar_europeana_corpus(tasks_base_path):
+    """
+    This test covers the complete ICDAR Europeana corpus:
+    https://github.com/stefan-it/historic-domain-adaptation-icdar
+    """
+    gold_stats = {"fr": {"train": 7936, "dev": 992, "test": 992}, "nl": {"train": 5777, "dev": 722, "test": 723}}
+
+    def check_number_sentences(reference: int, actual: int, split_name: str):
+        assert actual == reference, f"Mismatch in number of sentences for {split_name} split"
+
+    for language in ["fr", "nl"]:
+        corpus = flair.datasets.NER_ICDAR_EUROPEANA(language=language)
+
+        check_number_sentences(len(corpus.train), gold_stats[language]["train"], "train")
+        check_number_sentences(len(corpus.dev), gold_stats[language]["dev"], "dev")
+        check_number_sentences(len(corpus.test), gold_stats[language]["test"], "test")
+
+
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
     corpus = MultiFileJsonlCorpus(
         train_files=[tasks_base_path / "jsonl/train.jsonl"],
@@ -724,16 +742,20 @@ def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
     dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl")
 
     assert len(dataset.sentences) == 5
-    expected_labels = ["O", "O", "B-LOC", "I-LOC"]
-    assert [[label.value for label in t.get_labels("ner")] for t in dataset.sentences[0]] == [
-        [e] for e in expected_labels
-    ]
-    assert [dataset.sentences[0].get_token(i).get_label("ner").value for i in range(1, 5)] == expected_labels
+    assert len(dataset.sentences[0].get_labels("ner")) == 1
+    assert dataset.sentences[0][2:4].get_label("ner").value == "LOC"
 
 
 def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):
     corpus = JsonlCorpus(tasks_base_path / "jsonl")
     assert len(corpus.get_all_sentences()) == 11
+
+
+def test_jsonl_corpus_loads_spans(tasks_base_path):
+    corpus = JsonlCorpus(tasks_base_path / "jsonl")
+    assert corpus.train is not None
+    example = corpus.train[0]
+    assert len(example.get_spans("ner")) > 0
 
 
 TRAIN_FILE = "tests/resources/tasks/jsonl/train.jsonl"

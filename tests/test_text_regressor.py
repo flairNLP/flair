@@ -27,7 +27,7 @@ def init(tasks_base_path) -> Tuple[Corpus, TextRegressor, ModelTrainer]:
 def test_labels_to_indices(tasks_base_path):
     corpus, model, trainer = init(tasks_base_path)
 
-    result = model._labels_to_indices(corpus.train)
+    result = model._labels_to_tensor(corpus.train)
 
     for i in range(len(corpus.train)):
         expected = round(float(corpus.train[i].labels[0].value), 3)
