@@ -97,7 +97,7 @@ Span[2:3]: "Berlin" → LOC (0.999)
 
 ## Tutorials
 
-We provide a set of quick tutorials to get you started with the library:
+We provide a set of **quick tutorials** to get you started with the library:
 
 * [Tutorial 1: Basics](/resources/docs/TUTORIAL_1_BASICS.md)
 * [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
@@ -115,6 +115,12 @@ language models, sequence labeling models, and text classification models. Let u
 
 There is also a dedicated landing page for our **[biomedical NER and datasets](/resources/docs/HUNFLAIR.md)** with
 installation instructions and tutorials.
+
+
+## More Documentation
+
+Another great place to start is the recent book [Natural Language Processing with Flair](https://www.amazon.com/Natural-Language-Processing-Flair-understanding/dp/1801072310)
+and its accompanying [code repository](https://github.com/PacktPublishing/Natural-Language-Processing-with-Flair).
 
 There are also good third-party articles and posts that illustrate how to use Flair:
 * [How to build a text classifier with Flair](https://towardsdatascience.com/text-classification-with-state-of-the-art-nlp-library-flair-b541d7add21f)
