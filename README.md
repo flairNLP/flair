@@ -97,7 +97,7 @@ Span[2:3]: "Berlin" → LOC (0.999)
 
 ## Tutorials
 
-We provide a set of quick tutorials to get you started with the library:
+We provide a set of **quick tutorials** to get you started with the library:
 
 * [Tutorial 1: Basics](/resources/docs/TUTORIAL_1_BASICS.md)
 * [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
@@ -116,14 +116,23 @@ language models, sequence labeling models, and text classification models. Let u
 There is also a dedicated landing page for our **[biomedical NER and datasets](/resources/docs/HUNFLAIR.md)** with
 installation instructions and tutorials.
 
+
+## More Documentation
+
+Another great place to start is the recent book [Natural Language Processing with Flair](https://www.amazon.com/Natural-Language-Processing-Flair-understanding/dp/1801072310)
+and its accompanying [code repository](https://github.com/PacktPublishing/Natural-Language-Processing-with-Flair).
+
 There are also good third-party articles and posts that illustrate how to use Flair:
-* [How to build a text classifier with Flair](https://towardsdatascience.com/text-classification-with-state-of-the-art-nlp-library-flair-b541d7add21f)
+* [Training an NER model with Flair](https://medium.com/thecyphy/training-custom-ner-model-using-flair-df1f9ea9c762)
+* [Training a text classifier with Flair](https://towardsdatascience.com/text-classification-with-state-of-the-art-nlp-library-flair-b541d7add21f)
+* [Zero and few-shot learning](https://towardsdatascience.com/zero-and-few-shot-learning-c08e145dc4ed) 
+* [Visualisation tool for highlighting the extracted entities](https://github.com/lunayach/visNER)
+* [Flair functionality and how to use in Colab](https://www.analyticsvidhya.com/blog/2019/02/flair-nlp-library-python/)
+* [Benchmarking NER algorithms](https://towardsdatascience.com/benchmark-ner-algorithm-d4ab01b2d4c3)
+* [Clinical NLP](https://towardsdatascience.com/clinical-natural-language-processing-5c7b3d17e137)
 * [How to build a microservice with Flair and Flask](https://shekhargulati.com/2019/01/04/building-a-sentiment-analysis-python-microservice-with-flair-and-flask/)
 * [A docker image for Flair](https://towardsdatascience.com/docker-image-for-nlp-5402c9a9069e)
-* [Great overview of Flair functionality and how to use in Colab](https://www.analyticsvidhya.com/blog/2019/02/flair-nlp-library-python/)
-* [Visualisation tool for highlighting the extracted entities](https://github.com/lunayach/visNER)
 * [Practical approach of State-of-the-Art Flair in Named Entity Recognition](https://medium.com/analytics-vidhya/practical-approach-of-state-of-the-art-flair-in-named-entity-recognition-46a837e25e6b)
-* [Benchmarking NER algorithms](https://towardsdatascience.com/benchmark-ner-algorithm-d4ab01b2d4c3)
 * [Training a Flair text classifier on Google Cloud Platform (GCP) and serving predictions on GCP](https://github.com/robinvanschaik/flair-on-gcp)
 * [Model Interpretability for transformer-based Flair models](https://github.com/robinvanschaik/interpret-flair)
 
