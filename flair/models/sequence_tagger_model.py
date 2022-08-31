@@ -927,7 +927,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     library_name="flair",
                     library_version=flair.__version__,
                     cache_dir=flair.cache_root / "models" / model_folder,
-                    use_auth_token=True,
                 )
             except HTTPError:
                 # output information
@@ -980,10 +979,17 @@ for entity in sentence.get_spans('ner'):
     print(entity)
 ```"""
 
-    def push_to_hub(self, repo_id: str, private: bool = None, commit_message: str = "Add new SequenceTagger model."):
+    def push_to_hub(
+        self,
+        repo_id: str,
+        token: Optional[str] = None,
+        private: bool = None,
+        commit_message: str = "Add new SequenceTagger model.",
+    ):
         """
         Uploads the Sequence Tagger model to a Hugging Face Hub repository.
         :param repo_id: A namespace (user or an organization) and a repo name separated by a `/`.
+        :param token: An authentication token (See https://huggingface.co/settings/token).
         :param private: Whether the repository is private.
         :param commit_message: Message to commit while pushing.
         :return: The url of the repository.
@@ -993,6 +999,7 @@ for entity in sentence.get_spans('ner'):
 
         repo_url = create_repo(
             repo_id=repo_id,
+            token=token,
             private=private,
             exist_ok=True,
         )
@@ -1015,6 +1022,7 @@ for entity in sentence.get_spans('ner'):
                 repo_id=repo_id,
                 folder_path=tmp_path,
                 path_in_repo="",
+                token=token,
                 commit_message=commit_message,
             )
             return repo_url
