@@ -614,13 +614,13 @@ class ModelTrainer:
                         f" ({main_evaluation_metric[0]})"
                         f" {round(train_part_eval_result.main_score, 4)}"
                     )
-                if use_tensorboard:
-                    for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
-                        writer.add_scalar(
-                            f"train_{metric_class_avg_type}_{metric_type}",
-                            train_part_eval_result.classification_report[metric_class_avg_type][metric_type],
-                            epoch,
-                        )
+                    if use_tensorboard:
+                        for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
+                            writer.add_scalar(
+                                f"train_{metric_class_avg_type}_{metric_type}",
+                                train_part_eval_result.classification_report[metric_class_avg_type][metric_type],
+                                epoch,
+                            )
 
                 if log_dev:
                     assert self.corpus.dev
