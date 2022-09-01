@@ -775,7 +775,7 @@ class TransformerNebulyEmbeddings(TransformerBaseEmbeddings):
     ):
         example_tensors = self.prepare_tensors(example_sentences)
         #dynamic_axes = TransformerOnnxEmbeddings.collect_dynamic_axes(self, example_tensors)
-        input_data = [((*example_tensors.values()), 0)]
+        input_data = [(tuple(example_tensors.values()), 0)]
         torch_wrapper = TorchWrapper(self)
 
         optimized_model = optimize_model(
