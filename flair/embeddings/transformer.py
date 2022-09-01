@@ -800,6 +800,7 @@ class TransformerNebulyEmbeddings(TransformerBaseEmbeddings):
 
         input_data = [(tuple(example_tensors.values()), 0)]
         torch_wrapper = TorchWrapper(embedding)
+        torch_wrapper.eval()
 
         optimized_model = optimize_model(
             torch_wrapper, input_data=input_data, metric_drop_ths=metric_drop_ths, metric=metric, optimization_time=optimization_time, dynamic_info=dynamic_info, config_file=config_file, ignore_compilers=ignore_compilers
