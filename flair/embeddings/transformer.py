@@ -765,7 +765,7 @@ class TransformerNebulyEmbeddings(TransformerBaseEmbeddings):
 
     def optimize_model(
         self,
-        model: TransformerBaseEmbeddings,
+        embedding: "TransformerEmbeddings",
         example_sentences: List[Sentence],
         metric_drop_ths: float = None,
         metric: Union[str, Callable] = None,
@@ -774,10 +774,11 @@ class TransformerNebulyEmbeddings(TransformerBaseEmbeddings):
         config_file: str = None,
         ignore_compilers: List[str] = None
     ):
-        example_tensors = model.prepare_tensors(example_sentences)
+        print(type(embedding))
+        example_tensors = embedding.prepare_tensors(example_sentences)
         #dynamic_axes = TransformerOnnxEmbeddings.collect_dynamic_axes(self, example_tensors)
         input_data = [(tuple(example_tensors.values()), 0)]
-        torch_wrapper = TorchWrapper(model)
+        torch_wrapper = TorchWrapper(embedding)
 
         optimized_model = optimize_model(
             torch_wrapper, input_data=input_data, metric_drop_ths=metric_drop_ths, metric=metric, optimization_time=optimization_time, dynamic_info=dynamic_info, config_file=config_file, ignore_compilers=ignore_compilers
