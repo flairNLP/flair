@@ -474,6 +474,9 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 device=device,
             )
             model_kwargs["word_ids"] = word_ids
+
+        desired_order = ['input_ids', 'lengths', 'attention_mask', 'overflow_to_sample_mapping', 'word_ids', 'langs']
+        model_kwargs = {k: model_kwargs[k] for k in desired_order if k in model_kwargs}
         return model_kwargs
 
     def __gather_flair_tokens(self, sentences: List[Sentence]) -> Tuple[List[List[str]], List[int], List[int]]:
