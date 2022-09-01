@@ -748,9 +748,9 @@ class TorchWrapper(torch.nn.Module):
     def forward(
         self,
         input_ids: torch.Tensor,
+        lengths: torch.LongTensor,
         attention_mask: torch.Tensor,
         overflow_to_sample_mapping: torch.Tensor,
-        lengths: torch.LongTensor,
         word_ids: torch.Tensor,
     ) -> torch.Tensor:
         return self.embedding.forward(
