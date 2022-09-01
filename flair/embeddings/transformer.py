@@ -7,7 +7,7 @@ import zipfile
 from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Dict, List, Optional, Tuple, Type, Union, cast, Callable
 
 import torch
 from torch.jit import ScriptModule
@@ -25,6 +25,8 @@ from transformers.utils import PaddingStrategy
 import flair
 from flair.data import Sentence, log
 from flair.embeddings.base import DocumentEmbeddings, Embeddings, TokenEmbeddings
+
+from nebullvm.api.functions import optimize_model
 
 
 @torch.jit.script_if_tracing
@@ -735,6 +737,54 @@ class TransformerJitEmbeddings(TransformerBaseEmbeddings):
         return param_names, params
 
 
+class TorchWrapper(torch.nn.Module):
+    def __init__(self, embedding: TransformerBaseEmbeddings):
+        super().__init__()
+        self.embedding = embedding
+
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        overflow_to_sample_mapping: torch.Tensor,
+        lengths: torch.LongTensor,
+        word_ids: torch.Tensor,
+    ) -> torch.Tensor:
+        return self.embedding.forward(
+            input_ids=input_ids,
+            lengths=lengths,
+            attention_mask=attention_mask,
+            overflow_to_sample_mapping=overflow_to_sample_mapping,
+            word_ids=word_ids,
+        )["token_embeddings"]
+
+
+class TransformerNebulyEmbeddings(TransformerBaseEmbeddings):
+    def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
+        pass
+
+    def optimize_model(
+        self,
+        example_sentences: List[Sentence],
+        metric_drop_ths: float = None,
+        metric: Union[str, Callable] = None,
+        optimization_time: str = "constrained",
+        dynamic_info: Dict = None,
+        config_file: str = None,
+        ignore_compilers: List[str] = None
+    ):
+        example_tensors = self.prepare_tensors(example_sentences)
+        #dynamic_axes = TransformerOnnxEmbeddings.collect_dynamic_axes(self, example_tensors)
+        input_data = [((*example_tensors.values()), 0)]
+        torch_wrapper = TorchWrapper(self)
+
+        optimized_model = optimize_model(
+            torch_wrapper, input_data=input_data, metric_drop_ths=metric_drop_ths, metric=metric, optimization_time=optimization_time, dynamic_info=dynamic_info, config_file=config_file, ignore_compilers=ignore_compilers
+        )
+
+        return optimized_model
+
+
 class TransformerJitWordEmbeddings(TokenEmbeddings, TransformerJitEmbeddings):
     def __init__(
         self,
@@ -769,6 +819,7 @@ class TransformerOnnxDocumentEmbeddings(DocumentEmbeddings, TransformerOnnxEmbed
 
 class TransformerEmbeddings(TransformerBaseEmbeddings):
     onnx_cls: Type[TransformerOnnxEmbeddings] = TransformerOnnxEmbeddings
+    nebuly_cls: Type[TransformerNebulyEmbeddings] = TransformerNebulyEmbeddings
 
     def __init__(
         self,
@@ -1134,3 +1185,15 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         sentences with some variation.
         """
         return self.onnx_cls.export_from_embedding(path, self, example_sentences, **kwargs)
+
+    def optimize_nebuly(
+        self,
+        example_sentences: List[Sentence],
+        metric_drop_ths: float = None,
+        metric: Union[str, Callable] = None,
+        optimization_time: str = "constrained",
+        dynamic_info: Dict = None,
+        config_file: str = None,
+        ignore_compilers: List[str] = None
+    ):
+        return self.nebuly_cls.optimize_model(example_sentences, metric_drop_ths, metric, optimization_time, dynamic_info, config_file, ignore_compilers)
