@@ -760,11 +760,29 @@ class TorchWrapper(torch.nn.Module):
 
 
 class TransformerNebulyEmbeddings(TransformerBaseEmbeddings):
-    def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
-        pass
+    def __init__(self, nebuly_model, **kwargs):
+        super().__init__(**kwargs)
+        self.model = nebuly_model
 
+    def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
+        return {"token_embeddings": self.model(*tensors.values())[0]}
+
+    @classmethod
+    def convert_dynamic_axes(cls, dynamic_info: Dict):
+        dynamic_axes = dict()
+        dynamic_axes["inputs"] = []
+        dynamic_axes["outputs"] = []
+        for k, v in dynamic_info.items():
+            if k not in ["token_embeddings", "document_embeddings"]:
+                dynamic_axes["inputs"].append(v)
+            else:
+                dynamic_axes["outputs"].append(v)
+
+        return dynamic_axes
+
+    @classmethod
     def optimize_model(
-        self,
+        cls,
         embedding: "TransformerEmbeddings",
         example_sentences: List[Sentence],
         metric_drop_ths: float = None,
@@ -774,9 +792,12 @@ class TransformerNebulyEmbeddings(TransformerBaseEmbeddings):
         config_file: str = None,
         ignore_compilers: List[str] = None
     ):
-        print(type(embedding))
         example_tensors = embedding.prepare_tensors(example_sentences)
-        #dynamic_axes = TransformerOnnxEmbeddings.collect_dynamic_axes(self, example_tensors)
+
+        if dynamic_info is None:
+            dynamic_axes = TransformerOnnxEmbeddings.collect_dynamic_axes(embedding, example_tensors)
+            dynamic_info = cls.convert_dynamic_axes(dynamic_axes)
+
         input_data = [(tuple(example_tensors.values()), 0)]
         torch_wrapper = TorchWrapper(embedding)
 
@@ -784,7 +805,7 @@ class TransformerNebulyEmbeddings(TransformerBaseEmbeddings):
             torch_wrapper, input_data=input_data, metric_drop_ths=metric_drop_ths, metric=metric, optimization_time=optimization_time, dynamic_info=dynamic_info, config_file=config_file, ignore_compilers=ignore_compilers
         )
 
-        return optimized_model
+        return cls(optimized_model, **embedding.to_args())
 
 
 class TransformerJitWordEmbeddings(TokenEmbeddings, TransformerJitEmbeddings):
