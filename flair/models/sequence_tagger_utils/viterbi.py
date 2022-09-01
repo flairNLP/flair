@@ -35,7 +35,7 @@ class ViterbiLoss(torch.nn.Module):
         :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
             lengths of sentences in batch, transitions from CRF
         :param targets: true tags for sentences which will be converted to matrix indices.
-        :return: average Viterbi Loss over batch size
+        :return: summed Viterbi Loss over all data points
         """
         features, lengths, transitions = features_tuple
 
