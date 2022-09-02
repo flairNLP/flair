@@ -475,8 +475,10 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             )
             model_kwargs["word_ids"] = word_ids
 
-        desired_order = ['input_ids', 'lengths', 'attention_mask', 'overflow_to_sample_mapping', 'word_ids', 'langs']
-        model_kwargs = {k: model_kwargs[k] for k in desired_order if k in model_kwargs}
+        # Ensure that the keys in the dict are in the proper order expected from the model forward function
+        desired_keys_order = ['input_ids', 'lengths', 'attention_mask', 'overflow_to_sample_mapping', 'word_ids', 'langs']
+        model_kwargs = {k: model_kwargs[k] for k in desired_keys_order if k in model_kwargs}
+
         return model_kwargs
 
     def __gather_flair_tokens(self, sentences: List[Sentence]) -> Tuple[List[List[str]], List[int], List[int]]:
@@ -762,10 +764,10 @@ class TorchWrapper(torch.nn.Module):
         )["token_embeddings"]
 
 
-class TransformerNebulyEmbeddings(TransformerBaseEmbeddings):
-    def __init__(self, nebuly_model, **kwargs):
+class TransformerNebullvmEmbeddings(TransformerBaseEmbeddings):
+    def __init__(self, nebullvm_model, **kwargs):
         super().__init__(**kwargs)
-        self.model = nebuly_model
+        self.model = nebullvm_model
 
     def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
         return {"token_embeddings": self.model(*tensors.values())[0]}
@@ -846,7 +848,7 @@ class TransformerOnnxDocumentEmbeddings(DocumentEmbeddings, TransformerOnnxEmbed
 
 class TransformerEmbeddings(TransformerBaseEmbeddings):
     onnx_cls: Type[TransformerOnnxEmbeddings] = TransformerOnnxEmbeddings
-    nebuly_cls: Type[TransformerNebulyEmbeddings] = TransformerNebulyEmbeddings
+    nebullvm_cls: Type[TransformerNebullvmEmbeddings] = TransformerNebullvmEmbeddings
 
     def __init__(
         self,
@@ -1213,7 +1215,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         """
         return self.onnx_cls.export_from_embedding(path, self, example_sentences, **kwargs)
 
-    def optimize_nebuly(
+    def optimize_nebullvm(
         self,
         example_sentences: List[Sentence],
         metric_drop_ths: float = None,
@@ -1223,4 +1225,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         config_file: str = None,
         ignore_compilers: List[str] = None
     ):
-        return self.nebuly_cls.optimize_model(self, example_sentences, metric_drop_ths, metric, optimization_time, dynamic_info, config_file, ignore_compilers)
+        """Optimize the input model using the nebullvm api.
+        :param example_sentences: a list of sentences that will be used for tracing. It is recommended to take 2-4
+        sentences with some variation.
+        Info about other optional params can be found in the nebullvm documentation:
+        https://nebuly.gitbook.io/nebuly/nebulgym/get-started
+        """
+        return self.nebullvm_cls.optimize_model(self, example_sentences, metric_drop_ths, metric, optimization_time, dynamic_info, config_file, ignore_compilers)
