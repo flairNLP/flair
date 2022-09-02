@@ -25,4 +25,4 @@ more-itertools
 wikipedia-api
 pptree
 pytorch_revgrad
-nebullvm
+nebullvm>=0.4.1
