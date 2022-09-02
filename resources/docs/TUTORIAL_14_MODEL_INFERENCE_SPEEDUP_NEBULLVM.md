@@ -20,6 +20,7 @@ We need to define a few sentences that will be used by nebullvm to trace the mod
 Those sentences can be part of your dataset.
 ```python
 from flair.data import Sentence
+
 sentences = [
     Sentence("Mars is the fourth planet from the Sun and the second-smallest planet in the Solar System."), 
     Sentence("In the fourth century BCE, Aristotle noted that Mars disappeared behind the Moon during an occultation."),
@@ -30,9 +31,16 @@ sentences = [
 
 ## Nebullvm optimization
 
-You can optimize the model with nebullvm with a simple line of code:
+If it's the first time that you run an optimization using nebullvm on this machine, we suggest that you run `import nebullvm` to install the deep learning compilers
+required by the library. Be aware that this will take a few minutes, but it will be required only the first time.
+
 ```python
-model.embeddings = model.embeddings.optimize_nebuly(sentences)
+import nebullvm
+```
+
+You can then optimize the model with nebullvm with a simple line of code:
+```python
+model.embeddings = model.embeddings.optimize_nebullvm(sentences)
 ```
 By running this cell, the embeddings are replaced by TransformerNebullvmEmbeddings, which ensure that the optimized model is used for predictions.
 
@@ -80,6 +88,10 @@ The `optimize_nebullvm` function can additionally take several optional paramete
             ignored during the OptimizerStep. Default: None.
 
 You can find more details in the official nebullvm [documentation](https://nebuly.gitbook.io/nebuly/nebulgym/get-started) and on the [github page](https://github.com/nebuly-ai/nebullvm). 
+
+**KNOWN ISSUES:** 
+- Nebullvm optimization is not compatible for now with Pytorch versions 12.0 and 12.1 due to a Pytorch bug in the function that allows to export a model to onnx.
+If you get an error similar to `RuntimeError: r INTERNAL ASSERT FAILED at "../aten/src/ATen/core/jit_type_base.h":545, please report a bug to PyTorch`, please try using Pytorch 1.11.
 
 After the optimization, the usage for predictions is the same as before:
 ```python
