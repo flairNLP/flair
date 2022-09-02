@@ -839,6 +839,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                                     continue
                                 data_point.add_label(typename=label_name, value=label_value, score=c.item())
 
+                self._post_process_predictions(batch, label_type=label_name)
+
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             if return_loss:
@@ -850,6 +852,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             label_threshold = self.multi_label_threshold[label_value]
 
         return label_threshold
+
+    def _post_process_predictions(self, batch, label_type):
+        return batch
 
     def __str__(self):
         return (
