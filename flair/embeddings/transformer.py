@@ -7,7 +7,7 @@ import zipfile
 from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, Union, cast, Callable
+from typing import Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
 import torch
 from torch.jit import ScriptModule
@@ -474,7 +474,14 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             model_kwargs["word_ids"] = word_ids
 
         # Ensure that the keys in the dict are in the proper order expected from the model forward function
-        desired_keys_order = ['input_ids', 'lengths', 'attention_mask', 'overflow_to_sample_mapping', 'word_ids', 'langs']
+        desired_keys_order = [
+            "input_ids",
+            "lengths",
+            "attention_mask",
+            "overflow_to_sample_mapping",
+            "word_ids",
+            "langs",
+        ]
         model_kwargs = {k: model_kwargs[k] for k in desired_keys_order if k in model_kwargs}
 
         return model_kwargs
@@ -793,7 +800,7 @@ class TransformerNebullvmEmbeddings(TransformerBaseEmbeddings):
         optimization_time: str = "constrained",
         dynamic_info: Dict = None,
         config_file: str = None,
-        ignore_compilers: List[str] = None
+        ignore_compilers: List[str] = None,
     ):
         example_tensors = embedding.prepare_tensors(example_sentences)
 
@@ -809,7 +816,14 @@ class TransformerNebullvmEmbeddings(TransformerBaseEmbeddings):
         from nebullvm.api.functions import optimize_model
 
         optimized_model = optimize_model(
-            torch_wrapper, input_data=input_data, metric_drop_ths=metric_drop_ths, metric=metric, optimization_time=optimization_time, dynamic_info=dynamic_info, config_file=config_file, ignore_compilers=ignore_compilers
+            torch_wrapper,
+            input_data=input_data,
+            metric_drop_ths=metric_drop_ths,
+            metric=metric,
+            optimization_time=optimization_time,
+            dynamic_info=dynamic_info,
+            config_file=config_file,
+            ignore_compilers=ignore_compilers,
         )
 
         return cls(optimized_model, **embedding.to_args())
@@ -1224,7 +1238,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         optimization_time: str = "constrained",
         dynamic_info: Dict = None,
         config_file: str = None,
-        ignore_compilers: List[str] = None
+        ignore_compilers: List[str] = None,
     ):
         """Optimize the input model using the nebullvm api.
         :param example_sentences: a list of sentences that will be used for tracing. It is recommended to take 2-4
@@ -1232,4 +1246,13 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         Info about other optional params can be found in the nebullvm documentation:
         https://nebuly.gitbook.io/nebuly/nebulgym/get-started
         """
-        return self.nebullvm_cls.optimize_model(self, example_sentences, metric_drop_ths, metric, optimization_time, dynamic_info, config_file, ignore_compilers)
+        return self.nebullvm_cls.optimize_model(
+            self,
+            example_sentences,
+            metric_drop_ths,
+            metric,
+            optimization_time,
+            dynamic_info,
+            config_file,
+            ignore_compilers,
+        )
