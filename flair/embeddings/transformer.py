@@ -26,8 +26,6 @@ import flair
 from flair.data import Sentence, log
 from flair.embeddings.base import DocumentEmbeddings, Embeddings, TokenEmbeddings
 
-from nebullvm.api.functions import optimize_model
-
 
 @torch.jit.script_if_tracing
 def pad_sequence_embeddings(all_hidden_states: List[torch.Tensor]) -> torch.Tensor:
@@ -806,6 +804,9 @@ class TransformerNebullvmEmbeddings(TransformerBaseEmbeddings):
         input_data = [(tuple(example_tensors.values()), 0)]
         torch_wrapper = TorchWrapper(embedding)
         torch_wrapper.eval()
+
+        # Import nebullvm only if it is used
+        from nebullvm.api.functions import optimize_model
 
         optimized_model = optimize_model(
             torch_wrapper, input_data=input_data, metric_drop_ths=metric_drop_ths, metric=metric, optimization_time=optimization_time, dynamic_info=dynamic_info, config_file=config_file, ignore_compilers=ignore_compilers
