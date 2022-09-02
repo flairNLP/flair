@@ -22,7 +22,7 @@ Those sentences can be part of your dataset.
 from flair.data import Sentence
 
 sentences = [
-    Sentence("Mars is the fourth planet from the Sun and the second-smallest planet in the Solar System."), 
+    Sentence("Mars is the fourth planet from the Sun and the second-smallest planet in the Solar System."),
     Sentence("In the fourth century BCE, Aristotle noted that Mars disappeared behind the Moon during an occultation."),
     Sentence("Liquid water cannot exist on the surface of Mars due to low atmospheric pressure."),
     Sentence("In 2004, Opportunity detected the mineral jarosite."),
@@ -87,9 +87,9 @@ The `optimize_nebullvm` function can additionally take several optional paramete
 - ignore_compilers (List, optional): List containing the compilers to be
             ignored during the OptimizerStep. Default: None.
 
-You can find more details in the official nebullvm [documentation](https://nebuly.gitbook.io/nebuly/nebulgym/get-started) and on the [github page](https://github.com/nebuly-ai/nebullvm). 
+You can find more details in the official nebullvm [documentation](https://nebuly.gitbook.io/nebuly/nebulgym/get-started) and on the [github page](https://github.com/nebuly-ai/nebullvm).
 
-**KNOWN ISSUES:** 
+**KNOWN ISSUES:**
 - Nebullvm optimization is not compatible for now with Pytorch versions 12.0 and 12.1 due to a Pytorch bug in the function that allows to export a model to onnx.
 If you get an error similar to `RuntimeError: r INTERNAL ASSERT FAILED at "../aten/src/ATen/core/jit_type_base.h":545, please report a bug to PyTorch`, please try using Pytorch 1.11.
 
@@ -105,3 +105,13 @@ After performing the prediction, you can see the result:
 print(sentence)
 # Expected output: Sentence: "George Washington went to Washington ." → ["George Washington"/PER, "Washington"/LOC]
 ```
+
+## Results
+
+With nebullvm the inference speed of the mode can be significantly improved, with this model we found the following results:
+
+| Machine Type   | Baseline (s) | Nebullvm - optimized (s) | Speedup |
+|----------------|--------------|--------------------------|---------|
+| M1             | 0.181        | 0.0358                   | 5.1x    |
+| Intel CPU      | 0.206        | 0.0953                   | 2,2x    |
+| GPU (Tesla T4) | 0.0266       | 0.0129                   | 2.1x    |
