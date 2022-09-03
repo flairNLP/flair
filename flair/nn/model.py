@@ -48,7 +48,7 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         raise NotImplementedError
 
     @abstractmethod
-    def forward_loss(self, data_points: List[DT]) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
+    def forward_loss(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
         """Performs a forward pass and returns a loss tensor for backpropagation.
         Implement this to enable training."""
         raise NotImplementedError
@@ -575,7 +575,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             self.gradient_reversal = RevGrad()
 
         if self.multi_label:
-            self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
+            self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights, reduction="sum")
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
