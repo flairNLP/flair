@@ -56,7 +56,7 @@ class MultitaskModel(flair.nn.Classifier):
     def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
         raise NotImplementedError("`_prepare_tensors` is not used for multitask learning")
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]):
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
         """
         Abstract forward loss implementation of flair.nn.Model's interface.
         Calls the respective forward loss of each model.

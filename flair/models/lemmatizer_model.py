@@ -395,7 +395,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
         return self.loss(scores_in_correct_format, target), len(labels)
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
         scores, labels = self.forward_pass(sentences)
 
         return self._calculate_loss(scores, labels)

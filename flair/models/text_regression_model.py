@@ -53,13 +53,13 @@ class TextRegressor(flair.nn.Model[Sentence]):
         label_scores = self.decoder(text_embedding_tensor)
         return label_scores
 
-    def forward_loss(self, sentences: List[Sentence]) -> torch.Tensor:
+    def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
 
         labels = self._labels_to_tensor(sentences)
         text_embedding_tensor = self._prepare_tensors(sentences)
         scores = self.forward(*text_embedding_tensor)
 
-        return self.loss_function(scores.squeeze(1), labels)
+        return self.loss_function(scores.squeeze(1), labels), len(sentences)
 
     def _labels_to_tensor(self, sentences: List[Sentence]):
         indices = [

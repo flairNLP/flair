@@ -500,11 +500,8 @@ class ModelTrainer:
                     for batch_step in batch_steps:
 
                         # forward pass
-                        loss = self.model.forward_loss(batch_step)
-
-                        if isinstance(loss, tuple):
-                            average_over += loss[1]
-                            loss = loss[0]
+                        loss, datapoint_count = self.model.forward_loss(batch_step)
+                        average_over += datapoint_count
 
                         # Backward
                         if use_amp:
@@ -1022,9 +1019,7 @@ class ModelTrainer:
                 step += 1
 
                 # forward pass
-                loss = self.model.forward_loss(batch)
-                if isinstance(loss, tuple):
-                    loss = loss[0]
+                loss, datapoint_count = self.model.forward_loss(batch)
 
                 # update optimizer and scheduler
                 optimizer.zero_grad()

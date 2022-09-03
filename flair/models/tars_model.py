@@ -34,9 +34,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
 
         super(FewshotClassifier, self).__init__()
 
-    def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence]
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
+    def forward_loss(self, data_points: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
 
         if not isinstance(data_points, list):
             data_points = [data_points]
@@ -44,8 +42,8 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         # Transform input data into TARS format
         sentences = self._get_tars_formatted_sentences(data_points)
 
-        loss = self.tars_model.forward_loss(sentences)
-        return loss
+        loss, count = self.tars_model.forward_loss(sentences)
+        return loss, count
 
     def _prepare_tensors(self, data_points: List[Sentence]) -> Tuple[torch.Tensor, ...]:
         return self.tars_model._prepare_tensors(data_points)

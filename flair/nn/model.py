@@ -48,7 +48,7 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         raise NotImplementedError
 
     @abstractmethod
-    def forward_loss(self, data_points: List[DT]) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
+    def forward_loss(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
         """Performs a forward pass and returns a loss tensor for backpropagation.
         Implement this to enable training."""
         raise NotImplementedError
