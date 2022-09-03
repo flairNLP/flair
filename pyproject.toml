@@ -23,6 +23,7 @@ filterwarnings = [
 markers = [
     "integration",
 ]
+testpaths = ["flair", "tests"]
 [tool.mypy]
 ignore_missing_imports = true
 
