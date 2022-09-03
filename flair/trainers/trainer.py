@@ -100,6 +100,7 @@ class ModelTrainer:
         anneal_against_dev_loss: bool = False,
         batch_growth_annealing: bool = False,
         shuffle: bool = True,
+        shuffle_first_epoch: bool = False,
         param_selection_mode: bool = False,
         write_weights: bool = False,
         num_workers: Optional[int] = None,
@@ -463,10 +464,13 @@ class ModelTrainer:
                     log_line(log)
                     break
 
+                # never shuffle the first epoch
+                shuffle = False if not shuffle_first_epoch and epoch == 1 else shuffle
+
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
-                    shuffle=shuffle if epoch > 1 else False,  # never shuffle the first epoch
+                    shuffle=shuffle,
                     num_workers=0 if num_workers is None else num_workers,
                     sampler=sampler,
                 )
