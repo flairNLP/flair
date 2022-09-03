@@ -33,7 +33,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
         nn.init.xavier_uniform_(self.decoder.weight)
 
-        self.loss_function = nn.MSELoss()
+        self.loss_function = nn.MSELoss(reduction="sum")
 
         # auto-spawn on GPU if available
         self.to(flair.device)
