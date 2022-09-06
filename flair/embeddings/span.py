@@ -131,21 +131,21 @@ class SpanGazetteerEmbeddings(Embeddings[Span]):
         return self.name
 
 
-
 class SpanGazetteerFeaturePrediction(Embeddings[Span]):
 
     def __init__(self,
-                 prediction_model = None, # TODO needs to be a model that has a predict-method
+                 prediction_model = None,
                  ):
         """
-        :param prediction_model: the trained model to be used for predicting gazetteer features per span
+        :param prediction_model: the trained model to be used for predicting gazetteer features per span,
+        the prediction_model needs to have a predict method that returns a feature vector per string
         """
         super().__init__()
         self.prediction_model = prediction_model
-        self.name = "predicted-gazetteer-features" # TODO get a nice descriptive name from the model
+        self.name = "predicted-gazetteer-features" # TODO how to get a nice descriptive name from the model
         self.static_embeddings = True
 
-        self.__gazetteer_vector_length = 4 # TODO get length somehow
+        self.__gazetteer_vector_length = 4 # TODO infer length somehow, predict random string
         self.__embedding_length = self.__gazetteer_vector_length
 
         self.to(flair.device)
@@ -160,8 +160,6 @@ class SpanGazetteerFeaturePrediction(Embeddings[Span]):
 
     def predict_feature_vector(self, spans: List[Span]):
         feature_vector = self.prediction_model.predict([s.text for s in spans])
-        #feature_vector = feature_vector.squeeze().detach()  # TODO necessary?
-
         return feature_vector
 
     def _add_embeddings_internal(self, spans: List[Span]):
@@ -172,8 +170,7 @@ class SpanGazetteerFeaturePrediction(Embeddings[Span]):
     def __str__(self):
         return self.name
 
-    # TODO das hier ist eigentlich Quatsch, wird nur gerade von der error_analysis gebraucht, daher hack
-    # die error_analysis sollte also flexibler werden
+    # TODO this doesn't make sense, but error_analysis needs it as of now
     def has_entry(self, span_string: str) -> bool:
         return True
 
