@@ -142,10 +142,11 @@ class SpanGazetteerFeaturePrediction(Embeddings[Span]):
         """
         super().__init__()
         self.prediction_model = prediction_model
-        self.name = "predicted-gazetteer-features" # TODO how to get a nice descriptive name from the model
+        #self.prediction_model.eval()
+        self.name = "SpanGazetteerFeaturePrediction" # TODO how to get a nice descriptive name from the model
         self.static_embeddings = True
 
-        self.__gazetteer_vector_length = 4 # TODO infer length somehow, predict random string
+        self.__gazetteer_vector_length = self.prediction_model.predict(["some string"]).size(1)
         self.__embedding_length = self.__gazetteer_vector_length
 
         self.to(flair.device)
