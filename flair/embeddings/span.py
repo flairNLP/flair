@@ -9,6 +9,7 @@ import flair
 from flair.data import Span
 from flair.embeddings import Embeddings, TokenEmbeddings
 from flair.nn import DefaultClassifier
+from typing import Dict
 
 log = logging.getLogger("flair")
 
@@ -46,6 +47,7 @@ class SpanGazetteerEmbeddings(Embeddings[Span]):
 
         self.__gazetteer_vector_length = len(next(iter(self.gazetteer.values())))  # one entry in gaz to get its size
         self.__embedding_length = self.__gazetteer_vector_length
+        self.__embedding_type = "span-level"
         if self.add_lower_case_lookup:
             self.__embedding_length += self.__gazetteer_vector_length
         if self.add_substring_gazetteer_lookup:
@@ -113,7 +115,7 @@ class SpanGazetteerEmbeddings(Embeddings[Span]):
         return self.__embedding_length
 
     @property
-    def embedding_type(self) -> int:
+    def embedding_type(self) -> str:
         return self.__embedding_type
 
     def _add_embeddings_internal(self, spans: List[Span]):
@@ -135,6 +137,7 @@ class SpanGazetteerFeaturePrediction(Embeddings[Span]):
 
     def __init__(self,
                  prediction_model = None,
+                 fine_tune: bool = False,
                  ):
         """
         :param prediction_model: the trained model to be used for predicting gazetteer features per span,
@@ -142,12 +145,16 @@ class SpanGazetteerFeaturePrediction(Embeddings[Span]):
         """
         super().__init__()
         self.prediction_model = prediction_model
-        #self.prediction_model.eval()
         self.name = "SpanGazetteerFeaturePrediction" # TODO how to get a nice descriptive name from the model
-        self.static_embeddings = True
+        self.fine_tune = fine_tune
+        if self.fine_tune:
+            self.static_embeddings = False
+        else:
+            self.static_embeddings = True
 
         self.__gazetteer_vector_length = self.prediction_model.predict(["some string"]).size(1)
         self.__embedding_length = self.__gazetteer_vector_length
+        self.__embedding_type = "span-level"
 
         self.to(flair.device)
 
@@ -156,12 +163,17 @@ class SpanGazetteerFeaturePrediction(Embeddings[Span]):
         return self.__embedding_length
 
     @property
-    def embedding_type(self) -> int:
+    def embedding_type(self) -> str:
         return self.__embedding_type
 
     def predict_feature_vector(self, spans: List[Span]):
-        feature_vector = self.prediction_model.predict([s.text for s in spans])
-        return feature_vector
+        if self.fine_tune:
+            self.prediction_model.train()
+            return self.prediction_model.predict([s.text for s in spans])
+        else:
+            self.prediction_model.eval()
+            with torch.no_grad():
+                return self.prediction_model.predict([s.text for s in spans])
 
     def _add_embeddings_internal(self, spans: List[Span]):
         embeddings = self.predict_feature_vector(spans)
@@ -175,3 +187,68 @@ class SpanGazetteerFeaturePrediction(Embeddings[Span]):
     def has_entry(self, span_string: str) -> bool:
         return True
 
+
+class StackedSpanEmbeddings(Embeddings[Span]):
+    """A stack of embeddings, used if you need to combine several different embedding types."""
+
+    def __init__(self, embeddings: List[Embeddings[Span]]):
+        """The constructor takes a list of embeddings to be combined."""
+        super().__init__()
+
+        self.embeddings = embeddings
+
+        # IMPORTANT: add embeddings as torch modules
+        for i, embedding in enumerate(embeddings):
+            embedding.name = f"{str(i)}-{embedding.name}"
+            self.add_module(f"list_embedding_{str(i)}", embedding)
+
+        self.name: str = "Stack"
+        self.static_embeddings: bool = True
+
+        self.__embedding_type: str = embeddings[0].embedding_type
+
+        self.__embedding_length: int = 0
+        for embedding in embeddings:
+            self.__embedding_length += embedding.embedding_length
+
+    def embed(self, spans: List[Span], static_embeddings: bool = True):
+        if type(spans) is Span:
+            spans = [spans]
+
+        for embedding in self.embeddings:
+            embedding.embed(spans)
+
+    @property
+    def embedding_type(self) -> str:
+        return self.__embedding_type
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, spans: List[Span]) -> List[Span]:
+
+        for embedding in self.embeddings:
+            embedding._add_embeddings_internal(spans)
+
+        return spans
+
+    def __str__(self):
+        return f'StackedEmbeddings [{",".join([str(e) for e in self.embeddings])}]'
+
+    def get_names(self) -> List[str]:
+        """Returns a list of embedding names. In most cases, it is just a list with one item, namely the name of
+        this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
+        Then, the list contains the names of all embeddings in the stack."""
+        names = []
+        for embedding in self.embeddings:
+            names.extend(embedding.get_names())
+        return names
+
+    def get_named_embeddings_dict(self) -> Dict:
+
+        named_embeddings_dict = {}
+        for embedding in self.embeddings:
+            named_embeddings_dict.update(embedding.get_named_embeddings_dict())
+
+        return named_embeddings_dict
