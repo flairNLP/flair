@@ -6,8 +6,8 @@ from flair.data import Dictionary
 
 class RNNRegressor(nn.Module):
     def __init__(self,
-                 char_embedding_dim: int = 25,
-                 hidden_size_char: int = 50,
+                 char_embedding_dim: int = 50,
+                 hidden_size_char: int = 256,
                  output_size: int = 4,
                  device = torch.device("cpu")):
         super(RNNRegressor, self).__init__()
@@ -91,16 +91,12 @@ class RNNRegressor(nn.Module):
         return output, target_vectors
 
     def predict(self, strings):
-
         if not isinstance(strings, list):
             strings = [strings]
-
-        with torch.no_grad():
-            self.eval() # TODO: necessary?
-            dummy_targets = torch.zeros(len(strings)) # dummy because forward needs target_vectors at the moment...
-            batch = [strings, dummy_targets]
-            output, _ = self.forward(batch)
-        return output#.detach().cpu().numpy()
+        dummy_targets = torch.zeros(len(strings)) # dummy because forward needs target_vectors at the moment...
+        batch = [strings, dummy_targets]
+        output, _ = self.forward(batch)
+        return output
 
 
 # this version was using Flair's CharacterEmbeddings. In principle the same thing but needed Flair Sentences which was time consuming
@@ -146,13 +142,3 @@ class RNNRegressor(nn.Module):
 #             batch = [strings, dummy_targets, dummy_weighting]
 #             output, _, _ = self.forward(batch)
 #         return output#.detach().cpu().numpy()
-
-
-
-
-
-
-
-
-
-

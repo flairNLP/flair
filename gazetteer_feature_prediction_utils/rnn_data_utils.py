@@ -14,6 +14,7 @@ class GazetteerFeaturesDataset(Dataset):
                  downsample=1.0,
                  balance_random=True,
                  factor_random_true=1,
+                 min_tagged_freq=20,
                  device=torch.device("cpu")):
 
         self.gazetteer = pd.read_csv(gazetteer_path)
@@ -21,14 +22,19 @@ class GazetteerFeaturesDataset(Dataset):
         self.factor_random_true = factor_random_true
         self.balance_random = balance_random
         self.downsample = downsample
+        self.min_tagged_freq = min_tagged_freq
         self.device = device
 
         self.gazetteer = self.gazetteer.sample(frac=self.downsample)
+        print("Originally: \t gazetteer len:", len(self.gazetteer), "random_spans len:", len(self.random_spans))
+
+        # filter out those with <= min_tagged_freq
+        self.gazetteer = self.gazetteer.drop(self.gazetteer[self.gazetteer.tagged_frequency < self.min_tagged_freq].index)
 
         if self.balance_random and len(self.random_spans) > self.factor_random_true*len(self.gazetteer):
             self.random_spans = self.random_spans.sample(self.factor_random_true*len(self.gazetteer))
 
-        print("gazetteer len:", len(self.gazetteer), "random_spans len:", len(self.random_spans))
+        print("After: \t gazetteer len:", len(self.gazetteer), "random_spans len:", len(self.random_spans))
 
         self.joined = pd.concat([self.gazetteer, self.random_spans])
 
@@ -77,11 +83,13 @@ def get_dataloaders(gazetteer_path,
                     batch_size = 32,
                     device = torch.device("cuda:1"),
                     downsample = 1.0,
+                    min_tagged_freq = 20,
                     factor_random_true = 1):
 
     gazetteer_dataset = GazetteerFeaturesDataset(gazetteer_path, random_spans_path,
                                                  downsample = downsample,
-                                                 device=device, factor_random_true=factor_random_true)
+                                                 device=device, factor_random_true=factor_random_true,
+                                                 min_tagged_freq=min_tagged_freq)
 
     print(len(gazetteer_dataset))
 

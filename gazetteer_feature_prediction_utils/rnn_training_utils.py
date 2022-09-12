@@ -87,7 +87,7 @@ def train(model,
 
             #### hier eine Gewichtung einbauen
             # also je nach coonfidence / tagged-untagged Loss multiplizieren, damit manche mehr/weniger ins Gewicht fallsen
-            # siehe train_model_deprecated.py
+            # siehe train_rnn_model_deprecated.py
             # TODO: Achtung: so würde das aktuell dazu führen, dass die random spans NICHT gewertet werden, weil die [0,0] als conf und ratio haben
             # das müsste man also ändern. Wie? Wenn ich die einfach [1.0, 1.0] setze, werden sie vergleichsweise stark gewichtet, weil die "echteh"
             # ja < 1.0 haben. Wäre das schlimm?
