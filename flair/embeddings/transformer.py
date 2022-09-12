@@ -778,8 +778,8 @@ class TransformerNebullvmEmbeddings(TransformerBaseEmbeddings):
         return {"token_embeddings": self.model(*tensors.values())[0]}
 
     @classmethod
-    def convert_dynamic_axes(cls, dynamic_info: Dict):
-        dynamic_axes = dict()
+    def convert_dynamic_axes(cls, dynamic_info: Dict[str, Dict[int, str]]) -> Dict[str, List[Dict[int, str]]]:
+        dynamic_axes: Dict[str, List[Dict[int, str]]] = dict()
         dynamic_axes["inputs"] = []
         dynamic_axes["outputs"] = []
         for k, v in dynamic_info.items():
