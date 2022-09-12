@@ -183,10 +183,6 @@ class SpanGazetteerFeaturePrediction(Embeddings[Span]):
     def __str__(self):
         return self.name
 
-    # TODO this doesn't make sense, but error_analysis needs it as of now
-    def has_entry(self, span_string: str) -> bool:
-        return True
-
 
 class StackedSpanEmbeddings(Embeddings[Span]):
     """A stack of embeddings, used if you need to combine several different embedding types."""
