@@ -327,17 +327,13 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
 
             # first iterate over gold spans and see if matches predictions
             printed = []
-            in_gazetteer = False
+            #in_gazetteer = False
             contains_error = False  # gets set to True if one or more incorrect predictions in datapoint
 
             for span in datapoint.get_spans(gold_label_type):
                 if self.gazetteer_embeddings:
                     self.gazetteer_embeddings.embed(span) #TODO would be nice to have already stored span embeddings
                     gazetteer_vector = span.get_embedding()
-                    if self.gazetteer_embeddings.has_entry(span.text):
-                        in_gazetteer = True
-                    else:
-                        in_gazetteer = False
                 else:
                     gazetteer_vector = torch.Tensor([])  # dummy
 
@@ -352,7 +348,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                     f' --> {span.get_label("predicted").value} ({symbol})'
-                    f' \t gazetteer entry: {"📔" if in_gazetteer else "❔"} \t {[round(e, 2) for e in gazetteer_vector.tolist()]}\n'
 
                 )
             # now add also the predicted spans that have *no* gold span equivalent
@@ -360,10 +355,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                 if self.gazetteer_embeddings:
                     self.gazetteer_embeddings.embed(span) #TODO would be nice to have already stored span embeddings
                     gazetteer_vector = span.get_embedding()
-                    if self.gazetteer_embeddings.has_entry(span.text):
-                        in_gazetteer = True
-                    else:
-                        in_gazetteer = False
                 else:
                     gazetteer_vector = torch.Tensor([])  # dummy
 
@@ -375,7 +366,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                     eval_line += (
                         f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                         f' --> {span.get_label("predicted").value} ("❌")'
-                        f' \t gazetteer entry: {"📔" if in_gazetteer else "❔"} \t {[round(e, 2) for e in gazetteer_vector.tolist()]} \n'
+                        f' \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_vector.tolist()]}\n'
+
                     )
 
             lines.append(eval_line)
