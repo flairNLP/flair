@@ -76,6 +76,7 @@ class ModelTrainer:
         # first, get all individual gradients
         named_grads = {}
         for loss in losses:
+            tagger.zero_grad()
             loss.backward(retain_graph=True)
             for param in tagger.named_parameters():
                 if param[1].grad is None: continue
@@ -102,6 +103,7 @@ class ModelTrainer:
                 for param_name, param in tagger.named_parameters():
                     if param_name == name:
                         param.grad = named_grads[name]
+
         if regularize:
             for name in named_grads.keys():
                 # write in regularized gradient
