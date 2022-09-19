@@ -725,6 +725,123 @@ class SapBert:
         ]
 
 
+class BioEntityLinkingModel:
+    def __init__(self, model_type: str):
+        if model_type not in ["biosyn", "sapbert"]:
+            raise ValueError("model_type must be 'biosyn' or 'sapbert'")
+        self.model_type = model_type
+
+    def init_model(self, max_length: int):
+        # Use BioSyn or SapBert
+        if self.model_type == "biosyn":
+            self.model = BioSyn(
+                max_length=max_length, use_cuda=torch.cuda.is_available()
+            )
+        elif self.model_type == "sapbert":
+            self.model = SapBert(
+                max_length=max_length, use_cuda=torch.cuda.is_available()
+            )
+
+    def load_model(
+        self,
+        model_name_or_path: str,
+        dictionary_name_or_path: str,
+        mean_centering: bool,
+    ):
+        self.model.load_model(model_name_or_path=model_name_or_path)
+
+        # check for embedded dictionary in cache
+        dictionary_name = os.path.splitext(os.path.basename(dictionary_name_or_path))[0]
+        cache_folder = os.path.join(flair.cache_root, "datasets")
+        cached_dictionary_path = os.path.join(
+            cache_folder,
+            f"cached_{model_name_or_path.split('/')[-1]}_{dictionary_name}.pk",
+        )
+
+        # If exists, load the cached dictionary
+        if os.path.exists(cached_dictionary_path):
+            with open(cached_dictionary_path, "rb") as cached_file:
+                cached_dictionary = pickle.load(cached_file)
+            log.info(
+                "Loaded dictionary from cached file {}".format(cached_dictionary_path)
+            )
+
+            self.dictionary, self.dict_sparse_embeds, self.dict_dense_embeds = (
+                cached_dictionary["dictionary"],
+                cached_dictionary["dict_sparse_embeds"],
+                cached_dictionary["dict_dense_embeds"],
+            )
+
+        # else, load and embed
+        else:
+            # use provided dictionary
+            if dictionary_name_or_path == "ctd-disease":
+                self.dictionary = NEL_CTD_DISEASE_DICT().data
+            elif dictionary_name_or_path == "ctd-chemical":
+                self.dictionary = NEL_CTD_CHEMICAL_DICT().data
+            elif dictionary_name_or_path == "ncbi-gene":
+                self.dictionary = NEL_NCBI_GENE_DICT().data
+            elif dictionary_name_or_path == "ncbi-taxonomy":
+                self.dictionary = NEL_NCBI_TAXONOMY_DICT().data
+            # use custom dictionary file
+            else:
+                self.dictionary = DictionaryDataset(
+                    dictionary_path=dictionary_name_or_path
+                ).data
+
+            # embed dictionary
+            dictionary_names = [row[0] for row in self.dictionary]
+            if self.model_type == "biosyn":
+                self.dict_sparse_embeds = self.model.embed_sparse(
+                    names=dictionary_names, show_progress=True
+                )
+            self.dict_dense_embeds = self.model.embed_dense(
+                names=dictionary_names, show_progress=True
+            )
+
+            # cache dictionary
+            cached_dictionary = {
+                "dictionary": self.dictionary,
+                "dict_sparse_embeds": self.dict_sparse_embeds,
+                "dict_dense_embeds": self.dict_dense_embeds,
+            }
+            if not os.path.exists(cache_folder):
+                os.mkdir(cache_folder)
+            with open(cached_dictionary_path, "wb") as cache_file:
+                pickle.dump(cached_dictionary, cache_file)
+            print(
+                "Saving dictionary into cached file {}".format(cached_dictionary_path)
+            )
+
+        # apply mean centering
+        if mean_centering:
+            self.tgt_space_mean_vec = self.dict_dense_embeds.mean(0)
+            self.dict_dense_embeds -= self.tgt_space_mean_vec
+        else:
+            self.tgt_space_mean_vec = None
+
+    def get_predictions(self, mention: str, topk: int):
+        if self.model_type == "biosyn":
+            return self.model.get_predictions(
+                mention,
+                self.dictionary,
+                self.dict_sparse_embeds,
+                self.dict_dense_embeds,
+                topk,
+                self.tgt_space_mean_vec,
+            )
+        elif self.model_type == "sapbert":
+            return self.model.get_predictions(
+                mention,
+                self.dictionary,
+                self.dense_embeds,
+                topk,
+                self.tgt_space_mean_vec,
+            )
+        else:
+            raise ValueError("model_type must be 'biosyn' or 'sapbert'")
+
+
 class BiomedicalEntityLinking:
     """
     Biomedical Entity Linker for HunFlair
@@ -734,11 +851,6 @@ class BiomedicalEntityLinking:
     def __init__(
         self,
         model,
-        dictionary: np.ndarray,
-        database_name: str,
-        dict_sparse_embeds: np.ndarray,
-        dict_dense_embeds: np.ndarray,
-        tgt_space_mean_vec: np.ndarray,
         ab3p_path: Path,
     ) -> None:
         """
@@ -749,11 +861,6 @@ class BiomedicalEntityLinking:
         :param dict_dense_embeds: dense embeddings of dictionary
         """
         self.model = model
-        self.dictionary = dictionary
-        self.database_name = database_name
-        self.dict_sparse_embeds = dict_sparse_embeds
-        self.dict_dense_embeds = dict_dense_embeds
-        self.tgt_space_mean_vec = tgt_space_mean_vec
         self.text_preprocessor = TextPreprocess()
         self.ab3p_path = ab3p_path
 
@@ -815,17 +922,13 @@ class BiomedicalEntityLinking:
                 "SapBERT is not trained for gene entity linking. You can use BioSyn instead."
             )
 
-        # Use BioSyn or SapBert
-        if model_type == "biosyn":
-            model = BioSyn(max_length=max_length, use_cuda=torch.cuda.is_available())
-        elif model_type == "sapbert":
-            model = SapBert(max_length=max_length, use_cuda=torch.cuda.is_available())
-        else:
+        # Initalize model
+        if model_type not in ["biosyn", "sapbert"]:
             raise ValueError(
                 "Invalid value for model_type. The only possible values are 'biosyn' and 'sapbert'"
             )
-
-        model.load_model(model_name_or_path=model_path)
+        model = BioEntityLinkingModel(model_type)
+        model.init_model(max_length=max_length)
 
         # determine dictionary to use
         if dictionary_path is "disease":
@@ -858,7 +961,7 @@ class BiomedicalEntityLinking:
                 dictionary_path = "ncbi-gene"
             # error
             else:
-                if model == "sapbert":
+                if model_type == "sapbert":
                     log.error(
                         """When using the sapbert model, you need to specify a dictionary. 
                     Available options are: 'disease', 'chemical', 'gene' and 'taxonomy'.
@@ -872,22 +975,14 @@ class BiomedicalEntityLinking:
                     )
                 raise ValueError("Invalid dictionary")
 
-        # embed dictionary
-        (
-            dictionary,
-            database_name,
-            dict_sparse_embeds,
-            dict_dense_embeds,
-            tgt_space_mean_vec,
-        ) = cls._cache_or_load_dictionary(model, model_name, str(dictionary_path))
+        model.load_model(
+            model_name_or_path=model_path,
+            dictionary_name_or_path=dictionary_path,
+            mean_centering=False,
+        )
 
         return cls(
             model,
-            dictionary,
-            database_name,
-            dict_sparse_embeds,
-            dict_dense_embeds,
-            tgt_space_mean_vec,
             ab3p_path,
         )
 
@@ -932,14 +1027,7 @@ class BiomedicalEntityLinking:
                     mention = self.text_preprocessor.run(entity.span.text)
 
                 # get predictions from dictionary
-                predictions = self.model.get_predictions(
-                    mention,
-                    self.dictionary,
-                    self.dict_sparse_embeds,
-                    self.dict_dense_embeds,
-                    topk,
-                    self.tgt_space_mean_vec,
-                )
+                predictions = self.model.get_predictions(mention, topk)
 
                 # add predictions to entity
                 label_name = (
@@ -962,8 +1050,6 @@ class BiomedicalEntityLinking:
                         cui_parts = cui.split(":")
                         database_name = ":".join(cui_parts[0:-1])
                         cui = cui_parts[-1]
-                    elif isinstance(self.database_name, str):
-                        database_name = self.database_name
                     else:
                         database_name = None
                     sentence.add_complex_label(
@@ -977,96 +1063,3 @@ class BiomedicalEntityLinking:
                             score=prediction[2].astype(float),
                         ),
                     )
-
-    @staticmethod
-    def _cache_or_load_dictionary(
-        entity_linker,
-        model_name_or_path: Union[str, Path],
-        dictionary_path: Path,
-        mean_centering: bool = False,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        tgt_space_mean_vec = None
-        dictionary_name = os.path.splitext(os.path.basename(dictionary_path))[0]
-
-        cache_folder = os.path.join(flair.cache_root, "datasets")
-        cached_dictionary_path = os.path.join(
-            cache_folder,
-            f"cached_{model_name_or_path.split('/')[-1]}_{dictionary_name}.pk",
-        )
-
-        # If exist, load the cached dictionary
-        if os.path.exists(cached_dictionary_path):
-            with open(cached_dictionary_path, "rb") as fin:
-                cached_dictionary = pickle.load(fin)
-            log.info(
-                "Loaded dictionary from cached file {}".format(cached_dictionary_path)
-            )
-
-            dictionary, dict_sparse_embeds, dict_dense_embeds = (
-                cached_dictionary["dictionary"],
-                cached_dictionary["dict_sparse_embeds"],
-                cached_dictionary["dict_dense_embeds"],
-            )
-        # Else, embed the dictionary
-        else:
-            # use provided dictionary
-            if dictionary_path == "ctd-disease":
-                dictionary = NEL_CTD_DISEASE_DICT().data
-                database = NEL_CTD_DISEASE_DICT.get_database_name()
-            elif dictionary_path == "ctd-chemical":
-                dictionary = NEL_CTD_CHEMICAL_DICT().data
-                database = NEL_CTD_CHEMICAL_DICT.get_database_name()
-            elif dictionary_path == "ncbi-gene":
-                dictionary = NEL_NCBI_GENE_DICT().data
-                database = NEL_NCBI_GENE_DICT.get_database_name()
-            elif dictionary_path == "ncbi-taxonomy":
-                dictionary = NEL_NCBI_TAXONOMY_DICT().data
-                database = NEL_NCBI_TAXONOMY_DICT.get_datbase_name()
-            # use custom dictionary file
-            else:
-                dictionary = DictionaryDataset(dictionary_path=dictionary_path).data
-                database = None
-
-            # embed dictionary
-            dictionary_names = [row[0] for row in dictionary]
-            dict_sparse_embeds = entity_linker.embed_sparse(
-                names=dictionary_names, show_progress=True
-            )
-            dict_dense_embeds = entity_linker.embed_dense(
-                names=dictionary_names, show_progress=True
-            )
-
-            if mean_centering:
-                tgt_space_mean_vec = dict_dense_embeds.mean(0)
-                dict_dense_embeds -= tgt_space_mean_vec
-            cached_dictionary = {
-                "dictionary": dictionary,
-                "dict_sparse_embeds": dict_sparse_embeds,
-                "dict_dense_embeds": dict_dense_embeds,
-            }
-
-            if not os.path.exists(cache_folder):
-                os.mkdir(cache_folder)
-            with open(cached_dictionary_path, "wb") as fin:
-                pickle.dump(cached_dictionary, fin)
-            print(
-                "Saving dictionary into cached file {}".format(cached_dictionary_path)
-            )
-
-        # determine dictionary name
-        if dictionary_path == "ctd-disease":
-            database = NEL_CTD_DISEASE_DICT.get_database_name()
-        elif dictionary_path == "ctd-chemical":
-            database = NEL_CTD_CHEMICAL_DICT.get_database_name()
-        elif dictionary_path == "ncbi-gene":
-            database = NEL_NCBI_GENE_DICT.get_database_name()
-        elif dictionary_path == "ncbi-taxonomy":
-            database = NEL_NCBI_TAXONOMY_DICT.get_datbase_name()
-
-        return (
-            dictionary,
-            database,
-            dict_sparse_embeds,
-            dict_dense_embeds,
-            tgt_space_mean_vec,
-        )
