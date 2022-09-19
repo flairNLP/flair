@@ -80,9 +80,9 @@ class ModelTrainer:
             for param in tagger.named_parameters():
                 if param[1].grad is None: continue
                 if param[0] not in named_grads:
-                    named_grads[param[0]] = [param[1].grad.detach().clone()]
+                    named_grads[param[0]] = [param[1].grad.detach().clone().to("cpu")]
                 else:
-                    named_grads[param[0]].append(param[1].grad.detach().clone())
+                    named_grads[param[0]].append(param[1].grad.detach().clone().to("cpu"))
 
         # combine gradients
         for name in named_grads.keys():
@@ -91,7 +91,7 @@ class ModelTrainer:
 
             if regularize:
                 # min max combination
-                zeros = torch.zeros(named_grads[name][0].size(), device=flair.device)
+                zeros = torch.zeros(named_grads[name][0].size(), device="cpu")
                 minimum = torch.min(stacked_grads, 0).values
                 maximum = torch.max(stacked_grads, 0).values
                 regularized_gradient = torch.maximum(minimum, zeros) + torch.minimum(maximum, zeros)
@@ -102,7 +102,7 @@ class ModelTrainer:
             # write in regularized gradient
             for param_name, param in tagger.named_parameters():
                 if param_name == name:
-                    param.grad = regularized_gradient
+                    param.grad = regularized_gradient.to(flair.device)
 
     def train(
         self,
