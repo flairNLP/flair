@@ -64,7 +64,7 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
 
 class ReadoutLayer(TokenEmbeddings):
 
-    def __init__(self, embeddings: TransformerWordEmbeddings, lstm_states: int = 64):
+    def __init__(self, embeddings: TransformerWordEmbeddings, lstm_states: int = 64, bidirectional=False):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -74,13 +74,13 @@ class ReadoutLayer(TokenEmbeddings):
         self.static_embeddings: bool = False
 
         self.__embedding_type: str = embeddings.embedding_type
-        self.__embedding_length: int = lstm_states
+        self.__embedding_length: int = lstm_states *2 if bidirectional else lstm_states
 
         self.rnn: RNNBase = torch.nn.LSTM(
             embeddings.embedding_length,
             hidden_size=lstm_states,
             num_layers=1,
-            bidirectional=False,
+            bidirectional=bidirectional,
             batch_first=True,
         )
 
