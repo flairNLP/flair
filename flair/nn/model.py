@@ -55,18 +55,18 @@ class Model(torch.nn.Module, typing.Generic[DT]):
 
     @abstractmethod
     def evaluate(
-        self,
-        data_points: Union[List[DT], Dataset],
-        gold_label_type: str,
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
-        gold_label_dictionary: Optional[Dictionary] = None,
-        return_loss: bool = True,
-        **kwargs,
+            self,
+            data_points: Union[List[DT], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: Optional[int] = 8,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
+            gold_label_dictionary: Optional[Dictionary] = None,
+            return_loss: bool = True,
+            **kwargs,
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
@@ -202,18 +202,18 @@ class Classifier(Model[DT], typing.Generic[DT]):
     evaluation routines and compute the same numbers."""
 
     def evaluate(
-        self,
-        data_points: Union[List[DT], Dataset],
-        gold_label_type: str,
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
-        gold_label_dictionary: Optional[Dictionary] = None,
-        return_loss: bool = True,
-        **kwargs,
+            self,
+            data_points: Union[List[DT], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: Optional[int] = 8,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
+            gold_label_dictionary: Optional[Dictionary] = None,
+            return_loss: bool = True,
+            **kwargs,
     ) -> Result:
         import numpy as np
         import sklearn
@@ -439,11 +439,11 @@ class Classifier(Model[DT], typing.Generic[DT]):
             classification_report_dict = {}
 
         detailed_result = (
-            "\nResults:"
-            f"\n- F-score (micro) {micro_f_score}"
-            f"\n- F-score (macro) {macro_f_score}"
-            f"\n- Accuracy {accuracy_score}"
-            "\n\nBy class:\n" + classification_report
+                "\nResults:"
+                f"\n- F-score (micro) {micro_f_score}"
+                f"\n- F-score (macro) {macro_f_score}"
+                f"\n- Accuracy {accuracy_score}"
+                "\n\nBy class:\n" + classification_report
         )
 
         # line for log file
@@ -466,14 +466,14 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
     @abstractmethod
     def predict(
-        self,
-        sentences: Union[List[DT], DT],
-        mini_batch_size: int = 32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none",
+            self,
+            sentences: Union[List[DT], DT],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
@@ -516,18 +516,18 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
     """
 
     def __init__(
-        self,
-        label_dictionary: Dictionary,
-        final_embedding_size: int,
-        dropout: float = 0.0,
-        locked_dropout: float = 0.0,
-        word_dropout: float = 0.0,
-        multi_label: bool = False,
-        multi_label_threshold: float = 0.5,
-        loss_weights: Dict[str, float] = None,
-        decoder: Optional[torch.nn.Module] = None,
-        inverse_model: bool = False,
-        train_on_gold_pairs_only: bool = False,
+            self,
+            label_dictionary: Dictionary,
+            final_embedding_size: int,
+            dropout: float = 0.0,
+            locked_dropout: float = 0.0,
+            word_dropout: float = 0.0,
+            multi_label: bool = False,
+            multi_label_threshold: float = 0.5,
+            loss_weights: Dict[str, float] = None,
+            decoder: Optional[torch.nn.Module] = None,
+            inverse_model: bool = False,
+            train_on_gold_pairs_only: bool = False,
     ):
 
         super().__init__()
@@ -577,7 +577,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         if self.multi_label:
             self.loss_function: _Loss = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights, reduction="sum")
         else:
-            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="none")
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
 
     def _filter_data_point(self, data_point: DT) -> bool:
@@ -609,8 +609,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         return (embedded_data_pairs,)
 
     def _transform_embeddings(
-        self,
-        *args: torch.Tensor,
+            self,
+            *args: torch.Tensor,
     ) -> torch.Tensor:
         """This method does applies a transformation through the model given a list of tensors as input.
         Returns the embeddings that will ran trough a linear decoder layer to calculate logits.
@@ -729,14 +729,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         return typing.cast(List[DT], reordered_sentences)
 
     def predict(
-        self,
-        sentences: Union[List[DT], DT],
-        mini_batch_size: int = 32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none",
+            self,
+            sentences: Union[List[DT], DT],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
@@ -804,7 +804,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
                     if return_loss:
                         gold_labels = self._prepare_label_tensor(data_points)
-                        overall_loss += self._calculate_loss(scores, gold_labels)[0]
+                        losses, count = self._calculate_loss(scores, gold_labels)
+                        for loss in losses:
+                            overall_loss += loss
                         label_count += len(data_points)
 
                     if self.multi_label:
@@ -853,9 +855,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
     def __str__(self):
         return (
-            super(flair.nn.Model, self).__str__().rstrip(")")
-            + f"  (weights): {self.weight_dict}\n"
-            + f"  (weight_tensor) {self.loss_weights}\n)"
+                super(flair.nn.Model, self).__str__().rstrip(")")
+                + f"  (weights): {self.weight_dict}\n"
+                + f"  (weight_tensor) {self.loss_weights}\n)"
         )
 
     @classmethod

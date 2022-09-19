@@ -71,6 +71,37 @@ class ModelTrainer:
             if os.path.exists(previous_best_path):
                 os.remove(previous_best_path)
 
+    @staticmethod
+    def compute_regularized_gradient(losses, tagger, sum=False):
+        # first, get all individual gradients
+        named_grads = {}
+        for loss in losses:
+            loss.backward(retain_graph=True)
+            for param in tagger.named_parameters():
+                if param[1].grad is None: continue
+                if param[0] not in named_grads:
+                    named_grads[param[0]] = [param[1].grad.detach().clone().to('cpu')]
+                else:
+                    named_grads[param[0]].append(param[1].grad.detach().clone().to('cpu'))
+
+        # combine gradients
+        for name in named_grads.keys():
+
+            if sum:
+                # sum gradients
+                regularized_gradient = torch.add(named_grads[name][0], named_grads[name][1])
+            else:
+                # min max combination
+                zeros = torch.zeros(named_grads[name][0].size(), device="cpu")
+                minimum = torch.minimum(named_grads[name][0], named_grads[name][1])
+                maximum = torch.maximum(named_grads[name][0], named_grads[name][1])
+                regularized_gradient = torch.maximum(minimum, zeros) + torch.minimum(maximum, zeros)
+
+            # write in regularized gradient
+            for param_name, param in tagger.named_parameters():
+                if param_name == name:
+                    param.grad = regularized_gradient.to(flair.device)
+
     def train(
         self,
         base_path: Union[Path, str],
@@ -504,16 +535,19 @@ class ModelTrainer:
                     for batch_step in batch_steps:
 
                         # forward pass
-                        loss, datapoint_count = self.model.forward_loss(batch_step)
+                        losses, datapoint_count = self.model.forward_loss(batch_step)
                         average_over += datapoint_count
 
+                        ModelTrainer.compute_regularized_gradient(losses, self.model)
+
                         # Backward
-                        if use_amp:
-                            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                                scaled_loss.backward()
-                        else:
-                            loss.backward()
-                        train_loss += loss.item()
+                        # if use_amp:
+                        #     with amp.scale_loss(loss, optimizer) as scaled_loss:
+                        #         scaled_loss.backward()
+                        # else:
+                        #     loss.backward()
+                        for loss in losses:
+                            train_loss += loss.item()
 
                         # identify dynamic embeddings (always deleted) on first sentence
                         if not dynamic_embeddings:
