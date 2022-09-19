@@ -64,7 +64,7 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
 
 class ReadoutLayer(TokenEmbeddings):
 
-    def __init__(self, embeddings: TokenEmbeddings, lstm_states: int = 64):
+    def __init__(self, embeddings: TransformerWordEmbeddings, lstm_states: int = 64):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -73,8 +73,7 @@ class ReadoutLayer(TokenEmbeddings):
         self.name: str = "Readout"
         self.static_embeddings: bool = False
 
-        self.__embedding_type: str = embeddings[0].embedding_type
-
+        self.__embedding_type: str = embeddings.embedding_type
         self.__embedding_length: int = lstm_states
 
         self.rnn: RNNBase = torch.nn.LSTM(
@@ -92,14 +91,13 @@ class ReadoutLayer(TokenEmbeddings):
         if type(sentences) is Sentence:
             sentences = [sentences]
 
-        for embedding in self.embeddings:
-            embedding.embed(sentences)
+        self.embeddings.embed(sentences)
 
         tokens: List[Token] = []
         for sentence in sentences:
             tokens.extend(sentence)
 
-        all_token_embeddings = [token.embedding for token in tokens]
+        all_token_embeddings = [token.get_embedding(self.embeddings.get_names()) for token in tokens]
         stacked_token_embeddings = torch.stack(all_token_embeddings)
         rnn_out, hidden = self.rnn(stacked_token_embeddings)
         for token_no, token in enumerate(tokens):
