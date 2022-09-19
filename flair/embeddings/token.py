@@ -12,6 +12,7 @@ import torch
 from bpemb import BPEmb
 from gensim.models import KeyedVectors
 from torch import nn
+from torch.nn import RNNBase
 
 import flair
 from flair.data import Corpus, Dictionary, Sentence, Token, _iter_dataset
@@ -26,15 +27,14 @@ log = logging.getLogger("flair")
 
 
 class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
-
     onnx_cls = TransformerOnnxWordEmbeddings
 
     def __init__(
-        self,
-        model: str = "bert-base-uncased",
-        is_document_embedding: bool = False,
-        allow_long_sentences: bool = True,
-        **kwargs,
+            self,
+            model: str = "bert-base-uncased",
+            is_document_embedding: bool = False,
+            allow_long_sentences: bool = True,
+            **kwargs,
     ):
         """
         Bidirectional transformer embeddings of words from various transformer architectures.
@@ -60,6 +60,76 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
         # this parameter is fixed
         del state["is_token_embedding"]
         return cls(**state)
+
+
+class ReadoutLayer(TokenEmbeddings):
+
+    def __init__(self, embeddings: TokenEmbeddings, lstm_states: int = 64):
+        """The constructor takes a list of embeddings to be combined."""
+        super().__init__()
+
+        self.embeddings = embeddings
+
+        self.name: str = "Readout"
+        self.static_embeddings: bool = False
+
+        self.__embedding_type: str = embeddings[0].embedding_type
+
+        self.__embedding_length: int = lstm_states
+
+        self.rnn: RNNBase = torch.nn.LSTM(
+            embeddings.embedding_length,
+            hidden_size=lstm_states,
+            num_layers=1,
+            bidirectional=False,
+            batch_first=True,
+        )
+
+        self.to(flair.device)
+
+    def embed(self, sentences: Union[Sentence, List[Sentence]], static_embeddings: bool = True):
+        # if only one sentence is passed, convert to list of sentence
+        if type(sentences) is Sentence:
+            sentences = [sentences]
+
+        for embedding in self.embeddings:
+            embedding.embed(sentences)
+
+        tokens: List[Token] = []
+        for sentence in sentences:
+            tokens.extend(sentence)
+
+        all_token_embeddings = [token.embedding for token in tokens]
+        stacked_token_embeddings = torch.stack(all_token_embeddings)
+        rnn_out, hidden = self.rnn(stacked_token_embeddings)
+        for token_no, token in enumerate(tokens):
+            token.set_embedding(self.name, rnn_out[token_no, -1, :])
+
+    @property
+    def embedding_type(self) -> str:
+        return self.__embedding_type
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        for embedding in self.embeddings:
+            embedding._add_embeddings_internal(sentences)
+
+        return sentences
+
+    def __str__(self):
+        return f'ReadoutLayer [{",".join([str(e) for e in self.embeddings])}]'
+
+    def get_named_embeddings_dict(self) -> Dict:
+
+        named_embeddings_dict = {}
+        for embedding in self.embeddings:
+            named_embeddings_dict.update(embedding.get_named_embeddings_dict())
+
+        return named_embeddings_dict
 
 
 class StackedEmbeddings(TokenEmbeddings):
@@ -133,12 +203,12 @@ class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
     def __init__(
-        self,
-        embeddings: str,
-        field: str = None,
-        fine_tune: bool = False,
-        force_cpu: bool = True,
-        stable: bool = False,
+            self,
+            embeddings: str,
+            field: str = None,
+            fine_tune: bool = False,
+            force_cpu: bool = True,
+            stable: bool = False,
     ):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
@@ -391,10 +461,10 @@ class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
     def __init__(
-        self,
-        path_to_char_dict: str = None,
-        char_embedding_dim: int = 25,
-        hidden_size_char: int = 25,
+            self,
+            path_to_char_dict: str = None,
+            char_embedding_dim: int = 25,
+            hidden_size_char: int = 25,
     ):
         """Uses the default character dictionary if none provided."""
 
@@ -490,13 +560,13 @@ class FlairEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
     def __init__(
-        self,
-        model,
-        fine_tune: bool = False,
-        chars_per_chunk: int = 512,
-        with_whitespace: bool = True,
-        tokenized_lm: bool = True,
-        is_lower: bool = False,
+            self,
+            model,
+            fine_tune: bool = False,
+            chars_per_chunk: int = 512,
+            with_whitespace: bool = True,
+            tokenized_lm: bool = True,
+            is_lower: bool = False,
     ):
         """
         initializes contextual string embeddings using a character-level language model.
@@ -800,11 +870,11 @@ class FlairEmbeddings(TokenEmbeddings):
 
 class PooledFlairEmbeddings(TokenEmbeddings):
     def __init__(
-        self,
-        contextual_embeddings: Union[str, FlairEmbeddings],
-        pooling: str = "min",
-        only_capitalized: bool = False,
-        **kwargs,
+            self,
+            contextual_embeddings: Union[str, FlairEmbeddings],
+            pooling: str = "min",
+            only_capitalized: bool = False,
+            **kwargs,
     ):
 
         super().__init__()
@@ -985,11 +1055,11 @@ class OneHotEmbeddings(TokenEmbeddings):
     """One-hot encoded embeddings."""
 
     def __init__(
-        self,
-        vocab_dictionary: Dictionary,
-        field: str = "text",
-        embedding_length: int = 300,
-        stable: bool = False,
+            self,
+            vocab_dictionary: Dictionary,
+            field: str = "text",
+            embedding_length: int = 300,
+            stable: bool = False,
     ):
         """
         Initializes one-hot encoded word embeddings and a trainable embedding layer
@@ -1124,7 +1194,7 @@ class HashEmbeddings(TokenEmbeddings):
 
 class MuseCrosslingualEmbeddings(TokenEmbeddings):
     def __init__(
-        self,
+            self,
     ):
         self.name: str = "muse-crosslingual"
         self.static_embeddings = True
@@ -1196,7 +1266,6 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
                 self.language_embeddings[language_code] = gensim.models.KeyedVectors.load(str(embeddings_file))
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-
                 word_embedding = self.get_cached_vec(language_code=language_code, word=token.text)
 
                 token.set_embedding(self.name, word_embedding)
@@ -1245,14 +1314,14 @@ class BPEmbSerializable(BPEmb):
 
 class BytePairEmbeddings(TokenEmbeddings):
     def __init__(
-        self,
-        language: str = None,
-        dim: int = 50,
-        syllables: int = 100000,
-        cache_dir=None,
-        model_file_path: Path = None,
-        embedding_file_path: Path = None,
-        **kwargs,
+            self,
+            language: str = None,
+            dim: int = 50,
+            syllables: int = 100000,
+            cache_dir=None,
+            model_file_path: Path = None,
+            embedding_file_path: Path = None,
+            **kwargs,
     ):
         """
         Initializes BP embeddings. Constructor downloads required files if not there.
@@ -1265,7 +1334,7 @@ class BytePairEmbeddings(TokenEmbeddings):
             self.name: str = f"bpe-{language}-{syllables}-{dim}"
         else:
             assert (
-                model_file_path is not None and embedding_file_path is not None
+                    model_file_path is not None and embedding_file_path is not None
             ), "Need to specify model_file_path and embedding_file_path if no language is given in BytePairEmbeddings(...)"
             dim = None  # type: ignore
 
@@ -1322,11 +1391,11 @@ class ELMoEmbeddings(TokenEmbeddings):
     Default is to concatene the top 3 layers in the LM."""
 
     def __init__(
-        self,
-        model: str = "original",
-        options_file: str = None,
-        weight_file: str = None,
-        embedding_mode: str = "all",
+            self,
+            model: str = "original",
+            options_file: str = None,
+            weight_file: str = None,
+            embedding_mode: str = "all",
     ):
         super().__init__()
 

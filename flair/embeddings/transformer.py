@@ -276,6 +276,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         token_embedding: bool = False,
         force_device: Optional[torch.device] = None,
         force_max_length: bool = False,
+        store_all_layers: bool = False,
     ):
         self.name = name
         super().__init__()
@@ -293,6 +294,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         self.force_device = force_device
         self.fine_tune = fine_tune
         self.force_max_length = force_max_length
+        self.store_all_layers = store_all_layers
 
         if not self.token_embedding and not self.document_embedding:
             raise ValueError("either 'is_token_embedding' or 'is_document_embedding' needs to be set.")
@@ -313,6 +315,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             "fine_tune": self.fine_tune,
             "use_lang_emb": self.use_lang_emb,
             "force_max_length": self.force_max_length,
+            "store_all_layers": self.store_all_layers,
         }
 
     def __getstate__(self):
@@ -522,7 +525,11 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
     def __extract_token_embeddings(self, sentence_embeddings, sentences):
         for token_embeddings, sentence in zip(sentence_embeddings, sentences):
             for token_embedding, token in zip(token_embeddings, sentence):
-                token.set_embedding(self.name, token_embedding)
+                if self.store_all_layers:
+                    token.set_embedding(self.name, token_embedding.view(-1, self.model.config.hidden_size))
+                else:
+                    token.set_embedding(self.name, token_embedding)
+
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         tensors = self.prepare_tensors(sentences, device=self.force_device)
@@ -788,6 +795,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         tokenizer_data: Optional[BytesIO] = None,
         name: Optional[str] = None,
         force_max_length: bool = False,
+        store_all_layers: bool = False,
         **kwargs,
     ):
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -879,6 +887,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         else:
             self.layer_indexes = list(map(int, layers.split(",")))
 
+        self.store_all_layers = store_all_layers
+        if self.store_all_layers:
+            layer_mean = False
+
         self.cls_pooling = cls_pooling
         self.subtoken_pooling = subtoken_pooling
         self.layer_mean = layer_mean
@@ -913,6 +925,9 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if not self.layer_mean:
             length = len(self.layer_indexes) * model.config.hidden_size
         else:
+            length = model.config.hidden_size
+
+        if self.store_all_layers:
             length = model.config.hidden_size
 
         # in case of doubt: token embedding has higher priority than document embedding
@@ -1080,8 +1095,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
         if self.token_embedding:
             assert word_ids is not None
+            embedding_length = self.embedding_length_internal
+            if self.store_all_layers: # FIXME: This is terrible
+                embedding_length *= len(self.layer_indexes)
             all_token_embeddings = torch.zeros(
-                word_ids.shape[0], int(lengths.max()), self.embedding_length_internal, device=flair.device
+                word_ids.shape[0], int(lengths.max()), embedding_length, device=flair.device
             )
             true_tensor = torch.ones_like(word_ids[:, :1], dtype=torch.bool)
             if self.subtoken_pooling == "first":
