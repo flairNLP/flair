@@ -102,7 +102,6 @@ class ModelTrainer:
                 for param_name, param in tagger.named_parameters():
                     if param_name == name:
                         param.grad = named_grads[name]
-                        print(param.grad)
         if regularize:
             for name in named_grads.keys():
                 # write in regularized gradient
