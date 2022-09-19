@@ -72,7 +72,7 @@ class ModelTrainer:
                 os.remove(previous_best_path)
 
     @staticmethod
-    def compute_regularized_gradient(losses, tagger, sum=False):
+    def compute_regularized_gradient(losses, tagger, regularize=False):
         # first, get all individual gradients
         named_grads = {}
         for loss in losses:
@@ -87,15 +87,15 @@ class ModelTrainer:
         # combine gradients
         for name in named_grads.keys():
 
-            if sum:
-                # sum gradients
-                regularized_gradient = torch.add(named_grads[name][0], named_grads[name][1])
-            else:
+            if regularize:
                 # min max combination
                 zeros = torch.zeros(named_grads[name][0].size(), device="cpu")
                 minimum = torch.minimum(named_grads[name][0], named_grads[name][1])
                 maximum = torch.maximum(named_grads[name][0], named_grads[name][1])
                 regularized_gradient = torch.maximum(minimum, zeros) + torch.minimum(maximum, zeros)
+            else:
+                # sum gradients
+                regularized_gradient = torch.add(named_grads[name][0], named_grads[name][1])
 
             # write in regularized gradient
             for param_name, param in tagger.named_parameters():
@@ -155,6 +155,7 @@ class ModelTrainer:
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
         scheduler_state_dict: Optional[Dict[str, Any]] = None,
         save_optimizer_state: bool = False,
+        regularize_gradient: bool = False,
         **kwargs,
     ) -> dict:
         """
@@ -538,7 +539,7 @@ class ModelTrainer:
                         losses, datapoint_count = self.model.forward_loss(batch_step)
                         average_over += datapoint_count
 
-                        ModelTrainer.compute_regularized_gradient(losses, self.model)
+                        ModelTrainer.compute_regularized_gradient(losses, self.model, regularize=regularize_gradient)
 
                         # Backward
                         # if use_amp:
