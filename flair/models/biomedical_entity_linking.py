@@ -3,6 +3,7 @@ import stat
 import re
 import pickle
 import logging
+from statistics import mode
 from xmlrpc.client import Boolean
 import numpy as np
 import numpy.typing as nptyping
@@ -249,9 +250,10 @@ class Ab3P:
 class DictionaryDataset:
     """
     A class used to load dictionary data from a custom dictionary file.
-    File must be formatted as follows:
+    Every line in the file must be formatted as follows:
     concept_unique_id||concept_name
-    multiple synonyms for the same concept should be in seperate lines
+    with one line per concept name. Multiple synonyms for the same concept should
+    be in seperate lines with the same concept_unique_id.
 
     Slightly modifed from Sung et al. 2020
     Biomedical Entity Representations with Synonym Marginalization
@@ -281,46 +283,56 @@ class DictionaryDataset:
         return data
 
 
-class BioSyn:
-    """
-    Wrapper class for dense encoder and sparse encoder
-
-    Modified from Sung et al. 2020
-    Biomedical Entity Representations with Synonym Marginalization
-    https://github.com/dmis-lab/BioSyn/blob/master/src/biosyn/biosyn.py#L31
-    """
-
-    def __init__(self, max_length: int, use_cuda: bool) -> None:
+class BioEntityLinkingModel:
+    def __init__(self, model_type: str, max_length: int) -> None:
+        if model_type not in ["biosyn", "sapbert"]:
+            raise ValueError("model_type must be 'biosyn' or 'sapbert'")
+        self.model_type = model_type
         self.max_length = max_length
-        self.use_cuda = use_cuda
 
         self.tokenizer = None
         self.encoder = None
+        # sparse weights only used for biosyn
         self.sparse_encoder = None
         self.sparse_weight = None
 
-    def get_sparse_weight(self) -> torch.Tensor:
-        assert self.sparse_weight is not None
+        self.use_cuda = torch.cuda.is_available()
 
-        return self.sparse_weight
-
-    def load_model(self, model_name_or_path: Union[str, Path]):
+    def load_model(
+        self,
+        model_name_or_path: Union[str, Path],
+        dictionary_name_or_path: str,
+        mean_centering: bool,
+    ):
         self.load_dense_encoder(model_name_or_path)
-        self.load_sparse_encoder(model_name_or_path)
-        self.load_sparse_weight(model_name_or_path)
+
+        if self.model_type == "biosyn":
+            self.load_sparse_encoder(model_name_or_path)
+            self.load_sparse_weight(model_name_or_path)
+
+        self.embed_dictionary(
+            model_name_or_path=model_name_or_path,
+            dictionary_name_or_path=dictionary_name_or_path,
+            mean_centering=mean_centering,
+        )
 
         return self
 
+    # always used
     def load_dense_encoder(
         self, model_name_or_path: Union[str, Path]
     ) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
+        # load dense encoder from path or from hugging face
         self.encoder = AutoModel.from_pretrained(model_name_or_path)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            model_name_or_path, use_fast=True, do_lower_case=True
+        )
         if self.use_cuda:
             self.encoder = self.encoder.to("cuda")
 
         return self.encoder, self.tokenizer
 
+    # only used for biosyn
     def load_sparse_encoder(
         self, model_name_or_path: Union[str, Path]
     ) -> SparseEncoder:
@@ -340,6 +352,7 @@ class BioSyn:
 
         return self.sparse_encoder
 
+    # only used for biosyn
     def load_sparse_weight(self, model_name_or_path: Union[str, Path]) -> torch.Tensor:
         sparse_weight_path = os.path.join(model_name_or_path, "sparse_weight.pt")
         # check file exists
@@ -357,49 +370,16 @@ class BioSyn:
 
         return self.sparse_weight
 
-    def get_score_matrix(
-        self, query_embeds: np.ndarray, dict_embeds: np.ndarray
-    ) -> np.ndarray:
-        """
-        Return score matrix
-        :param query_embeds np.array: 2d numpy array of query embeddings
-        :param dict_embeds np.array: 2d numpy array of query embeddings
-        :returns score_matrix np.array: 2d numpy array of scores
-        """
-        score_matrix = np.matmul(query_embeds, dict_embeds.T)
+    # only used for biosyn
+    def get_sparse_weight(self) -> torch.Tensor:
+        assert self.sparse_weight is not None
 
-        return score_matrix
+        return self.sparse_weight
 
-    def retrieve_candidate(
-        self, score_matrix: np.ndarray, topk: int
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Return sorted topk indxes (descending order)
-        :param score_matrix np.array: 2d numpy array of scores
-        :param topk int: The number of candidates
-        :returns topk_idxs np.array: 2d numpy array of scores [# of query , # of dict]
-        """
-
-        def indexing_2d(arr, cols):
-            rows = np.repeat(
-                np.arange(0, cols.shape[0])[:, np.newaxis], cols.shape[1], axis=1
-            )
-            return arr[rows, cols]
-
-        # get topk indexes without sorting
-        topk_idxs = np.argpartition(score_matrix, -topk)[:, -topk:]
-
-        # get topk indexes with sorting
-        topk_score_matrix = indexing_2d(score_matrix, topk_idxs)
-        topk_argidxs = np.argsort(-topk_score_matrix)
-        topk_scores = np.sort(-topk_score_matrix)
-        topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
-
-        return topk_idxs, -topk_scores
-
+    # only used for biosyn
     def embed_sparse(self, names: list, show_progress: bool = False) -> np.ndarray:
         """
-        Embedding data into sparse representations
+        Embedding data into sparse representations for BioSyn
         :param names np.array: An array of names
         :returns sparse_embeds np.array: A list of sparse embeddings
         """
@@ -421,9 +401,11 @@ class BioSyn:
 
         return sparse_embeds
 
-    def embed_dense(self, names: list, show_progress: bool = False) -> np.ndarray:
+    def biosyn_embed_dense(
+        self, names: list, show_progress: bool = False, batch_size: int = 1024
+    ) -> np.ndarray:
         """
-        Embedding data into dense representations
+        Embedding data into dense representations for BioSyn
         :param names list: An array of names
         :returns dense_embeds list: A list of dense embeddings
         """
@@ -462,177 +444,16 @@ class BioSyn:
 
         return dense_embeds
 
-    def get_predictions(
-        self,
-        mention: str,
-        dictionary: np.ndarray,
-        dict_sparse_embeds: np.ndarray,
-        dict_dense_embeds: np.ndarray,
-        topk: int,
-        tgt_space_mean_vec: np.ndarray = None,
-    ) -> np.ndarray:
-        # embed mention
-        mention_sparse_embeds = self.embed_sparse(names=[mention])
-        mention_dense_embeds = self.embed_dense(names=[mention])
-
-        # calcuate score matrix and get top k
-        sparse_score_matrix = self.get_score_matrix(
-            query_embeds=mention_sparse_embeds, dict_embeds=dict_sparse_embeds
-        )
-        dense_score_matrix = self.get_score_matrix(
-            query_embeds=mention_dense_embeds, dict_embeds=dict_dense_embeds
-        )
-        sparse_weight = self.get_sparse_weight().item()
-        hybrid_score_matrix = sparse_weight * sparse_score_matrix + dense_score_matrix
-        hybrid_candidate_idxs, hybrid_candidate_scores = self.retrieve_candidate(
-            score_matrix=hybrid_score_matrix, topk=topk
-        )
-        ids = hybrid_candidate_idxs[0].tolist()
-        scores = hybrid_candidate_scores[0].tolist()
-
-        return [np.append(dictionary[ind], score) for ind, score in zip(ids, scores)]
-
-
-class SapBert:
-    """
-    Wrapper class for BERT encoder for SapBert
-
-    Modified from Liu et al. 2020
-    SapBERT: Self-alignment pretraining for BERT & XL-BEL: Cross-Lingual Biomedical Entity Linking
-    https://github.com/cambridgeltl/sapbert/blob/main/src/model_wrapper.py#L20
-    """
-
-    # Same as BioSyn
-    def __init__(self, max_length: int, use_cuda: bool) -> None:
-        self.max_length = max_length
-        self.use_cuda = use_cuda
-
-        self.tokenizer = None
-        self.encoder = None
-
-    # Differenece to BioSyn: not loading sparse encoder and weights
-    def load_model(self, model_name_or_path: Union[str, Path]):
-        self.load_bert(model_name_or_path)
-
-        return self
-
-    # Difference to load_dense_encoder in BioSyn: use_fast and do_lower_case
-    def load_bert(
-        self, path: Union[str, Path], lowercase: bool = True
-    ) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            path, use_fast=True, do_lower_case=lowercase
-        )
-        self.encoder = AutoModel.from_pretrained(path)
-        if self.use_cuda:
-            self.encoder = self.encoder.cuda()
-
-        return self.encoder, self.tokenizer
-
-    # Difference to BioSyn: has parameters cosine and normalize and uses them, same when not cosine and not normalize
-    def get_score_matrix(
-        self,
-        query_embeds: np.ndarray,
-        dict_embeds: np.ndarray,
-        cosine: bool = False,
-        normalise: bool = False,
-    ) -> np.ndarray:
-        """
-        Return score matrix
-        :param query_embeds: 2d numpy array of query embeddings
-        :param dict_embeds: 2d numpy array of query embeddings
-        :param score_matrix: 2d numpy array of scores
-        """
-        if cosine:
-            score_matrix = cosine_similarity(query_embeds, dict_embeds)
-        else:
-            score_matrix = np.matmul(query_embeds, dict_embeds.T)
-
-        if normalise:
-            score_matrix = (score_matrix - score_matrix.min()) / (
-                score_matrix.max() - score_matrix.min()
-            )
-
-        return score_matrix
-
-    # same as in BioSyn
-    def retrieve_candidate(
-        self, score_matrix: np.ndarray, topk: int
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Return sorted topk idxes (descending order)
-        :param score_matrix: 2d numpy array of scores
-        :param topk: number of candidates
-        :return topk_idxs: 2d numpy array of ids [# of query , # of dict]
-        :return topk_scores: 2d numpy array of top scores
-        """
-
-        def indexing_2d(arr, cols):
-            rows = np.repeat(
-                np.arange(0, cols.shape[0])[:, np.newaxis], cols.shape[1], axis=1
-            )
-            return arr[rows, cols]
-
-        # get topk indexes without sorting
-        topk_idxs = np.argpartition(score_matrix, -topk)[:, -topk:]
-
-        # get topk indexes with sorting
-        topk_score_matrix = indexing_2d(score_matrix, topk_idxs)
-        topk_argidxs = np.argsort(-topk_score_matrix)
-        topk_scores = np.sort(-topk_score_matrix)
-        topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
-
-        return topk_idxs, -topk_scores
-
-    # Not in BioSyn
-    def retrieve_candidate_cuda(
-        self,
-        score_matrix: np.ndarray,
-        topk: int,
-        batch_size: int = 128,
-        show_progress: bool = False,
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Return sorted topk idxes (descending order)
-        :param score_matrix: 2d numpy array of scores
-        :param topk: number of candidates
-        :return res: d numpy array of ids [# of query , # of dict]
-        :return scores: numpy array of top scores
-        """
-
-        res = None
-        scores = None
-        for i in tqdm(
-            np.arange(0, score_matrix.shape[0], batch_size), disable=not show_progress
-        ):
-            score_matrix_tmp = torch.tensor(score_matrix[i : i + batch_size]).cuda()
-            sorted_values, matrix_sorted = torch.sort(
-                score_matrix_tmp, dim=1, descending=True
-            )
-            matrix_sorted = matrix_sorted[:, :topk].cpu()
-            sorted_values = sorted_values[:, :topk].cpu()
-            if res is None:
-                res = matrix_sorted
-                scores = sorted_values
-            else:
-                res = torch.cat([res, matrix_sorted], axis=0)
-                scores = torch.cat([scores, sorted_values], axis=0)
-
-        return res.numpy(), scores.numpy()
-
-    def embed_sparse(self, names: nptyping.ArrayLike, show_progress: bool):
-        return []
-
     # Attention: uses cuda
-    def embed_dense(
+    def sapbert_embed_dense(
         self,
-        names: nptyping.ArrayLike,
+        names: np.ndarray,
         show_progress: bool = False,
         batch_size: int = 2048,
         agg_mode: str = "cls",
     ) -> np.ndarray:
         """
-        Embedding data into dense representations
+        Embedding data into dense representations for SapBert
         :param names: np.array of names
         :param show_progress: bool to toggle progress bar
         :param batch_size: batch size
@@ -689,67 +510,149 @@ class SapBert:
 
         return dense_embeds
 
+    def get_score_matrix(
+        self,
+        query_embeds: np.ndarray,
+        dict_embeds: np.ndarray,
+        cosine: bool = False,
+        normalise: bool = False,
+    ) -> np.ndarray:
+        """
+        Return score matrix
+        :param query_embeds: 2d numpy array of query embeddings
+        :param dict_embeds: 2d numpy array of query embeddings
+        :param score_matrix: 2d numpy array of scores
+        """
+        if cosine:
+            score_matrix = cosine_similarity(query_embeds, dict_embeds)
+        else:
+            score_matrix = np.matmul(query_embeds, dict_embeds.T)
+
+        if normalise:
+            score_matrix = (score_matrix - score_matrix.min()) / (
+                score_matrix.max() - score_matrix.min()
+            )
+
+        return score_matrix
+
+    def retrieve_candidate(
+        self, score_matrix: np.ndarray, topk: int
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Return sorted topk indxes (descending order)
+        :param score_matrix np.array: 2d numpy array of scores
+        :param topk int: The number of candidates
+        :returns topk_idxs np.array: 2d numpy array of scores [# of query , # of dict]
+        """
+
+        def indexing_2d(arr, cols):
+            rows = np.repeat(
+                np.arange(0, cols.shape[0])[:, np.newaxis], cols.shape[1], axis=1
+            )
+            return arr[rows, cols]
+
+        # get topk indexes without sorting
+        topk_idxs = np.argpartition(score_matrix, -topk)[:, -topk:]
+
+        # get topk indexes with sorting
+        topk_score_matrix = indexing_2d(score_matrix, topk_idxs)
+        topk_argidxs = np.argsort(-topk_score_matrix)
+        topk_scores = np.sort(-topk_score_matrix)
+        topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
+
+        return topk_idxs, -topk_scores
+
+    # Not in BioSyn
+    def retrieve_candidate_cuda(
+        self,
+        score_matrix: np.ndarray,
+        topk: int,
+        batch_size: int = 128,
+        show_progress: bool = False,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Return sorted topk idxes (descending order)
+        :param score_matrix: 2d numpy array of scores
+        :param topk: number of candidates
+        :return res: d numpy array of ids [# of query , # of dict]
+        :return scores: numpy array of top scores
+        """
+
+        res = None
+        scores = None
+        for i in tqdm(
+            np.arange(0, score_matrix.shape[0], batch_size), disable=not show_progress
+        ):
+            score_matrix_tmp = torch.tensor(score_matrix[i : i + batch_size]).cuda()
+            sorted_values, matrix_sorted = torch.sort(
+                score_matrix_tmp, dim=1, descending=True
+            )
+            matrix_sorted = matrix_sorted[:, :topk].cpu()
+            sorted_values = sorted_values[:, :topk].cpu()
+            if res is None:
+                res = matrix_sorted
+                scores = sorted_values
+            else:
+                res = torch.cat([res, matrix_sorted], axis=0)
+                scores = torch.cat([scores, sorted_values], axis=0)
+
+        return res.numpy(), scores.numpy()
+
     # possible values for agg_mode: cls|mean_pool|nospec
     def get_predictions(
         self,
         mention: str,
-        dictionary: np.ndarray,
-        dict_sparse_embeds: np.ndarray,
-        dict_dense_embeds: np.ndarray,
         topk: int,
         tgt_space_mean_vec: np.ndarray = None,
         agg_mode: str = "cls",
     ) -> np.ndarray:
-        mention_dense_embeds = self.embed_dense(names=[mention], agg_mode=agg_mode)
+        # get dense embeds for mention
+
+        if self.model_type == "biosyn":
+            mention_dense_embeds = self.biosyn_embed_dense(names=[mention])
+        elif self.model_type == "sapbert":
+            mention_dense_embeds = self.sapbert_embed_dense(
+                names=[mention], agg_mode=agg_mode
+            )
         if tgt_space_mean_vec is not None:
             mention_dense_embeds -= tgt_space_mean_vec
-
-        # get score matrix
-        # same as in BioSyn, but without the sparse encoder
         dense_score_matrix = self.get_score_matrix(
-            query_embeds=mention_dense_embeds,
-            dict_embeds=dict_dense_embeds,
+            query_embeds=mention_dense_embeds, dict_embeds=self.dict_dense_embeds
         )
-        score_matrix = dense_score_matrix
-        # same as in BioSyn, but with options for batchsize and show_progress
-        # TODO: Should differentiate based on cuda availability!
-        candidate_idxs, candidate_scores = self.retrieve_candidate_cuda(
-            score_matrix=score_matrix, topk=topk, batch_size=16, show_progress=False
-        )
-        # build return value with array of [concept_name, cui, score]
-        return [
-            np.append(dictionary[ind], score)
-            for ind, score in zip(
-                candidate_idxs[0].tolist(), candidate_scores[0].tolist()
+
+        # for bioysn: calculate hybrid scores with dense and sparse embeds
+        if self.model_type == "biosyn":
+            # get sparse embeds for mention
+            mention_sparse_embeds = self.embed_sparse(names=[mention])
+            sparse_score_matrix = self.get_score_matrix(
+                query_embeds=mention_sparse_embeds, dict_embeds=self.dict_sparse_embeds
             )
+            sparse_weight = self.get_sparse_weight().item()
+            # calculate hybrid score matrix
+            score_matrix = sparse_weight * sparse_score_matrix + dense_score_matrix
+            candidate_idxs, candidate_scores = self.retrieve_candidate(
+                score_matrix=score_matrix, topk=topk
+            )
+        # for sapbert: use only dense embeds
+        elif self.model_type == "sapbert":
+            score_matrix = dense_score_matrix
+            candidate_idxs, candidate_scores = self.retrieve_candidate_cuda(
+                score_matrix=score_matrix, topk=topk, batch_size=16, show_progress=False
+            )
+
+        ids = candidate_idxs[0].tolist()
+        scores = candidate_scores[0].tolist()
+
+        return [
+            np.append(self.dictionary[ind], score) for ind, score in zip(ids, scores)
         ]
 
-
-class BioEntityLinkingModel:
-    def __init__(self, model_type: str):
-        if model_type not in ["biosyn", "sapbert"]:
-            raise ValueError("model_type must be 'biosyn' or 'sapbert'")
-        self.model_type = model_type
-
-    def init_model(self, max_length: int):
-        # Use BioSyn or SapBert
-        if self.model_type == "biosyn":
-            self.model = BioSyn(
-                max_length=max_length, use_cuda=torch.cuda.is_available()
-            )
-        elif self.model_type == "sapbert":
-            self.model = SapBert(
-                max_length=max_length, use_cuda=torch.cuda.is_available()
-            )
-
-    def load_model(
+    def embed_dictionary(
         self,
         model_name_or_path: str,
         dictionary_name_or_path: str,
         mean_centering: bool,
     ):
-        self.model.load_model(model_name_or_path=model_name_or_path)
-
         # check for embedded dictionary in cache
         dictionary_name = os.path.splitext(os.path.basename(dictionary_name_or_path))[0]
         cache_folder = os.path.join(flair.cache_root, "datasets")
@@ -792,12 +695,17 @@ class BioEntityLinkingModel:
             # embed dictionary
             dictionary_names = [row[0] for row in self.dictionary]
             if self.model_type == "biosyn":
-                self.dict_sparse_embeds = self.model.embed_sparse(
+                self.dict_dense_embeds = self.biosyn_embed_dense(
                     names=dictionary_names, show_progress=True
                 )
-            self.dict_dense_embeds = self.model.embed_dense(
-                names=dictionary_names, show_progress=True
-            )
+                self.dict_sparse_embeds = self.embed_sparse(
+                    names=dictionary_names, show_progress=True
+                )
+            elif self.model_type == "sapbert":
+                self.dict_dense_embeds = self.sapbert_embed_dense(
+                    names=dictionary_names, show_progress=True
+                )
+                self.dict_sparse_embeds = None
 
             # cache dictionary
             cached_dictionary = {
@@ -820,27 +728,6 @@ class BioEntityLinkingModel:
         else:
             self.tgt_space_mean_vec = None
 
-    def get_predictions(self, mention: str, topk: int):
-        if self.model_type == "biosyn":
-            return self.model.get_predictions(
-                mention,
-                self.dictionary,
-                self.dict_sparse_embeds,
-                self.dict_dense_embeds,
-                topk,
-                self.tgt_space_mean_vec,
-            )
-        elif self.model_type == "sapbert":
-            return self.model.get_predictions(
-                mention,
-                self.dictionary,
-                self.dense_embeds,
-                topk,
-                self.tgt_space_mean_vec,
-            )
-        else:
-            raise ValueError("model_type must be 'biosyn' or 'sapbert'")
-
 
 class BiomedicalEntityLinking:
     """
@@ -854,7 +741,7 @@ class BiomedicalEntityLinking:
         ab3p_path: Path,
     ) -> None:
         """
-        Initalize HunNen class, called by classmethod load
+        Initalize class, called by classmethod load
         :param model: BioSyn object containing the dense and sparse encoders
         :param dictionary: numpy array containing all concept names and their cui
         :param dict_sparse_embeds: sparse embeddings of dictionary
@@ -927,8 +814,7 @@ class BiomedicalEntityLinking:
             raise ValueError(
                 "Invalid value for model_type. The only possible values are 'biosyn' and 'sapbert'"
             )
-        model = BioEntityLinkingModel(model_type)
-        model.init_model(max_length=max_length)
+        model = BioEntityLinkingModel(model_type, max_length=max_length)
 
         # determine dictionary to use
         if dictionary_path is "disease":
