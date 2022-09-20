@@ -67,7 +67,9 @@ class ReadoutLayer(TokenEmbeddings):
     def __init__(self, embeddings: TransformerWordEmbeddings,
                  lstm_states: int = 64,
                  bidirectional=False,
-                 locked_dropout=0.5):
+                 locked_dropout=0.5,
+                 reproject_embeddings=True,
+                 ):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -80,6 +82,8 @@ class ReadoutLayer(TokenEmbeddings):
         self.__embedding_length: int = lstm_states * 2 if bidirectional else lstm_states
 
         self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
+        if reproject_embeddings:
+            self.embedding2nn = torch.nn.Linear(embeddings.embedding_length, embeddings.embedding_length)
 
         self.rnn: RNNBase = torch.nn.LSTM(
             embeddings.embedding_length,
@@ -107,6 +111,8 @@ class ReadoutLayer(TokenEmbeddings):
 
         # apply dropout
         stacked_token_embeddings = self.locked_dropout(stacked_token_embeddings)
+        if self.embedding2nn:
+            stacked_token_embeddings = self.embedding2nn(stacked_token_embeddings)
 
         rnn_out, hidden = self.rnn(stacked_token_embeddings)
         for token_no, token in enumerate(tokens):
