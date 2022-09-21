@@ -6,6 +6,7 @@ import torch
 import flair.embeddings
 import flair.nn
 from flair.data import Dictionary, Sentence
+import re
 
 log = logging.getLogger("flair")
 
@@ -123,7 +124,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
                 if for_prediction:
                     data_points.extend(entities)
-
             if len(embedding_list) > 0:
                 embedded_entity_pairs = torch.cat(embedding_list, 0)
 
