@@ -620,11 +620,24 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         return args[0]
 
     def forward(self, *args: torch.Tensor) -> torch.Tensor:
+        # import torch
+        # torch.set_printoptions(precision=2, edgeitems=7, linewidth=300)
         emb = self._transform_embeddings(*args)
         emb = emb.unsqueeze(1)
-        emb = self.dropout(emb)
-        emb = self.locked_dropout(emb)
-        emb = self.word_dropout(emb)
+        # print(emb)
+        # print(emb.size())
+        protected = torch.narrow(emb, 2, 768, 7)
+        droppart = torch.narrow(emb, 2, 0, 768)
+        droppart = self.dropout(droppart)
+        droppart = self.locked_dropout(droppart)
+        droppart = self.word_dropout(droppart)
+
+        emb = torch.cat([droppart, protected], dim=2)
+
+        # print()
+        # print()
+        # print(emb)
+        # print(emb.size())
         emb = emb.squeeze(1)
 
         if self.inverse_model:
