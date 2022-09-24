@@ -146,6 +146,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         if locked_dropout > 0.0:
             self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
+        self.final_locked_dropout = flair.nn.LockedDropout(0.5)
+
         # ----- Model layers -----
         self.reproject_embeddings = reproject_embeddings
         if self.reproject_embeddings:
@@ -311,8 +313,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         if self.use_dropout:
             sentence_tensor = self.dropout(sentence_tensor)
-        if self.use_locked_dropout:
-            sentence_tensor = self.locked_dropout(sentence_tensor)
+
+        # FIXME: hack that final dropout is always applied
+        sentence_tensor = self.final_locked_dropout(sentence_tensor)
 
         # linear map to tag space
         features = self.linear(sentence_tensor)
