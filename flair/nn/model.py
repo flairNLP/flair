@@ -528,6 +528,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         decoder: Optional[torch.nn.Module] = None,
         inverse_model: bool = False,
         train_on_gold_pairs_only: bool = False,
+        dropout_applied_to_range: Tuple[int, int] = None,
+
     ):
 
         super().__init__()
@@ -554,6 +556,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
         self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
         self.word_dropout = flair.nn.WordDropout(word_dropout)
+        self.dropout_applied_to_range = dropout_applied_to_range
 
         # loss weights and loss function
         self.weight_dict = loss_weights
@@ -624,20 +627,28 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         # torch.set_printoptions(precision=2, edgeitems=7, linewidth=300)
         emb = self._transform_embeddings(*args)
         emb = emb.unsqueeze(1)
-        # print(emb)
-        # print(emb.size())
-        protected = torch.narrow(emb, 2, 768, 7)
-        droppart = torch.narrow(emb, 2, 0, 768)
-        droppart = self.dropout(droppart)
-        droppart = self.locked_dropout(droppart)
-        droppart = self.word_dropout(droppart)
 
-        emb = torch.cat([droppart, protected], dim=2)
+        # if a range is given apply dropout only on this part of embedding tensor
+        if self.dropout_applied_to_range:
+            apply_dropout_here = torch.narrow(emb, 2, self.dropout_applied_to_range[0],
+                                             self.dropout_applied_to_range[1]-self.dropout_applied_to_range[0])
+            droppart = self.dropout(apply_dropout_here)
+            droppart = self.locked_dropout(droppart)
+            droppart = self.word_dropout(droppart)
 
-        # print()
-        # print()
-        # print(emb)
-        # print(emb.size())
+            # now replace emb where dropout was applied, keeping the rest as is:
+            after_dropout = emb.clone()
+            after_dropout[:,:,self.dropout_applied_to_range[0]: self.dropout_applied_to_range[1]] = droppart
+
+            emb = after_dropout
+
+
+        # if no range is given apply dropout on whole embedding tensor
+        else:
+            emb = self.dropout(emb)
+            emb = self.locked_dropout(emb)
+            emb = self.word_dropout(emb)
+
         emb = emb.squeeze(1)
 
         if self.inverse_model:

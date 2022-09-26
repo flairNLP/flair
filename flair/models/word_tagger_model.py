@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Tuple
 
 import torch
 
@@ -20,18 +20,21 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
         embeddings: TokenEmbeddings,
         tag_dictionary: Dictionary,
         tag_type: str,
+        dropout_applied_to_range: Tuple[int, int] = None,
         **classifierargs,
     ):
         """
         Initializes a WordTagger
         :param embeddings: word embeddings used in tagger
         :param tag_dictionary: dictionary of tags you want to predict
+        :param dropout_applied_to_range: specify a range (a tuple, e.g. (0,768)) of embedding portion on which dropout is to be applied
         :param tag_type: string identifier for tag type
         :param beta: Parameter for F-beta score for evaluation and training annealing
         """
         super().__init__(
             label_dictionary=tag_dictionary,
             final_embedding_size=embeddings.embedding_length,
+            dropout_applied_to_range = dropout_applied_to_range,
             **classifierargs,
         )
 
