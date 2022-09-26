@@ -348,6 +348,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                     f' --> {span.get_label("predicted").value} ({symbol})'
+                    f' \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_vector.tolist()]}\n'
 
                 )
             # now add also the predicted spans that have *no* gold span equivalent
