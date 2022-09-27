@@ -4,54 +4,42 @@ import torch
 import time
 import logging
 import numpy as np
+import os
 
 import flair
-from flair.data import Span
-from flair.embeddings import Embeddings, TokenEmbeddings
-from flair.nn import DefaultClassifier
-from typing import Dict
+from flair.data import Span, DT
+from flair.embeddings import Embeddings
+from typing import Dict, Generic
 
 log = logging.getLogger("flair")
 
-# class LogitEmbeddings(TokenEmbeddings):
-#
-#     def __init__(self,
-#                  classifier: DefaultClassifier,
-#                  ):
-#         self.classifier_model = classifier
 
-
-
-
-class SpanGazetteerEmbeddings(Embeddings[Span]):
-
+class SpanEmbeddingFromExternal(Embeddings[Span], Generic[DT]):
     def __init__(self,
-                 gazetteer_file: str = None,
                  add_lower_case_lookup: bool = False,
                  add_substring_gazetteer_lookup: bool = False,
                  add_first_last_token_gazetteer_lookup: bool = False,
-                 counts_for_max_confidence=100,  # TODO: what to choose here? make parameter
-                 gazetteer_prepare_method: str = "normalize_confidence_ratio",
                  ):
         """
-        :param gazetteer_file: path to a csv file containing a gazetteer list with span strings in rows, label names in columns, counts in cells
         :param add_lower_case_lookup: concatenating a look-up for title cased version of span text, ege WASHINGTON --> Washington
         :param add_substring_gazetteer_lookup: concatenating mean vector of look-up for each token in span
         :param add_first_last_token_gazetteer_lookup: concatenatinv look-up for first and last token in span
-        :param counts_for_max_confidence: #TODO
-        :param gazetteer_prepare_method: #TODO
         """
+
+        if not hasattr(self, "name"):
+            self.name: str = "unnamed_embedding"
+        if not hasattr(self, "static_embeddings"):
+            self.static_embeddings = False
+
         super().__init__()
-        self.name = gazetteer_file
+
         self.static_embeddings = True
+
         self.add_lower_case_lookup = add_lower_case_lookup
         self.add_first_last_token_gazetteer_lookup = add_first_last_token_gazetteer_lookup
         self.add_substring_gazetteer_lookup = add_substring_gazetteer_lookup
-        self.gazetteer_prepare_method = gazetteer_prepare_method
 
-        self.gazetteer = self._prepare_gazetteer(gazetteer_file,
-                                                 counts_for_max_confidence,
-                                                 prepare_method=self.gazetteer_prepare_method)
+        self.gazetteer = self._prepare_gazetteer()
 
         self.__gazetteer_vector_length = len(next(iter(self.gazetteer.values())))  # one entry in gaz to get its size
         self.__embedding_length = self.__gazetteer_vector_length
@@ -63,79 +51,20 @@ class SpanGazetteerEmbeddings(Embeddings[Span]):
         if self.add_substring_gazetteer_lookup:
             self.__embedding_length += self.__gazetteer_vector_length
 
-
         self.to(flair.device)
 
-    def _prepare_gazetteer(self,
-                           gazetteer_file,
-                           counts_for_max_confidence,
-                           prepare_method = "normalize_confidence_ratio"):
-
-        log.info(f"---- Reading raw gazetteer file: {gazetteer_file}")
-        with open(gazetteer_file, mode='r') as inp:
-            log.info(f"---- Gazetteer file contains {sum(1 for line in inp)} lines...")
-            inp.seek(0)  # to start at beginning again
-            reader = csv.reader(inp)
-            header = next(reader)  # header line
-            log.info(f"---- Header is: {header}")
-
-            gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
-
-        print(f"---- Length of used gazetteer:\t", len(gazetteer))
-
-        global_start = time.time()
-        start = time.time()
-
-        for nr, (key, vector) in enumerate(gazetteer.items()):
-
-            if prepare_method == "normalize_confidence_ratio":
-                if time.time() - start >= 30:  # print progress every 30 seconds
-                    print("done with \t", round(nr / len(gazetteer) * 100, 2), " % of gazetteer", end="\n")
-                    start = time.time()
-
-                # Filter tagged counts and get tagged sum
-                vector_tag_counts = vector[:4]
-                sum_tagged = np.sum(vector_tag_counts)  # sum
-                ratio_tagged_untagged = vector[6]
-
-                # compute normalized tag counts and confidence
-                normalized_tag_counts = vector_tag_counts / sum_tagged
-                confidence = np.array([min(sum_tagged / counts_for_max_confidence, 1)])
-
-                rt_vector = np.concatenate((normalized_tag_counts, confidence, [ratio_tagged_untagged]), 0)
-                #rt_vector = np.round(rt_vector, 4)
-
-                gazetteer[key] = np.around(rt_vector, decimals=5).tolist()
-
-            if prepare_method == "normalize":
-                # Filter tagged counts and get tagged sum
-                vector_tag_counts = vector[:4]
-                sum_tagged = np.sum(vector_tag_counts)  # sum
-                ratio_tagged_untagged = vector[6]
-
-                # compute normalized tag counts and confidence
-                normalized_tag_counts = vector_tag_counts / sum_tagged
-
-                gazetteer[key] = np.around(np.array(normalized_tag_counts), decimals=5).tolist()
-
-
-        global_end = time.time()
-        print(f"---- Converting took {round(global_end - global_start, 2)} seconds")
-
-        return gazetteer
+    def _prepare_gazetteer(self):
+        raise NotImplementedError
 
     def get_gazetteer_embedding(self, span_string: str) -> torch.Tensor:
 
         if span_string in self.gazetteer:
             gaz_vector = torch.tensor(self.gazetteer[span_string], device=flair.device, dtype=torch.float)
         else:
-            #gaz_vector = torch.neg(torch.ones(self.__gazetteer_vector_length, device=flair.device, dtype=torch.float))
+            # gaz_vector = torch.neg(torch.ones(self.__gazetteer_vector_length, device=flair.device, dtype=torch.float))
             gaz_vector = torch.zeros(self.__gazetteer_vector_length, device=flair.device, dtype=torch.float)
 
         return gaz_vector
-
-    def has_entry(self, span_string: str) -> bool:
-        return span_string in self.gazetteer
 
     @property
     def embedding_length(self) -> int:
@@ -164,6 +93,134 @@ class SpanGazetteerEmbeddings(Embeddings[Span]):
         return self.name
 
 
+class SpanGazetteerEmbeddingsFromFiles(SpanEmbeddingFromExternal[Span]):
+
+    def __init__(self,
+                 gazetteer_files_directory: str = None,
+                 add_lower_case_lookup: bool = False,
+                 add_substring_gazetteer_lookup: bool = False,
+                 add_first_last_token_gazetteer_lookup: bool = False,
+
+                 ):
+        """
+        :param gazetteer_files_directory: path to folder containing gazetteer files
+        """
+
+        self.name = gazetteer_files_directory
+        self.gazetteer_files_directory = gazetteer_files_directory
+
+        super().__init__(add_lower_case_lookup=add_lower_case_lookup,
+                         add_first_last_token_gazetteer_lookup=add_first_last_token_gazetteer_lookup,
+                         add_substring_gazetteer_lookup=add_substring_gazetteer_lookup)
+
+
+    def _prepare_gazetteer(self):
+        gazetteer_files = []
+        files = list([f for f in os.listdir(self.gazetteer_files_directory + '/')])
+        for index, file in enumerate(files):
+            gazetteer_files.append((str(index), file))
+        count_files = len(files)
+        gazetteer = {}
+        for (label_id, gazetteer_file) in gazetteer_files:
+            print(f"--- Now processing file nr {label_id}: {gazetteer_file} ---")
+            with open(f"{self.gazetteer_files_directory}/{gazetteer_file}", 'r', encoding='utf-8', errors='strict') as src:
+                for line in src:
+                    if len(line) == 0:
+                        break
+                    elif len(line.rstrip("\n")) > 0:
+                        line = line.rstrip("\n")
+
+                    if line not in gazetteer:
+                        gazetteer[line] = [0.0] * count_files
+
+                    gazetteer[line][int(label_id)] = 1.0
+
+        return gazetteer
+
+
+class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
+
+    def __init__(self,
+                 gazetteer_file: str = None,
+                 add_lower_case_lookup: bool = False,
+                 add_substring_gazetteer_lookup: bool = False,
+                 add_first_last_token_gazetteer_lookup: bool = False,
+                 counts_for_max_confidence=100,  # TODO: what to choose here? make parameter
+                 gazetteer_prepare_method: str = "normalize_confidence_ratio",
+                 ):
+        """
+        :param gazetteer_file: path to a csv file containing a gazetteer list with span strings in rows, label names in columns, counts in cells
+        :param counts_for_max_confidence: #TODO
+        :param gazetteer_prepare_method: #TODO
+        """
+        self.name = gazetteer_file
+        self.gazetteer_file = gazetteer_file
+        self.static_embeddings = True
+        self.gazetteer_prepare_method = gazetteer_prepare_method
+        self.counts_for_max_confidence = counts_for_max_confidence
+
+        super().__init__(add_lower_case_lookup=add_lower_case_lookup,
+                         add_first_last_token_gazetteer_lookup=add_first_last_token_gazetteer_lookup,
+                         add_substring_gazetteer_lookup=add_substring_gazetteer_lookup)
+
+
+    def _prepare_gazetteer(self):
+
+        log.info(f"---- Reading raw gazetteer file: {self.gazetteer_file}")
+        with open(self.gazetteer_file, mode='r') as inp:
+            log.info(f"---- Gazetteer file contains {sum(1 for line in inp)} lines...")
+            inp.seek(0)  # to start at beginning again
+            reader = csv.reader(inp)
+            header = next(reader)  # header line
+            log.info(f"---- Header is: {header}")
+
+            gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
+
+        print(f"---- Length of used gazetteer:\t", len(gazetteer))
+
+        global_start = time.time()
+        start = time.time()
+
+        for nr, (key, vector) in enumerate(gazetteer.items()):
+
+            if self.gazetteer_prepare_method == "normalize_confidence_ratio":
+                if time.time() - start >= 30:  # print progress every 30 seconds
+                    print("done with \t", round(nr / len(gazetteer) * 100, 2), " % of gazetteer", end="\n")
+                    start = time.time()
+
+                # Filter tagged counts and get tagged sum
+                vector_tag_counts = vector[:4]
+                sum_tagged = np.sum(vector_tag_counts)  # sum
+                ratio_tagged_untagged = vector[6]
+
+                # compute normalized tag counts and confidence
+                normalized_tag_counts = vector_tag_counts / sum_tagged
+                confidence = np.array([min(sum_tagged / self.counts_for_max_confidence, 1)])
+
+                rt_vector = np.concatenate((normalized_tag_counts, confidence, [ratio_tagged_untagged]), 0)
+                #rt_vector = np.round(rt_vector, 4)
+
+                gazetteer[key] = np.around(rt_vector, decimals=5).tolist()
+
+            if self.gazetteer_prepare_method == "normalize":
+                # Filter tagged counts and get tagged sum
+                vector_tag_counts = vector[:4]
+                sum_tagged = np.sum(vector_tag_counts)  # sum
+                ratio_tagged_untagged = vector[6]
+
+                # compute normalized tag counts and confidence
+                normalized_tag_counts = vector_tag_counts / sum_tagged
+
+                gazetteer[key] = np.around(np.array(normalized_tag_counts), decimals=5).tolist()
+
+
+        global_end = time.time()
+        print(f"---- Converting took {round(global_end - global_start, 2)} seconds")
+
+        return gazetteer
+
+
+# TODO: refactor so that it inherits from SpanEmbeddingFromExternal class as well as the others
 class SpanGazetteerFeaturePrediction(Embeddings[Span]):
 
     def __init__(self,
