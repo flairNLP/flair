@@ -36,7 +36,6 @@ from pathlib import Path
 import subprocess
 import tempfile
 import faiss
-import pysparnn.cluster_index as ci
 from sklearn.neighbors import NearestNeighbors
 
 log = logging.getLogger("flair")
@@ -285,15 +284,13 @@ class DictionaryDataset:
 
 
 class BioEntityLinkingModel:
-    def __init__(self, model_type: str, max_length: int) -> None:
-        if model_type not in ["biosyn", "sapbert"]:
-            raise ValueError("model_type must be 'biosyn' or 'sapbert'")
-        self.model_type = model_type
+    def __init__(self, use_sparse_embeds: bool, max_length: int) -> None:
+        self.use_sparse_embeds = use_sparse_embeds
         self.max_length = max_length
 
         self.tokenizer = None
         self.encoder = None
-        # sparse weights only used for biosyn
+
         self.sparse_encoder = None
         self.sparse_weight = None
 
@@ -307,7 +304,7 @@ class BioEntityLinkingModel:
     ):
         self.load_dense_encoder(model_name_or_path)
 
-        if self.model_type == "biosyn":
+        if self.use_sparse_embeds:
             self.load_sparse_encoder(model_name_or_path)
             self.load_sparse_weight(model_name_or_path)
 
@@ -333,7 +330,6 @@ class BioEntityLinkingModel:
 
         return self.encoder, self.tokenizer
 
-    # only used for biosyn
     def load_sparse_encoder(
         self, model_name_or_path: Union[str, Path]
     ) -> SparseEncoder:
@@ -353,7 +349,6 @@ class BioEntityLinkingModel:
 
         return self.sparse_encoder
 
-    # only used for biosyn
     def load_sparse_weight(self, model_name_or_path: Union[str, Path]) -> torch.Tensor:
         sparse_weight_path = os.path.join(model_name_or_path, "sparse_weight.pt")
         # check file exists
@@ -371,16 +366,14 @@ class BioEntityLinkingModel:
 
         return self.sparse_weight
 
-    # only used for biosyn
     def get_sparse_weight(self) -> torch.Tensor:
         assert self.sparse_weight is not None
 
         return self.sparse_weight
 
-    # only used for biosyn
     def embed_sparse(self, names: list, show_progress: bool = False) -> np.ndarray:
         """
-        Embedding data into sparse representations for BioSyn
+        Embedding data into sparse representations
         :param names np.array: An array of names
         :returns sparse_embeds np.array: A list of sparse embeddings
         """
@@ -563,7 +556,6 @@ class BioEntityLinkingModel:
 
         return topk_idxs, -topk_scores
 
-    # Not in BioSyn
     def retrieve_candidate_cuda(
         self,
         score_matrix: np.ndarray,
@@ -608,9 +600,9 @@ class BioEntityLinkingModel:
         agg_mode: str = "cls",
     ) -> np.ndarray:
         # get dense embeds for mention
-        if self.model_type == "biosyn":
+        if self.use_sparse_embeds:
             mention_dense_embeds = self.biosyn_embed_dense(names=[mention])
-        elif self.model_type == "sapbert":
+        else:
             mention_dense_embeds = self.sapbert_embed_dense(
                 names=[mention], agg_mode=agg_mode
             )
@@ -620,8 +612,8 @@ class BioEntityLinkingModel:
             query_embeds=mention_dense_embeds, dict_embeds=self.dict_dense_embeds
         )
 
-        # for bioysn: calculate hybrid scores with dense and sparse embeds
-        if self.model_type == "biosyn":
+        # when using sparse embeds: calculate hybrid scores with dense and sparse embeds
+        if self.use_sparse_embeds:
             # get sparse embeds for mention
             mention_sparse_embeds = self.embed_sparse(names=[mention])
             sparse_score_matrix = self.get_score_matrix(
@@ -633,8 +625,8 @@ class BioEntityLinkingModel:
             candidate_idxs, candidate_scores = self.retrieve_candidate(
                 score_matrix=score_matrix, topk=topk
             )
-        # for sapbert: use only dense embeds
-        elif self.model_type == "sapbert":
+        # for only dense embeddings
+        else:
             score_matrix = dense_score_matrix
             candidate_idxs, candidate_scores = self.retrieve_candidate_cuda(
                 score_matrix=score_matrix, topk=topk, batch_size=16, show_progress=False
@@ -655,9 +647,9 @@ class BioEntityLinkingModel:
         agg_mode: str = "cls",
     ) -> np.ndarray:
         # get dense embeds for mention
-        if self.model_type == "biosyn":
+        if self.use_sparse_embeds:
             mention_dense_embeds = self.biosyn_embed_dense(names=[mention])
-        elif self.model_type == "sapbert":
+        else:
             mention_dense_embeds = self.sapbert_embed_dense(
                 names=[mention], agg_mode=agg_mode
             )
@@ -669,15 +661,8 @@ class BioEntityLinkingModel:
             x=mention_dense_embeds, k=topk
         )
 
-        # use only dense embeds
-        if self.model_type == "sapbert":
-            return [
-                np.append(self.dictionary[ind], score)
-                for ind, score in zip(dense_ids, dense_distances)
-            ]
-
-        # for bioysn: calculate hybrid scores with dense and sparse embeds
-        elif self.model_type == "biosyn":
+        # if using sparse embeds: calculate hybrid scores with dense and sparse embeds
+        if self.use_sparse_embeds:
             # get sparse embeds for mention
             mention_sparse_embeds = self.embed_sparse(names=[mention])
             sparse_weight = self.get_sparse_weight().item()
@@ -690,13 +675,19 @@ class BioEntityLinkingModel:
             hybrid_scores = dict(zip(dense_ids, dense_distances))
             for sparse_id, sparse_score in zip(sparse_ids, sparse_distances):
                 if sparse_id in hybrid_scores:
-                    hybrid_scores[sparse_id] += sparse_score
+                    hybrid_scores[sparse_id] += sparse_weight * sparse_score
                 else:
-                    hybrid_scores[sparse_id] = sparse_score
+                    hybrid_scores[sparse_id] = sparse_weight * sparse_score
 
             return [
                 np.append(self.dictionary[ind], score)
                 for ind, score in hybrid_scores.items()
+            ]
+        # use only dense embeds
+        else:
+            return [
+                np.append(self.dictionary[ind], score)
+                for ind, score in zip(dense_ids, dense_distances)
             ]
 
     def embed_dictionary(
@@ -751,8 +742,8 @@ class BioEntityLinkingModel:
             # embed dictionary
             dictionary_names = [row[0] for row in self.dictionary]
 
-            # for BioSyn, use dense and sparse embeddings
-            if self.model_type == "biosyn":
+            # create dense and sparse embeddings
+            if self.use_sparse_embeds:
                 self.dict_dense_embeds = self.biosyn_embed_dense(
                     names=dictionary_names, show_progress=True
                 )
@@ -761,15 +752,13 @@ class BioEntityLinkingModel:
                 )
 
                 # build index scikit
-                print("starting building the forest")
                 self.sparse_dictionary_index = NearestNeighbors(
                     metric="cosine_similarity"
                 )
                 self.sparse_dictionary_index.fit(self.dict_sparse_embeds)
-                print("finished building the forest")
 
-            # for SapBert only dense embeddings
-            elif self.model_type == "sapbert":
+            # create only dense embeddings
+            else:
                 self.dict_dense_embeds = self.sapbert_embed_dense(
                     names=dictionary_names, show_progress=True
                 )
@@ -812,7 +801,7 @@ class BioEntityLinkingModel:
 class BiomedicalEntityLinking:
     """
     Biomedical Entity Linker for HunFlair
-    Can predict top k entities on sentences annotated with biomedical entity mentions using BioSyn.
+    Can predict top k entities on sentences annotated with biomedical entity mentions
     """
 
     def __init__(
@@ -822,10 +811,8 @@ class BiomedicalEntityLinking:
     ) -> None:
         """
         Initalize class, called by classmethod load
-        :param model: BioSyn object containing the dense and sparse encoders
-        :param dictionary: numpy array containing all concept names and their cui
-        :param dict_sparse_embeds: sparse embeddings of dictionary
-        :param dict_dense_embeds: dense embeddings of dictionary
+        :param model: object containing the dense and sparse encoders
+        :param ab3p_path: path to ab3p model
         """
         self.model = model
         self.text_preprocessor = TextPreprocess()
@@ -836,12 +823,12 @@ class BiomedicalEntityLinking:
         cls,
         model_name,
         dictionary_path: Union[str, Path] = None,
-        model_type="biosyn",
+        use_sparse_and_dense_embeds: bool = True,
         max_length=25,
         ab3p_path: Path = None,
     ):
         """
-        Load a model for biomedical named entity normalization using BioSyn or SapBert on sentences annotated with
+        Load a model for biomedical named entity normalization on sentences annotated with
         biomedical entity mentions
         :param model_name: Name of pretrained model to use. Possible values for pretrained models are:
         chemical, disease, gene, sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease,
@@ -850,8 +837,9 @@ class BiomedicalEntityLinking:
         or a path to a dictionary file with each line in the format: id||name, with one line for each name of a concept.
         Possible values for dictionaries are: chemical, ctd-chemical, disease, bc5cdr-disease, gene, cnbci-gene,
         taxonomy and ncbi-taxonomy
+        :param use_sparse_and_dense_embeds: If True, uses a combinations of sparse and dense embeddings for the dictionary and the mentions
+        If False, uses only dense embeddings
         """
-        model_type = model_type.lower()
         model_name = model_name.lower()
         model_path = model_name
 
@@ -890,11 +878,9 @@ class BiomedicalEntityLinking:
             )
 
         # Initalize model
-        if model_type not in ["biosyn", "sapbert"]:
-            raise ValueError(
-                "Invalid value for model_type. The only possible values are 'biosyn' and 'sapbert'"
-            )
-        model = BioEntityLinkingModel(model_type, max_length=max_length)
+        model = BioEntityLinkingModel(
+            use_sparse_embeds=use_sparse_and_dense_embeds, max_length=max_length
+        )
 
         # determine dictionary to use
         if dictionary_path == "disease":
@@ -927,18 +913,11 @@ class BiomedicalEntityLinking:
                 dictionary_path = "ncbi-gene"
             # error
             else:
-                if model_type == "sapbert":
-                    log.error(
-                        """When using the sapbert model, you need to specify a dictionary. 
-                    Available options are: 'disease', 'chemical', 'gene' and 'taxonomy'.
-                    Or provide a path to a dictionary file."""
-                    )
-                else:
-                    log.error(
-                        """When using a custom model you need to specify a dictionary. 
-                    Available options are: 'disease', 'chemical', 'gene' and 'taxonomy'.
-                    Or provide a path to a dictionary file."""
-                    )
+                log.error(
+                    """When using a custom model you need to specify a dictionary. 
+                Available options are: 'disease', 'chemical', 'gene' and 'taxonomy'.
+                Or provide a path to a dictionary file."""
+                )
                 raise ValueError("Invalid dictionary")
 
         model.load_model(
