@@ -126,7 +126,7 @@ class SpanGazetteerEmbeddingsFromFiles(SpanEmbeddingFromExternal[Span]):
             with open(f"{self.gazetteer_files_directory}/{gazetteer_file}", 'r', encoding='utf-8', errors='strict') as src:
                 for line in src:
                     if len(line) == 0:
-                        break
+                        continue
                     elif len(line.rstrip("\n")) > 0:
                         line = line.rstrip("\n")
 
@@ -135,6 +135,61 @@ class SpanGazetteerEmbeddingsFromFiles(SpanEmbeddingFromExternal[Span]):
 
                     gazetteer[line][int(label_id)] = 1.0
 
+        print(f"--- Nr of entries in gazetteer: {len(gazetteer)} ---")
+        return gazetteer
+
+
+class SpanEmbeddingGEMNET(SpanEmbeddingFromExternal[Span]):
+
+    def __init__(self,
+                 path: str = None,
+                 add_lower_case_lookup: bool = False,
+                 add_substring_gazetteer_lookup: bool = False,
+                 add_first_last_token_gazetteer_lookup: bool = False
+                 ):
+        """
+        :param path: the local path to the 'wikigaz-tsv' file from Meng et al. 2020, can be downloaded here:
+        https://lowcontext-ner-gaz.s3.amazonaws.com/readme.html
+        """
+
+        self.path = path
+
+        super().__init__(add_lower_case_lookup=add_lower_case_lookup,
+                         add_first_last_token_gazetteer_lookup=add_first_last_token_gazetteer_lookup,
+                         add_substring_gazetteer_lookup=add_substring_gazetteer_lookup)
+
+    def _prepare_gazetteer(self):
+        log.info(f"---- Reading raw gazetteer file: {self.path}")
+
+        gazetteer = {}
+        with open(self.path, mode='r') as inp:
+            log.info(f"---- Gazetteer file contains {sum(1 for line in inp)} lines...")
+            inp.seek(0)  # to start at beginning again
+            label2id = {"CORP": 0,
+                        "CW": 1,
+                        "GRP": 2,
+                        "LOC": 3,
+                        "PER": 4,
+                        "PROD": 5
+                        }
+            reader = csv.reader(inp, delimiter='\t')
+
+            for row in reader:
+                if len(row) ==1: # some ~10 rows have comma instead of tab, they get ignored here
+                    try:
+                        row = row[0].split(",")
+                    except:
+                        continue
+                if len(row) < 4:
+                    continue
+                span = " ".join(row[3:]) # hack: in some rows the span got wrongly separated
+                label = row[1]
+                label_id = label2id[label]
+                if span not in gazetteer:
+                    gazetteer[span] = [0.0] * len(label2id)
+                gazetteer[span][label_id] = 1.0
+
+        print(f"--- Nr of entries in gazetteer: {len(gazetteer)} ---")
         return gazetteer
 
 
