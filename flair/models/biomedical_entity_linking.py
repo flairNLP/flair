@@ -6,8 +6,6 @@ import logging
 from statistics import mode
 from xmlrpc.client import Boolean
 import numpy as np
-import numpy.typing as nptyping
-import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -37,6 +35,9 @@ from typing import List, Tuple, Union
 from pathlib import Path
 import subprocess
 import tempfile
+import faiss
+import pysparnn.cluster_index as ci
+from sklearn.neighbors import NearestNeighbors
 
 log = logging.getLogger("flair")
 
@@ -607,7 +608,6 @@ class BioEntityLinkingModel:
         agg_mode: str = "cls",
     ) -> np.ndarray:
         # get dense embeds for mention
-
         if self.model_type == "biosyn":
             mention_dense_embeds = self.biosyn_embed_dense(names=[mention])
         elif self.model_type == "sapbert":
@@ -647,6 +647,58 @@ class BioEntityLinkingModel:
             np.append(self.dictionary[ind], score) for ind, score in zip(ids, scores)
         ]
 
+    def get_predictions_faiss(
+        self,
+        mention: str,
+        topk: int,
+        tgt_space_mean_vec: np.ndarray = None,
+        agg_mode: str = "cls",
+    ) -> np.ndarray:
+        # get dense embeds for mention
+        if self.model_type == "biosyn":
+            mention_dense_embeds = self.biosyn_embed_dense(names=[mention])
+        elif self.model_type == "sapbert":
+            mention_dense_embeds = self.sapbert_embed_dense(
+                names=[mention], agg_mode=agg_mode
+            )
+        # remove mean centering
+        if tgt_space_mean_vec is not None:
+            mention_dense_embeds -= tgt_space_mean_vec
+
+        dense_distances, dense_ids = self.dense_dictionary_index.search(
+            x=mention_dense_embeds, k=topk
+        )
+
+        # use only dense embeds
+        if self.model_type == "sapbert":
+            return [
+                np.append(self.dictionary[ind], score)
+                for ind, score in zip(dense_ids, dense_distances)
+            ]
+
+        # for bioysn: calculate hybrid scores with dense and sparse embeds
+        elif self.model_type == "biosyn":
+            # get sparse embeds for mention
+            mention_sparse_embeds = self.embed_sparse(names=[mention])
+            sparse_weight = self.get_sparse_weight().item()
+            # result = self.sparse_dictionary_index.search(mention_sparse_embeds, k=topk)
+            sparse_distances, sparse_ids = self.sparse_dictionary_index.kneighbors(
+                mention_sparse_embeds, n_neighbors=topk
+            )
+
+            # combine dense and sparse scores
+            hybrid_scores = dict(zip(dense_ids, dense_distances))
+            for sparse_id, sparse_score in zip(sparse_ids, sparse_distances):
+                if sparse_id in hybrid_scores:
+                    hybrid_scores[sparse_id] += sparse_score
+                else:
+                    hybrid_scores[sparse_id] = sparse_score
+
+            return [
+                np.append(self.dictionary[ind], score)
+                for ind, score in hybrid_scores.items()
+            ]
+
     def embed_dictionary(
         self,
         model_name_or_path: str,
@@ -661,7 +713,7 @@ class BioEntityLinkingModel:
             f"cached_{model_name_or_path.split('/')[-1]}_{dictionary_name}.pk",
         )
 
-        # If exists, load the cached dictionary
+        # If exists, load the cached dictionary indizes
         if os.path.exists(cached_dictionary_path):
             with open(cached_dictionary_path, "rb") as cached_file:
                 cached_dictionary = pickle.load(cached_file)
@@ -669,10 +721,14 @@ class BioEntityLinkingModel:
                 "Loaded dictionary from cached file {}".format(cached_dictionary_path)
             )
 
-            self.dictionary, self.dict_sparse_embeds, self.dict_dense_embeds = (
+            (
+                self.dictionary,
+                self.sparse_dictionary_index,
+                self.dense_dictionary_index,
+            ) = (
                 cached_dictionary["dictionary"],
-                cached_dictionary["dict_sparse_embeds"],
-                cached_dictionary["dict_dense_embeds"],
+                cached_dictionary["sparse_dictionary_index"],
+                cached_dictionary["dense_dictionary_index"],
             )
 
         # else, load and embed
@@ -694,6 +750,8 @@ class BioEntityLinkingModel:
 
             # embed dictionary
             dictionary_names = [row[0] for row in self.dictionary]
+
+            # for BioSyn, use dense and sparse embeddings
             if self.model_type == "biosyn":
                 self.dict_dense_embeds = self.biosyn_embed_dense(
                     names=dictionary_names, show_progress=True
@@ -701,17 +759,39 @@ class BioEntityLinkingModel:
                 self.dict_sparse_embeds = self.embed_sparse(
                     names=dictionary_names, show_progress=True
                 )
+
+                # build index scikit
+                print("starting building the forest")
+                self.sparse_dictionary_index = NearestNeighbors(
+                    metric="cosine_similarity"
+                )
+                self.sparse_dictionary_index.fit(self.dict_sparse_embeds)
+                print("finished building the forest")
+
+            # for SapBert only dense embeddings
             elif self.model_type == "sapbert":
                 self.dict_dense_embeds = self.sapbert_embed_dense(
                     names=dictionary_names, show_progress=True
                 )
                 self.dict_sparse_embeds = None
+                self.sparse_dictionary_index = None
+
+            # build dense index
+            dimension = self.dict_dense_embeds.shape[1]
+            # to use cosine similarity, we normalize the vectors and then use inner product
+            faiss.normalize_L2(self.dict_dense_embeds)
+            dense_index = faiss.IndexFlatIP(dimension)
+            gpu_resource = faiss.StandardGpuResources()
+            self.dense_dictionary_index = faiss.index_cpu_to_all_gpus(
+                gpu_resource, 0, dense_index
+            )
+            self.dense_dictionary_index.add(self.dict_dense_embeds)
 
             # cache dictionary
             cached_dictionary = {
                 "dictionary": self.dictionary,
-                "dict_sparse_embeds": self.dict_sparse_embeds,
-                "dict_dense_embeds": self.dict_dense_embeds,
+                "sparse_dictionary_index": self.sparse_dictionary_index,
+                "dense_dictionary_index": self.dense_dictionary_index,
             }
             if not os.path.exists(cache_folder):
                 os.mkdir(cache_folder)
@@ -817,13 +897,13 @@ class BiomedicalEntityLinking:
         model = BioEntityLinkingModel(model_type, max_length=max_length)
 
         # determine dictionary to use
-        if dictionary_path is "disease":
+        if dictionary_path == "disease":
             dictionary_path = "ctd-disease"
-        if dictionary_path is "chemical":
+        if dictionary_path == "chemical":
             dictionary_path = "ctd-chemical"
-        if dictionary_path is "gene":
+        if dictionary_path == "gene":
             dictionary_path = "ncbi-gene"
-        if dictionary_path is "taxonomy":
+        if dictionary_path == "taxonomy":
             dictionary_path = "ncbi-taxonomy"
         if dictionary_path is None:
             # disease
@@ -906,7 +986,7 @@ class BiomedicalEntityLinking:
                         token = self.text_preprocessor.run(token.text)
                         if token in abbreviation_dict:
                             parsed_tokens.append(abbreviation_dict[token.lower()])
-                        elif len(token) is not 0:
+                        elif len(token) != 0:
                             parsed_tokens.append(token)
                     mention = " ".join(parsed_tokens)
                 else:
@@ -914,6 +994,8 @@ class BiomedicalEntityLinking:
 
                 # get predictions from dictionary
                 predictions = self.model.get_predictions(mention, topk)
+
+                self.model.get_predictions_faiss(mention, topk)
 
                 # add predictions to entity
                 label_name = (
