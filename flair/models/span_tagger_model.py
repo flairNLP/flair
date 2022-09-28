@@ -285,6 +285,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
     def _print_predictions(self, batch, gold_label_type):
         lines = []
         for datapoint in batch:
+            printed = []
+
             eval_line = f"\n{datapoint.to_original_text()}\n"
             for span in datapoint.get_spans(gold_label_type):
                 symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
@@ -292,6 +294,17 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                     f' --> {span.get_label("predicted").value} ({symbol})\n'
                 )
+                printed.append(span)
+
+            # print out also the wrongly predicted (no gold label)
+            for span in datapoint.get_spans("predicted"):
+                if span.get_label("predicted").value != span.get_label(gold_label_type).value and span not in printed:
+                    eval_line += (
+                        f' - "{span.text}" / {span.get_label(gold_label_type).value}'
+                        f' --> {span.get_label("predicted").value} ("❌")\n'
+                    )
+                    printed.append(span)
+
             lines.append(eval_line)
 
         return lines
