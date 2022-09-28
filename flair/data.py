@@ -336,11 +336,11 @@ class EntityLinkingLabel(Label):
     def __init__(
         self,
         span,
-        id: Optional[str],
+        id: str,
         concept_name: str,
-        additional_ids: Optional[Union[List[str], str]],
-        database: Optional[str],
         score: float = 1.0,
+        additional_ids: Optional[Union[List[str], str]] = None,
+        ontology: Optional[str] = None,
     ):
         super().__init__(id, score)
         self.span = span
@@ -348,7 +348,7 @@ class EntityLinkingLabel(Label):
         if isinstance(additional_ids, str):
             additional_ids = [additional_ids]
         self.additional_ids = additional_ids
-        self.database = database
+        self.ontology = ontology
 
     def spawn(self, value: str, score: float = 1.0):
         return EntityLinkingLabel(

@@ -37,6 +37,7 @@ import subprocess
 import tempfile
 import faiss
 from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import Normalizer
 
 log = logging.getLogger("flair")
 
@@ -271,7 +272,7 @@ class DictionaryDataset:
         data = []
         with open(dictionary_path, mode="r", encoding="utf-8") as f:
             lines = f.readlines()
-            for line in tqdm(lines):
+            for line in tqdm(lines, desc="Loading dictionary"):
                 line = line.strip()
                 if line == "":
                     continue
@@ -381,7 +382,10 @@ class BioEntityLinkingModel:
         sparse_embeds = []
 
         if show_progress:
-            iterations = tqdm(range(0, len(names), batch_size))
+            iterations = tqdm(
+                range(0, len(names), batch_size),
+                desc="Calculating sparse embeddings for dictionary",
+            )
         else:
             iterations = range(0, len(names), batch_size)
 
@@ -427,7 +431,9 @@ class BioEntityLinkingModel:
 
         with torch.no_grad():
             for batch in tqdm(
-                name_dataloader, disable=not show_progress, desc="embedding dictionary"
+                name_dataloader,
+                disable=not show_progress,
+                desc="Calculating dense embeddings for dictionary",
             ):
                 outputs = self.encoder(**batch)
                 batch_dense_embeds = (
@@ -462,7 +468,10 @@ class BioEntityLinkingModel:
 
         with torch.no_grad():
             if show_progress:
-                iterations = tqdm(range(0, len(names), batch_size))
+                iterations = tqdm(
+                    range(0, len(names), batch_size),
+                    desc="calculating dense embeddings for dictionary",
+                )
             else:
                 iterations = range(0, len(names), batch_size)
 
@@ -657,6 +666,9 @@ class BioEntityLinkingModel:
         if tgt_space_mean_vec is not None:
             mention_dense_embeds -= tgt_space_mean_vec
 
+        # normalize mention vector
+        faiss.normalize_L2(mention_dense_embeds)
+
         dense_distances, dense_ids = self.dense_dictionary_index.search(
             x=mention_dense_embeds, k=topk
         )
@@ -665,6 +677,9 @@ class BioEntityLinkingModel:
         if self.use_sparse_embeds:
             # get sparse embeds for mention
             mention_sparse_embeds = self.embed_sparse(names=[mention])
+            # normalize mention vector
+            faiss.normalize_L2(mention_sparse_embeds)
+
             sparse_weight = self.get_sparse_weight().item()
             # result = self.sparse_dictionary_index.search(mention_sparse_embeds, k=topk)
             sparse_distances, sparse_ids = self.sparse_dictionary_index.kneighbors(
@@ -699,9 +714,10 @@ class BioEntityLinkingModel:
         # check for embedded dictionary in cache
         dictionary_name = os.path.splitext(os.path.basename(dictionary_name_or_path))[0]
         cache_folder = os.path.join(flair.cache_root, "datasets")
+        file_name = f"bio_nen_{model_name_or_path.split('/')[-1]}_{dictionary_name}"
         cached_dictionary_path = os.path.join(
             cache_folder,
-            f"cached_{model_name_or_path.split('/')[-1]}_{dictionary_name}.pk",
+            f"{file_name}.pk",
         )
 
         # If exists, load the cached dictionary indizes
@@ -712,14 +728,10 @@ class BioEntityLinkingModel:
                 "Loaded dictionary from cached file {}".format(cached_dictionary_path)
             )
 
-            (
-                self.dictionary,
-                self.sparse_dictionary_index,
-                self.dense_dictionary_index,
-            ) = (
+            (self.dictionary, self.dict_sparse_embeds, self.dict_dense_embeds,) = (
                 cached_dictionary["dictionary"],
-                cached_dictionary["sparse_dictionary_index"],
-                cached_dictionary["dense_dictionary_index"],
+                cached_dictionary["sparse_dictionary_embeds"],
+                cached_dictionary["dense_dictionary_embeds"],
             )
 
         # else, load and embed
@@ -751,10 +763,101 @@ class BioEntityLinkingModel:
                     names=dictionary_names, show_progress=True
                 )
 
-                # build index scikit
-                self.sparse_dictionary_index = NearestNeighbors(
-                    metric="cosine_similarity"
+            # create only dense embeddings
+            else:
+                self.dict_dense_embeds = self.sapbert_embed_dense(
+                    names=dictionary_names, show_progress=True
                 )
+                self.dict_sparse_embeds = None
+                self.sparse_dictionary_index = None
+
+            # cache dictionary
+            cached_dictionary = {
+                "dictionary": self.dictionary,
+                "sparse_dictionary_embeds": self.dict_sparse_embeds,
+                "dense_dictionary_embeds": self.dict_dense_embeds,
+            }
+            if not os.path.exists(cache_folder):
+                os.mkdir(cache_folder)
+            with open(cached_dictionary_path, "wb") as cache_file:
+                pickle.dump(cached_dictionary, cache_file)
+            print("Saving dictionary into cached file {}".format(cache_folder))
+
+        # apply mean centering
+        if mean_centering:
+            self.tgt_space_mean_vec = self.dict_dense_embeds.mean(0)
+            self.dict_dense_embeds -= self.tgt_space_mean_vec
+        else:
+            self.tgt_space_mean_vec = None
+
+    def embed_dictionary_faiss(
+        self,
+        model_name_or_path: str,
+        dictionary_name_or_path: str,
+        mean_centering: bool,
+    ):
+        # check for embedded dictionary in cache
+        dictionary_name = os.path.splitext(os.path.basename(dictionary_name_or_path))[0]
+        cache_folder = os.path.join(flair.cache_root, "datasets")
+        file_name = f"bio_nen_{model_name_or_path.split('/')[-1]}_{dictionary_name}"
+        cached_dictionary_path = os.path.join(
+            cache_folder,
+            f"{file_name}.pk",
+        )
+
+        # If exists, load the cached dictionary indizes
+        if os.path.exists(cached_dictionary_path):
+            with open(cached_dictionary_path, "rb") as cached_file:
+                cached_dictionary = pickle.load(cached_file)
+            log.info(
+                "Loaded dictionary from cached file {}".format(cached_dictionary_path)
+            )
+
+            (
+                self.dictionary,
+                self.sparse_dictionary_index,
+                self.dense_dictionary_index,
+            ) = (
+                cached_dictionary["dictionary"],
+                cached_dictionary["sparse_dictionary_index"],
+                cached_dictionary["dense_dictionary_index"],
+            )
+            self.dense_dictionary_index = faiss.index_cpu_to_gpu(
+                faiss.StandardGpuResources(), 0, self.dense_dictionary_index
+            )
+
+        # else, load and embed
+        else:
+            # use provided dictionary
+            if dictionary_name_or_path == "ctd-disease":
+                self.dictionary = NEL_CTD_DISEASE_DICT().data
+            elif dictionary_name_or_path == "ctd-chemical":
+                self.dictionary = NEL_CTD_CHEMICAL_DICT().data
+            elif dictionary_name_or_path == "ncbi-gene":
+                self.dictionary = NEL_NCBI_GENE_DICT().data
+            elif dictionary_name_or_path == "ncbi-taxonomy":
+                self.dictionary = NEL_NCBI_TAXONOMY_DICT().data
+            # use custom dictionary file
+            else:
+                self.dictionary = DictionaryDataset(
+                    dictionary_path=dictionary_name_or_path
+                ).data
+
+            # embed dictionary
+            dictionary_names = [row[0] for row in self.dictionary]
+
+            # create dense and sparse embeddings
+            if self.use_sparse_embeds:
+                self.dict_dense_embeds = self.biosyn_embed_dense(
+                    names=dictionary_names, show_progress=True
+                )
+                self.dict_sparse_embeds = self.embed_sparse(
+                    names=dictionary_names, show_progress=True
+                )
+                faiss.normalize_L2(self.dict_sparse_embeds)
+
+                # build sparse index scikit
+                self.sparse_dictionary_index = NearestNeighbors(metric="cosine")
                 self.sparse_dictionary_index.fit(self.dict_sparse_embeds)
 
             # create only dense embeddings
@@ -770,25 +873,25 @@ class BioEntityLinkingModel:
             # to use cosine similarity, we normalize the vectors and then use inner product
             faiss.normalize_L2(self.dict_dense_embeds)
             dense_index = faiss.IndexFlatIP(dimension)
-            gpu_resource = faiss.StandardGpuResources()
-            self.dense_dictionary_index = faiss.index_cpu_to_all_gpus(
-                gpu_resource, 0, dense_index
+            self.dense_dictionary_index = faiss.index_cpu_to_gpu(
+                faiss.StandardGpuResources(), 0, dense_index
             )
             self.dense_dictionary_index.add(self.dict_dense_embeds)
+
+            # create a cpu version of the index to cache (IO does not work with gpu index)
+            cache_index_dense = faiss.index_gpu_to_cpu(self.dense_dictionary_index)
 
             # cache dictionary
             cached_dictionary = {
                 "dictionary": self.dictionary,
                 "sparse_dictionary_index": self.sparse_dictionary_index,
-                "dense_dictionary_index": self.dense_dictionary_index,
+                "dense_dictionary_index": cache_index_dense,
             }
             if not os.path.exists(cache_folder):
                 os.mkdir(cache_folder)
             with open(cached_dictionary_path, "wb") as cache_file:
                 pickle.dump(cached_dictionary, cache_file)
-            print(
-                "Saving dictionary into cached file {}".format(cached_dictionary_path)
-            )
+            print("Saving dictionary into cached file {}".format(cache_folder))
 
         # apply mean centering
         if mean_centering:
@@ -974,7 +1077,7 @@ class BiomedicalEntityLinking:
                 # get predictions from dictionary
                 predictions = self.model.get_predictions(mention, topk)
 
-                self.model.get_predictions_faiss(mention, topk)
+                # self.model.get_predictions_faiss(mention, topk)
 
                 # add predictions to entity
                 label_name = (
@@ -992,13 +1095,13 @@ class BiomedicalEntityLinking:
                         additional_labels = labels[1:]
                     else:
                         additional_labels = None
-                    # determine database:
+                    # determine ontology:
                     if ":" in cui:
                         cui_parts = cui.split(":")
-                        database_name = ":".join(cui_parts[0:-1])
+                        ontology = ":".join(cui_parts[0:-1])
                         cui = cui_parts[-1]
                     else:
-                        database_name = None
+                        ontology = None
                     sentence.add_complex_label(
                         typename=label_name,
                         label=EntityLinkingLabel(
@@ -1006,7 +1109,7 @@ class BiomedicalEntityLinking:
                             id=cui,
                             concept_name=prediction[0],
                             additional_ids=additional_labels,
-                            database=database_name,
+                            ontology=ontology,
                             score=prediction[2].astype(float),
                         ),
                     )
