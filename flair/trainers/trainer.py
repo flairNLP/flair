@@ -150,6 +150,7 @@ class ModelTrainer:
         'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
         :param save_final_model: If True, final model is saved
         :param anneal_with_restarts: If True, the last best model is restored when annealing the learning rate  # noqa: E501
+        :param anneal_with_prestarts: If True, the model preceding the last best model is restored when annealing the learning rate  # noqa: E501
         :param shuffle: If True, data is shuffled during training
         :param param_selection_mode: If True, testing is performed against dev data. Use this mode when doing  # noqa: E501
         parameter selection.
