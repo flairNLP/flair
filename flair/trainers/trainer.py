@@ -157,6 +157,7 @@ class ModelTrainer:
         :param shuffle: If True, data is shuffled during training
         :param param_selection_mode: If True, testing is performed against dev data. Use this mode when doing  # noqa: E501
         parameter selection.
+        :param write_weights: If True, write weights to weights.txt on each batch logging event.
         :param num_workers: Number of workers in your data loader.
         :param sampler: You can pass a data sampler here for special sampling of data.  # noqa: E501
         :param eval_on_train_fraction: the fraction of train data to do the evaluation on,  # noqa: E501
