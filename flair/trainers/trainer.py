@@ -129,7 +129,8 @@ class ModelTrainer:
         Trains any class that implements the flair.nn.Model interface.
         :param base_path: Main path to which all output during training is logged and models are saved  # noqa: E501
         :param learning_rate: Initial learning rate (or max, if scheduler is OneCycleLR)  # noqa: E501
-        :param mini_batch_size: Size of mini-batches during training
+        :param mini_batch_size: Size of mini-batches during training  # noqa: E501
+        :param eval_batch_size: Size of mini-batches during evaluation. Defaults to mini_batch_size.  # noqa: E501
         :param mini_batch_chunk_size: If mini-batches are larger than this number, they get broken down into chunks of this size for processing purposes  # noqa: E501
         :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.  # noqa: E501
         :param scheduler: The learning rate scheduler to use
