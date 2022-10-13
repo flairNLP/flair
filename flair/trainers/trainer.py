@@ -153,6 +153,7 @@ class ModelTrainer:
         :param anneal_with_prestarts: If True, the model preceding the last best model is restored when annealing the learning rate  # noqa: E501
         :param anneal_against_dev_loss: If True, the annealment is triggered when dev loss plateaus.  # noqa: E501
          If False (default), it is triggered when dev score plateaus.
+        :param batch_growth_annealing: If True, mini_batch_size doubles every time learning_rate is annealed.  # noqa: E501
         :param shuffle: If True, data is shuffled during training
         :param param_selection_mode: If True, testing is performed against dev data. Use this mode when doing  # noqa: E501
         parameter selection.
