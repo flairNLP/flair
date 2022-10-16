@@ -428,7 +428,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
         label_name: Optional[str] = None,
-        return_loss=Literal[False],
+        return_loss: Literal[False] = False,
         embedding_storage_mode="none",
         force_token_predictions: bool = False,
     ) -> None:
@@ -442,7 +442,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
         label_name: Optional[str] = None,
-        return_loss=Literal[True],
+        return_loss: Literal[True] = True,
         embedding_storage_mode="none",
         force_token_predictions: bool = False,
     ) -> Tuple[torch.Tensor, int]:
