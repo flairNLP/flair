@@ -1,7 +1,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, Literal, overload
+from typing import Dict, List, Optional, Tuple, Union, overload
 from urllib.error import HTTPError
 
 import torch
@@ -9,6 +9,7 @@ import torch.nn
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
+from typing_extensions import Literal
 
 import flair.nn
 from flair.data import Dictionary, Label, Sentence, Span
