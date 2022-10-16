@@ -1,7 +1,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, overload
+from typing import Dict, List, Optional, Tuple, Union
 from urllib.error import HTTPError
 
 import torch
@@ -9,7 +9,6 @@ import torch.nn
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
-from typing_extensions import Literal
 
 import flair.nn
 from flair.data import Dictionary, Label, Sentence, Span
@@ -419,34 +418,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             device=flair.device,
         )
         return labels
-
-    @overload
-    def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size: int = 32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss: Literal[False] = False,
-        embedding_storage_mode="none",
-        force_token_predictions: bool = False,
-    ) -> None:
-        ...
-
-    @overload
-    def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size: int = 32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss: Literal[True] = True,
-        embedding_storage_mode="none",
-        force_token_predictions: bool = False,
-    ) -> Tuple[torch.Tensor, int]:
-        ...
 
     def predict(
         self,

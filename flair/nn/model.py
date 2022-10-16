@@ -250,11 +250,11 @@ class Classifier(Model[DT], typing.Generic[DT]):
                     datapoint.remove_labels("predicted")
                 # predict for batch
                 loss_and_count = self.predict(
-                    batch,
-                    embedding_storage_mode=embedding_storage_mode,
+                    typing.cast(List[DT], batch),
                     mini_batch_size=mini_batch_size,
                     label_name="predicted",
                     return_loss=return_loss,
+                    embedding_storage_mode=embedding_storage_mode,
                 )
 
                 if return_loss:
@@ -474,7 +474,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
         label_name: Optional[str] = None,
         return_loss=False,
         embedding_storage_mode="none",
-    ) -> Optional[Tuple[torch.Tensor, int]]:
+    ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
         :param sentences: list of sentences
