@@ -441,7 +441,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         # for printing
         line_to_print = ""
 
-        losses: List[torch.Tensor] = []
+        overall_loss = torch.zeros(1, device=flair.device)
         number_tokens_in_total = 0
 
         with torch.no_grad():
@@ -652,7 +652,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                         tokens_in_batch[i].add_tag(tag_type=label_name, tag_value=predicted_lemma)
 
                 if return_loss:
-                    losses.append(self.forward_loss(batch)[0])
+                    batch_loss = self.forward_loss(batch)[0]
+                    overall_loss += batch_loss.sum()
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
@@ -660,7 +661,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                 log.info(line_to_print)
 
             if return_loss:
-                return torch.cat(losses, 0).detach().cpu().numpy(), number_tokens_in_total
+                return overall_loss, number_tokens_in_total
 
     def _get_state_dict(self):
         model_state = {

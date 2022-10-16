@@ -1,7 +1,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Literal, overload
 from urllib.error import HTTPError
 
 import torch
@@ -419,6 +419,34 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         )
         return labels
 
+    @overload
+    def predict(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size: int = 32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=Literal[False],
+        embedding_storage_mode="none",
+        force_token_predictions: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    def predict(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size: int = 32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=Literal[True],
+        embedding_storage_mode="none",
+        force_token_predictions: bool = False,
+    ) -> Tuple[torch.Tensor, int]:
+        ...
+
     def predict(
         self,
         sentences: Union[List[Sentence], Sentence],
@@ -468,7 +496,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if verbose:
                 dataloader = tqdm(dataloader, desc="Batch inference")
 
-            losses: List[torch.Tensor] = []
+            overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
             for batch in dataloader:
 
@@ -487,9 +515,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 # if return_loss, get loss value
                 if return_loss:
                     gold_labels = self._prepare_label_tensor(batch)
-                    loss = self._calculate_loss(features, gold_labels)
-                    losses.append(loss[0])
-                    label_count += loss[1]
+                    loss, token_count = self._calculate_loss(features, gold_labels)
+                    overall_loss += loss.sum()
+                    label_count += token_count
 
                 # make predictions
                 if self.use_crf:
@@ -528,7 +556,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 store_embeddings(sentences, storage_mode=embedding_storage_mode)
 
             if return_loss:
-                return torch.cat(losses, 0).detach().cpu().numpy(), label_count
+                return overall_loss, label_count
 
     def _standard_inference(self, features: torch.Tensor, batch: List[Sentence], probabilities_for_all_classes: bool):
         """

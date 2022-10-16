@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DT, DT2, Dictionary, Sentence, _PartOfSentence
+from flair.data import DT, DT2, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
 from flair.file_utils import Tqdm
@@ -474,7 +474,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
         label_name: Optional[str] = None,
         return_loss=False,
         embedding_storage_mode="none",
-    ):
+    ) -> Optional[Tuple[torch.Tensor, int]]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
         :param sentences: list of sentences
@@ -706,30 +706,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         embedded_tensor = self._prepare_tensors(sentences)
         scores = self.forward(*embedded_tensor)
 
-        losses, count = self._calculate_loss(scores, labels)
-
         # calculate the loss
-        return self._map_loss_to_data_point(losses, sentences, predict_data_points), count
+        return self._calculate_loss(scores, labels)
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
         losses = self.loss_function(scores, labels)
-        while losses.dim() > 1:
-            losses = losses.mean(1)
         return losses, labels.size(0)
-
-    def _map_loss_to_data_point(
-        self, losses: torch.Tensor, data_points: List[DT], prediction_data_points: List[DT2]
-    ) -> torch.Tensor:
-        mapped_loss = torch.zeros(len(data_points), device=losses.device)
-        for i, pred_dp in enumerate(prediction_data_points):
-            if pred_dp in data_points:
-                mapping_idx = data_points.index(typing.cast(DT, pred_dp))
-            elif isinstance(pred_dp, _PartOfSentence):
-                mapping_idx = data_points.index(typing.cast(DT, pred_dp.sentence))
-            else:
-                raise ValueError(f"could not map {type(pred_dp)}")
-            mapped_loss[mapping_idx] = losses[i]
-        return mapped_loss
 
     def _sort_data(self, data_points: List[DT]) -> List[DT]:
 
@@ -796,7 +778,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             else:
                 batches = [reordered_sentences]
 
-            per_sample_losses: List[torch.Tensor] = []
+            overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
             for batch in batches:
 
@@ -823,11 +805,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
                     if return_loss:
                         gold_labels = self._prepare_label_tensor(data_points)
-                        per_sample_losses.append(
-                            self._map_loss_to_data_point(
-                                self._calculate_loss(scores, gold_labels)[0], batch, data_points
-                            )
-                        )
+                        losses = self._calculate_loss(scores, gold_labels)[0]
+                        overall_loss += losses.sum()
                         label_count += len(data_points)
 
                     if self.multi_label:
@@ -865,7 +844,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             if return_loss:
-                return torch.cat(per_sample_losses, 0).detach().cpu().numpy(), label_count
+                return overall_loss, label_count
 
     def _get_label_threshold(self, label_value):
         label_threshold = self.multi_label_threshold["default"]

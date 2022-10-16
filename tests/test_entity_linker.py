@@ -21,4 +21,4 @@ def test_forward_loss():
     tagger = EntityLinker(TransformerWordEmbeddings("distilbert-base-uncased"), label_dictionary=Dictionary())
     loss, count = tagger.forward_loss([sentence])
     assert count == 2
-    assert loss.shape == (1,)
+    assert loss.shape == (2,)
