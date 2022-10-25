@@ -129,7 +129,8 @@ class ModelTrainer:
         Trains any class that implements the flair.nn.Model interface.
         :param base_path: Main path to which all output during training is logged and models are saved  # noqa: E501
         :param learning_rate: Initial learning rate (or max, if scheduler is OneCycleLR)  # noqa: E501
-        :param mini_batch_size: Size of mini-batches during training
+        :param mini_batch_size: Size of mini-batches during training  # noqa: E501
+        :param eval_batch_size: Size of mini-batches during evaluation. Defaults to mini_batch_size.  # noqa: E501
         :param mini_batch_chunk_size: If mini-batches are larger than this number, they get broken down into chunks of this size for processing purposes  # noqa: E501
         :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.  # noqa: E501
         :param scheduler: The learning rate scheduler to use
@@ -139,6 +140,7 @@ class ModelTrainer:
         :param patience: Patience is the number of epochs with no improvement the Trainer waits  # noqa: E501
          until annealing the learning rate
         :param min_learning_rate: If the (in multi lr case: all) learning rate falls below this threshold, training terminates  # noqa: E501
+        :param initial_extra_patience: Extra patience on top of the base patience value before the first learning rate annealment  # noqa: E501
         :param warmup_fraction: Fraction of warmup steps if the scheduler is LinearSchedulerWithWarmup  # noqa: E501
         :param train_with_dev:  If True, the data from dev split is added to the training data  # noqa: E501
         :param train_with_test: If True, the data from test split is added to the training data  # noqa: E501
@@ -148,9 +150,14 @@ class ModelTrainer:
         'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
         :param save_final_model: If True, final model is saved
         :param anneal_with_restarts: If True, the last best model is restored when annealing the learning rate  # noqa: E501
+        :param anneal_with_prestarts: If True, the model preceding the last best model is restored when annealing the learning rate  # noqa: E501
+        :param anneal_against_dev_loss: If True, the annealment is triggered when dev loss plateaus.  # noqa: E501
+         If False (default), it is triggered when dev score plateaus.
+        :param batch_growth_annealing: If True, mini_batch_size doubles every time learning_rate is annealed.  # noqa: E501
         :param shuffle: If True, data is shuffled during training
         :param param_selection_mode: If True, testing is performed against dev data. Use this mode when doing  # noqa: E501
         parameter selection.
+        :param write_weights: If True, write weights to weights.txt on each batch logging event.
         :param num_workers: Number of workers in your data loader.
         :param sampler: You can pass a data sampler here for special sampling of data.  # noqa: E501
         :param eval_on_train_fraction: the fraction of train data to do the evaluation on,  # noqa: E501
