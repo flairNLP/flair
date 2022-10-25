@@ -334,6 +334,9 @@ class ModelTrainer:
                     verbose=True,
                 )
 
+        # Determine whether to log "bad epochs" information
+        log_bad_epochs = True if scheduler.__class__ == AnnealOnPlateau else False
+
         # load existing scheduler state dictionary if it exists
         if scheduler_state_dict:
             scheduler.load_state_dict(scheduler_state_dict)
@@ -751,7 +754,8 @@ class ModelTrainer:
                         bad_epochs += initial_extra_patience
 
                 # log bad epochs
-                log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
+                if log_bad_epochs:
+                    log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
 
                 if loss_txt is not None:
                     # output log file
@@ -759,7 +763,8 @@ class ModelTrainer:
 
                         # make headers on first epoch
                         if epoch == 1:
-                            f.write("EPOCH\tTIMESTAMP\tBAD_EPOCHS" "\tLEARNING_RATE\tTRAIN_LOSS")
+                            bad_epoch_header = "BAD_EPOCHS\t" if log_bad_epochs else ""
+                            f.write(f"EPOCH\tTIMESTAMP\t{bad_epoch_header}LEARNING_RATE\tTRAIN_LOSS")
 
                             if log_train:
                                 f.write("\tTRAIN_" + "\tTRAIN_".join(train_eval_result.log_header.split("\t")))
@@ -778,9 +783,10 @@ class ModelTrainer:
 
                         lr_info = ",".join([f"{lr:.4f}" for lr in current_learning_rate])
 
+                        bad_epoch_info = "\t" + str(bad_epochs) if log_bad_epochs else ""
                         f.write(
                             f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}"
-                            f"\t{bad_epochs}"
+                            f"{bad_epoch_info}"
                             f"\t{lr_info}\t{train_loss}"
                         )
                         f.write(result_line)
