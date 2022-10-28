@@ -567,7 +567,7 @@ class Span(_PartOfSentence):
 
     @property
     def text(self) -> str:
-        return "".join([t.text + t.whitespace_after * " " for t in self.tokens])
+        return "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
 
     @property
     def unlabeled_identifier(self) -> str:
