@@ -567,7 +567,7 @@ class Span(_PartOfSentence):
 
     @property
     def text(self) -> str:
-        return " ".join([t.text for t in self.tokens])
+        return "".join([t.text + t.whitespace_after * " " for t in self.tokens])
 
     @property
     def unlabeled_identifier(self) -> str:
@@ -748,7 +748,7 @@ class Sentence(DataPoint):
 
     @property
     def unlabeled_identifier(self):
-        return f'Sentence: "{self.to_tokenized_string()}"'
+        return f'Sentence: "{self.text}"'
 
     def get_relations(self, type: str) -> List[Relation]:
         relations: List[Relation] = []
@@ -882,7 +882,7 @@ class Sentence(DataPoint):
 
     @property
     def text(self):
-        return self.to_tokenized_string()
+        return "".join([t.text + t.whitespace_after * " " for t in self.tokens])
 
     def to_tokenized_string(self) -> str:
 
