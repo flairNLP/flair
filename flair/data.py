@@ -748,7 +748,7 @@ class Sentence(DataPoint):
 
     @property
     def unlabeled_identifier(self):
-        return f'Sentence: "{self.text}"'
+        return f'Sentence[{len(self)}]: "{self.text}"'
 
     def get_relations(self, type: str) -> List[Relation]:
         relations: List[Relation] = []
