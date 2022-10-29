@@ -115,10 +115,7 @@ class StackedEmbeddings(TokenEmbeddings):
         """Returns a list of embedding names. In most cases, it is just a list with one item, namely the name of
         this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
         Then, the list contains the names of all embeddings in the stack."""
-        names = []
-        for embedding in self.embeddings:
-            names.extend(embedding.get_names())
-        return names
+        return [name for embedding in self.embeddings for name in embedding.get_names()]
 
     def get_named_embeddings_dict(self) -> Dict:
 
