@@ -269,6 +269,8 @@ class DataPoint:
     and the property 'label')
     """
 
+    __slots__ = ["annotation_layers", "_embeddings"]
+
     def __init__(self):
         self.annotation_layers = {}
         self._embeddings: Dict[str, torch.Tensor] = {}
@@ -433,7 +435,10 @@ DT = typing.TypeVar("DT", bound=DataPoint)
 DT2 = typing.TypeVar("DT2", bound=DataPoint)
 
 
-class _PartOfSentence(DataPoint, ABC):
+class _PartOfSentence(DataPoint):
+
+    __slots__ = ["sentence"]
+
     def __init__(self, sentence):
         super().__init__()
         self.sentence: Sentence = sentence
@@ -473,7 +478,16 @@ class Token(_PartOfSentence):
     to its head in a dependency tree.
     """
 
-    # __slots__ = ['form', 'head_id', 'whitespace_after', 'start_pos', 'end_pos', '_embeddings', 'tags_proba_dist']
+    __slots__ = [
+        "form",
+        "_internal_index",
+        "head_id",
+        "whitespace_after",
+        "start_pos",
+        "end_pos",
+        "_embeddings",
+        "tags_proba_dist",
+    ]
 
     def __init__(
         self,
