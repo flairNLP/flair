@@ -1,8 +1,8 @@
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, List, Tuple
 
 
-def get_spans_from_bio(bioes_tags, bioes_scores=None):
+def get_spans_from_bio(bioes_tags: List[str], bioes_scores=None) -> List[Tuple[List[int], float, str]]:
     # add a dummy "O" to close final prediction
     bioes_tags.append("O")
     # return complex list
@@ -40,7 +40,7 @@ def get_spans_from_bio(bioes_tags, bioes_scores=None):
         if (starts_new_span or not in_span) and len(current_span) > 0:
             # determine score and value
             span_score = sum(current_span_scores) / len(current_span_scores)
-            span_value = sorted(current_tag_weights.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]
+            span_value = max(current_tag_weights.keys(), key=current_tag_weights.__getitem__)
 
             # append to result list
             found_spans.append((current_span, span_score, span_value))
