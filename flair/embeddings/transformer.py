@@ -55,6 +55,12 @@ def pad_sequence_embeddings(all_hidden_states: List[torch.Tensor]) -> torch.Tens
 
 
 @torch.jit.script_if_tracing
+def pad_hidden_states(hidden_states: torch.Tensor, input_ids: torch.Tensor) -> torch.Tensor:
+    return hidden_states[:, :input_ids.size()[1]]
+
+
+
+@torch.jit.script_if_tracing
 def combine_strided_tensors(
     hidden_states: torch.Tensor,
     overflow_to_sample_mapping: torch.Tensor,
@@ -1144,6 +1150,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if pixel_values is not None:
             model_kwargs["pixel_values"] = pixel_values
         hidden_states = self.model(input_ids, **model_kwargs)[-1]
+        hidden_states = pad_hidden_states(hidden_states, input_ids)
 
         # make the tuple a tensor; makes working with it easier.
         hidden_states = torch.stack(hidden_states)
