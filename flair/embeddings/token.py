@@ -165,6 +165,114 @@ class ReadoutLayer(TokenEmbeddings):
         return named_embeddings_dict
 
 
+class LayerwiseMLPReadoutLayer(TokenEmbeddings):
+
+    def __init__(self,
+                 embeddings: TransformerWordEmbeddings,
+                 dropout=0.0,
+                 aggregation: str = "weighted_sum",
+                 encode_positions: bool = False
+                 ):
+        """The constructor takes a list of embeddings to be combined."""
+        super().__init__()
+
+        self.embeddings = embeddings
+
+        self.name: str = "LayerwiseMLPReadout"
+        self.static_embeddings: bool = False
+        self.__embedding_type: str = embeddings.embedding_type
+
+        # encode a test sentence to get the number of layers
+        test_sentence = Sentence("test")
+        self.embeddings.embed(test_sentence)
+        self.number_of_layers = test_sentence[0].embedding.size(0) # exclude embedding layer
+
+        self.encode_positions = encode_positions
+        if self.encode_positions:
+            self.__embedding_length: int = embeddings.embedding_length + self.number_of_layers
+        else:
+            self.__embedding_length: int = embeddings.embedding_length
+
+        assert aggregation in ["concat", "weighted_sum", "mean"]
+        self.aggregation = aggregation
+        if aggregation == "weighted_sum":
+            weights = torch.ones(self.number_of_layers) / self.number_of_layers
+            self.weights = torch.nn.Parameter(data=weights.unsqueeze(0))
+
+        output_size = int(self.embedding_length / self.embedding_length if aggregation == "concat" else self.embedding_length)
+        if output_size != self.embedding_length:
+            self.__embedding_length = output_size
+
+        self.mlp = torch.nn.Sequential(
+            torch.nn.Dropout(dropout),
+            torch.nn.Linear(self.embedding_length, self.embedding_length),
+            torch.nn.ReLU(),
+            torch.nn.Linear(self.embedding_length, output_size),
+        )
+
+        self.to(flair.device)
+
+    def embed(self, sentences: Union[Sentence, List[Sentence]], static_embeddings: bool = True):
+        # if only one sentence is passed, convert to list of sentence
+        if type(sentences) is Sentence:
+            sentences = [sentences]
+
+        self.embeddings.embed(sentences)
+
+        tokens: List[Token] = []
+        for sentence in sentences:
+            tokens.extend(sentence)
+
+        all_token_embeddings = [token.get_embedding(self.embeddings.get_names()) for token in tokens]
+        stacked_token_embeddings = torch.stack(all_token_embeddings)
+
+        if self.encode_positions:
+            eye = torch.eye(self.number_of_layers, dtype=torch.float, device=flair.device)
+            eye_stack = torch.stack([eye for _ in all_token_embeddings])
+            stacked_token_embeddings = torch.cat([stacked_token_embeddings, eye_stack], dim=2)
+
+        outputs = self.mlp(stacked_token_embeddings)
+
+        number_tokens, layers, hidden_size = outputs.shape
+        if self.aggregation == "concat":
+            outputs = outputs.reshape(number_tokens, -1)
+        elif self.aggregation == "weighted_sum":
+            outputs = torch.matmul(self.weights, outputs)
+        elif self.aggregation == "mean":
+            outputs = outputs.mean(dim=1)
+        else:
+            raise ValueError("Unknown aggregation")
+
+        for token_no, token in enumerate(tokens):
+            token.set_embedding(self.name, outputs[token_no, -1, :])
+
+    @property
+    def embedding_type(self) -> str:
+        return self.__embedding_type
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        for embedding in self.embeddings:
+            embedding._add_embeddings_internal(sentences)
+
+        return sentences
+
+    def __str__(self):
+        return f'Layerwise MLP readout [{",".join([str(e) for e in self.embeddings])}]'
+
+    def get_named_embeddings_dict(self) -> Dict:
+
+        named_embeddings_dict = {}
+        for embedding in self.embeddings:
+            named_embeddings_dict.update(embedding.get_named_embeddings_dict())
+
+        return named_embeddings_dict
+
+
 class StackedEmbeddings(TokenEmbeddings):
     """A stack of embeddings, used if you need to combine several different embedding types."""
 
