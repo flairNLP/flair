@@ -20,6 +20,7 @@ class OcrJsonDataset(FlairDataset):
         in_memory: bool = True,
         encoding: str = "utf-8",
         load_images: bool = False,
+        normalize_coords_to_thousands: bool = True,
         label_name_map: Dict[str, str] = None,
     ):
         self.in_memory = in_memory
@@ -30,16 +31,18 @@ class OcrJsonDataset(FlairDataset):
         tagged_dir = path_to_split_directory / "tagged"
         self.base_path = path_to_split_directory
         assert tagged_dir.exists()
-        self.file_names = sorted([p.stem for p in tagged_dir.iterdir() if p.is_file()])
-        if load_images:
-            assert image_dir.exists()
-            self.file_names = sorted(set([p.stem for p in image_dir.iterdir() if p.is_file()]) & set(self.file_names))
+        assert image_dir.exists()
+        self.file_names = sorted(
+            set([p.stem for p in image_dir.iterdir() if p.is_file()])
+            & set([p.stem for p in tagged_dir.iterdir() if p.is_file()])
+        )
 
         self.total_sentence_count: int = len(self.file_names)
         self.load_images = load_images
         self.label_type = label_type
         self.encoding = encoding
         self.label_name_map = label_name_map
+        self.normalize_coords_to_thousands = normalize_coords_to_thousands
         if in_memory:
             self.sentences = [self._load_example(file_name) for file_name in self.file_names]
 
@@ -56,8 +59,23 @@ class OcrJsonDataset(FlairDataset):
             data = json.load(f)
         sentence = Sentence(text=data["words"])
 
-        for token, bbox in zip(sentence, data["bbox"]):
-            token.add_metadata("bbox", BoundingBox(*bbox))
+        img_path = self.base_path / "images" / f"{file_name}.jpg"
+        with PIL.Image.open(img_path) as img:
+            width, height = img.size
+            if self.load_images:
+                img.load()
+                sentence.add_metadata("image", img)
+            sentence.add_metadata("img_width", width)
+            sentence.add_metadata("img_height", height)
+
+        for token, (left, top, right, bottom) in zip(sentence, data["bbox"]):
+            if self.normalize_coords_to_thousands:
+                left = int(1000 * left / width)
+                top = int(1000 * top / height)
+                right = int(1000 * right / width)
+                bottom = int(1000 * bottom / height)
+
+            token.add_metadata("bbox", BoundingBox(left=left, top=top, right=right, bottom=bottom))
 
         for span_indices, score, label in get_spans_from_bio(data["labels"]):
             span = sentence[span_indices[0] : span_indices[-1] + 1]
@@ -65,11 +83,6 @@ class OcrJsonDataset(FlairDataset):
             if value != "O":
                 span.add_label(self.label_type, value=value, score=score)
 
-        if self.load_images:
-            img_path = self.base_path / "images" / f"{file_name}.jpg"
-            with PIL.Image.open(img_path) as img:
-                img.load()
-            sentence.add_metadata("image", img)
         return sentence
 
     def is_in_memory(self) -> bool:
@@ -102,6 +115,7 @@ class OcrCorpus(Corpus):
         label_type: str = "ner",
         in_memory: bool = True,
         load_images: bool = False,
+        normalize_coords_to_thousands: bool = True,
         label_name_map: Dict[str, str] = None,
         **corpusargs,
     ):
@@ -112,6 +126,7 @@ class OcrCorpus(Corpus):
                 encoding=encoding,
                 in_memory=in_memory,
                 load_images=load_images,
+                normalize_coords_to_thousands=normalize_coords_to_thousands,
                 label_name_map=label_name_map,
             )
             if train_path is not None
@@ -126,6 +141,7 @@ class OcrCorpus(Corpus):
                 encoding=encoding,
                 in_memory=in_memory,
                 load_images=load_images,
+                normalize_coords_to_thousands=normalize_coords_to_thousands,
                 label_name_map=label_name_map,
             )
             if dev_path is not None
@@ -140,6 +156,7 @@ class OcrCorpus(Corpus):
                 encoding=encoding,
                 in_memory=in_memory,
                 load_images=load_images,
+                normalize_coords_to_thousands=normalize_coords_to_thousands,
                 label_name_map=label_name_map,
             )
             if test_path is not None
@@ -157,6 +174,7 @@ class SROIE(OcrCorpus):
         label_type: str = "ner",
         in_memory: bool = True,
         load_images: bool = False,
+        normalize_coords_to_thousands: bool = True,
         label_name_map: Dict[str, str] = None,
         **corpusargs,
     ):
@@ -184,5 +202,6 @@ class SROIE(OcrCorpus):
             in_memory=in_memory,
             load_images=load_images,
             label_name_map=label_name_map,
+            normalize_coords_to_thousands=normalize_coords_to_thousands,
             **corpusargs,
         )
