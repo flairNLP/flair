@@ -3,19 +3,25 @@ import os
 import random
 import re
 import tempfile
+import warnings
 import zipfile
 from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import torch
 from torch.jit import ScriptModule
 from transformers import (
     CONFIG_MAPPING,
     AutoConfig,
+    AutoFeatureExtractor,
     AutoModel,
     AutoTokenizer,
+    FeatureExtractionMixin,
+    LayoutLMTokenizer,
+    LayoutLMTokenizerFast,
+    LayoutLMv2FeatureExtractor,
     PretrainedConfig,
     PreTrainedTokenizer,
 )
@@ -23,7 +29,7 @@ from transformers.tokenization_utils_base import LARGE_INTEGER
 from transformers.utils import PaddingStrategy
 
 import flair
-from flair.data import Sentence, log
+from flair.data import Sentence, Token, log
 from flair.embeddings.base import DocumentEmbeddings, Embeddings, TokenEmbeddings
 
 
@@ -276,6 +282,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         token_embedding: bool = False,
         force_device: Optional[torch.device] = None,
         force_max_length: bool = False,
+        feature_extractor: Optional[FeatureExtractionMixin] = None,
     ):
         self.name = name
         super().__init__()
@@ -293,6 +300,16 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         self.force_device = force_device
         self.fine_tune = fine_tune
         self.force_max_length = force_max_length
+        self.feature_extractor = feature_extractor
+
+        tokenizer_params = list(inspect.signature(self.tokenizer.__call__).parameters.keys())
+        self.tokenizer_needs_ocr_boxes = "boxes" in tokenizer_params
+
+        # The layoutlm tokenizer doesn't handle ocr themselves
+        self.needs_manual_ocr = isinstance(self.tokenizer, (LayoutLMTokenizer, LayoutLMTokenizerFast))
+
+        if (self.tokenizer_needs_ocr_boxes or self.needs_manual_ocr) and self.context_length > 0:
+            warnings.warn(f"using '{name}' with additional context, might lead to bad results.", UserWarning)
 
         if not self.token_embedding and not self.document_embedding:
             raise ValueError("either 'is_token_embedding' or 'is_document_embedding' needs to be set.")
@@ -313,18 +330,23 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             "fine_tune": self.fine_tune,
             "use_lang_emb": self.use_lang_emb,
             "force_max_length": self.force_max_length,
+            "feature_extractor": self.feature_extractor,
         }
 
     def __getstate__(self):
         model_state = self.to_args()
         del model_state["tokenizer"]
         model_state["tokenizer_data"] = self.__tokenizer_bytes()
+        del model_state["feature_extractor"]
+        if self.feature_extractor:
+            model_state["feature_extractor_data"] = self.__feature_extractor_bytes()
 
         return model_state
 
     def __setstate__(self, state):
         tokenizer = self._tokenizer_from_bytes(state.pop("tokenizer_data"))
-        embedding = self.create_from_state(tokenizer=tokenizer, **state)
+        feature_extractor = self._feature_extractor_from_bytes(state.pop("feature_extractor_data", None))
+        embedding = self.create_from_state(tokenizer=tokenizer, feature_extractor=feature_extractor, **state)
         for key in embedding.__dict__.keys():
             self.__dict__[key] = embedding.__dict__[key]
 
@@ -333,6 +355,14 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         with tempfile.TemporaryDirectory() as temp_dir:
             zip_obj.extractall(temp_dir)
             return AutoTokenizer.from_pretrained(temp_dir, add_prefix_space=True)
+
+    def _feature_extractor_from_bytes(self, zip_data: Optional[BytesIO]) -> Optional[FeatureExtractionMixin]:
+        if zip_data is None:
+            return None
+        zip_obj = zipfile.ZipFile(zip_data)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            zip_obj.extractall(temp_dir)
+            return AutoFeatureExtractor.from_pretrained(temp_dir, apply_ocr=False)
 
     def __tokenizer_bytes(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -347,6 +377,18 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 if os.path.exists(f):
                     zip_obj.write(f, os.path.relpath(f, temp_dir))
 
+        zip_data.seek(0)
+        return zip_data
+
+    def __feature_extractor_bytes(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            files = list(self.feature_extractor.save_pretrained(temp_dir))
+            zip_data = BytesIO()
+            zip_obj = zipfile.ZipFile(zip_data, "w")
+            for f in files:
+                # transformers returns the "added_tokens.json" even if it doesn't create it
+                if os.path.exists(f):
+                    zip_obj.write(f, os.path.relpath(f, temp_dir))
         zip_data.seek(0)
         return zip_data
 
@@ -372,32 +414,52 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             device = flair.device
         flair_tokens, offsets, lengths = self.__gather_flair_tokens(sentences)
 
-        # encode inputs
+        # random check some tokens to save performance.
+        if (self.needs_manual_ocr or self.tokenizer_needs_ocr_boxes) and not all(
+            [
+                flair_tokens[0][0].has_metadata("bbox"),
+                flair_tokens[0][-1].has_metadata("bbox"),
+                flair_tokens[-1][0].has_metadata("bbox"),
+                flair_tokens[-1][-1].has_metadata("bbox"),
+            ]
+        ):
+            raise ValueError(f"The embedding '{self.name}' requires the ocr 'bbox' set as metadata on all tokens.")
+
+        if self.feature_extractor is not None and not all(
+            [
+                sentences[0].has_metadata("image"),
+                sentences[-1].has_metadata("image"),
+            ]
+        ):
+            raise ValueError(f"The embedding '{self.name}' requires the 'image' set as metadata for all sentences.")
+
+        return self.__build_transformer_model_inputs(sentences, offsets, lengths, flair_tokens, device)
+
+    def __build_transformer_model_inputs(
+        self,
+        sentences: List[Sentence],
+        offsets: List[int],
+        sentence_lengths: List[int],
+        flair_tokens: List[List[Token]],
+        device: torch.device,
+    ):
+        tokenizer_kwargs: Dict[str, Any] = {}
+        if self.tokenizer_needs_ocr_boxes:
+            tokenizer_kwargs["boxes"] = [[t.get_metadata("bbox") for t in tokens] for tokens in flair_tokens]
+        else:
+
+            tokenizer_kwargs["is_split_into_words"] = True
+
         batch_encoding = self.tokenizer(
-            flair_tokens,
+            [[t.text for t in tokens] for tokens in flair_tokens],
             stride=self.stride,
             return_overflowing_tokens=self.allow_long_sentences,
             truncation=self.truncate,
             padding=PaddingStrategy.MAX_LENGTH if self.force_max_length else PaddingStrategy.LONGEST,
             return_tensors="pt",
-            is_split_into_words=True,
+            **tokenizer_kwargs,
         )
 
-        tensor_args = self.__build_transformer_model_inputs(
-            batch_encoding, sentences, offsets, lengths, flair_tokens, device
-        )
-
-        return tensor_args
-
-    def __build_transformer_model_inputs(
-        self,
-        batch_encoding,
-        sentences: List[Sentence],
-        offsets: List[int],
-        sentence_lengths: List[int],
-        flair_tokens: List[List[str]],
-        device: torch.device,
-    ):
         input_ids = batch_encoding["input_ids"].to(device, non_blocking=True)
         model_kwargs = {"input_ids": input_ids}
 
@@ -416,9 +478,11 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 self.tokenizer.pad_token_id,
             )
             lengths = (unpacked_ids != self.tokenizer.pad_token_id).sum(dim=1)
+            padded_tokens = [flair_tokens[i] for i in cpu_overflow_to_sample_mapping]
         else:
             cpu_overflow_to_sample_mapping = None
             lengths = (input_ids != self.tokenizer.pad_token_id).sum(dim=1)
+            padded_tokens = flair_tokens
         model_kwargs["lengths"] = lengths
 
         # set language IDs for XLM-style transformers
@@ -440,13 +504,17 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                     lang_id = lang2id.get(sentence.get_language_code(), 0)
                     model_kwargs["langs"][sentence_idx : sentence_idx + part_length] = lang_id
                     sentence_idx += part_length
-        if self.token_embedding:
+
+        if "bbox" in batch_encoding:
+            model_kwargs["bbox"] = batch_encoding["bbox"].to(device, non_blocking=True)
+
+        if self.token_embedding or self.needs_manual_ocr:
             if self.tokenizer.is_fast:
                 word_ids_list = [batch_encoding.word_ids(i) for i in range(input_ids.size()[0])]
             else:
                 word_ids_list = _legacy_reconstruct_word_ids(
                     self,
-                    flair_tokens,
+                    [[t.text for t in tokens] for tokens in flair_tokens],
                 )
                 # word_ids is only supported for the fast rust tokenizers. Some models like "xlm-mlm-ende-1024" do not have
                 # a fast tokenizer implementation, hence we need to fall back to our own reconstruction of word_ids.
@@ -471,10 +539,30 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 ],
                 device=device,
             )
-            model_kwargs["word_ids"] = word_ids
+            if self.token_embedding:
+                model_kwargs["word_ids"] = word_ids
+            if self.needs_manual_ocr:
+                bbox = [
+                    [(0, 0, 0, 0) if val is None else tokens[val].get_metadata("bbox") for val in _word_ids]
+                    for _word_ids, tokens in zip(word_ids_list, padded_tokens)
+                ]
+                model_kwargs["bbox"] = torch.tensor(bbox, device=device)
+
+        if self.feature_extractor is not None:
+            images = [sent.get_metadata("image") for sent in sentences]
+            image_encodings = self.feature_extractor(images, return_tensors="pt")["pixel_values"]
+            if cpu_overflow_to_sample_mapping is not None:
+                batched_image_encodings = [image_encodings[i] for i in cpu_overflow_to_sample_mapping]
+                image_encodings = torch.stack(batched_image_encodings)
+            image_encodings = image_encodings.to(flair.device)
+            if isinstance(self.feature_extractor, LayoutLMv2FeatureExtractor):
+                model_kwargs["image"] = image_encodings
+            else:
+                model_kwargs["pixel_values"] = image_encodings
+
         return model_kwargs
 
-    def __gather_flair_tokens(self, sentences: List[Sentence]) -> Tuple[List[List[str]], List[int], List[int]]:
+    def __gather_flair_tokens(self, sentences: List[Sentence]) -> Tuple[List[List[Token]], List[int], List[int]]:
         offsets = []
         lengths = []
         if self.context_length > 0:
@@ -498,7 +586,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             lengths.append(len(sentence))
         return sentence_tokens, offsets, lengths
 
-    def __expand_sentence_with_context(self, sentence) -> Tuple[List[str], int]:
+    def __expand_sentence_with_context(self, sentence) -> Tuple[List[Token], int]:
         expand_context = self.context_length > 0 and (
             not self.training or random.randint(1, 100) > (self.context_dropout * 100)
         )
@@ -510,7 +598,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             left_context = sentence.left_context(self.context_length, self.respect_document_boundaries)
             right_context = sentence.right_context(self.context_length, self.respect_document_boundaries)
 
-        expanded_sentence = left_context + [t.text for t in sentence.tokens] + right_context
+        expanded_sentence = left_context + sentence.tokens + right_context
 
         context_length = len(left_context)
         return expanded_sentence, context_length
@@ -786,6 +874,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         context_dropout: float = 0.5,
         saved_config: Optional[PretrainedConfig] = None,
         tokenizer_data: Optional[BytesIO] = None,
+        feature_extractor_data: Optional[BytesIO] = None,
         name: Optional[str] = None,
         force_max_length: bool = False,
         **kwargs,
@@ -802,12 +891,23 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
         logging.set_verbosity_error()
 
+        self.tokenizer: PreTrainedTokenizer
+        self.feature_extractor: Optional[FeatureExtractionMixin]
+
         if tokenizer_data is None:
             # load tokenizer and transformer model
-            self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, **kwargs)
+            self.tokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, **kwargs)
+            try:
+                self.feature_extractor = AutoFeatureExtractor.from_pretrained(model, apply_ocr=False)
+            except OSError:
+                self.feature_extractor = None
         else:
             # load tokenizer from inmemory zip-file
             self.tokenizer = self._tokenizer_from_bytes(tokenizer_data)
+            if feature_extractor_data is not None:
+                self.feature_extractor = self._feature_extractor_from_bytes(feature_extractor_data)
+            else:
+                self.feature_extractor = None
 
         def is_supported_t5_model(config: PretrainedConfig) -> bool:
             t5_supported_model_types = ["t5", "mt5", "longt5"]
@@ -844,10 +944,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
         # model name
         if name is None:
-            self.name = "transformer-" + str(transformer_model)
+            self.name = "transformer-" + transformer_model.name_or_path
         else:
             self.name = name
-        self.base_model_name = str(transformer_model)
+        self.base_model_name = transformer_model.name_or_path
 
         self.token_embedding = is_token_embedding
         self.document_embedding = is_document_embedding
@@ -888,10 +988,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         # return length
         self.embedding_length_internal = self._calculate_embedding_length(transformer_model)
 
+        super().__init__(**self.to_args())
+
         # most models have an initial BOS token, except for XLNet, T5 and GPT2
         self.initial_cls_token: bool = self._has_initial_cls_token()
 
-        super().__init__(**self.to_args())
         self.model = transformer_model
         self.to(flair.device)
         # when initializing, embeddings are in eval mode by default
@@ -906,6 +1007,9 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
     def _has_initial_cls_token(self) -> bool:
         # most models have CLS token as last token (GPT-1, GPT-2, TransfoXL, XLNet, XLM), but BERT is initial
+        if self.tokenizer_needs_ocr_boxes:
+            # cannot run `.encode` if ocr boxes are required, assume
+            return True
         tokens = self.tokenizer.encode("a")
         return tokens[0] == self.tokenizer.cls_token_id
 
@@ -1027,12 +1131,18 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         overflow_to_sample_mapping: Optional[torch.Tensor] = None,
         word_ids: Optional[torch.Tensor] = None,
         langs: Optional[torch.Tensor] = None,
+        bbox: Optional[torch.Tensor] = None,
+        pixel_values: Optional[torch.Tensor] = None,
     ):
         model_kwargs = {}
         if langs is not None:
             model_kwargs["langs"] = langs
         if attention_mask is not None:
             model_kwargs["attention_mask"] = attention_mask
+        if bbox is not None:
+            model_kwargs["bbox"] = bbox
+        if pixel_values is not None:
+            model_kwargs["pixel_values"] = pixel_values
         hidden_states = self.model(input_ids, **model_kwargs)[-1]
 
         # make the tuple a tensor; makes working with it easier.

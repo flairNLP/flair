@@ -3,7 +3,7 @@ import logging
 import re
 import typing
 from abc import ABC, abstractmethod
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, namedtuple
 from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
@@ -35,6 +35,9 @@ def _len_dataset(dataset: Optional[Dataset]) -> int:
 
     loader = DataLoader(dataset, batch_size=1, num_workers=0)
     return len(loader)
+
+
+BoundingBox = namedtuple("BoundingBox", ["left", "top", "right", "bottom"])
 
 
 class Dictionary:
@@ -270,6 +273,7 @@ class DataPoint:
     def __init__(self):
         self.annotation_layers = {}
         self._embeddings: Dict[str, torch.Tensor] = {}
+        self._metadata: Dict[str, typing.Any] = {}
 
     @property
     @abstractmethod
@@ -324,6 +328,15 @@ class DataPoint:
             return True
         else:
             return False
+
+    def add_metadata(self, key: str, value: typing.Any) -> None:
+        self._metadata[key] = value
+
+    def get_metadata(self, key: str) -> typing.Any:
+        return self._metadata[key]
+
+    def has_metadata(self, key: str) -> bool:
+        return key in self._metadata
 
     def add_label(self, typename: str, value: str, score: float = 1.0):
 
@@ -830,10 +843,10 @@ class Sentence(DataPoint):
             token.clear_embeddings(embedding_names)
 
     @lru_cache(maxsize=1)  # cache last context, as training repeats calls
-    def left_context(self, context_length: int, respect_document_boundaries: bool = True):
+    def left_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
-        left_context: List[str] = []
-        while True:
+        left_context: List[Token] = []
+        while len(left_context) < context_length:
             sentence = sentence.previous_sentence()
             if sentence is None:
                 break
@@ -841,28 +854,22 @@ class Sentence(DataPoint):
             if respect_document_boundaries and sentence.is_document_boundary:
                 break
 
-            left_context = [t.text for t in sentence.tokens] + left_context
-            if len(left_context) > context_length:
-                left_context = left_context[-context_length:]
-                break
-        return left_context
+            left_context = sentence.tokens + left_context
+        return left_context[-context_length:]
 
     @lru_cache(maxsize=1)  # cache last context, as training repeats calls
-    def right_context(self, context_length: int, respect_document_boundaries: bool = True):
+    def right_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
-        right_context: List[str] = []
-        while True:
+        right_context: List[Token] = []
+        while len(right_context) < context_length:
             sentence = sentence.next_sentence()
             if sentence is None:
                 break
             if respect_document_boundaries and sentence.is_document_boundary:
                 break
 
-            right_context += [t.text for t in sentence.tokens]
-            if len(right_context) > context_length:
-                right_context = right_context[:context_length]
-                break
-        return right_context
+            right_context += sentence.tokens
+        return right_context[:context_length]
 
     def __str__(self):
         return self.to_tagged_string()
