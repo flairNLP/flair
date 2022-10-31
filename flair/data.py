@@ -201,7 +201,7 @@ class Label:
 
     __slots__ = ["value", "score", "data_point"]
 
-    def __init__(self, data_point: "DataPoint", value: Optional[str], score: float = 1.0):
+    def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0):
         self.value = value
         self.score = score
         self.data_point: DataPoint = data_point
