@@ -554,6 +554,8 @@ class Span(_PartOfSentence):
     This class represents one textual span consisting of Tokens.
     """
 
+    __slots__ = ["tokens"]
+
     def __init__(self, tokens: List[Token]):
         super().__init__(tokens[0].sentence)
         self.tokens = tokens
@@ -593,6 +595,9 @@ class Span(_PartOfSentence):
 
 
 class Relation(_PartOfSentence):
+
+    __slots__ = ["first", "second"]
+
     def __init__(self, first: Span, second: Span):
         super().__init__(sentence=first.sentence)
         self.first: Span = first
@@ -655,6 +660,19 @@ class Sentence(DataPoint):
     """
     A Sentence is a list of tokens and is used to represent a sentence or text fragment.
     """
+
+    __slots__ = [
+        "tokens",
+        "_known_spans",
+        "language_code",
+        "start_pos",
+        "end_pos",
+        "tokenized",
+        "is_document_boundary",
+        "_previous_sentence",
+        "_next_sentence",
+        "_position_in_dataset",
+    ]
 
     def __init__(
         self,
