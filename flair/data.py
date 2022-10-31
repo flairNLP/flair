@@ -199,6 +199,8 @@ class Label:
     score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
+    __slots__ = ["_value", "_score", "data_point"]
+
     def __init__(self, data_point: "DataPoint", value: Optional[str], score: float = 1.0):
         self._value = value
         self._score = score
@@ -470,6 +472,8 @@ class Token(_PartOfSentence):
     This class represents one word in a tokenized sentence. Each token may have any number of tags. It may also point
     to its head in a dependency tree.
     """
+
+    # __slots__ = ['form', 'head_id', 'whitespace_after', 'start_pos', 'end_pos', '_embeddings', 'tags_proba_dist']
 
     def __init__(
         self,
