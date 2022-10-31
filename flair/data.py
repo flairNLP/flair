@@ -199,49 +199,26 @@ class Label:
     score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
-    __slots__ = ["_value", "_score", "data_point"]
+    __slots__ = ["value", "score", "data_point"]
 
     def __init__(self, data_point: "DataPoint", value: Optional[str], score: float = 1.0):
-        self._value = value
-        self._score = score
-        self.data_point: DataPoint = data_point
-        super().__init__()
-
-    def set_value(self, value: str, score: float = 1.0):
         self.value = value
         self.score = score
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, value):
-        if not value and value != "":
-            raise ValueError("Incorrect label value provided. Label value needs to be set.")
-        else:
-            self._value = value
-
-    @property
-    def score(self):
-        return self._score
-
-    @score.setter
-    def score(self, score):
-        self._score = score
+        self.data_point: DataPoint = data_point
+        super().__init__()
 
     def to_dict(self):
         return {"value": self.value, "confidence": self.score}
 
     def __str__(self):
-        return f"{self.data_point.unlabeled_identifier}{flair._arrow}{self._value} ({round(self._score, 4)})"
+        return f"{self.data_point.unlabeled_identifier}{flair._arrow}{self.value} ({round(self.score, 4)})"
 
     @property
     def shortstring(self):
-        return f'"{self.data_point.text}"/{self._value}'
+        return f'"{self.data_point.text}"/{self.value}'
 
     def __repr__(self):
-        return f"'{self.data_point.unlabeled_identifier}'/'{self._value}' ({round(self._score, 4)})"
+        return f"'{self.data_point.unlabeled_identifier}'/'{self.value}' ({round(self.score, 4)})"
 
     def __eq__(self, other):
         return self.value == other.value and self.score == other.score and self.data_point == other.data_point
