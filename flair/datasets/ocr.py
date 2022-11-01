@@ -81,7 +81,7 @@ class OcrJsonDataset(FlairDataset):
             width, height = img.size
             if self.load_images:
                 img.load()
-                sentence.add_metadata("image", img)
+                sentence.add_metadata("image", img.convert("RGB"))
             sentence.add_metadata("img_width", width)
             sentence.add_metadata("img_height", height)
 

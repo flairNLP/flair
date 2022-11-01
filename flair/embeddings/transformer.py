@@ -55,8 +55,8 @@ def pad_sequence_embeddings(all_hidden_states: List[torch.Tensor]) -> torch.Tens
 
 
 @torch.jit.script_if_tracing
-def pad_hidden_states(hidden_states: torch.Tensor, input_ids: torch.Tensor) -> torch.Tensor:
-    return hidden_states[:, : input_ids.size()[1]]
+def truncate_hidden_states(hidden_states: torch.Tensor, input_ids: torch.Tensor) -> torch.Tensor:
+    return hidden_states[:, :, :input_ids.size()[1]]
 
 
 @torch.jit.script_if_tracing
@@ -1149,10 +1149,12 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if pixel_values is not None:
             model_kwargs["pixel_values"] = pixel_values
         hidden_states = self.model(input_ids, **model_kwargs)[-1]
-
         # make the tuple a tensor; makes working with it easier.
         hidden_states = torch.stack(hidden_states)
         hidden_states = pad_hidden_states(hidden_states, input_ids)
+
+        # for multimodal models like layoutlmv3, we truncate the image embeddings as they are only used via attention
+        hidden_states = truncate_hidden_states(hidden_states, input_ids)
 
         # only use layers that will be outputted
         hidden_states = hidden_states[self.layer_indexes, :, :]
