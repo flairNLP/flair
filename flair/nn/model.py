@@ -38,16 +38,6 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         raise NotImplementedError
 
     @abstractmethod
-    def forward(self, *args: torch.Tensor) -> torch.Tensor:
-        """Performs a forward pass on input tensors for backpropagation or prediction."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
-        """Creates the input tensors that will be passed trough the forward call."""
-        raise NotImplementedError
-
-    @abstractmethod
     def forward_loss(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
         """Performs a forward pass and returns a loss tensor for backpropagation.
         Implement this to enable training."""
@@ -517,6 +507,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
     def __init__(
         self,
+        embeddings: Embeddings,
         label_dictionary: Dictionary,
         final_embedding_size: int,
         dropout: float = 0.0,
@@ -531,6 +522,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
     ):
 
         super().__init__()
+
+        # set the embeddings
+        self.embeddings = embeddings
 
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
@@ -587,51 +581,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         return True
 
     @abstractmethod
-    def _embed_prediction_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
+    def _get_embedding_for_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
         raise NotImplementedError()
-
-    @property
-    def _inner_embeddings(self) -> Optional[Embeddings[DT]]:
-        return None
-
-    def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
-        filtered_data_points = [dt for dt in data_points if self._filter_data_point(dt)]
-        if not filtered_data_points:
-            return (torch.zeros(0, self.final_embedding_size, device=flair.device),)
-        if self._inner_embeddings is not None:
-            self._inner_embeddings.embed(filtered_data_points)
-        embedding_list = []
-        for prediction_data_point in self._get_prediction_data_points(filtered_data_points):
-            embedding_list.append(self._embed_prediction_data_point(prediction_data_point).unsqueeze(0))
-
-        embedded_data_pairs = torch.cat(embedding_list, 0)
-
-        return (embedded_data_pairs,)
-
-    def _transform_embeddings(
-        self,
-        *args: torch.Tensor,
-    ) -> torch.Tensor:
-        """This method does applies a transformation through the model given a list of tensors as input.
-        Returns the embeddings that will ran trough a linear decoder layer to calculate logits.
-
-        If it is not overwritten, it will act as identity function for of the first tensor.
-        """
-        return args[0]
-
-    def forward(self, *args: torch.Tensor) -> torch.Tensor:
-        emb = self._transform_embeddings(*args)
-        emb = emb.unsqueeze(1)
-        emb = self.dropout(emb)
-        emb = self.locked_dropout(emb)
-        emb = self.word_dropout(emb)
-        emb = emb.squeeze(1)
-
-        if self.inverse_model:
-            emb = self.gradient_reversal(emb)
-
-        scores = self.decoder(emb)
-        return scores
 
     @abstractmethod
     def _get_prediction_data_points(self, sentences: List[DT]) -> List[DT2]:
@@ -661,13 +612,13 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         else:
             self._multi_label_threshold = {"default": x}
 
-    def get_scores_and_labels(self, batch: List[DT]) -> Tuple[torch.Tensor, List[List[str]]]:
-        batch = [dp for dp in batch if self._filter_data_point(dp)]
-        predict_data_points = self._get_prediction_data_points(batch)
-        labels = [self._get_label_of_datapoint(pdp) for pdp in predict_data_points]
-        embedded_tensor = self._prepare_tensors(batch)
-        logits = self._transform_embeddings(*embedded_tensor)
-        return logits, labels
+    # def get_scores_and_labels(self, batch: List[DT]) -> Tuple[torch.Tensor, List[List[str]]]:
+    #     batch = [dp for dp in batch if self._filter_data_point(dp)]
+    #     predict_data_points = self._get_prediction_data_points(batch)
+    #     labels = [self._get_label_of_datapoint(pdp) for pdp in predict_data_points]
+    #     embedded_tensor = self._prepare_tensors(batch)
+    #     logits = self._transform_embeddings(*embedded_tensor)
+    #     return logits, labels
 
     def _prepare_label_tensor(self, prediction_data_points: List[DT2]) -> torch.Tensor:
         labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points]
@@ -692,22 +643,42 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                 device=flair.device,
             )
 
+    def _encode_data_points(self, sentences: List[DT], data_points: List[DT2]):
+
+        # embed sentences
+        self.embeddings.embed(sentences)
+
+        # get a tensor of data points
+        data_point_tensor = torch.stack([self._get_embedding_for_data_point(data_point) for data_point in data_points])
+
+        # do dropout
+        data_point_tensor = data_point_tensor.unsqueeze(1)
+        data_point_tensor = self.dropout(data_point_tensor)
+        data_point_tensor = self.locked_dropout(data_point_tensor)
+        data_point_tensor = self.word_dropout(data_point_tensor)
+        data_point_tensor = data_point_tensor.squeeze(1)
+
+        return data_point_tensor
+
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
 
         # make a forward pass to produce embedded data points and labels
         sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
-        predict_data_points = self._get_prediction_data_points(sentences)
-        labels = self._prepare_label_tensor(predict_data_points)
 
-        # no loss can be calculated if there are no labels
-        if labels.size(0) == 0:
-            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+        # get the data points for which to predict labels
+        data_points = self._get_prediction_data_points(sentences)
 
-        embedded_tensor = self._prepare_tensors(sentences)
-        scores = self.forward(*embedded_tensor)
+        # get their gold labels as a tensor
+        label_tensor = self._prepare_label_tensor(data_points)
+
+        # pass data points through network to get encoded data point tensor
+        data_point_tensor = self._encode_data_points(sentences, data_points)
+
+        # decode
+        scores = self.decoder(data_point_tensor)
 
         # calculate the loss
-        return self._calculate_loss(scores, labels)
+        return self._calculate_loss(scores, label_tensor)
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
         return self.loss_function(scores, labels), labels.size(0)
@@ -792,9 +763,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                 if not data_points:
                     continue
 
-                tensors = self._prepare_tensors(batch)
-
-                scores = self.forward(*tensors)
+                # pass data points through network and decode
+                data_point_tensor = self._encode_data_points(sentences, data_points)
+                scores = self.decoder(data_point_tensor)
 
                 # if anything could possibly be predicted
                 if len(data_points) > 0:

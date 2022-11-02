@@ -94,7 +94,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
             entity_pairs.extend(self._get_valid_relations(sentence))
         return entity_pairs
 
-    def _embed_prediction_data_point(self, prediction_data_point: Relation) -> torch.Tensor:
+    def _get_embedding_for_data_point(self, prediction_data_point: Relation) -> torch.Tensor:
         span_1 = prediction_data_point.first
         span_2 = prediction_data_point.second
         embedding_names = self.embeddings.get_names()

@@ -24,13 +24,13 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
 
     def __init__(
         self,
-        document_embeddings: flair.embeddings.DocumentEmbeddings,
+        embeddings: flair.embeddings.DocumentEmbeddings,
         label_type: str,
         **classifierargs,
     ):
         """
         Initializes a TextClassifier
-        :param document_embeddings: embeddings used to embed each data point
+        :param embeddings: embeddings used to embed each data point
         :param label_dictionary: dictionary of labels you want to predict
         :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
         or False to force single-label prediction
@@ -42,18 +42,17 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
 
         super(TextClassifier, self).__init__(
             **classifierargs,
-            final_embedding_size=document_embeddings.embedding_length,
+            embeddings=embeddings,
+            final_embedding_size=embeddings.embedding_length,
         )
-
-        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
 
         self._label_type = label_type
 
         # auto-spawn on GPU if available
         self.to(flair.device)
 
-    def _embed_prediction_data_point(self, prediction_data_point: Sentence) -> torch.Tensor:
-        embedding_names = self.document_embeddings.get_names()
+    def _get_embedding_for_data_point(self, prediction_data_point: Sentence) -> torch.Tensor:
+        embedding_names = self.embeddings.get_names()
         return prediction_data_point.get_embedding(embedding_names)
 
     def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Sentence]:
@@ -70,10 +69,6 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
             "weight_dict": self.weight_dict,
         }
         return model_state
-
-    @property
-    def _inner_embeddings(self) -> Embeddings[Sentence]:
-        return self.document_embeddings
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
