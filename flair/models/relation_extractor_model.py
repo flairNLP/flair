@@ -57,7 +57,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
         self.to(flair.device)
 
-
     @property
     def _inner_embeddings(self) -> Embeddings[Sentence]:
         return self.embeddings
@@ -73,12 +72,12 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
                 # filter entity pairs according to their tags if set
                 if (
-                        self.entity_pair_filters is not None
-                        and (
+                    self.entity_pair_filters is not None
+                    and (
                         span_1.get_label(self.entity_label_type).value,
                         span_2.get_label(self.entity_label_type).value,
-                )
-                        not in self.entity_pair_filters
+                    )
+                    not in self.entity_pair_filters
                 ):
                     continue
 
