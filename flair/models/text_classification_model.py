@@ -55,8 +55,8 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         embedding_names = self.embeddings.get_names()
         return prediction_data_point.get_embedding(embedding_names)
 
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Sentence]:
-        return sentences
+    def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Sentence]:
+        return [sentence]
 
     def _get_state_dict(self):
         model_state = {

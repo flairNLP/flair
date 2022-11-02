@@ -65,12 +65,8 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
         names = self.embeddings.get_names()
         return prediction_data_point.get_embedding(names)
 
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Token]:
-        tokens: List[Token] = []
-
-        for sentence in sentences:
-            tokens.extend(sentence)
-        return tokens
+    def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Token]:
+        return sentence.tokens
 
     @property
     def label_type(self):

@@ -62,8 +62,8 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
     def label_type(self):
         return self._label_type
 
-    def _get_prediction_data_points(self, sentences: List[TextPair]) -> List[TextPair]:
-        return sentences
+    def _get_data_points_from_sentence(self, sentence: TextPair) -> List[TextPair]:
+        return [sentence]
 
     def _get_embedding_for_data_point(self, prediction_data_point: TextPair) -> torch.Tensor:
         embedding_names = self.embeddings.get_names()

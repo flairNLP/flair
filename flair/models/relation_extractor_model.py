@@ -57,7 +57,12 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
         self.to(flair.device)
 
-    def _get_valid_relations(self, sentence: Sentence) -> List[Relation]:
+
+    @property
+    def _inner_embeddings(self) -> Embeddings[Sentence]:
+        return self.embeddings
+
+    def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Relation]:
         entity_pairs = []
         entity_spans = sentence.get_spans(self.entity_label_type)
 
@@ -68,12 +73,12 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
                 # filter entity pairs according to their tags if set
                 if (
-                    self.entity_pair_filters is not None
-                    and (
+                        self.entity_pair_filters is not None
+                        and (
                         span_1.get_label(self.entity_label_type).value,
                         span_2.get_label(self.entity_label_type).value,
-                    )
-                    not in self.entity_pair_filters
+                )
+                        not in self.entity_pair_filters
                 ):
                     continue
 
@@ -81,17 +86,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
                 if self.training and self.train_on_gold_pairs_only and relation.get_label(self.label_type).value == "O":
                     continue
                 entity_pairs.append(relation)
-        return entity_pairs
-
-    @property
-    def _inner_embeddings(self) -> Embeddings[Sentence]:
-        return self.embeddings
-
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Relation]:
-        entity_pairs: List[Relation] = []
-
-        for sentence in sentences:
-            entity_pairs.extend(self._get_valid_relations(sentence))
         return entity_pairs
 
     def _get_embedding_for_data_point(self, prediction_data_point: Relation) -> torch.Tensor:
