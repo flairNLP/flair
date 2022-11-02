@@ -178,63 +178,47 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
 class CandidateGenerationMethod():
 
-    def __init__(self, candidate_dict):
-        self.candidate_dict = candidate_dict
-
-        # create a dictionary where blanks are removed
-        # this leads to some distinct mentions being the same afterwards
-        # thus we unify their lists
-        simpler_mentions_candidate_dict = {}
-        for mention in candidate_dict:
-            # create mention without blanks
-            simplified_mention=mention.replace(' ','').lower()
-            # the simplified mention already occurred from another mention
-            if simplified_mention in simpler_mentions_candidate_dict:
-                candidates = set(simpler_mentions_candidate_dict[simplified_mention])
-                candidates.update(candidate_dict[mention])
-                simpler_mentions_candidate_dict[simplified_mention] = list(candidates)
-            # its the first occurrence of the simplified mention
-            else:
-                simpler_mentions_candidate_dict[simplified_mention] = candidate_dict[mention]
-
-        self.simpler_mentions_candidate_dict = simpler_mentions_candidate_dict
+    def __init__(self, candidate_dict, mention_to_mentions):
+        self.candidate_dict = candidate_dict # for each actual mention a list of candidates
+        self.mention_to_mentions = mention_to_mentions # for each mention a set of 'actual mentions'
 
         self.punc_remover = re.compile(r"[\W]+")
 
-        even_more_simpler_mentions_candidate_dict = {}
-        for mention in candidate_dict:
-            # create mention without blanks
-            simplified_mention=self.punc_remover.sub("", mention.lower())
-            # the simplified mention already occurred from another mention
-            if simplified_mention in even_more_simpler_mentions_candidate_dict:
-                candidates = set(even_more_simpler_mentions_candidate_dict[simplified_mention])
-                candidates.update(candidate_dict[mention])
-                even_more_simpler_mentions_candidate_dict[simplified_mention] = list(candidates)
-            # its the first occurrence of the simplified mention
-            else:
-                even_more_simpler_mentions_candidate_dict[simplified_mention] = candidate_dict[mention]
+    def find_mention(self, mention):
 
-        self.even_more_simpler_mentions_candidate_dict = even_more_simpler_mentions_candidate_dict
+        try:
+            corresponding_mentions = self.mention_to_mentions[mention]
+        except KeyError:
+            try:
+                corresponding_mentions = self.mention_to_mentions[mention.lower().replace(' ', '')]
+            except KeyError:
+                try:
+                    corresponding_mentions = self.mention_to_mentions[self.punc_remover.sub("", mention.lower())]
+                except KeyError:
+                    return []
+        return list(corresponding_mentions)
+
+    def get_candidates_for_mentions(self, mentions):
+        if not mentions:
+            return set()
+        else:
+            candidates = set()
+            for mention in mentions:
+                candidates.update(self.candidate_dict[mention])
+
+        return candidates
 
     def get_candidates(self, mentions):
         candidate_set = set()
+        actual_mentions = []
         for mention in mentions:
-            try:
-               candidate_set.update(self.candidate_dict[mention])
-            except KeyError:
-                # check if mention without blanks exists
-                try:
-                    mention_without_blanks = mention.replace(' ','').lower()
-                    candidate_set.update(self.simpler_mentions_candidate_dict[mention_without_blanks])
-                except KeyError:
-                    # check if even more simplified mention exists
-                    even_more_simplified_mention = self.punc_remover.sub("", mention.lower())
-                    try:
-                        candidate_set.update(self.even_more_simpler_mentions_candidate_dict[even_more_simplified_mention])
-                    except KeyError:
-                        #possible 'fixes': sample 15 random entities or sample candidates with string similarity (like 15 most similar)
-                        pass
-                        #print('Unknown mention: '+ mention)
+
+            # take mention and see if it, or lower cased or even more simplified, is contained in list of mentions
+            # if so return the (list of) mentions
+            actual_mentions += self.find_mention(mention)
+
+        candidate_set = self.get_candidates_for_mentions(actual_mentions)
+
         return candidate_set
 
 
