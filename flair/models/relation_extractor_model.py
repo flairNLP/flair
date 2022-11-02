@@ -57,10 +57,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
         self.to(flair.device)
 
-    @property
-    def _inner_embeddings(self) -> Embeddings[Sentence]:
-        return self.embeddings
-
     def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Relation]:
         entity_pairs = []
         entity_spans = sentence.get_spans(self.entity_label_type)
