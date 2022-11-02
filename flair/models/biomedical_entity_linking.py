@@ -309,7 +309,12 @@ class BioEntityLinkingModel:
             self.load_sparse_encoder(model_name_or_path)
             self.load_sparse_weight(model_name_or_path)
 
-        self.embed_dictionary(
+        # self.embed_dictionary(
+        #     model_name_or_path=model_name_or_path,
+        #     dictionary_name_or_path=dictionary_name_or_path,
+        #     mean_centering=mean_centering,
+        # )
+        self.embed_dictionary_faiss(
             model_name_or_path=model_name_or_path,
             dictionary_name_or_path=dictionary_name_or_path,
             mean_centering=mean_centering,
@@ -470,7 +475,7 @@ class BioEntityLinkingModel:
             if show_progress:
                 iterations = tqdm(
                     range(0, len(names), batch_size),
-                    desc="calculating dense embeddings for dictionary",
+                    desc="Calculating dense embeddings for dictionary",
                 )
             else:
                 iterations = range(0, len(names), batch_size)
@@ -655,6 +660,7 @@ class BioEntityLinkingModel:
         tgt_space_mean_vec: np.ndarray = None,
         agg_mode: str = "cls",
     ) -> np.ndarray:
+
         # get dense embeds for mention
         if self.use_sparse_embeds:
             mention_dense_embeds = self.biosyn_embed_dense(names=[mention])
@@ -669,37 +675,63 @@ class BioEntityLinkingModel:
         # normalize mention vector
         faiss.normalize_L2(mention_dense_embeds)
 
-        dense_distances, dense_ids = self.dense_dictionary_index.search(
-            x=mention_dense_embeds, k=topk
-        )
-
         # if using sparse embeds: calculate hybrid scores with dense and sparse embeds
         if self.use_sparse_embeds:
+            # search for more than topk candidates to use them when combining with sparse scores
+            dense_scores, dense_ids = self.dense_dictionary_index.search(
+                x=mention_dense_embeds, k=topk + 10
+            )
             # get sparse embeds for mention
             mention_sparse_embeds = self.embed_sparse(names=[mention])
             # normalize mention vector
             faiss.normalize_L2(mention_sparse_embeds)
 
             sparse_weight = self.get_sparse_weight().item()
-            # result = self.sparse_dictionary_index.search(mention_sparse_embeds, k=topk)
             sparse_distances, sparse_ids = self.sparse_dictionary_index.kneighbors(
-                mention_sparse_embeds, n_neighbors=topk
+                mention_sparse_embeds, n_neighbors=topk + 10
             )
 
             # combine dense and sparse scores
-            hybrid_scores = dict(zip(dense_ids, dense_distances))
-            for sparse_id, sparse_score in zip(sparse_ids, sparse_distances):
-                if sparse_id in hybrid_scores:
-                    hybrid_scores[sparse_id] += sparse_weight * sparse_score
-                else:
-                    hybrid_scores[sparse_id] = sparse_weight * sparse_score
+            hybrid_ids = []
+            hybrid_scores = []
+            # for every embedded mention
+            for (
+                top_dense_ids,
+                top_dense_scores,
+                top_sparse_ids,
+                top_sparse_distances,
+            ) in zip(dense_ids, dense_scores, sparse_ids, sparse_distances):
+                ids = top_dense_ids
+                distances = top_dense_scores
+                for sparse_id, sparse_distance in zip(
+                    top_sparse_ids, top_sparse_distances
+                ):
+                    if sparse_id not in ids:
+                        ids = np.append(ids, sparse_id)
+                        distances = np.append(
+                            distances, sparse_weight * (1 - sparse_distance)
+                        )
+                    else:
+                        index = np.where(ids == sparse_id)[0][0]
+                        distances[index] = (
+                            sparse_weight * (1 - sparse_distance) + distances[index]
+                        )
+
+                sorted_indizes = np.argsort(-distances)
+                ids = ids[sorted_indizes][:topk]
+                distances = distances[sorted_indizes][:topk]
+                hybrid_ids.append(ids.tolist())
+                hybrid_scores.append(distances.tolist())
 
             return [
                 np.append(self.dictionary[ind], score)
-                for ind, score in hybrid_scores.items()
+                for ind, score in zip(hybrid_ids, hybrid_scores)
             ]
         # use only dense embeds
         else:
+            dense_distances, dense_ids = self.dense_dictionary_index.search(
+                x=mention_dense_embeds, k=topk
+            )
             return [
                 np.append(self.dictionary[ind], score)
                 for ind, score in zip(dense_ids, dense_distances)
@@ -805,7 +837,7 @@ class BioEntityLinkingModel:
             f"{file_name}.pk",
         )
 
-        # If exists, load the cached dictionary indizes
+        # If exists, load the cached dictionary indices
         if os.path.exists(cached_dictionary_path):
             with open(cached_dictionary_path, "rb") as cached_file:
                 cached_dictionary = pickle.load(cached_file)
@@ -910,7 +942,7 @@ class BiomedicalEntityLinking:
     def __init__(
         self,
         model,
-        ab3p_path: Path,
+        ab3p,
     ) -> None:
         """
         Initalize class, called by classmethod load
@@ -919,7 +951,7 @@ class BiomedicalEntityLinking:
         """
         self.model = model
         self.text_preprocessor = TextPreprocess()
-        self.ab3p_path = ab3p_path
+        self.ab3p = ab3p
 
     @classmethod
     def load(
@@ -928,6 +960,7 @@ class BiomedicalEntityLinking:
         dictionary_path: Union[str, Path] = None,
         use_sparse_and_dense_embeds: bool = True,
         max_length=25,
+        use_ab3p: bool = True,
         ab3p_path: Path = None,
     ):
         """
@@ -961,24 +994,25 @@ class BiomedicalEntityLinking:
             "biosyn-sapbert-bc2gn",
         ]:
             model_path = "dmis-lab/biosyn-" + model_name
-        elif model_name == "disease" and model_type == "biosyn":
-            model_path = "dmis-lab/biosyn-sapbert-bc5cdr-disease"
-        elif model_name == "chemical" and model_type == "biosyn":
-            model_path = "dmis-lab/biosyn-sapbert-bc5cdr-chemical"
-        elif model_name == "gene" and model_type == "biosyn":
-            model_path = "dmis-lab/biosyn-sapbert-bc2gn"
-        # Sapbert
-        elif model_name == "sapbert" or model_type == "sapbert":
+        elif model_name == "sapbert":
             model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
-            model_type = "sapbert"
-        elif model_name == "disease" and model_type == "sapbert":
-            model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
-        elif model_name == "chemical" and model_type == "sapbert":
-            model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
-        elif model_name == "gene" and model_type == "sapbert":
-            raise ValueError(
-                "SapBERT is not trained for gene entity linking. You can use BioSyn instead."
-            )
+            use_sparse_and_dense_embeds = False
+        elif use_sparse_and_dense_embeds:
+            if model_name == "disease":
+                model_path = "dmis-lab/biosyn-sapbert-bc5cdr-disease"
+            elif model_name == "chemical":
+                model_path = "dmis-lab/biosyn-sapbert-bc5cdr-chemical"
+            elif model_name == "gene":
+                model_path = "dmis-lab/biosyn-sapbert-bc2gn"
+        else:
+            if model_name == "disease":
+                model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
+            elif model_name == "chemical":
+                model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
+            elif model_name == "gene":
+                raise ValueError(
+                    "No trained model for gene entity linking using only dense embeddings."
+                )
 
         # Initalize model
         model = BioEntityLinkingModel(
@@ -1029,17 +1063,16 @@ class BiomedicalEntityLinking:
             mean_centering=False,
         )
 
-        return cls(
-            model,
-            ab3p_path,
-        )
+        # load ab3p model
+        ab3p = Ab3P.load(ab3p_path) if use_ab3p else None
+
+        return cls(model, ab3p)
 
     def predict(
         self,
         sentences: Union[List[Sentence], Sentence],
         input_entity_annotation_layer: str = None,
         topk: int = 1,
-        use_Ab3P: Boolean = True,
     ) -> None:
         """
         On one or more sentences, predict the cui on all named entites annotated with a tag of type input_entity_annotation_layer.
@@ -1055,9 +1088,8 @@ class BiomedicalEntityLinking:
             sentences = [sentences]
 
         # use Ab3P to build abbreviation dictionary
-        if use_Ab3P:
-            ab3p = Ab3P.load(self.ab3p_path)
-            abbreviation_dict = ab3p.build_abbreviation_dict(sentences)
+        if self.ab3p is not None:
+            abbreviation_dict = self.ab3p.build_abbreviation_dict(sentences)
 
         for sentence in sentences:
             for entity in sentence.get_labels(input_entity_annotation_layer):
@@ -1075,9 +1107,9 @@ class BiomedicalEntityLinking:
                     mention = self.text_preprocessor.run(entity.span.text)
 
                 # get predictions from dictionary
-                predictions = self.model.get_predictions(mention, topk)
+                # predictions = self.model.get_predictions(mention, topk)
 
-                # self.model.get_predictions_faiss(mention, topk)
+                predictions = self.model.get_predictions_faiss(mention, topk)
 
                 # add predictions to entity
                 label_name = (
