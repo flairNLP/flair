@@ -675,7 +675,7 @@ class TARSClassifier(FewshotClassifier):
 
         # initialize a bare-bones sequence tagger
         self.tars_model = TextClassifier(
-            document_embeddings=embeddings,
+            embeddings=embeddings,
             label_dictionary=tars_dictionary,
             label_type=self.static_label_type,
             **tagger_args,
@@ -770,7 +770,7 @@ class TARSClassifier(FewshotClassifier):
 
     @property
     def tars_embeddings(self):
-        return self.tars_model.document_embeddings
+        return self.tars_model.embeddings
 
     def predict(
         self,
