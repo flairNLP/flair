@@ -74,7 +74,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
 
         return super()._init_model_with_state_dict(
             state,
-            document_embeddings=state.get("document_embeddings"),
+            embeddings=state.get("document_embeddings"),
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type"),
             multi_label=state.get("multi_label"),
