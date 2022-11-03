@@ -23,7 +23,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
     The model expects text/sentences with annotated tags on token level (e.g. NER), and learns to predict spans.
     All possible combinations of spans (up to a defined max length) are considered, represented e.g. via concatenation
     of the word embeddings of the first and last token in the span.
-    An optional gazetteer look up is added.
+    An optional span based gazetteer embedding look up is concatenated.
     Then fed through a linear layer to get the actual span label. Overlapping spans can be resolved or kept.
     """
 
@@ -42,7 +42,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
             **classifierargs,
     ):
         """
-        Initializes an SpanTagger
+        Initializes a SpanTagger
         :param word_embeddings: embeddings used to embed the words/sentences
         :param gazetteer_embeddings: span embeddings, i. e. coming from a gazetteer
         :param label_dictionary: dictionary that gives ids to all classes. Should contain <unk>
@@ -167,11 +167,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
         if self.word_embeddings:
             span_embedding_parts.append(self.aggregated_embedding(prediction_data_point, self.word_embeddings.get_names()))
 
-        # concat the span length (scalar tensor) to span_embedding
         if self.concat_span_length_to_embedding:
             span_embedding_parts.append(torch.tensor([len(prediction_data_point) / self.max_span_length]).to(flair.device))
 
-        # if a gazetteer was given, concat the gazetteer embedding to the span_embedding
         if self.gazetteer_embeddings:
             self.gazetteer_embeddings.embed(prediction_data_point)
             gazetteer_embedding = prediction_data_point.get_embedding(self.gazetteer_embeddings.get_names())
@@ -183,7 +181,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
 
     def _post_process_predictions(self, batch, label_type):
         """
-        Post-processing the span predictions to avoid overlapping predictions.
+        Post-processing the span predictions to avoid overlapping predictions, using condition as set by resolve_overlaps parameter.
         When in doubt use the most confident one, i.e. sort the span predictions by confidence, go through them and
         decide via the given criterion.
         :param batch: batch of sentences with already predicted span labels to be "cleaned"
@@ -325,12 +323,18 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
             **kwargs,
         )
 
+    @property
+    def label_type(self):
+        return self._label_type
+
     def error_analysis(self, batch, gold_label_type, out_directory):
         lines = []
         lines_just_errors = []
 
         count_true = 0
         count_error = 0
+        count_ground_truth_in_gazetteer = 0
+        count_ground_truth_not_in_gazetteer = 0
 
         self.evaluate(batch, gold_label_type)
 
@@ -340,13 +344,17 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
 
             # first iterate over gold spans and see if matches predictions
             printed = []
-            #in_gazetteer = False
             contains_error = False  # gets set to True if one or more incorrect predictions in datapoint
 
             for span in datapoint.get_spans(gold_label_type):
                 if self.gazetteer_embeddings:
                     self.gazetteer_embeddings.embed(span) #TODO would be nice to have already stored span embeddings
                     gazetteer_vector = span.get_embedding()
+                    if sum(gazetteer_vector) > 0.0:
+                        count_ground_truth_in_gazetteer +=1
+                    else:
+                        count_ground_truth_not_in_gazetteer +=1
+
                 else:
                     gazetteer_vector = torch.Tensor([])  # dummy
 
@@ -388,8 +396,18 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
             if contains_error:
                 lines_just_errors.append(eval_line)
 
+        percentage_true_all = round(count_true / (count_true + count_error) * 100, 2)
+        if self.gazetteer_embeddings:
+            percentage_found_all = round(count_ground_truth_in_gazetteer / (count_ground_truth_in_gazetteer + count_ground_truth_not_in_gazetteer) * 100, 2)
+        else:
+            percentage_found_all = 0.0
+
         error_counts_dict = {"count_true": count_true,
                              "count_error": count_error,
+                             "percentage_true_all": percentage_true_all,
+                             "count_ground_truth_in_gazetteer": count_ground_truth_in_gazetteer,
+                             "count_ground_truth_not_in_gazetteer": count_ground_truth_not_in_gazetteer,
+                             "percentage_found_all": percentage_found_all,
                              }
 
         if out_directory:
@@ -399,11 +417,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                 outfile.write("".join(lines))
             with open(Path(out_directory / "predictions_just_errors.txt"), "w", encoding="utf-8") as outfile:
                 outfile.write("".join(lines_just_errors))
-            with open(Path(out_directory / "error_counts_dict"), "w", encoding="utf-8") as fp:
+            with open(Path(out_directory / "counts_and_percentages.json"), "w", encoding="utf-8") as fp:
                 json.dump(error_counts_dict, fp)
 
         return error_counts_dict
 
-    @property
-    def label_type(self):
-        return self._label_type
