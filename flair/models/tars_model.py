@@ -45,12 +45,6 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         loss, count = self.tars_model.forward_loss(sentences)
         return loss, count
 
-    def _prepare_tensors(self, data_points: List[Sentence]) -> Tuple[torch.Tensor, ...]:
-        return self.tars_model._prepare_tensors(data_points)
-
-    def forward(self, *args: torch.Tensor) -> torch.Tensor:
-        return self.tars_model.forward(*args)
-
     @property
     def tars_embeddings(self):
         raise NotImplementedError

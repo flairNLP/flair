@@ -246,13 +246,13 @@ class TextClassifierParamSelector(ParamSelector):
     def _set_up_model(self, params: dict):
         text_classification_params = {key: params[key] for key in params if key in TEXT_CLASSIFICATION_PARAMETERS}
 
-        document_embedding = TransformerDocumentEmbeddings(fine_tune=self.fine_tune, **text_classification_params)
+        embedding = TransformerDocumentEmbeddings(fine_tune=self.fine_tune, **text_classification_params)
 
         text_classifier: TextClassifier = TextClassifier(
             label_dictionary=self.label_dictionary,
             multi_label=self.multi_label,
             label_type=self.label_type,
-            document_embeddings=document_embedding,
+            embeddings=embedding,
         )
 
         return text_classifier
