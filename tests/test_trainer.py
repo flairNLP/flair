@@ -20,7 +20,7 @@ def test_text_classifier_multi(results_base_path, tasks_base_path):
     label_dict = corpus.make_label_dictionary(label_type="city")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=DocumentPoolEmbeddings([flair_embeddings], fine_tune_mode="linear"),
+        embeddings=DocumentPoolEmbeddings([flair_embeddings], fine_tune_mode="linear"),
         label_dictionary=label_dict,
         label_type="city",
     )
