@@ -72,6 +72,13 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
 
+        import re
+
+        # remap state dict for models serialized with Flair <= 0.11.3
+        state_dict = state["state_dict"]
+        for key in list(state_dict.keys()):
+            state_dict[re.sub("^document_embeddings\\.", "embeddings.", key)] = state_dict.pop(key)
+
         return super()._init_model_with_state_dict(
             state,
             embeddings=state.get("document_embeddings"),

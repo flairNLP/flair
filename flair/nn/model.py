@@ -578,7 +578,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         """Specify if a data point should be kept. That way you can remove for example empty texts.
         Return true if the data point should be kept and false if it should be removed.
         """
-        return True
+        return True if len(data_point) > 0 else False
 
     @abstractmethod
     def _get_embedding_for_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
@@ -769,7 +769,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                     continue
 
                 # pass data points through network and decode
-                data_point_tensor = self._encode_data_points(sentences, data_points)
+                data_point_tensor = self._encode_data_points(batch, data_points)
                 scores = self.decoder(data_point_tensor)
 
                 # if anything could possibly be predicted

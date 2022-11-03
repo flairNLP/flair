@@ -114,6 +114,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
+
+        # remap state dict for models serialized with Flair <= 0.11.3
+        import re
+
+        state_dict = state["state_dict"]
+        for key in list(state_dict.keys()):
+            state_dict[re.sub("^word_embeddings\\.", "embeddings.", key)] = state_dict.pop(key)
+
         return super()._init_model_with_state_dict(
             state,
             embeddings=state.get("word_embeddings"),

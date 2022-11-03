@@ -426,6 +426,9 @@ class DataPoint:
     def __hash__(self):
         return hash(self.unlabeled_identifier)
 
+    def __len__(self):
+        raise NotImplementedError
+
 
 DT = typing.TypeVar("DT", bound=DataPoint)
 DT2 = typing.TypeVar("DT2", bound=DataPoint)
@@ -529,6 +532,9 @@ class Token(_PartOfSentence):
     @property
     def embedding(self):
         return self.get_embedding()
+
+    def __len__(self):
+        return 1
 
     def __repr__(self):
         return self.__str__()
