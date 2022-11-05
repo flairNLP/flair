@@ -87,7 +87,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         zero_tag_value: str = "O",
         allow_unk_tag: bool = True,
         cross_augmentation: bool = True,
-        mask_remainder: bool = True,
+        mask_type: str = 'mark',
+        mask_remainder: bool = False,
         **classifierargs,
     ) -> None:
         """
@@ -125,7 +126,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                                reduce the sentence's sequence length for long entities.)
         :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
         """
-        # Set lable type and prepare label dictionary
+        # Set label type and prepare label dictionary
         self._label_type = label_type
         self._zero_tag_value = zero_tag_value
         self._allow_unk_tag = allow_unk_tag
@@ -155,14 +156,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         self.entity_pair_labels = entity_pair_labels
 
         self.cross_augmentation = cross_augmentation
+        self.mask_type = mask_type
         self.mask_remainder = mask_remainder
         self.entity_threshold = entity_threshold
-
-        # Control mask templates
-        self._entity_mask: str = "ENTITY"
-        self._head_mask: str = f"[H-{self._entity_mask}]"
-        self._tail_mask: str = f"[T-{self._entity_mask}]"
-        self._remainder_mask: str = f"[R-{self._entity_mask}]"
 
         # Auto-spawn on GPU, if available
         self.to(flair.device)
@@ -239,14 +235,13 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
             yield head, tail, remainder, gold_label
 
-    def _label_aware_head_mask(self, label: str) -> str:
-        return self._head_mask.replace(self._entity_mask, label)
-
-    def _label_aware_tail_mask(self, label: str) -> str:
-        return self._tail_mask.replace(self._entity_mask, label)
-
-    def _label_aware_remainder_mask(self, label: str) -> str:
-        return self._remainder_mask.replace(self._entity_mask, label)
+    def _mask(self, entity: _Entity, role: str) -> str:
+        if self.mask_type == 'mark':
+            return f"[[{role}-{entity.span.text}]]"
+        if self.mask_type == 'label-aware':
+            return f"[{role}-{entity.label.value}]"
+        if self.mask_type == 'entity':
+            return f"[{role}-ENTITY]"
 
     def _create_masked_sentence(
         self,
@@ -297,15 +292,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         masked_sentence_tokens: List[str] = []
         for token in original_sentence:
 
-            remainder_label: Optional[str] = leading_remainder_token_to_label.get(token.unlabeled_identifier)
-            if remainder_label is not None:
-                masked_sentence_tokens.append(self._remainder_mask)
-
-            elif token is head.span[0]:
-                masked_sentence_tokens.append(self._head_mask)
+            if token is head.span[0]:
+                masked_sentence_tokens.append(self._mask(entity=head, role='H'))
 
             elif token is tail.span[0]:
-                masked_sentence_tokens.append(self._tail_mask)
+                masked_sentence_tokens.append(self._mask(entity=tail, role='T'))
 
             elif all(
                 token is not non_leading_entity_token
