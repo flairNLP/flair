@@ -6,12 +6,69 @@ import logging
 import numpy as np
 import os
 
+from torch import Tensor
+
 import flair
 from flair.data import Span, DT
 from flair.embeddings import Embeddings
 from typing import Dict, Generic
 
 log = logging.getLogger("flair")
+
+
+class SpanGazetteer(Embeddings[Span]):
+    def __init__(self,
+                 gazetteer: Dict[str, List[int]],
+                 add_lower_case_lookup: bool = False,
+                 ):
+        """
+        :param add_lower_case_lookup: concatenating a look-up for title cased version of span text, ege WASHINGTON --> Washington
+        """
+
+        self.name: str = "dictionary_gazetteer"
+        self.gazetteer: Dict[str, List[int]] = gazetteer
+        self.static_embeddings = True
+
+        super().__init__()
+
+        self.add_lower_case_lookup = add_lower_case_lookup
+
+        self.__gazetteer_vector_length = len(next(iter(self.gazetteer.values())))  # one entry in gaz to get its size
+        self.__embedding_type = "span-level"
+
+        # length of gazetteer embedding
+        self.__embedding_length = self.__gazetteer_vector_length
+        if self.add_lower_case_lookup:
+            self.__embedding_length += self.__gazetteer_vector_length
+
+        self.to(flair.device)
+
+    def get_gazetteer_embedding(self, span_string: str) -> torch.Tensor:
+
+        if span_string in self.gazetteer:
+            gaz_vector = torch.tensor(self.gazetteer[span_string], device=flair.device, dtype=torch.float)
+        else:
+            gaz_vector = torch.zeros(self.__gazetteer_vector_length, device=flair.device, dtype=torch.float)
+
+        return gaz_vector
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    @property
+    def embedding_type(self) -> str:
+        return self.__embedding_type
+
+    def _add_embeddings_internal(self, spans: List[Span]):
+        for span in spans:
+            embeddings = [self.get_gazetteer_embedding(span.text)]
+            if self.add_lower_case_lookup:
+                embeddings.append(self.get_gazetteer_embedding(span.text.title()))
+            span.set_embedding(self.name, torch.cat(embeddings))
+
+    def __str__(self):
+        return self.name
 
 
 class SpanEmbeddingFromExternal(Embeddings[Span], Generic[DT]):
@@ -47,7 +104,7 @@ class SpanEmbeddingFromExternal(Embeddings[Span], Generic[DT]):
 
         if self.global_lowercasing:
             print(f"--- Converting keys to lower case ---")
-            self.gazetteer =  {k.lower(): v for k, v in self.gazetteer.items()}
+            self.gazetteer = {k.lower(): v for k, v in self.gazetteer.items()}
 
         self.__gazetteer_vector_length = len(next(iter(self.gazetteer.values())))  # one entry in gaz to get its size
         self.__embedding_length = self.__gazetteer_vector_length
@@ -95,7 +152,7 @@ class SpanEmbeddingFromExternal(Embeddings[Span], Generic[DT]):
                 embeddings.append(self.get_gazetteer_embedding(span[-1].text))
             if self.add_substring_gazetteer_lookup:
                 substring_mean = torch.mean(torch.stack([self.get_gazetteer_embedding(t.text)
-                                                         for t in span.tokens]),dim=0)
+                                                         for t in span.tokens]), dim=0)
                 embeddings.append(substring_mean)
 
             span.set_embedding(self.name, torch.cat(embeddings))
@@ -123,10 +180,10 @@ class SpanGazetteerEmbeddingsFromFiles(SpanEmbeddingFromExternal[Span]):
         super().__init__(**kwargs,
                          )
 
-
     def _prepare_gazetteer(self):
         gazetteer_files = []
-        files = list([f for f in os.listdir(self.gazetteer_files_directory + '/') if not os.path.isdir(os.path.join(self.gazetteer_files_directory,f))])
+        files = list([f for f in os.listdir(self.gazetteer_files_directory + '/') if
+                      not os.path.isdir(os.path.join(self.gazetteer_files_directory, f))])
         if self.exclude_files:
             files = [f for f in files if str(f) not in self.exclude_files]
         for index, file in enumerate(files):
@@ -135,7 +192,8 @@ class SpanGazetteerEmbeddingsFromFiles(SpanEmbeddingFromExternal[Span]):
         gazetteer = {}
         for (label_id, gazetteer_file) in gazetteer_files:
             print(f"--- Now processing file nr {label_id}: {gazetteer_file} ---")
-            with open(f"{self.gazetteer_files_directory}/{gazetteer_file}", 'r', encoding='utf-8', errors='strict') as src:
+            with open(f"{self.gazetteer_files_directory}/{gazetteer_file}", 'r', encoding='utf-8',
+                      errors='strict') as src:
                 for line in src:
                     if len(line) == 0:
                         continue
@@ -185,14 +243,14 @@ class SpanEmbeddingGEMNET(SpanEmbeddingFromExternal[Span]):
             reader = csv.reader(inp, delimiter='\t')
 
             for row in reader:
-                if len(row) ==1: # some ~10 rows have comma instead of tab, they get ignored here
+                if len(row) == 1:  # some ~10 rows have comma instead of tab, they get ignored here
                     try:
                         row = row[0].split(",")
                     except:
                         continue
                 if len(row) < 4:
                     continue
-                span = " ".join(row[3:]) # hack: in some rows the span got wrongly separated
+                span = " ".join(row[3:])  # hack: in some rows the span got wrongly separated
                 label = row[1]
                 label_id = label2id[label]
                 if span not in gazetteer:
@@ -225,7 +283,6 @@ class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
 
         super().__init__(**kwargs,
                          )
-
 
     def _prepare_gazetteer(self):
 
@@ -261,7 +318,7 @@ class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
                 confidence = np.array([min(sum_tagged / self.counts_for_max_confidence, 1)])
 
                 rt_vector = np.concatenate((normalized_tag_counts, confidence, [ratio_tagged_untagged]), 0)
-                #rt_vector = np.round(rt_vector, 4)
+                # rt_vector = np.round(rt_vector, 4)
 
                 gazetteer[key] = np.around(rt_vector, decimals=5).tolist()
 
@@ -276,7 +333,6 @@ class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
 
                 gazetteer[key] = np.around(np.array(normalized_tag_counts), decimals=5).tolist()
 
-
         global_end = time.time()
         print(f"---- Converting took {round(global_end - global_start, 2)} seconds")
 
@@ -287,7 +343,7 @@ class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
 class SpanGazetteerFeaturePrediction(Embeddings[Span]):
 
     def __init__(self,
-                 prediction_model = None,
+                 prediction_model=None,
                  fine_tune: bool = False,
                  ):
         """
@@ -296,7 +352,7 @@ class SpanGazetteerFeaturePrediction(Embeddings[Span]):
         """
         super().__init__()
         self.prediction_model = prediction_model
-        self.name = "SpanGazetteerFeaturePrediction" # TODO how to get a nice descriptive name from the model
+        self.name = "SpanGazetteerFeaturePrediction"  # TODO how to get a nice descriptive name from the model
         self.fine_tune = fine_tune
         if self.fine_tune:
             self.static_embeddings = False
