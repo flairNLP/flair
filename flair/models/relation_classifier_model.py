@@ -299,13 +299,13 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
             remainder_label: Optional[str] = leading_remainder_token_to_label.get(token.unlabeled_identifier)
             if remainder_label is not None:
-                masked_sentence_tokens.append(self._label_aware_remainder_mask(remainder_label))
+                masked_sentence_tokens.append(self._remainder_mask)
 
             elif token is head.span[0]:
-                masked_sentence_tokens.append(self._label_aware_head_mask(head.label.value))
+                masked_sentence_tokens.append(self._head_mask)
 
             elif token is tail.span[0]:
-                masked_sentence_tokens.append(self._label_aware_tail_mask(tail.label.value))
+                masked_sentence_tokens.append(self._tail_mask)
 
             elif all(
                 token is not non_leading_entity_token
