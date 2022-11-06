@@ -18,14 +18,14 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
 
     def __init__(
         self,
-        document_embeddings: flair.embeddings.DocumentEmbeddings,
+        embeddings: flair.embeddings.DocumentEmbeddings,
         label_type: str,
         embed_separately: bool = False,
         **classifierargs,
     ):
         """
         Initializes a TextClassifier
-        :param document_embeddings: embeddings used to embed each data point
+        :param embeddings: embeddings used to embed each data point
         :param label_dictionary: dictionary of labels you want to predict
         :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
         or False to force single-label prediction
@@ -35,12 +35,9 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
         """
         super().__init__(
             **classifierargs,
-            final_embedding_size=2 * document_embeddings.embedding_length
-            if embed_separately
-            else document_embeddings.embedding_length,
+            embeddings=embeddings,
+            final_embedding_size=2 * embeddings.embedding_length if embed_separately else embeddings.embedding_length,
         )
-
-        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
 
         self._label_type = label_type
 
@@ -65,13 +62,13 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
     def label_type(self):
         return self._label_type
 
-    def _get_prediction_data_points(self, sentences: List[TextPair]) -> List[TextPair]:
-        return sentences
+    def _get_data_points_from_sentence(self, sentence: TextPair) -> List[TextPair]:
+        return [sentence]
 
-    def _embed_prediction_data_point(self, prediction_data_point: TextPair) -> torch.Tensor:
-        embedding_names = self.document_embeddings.get_names()
+    def _get_embedding_for_data_point(self, prediction_data_point: TextPair) -> torch.Tensor:
+        embedding_names = self.embeddings.get_names()
         if self.embed_separately:
-            self.document_embeddings.embed([prediction_data_point.first, prediction_data_point.second])
+            self.embeddings.embed([prediction_data_point.first, prediction_data_point.second])
             return torch.cat(
                 [
                     prediction_data_point.first.get_embedding(embedding_names),
@@ -86,13 +83,13 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
                 + prediction_data_point.second.to_tokenized_string(),
                 use_tokenizer=False,
             )
-            self.document_embeddings.embed(concatenated_sentence)
+            self.embeddings.embed(concatenated_sentence)
             return concatenated_sentence.get_embedding(embedding_names)
 
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "document_embeddings": self.document_embeddings,
+            "document_embeddings": self.embeddings,
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "multi_label": self.multi_label,
@@ -106,7 +103,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
     def _init_model_with_state_dict(cls, state, **kwargs):
         return super()._init_model_with_state_dict(
             state,
-            document_embeddings=state.get("document_embeddings"),
+            embeddings=state.get("document_embeddings"),
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type"),
             multi_label=state.get("multi_label_threshold", 0.5),

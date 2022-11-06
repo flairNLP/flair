@@ -34,9 +34,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
 
         super(FewshotClassifier, self).__init__()
 
-    def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence]
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, int]]:
+    def forward_loss(self, data_points: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
 
         if not isinstance(data_points, list):
             data_points = [data_points]
@@ -44,14 +42,8 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         # Transform input data into TARS format
         sentences = self._get_tars_formatted_sentences(data_points)
 
-        loss = self.tars_model.forward_loss(sentences)
-        return loss
-
-    def _prepare_tensors(self, data_points: List[Sentence]) -> Tuple[torch.Tensor, ...]:
-        return self.tars_model._prepare_tensors(data_points)
-
-    def forward(self, *args: torch.Tensor) -> torch.Tensor:
-        return self.tars_model.forward(*args)
+        loss, count = self.tars_model.forward_loss(sentences)
+        return loss, count
 
     @property
     def tars_embeddings(self):
@@ -677,7 +669,7 @@ class TARSClassifier(FewshotClassifier):
 
         # initialize a bare-bones sequence tagger
         self.tars_model = TextClassifier(
-            document_embeddings=embeddings,
+            embeddings=embeddings,
             label_dictionary=tars_dictionary,
             label_type=self.static_label_type,
             **tagger_args,
@@ -746,7 +738,7 @@ class TARSClassifier(FewshotClassifier):
             task_name=state["current_task"],
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type", "default_label"),
-            embeddings=state.get("tars_model").document_embeddings,
+            embeddings=state.get("tars_model").embeddings,
             num_negative_labels_to_sample=state.get("num_negative_labels_to_sample"),
             **kwargs,
         )
@@ -772,7 +764,7 @@ class TARSClassifier(FewshotClassifier):
 
     @property
     def tars_embeddings(self):
-        return self.tars_model.document_embeddings
+        return self.tars_model.embeddings
 
     def predict(
         self,

@@ -24,9 +24,9 @@ import flair
 logger = logging.getLogger("flair")
 
 
-def load_big_file(f: str) -> mmap.mmap:
+def load_big_file(f: str):
     """
-    Workaround for loading a big pickle file. Files over 2GB cause pickle errors on certin Mac and Windows distributions.
+    Workaround for loading a big pickle file. Files over 2GB cause pickle errors on certain Mac and Windows distributions.
     :param f:
     :return:
     """

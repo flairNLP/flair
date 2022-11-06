@@ -7,7 +7,6 @@ import torch
 import flair.embeddings
 import flair.nn
 from flair.data import Relation, Sentence
-from flair.embeddings import Embeddings
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -39,7 +38,11 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         relation_representation_length = 2 * embeddings.embedding_length
         if self.pooling_operation == "first_last":
             relation_representation_length *= 2
-        super(RelationExtractor, self).__init__(**classifierargs, final_embedding_size=relation_representation_length)
+        super(RelationExtractor, self).__init__(
+            embeddings=embeddings,
+            final_embedding_size=relation_representation_length,
+            **classifierargs,
+        )
 
         # set embeddings
         self.embeddings: flair.embeddings.TokenEmbeddings = embeddings
@@ -57,7 +60,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
         self.to(flair.device)
 
-    def _get_valid_relations(self, sentence: Sentence) -> List[Relation]:
+    def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Relation]:
         entity_pairs = []
         entity_spans = sentence.get_spans(self.entity_label_type)
 
@@ -83,18 +86,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
                 entity_pairs.append(relation)
         return entity_pairs
 
-    @property
-    def _inner_embeddings(self) -> Embeddings[Sentence]:
-        return self.embeddings
-
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Relation]:
-        entity_pairs: List[Relation] = []
-
-        for sentence in sentences:
-            entity_pairs.extend(self._get_valid_relations(sentence))
-        return entity_pairs
-
-    def _embed_prediction_data_point(self, prediction_data_point: Relation) -> torch.Tensor:
+    def _get_embedding_for_data_point(self, prediction_data_point: Relation) -> torch.Tensor:
         span_1 = prediction_data_point.first
         span_2 = prediction_data_point.second
         embedding_names = self.embeddings.get_names()

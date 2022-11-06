@@ -17,6 +17,8 @@ from torch.utils.data.dataset import ConcatDataset, Subset
 import flair
 from flair.file_utils import Tqdm
 
+T_co = typing.TypeVar("T_co", covariant=True)
+
 log = logging.getLogger("flair")
 
 
@@ -280,12 +282,19 @@ class DataPoint:
         self._embeddings[name] = vector
 
     def get_embedding(self, names: Optional[List[str]] = None) -> torch.Tensor:
-        embeddings = self.get_each_embedding(names)
+        # if one embedding name, directly return it
+        if names and len(names) == 1:
+            if names[0] in self._embeddings:
+                return self._embeddings[names[0]].to(flair.device)
+            else:
+                return torch.tensor([], device=flair.device)
 
+        # if multiple embedding names, concatenate them
+        embeddings = self.get_each_embedding(names)
         if embeddings:
             return torch.cat(embeddings, dim=0)
-
-        return torch.tensor([], device=flair.device)
+        else:
+            return torch.tensor([], device=flair.device)
 
     def get_each_embedding(self, embedding_names: Optional[List[str]] = None) -> List[torch.Tensor]:
         embeddings = []
@@ -419,6 +428,9 @@ class DataPoint:
     def __hash__(self):
         return hash(self.unlabeled_identifier)
 
+    def __len__(self):
+        raise NotImplementedError
+
 
 DT = typing.TypeVar("DT", bound=DataPoint)
 DT2 = typing.TypeVar("DT2", bound=DataPoint)
@@ -523,6 +535,9 @@ class Token(_PartOfSentence):
     def embedding(self):
         return self.get_embedding()
 
+    def __len__(self):
+        return 1
+
     def __repr__(self):
         return self.__str__()
 
@@ -567,7 +582,7 @@ class Span(_PartOfSentence):
 
     @property
     def text(self) -> str:
-        return " ".join([t.text for t in self.tokens])
+        return "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
 
     @property
     def unlabeled_identifier(self) -> str:
@@ -748,7 +763,7 @@ class Sentence(DataPoint):
 
     @property
     def unlabeled_identifier(self):
-        return f'Sentence: "{self.to_tokenized_string()}"'
+        return f'Sentence[{len(self)}]: "{self.text}"'
 
     def get_relations(self, type: str) -> List[Relation]:
         relations: List[Relation] = []
@@ -882,7 +897,7 @@ class Sentence(DataPoint):
 
     @property
     def text(self):
-        return self.to_tokenized_string()
+        return self.to_original_text()
 
     def to_tokenized_string(self) -> str:
 
@@ -932,17 +947,11 @@ class Sentence(DataPoint):
         return self
 
     def to_original_text(self) -> str:
-        str = ""
-        pos = 0
-        for t in self.tokens:
-            while t.start_pos > pos:
-                str += " "
-                pos += 1
-
-            str += t.text
-            pos += len(t.text)
-
-        return str
+        # if sentence has no tokens, return empty string
+        if len(self) == 0:
+            return ""
+        # otherwise, return concatenation of tokens with the correct offsets
+        return self[0].start_pos * " " + "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
 
     def to_dict(self, tag_type: str = None):
         labels = []
@@ -1172,12 +1181,12 @@ class Image(DataPoint):
         pass
 
 
-class Corpus:
+class Corpus(typing.Generic[T_co]):
     def __init__(
         self,
-        train: Dataset = None,
-        dev: Dataset = None,
-        test: Dataset = None,
+        train: Optional[Dataset[T_co]] = None,
+        dev: Optional[Dataset[T_co]] = None,
+        test: Optional[Dataset[T_co]] = None,
         name: str = "corpus",
         sample_missing_splits: Union[bool, str] = True,
     ):
@@ -1201,20 +1210,20 @@ class Corpus:
             dev, train = randomly_split_into_two_datasets(train, dev_size)
 
         # set train dev and test data
-        self._train: Optional[Dataset] = train
-        self._test: Optional[Dataset] = test
-        self._dev: Optional[Dataset] = dev
+        self._train: Optional[Dataset[T_co]] = train
+        self._test: Optional[Dataset[T_co]] = test
+        self._dev: Optional[Dataset[T_co]] = dev
 
     @property
-    def train(self) -> Optional[Dataset]:
+    def train(self) -> Optional[Dataset[T_co]]:
         return self._train
 
     @property
-    def dev(self) -> Optional[Dataset]:
+    def dev(self) -> Optional[Dataset[T_co]]:
         return self._dev
 
     @property
-    def test(self) -> Optional[Dataset]:
+    def test(self) -> Optional[Dataset[T_co]]:
         return self._test
 
     def downsample(

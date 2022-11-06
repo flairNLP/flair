@@ -34,7 +34,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     label_dict = corpus.make_label_dictionary(label_type="topic")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=document_embeddings,
+        embeddings=document_embeddings,
         label_dictionary=label_dict,
         label_type="topic",
         multi_label=False,
@@ -71,7 +71,7 @@ def test_train_load_use_classifier_with_sampler(results_base_path, tasks_base_pa
     label_dict = corpus.make_label_dictionary(label_type="topic")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=document_embeddings,
+        embeddings=document_embeddings,
         label_dictionary=label_dict,
         label_type="topic",
         multi_label=False,
@@ -112,7 +112,7 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
     label_dict = corpus.make_label_dictionary(label_type="topic")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=document_embeddings,
+        embeddings=document_embeddings,
         label_dictionary=label_dict,
         label_type="topic",
         multi_label=False,
@@ -151,7 +151,7 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
     label_dict = corpus.make_label_dictionary(label_type="topic")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=document_embeddings,
+        embeddings=document_embeddings,
         label_dictionary=label_dict,
         label_type="topic",
         multi_label=True,
@@ -216,7 +216,7 @@ def test_train_load_use_classifier_flair(results_base_path, tasks_base_path):
     )
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=flair_document_embeddings,
+        embeddings=flair_document_embeddings,
         label_dictionary=label_dict,
         label_type="topic",
         multi_label=False,
@@ -253,7 +253,7 @@ def test_train_resume_classifier(results_base_path, tasks_base_path):
     label_dict = corpus.make_label_dictionary(label_type="topic")
 
     model = TextClassifier(
-        document_embeddings=document_embeddings,
+        embeddings=document_embeddings,
         label_dictionary=label_dict,
         multi_label=False,
         label_type="topic",
