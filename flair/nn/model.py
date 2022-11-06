@@ -590,7 +590,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
         raise NotImplementedError
 
-    @lru_cache(2048)
     def _get_data_points_for_batch(self, sentences: Tuple[DT]) -> List[DT2]:
         """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
         return [
