@@ -34,14 +34,20 @@
 10	1910	NUM	I-DATE	SpaceAfter=No
 11	.	PUNCT	O	_
 
-# text = Joseph Weizenbaum was born in Berlin, Germany.
-# relations = 6;6;1;2;place_of_birth
+# text = Joseph Weizenbaum, a professor at MIT, was born in Berlin, Germany.
+# relations = 12;12;1;2;place_of_birth|14;14;1;2;place_of_birth
 1	Joseph	PROPN	B-PER	_
-2	Weizenbaum	PROPN	I-PER	_
-3	was	AUX	O	_
-4	born	VERB	O	_
-5	in	ADP	O	_
-6	Berlin	PROPN	B-LOC	_
-7	,	PUNCT	O	_
-8	Germany	PROPN	B-LOC	SpaceAfter=No
-9	.	PUNCT	O	_
+2	Weizenbaum	PROPN	I-PER	SpaceAfter=No
+3	,	PUNCT	O	_
+4	a	DET	O	_
+5	professor	NOUN	O	_
+6	at	ADP	O	_
+7	MIT	PROPN	B-ORG	SpaceAfter=No
+8	,	PUNCT	O	_
+9	was	AUX	O	_
+10	born	VERB	O	_
+11	in	ADP	O	_
+12	Berlin	PROPN	B-LOC	SpaceAfter=No
+13	,	PUNCT	O	_
+14	Germany	PROPN	B-LOC	SpaceAfter=No
+15	.	PUNCT	O	_
