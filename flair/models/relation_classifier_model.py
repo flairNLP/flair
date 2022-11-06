@@ -23,7 +23,7 @@ from torch.utils.data.dataset import ConcatDataset, Dataset
 import flair
 from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.embeddings import DocumentEmbeddings, Embeddings
+from flair.embeddings import DocumentEmbeddings
 from flair.tokenization import SpaceTokenizer
 
 
@@ -78,7 +78,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
     def __init__(
         self,
-        document_embeddings: DocumentEmbeddings,
+        embeddings: DocumentEmbeddings,
         label_dictionary: Dictionary,
         label_type: str,
         entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
@@ -93,7 +93,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         """
         Initializes a `RelationClassifier`.
 
-        :param document_embeddings: The document embeddings used to embed each sentence
+        :param embeddings: The document embeddings used to embed each sentence
         :param label_dictionary: A Dictionary containing all predictable labels from the corpus
         :param label_type: The label type which is going to be predicted, in case a corpus has multiple annotations
         :param entity_label_types: A label type or sequence of label types of the required relation entities.
@@ -134,12 +134,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
         # Initialize super default classifier
         super().__init__(
+            embeddings=embeddings,
             label_dictionary=modified_label_dictionary,
-            final_embedding_size=document_embeddings.embedding_length,
+            final_embedding_size=embeddings.embedding_length,
             **classifierargs,
         )
-
-        self.document_embeddings = document_embeddings
 
         if isinstance(entity_label_types, str):
             self.entity_label_types: Dict[str, Optional[Set[str]]] = {entity_label_types: None}
@@ -406,26 +405,18 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             sample_missing_splits=False,
         )
 
-    @property
-    def _inner_embeddings(self) -> Embeddings[EncodedSentence]:
-        # TODO: The DocumentEmbeddings class is not generic and only accepts Sentence objects.
-        #   Since the EncodedSentence behaves the same as a standard Sentence, we may perform a safe type-cast here.
-        #   Another solution would be to introduce a type-variable bound to Sentence as generic for the DocumentEmbeddings.
-        #   But this would require to change to all other usages of the DocumentEmbeddings.
-        return cast(Embeddings[EncodedSentence], self.document_embeddings)
-
-    def _embed_prediction_data_point(self, prediction_data_point: EncodedSentence) -> torch.Tensor:
-        embedding_names: List[str] = self.document_embeddings.get_names()
+    def _get_embedding_for_data_point(self, prediction_data_point: EncodedSentence) -> torch.Tensor:
+        embedding_names: List[str] = self.embeddings.get_names()
         return prediction_data_point.get_embedding(embedding_names)
 
-    def _get_prediction_data_points(self, sentences: List[EncodedSentence]) -> List[EncodedSentence]:
+    def _get_data_points_from_sentence(self, sentence: EncodedSentence) -> List[EncodedSentence]:
         """
         Returns the encoded sentences to which labels are added.
         To encode sentences, use the `transform` function of the `RelationClassifier`.
         """
 
         # Ensure that all sentences are encoded properly
-        if any(not isinstance(sentence, EncodedSentence) for sentence in sentences):
+        if not isinstance(sentence, EncodedSentence):
             raise ValueError(
                 "Some of the passed sentences are not encoded "
                 "to be compatible with the relation classifier's forward pass.\n"
@@ -441,7 +432,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                 "CORRECT: trainer: ModelTrainer = ModelTrainer(model=model, corpus=model.transform_corpus(corpus))"
             )
 
-        return sentences
+        return [sentence]
 
     def predict(
         self,
@@ -523,7 +514,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     def _get_state_dict(self) -> Dict[str, Any]:
         model_state: Dict[str, Any] = {
             **super()._get_state_dict(),
-            "document_embeddings": self.document_embeddings,
+            "embeddings": self.embeddings,
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "entity_label_types": self.entity_label_types,
@@ -540,7 +531,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     def _init_model_with_state_dict(cls, state: Dict[str, Any], **kwargs):
         return super()._init_model_with_state_dict(
             state,
-            document_embeddings=state["document_embeddings"],
+            embeddings=state["embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
             entity_label_types=state["entity_label_types"],

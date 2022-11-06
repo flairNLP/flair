@@ -44,7 +44,7 @@ class TestTransform:
         label_dictionary = corpus.make_label_dictionary("relation")
         embeddings = TransformerDocumentEmbeddings(model="distilbert-base-uncased", layers="-1", fine_tune=True)
         model: RelationClassifier = RelationClassifier(
-            document_embeddings=embeddings,
+            embeddings=embeddings,
             label_dictionary=label_dictionary,
             label_type="relation",
             entity_label_types="ner",
@@ -85,7 +85,7 @@ class TestTransform:
         label_dictionary = corpus.make_label_dictionary("relation")
         embeddings = TransformerDocumentEmbeddings(model="distilbert-base-uncased", layers="-1", fine_tune=True)
         model: RelationClassifier = RelationClassifier(
-            document_embeddings=embeddings,
+            embeddings=embeddings,
             label_dictionary=label_dictionary,
             label_type="relation",
             entity_label_types="ner",
@@ -150,7 +150,7 @@ def test_train_load_use_relation_classifier(results_base_path: Path, tasks_base_
 
     # Step 4: Initialize relation classifier
     model: RelationClassifier = RelationClassifier(
-        document_embeddings=embeddings,
+        embeddings=embeddings,
         label_dictionary=label_dictionary,
         label_type="relation",
         entity_label_types="ner",
