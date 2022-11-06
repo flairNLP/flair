@@ -17,6 +17,8 @@ from torch.utils.data.dataset import ConcatDataset, Subset
 import flair
 from flair.file_utils import Tqdm
 
+T_co = typing.TypeVar("T_co", covariant=True)
+
 log = logging.getLogger("flair")
 
 
@@ -1179,12 +1181,12 @@ class Image(DataPoint):
         pass
 
 
-class Corpus:
+class Corpus(typing.Generic[T_co]):
     def __init__(
         self,
-        train: Dataset = None,
-        dev: Dataset = None,
-        test: Dataset = None,
+        train: Optional[Dataset[T_co]] = None,
+        dev: Optional[Dataset[T_co]] = None,
+        test: Optional[Dataset[T_co]] = None,
         name: str = "corpus",
         sample_missing_splits: Union[bool, str] = True,
     ):
@@ -1208,20 +1210,20 @@ class Corpus:
             dev, train = randomly_split_into_two_datasets(train, dev_size)
 
         # set train dev and test data
-        self._train: Optional[Dataset] = train
-        self._test: Optional[Dataset] = test
-        self._dev: Optional[Dataset] = dev
+        self._train: Optional[Dataset[T_co]] = train
+        self._test: Optional[Dataset[T_co]] = test
+        self._dev: Optional[Dataset[T_co]] = dev
 
     @property
-    def train(self) -> Optional[Dataset]:
+    def train(self) -> Optional[Dataset[T_co]]:
         return self._train
 
     @property
-    def dev(self) -> Optional[Dataset]:
+    def dev(self) -> Optional[Dataset[T_co]]:
         return self._dev
 
     @property
-    def test(self) -> Optional[Dataset]:
+    def test(self) -> Optional[Dataset[T_co]]:
         return self._test
 
     def downsample(
