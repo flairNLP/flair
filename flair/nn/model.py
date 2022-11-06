@@ -4,6 +4,7 @@ import typing
 import warnings
 from abc import abstractmethod
 from collections import Counter
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
@@ -590,7 +591,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
         raise NotImplementedError
 
-    def _get_data_points_for_batch(self, sentences: List[DT]) -> List[DT2]:
+    @lru_cache(2048)
+    def _get_data_points_for_batch(self, sentences: Tuple[DT]) -> List[DT2]:
         """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
         return [data_point for sentence in sentences for data_point in self._get_data_points_from_sentence(sentence)]
 
@@ -617,7 +619,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         else:
             self._multi_label_threshold = {"default": x}
 
-    def _prepare_label_tensor(self, prediction_data_points: List[DT2]) -> torch.Tensor:
+    @lru_cache(2048)
+    def _prepare_label_tensor(self, prediction_data_points: Tuple[DT2]) -> torch.Tensor:
         labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points]
         if self.multi_label:
             return torch.tensor(
@@ -663,12 +666,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
 
         # get the data points for which to predict labels
-        data_points = self._get_data_points_for_batch(sentences)
+        data_points = self._get_data_points_for_batch(tuple(sentences))
         if len(data_points) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
         # get their gold labels as a tensor
-        label_tensor = self._prepare_label_tensor(data_points)
+        label_tensor = self._prepare_label_tensor(tuple(data_points))
         if label_tensor.size(0) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
@@ -760,7 +763,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                 if not batch:
                     continue
 
-                data_points = self._get_data_points_for_batch(batch)
+                data_points = self._get_data_points_for_batch(tuple(batch))
 
                 if not data_points:
                     continue
@@ -776,7 +779,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                         sentence.remove_labels(label_name)
 
                     if return_loss:
-                        gold_labels = self._prepare_label_tensor(data_points)
+                        gold_labels = self._prepare_label_tensor(tuple(data_points))
                         overall_loss += self._calculate_loss(scores, gold_labels)[0]
                         label_count += len(data_points)
 
