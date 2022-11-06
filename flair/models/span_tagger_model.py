@@ -29,13 +29,13 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
 
     def __init__(
             self,
+            embeddings: flair.embeddings.TokenEmbeddings,
             label_dictionary: Dictionary,
-            word_embeddings: flair.embeddings.TokenEmbeddings,
             gazetteer_embeddings = None,
             pooling_operation: str = "first_last",
             label_type: str = "ner",
             max_span_length: int = 5,
-            delete_goldsubspans_in_training: bool = True,
+            delete_goldsubspans_in_training: bool = False,
             concat_span_length_to_embedding: bool = False,
             resolve_overlaps: str = "by_token",
             decoder=None,
@@ -43,7 +43,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
     ):
         """
         Initializes a SpanTagger
-        :param word_embeddings: embeddings used to embed the words/sentences
+        :param embeddings: embeddings used to embed the words/sentences
         :param gazetteer_embeddings: span embeddings, i. e. coming from a gazetteer
         :param label_dictionary: dictionary that gives ids to all classes. Should contain <unk>
         :param pooling_operation: either 'average', 'first', 'last' or 'first_last'. Specifies the way of how text representations of spans are handled.
@@ -60,9 +60,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
             'prefer_longer' : prefers longer spans over shorter ones # TODO: names are confusing, this is also "by token" but with length instead of score
         """
         final_embedding_size = 0
-        if word_embeddings:
-            final_embedding_size += word_embeddings.embedding_length * 2 \
-                if pooling_operation == "first_last" else word_embeddings.embedding_length
+        if embeddings:
+            final_embedding_size += embeddings.embedding_length * 2 \
+                if pooling_operation == "first_last" else embeddings.embedding_length
         if gazetteer_embeddings:
             final_embedding_size += gazetteer_embeddings.embedding_length
         if concat_span_length_to_embedding:
@@ -72,6 +72,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
         label_dictionary.add_item("O")
 
         super(SpanTagger, self).__init__(
+            embeddings=embeddings,
             label_dictionary=label_dictionary,
             final_embedding_size=final_embedding_size,
             decoder=decoder,
@@ -79,7 +80,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
         )
 
         self.gazetteer_embeddings = gazetteer_embeddings
-        self.word_embeddings = word_embeddings
 
         self.delete_goldsubspans_in_training = delete_goldsubspans_in_training
         self.concat_span_length_to_embedding = concat_span_length_to_embedding
@@ -123,49 +123,41 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
     def emb_mean(self, span, embedding_names):
         return torch.mean(torch.cat([token.get_embedding(embedding_names) for token in span], 0), 0)
 
-    @property
-    def _inner_embeddings(self) -> Embeddings[Sentence]:
-        return self.word_embeddings
+    def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Span]:
 
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Span]:
-        if not isinstance(sentences, list):
-            sentences = [sentences]
         spans: List[Span] = []
-        for sentence in sentences:
-            # create list of all possible spans (consider given max_span_length)
-            spans_sentence = []
-            tokens = [token for token in sentence]
-            for span_len in range(1, self.max_span_length + 1):
-                spans_sentence.extend([Span(tokens[n:n + span_len]) for n in range(len(tokens) - span_len + 1)])
 
-            # delete spans that are subspans of labeled spans (to help make gazetteer training signal more clear)
-            if self.delete_goldsubspans_in_training and self.training:
-                goldspans = sentence.get_spans(self.label_type)
+        # create list of all possible spans (consider given max_span_length)
+        tokens = [token for token in sentence]
+        for span_len in range(1, self.max_span_length + 1):
+            spans.extend([Span(tokens[n:n + span_len]) for n in range(len(tokens) - span_len + 1)])
 
-                # make list of all subspans of goldspans
-                gold_subspans = []
-                for goldspan in goldspans:
-                    goldspan_tokens = [token for token in goldspan.tokens]
-                    for span_len in range(1, self.max_span_length + 1):
-                        gold_subspans.extend(
-                            [Span(goldspan_tokens[n:n + span_len]) for n in
-                             range(len(goldspan_tokens) - span_len + 1)])
+        # delete spans that are subspans of labeled spans (to help make gazetteer training signal more clear)
+        if self.delete_goldsubspans_in_training and self.training:
+            goldspans = sentence.get_spans(self.label_type)
 
-                gold_subspans = [span for span in gold_subspans if
-                                 not span.has_label(self.label_type)]  # FULL goldspans should be kept!
+            # make list of all subspans of goldspans
+            gold_subspans = []
+            for goldspan in goldspans:
+                goldspan_tokens = [token for token in goldspan.tokens]
+                for span_len in range(1, self.max_span_length + 1):
+                    gold_subspans.extend(
+                        [Span(goldspan_tokens[n:n + span_len]) for n in
+                         range(len(goldspan_tokens) - span_len + 1)])
 
-                # finally: remove the gold_subspans from spans_sentence
-                spans_sentence = [span for span in spans_sentence if span.unlabeled_identifier not in [s.unlabeled_identifier for s in gold_subspans]]
+            gold_subspans = [span for span in gold_subspans if
+                             not span.has_label(self.label_type)]  # FULL goldspans should be kept!
 
-            spans.extend(spans_sentence)
+            # finally: remove the gold_subspans from spans_sentence
+            spans = [span for span in spans if span.unlabeled_identifier not in [s.unlabeled_identifier for s in gold_subspans]]
 
         return spans
 
-    def _embed_prediction_data_point(self, prediction_data_point: Span) -> torch.Tensor:
+    def _get_embedding_for_data_point(self, prediction_data_point: Span) -> torch.Tensor:
 
         span_embedding_parts = []
-        if self.word_embeddings:
-            span_embedding_parts.append(self.aggregated_embedding(prediction_data_point, self.word_embeddings.get_names()))
+        if self.embeddings:
+            span_embedding_parts.append(self.aggregated_embedding(prediction_data_point, self.embeddings.get_names()))
 
         if self.concat_span_length_to_embedding:
             span_embedding_parts.append(torch.tensor([len(prediction_data_point) / self.max_span_length]).to(flair.device))
@@ -267,7 +259,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "word_embeddings": self.word_embeddings,
+            "embeddings": self.embeddings,
             "label_type": self.label_type,
             "label_dictionary": self.label_dictionary,
             "pooling_operation": self.pooling_operation,
@@ -311,7 +303,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
     def _init_model_with_state_dict(cls, state, **kwargs):
         return super()._init_model_with_state_dict(
             state,
-            word_embeddings=state.get("word_embeddings"),
+            embeddings=state.get("embeddings"),
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type"),
             pooling_operation=state.get("pooling_operation"),
