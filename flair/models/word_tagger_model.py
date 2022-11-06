@@ -5,7 +5,7 @@ import torch
 
 import flair.nn
 from flair.data import Dictionary, Sentence, Token
-from flair.embeddings import Embeddings, TokenEmbeddings
+from flair.embeddings import TokenEmbeddings
 
 log = logging.getLogger("flair")
 
@@ -30,13 +30,11 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
         :param beta: Parameter for F-beta score for evaluation and training annealing
         """
         super().__init__(
+            embeddings=embeddings,
             label_dictionary=tag_dictionary,
             final_embedding_size=embeddings.embedding_length,
             **classifierargs,
         )
-
-        # embeddings
-        self.embeddings = embeddings
 
         # dictionaries
         self.tag_type: str = tag_type
@@ -63,20 +61,12 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
             **kwargs,
         )
 
-    @property
-    def _inner_embeddings(self) -> Embeddings[Sentence]:
-        return self.embeddings
-
-    def _embed_prediction_data_point(self, prediction_data_point: Token) -> torch.Tensor:
+    def _get_embedding_for_data_point(self, prediction_data_point: Token) -> torch.Tensor:
         names = self.embeddings.get_names()
         return prediction_data_point.get_embedding(names)
 
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Token]:
-        tokens: List[Token] = []
-
-        for sentence in sentences:
-            tokens.extend(sentence)
-        return tokens
+    def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Token]:
+        return sentence.tokens
 
     @property
     def label_type(self):
