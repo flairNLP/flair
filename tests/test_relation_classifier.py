@@ -40,7 +40,7 @@ class TestTransform:
             for sentence in map(itemgetter(0), data_loader)
         } == ground_truth
 
-    def test_transform_corpus_with_cross_augmentation_and_remainder(self, corpus: ColumnCorpus) -> None:
+    def test_transform_corpus_with_cross_augmentation(self, corpus: ColumnCorpus) -> None:
         label_dictionary = corpus.make_label_dictionary("relation")
         embeddings = TransformerDocumentEmbeddings(model="distilbert-base-uncased", layers="-1", fine_tune=True)
         model: RelationClassifier = RelationClassifier(
@@ -53,7 +53,6 @@ class TestTransform:
                 ("LOC", "PER"),  # place_of_birth
             },
             cross_augmentation=True,
-            mask_remainder=True,
         )
 
         transformed_corpus = model.transform_corpus(corpus)
@@ -62,21 +61,27 @@ class TestTransform:
         # training, validation and test dataset (in this test they are the same)
         ground_truth: Set[Tuple[str, Tuple[str, ...]]] = {
             # Entity pair permutations of: "Larry Page and Sergey Brin founded Google ."
-            ("[T-PER] and [R-PER] founded [H-ORG] .", ("founded_by",)),
-            ("[R-PER] and [T-PER] founded [H-ORG] .", ("founded_by",)),
+            ("[[T-Larry Page]] and Sergey Brin founded [[H-Google]] .", ("founded_by",)),
+            ("Larry Page and [[T-Sergey Brin]] founded [[H-Google]] .", ("founded_by",)),
             # Entity pair permutations of: "Microsoft was founded by Bill Gates ."
-            ("[H-ORG] was founded by [T-PER] .", ("founded_by",)),
+            ("[[H-Microsoft]] was founded by [[T-Bill Gates]] .", ("founded_by",)),
             # Entity pair permutations of: "Konrad Zuse was born in Berlin on 22 June 1910 ."
-            ("[T-PER] was born in [H-LOC] on [R-DATE] .", ("place_of_birth",)),
+            ("[[T-Konrad Zuse]] was born in [[H-Berlin]] on 22 June 1910 .", ("place_of_birth",)),
             # Entity pair permutations of: "Joseph Weizenbaum , a professor at MIT , was born in Berlin , Germany."
-            ("[T-PER] , a professor at [H-ORG] , was born in [R-LOC] , [R-LOC] .", ("O",)),
-            ("[T-PER] , a professor at [R-ORG] , was born in [H-LOC] , [R-LOC] .", ("place_of_birth",)),
-            ("[T-PER] , a professor at [R-ORG] , was born in [R-LOC] , [H-LOC] .", ("place_of_birth",)),
+            ("[[T-Joseph Weizenbaum]] , a professor at [[H-MIT]] , was born in Berlin , Germany .", ("O",)),
+            (
+                "[[T-Joseph Weizenbaum]] , a professor at MIT , was born in [[H-Berlin]] , Germany .",
+                ("place_of_birth",),
+            ),
+            (
+                "[[T-Joseph Weizenbaum]] , a professor at MIT , was born in Berlin , [[H-Germany]] .",
+                ("place_of_birth",),
+            ),
         }
         for split in (transformed_corpus.train, transformed_corpus.dev, transformed_corpus.test):
             TestTransform.check_transformation_correctness(split, ground_truth)
 
-    def test_transform_corpus_without_cross_augmentation_and_remainder(self, corpus: ColumnCorpus) -> None:
+    def test_transform_corpus_without_cross_augmentation(self, corpus: ColumnCorpus) -> None:
         label_dictionary = corpus.make_label_dictionary("relation")
         embeddings = TransformerDocumentEmbeddings(model="distilbert-base-uncased", layers="-1", fine_tune=True)
         model: RelationClassifier = RelationClassifier(
@@ -89,7 +94,6 @@ class TestTransform:
                 ("LOC", "PER"),  # place_of_birth
             },
             cross_augmentation=False,
-            mask_remainder=False,
         )
 
         transformed_corpus = model.transform_corpus(corpus)
@@ -98,15 +102,21 @@ class TestTransform:
         # training, validation and test dataset (in this test they are the same)
         ground_truth: Set[Tuple[str, Tuple[str, ...]]] = {
             # Entity pair permutations of: "Larry Page and Sergey Brin founded Google ."
-            ("[T-PER] and Sergey Brin founded [H-ORG] .", ("founded_by",)),
-            ("Larry Page and [T-PER] founded [H-ORG] .", ("founded_by",)),
+            ("[[T-Larry Page]] and Sergey Brin founded [[H-Google]] .", ("founded_by",)),
+            ("Larry Page and [[T-Sergey Brin]] founded [[H-Google]] .", ("founded_by",)),
             # Entity pair permutations of: "Microsoft was founded by Bill Gates ."
-            ("[H-ORG] was founded by [T-PER] .", ("founded_by",)),
+            ("[[H-Microsoft]] was founded by [[T-Bill Gates]] .", ("founded_by",)),
             # Entity pair permutations of: "Konrad Zuse was born in Berlin on 22 June 1910 ."
-            ("[T-PER] was born in [H-LOC] on 22 June 1910 .", ("place_of_birth",)),
+            ("[[T-Konrad Zuse]] was born in [[H-Berlin]] on 22 June 1910 .", ("place_of_birth",)),
             # Entity pair permutations of: "Joseph Weizenbaum , a professor at MIT , was born in Berlin , Germany ."
-            ("[T-PER] , a professor at MIT , was born in [H-LOC] , Germany .", ("place_of_birth",)),
-            ("[T-PER] , a professor at MIT , was born in Berlin , [H-LOC] .", ("place_of_birth",)),
+            (
+                "[[T-Joseph Weizenbaum]] , a professor at MIT , was born in [[H-Berlin]] , Germany .",
+                ("place_of_birth",),
+            ),
+            (
+                "[[T-Joseph Weizenbaum]] , a professor at MIT , was born in Berlin , [[H-Germany]] .",
+                ("place_of_birth",),
+            ),
         }
         for split in (transformed_corpus.train, transformed_corpus.dev, transformed_corpus.test):
             TestTransform.check_transformation_correctness(split, ground_truth)

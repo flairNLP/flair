@@ -87,8 +87,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         zero_tag_value: str = "O",
         allow_unk_tag: bool = True,
         cross_augmentation: bool = True,
-        mask_type: str = 'mark',
-        mask_remainder: bool = False,
+        mask_type: str = "mark",
         **classifierargs,
     ) -> None:
         """
@@ -120,10 +119,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                                    in the cross product of all entities in the original sentence.
                                    When disabling cross augmentation, the transform functions only generate
                                    encoded sentences for each gold relation annotation in the original sentence.
-        :param mask_remainder: If `True`, also mask entities which are not part of the current entity pair,
-                               otherwise such entities will not be masked.
-                               (Setting this parameter to `True` may help to
-                               reduce the sentence's sequence length for long entities.)
         :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
         """
         # Set label type and prepare label dictionary
@@ -157,7 +152,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
         self.cross_augmentation = cross_augmentation
         self.mask_type = mask_type
-        self.mask_remainder = mask_remainder
         self.entity_threshold = entity_threshold
 
         # Auto-spawn on GPU, if available
@@ -236,18 +230,20 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             yield head, tail, remainder, gold_label
 
     def _mask(self, entity: _Entity, role: str) -> str:
-        if self.mask_type == 'mark':
-            return f"[[{role}-{entity.span.text}]]"
-        if self.mask_type == 'label-aware':
+        if self.mask_type == "label-aware":
             return f"[{role}-{entity.label.value}]"
-        if self.mask_type == 'entity':
+        if self.mask_type == "entity":
             return f"[{role}-ENTITY]"
+        if self.mask_type == "mark":
+            return f"[[{role}-{entity.span.text}]]"
+
+        # by default, use "mark" masking
+        return f"[[{role}-{entity.span.text}]]"
 
     def _create_masked_sentence(
         self,
         head: _Entity,
         tail: _Entity,
-        remainder: List[_Entity],
         gold_label: Optional[str] = None,
     ) -> EncodedSentence:
         """
@@ -262,29 +258,16 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
         :param head: The head `_Entity`
         :param tail: The tail `_Entity`
-        :param remainder: The list of remainder `_Entity`s
         :param gold_label: An optional gold label of the induced relation by the head and tail entity
         :return: The masked sentence (with gold annotations)
         """
         # Some sanity checks
         original_sentence: Sentence = head.span.sentence
         assert original_sentence is tail.span.sentence, "The head and tail need to come from the same sentence."
-        assert all(
-            original_sentence is entity.span.sentence for entity in remainder
-        ), "The remainder entities need to come from the same sentence as the head and tail."
 
         # Pre-compute non-leading head, tail and remainder tokens for entity masking
         non_leading_head_tokens: List[Token] = head.span.tokens[1:]
         non_leading_tail_tokens: List[Token] = tail.span.tokens[1:]
-        non_leading_remainder_tokens: List[Token] = [
-            token for remainder_entity in remainder for token in remainder_entity.span.tokens[1:]
-        ]
-
-        # Use a dictionary to find label annotations for a given leading remainder token.
-        leading_remainder_token_to_label: Dict[str, str] = {
-            remainder_entity.span[0].unlabeled_identifier: remainder_entity.label.value
-            for remainder_entity in remainder
-        }
 
         # We can not use the plaintext of the head/tail span in the sentence as the mask
         # since there may be multiple occurrences of the same entity mentioned in the sentence.
@@ -293,16 +276,14 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         for token in original_sentence:
 
             if token is head.span[0]:
-                masked_sentence_tokens.append(self._mask(entity=head, role='H'))
+                masked_sentence_tokens.append(self._mask(entity=head, role="H"))
 
             elif token is tail.span[0]:
-                masked_sentence_tokens.append(self._mask(entity=tail, role='T'))
+                masked_sentence_tokens.append(self._mask(entity=tail, role="T"))
 
             elif all(
                 token is not non_leading_entity_token
-                for non_leading_entity_token in itertools.chain(
-                    non_leading_head_tokens, non_leading_tail_tokens, non_leading_remainder_tokens
-                )
+                for non_leading_entity_token in itertools.chain(non_leading_head_tokens, non_leading_tail_tokens)
             ):
                 masked_sentence_tokens.append(token.text)
 
@@ -343,7 +324,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             masked_sentence: EncodedSentence = self._create_masked_sentence(
                 head=head,
                 tail=tail,
-                remainder=remainder if self.mask_remainder else [],
                 gold_label=gold_label if gold_label is not None else self.zero_tag_value,
             )
             original_relation: Relation = Relation(first=head.span, second=tail.span)
@@ -366,7 +346,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             masked_sentence: EncodedSentence = self._create_masked_sentence(
                 head=head,
                 tail=tail,
-                remainder=remainder if self.mask_remainder else [],
                 gold_label=gold_label,
             )
 
@@ -553,7 +532,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             "zero_tag_value": self.zero_tag_value,
             "allow_unk_tag": self.allow_unk_tag,
             "cross_augmentation": self.cross_augmentation,
-            "mask_remainder": self.mask_remainder,
+            "mask_type": self.mask_type,
         }
         return model_state
 
@@ -570,7 +549,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             zero_tag_value=state["zero_tag_value"],
             allow_unk_tag=state["allow_unk_tag"],
             cross_augmentation=state["cross_augmentation"],
-            mask_remainder=state["mask_remainder"],
+            mask_type=state["mask_type"],
             **kwargs,
         )
 
