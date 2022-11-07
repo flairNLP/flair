@@ -56,7 +56,7 @@ def pad_sequence_embeddings(all_hidden_states: List[torch.Tensor]) -> torch.Tens
 
 @torch.jit.script_if_tracing
 def truncate_hidden_states(hidden_states: torch.Tensor, input_ids: torch.Tensor) -> torch.Tensor:
-    return hidden_states[:, :, :input_ids.size()[1]]
+    return hidden_states[:, :, : input_ids.size()[1]]
 
 
 @torch.jit.script_if_tracing
