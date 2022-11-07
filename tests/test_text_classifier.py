@@ -6,268 +6,89 @@ from flair.embeddings import DocumentRNNEmbeddings, FlairEmbeddings, WordEmbeddi
 from flair.models import TextClassifier
 from flair.samplers import ImbalancedClassificationDatasetSampler
 from flair.trainers import ModelTrainer
+from tests.model_test_utils import BaseModelTest
 
-turian_embeddings = WordEmbeddings("turian")
-flair_embeddings = FlairEmbeddings("news-forward-fast")
-document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings([turian_embeddings], 128, 1, False, 64, False, False)
 
+class TestTextClassifier(BaseModelTest):
+    model_cls = TextClassifier
+    load_model = "sentiment"
+    train_label_type = "topic"
+    multiclass_prediction_labels = ["apple", "tv"]
 
-@pytest.mark.integration
-def test_load_use_classifier():
-    loaded_model: TextClassifier = TextClassifier.load("sentiment")
+    @pytest.fixture
+    def embeddings(self):
+        turian_embeddings = WordEmbeddings("turian")
+        document_embeddings = DocumentRNNEmbeddings([turian_embeddings], 128, 1, False, 64, False, False)
+        yield document_embeddings
 
-    sentence = Sentence("I love Berlin")
-    sentence_empty = Sentence("       ")
+    @pytest.fixture
+    def corpus(self, tasks_base_path):
+        yield flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="topic")
 
-    loaded_model.predict(sentence)
-    loaded_model.predict([sentence, sentence_empty])
-    loaded_model.predict([sentence_empty])
-    del loaded_model
+    @pytest.fixture
+    def multiclass_train_test_sentence(self):
+        yield Sentence("apple tv")
 
-    sentence.clear_embeddings()
-    sentence_empty.clear_embeddings()
+    @pytest.fixture
+    def multi_class_corpus(self, tasks_base_path):
+        yield flair.datasets.ClassificationCorpus(tasks_base_path / "multi_class", label_type="topic")
 
+    @pytest.mark.integration
+    def test_train_load_use_classifier_with_sampler(
+        self, results_base_path, corpus, embeddings, example_sentence, train_test_sentence
+    ):
+        flair.set_seed(123)
+        label_dict = corpus.make_label_dictionary(label_type=self.train_label_type)
 
-@pytest.mark.integration
-def test_train_load_use_classifier(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="topic")
-    label_dict = corpus.make_label_dictionary(label_type="topic")
+        model = self.model_cls(embeddings=embeddings, label_dictionary=label_dict, label_type=self.train_label_type)
 
-    model: TextClassifier = TextClassifier(
-        embeddings=document_embeddings,
-        label_dictionary=label_dict,
-        label_type="topic",
-        multi_label=False,
-    )
+        trainer = ModelTrainer(model, corpus)
+        trainer.train(results_base_path, max_epochs=2, shuffle=False, sampler=ImbalancedClassificationDatasetSampler)
 
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, shuffle=False)
+        model.predict(train_test_sentence)
 
-    sentence = Sentence("Berlin is a really nice city.")
+        for label in train_test_sentence.get_labels(self.train_label_type):
+            assert label.value is not None
+            assert 0.0 <= label.score <= 1.0
+            assert isinstance(label.score, float)
 
-    model.predict(sentence)
+        del trainer, model, corpus
 
-    for label in sentence.labels:
-        assert label.value is not None
-        assert 0.0 <= label.score <= 1.0
-        assert type(label.score) is float
+        loaded_model = self.model_cls.load(results_base_path / "final-model.pt")
 
-    del trainer, model, corpus
-    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
+        loaded_model.predict(example_sentence)
+        loaded_model.predict([example_sentence, self.empty_sentence])
+        loaded_model.predict([self.empty_sentence])
 
-    sentence = Sentence("I love Berlin")
-    sentence_empty = Sentence("       ")
+    @pytest.mark.integration
+    def test_predict_with_prob(self, example_sentence):
+        loaded_model = self.model_cls.load(self.load_model)
+        loaded_model.predict(example_sentence, return_probabilities_for_all_classes=True)
+        assert len(example_sentence.get_labels(loaded_model.label_type)) == len(loaded_model.label_dictionary)
+        assert sum([label.score for label in example_sentence.get_labels(loaded_model.label_type)]) > 1 - 1e-5
 
-    loaded_model.predict(sentence)
-    loaded_model.predict([sentence, sentence_empty])
-    loaded_model.predict([sentence_empty])
+    @pytest.mark.integration
+    def test_train_load_use_classifier_flair(self, results_base_path, corpus, example_sentence, train_test_sentence):
+        flair.set_seed(123)
+        embeddings = DocumentRNNEmbeddings([FlairEmbeddings("news-forward-fast")], 128, 1, False, 64, False, False)
+        label_dict = corpus.make_label_dictionary(label_type=self.train_label_type)
 
-    del loaded_model
+        model = self.model_cls(embeddings=embeddings, label_dictionary=label_dict, label_type=self.train_label_type)
 
+        trainer = ModelTrainer(model, corpus)
+        trainer.train(results_base_path, max_epochs=2, shuffle=False)
 
-@pytest.mark.integration
-def test_train_load_use_classifier_with_sampler(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="topic")
-    label_dict = corpus.make_label_dictionary(label_type="topic")
+        model.predict(train_test_sentence)
 
-    model: TextClassifier = TextClassifier(
-        embeddings=document_embeddings,
-        label_dictionary=label_dict,
-        label_type="topic",
-        multi_label=False,
-    )
+        for label in train_test_sentence.get_labels(self.train_label_type):
+            assert label.value is not None
+            assert 0.0 <= label.score <= 1.0
+            assert isinstance(label.score, float)
 
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(
-        results_base_path,
-        max_epochs=2,
-        shuffle=False,
-        sampler=ImbalancedClassificationDatasetSampler,
-    )
+        del trainer, model, corpus
 
-    sentence = Sentence("Berlin is a really nice city.")
-    model.predict(sentence)
+        loaded_model = self.model_cls.load(results_base_path / "final-model.pt")
 
-    for label in sentence.labels:
-        assert label.value is not None
-        assert 0.0 <= label.score <= 1.0
-        assert type(label.score) is float
-
-    del trainer, model, corpus
-    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
-
-    sentence = Sentence("I love Berlin")
-    sentence_empty = Sentence("       ")
-
-    loaded_model.predict(sentence)
-    loaded_model.predict([sentence, sentence_empty])
-    loaded_model.predict([sentence_empty])
-
-    del loaded_model
-
-
-@pytest.mark.integration
-def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="topic")
-    label_dict = corpus.make_label_dictionary(label_type="topic")
-
-    model: TextClassifier = TextClassifier(
-        embeddings=document_embeddings,
-        label_dictionary=label_dict,
-        label_type="topic",
-        multi_label=False,
-    )
-
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, shuffle=False)
-
-    sentence = Sentence("Berlin is a really nice city.")
-
-    model.predict(sentence, return_probabilities_for_all_classes=True)
-
-    assert len(sentence.labels) > 1
-
-    for label in sentence.labels:
-        assert label.value is not None
-        assert 0.0 <= label.score <= 1.0
-        assert type(label.score) is float
-
-    del trainer, model, corpus
-    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
-
-    sentence = Sentence("I love Berlin")
-    sentence_empty = Sentence("       ")
-
-    loaded_model.predict(sentence, return_probabilities_for_all_classes=True)
-    loaded_model.predict([sentence, sentence_empty], return_probabilities_for_all_classes=True)
-    loaded_model.predict([sentence_empty], return_probabilities_for_all_classes=True)
-
-    del loaded_model
-
-
-@pytest.mark.integration
-def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "multi_class", label_type="topic")
-    label_dict = corpus.make_label_dictionary(label_type="topic")
-
-    model: TextClassifier = TextClassifier(
-        embeddings=document_embeddings,
-        label_dictionary=label_dict,
-        label_type="topic",
-        multi_label=True,
-    )
-
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(
-        results_base_path,
-        mini_batch_size=1,
-        max_epochs=20,
-        shuffle=False,
-        checkpoint=False,
-        train_with_test=True,
-        train_with_dev=True,
-    )
-
-    sentence = Sentence("apple tv")
-
-    model.predict(sentence)
-
-    assert "apple" in [label.value for label in sentence.labels]
-    assert "tv" in [label.value for label in sentence.labels]
-
-    for label in sentence.labels:
-        print(label)
-        assert label.value is not None
-        assert 0.0 <= label.score <= 1.0
-        assert type(label.score) is float
-
-    del trainer, model, corpus
-    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
-
-    sentence = Sentence("apple tv")
-
-    loaded_model.predict(sentence)
-
-    assert "apple" in [label.value for label in sentence.labels]
-    assert "tv" in [label.value for label in sentence.labels]
-
-    for label in sentence.labels:
-        assert label.value is not None
-        assert 0.0 <= label.score <= 1.0
-        assert type(label.score) is float
-
-    sentence = Sentence("I love Berlin")
-    sentence_empty = Sentence("       ")
-
-    loaded_model.predict(sentence)
-    loaded_model.predict([sentence, sentence_empty])
-    loaded_model.predict([sentence_empty])
-
-    del loaded_model
-
-
-@pytest.mark.integration
-def test_train_load_use_classifier_flair(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="topic")
-    label_dict = corpus.make_label_dictionary(label_type="topic")
-
-    flair_document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
-        [flair_embeddings], 128, 1, False, 64, False, False
-    )
-
-    model: TextClassifier = TextClassifier(
-        embeddings=flair_document_embeddings,
-        label_dictionary=label_dict,
-        label_type="topic",
-        multi_label=False,
-    )
-
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, shuffle=False)
-
-    sentence = Sentence("Berlin is a really nice city.")
-
-    model.predict(sentence)
-
-    for label in sentence.labels:
-        assert label.value is not None
-        assert 0.0 <= label.score <= 1.0
-        assert type(label.score) is float
-
-    del trainer, model, corpus, flair_document_embeddings
-    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
-
-    sentence = Sentence("I love Berlin")
-    sentence_empty = Sentence("       ")
-
-    loaded_model.predict(sentence)
-    loaded_model.predict([sentence, sentence_empty])
-    loaded_model.predict([sentence_empty])
-
-    del loaded_model
-
-
-@pytest.mark.integration
-def test_train_resume_classifier(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="topic")
-    label_dict = corpus.make_label_dictionary(label_type="topic")
-
-    model = TextClassifier(
-        embeddings=document_embeddings,
-        label_dictionary=label_dict,
-        multi_label=False,
-        label_type="topic",
-    )
-
-    # train model for 2 epochs
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
-
-    del model
-
-    # load the checkpoint model and train until epoch 4
-    checkpoint_model = TextClassifier.load(results_base_path / "checkpoint.pt")
-    with pytest.warns(UserWarning):
-        trainer.resume(model=checkpoint_model, max_epochs=4)
-
-    del trainer
+        loaded_model.predict(example_sentence)
+        loaded_model.predict([example_sentence, self.empty_sentence])
+        loaded_model.predict([self.empty_sentence])
