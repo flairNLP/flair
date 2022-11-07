@@ -4,7 +4,6 @@ import typing
 import warnings
 from abc import abstractmethod
 from collections import Counter
-from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
@@ -618,7 +617,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         else:
             self._multi_label_threshold = {"default": x}
 
-    @lru_cache(2048)
     def _prepare_label_tensor(self, prediction_data_points: Tuple[DT2]) -> torch.Tensor:
         labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points]
         if self.multi_label:
