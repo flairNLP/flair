@@ -16,9 +16,9 @@ from typing import Dict, Generic
 log = logging.getLogger("flair")
 
 
-class SpanGazetteer(Embeddings[Span]):
+class SpanDictionaryGazetteer(Embeddings[Span]):
     def __init__(self,
-                 gazetteer: Dict[str, List[int]],
+                 dictionary: Dict[str, List[int]],
                  add_lower_case_lookup: bool = False,
                  ):
         """
@@ -26,14 +26,14 @@ class SpanGazetteer(Embeddings[Span]):
         """
 
         self.name: str = "dictionary_gazetteer"
-        self.gazetteer: Dict[str, List[int]] = gazetteer
+        self.dictionary: Dict[str, List[int]] = dictionary
         self.static_embeddings = True
 
         super().__init__()
 
         self.add_lower_case_lookup = add_lower_case_lookup
 
-        self.__gazetteer_vector_length = len(next(iter(self.gazetteer.values())))  # one entry in gaz to get its size
+        self.__gazetteer_vector_length = len(next(iter(self.dictionary.values())))  # one entry in gaz to get its size
         self.__embedding_type = "span-level"
 
         # length of gazetteer embedding
@@ -45,8 +45,8 @@ class SpanGazetteer(Embeddings[Span]):
 
     def get_gazetteer_embedding(self, span_string: str) -> torch.Tensor:
 
-        if span_string in self.gazetteer:
-            gaz_vector = torch.tensor(self.gazetteer[span_string], device=flair.device, dtype=torch.float)
+        if span_string in self.dictionary:
+            gaz_vector = torch.tensor(self.dictionary[span_string], device=flair.device, dtype=torch.float)
         else:
             gaz_vector = torch.zeros(self.__gazetteer_vector_length, device=flair.device, dtype=torch.float)
 
