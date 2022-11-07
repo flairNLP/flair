@@ -14,6 +14,9 @@ class TestTextClassifier(BaseModelTest):
     pretrained_model = "sentiment"
     train_label_type = "topic"
     multiclass_prediction_labels = ["apple", "tv"]
+    training_args = dict(
+        max_epochs=4,
+    )
 
     @pytest.fixture
     def embeddings(self):
@@ -88,7 +91,6 @@ class TestTextClassifier(BaseModelTest):
         del trainer, model, corpus
 
         loaded_model = self.model_cls.load(results_base_path / "final-model.pt")
-
         loaded_model.predict(example_sentence)
         loaded_model.predict([example_sentence, self.empty_sentence])
         loaded_model.predict([self.empty_sentence])

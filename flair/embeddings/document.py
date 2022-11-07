@@ -283,7 +283,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             self.word_dropout = None
 
         self.rnn.zero_grad()
-
         # embed words in the sentence
         self.embeddings.embed(sentences)
 

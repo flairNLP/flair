@@ -303,7 +303,7 @@ class ModelTrainer:
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
-        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.0
+        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else -1.0
 
         dataset_size = _len_dataset(self.corpus.train)
         if train_with_dev:
@@ -612,7 +612,6 @@ class ModelTrainer:
                         exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{train_part_eval_result.loss}" f"\t{train_part_eval_result.log_line}"
-
                     log.info(
                         f"TRAIN_SPLIT : loss {train_part_eval_result.loss}"
                         f" - {main_evaluation_metric[1]}"
