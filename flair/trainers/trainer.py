@@ -479,7 +479,8 @@ class ModelTrainer:
                     shuffle=shuffle if epoch > 1 else False,  # never shuffle the first epoch
                     num_workers=0 if num_workers is None else num_workers,
                     sampler=sampler,
-                    drop_last=True
+                    drop_last=True,
+                    model=self.model,
                 )
 
                 self.model.train()

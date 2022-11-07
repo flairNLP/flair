@@ -2,7 +2,7 @@ import logging
 import os
 from abc import abstractmethod
 from pathlib import Path
-from typing import Generic, List, Union
+from typing import Generic, List, Union, Optional
 
 import torch.utils.data.dataloader
 from deprecated import deprecated
@@ -26,6 +26,7 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         drop_last=False,
         timeout=0,
         worker_init_fn=None,
+        model=None,
     ):
 
         # in certain cases, multi-CPU data loading makes no sense and slows
@@ -50,6 +51,9 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         else:
             num_workers = min(num_workers, self.estimate_max_workers())
 
+        from flair.nn import Model
+        self.model: Model = model
+
         super(DataLoader, self).__init__(
             dataset,
             batch_size=batch_size,
@@ -57,11 +61,16 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
             sampler=sampler,
             batch_sampler=batch_sampler,
             num_workers=num_workers,
-            collate_fn=list,
+            collate_fn=self.custom_collate,
             drop_last=drop_last,
             timeout=timeout,
             worker_init_fn=worker_init_fn,
         )
+
+    def custom_collate(self, batch):
+        if self.model:
+            self.model.preprocess_batch(batch)
+        return list(batch)
 
     @staticmethod
     def estimate_max_workers():

@@ -4,6 +4,7 @@ import typing
 import warnings
 from abc import abstractmethod
 from collections import Counter
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
@@ -183,6 +184,11 @@ class Model(torch.nn.Module, typing.Generic[DT]):
                 "This model has no model card (likely because it is not yet "
                 "trained or was trained with Flair version < 0.9.1)"
             )
+
+    def preprocess_batch(self, batch):
+        """Optional. This function is called in the data loader when a batch is loaded.
+        You can put all CPU-heavy computations here that are needed to prepare the batch for GPU."""
+        pass
 
 
 class Classifier(Model[DT], typing.Generic[DT]):
@@ -574,6 +580,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
 
+    def preprocess_batch(self, batch):
+        # get data points and prepare embeddings
+        self._get_data_points_for_batch(tuple(batch))
+        self._prepare_label_tensor(tuple(batch))
+
     def _filter_data_point(self, data_point: DT) -> bool:
         """Specify if a data point should be kept. That way you can remove for example empty texts.
         Return true if the data point should be kept and false if it should be removed.
@@ -589,6 +600,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
         raise NotImplementedError
 
+    @lru_cache(maxsize=2048)
     def _get_data_points_for_batch(self, sentences: Tuple[DT]) -> List[DT2]:
         """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
         return [
@@ -774,9 +786,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
                 # if anything could possibly be predicted
                 if len(data_points) > 0:
+
+                    # print(batch)
+
                     # remove previously predicted labels of this type
-                    for sentence in data_points:
-                        sentence.remove_labels(label_name)
+                    # for data_point in data_points:
+                    #     print(data_point)
+                    #     print(data_point.annotation_layers)
+                    #     data_point.remove_labels(label_name)
 
                     if return_loss:
                         gold_labels = self._prepare_label_tensor(tuple(data_points))
