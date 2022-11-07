@@ -23,6 +23,23 @@ class OcrJsonDataset(FlairDataset):
         normalize_coords_to_thousands: bool = True,
         label_name_map: Dict[str, str] = None,
     ):
+        """
+        Instantiates a Dataset from a OCR-Json format.
+        The folder is structured with a "images" folder and a "tagged" folder.
+        Those folders contain respectively .jpg an .json files with matching file name.
+        The json contains 3 fields "words", "bbox", "labels" which are lists of equal length
+        "words" is a list of strings, containing the ocr texts,
+        "bbox" is a list of int-Tuples, containing left, top, right, bottom
+        "labels" is a BIO-tagging of the sentences
+        :param path_to_split_directory: base folder with the task data
+        :param label_type: the label_type to add the ocr labels to
+        :param encoding: the encoding to load the .json files with
+        :param normalize_coords_to_thousands: if True, the coordinates will be ranged from 0 to 1000
+        :param load_images: if True, the pillow images will be added as metadata
+        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
+        :param label_name_map: Optionally map tag names to different schema.
+        :return: a Dataset with Sentences that contain OCR information
+        """
         self.in_memory = in_memory
         path_to_split_directory = Path(path_to_split_directory)
         assert path_to_split_directory.exists()
@@ -119,6 +136,21 @@ class OcrCorpus(Corpus):
         label_name_map: Dict[str, str] = None,
         **corpusargs,
     ):
+        """
+        Instantiates a Corpus from a OCR-Json format
+
+        :param train_path: the folder for the training data
+        :param dev_path: the folder for the dev data
+        :param test_path: the folder for the test data
+        :param path_to_split_directory: base folder with the task data
+        :param label_type: the label_type to add the ocr labels to
+        :param encoding: the encoding to load the .json files with
+        :param load_images: if True, the pillow images will be added as metadata
+        :param normalize_coords_to_thousands: if True, the coordinates will be ranged from 0 to 1000
+        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
+        :param label_name_map: Optionally map tag names to different schema.
+        :return: a Corpus with Sentences that contain OCR information
+        """
         train: Optional[Dataset] = (
             OcrJsonDataset(
                 train_path,
@@ -178,6 +210,17 @@ class SROIE(OcrCorpus):
         label_name_map: Dict[str, str] = None,
         **corpusargs,
     ):
+        """
+        Instantiates the SROIE corpus with perfect ocr boxes.
+        :param base_path: the path to store the dataset or load it from
+        :param label_type: the label_type to add the ocr labels to
+        :param encoding: the encoding to load the .json files with
+        :param load_images: if True, the pillow images will be added as metadata
+        :param normalize_coords_to_thousands: if True, the coordinates will be ranged from 0 to 1000
+        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
+        :param label_name_map: Optionally map tag names to different schema.
+        :return: a Corpus with Sentences that contain OCR information
+        """
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
