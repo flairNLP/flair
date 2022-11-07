@@ -10,8 +10,8 @@ def get_spans_from_bio(bioes_tags: List[str], bioes_scores=None) -> List[Tuple[L
     # internal variables
     current_tag_weights: Dict[str, float] = defaultdict(lambda: 0.0)
     previous_tag = "O-"
-    current_span = []
-    current_span_scores = []
+    current_span: List[int] = []
+    current_span_scores: List[float] = []
     for idx, bioes_tag in enumerate(bioes_tags):
 
         # non-set tags are OUT tags
