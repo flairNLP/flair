@@ -1,4 +1,4 @@
-from typing import List, Type
+from typing import Any, Dict, List, Optional, Type
 
 import pytest
 
@@ -10,10 +10,13 @@ from flair.trainers import ModelTrainer
 
 class BaseModelTest:
     model_cls: Type[Model]
-    load_model: str
+    pretrained_model: Optional[str] = None
     empty_sentence = Sentence("       ")
     train_label_type: str
     multiclass_prediction_labels: List[str]
+    model_args: Dict[str, Any] = {}
+    training_args: Dict[str, Any] = {}
+    finetune_instead_of_train: bool = False
 
     @pytest.fixture
     def embeddings(self):
@@ -39,9 +42,26 @@ class BaseModelTest:
     def multiclass_train_test_sentence(self):
         pytest.skip("This test requires the `multiclass_train_test_sentence` fixture to be defined")
 
+    def transform_corpus(self, model, corpus):
+        return corpus
+
+    def assert_training_example(self, predicted_training_example):
+        pass
+
+    def build_model(self, embeddings, label_dict, **kwargs):
+        return self.model_cls(
+            embeddings=embeddings,
+            label_dictionary=label_dict,
+            label_type=self.train_label_type,
+            **self.model_args,
+            **kwargs,
+        )
+
     @pytest.mark.integration
     def test_load_use_model(self, example_sentence):
-        loaded_model = self.model_cls.load(self.load_model)
+        if self.pretrained_model is None:
+            pytest.skip("For this test `pretrained_model` needs to be set.")
+        loaded_model = self.model_cls.load(self.pretrained_model)
 
         loaded_model.predict(example_sentence)
         loaded_model.predict([example_sentence, self.empty_sentence])
@@ -56,12 +76,18 @@ class BaseModelTest:
         flair.set_seed(123)
         label_dict = corpus.make_label_dictionary(label_type=self.train_label_type)
 
-        model = self.model_cls(embeddings=embeddings, label_dictionary=label_dict, label_type=self.train_label_type)
+        model = self.build_model(embeddings, label_dict)
+        corpus = self.transform_corpus(model, corpus)
 
         trainer = ModelTrainer(model, corpus)
-        trainer.train(results_base_path, max_epochs=2, shuffle=False)
+
+        if self.finetune_instead_of_train:
+            trainer.fine_tune(results_base_path, shuffle=False, **self.training_args)
+        else:
+            trainer.train(results_base_path, shuffle=False, **self.training_args)
 
         model.predict(train_test_sentence)
+        self.assert_training_example(train_test_sentence)
 
         for label in train_test_sentence.get_labels(self.train_label_type):
             assert label.value is not None
@@ -83,16 +109,26 @@ class BaseModelTest:
         flair.set_seed(123)
         label_dict = corpus.make_label_dictionary(label_type=self.train_label_type)
 
-        model = self.model_cls(embeddings=embeddings, label_dictionary=label_dict, label_type=self.train_label_type)
+        model = self.build_model(embeddings, label_dict)
+        corpus = self.transform_corpus(model, corpus)
 
         trainer = ModelTrainer(model, corpus)
-        trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
+        if self.finetune_instead_of_train:
+            trainer.fine_tune(results_base_path, shuffle=False, **self.training_args, checkpoint=True)
+        else:
+            trainer.train(results_base_path, shuffle=False, **self.training_args, checkpoint=True)
 
         del model
         checkpoint_model = self.model_cls.load(results_base_path / "checkpoint.pt")
-        with pytest.warns(UserWarning):
-            trainer.resume(model=checkpoint_model, max_epochs=4)
+
+        if self.finetune_instead_of_train:
+            trainer.resume(model=checkpoint_model, max_epochs=self.training_args.get("max_epochs", 2) + 4)
+        else:
+            with pytest.warns(UserWarning):
+                trainer.resume(model=checkpoint_model, max_epochs=self.training_args.get("max_epochs", 2) + 4)
         checkpoint_model.predict(train_test_sentence)
+
+        self.assert_training_example(train_test_sentence)
 
         del trainer, checkpoint_model, corpus
 
@@ -102,11 +138,10 @@ class BaseModelTest:
         flair.set_seed(123)
         label_dict = multi_class_corpus.make_label_dictionary(label_type=self.train_label_type)
 
-        model = self.model_cls(
-            embeddings=embeddings, label_dictionary=label_dict, label_type=self.train_label_type, multi_label=True
-        )
+        model = self.build_model(embeddings, label_dict, multi_label=True)
+        corpus = self.transform_corpus(model, multi_class_corpus)
 
-        trainer = ModelTrainer(model, multi_class_corpus)
+        trainer = ModelTrainer(model, corpus)
         trainer.train(
             results_base_path,
             mini_batch_size=1,

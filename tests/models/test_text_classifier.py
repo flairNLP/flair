@@ -11,7 +11,7 @@ from tests.model_test_utils import BaseModelTest
 
 class TestTextClassifier(BaseModelTest):
     model_cls = TextClassifier
-    load_model = "sentiment"
+    pretrained_model = "sentiment"
     train_label_type = "topic"
     multiclass_prediction_labels = ["apple", "tv"]
 
@@ -62,7 +62,7 @@ class TestTextClassifier(BaseModelTest):
 
     @pytest.mark.integration
     def test_predict_with_prob(self, example_sentence):
-        loaded_model = self.model_cls.load(self.load_model)
+        loaded_model = self.model_cls.load(self.pretrained_model)
         loaded_model.predict(example_sentence, return_probabilities_for_all_classes=True)
         assert len(example_sentence.get_labels(loaded_model.label_type)) == len(loaded_model.label_dictionary)
         assert sum([label.score for label in example_sentence.get_labels(loaded_model.label_type)]) > 1 - 1e-5
