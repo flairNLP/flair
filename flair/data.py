@@ -273,6 +273,9 @@ class DataPoint:
         self.annotation_layers = {}
         self._embeddings: Dict[str, torch.Tensor] = {}
 
+        import random
+        self.__uid = random.getrandbits(128)
+
     @property
     @abstractmethod
     def embedding(self):
@@ -421,12 +424,10 @@ class DataPoint:
         return self.start_position < other.start_position
 
     def __eq__(self, other):
-        # TODO: does it make sense to exclude labels? Two data points of identical text (but different labels)
-        #  would be equal now.
-        return self.unlabeled_identifier == other.unlabeled_identifier
+        return self.__hash__() == other.__hash__()
 
     def __hash__(self):
-        return hash(self.unlabeled_identifier)
+        return hash(self.unlabeled_identifier) + self.__uid
 
     def __len__(self):
         raise NotImplementedError
