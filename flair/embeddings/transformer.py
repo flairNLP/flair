@@ -1151,7 +1151,6 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         hidden_states = self.model(input_ids, **model_kwargs)[-1]
         # make the tuple a tensor; makes working with it easier.
         hidden_states = torch.stack(hidden_states)
-        hidden_states = pad_hidden_states(hidden_states, input_ids)
 
         # for multimodal models like layoutlmv3, we truncate the image embeddings as they are only used via attention
         hidden_states = truncate_hidden_states(hidden_states, input_ids)
