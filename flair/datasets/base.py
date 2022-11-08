@@ -76,7 +76,7 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
 
         batch = MiniBatch(tuple(data))
 
-        if self.model:
+        if self.model and self.num_workers > 0:
             batch.precomputed = self.model.preprocess_batch(batch)
 
         return batch
