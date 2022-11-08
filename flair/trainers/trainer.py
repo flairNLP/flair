@@ -557,7 +557,7 @@ class ModelTrainer:
                             f"epoch {epoch}"
                             f" - iter {seen_batches}/{total_number_of_batches}"
                             f" - loss {intermittent_loss:.8f}"
-                            f" - time/sec: {(time.time() - start_time):.2f}"
+                            f" - time (sec): {(time.time() - start_time):.2f}"
                             f" - samples/sec: {average_over / (time.time() - start_time):.2f}"
                             f" - lr: {lr_info}{momentum_info}"
                         )
