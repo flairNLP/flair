@@ -38,6 +38,7 @@ import tempfile
 import faiss
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import Normalizer
+from scipy.sparse import csr_matrix
 
 log = logging.getLogger("flair")
 
@@ -309,12 +310,7 @@ class BioEntityLinkingModel:
             self.load_sparse_encoder(model_name_or_path)
             self.load_sparse_weight(model_name_or_path)
 
-        # self.embed_dictionary(
-        #     model_name_or_path=model_name_or_path,
-        #     dictionary_name_or_path=dictionary_name_or_path,
-        #     mean_centering=mean_centering,
-        # )
-        self.embed_dictionary_faiss(
+        self.embed_dictionary(
             model_name_or_path=model_name_or_path,
             dictionary_name_or_path=dictionary_name_or_path,
             mean_centering=mean_centering,
@@ -404,53 +400,8 @@ class BioEntityLinkingModel:
 
         return sparse_embeds
 
-    def biosyn_embed_dense(
-        self, names: list, show_progress: bool = False, batch_size: int = 1024
-    ) -> np.ndarray:
-        """
-        Embedding data into dense representations for BioSyn
-        :param names list: An array of names
-        :returns dense_embeds list: A list of dense embeddings
-        """
-        self.encoder.eval()  # prevent dropout
-
-        batch_size = 1024
-        dense_embeds = []
-
-        name_encodings = self.tokenizer(
-            names,
-            padding="max_length",
-            max_length=self.max_length,
-            truncation=True,
-            return_tensors="pt",
-        )
-        if self.use_cuda:
-            name_encodings = name_encodings.to("cuda")
-        name_dataset = NamesDataset(name_encodings)
-        name_dataloader = DataLoader(
-            name_dataset,
-            shuffle=False,
-            collate_fn=default_data_collator,
-            batch_size=batch_size,
-        )
-
-        with torch.no_grad():
-            for batch in tqdm(
-                name_dataloader,
-                disable=not show_progress,
-                desc="Calculating dense embeddings for dictionary",
-            ):
-                outputs = self.encoder(**batch)
-                batch_dense_embeds = (
-                    outputs[0][:, 0].cpu().detach().numpy()
-                )  # [CLS] representations
-                dense_embeds.append(batch_dense_embeds)
-        dense_embeds = np.concatenate(dense_embeds, axis=0)
-
-        return dense_embeds
-
     # Attention: uses cuda
-    def sapbert_embed_dense(
+    def embed_dense(
         self,
         names: np.ndarray,
         show_progress: bool = False,
@@ -544,33 +495,6 @@ class BioEntityLinkingModel:
         return score_matrix
 
     def retrieve_candidate(
-        self, score_matrix: np.ndarray, topk: int
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Return sorted topk indxes (descending order)
-        :param score_matrix np.array: 2d numpy array of scores
-        :param topk int: The number of candidates
-        :returns topk_idxs np.array: 2d numpy array of scores [# of query , # of dict]
-        """
-
-        def indexing_2d(arr, cols):
-            rows = np.repeat(
-                np.arange(0, cols.shape[0])[:, np.newaxis], cols.shape[1], axis=1
-            )
-            return arr[rows, cols]
-
-        # get topk indexes without sorting
-        topk_idxs = np.argpartition(score_matrix, -topk)[:, -topk:]
-
-        # get topk indexes with sorting
-        topk_score_matrix = indexing_2d(score_matrix, topk_idxs)
-        topk_argidxs = np.argsort(-topk_score_matrix)
-        topk_scores = np.sort(-topk_score_matrix)
-        topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
-
-        return topk_idxs, -topk_scores
-
-    def retrieve_candidate_cuda(
         self,
         score_matrix: np.ndarray,
         topk: int,
@@ -613,61 +537,16 @@ class BioEntityLinkingModel:
         tgt_space_mean_vec: np.ndarray = None,
         agg_mode: str = "cls",
     ) -> np.ndarray:
+        """
+        Return the topk predictions for a mention and their scores
+        :param mention: string of the mention to find candidates for
+        :param topk: number of candidates
+        :return res: d numpy array of ids [# of query , # of dict]
+        :return scores: numpy array of top predictions and their scores
+        """
         # get dense embeds for mention
-        if self.use_sparse_embeds:
-            mention_dense_embeds = self.biosyn_embed_dense(names=[mention])
-        else:
-            mention_dense_embeds = self.sapbert_embed_dense(
-                names=[mention], agg_mode=agg_mode
-            )
-        if tgt_space_mean_vec is not None:
-            mention_dense_embeds -= tgt_space_mean_vec
-        dense_score_matrix = self.get_score_matrix(
-            query_embeds=mention_dense_embeds, dict_embeds=self.dict_dense_embeds
-        )
+        mention_dense_embeds = self.embed_dense(names=[mention])
 
-        # when using sparse embeds: calculate hybrid scores with dense and sparse embeds
-        if self.use_sparse_embeds:
-            # get sparse embeds for mention
-            mention_sparse_embeds = self.embed_sparse(names=[mention])
-            sparse_score_matrix = self.get_score_matrix(
-                query_embeds=mention_sparse_embeds, dict_embeds=self.dict_sparse_embeds
-            )
-            sparse_weight = self.get_sparse_weight().item()
-            # calculate hybrid score matrix
-            score_matrix = sparse_weight * sparse_score_matrix + dense_score_matrix
-            candidate_idxs, candidate_scores = self.retrieve_candidate(
-                score_matrix=score_matrix, topk=topk
-            )
-        # for only dense embeddings
-        else:
-            score_matrix = dense_score_matrix
-            candidate_idxs, candidate_scores = self.retrieve_candidate_cuda(
-                score_matrix=score_matrix, topk=topk, batch_size=16, show_progress=False
-            )
-
-        ids = candidate_idxs[0].tolist()
-        scores = candidate_scores[0].tolist()
-
-        return [
-            np.append(self.dictionary[ind], score) for ind, score in zip(ids, scores)
-        ]
-
-    def get_predictions_faiss(
-        self,
-        mention: str,
-        topk: int,
-        tgt_space_mean_vec: np.ndarray = None,
-        agg_mode: str = "cls",
-    ) -> np.ndarray:
-
-        # get dense embeds for mention
-        if self.use_sparse_embeds:
-            mention_dense_embeds = self.biosyn_embed_dense(names=[mention])
-        else:
-            mention_dense_embeds = self.sapbert_embed_dense(
-                names=[mention], agg_mode=agg_mode
-            )
         # remove mean centering
         if tgt_space_mean_vec is not None:
             mention_dense_embeds -= tgt_space_mean_vec
@@ -678,6 +557,7 @@ class BioEntityLinkingModel:
         # if using sparse embeds: calculate hybrid scores with dense and sparse embeds
         if self.use_sparse_embeds:
             # search for more than topk candidates to use them when combining with sparse scores
+            # get candidates from dense embeddings
             dense_scores, dense_ids = self.dense_dictionary_index.search(
                 x=mention_dense_embeds, k=topk + 10
             )
@@ -686,9 +566,13 @@ class BioEntityLinkingModel:
             # normalize mention vector
             faiss.normalize_L2(mention_sparse_embeds)
 
+            # get candidates from sprase embeddings
             sparse_weight = self.get_sparse_weight().item()
-            sparse_distances, sparse_ids = self.sparse_dictionary_index.kneighbors(
-                mention_sparse_embeds, n_neighbors=topk + 10
+            sparse_score_matrix = self.get_score_matrix(
+                query_embeds=mention_sparse_embeds, dict_embeds=self.dict_sparse_embeds
+            )
+            sparse_ids, sparse_distances = self.retrieve_candidate(
+                score_matrix=sparse_score_matrix, topk=topk + 10
             )
 
             # combine dense and sparse scores
@@ -709,13 +593,13 @@ class BioEntityLinkingModel:
                     if sparse_id not in ids:
                         ids = np.append(ids, sparse_id)
                         distances = np.append(
-                            distances, sparse_weight * (1 - sparse_distance)
+                            distances, sparse_weight * sparse_distance
                         )
                     else:
                         index = np.where(ids == sparse_id)[0][0]
                         distances[index] = (
-                            sparse_weight * (1 - sparse_distance) + distances[index]
-                        )
+                            sparse_weight * sparse_distance
+                        ) + distances[index]
 
                 sorted_indizes = np.argsort(-distances)
                 ids = ids[sorted_indizes][:topk]
@@ -752,91 +636,6 @@ class BioEntityLinkingModel:
             f"{file_name}.pk",
         )
 
-        # If exists, load the cached dictionary indizes
-        if os.path.exists(cached_dictionary_path):
-            with open(cached_dictionary_path, "rb") as cached_file:
-                cached_dictionary = pickle.load(cached_file)
-            log.info(
-                "Loaded dictionary from cached file {}".format(cached_dictionary_path)
-            )
-
-            (self.dictionary, self.dict_sparse_embeds, self.dict_dense_embeds,) = (
-                cached_dictionary["dictionary"],
-                cached_dictionary["sparse_dictionary_embeds"],
-                cached_dictionary["dense_dictionary_embeds"],
-            )
-
-        # else, load and embed
-        else:
-            # use provided dictionary
-            if dictionary_name_or_path == "ctd-disease":
-                self.dictionary = NEL_CTD_DISEASE_DICT().data
-            elif dictionary_name_or_path == "ctd-chemical":
-                self.dictionary = NEL_CTD_CHEMICAL_DICT().data
-            elif dictionary_name_or_path == "ncbi-gene":
-                self.dictionary = NEL_NCBI_GENE_DICT().data
-            elif dictionary_name_or_path == "ncbi-taxonomy":
-                self.dictionary = NEL_NCBI_TAXONOMY_DICT().data
-            # use custom dictionary file
-            else:
-                self.dictionary = DictionaryDataset(
-                    dictionary_path=dictionary_name_or_path
-                ).data
-
-            # embed dictionary
-            dictionary_names = [row[0] for row in self.dictionary]
-
-            # create dense and sparse embeddings
-            if self.use_sparse_embeds:
-                self.dict_dense_embeds = self.biosyn_embed_dense(
-                    names=dictionary_names, show_progress=True
-                )
-                self.dict_sparse_embeds = self.embed_sparse(
-                    names=dictionary_names, show_progress=True
-                )
-
-            # create only dense embeddings
-            else:
-                self.dict_dense_embeds = self.sapbert_embed_dense(
-                    names=dictionary_names, show_progress=True
-                )
-                self.dict_sparse_embeds = None
-                self.sparse_dictionary_index = None
-
-            # cache dictionary
-            cached_dictionary = {
-                "dictionary": self.dictionary,
-                "sparse_dictionary_embeds": self.dict_sparse_embeds,
-                "dense_dictionary_embeds": self.dict_dense_embeds,
-            }
-            if not os.path.exists(cache_folder):
-                os.mkdir(cache_folder)
-            with open(cached_dictionary_path, "wb") as cache_file:
-                pickle.dump(cached_dictionary, cache_file)
-            print("Saving dictionary into cached file {}".format(cache_folder))
-
-        # apply mean centering
-        if mean_centering:
-            self.tgt_space_mean_vec = self.dict_dense_embeds.mean(0)
-            self.dict_dense_embeds -= self.tgt_space_mean_vec
-        else:
-            self.tgt_space_mean_vec = None
-
-    def embed_dictionary_faiss(
-        self,
-        model_name_or_path: str,
-        dictionary_name_or_path: str,
-        mean_centering: bool,
-    ):
-        # check for embedded dictionary in cache
-        dictionary_name = os.path.splitext(os.path.basename(dictionary_name_or_path))[0]
-        cache_folder = os.path.join(flair.cache_root, "datasets")
-        file_name = f"bio_nen_{model_name_or_path.split('/')[-1]}_{dictionary_name}"
-        cached_dictionary_path = os.path.join(
-            cache_folder,
-            f"{file_name}.pk",
-        )
-
         # If exists, load the cached dictionary indices
         if os.path.exists(cached_dictionary_path):
             with open(cached_dictionary_path, "rb") as cached_file:
@@ -845,13 +644,9 @@ class BioEntityLinkingModel:
                 "Loaded dictionary from cached file {}".format(cached_dictionary_path)
             )
 
-            (
-                self.dictionary,
-                self.sparse_dictionary_index,
-                self.dense_dictionary_index,
-            ) = (
+            (self.dictionary, self.dict_sparse_embeds, self.dense_dictionary_index,) = (
                 cached_dictionary["dictionary"],
-                cached_dictionary["sparse_dictionary_index"],
+                cached_dictionary["dict_sparse_embeds"],
                 cached_dictionary["dense_dictionary_index"],
             )
             self.dense_dictionary_index = faiss.index_cpu_to_gpu(
@@ -880,17 +675,12 @@ class BioEntityLinkingModel:
 
             # create dense and sparse embeddings
             if self.use_sparse_embeds:
-                self.dict_dense_embeds = self.biosyn_embed_dense(
+                self.dict_dense_embeds = self.embed_dense(
                     names=dictionary_names, show_progress=True
                 )
                 self.dict_sparse_embeds = self.embed_sparse(
                     names=dictionary_names, show_progress=True
                 )
-                faiss.normalize_L2(self.dict_sparse_embeds)
-
-                # build sparse index scikit
-                self.sparse_dictionary_index = NearestNeighbors(metric="cosine")
-                self.sparse_dictionary_index.fit(self.dict_sparse_embeds)
 
             # create only dense embeddings
             else:
@@ -898,12 +688,12 @@ class BioEntityLinkingModel:
                     names=dictionary_names, show_progress=True
                 )
                 self.dict_sparse_embeds = None
-                self.sparse_dictionary_index = None
 
             # build dense index
             dimension = self.dict_dense_embeds.shape[1]
             # to use cosine similarity, we normalize the vectors and then use inner product
             faiss.normalize_L2(self.dict_dense_embeds)
+
             dense_index = faiss.IndexFlatIP(dimension)
             self.dense_dictionary_index = faiss.index_cpu_to_gpu(
                 faiss.StandardGpuResources(), 0, dense_index
@@ -916,7 +706,7 @@ class BioEntityLinkingModel:
             # cache dictionary
             cached_dictionary = {
                 "dictionary": self.dictionary,
-                "sparse_dictionary_index": self.sparse_dictionary_index,
+                "sparse_dictionary_embeds": self.dict_sparse_embeds,
                 "dense_dictionary_index": cache_index_dense,
             }
             if not os.path.exists(cache_folder):
@@ -1107,9 +897,7 @@ class BiomedicalEntityLinking:
                     mention = self.text_preprocessor.run(entity.span.text)
 
                 # get predictions from dictionary
-                # predictions = self.model.get_predictions(mention, topk)
-
-                predictions = self.model.get_predictions_faiss(mention, topk)
+                predictions = self.model.get_predictions(mention, topk)
 
                 # add predictions to entity
                 label_name = (
