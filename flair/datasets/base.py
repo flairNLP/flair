@@ -65,6 +65,7 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
             drop_last=drop_last,
             timeout=timeout,
             worker_init_fn=worker_init_fn,
+            persistent_workers=True if num_workers > 0 else False,
         )
 
     def custom_collate(self, data):
