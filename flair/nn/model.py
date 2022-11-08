@@ -674,11 +674,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
     def forward_loss(self, batch: MiniBatch) -> Tuple[torch.Tensor, int]:
 
+        log.info("forward")
         # get the data points for which to predict labels
         if 'data_points_for_batch' in batch.precomputed:
             data_points = batch.precomputed['data_points_for_batch']
+            log.info("... using precomputed")
         else:
             data_points = self._get_data_points_for_batch(batch)
+            log.info("... precomputing")
 
         if len(data_points) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
