@@ -473,6 +473,8 @@ class ModelTrainer:
                     log_line(log)
                     break
 
+                start_time = time.time()
+
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
@@ -491,11 +493,8 @@ class ModelTrainer:
                 modulo = max(1, int(total_number_of_batches / 10))
 
                 # process mini-batches
-                batch_time = 0.0
                 average_over = 0
                 for batch_no, batch in enumerate(batch_loader):
-
-                    start_time = time.time()
 
                     # zero the gradients on the model and optimizer
                     self.model.zero_grad()
@@ -545,7 +544,6 @@ class ModelTrainer:
 
                     seen_batches += 1
 
-                    batch_time += time.time() - start_time
                     if seen_batches % modulo == 0:
                         momentum_info = ""
                         if cycle_momentum:
@@ -556,13 +554,13 @@ class ModelTrainer:
                         intermittent_loss = train_loss / average_over if average_over > 0 else train_loss / seen_batches
 
                         log.info(
-                            f"epoch {epoch} - iter {seen_batches}/"
-                            f"{total_number_of_batches} - loss "
-                            f"{intermittent_loss:.8f} - samples/sec:"
-                            f" {mini_batch_size * modulo / batch_time:.2f}"
+                            f"epoch {epoch}"
+                            f" - iter {seen_batches}/{total_number_of_batches}"
+                            f" - loss {intermittent_loss:.8f}"
+                            f" - time/sec: {(time.time() - start_time):.2f}"
+                            f" - samples/sec: {average_over / (time.time() - start_time):.2f}"
                             f" - lr: {lr_info}{momentum_info}"
                         )
-                        batch_time = 0.0
                         iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode and write_weights:
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
