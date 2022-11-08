@@ -8,7 +8,7 @@ import torch.utils.data.dataloader
 from deprecated import deprecated
 from torch.utils.data.dataset import ConcatDataset, Subset
 
-from flair.data import DT, FlairDataset, Sentence, Tokenizer
+from flair.data import DT, FlairDataset, Sentence, Tokenizer, MiniBatch
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 
 log = logging.getLogger("flair")
@@ -32,19 +32,19 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         # in certain cases, multi-CPU data loading makes no sense and slows
         # everything down. For this reason, we detect if a dataset is in-memory:
         # if so, num_workers is set to 0 for faster processing
-        flair_dataset = dataset
-        while True:
-            if type(flair_dataset) is Subset:
-                flair_dataset = flair_dataset.dataset
-            elif type(flair_dataset) is ConcatDataset:
-                flair_dataset = flair_dataset.datasets[0]
-            else:
-                break
-
-        if type(flair_dataset) is list:
-            num_workers = 0
-        elif isinstance(flair_dataset, FlairDataset) and flair_dataset.is_in_memory():
-            num_workers = 0
+        # flair_dataset = dataset
+        # while True:
+        #     if type(flair_dataset) is Subset:
+        #         flair_dataset = flair_dataset.dataset
+        #     elif type(flair_dataset) is ConcatDataset:
+        #         flair_dataset = flair_dataset.datasets[0]
+        #     else:
+        #         break
+        #
+        # if type(flair_dataset) is list:
+        #     num_workers = 0
+        # elif isinstance(flair_dataset, FlairDataset) and flair_dataset.is_in_memory():
+        #     num_workers = 0
 
         if num_workers is None:
             num_workers = min(self.estimate_max_workers(), 8)
@@ -67,10 +67,18 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
             worker_init_fn=worker_init_fn,
         )
 
-    def custom_collate(self, batch):
+    def custom_collate(self, data):
+
+        # filter in data loader
         if self.model:
-            self.model.preprocess_batch(batch)
-        return list(batch)
+            data = [sentence for sentence in data if self.model._filter_data_point(data)]
+
+        batch = MiniBatch(tuple(data))
+
+        if self.model:
+            batch.precomputed = self.model.preprocess_batch(batch)
+
+        return batch
 
     @staticmethod
     def estimate_max_workers():

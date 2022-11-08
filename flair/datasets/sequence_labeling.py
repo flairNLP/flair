@@ -514,15 +514,15 @@ class ColumnDataset(FlairDataset):
                         continue
 
                     # set previous and next sentence for context
-                    sentence._previous_sentence = previous_sentence
-                    sentence._next_sentence = None
-                    if previous_sentence:
-                        previous_sentence._next_sentence = sentence
+                    # sentence._previous_sentence = previous_sentence
+                    # sentence._next_sentence = None
+                    # if previous_sentence:
+                    #     previous_sentence._next_sentence = sentence
 
                     # append parsed sentence to list in memory
                     self.sentences.append(sentence)
 
-                    previous_sentence = sentence
+                    # previous_sentence = sentence
 
                 self.total_sentence_count = len(self.sentences)
 

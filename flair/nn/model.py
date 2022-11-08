@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DT, DT2, Dictionary, Sentence
+from flair.data import DT, DT2, Dictionary, Sentence, MiniBatch
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
 from flair.file_utils import Tqdm
@@ -46,18 +46,18 @@ class Model(torch.nn.Module, typing.Generic[DT]):
 
     @abstractmethod
     def evaluate(
-        self,
-        data_points: Union[List[DT], Dataset],
-        gold_label_type: str,
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
-        gold_label_dictionary: Optional[Dictionary] = None,
-        return_loss: bool = True,
-        **kwargs,
+            self,
+            data_points: Union[List[DT], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: Optional[int] = 8,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
+            gold_label_dictionary: Optional[Dictionary] = None,
+            return_loss: bool = True,
+            **kwargs,
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
@@ -185,10 +185,10 @@ class Model(torch.nn.Module, typing.Generic[DT]):
                 "trained or was trained with Flair version < 0.9.1)"
             )
 
-    def preprocess_batch(self, batch):
+    def preprocess_batch(self, batch) -> Dict:
         """Optional. This function is called in the data loader when a batch is loaded.
         You can put all CPU-heavy computations here that are needed to prepare the batch for GPU."""
-        pass
+        return {}
 
 
 class Classifier(Model[DT], typing.Generic[DT]):
@@ -198,18 +198,18 @@ class Classifier(Model[DT], typing.Generic[DT]):
     evaluation routines and compute the same numbers."""
 
     def evaluate(
-        self,
-        data_points: Union[List[DT], Dataset],
-        gold_label_type: str,
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
-        gold_label_dictionary: Optional[Dictionary] = None,
-        return_loss: bool = True,
-        **kwargs,
+            self,
+            data_points: Union[List[DT], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: Optional[int] = 8,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
+            gold_label_dictionary: Optional[Dictionary] = None,
+            return_loss: bool = True,
+            **kwargs,
     ) -> Result:
         import numpy as np
         import sklearn
@@ -435,11 +435,11 @@ class Classifier(Model[DT], typing.Generic[DT]):
             classification_report_dict = {}
 
         detailed_result = (
-            "\nResults:"
-            f"\n- F-score (micro) {micro_f_score}"
-            f"\n- F-score (macro) {macro_f_score}"
-            f"\n- Accuracy {accuracy_score}"
-            "\n\nBy class:\n" + classification_report
+                "\nResults:"
+                f"\n- F-score (micro) {micro_f_score}"
+                f"\n- F-score (macro) {macro_f_score}"
+                f"\n- Accuracy {accuracy_score}"
+                "\n\nBy class:\n" + classification_report
         )
 
         # line for log file
@@ -462,14 +462,14 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
     @abstractmethod
     def predict(
-        self,
-        sentences: Union[List[DT], DT],
-        mini_batch_size: int = 32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none",
+            self,
+            sentences: Union[List[DT], DT, MiniBatch],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
@@ -512,19 +512,19 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
     """
 
     def __init__(
-        self,
-        embeddings: Embeddings,
-        label_dictionary: Dictionary,
-        final_embedding_size: int,
-        dropout: float = 0.0,
-        locked_dropout: float = 0.0,
-        word_dropout: float = 0.0,
-        multi_label: bool = False,
-        multi_label_threshold: float = 0.5,
-        loss_weights: Dict[str, float] = None,
-        decoder: Optional[torch.nn.Module] = None,
-        inverse_model: bool = False,
-        train_on_gold_pairs_only: bool = False,
+            self,
+            embeddings: Embeddings,
+            label_dictionary: Dictionary,
+            final_embedding_size: int,
+            dropout: float = 0.0,
+            locked_dropout: float = 0.0,
+            word_dropout: float = 0.0,
+            multi_label: bool = False,
+            multi_label_threshold: float = 0.5,
+            loss_weights: Dict[str, float] = None,
+            decoder: Optional[torch.nn.Module] = None,
+            inverse_model: bool = False,
+            train_on_gold_pairs_only: bool = False,
     ):
 
         super().__init__()
@@ -580,10 +580,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
 
-    def preprocess_batch(self, batch):
+    def preprocess_batch(self, batch) -> Dict:
         # get data points and prepare embeddings
-        self._get_data_points_for_batch(tuple(batch))
-        self._prepare_label_tensor(tuple(batch))
+        data_points_for_batch = self._get_data_points_for_batch(batch)
+        label_tensor = self._prepare_label_tensor(batch)
+        return {'data_points_for_batch': data_points_for_batch, 'label_tensor': label_tensor}
 
     def _filter_data_point(self, data_point: DT) -> bool:
         """Specify if a data point should be kept. That way you can remove for example empty texts.
@@ -600,13 +601,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
         raise NotImplementedError
 
-    @lru_cache(maxsize=2048)
-    def _get_data_points_for_batch(self, sentences: Tuple[DT]) -> List[DT2]:
+    def _get_data_points_for_batch(self, mini_batch: MiniBatch) -> List[DT2]:
         """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
         return [
             data_point
-            for sentence in sentences
-            if self._filter_data_point(sentence)
+            for sentence in mini_batch
             for data_point in self._get_data_points_from_sentence(sentence)
         ]
 
@@ -633,7 +632,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         else:
             self._multi_label_threshold = {"default": x}
 
-    def _prepare_label_tensor(self, prediction_data_points: Tuple[DT2]) -> torch.Tensor:
+    def _prepare_label_tensor(self, prediction_data_points: List[DT2]) -> torch.Tensor:
         labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points]
         if self.multi_label:
             return torch.tensor(
@@ -642,7 +641,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                     for all_labels_for_point in labels
                 ],
                 dtype=torch.float,
-                device=flair.device,
+                device='cpu',
             )
         else:
             return torch.tensor(
@@ -653,13 +652,13 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                     for label in labels
                 ],
                 dtype=torch.long,
-                device=flair.device,
+                device='cpu',
             )
 
-    def _encode_data_points(self, sentences: List[DT], data_points: List[DT2]):
+    def _encode_data_points(self, batch: MiniBatch, data_points: List[DT2]):
 
         # embed sentences
-        self.embeddings.embed(sentences)
+        self.embeddings.embed(list(batch.data_points))
 
         # get a tensor of data points
         data_point_tensor = torch.stack([self._get_embedding_for_data_point(data_point) for data_point in data_points])
@@ -673,29 +672,30 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
         return data_point_tensor
 
-    def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
-
-        # make a forward pass to produce embedded data points and labels
-        sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
+    def forward_loss(self, batch: MiniBatch) -> Tuple[torch.Tensor, int]:
 
         # get the data points for which to predict labels
-        data_points = self._get_data_points_for_batch(tuple(sentences))
+        if 'data_points_for_batch' in batch.precomputed:
+            data_points = batch.precomputed['data_points_for_batch']
+        else:
+            data_points = self._get_data_points_for_batch(batch)
+
         if len(data_points) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
         # get their gold labels as a tensor
-        label_tensor = self._prepare_label_tensor(tuple(data_points))
+        label_tensor = self._prepare_label_tensor(data_points)
         if label_tensor.size(0) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
         # pass data points through network to get encoded data point tensor
-        data_point_tensor = self._encode_data_points(sentences, data_points)
+        data_point_tensor = self._encode_data_points(batch, data_points)
 
         # decode
         scores = self.decoder(data_point_tensor)
 
         # calculate the loss
-        return self._calculate_loss(scores, label_tensor)
+        return self._calculate_loss(scores, label_tensor.to(flair.device))
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
         return self.loss_function(scores, labels), labels.size(0)
@@ -717,14 +717,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         return typing.cast(List[DT], reordered_sentences)
 
     def predict(
-        self,
-        sentences: Union[List[DT], DT],
-        mini_batch_size: int = 32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none",
+            self,
+            sentences: Union[List[DT], DT],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
@@ -744,38 +744,40 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             if not sentences:
                 return sentences
 
-            if not isinstance(sentences, list):
-                sentences = [sentences]
+            # if input is already a mini-batch, use it
+            if isinstance(sentences, MiniBatch):
+                batches = [sentences]
 
-            reordered_sentences = self._sort_data(sentences)
+            # otherwise, create a data-loader that produces mini-batches
+            else:
+                if not isinstance(sentences, list):
+                    sentences = [sentences]
 
-            if len(reordered_sentences) == 0:
-                return sentences
+                # filter and reorder
+                sentences = [dp for dp in sentences if self._filter_data_point(sentences)]
+                reordered_sentences = self._sort_data(sentences)
 
-            if len(reordered_sentences) > mini_batch_size:
-                batches: Union[DataLoader, List[List[DT]]] = DataLoader(
+                if len(reordered_sentences) == 0:
+                    return sentences
+
+                batches: DataLoader = DataLoader(
                     dataset=FlairDatapointDataset(reordered_sentences),
                     batch_size=mini_batch_size,
                 )
-                # progress bar for verbosity
-                if verbose:
-                    progress_bar = tqdm(batches)
-                    progress_bar.set_description("Batch inference")
-                    batches = progress_bar
-            else:
-                batches = [reordered_sentences]
+
+            # progress bar for verbosity
+            if verbose:
+                progress_bar = tqdm(batches)
+                progress_bar.set_description("Batch inference")
+                batches = progress_bar
 
             overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
             for batch in batches:
 
-                batch = [dp for dp in batch if self._filter_data_point(dp)]
+                # print(batch)
 
-                # stop if all sentences are empty
-                if not batch:
-                    continue
-
-                data_points = self._get_data_points_for_batch(tuple(batch))
+                data_points = self._get_data_points_for_batch(batch)
 
                 if not data_points:
                     continue
@@ -796,7 +798,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                     #     data_point.remove_labels(label_name)
 
                     if return_loss:
-                        gold_labels = self._prepare_label_tensor(tuple(data_points))
+                        gold_labels = self._prepare_label_tensor(data_points).to(flair.device)
                         overall_loss += self._calculate_loss(scores, gold_labels)[0]
                         label_count += len(data_points)
 
@@ -851,9 +853,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
     def __str__(self):
         return (
-            super(flair.nn.Model, self).__str__().rstrip(")")
-            + f"  (weights): {self.weight_dict}\n"
-            + f"  (weight_tensor) {self.loss_weights}\n)"
+                super(flair.nn.Model, self).__str__().rstrip(")")
+                + f"  (weights): {self.weight_dict}\n"
+                + f"  (weight_tensor) {self.loss_weights}\n)"
         )
 
     @classmethod

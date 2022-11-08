@@ -7,7 +7,7 @@ from collections import Counter, defaultdict
 from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Union, cast
+from typing import Dict, Iterable, List, Optional, Union, cast, Tuple
 
 import torch
 from deprecated import deprecated
@@ -478,12 +478,12 @@ class Token(_PartOfSentence):
     """
 
     def __init__(
-        self,
-        text: str,
-        head_id: int = None,
-        whitespace_after: int = 1,
-        start_position: int = 0,
-        sentence=None,
+            self,
+            text: str,
+            head_id: int = None,
+            whitespace_after: int = 1,
+            start_position: int = 0,
+            sentence=None,
     ):
         super().__init__(sentence=sentence)
 
@@ -671,11 +671,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-        self,
-        text: Union[str, List[str]],
-        use_tokenizer: Union[bool, Tokenizer] = True,
-        language_code: str = None,
-        start_position: int = 0,
+            self,
+            text: Union[str, List[str]],
+            use_tokenizer: Union[bool, Tokenizer] = True,
+            language_code: str = None,
+            start_position: int = 0,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -1182,14 +1182,32 @@ class Image(DataPoint):
         pass
 
 
+class MiniBatch:
+    def __init__(self, data_points: Tuple[DataPoint]):
+        self.data_points: Tuple[DataPoint] = data_points
+        self.precomputed = {}
+
+    def __iter__(self):
+        return self.data_points.__iter__()
+
+    def __str__(self):
+        return f"{self.data_points[0].__class__.__name__}-MiniBatch (length {len(self.data_points)}) - {'; '.join([sentence.unlabeled_identifier for sentence in self.data_points])}"
+
+    def __len__(self):
+        return self.data_points.__len__()
+
+    def __getitem__(self, item):
+        return self.data_points.__getitem__(item)
+
+
 class Corpus(typing.Generic[T_co]):
     def __init__(
-        self,
-        train: Optional[Dataset[T_co]] = None,
-        dev: Optional[Dataset[T_co]] = None,
-        test: Optional[Dataset[T_co]] = None,
-        name: str = "corpus",
-        sample_missing_splits: Union[bool, str] = True,
+            self,
+            train: Optional[Dataset[T_co]] = None,
+            dev: Optional[Dataset[T_co]] = None,
+            test: Optional[Dataset[T_co]] = None,
+            name: str = "corpus",
+            sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1228,11 +1246,11 @@ class Corpus(typing.Generic[T_co]):
         return self._test
 
     def downsample(
-        self,
-        percentage: float = 0.1,
-        downsample_train=True,
-        downsample_dev=True,
-        downsample_test=True,
+            self,
+            percentage: float = 0.1,
+            downsample_train=True,
+            downsample_dev=True,
+            downsample_test=True,
     ):
 
         if downsample_train and self._train is not None:
@@ -1430,17 +1448,12 @@ class Corpus(typing.Generic[T_co]):
         label_dictionary: Dictionary = Dictionary(add_unk=add_unk)
         label_dictionary.span_labels = False
 
-        assert self.train
-        datasets = [self.train]
-
-        data: ConcatDataset = ConcatDataset(datasets)
-
         log.info("Computing label dictionary. Progress:")
 
         sentence_label_type_counter: typing.Counter[str] = Counter()
         label_value_counter: typing.Counter[str] = Counter()
         all_sentence_labels: List[str] = []
-        for sentence in Tqdm.tqdm(_iter_dataset(data)):
+        for sentence in Tqdm.tqdm(self.train):
 
             # count all label types per sentence
             sentence_label_type_counter.update(sentence.annotation_layers.keys())
@@ -1470,7 +1483,7 @@ class Corpus(typing.Generic[T_co]):
                 unked_count += count
 
         if len(label_dictionary.idx2item) == 0 or (
-            len(label_dictionary.idx2item) == 1 and "<unk>" in label_dictionary.get_items()
+                len(label_dictionary.idx2item) == 1 and "<unk>" in label_dictionary.get_items()
         ):
             log.error(f"ERROR: You specified label_type='{label_type}' which is not in this dataset!")
             contained_labels = ", ".join(
@@ -1522,11 +1535,11 @@ class Corpus(typing.Generic[T_co]):
 
 class MultiCorpus(Corpus):
     def __init__(
-        self,
-        corpora: List[Corpus],
-        task_ids: Optional[List[str]] = None,
-        name: str = "multicorpus",
-        **corpusargs,
+            self,
+            corpora: List[Corpus],
+            task_ids: Optional[List[str]] = None,
+            name: str = "multicorpus",
+            **corpusargs,
     ):
 
         self.corpora: List[Corpus] = corpora
