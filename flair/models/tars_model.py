@@ -742,9 +742,12 @@ class TARSClassifier(FewshotClassifier):
 
         # remap state dict for models serialized with Flair <= 0.11.3
         import re
+
         state_dict = state["state_dict"]
         for key in list(state_dict.keys()):
-            state_dict[re.sub("^tars_model.document_embeddings\\.", "tars_model.embeddings.", key)] = state_dict.pop(key)
+            state_dict[re.sub("^tars_model.document_embeddings\\.", "tars_model.embeddings.", key)] = state_dict.pop(
+                key
+            )
 
         # init new TARS classifier
         model: TARSClassifier = super()._init_model_with_state_dict(
@@ -873,12 +876,13 @@ class TARSClassifier(FewshotClassifier):
                         loss_and_count = self.tars_model.predict(
                             tars_sentence,
                             label_name=label_name,
-                            return_loss=True,
+                            return_loss=return_loss,
                             return_probabilities_for_all_classes=True if label_threshold < 0.5 else False,
                         )
 
-                        overall_loss += loss_and_count[0].item()
-                        overall_count += loss_and_count[1]
+                        if return_loss:
+                            overall_loss += loss_and_count[0].item()
+                            overall_count += loss_and_count[1]
 
                         # add all labels that according to TARS match the text and are above threshold
                         for predicted_tars_label in tars_sentence.get_labels(label_name):
