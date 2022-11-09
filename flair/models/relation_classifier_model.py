@@ -491,9 +491,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             )
 
             encoded_sentences = [x[0] for x in sentences_with_relation_reference]
-
-            print(encoded_sentences)
-
             loss = super().predict(
                 encoded_sentences,
                 mini_batch_size=mini_batch_size,
@@ -503,12 +500,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                 return_loss=return_loss,
                 embedding_storage_mode=embedding_storage_mode,
             )
-            print(encoded_sentences)
 
             # For each encoded sentence, transfer its prediction onto the original relation
             for encoded_sentence, original_relation in sentences_with_relation_reference:
                 for label in encoded_sentence.get_labels(prediction_label_type):
-                    original_relation.add_label(prediction_label_type, value=label.value, score=label.score)
+                    original_relation.add_label(prediction_label_type, value=label.value, score=label.value)
 
         else:
             raise ValueError("All passed sentences must be either uniformly encoded or not.")
