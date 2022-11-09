@@ -238,6 +238,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 # remove any previously predicted labels
                 for datapoint in batch:
                     datapoint.remove_labels("predicted")
+
                 # predict for batch
                 loss_and_count = self.predict(
                     batch,
@@ -591,12 +592,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
     def _get_data_points_for_batch(self, sentences: List[DT]) -> List[DT2]:
         """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
-        return [
-            data_point
-            for sentence in sentences
-            if self._filter_data_point(sentence)
-            for data_point in self._get_data_points_from_sentence(sentence)
-        ]
+        return [data_point for sentence in sentences for data_point in self._get_data_points_from_sentence(sentence)]
 
     def _get_label_of_datapoint(self, data_point: DT2) -> List[str]:
         """Extracts the labels from the data points.
@@ -757,6 +753,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             label_count = 0
             for batch in batches:
 
+                # filter data points in batch
                 batch = [dp for dp in batch if self._filter_data_point(dp)]
 
                 # stop if all sentences are empty

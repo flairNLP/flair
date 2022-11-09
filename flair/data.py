@@ -602,7 +602,7 @@ class Span(_PartOfSentence):
 
     @property
     def embedding(self):
-        pass
+        return self.get_embedding()
 
 
 class Relation(_PartOfSentence):
