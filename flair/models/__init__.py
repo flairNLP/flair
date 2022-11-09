@@ -11,6 +11,7 @@ from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier
 from .word_tagger_model import WordTagger
 from .span_tagger_model import SpanTagger
+from .span_tagger_model_with_gazetteer_mining import SpanTaggerWithGazetteerMining
 
 __all__ = [
     "EntityLinker",
