@@ -119,23 +119,26 @@ class SpanGazetteerEmbeddingsFromFiles(SpanEmbeddingFromExternal[Span]):
         self.name = gazetteer_files_directory
         self.gazetteer_files_directory = gazetteer_files_directory
         self.exclude_files = exclude_files
+        self.label2idx: Dict[str, int] = {}
 
         super().__init__(**kwargs,
                          )
 
 
     def _prepare_gazetteer(self):
-        gazetteer_files = []
+        #gazetteer_files = []
         files = list([f for f in os.listdir(self.gazetteer_files_directory + '/') if not os.path.isdir(os.path.join(self.gazetteer_files_directory,f))])
         if self.exclude_files:
             files = [f for f in files if str(f) not in self.exclude_files]
-        for index, file in enumerate(files):
-            gazetteer_files.append((str(index), file))
+        gazetteer_files = files
         count_files = len(gazetteer_files)
         gazetteer = {}
-        for (label_id, gazetteer_file) in gazetteer_files:
+        for (label_id, gazetteer_file) in enumerate(gazetteer_files):
             print(f"--- Now processing file nr {label_id}: {gazetteer_file} ---")
+            label_name_proxy = gazetteer_file # using the file name as name for label type
+            self.label2idx.update({label_name_proxy: label_id})
             with open(f"{self.gazetteer_files_directory}/{gazetteer_file}", 'r', encoding='utf-8', errors='strict') as src:
+                idx = self.label2idx[label_name_proxy]
                 for line in src:
                     if len(line) == 0:
                         continue
@@ -143,11 +146,13 @@ class SpanGazetteerEmbeddingsFromFiles(SpanEmbeddingFromExternal[Span]):
                         line = line.rstrip("\n")
 
                     if line not in gazetteer:
-                        gazetteer[line] = [0.0] * count_files
+                        #gazetteer[line] = torch.zeros(count_files) # [0.0] * count_files
+                        gazetteer[line] = torch.zeros(count_files, device=flair.device, dtype=torch.float)
 
-                    gazetteer[line][int(label_id)] = 1.0
+                    gazetteer[line][idx] = 1.0
 
         print(f"--- Nr of entries in gazetteer: {len(gazetteer)} ---")
+        print(f"--- Mapping label2idx: {self.label2idx} ---")
 
         return gazetteer
 
@@ -222,6 +227,7 @@ class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
         self.static_embeddings = True
         self.gazetteer_prepare_method = gazetteer_prepare_method
         self.counts_for_max_confidence = counts_for_max_confidence
+        self.label2idx: Dict[str, int] = {}
 
         super().__init__(**kwargs,
                          )
@@ -235,6 +241,8 @@ class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
             inp.seek(0)  # to start at beginning again
             reader = csv.reader(inp)
             header = next(reader)  # header line
+            self.label2idx = { label: i for (i, label) in enumerate(header[1:])}
+
             log.info(f"---- Header is: {header}")
 
             gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
@@ -243,6 +251,18 @@ class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
 
         global_start = time.time()
         start = time.time()
+
+        if self.gazetteer_prepare_method == "normalize_confidence_ratio":
+            self.label2idx.pop("abs_span_freq")
+            self.label2idx.pop("tagged_frequency")
+            self.label2idx.pop("tagged_ratio")
+            self.label2idx.update({"confidence": 4,
+                                   "ratio": 5})
+
+        if self.gazetteer_prepare_method == "normalize":
+            self.label2idx.pop("abs_span_freq")
+            self.label2idx.pop("tagged_frequency")
+            self.label2idx.pop("tagged_ratio")
 
         for nr, (key, vector) in enumerate(gazetteer.items()):
 
@@ -330,6 +350,182 @@ class SpanGazetteerFeaturePrediction(Embeddings[Span]):
         embeddings = self.predict_feature_vector(spans)
         for i, span in enumerate(spans):
             span.set_embedding(self.name, embeddings[i])
+
+    def __str__(self):
+        return self.name
+
+
+class ExpandingGazetteerSpanEmbeddings(Embeddings[Span], Generic[DT]):
+    def __init__(self,
+                 label2idx: Dict[str, int],
+                 reset_after_each_epoch: bool = True,
+                 starting_with_gazetteer = None, #TODO implement this
+                 confidence_threshold: float = 0.8,
+                 skip_first_epoch: bool = False, # TODO maybe makes sense to leave first epoch out
+                 pooling: str = "min",
+                 global_lowercasing: bool = False,
+                 mapping_corpus_label_to_initial_gazetteer: Dict[str, str] = None,
+
+                 **kwargs,
+                 ):
+        """
+        :param
+        """
+
+        if not hasattr(self, "name"):
+            self.name: str = "unnamed_embedding"
+        if not hasattr(self, "static_embeddings"):
+            self.static_embeddings = False
+
+        super().__init__()
+
+        self.static_embeddings = False
+
+        # these fields are for the embedding memory
+        self.label2idx = label2idx
+        if "O" in self.label2idx:
+            self.label2idx.pop("O")
+
+        self.gazetteer: Dict[str, torch.Tensor] = {}
+        self.updated_partition: Dict[str, torch.Tensor] = {}
+        self.skip_first_epoch = skip_first_epoch
+        self.global_lowercasing = global_lowercasing
+        self.updated_partition: Dict[str, torch.Tensor] = {}
+
+        # set the memory method
+        self.pooling = pooling
+
+        self.reset_after_each_epoch = reset_after_each_epoch
+        self.starting_with_gazetteer = starting_with_gazetteer
+        self.confidence_threshold = confidence_threshold
+
+        if self.starting_with_gazetteer:
+            if self.global_lowercasing != self.starting_with_gazetteer.global_lowercasing:
+                raise AssertionError("Attention: Lowercasing (global_lowercasing) is inconsistent between initial gazetteer and dynamic gazetteer!")
+
+            self.initial_gazetteer = self.starting_with_gazetteer.gazetteer
+            self.mapping_corpus_label_to_initial_gazetteer = mapping_corpus_label_to_initial_gazetteer
+            log.info(f"Starting with initial gazetteer with length {len(self.initial_gazetteer)}")
+            log.info(f"With initial label2idx mapping: {self.starting_with_gazetteer.label2idx}")
+            label2idx_combined = {}
+
+            # adding the original from initial gazetteer
+            idx_counter = 0
+            for k in self.starting_with_gazetteer.label2idx.keys():
+                label2idx_combined[k] = idx_counter
+                idx_counter +=1
+
+            # adding the ones from corpus, in their matched/mapped form
+            for k in self.label2idx.keys():
+                if self.mapping_corpus_label_to_initial_gazetteer and k in self.mapping_corpus_label_to_initial_gazetteer:
+                    corpus_equivalent = self.mapping_corpus_label_to_initial_gazetteer[k]
+                else:
+                    corpus_equivalent = k
+                if corpus_equivalent not in label2idx_combined:
+                    label2idx_combined[corpus_equivalent] = idx_counter
+                    idx_counter +=1
+
+            log.info("Restructuring the initial gazetteer to match new mapping (adding Columns and Zeros)...")
+            idx2label_initial = { v:k for k,v in self.starting_with_gazetteer.label2idx.items() }
+
+            initial_gazetteer_tmp = {}
+            for k,v in self.initial_gazetteer.items():
+                original_vector = v
+                new_vector = torch.zeros(len(label2idx_combined))
+                for old_idx, entry in enumerate(original_vector):
+                    label_name = idx2label_initial[old_idx]
+                    new_idx = label2idx_combined[label_name]
+                    new_vector[new_idx] = entry
+                initial_gazetteer_tmp[k] = new_vector
+
+            self.initial_gazetteer = initial_gazetteer_tmp
+            del initial_gazetteer_tmp
+            self.starting_with_gazetteer.label2idx = label2idx_combined
+            self.gazetteer.update(self.initial_gazetteer)
+
+            self.label2idx = self.starting_with_gazetteer.label2idx
+            log.info("After matching and adding the labels from corpus:")
+            log.info(f"{self.label2idx}")
+
+
+        self.__gazetteer_vector_length = len(self.label2idx)
+        self.__embedding_length = self.__gazetteer_vector_length
+        self.__embedding_type = "span-level"
+
+        self.to(flair.device)
+
+    def train(self, mode=True):
+        super().train(mode=mode)
+        if mode:
+            if self.reset_after_each_epoch:
+                # memory is wiped each time we do a training run
+                len_before = len(self.gazetteer)
+                self.gazetteer = {}
+                self.updated_partition = {}
+
+                if self.starting_with_gazetteer:
+                    log.info("train mode resetting embeddings to just include initial gazetteer")
+                    self.gazetteer.update(self.initial_gazetteer)
+                else:
+                    log.info("train mode resetting embeddings")
+                log.info(f"--> resetting from {len_before} to {len(self.gazetteer)} entries")
+            else:
+                log.info("train mode, keeping embeddings")
+                log.info(f"--> now including {len(self.gazetteer)} entries")
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    @property
+    def embedding_type(self) -> str:
+        return self.__embedding_type
+
+    def get_gazetteer_embedding(self, span_string: str) -> torch.Tensor:
+        if self.global_lowercasing:
+            span_string = span_string.lower()
+
+        if span_string in self.gazetteer:
+            gaz_vector = self.gazetteer[span_string]
+
+        else:
+            gaz_vector = torch.zeros(self.__gazetteer_vector_length,  device=flair.device, dtype=torch.float)
+
+        return gaz_vector
+
+    def update_gazetteer_embeddings(self, span_string, predicted_label, method = "replace"):
+        if self.mapping_corpus_label_to_initial_gazetteer and predicted_label in self.mapping_corpus_label_to_initial_gazetteer:
+            predicted_label = self.mapping_corpus_label_to_initial_gazetteer[predicted_label]
+
+        if predicted_label not in self.label2idx:
+            raise ValueError("label seems to not be in the label2idx dict. Something wrong with mapping? A typo?")
+
+        if self.global_lowercasing:
+            span_string = span_string.lower()
+
+        current_embedding = self.get_gazetteer_embedding(span_string)
+        if method == "replace":
+            new_embedding = current_embedding.detach().clone()
+            #new_embedding = torch.zeros(self.__gazetteer_vector_length, device=flair.device, dtype=torch.float)
+            new_embedding[self.label2idx[predicted_label]] = 1.0
+            # TODO Beware: blindly setting 1.0 to the predicted label!
+            #  Think about using logits or at least think about what to do with not 1-hot gazetteer!
+        else:
+            raise NotImplementedError
+
+        if False in torch.eq(current_embedding, new_embedding):
+            #print(f"Updating embedding entry for \t{span_string} from \t {current_embedding} --> \t {new_embedding}")
+            self.gazetteer[span_string] = new_embedding
+            self.updated_partition[span_string] = new_embedding
+
+    def _add_embeddings_internal(self, spans: List[Span]):
+
+        for span in spans:
+            embeddings = [self.get_gazetteer_embedding(span.text)]
+            span.set_embedding(self.name, torch.cat(embeddings))
+
+    def _get_updated_partition_of_gazetteer(self):
+        return self.updated_partition
 
     def __str__(self):
         return self.name
