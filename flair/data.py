@@ -212,7 +212,7 @@ class Label:
         self.score = score
 
     @property
-    def value(self):
+    def value(self) -> str:
         return self._value
 
     @value.setter
@@ -223,7 +223,7 @@ class Label:
             self._value = value
 
     @property
-    def score(self):
+    def score(self) -> float:
         return self._score
 
     @score.setter
