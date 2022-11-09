@@ -201,7 +201,7 @@ class Label:
     score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
-    def __init__(self, data_point: "DataPoint", value: Optional[str], score: float = 1.0):
+    def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0):
         self._value = value
         self._score = score
         self.data_point: DataPoint = data_point
@@ -212,7 +212,7 @@ class Label:
         self.score = score
 
     @property
-    def value(self):
+    def value(self) -> str:
         return self._value
 
     @value.setter
@@ -223,7 +223,7 @@ class Label:
             self._value = value
 
     @property
-    def score(self):
+    def score(self) -> float:
         return self._score
 
     @score.setter
