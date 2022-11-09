@@ -732,13 +732,27 @@ class TARSClassifier(FewshotClassifier):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
+
+        # get the serialized embeddings
+        tars_model = state.get("tars_model")
+        if hasattr(tars_model, "embeddings"):
+            embeddings = tars_model.embeddings
+        else:
+            embeddings = tars_model.document_embeddings
+
+        # remap state dict for models serialized with Flair <= 0.11.3
+        import re
+        state_dict = state["state_dict"]
+        for key in list(state_dict.keys()):
+            state_dict[re.sub("^tars_model.document_embeddings\\.", "tars_model.embeddings.", key)] = state_dict.pop(key)
+
         # init new TARS classifier
         model: TARSClassifier = super()._init_model_with_state_dict(
             state,
             task_name=state["current_task"],
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type", "default_label"),
-            embeddings=state.get("tars_model").embeddings,
+            embeddings=embeddings,
             num_negative_labels_to_sample=state.get("num_negative_labels_to_sample"),
             **kwargs,
         )
