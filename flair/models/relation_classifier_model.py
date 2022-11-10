@@ -1,5 +1,6 @@
 import collections as co
 import itertools
+import random
 from operator import itemgetter
 from typing import (
     Any,
@@ -87,7 +88,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         zero_tag_value: str = "O",
         allow_unk_tag: bool = True,
         cross_augmentation: bool = True,
-        mask_type: str = "mark",
+        mask_type: str = "mark-mask",
         **classifierargs,
     ) -> None:
         """
@@ -229,6 +230,13 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             yield head, tail, remainder, gold_label
 
     def _mask(self, entity: _Entity, role: str) -> str:
+
+        if self.mask_type == "mark-mask":
+            if random.choice([True, False]) and self.training:
+                return f"[{role}-ENTITY]"
+            else:
+                return f"[[{role}-{entity.span.text}]]"
+
         if self.mask_type == "label-aware":
             return f"[{role}-{entity.label.value}]"
         if self.mask_type == "entity":
@@ -395,10 +403,21 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         :param corpus: A corpus of sentences to transform
         :return: A corpus of encoded sentences specific to the `RelationClassifier`
         """
+        was_training = self.training
+
+        self.train()
+        train = self.transform_dataset(corpus.train) if corpus.train is not None else None
+
+        self.eval()
+        dev = self.transform_dataset(corpus.dev) if corpus.dev is not None else None
+        test = self.transform_dataset(corpus.test) if corpus.test is not None else None
+
+        self.train(mode=was_training)
+
         return Corpus(
-            train=self.transform_dataset(corpus.train) if corpus.train is not None else None,
-            dev=self.transform_dataset(corpus.dev) if corpus.dev is not None else None,
-            test=self.transform_dataset(corpus.test) if corpus.test is not None else None,
+            train=train,
+            dev=dev,
+            test=test,
             name=corpus.name,
             # If we sample missing splits, the encoded sentences that correspond to the same original sentences
             # may get distributed into different splits. For training purposes, this is always undesired.
