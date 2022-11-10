@@ -202,13 +202,13 @@ class Label:
     """
 
     __slots__ = ["value", "score", "data_point"]
-    
+
     def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0):
         self.value: str = value
         self.score: float = score
         self.data_point: DataPoint = data_point
         super().__init__()
-        
+
     def to_dict(self):
         return {"value": self.value, "confidence": self.score}
 
