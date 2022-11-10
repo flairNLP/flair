@@ -1,13 +1,9 @@
 import logging
-from collections import Counter
-from typing import List, Optional
+from typing import Optional
 
 import torch
-from tqdm import tqdm
 
 import flair
-from flair.data import FlairDataset
-from flair.datasets import DataLoader
 from flair.nn.distance import (
     CosineDistance,
     EuclideanDistance,
@@ -15,8 +11,6 @@ from flair.nn.distance import (
     LogitCosineDistance,
     NegativeScaledDotProduct,
 )
-from flair.nn.model import DefaultClassifier
-from flair.training_utils import store_embeddings
 
 logger = logging.getLogger("flair")
 
@@ -128,87 +122,3 @@ class PrototypicalDecoder(torch.nn.Module):
         scores = -distance
 
         return scores
-
-    def enable_expectation_maximization(
-        self,
-        data: FlairDataset,
-        encoder: DefaultClassifier,
-        exempt_labels: List[str] = [],
-        mini_batch_size: int = 8,
-    ):
-        """Applies monkey-patch to train method (which sets the train flag).
-
-        This allows for computation of average prototypes after a training
-        sequence."""
-
-        decoder = self
-
-        unpatched_train = encoder.train
-
-        def patched_train(mode: bool = True):
-            unpatched_train(mode=mode)
-            if mode:
-                logger.info("recalculating prototypes")
-                with torch.no_grad():
-                    decoder.calculate_prototypes(
-                        data=data, encoder=encoder, exempt_labels=exempt_labels, mini_batch_size=mini_batch_size
-                    )
-
-        # Monkey-patching is problematic for mypy (https://github.com/python/mypy/issues/2427)
-        encoder.train = patched_train  # type: ignore
-
-    def calculate_prototypes(
-        self,
-        data: FlairDataset,
-        encoder: DefaultClassifier,
-        exempt_labels: List[str] = [],
-        mini_batch_size=32,
-    ):
-        """
-        Function that calclues a prototype for each class based on the euclidean average embedding over the whole dataset
-        :param data: dataset for which to calculate prototypes
-        :param encoder: encoder to use
-        :param exempt_labels: labels to exclude
-        :param mini_batch_size: number of sentences to embed at same time
-        :return:
-        """
-
-        # gradients are not required for prototype computation
-        with torch.no_grad():
-
-            dataloader = DataLoader(data, batch_size=mini_batch_size)
-
-            # reset prototypes for all classes
-            new_prototypes = torch.zeros(self.num_prototypes, self.prototype_size, device=flair.device)
-
-            counter: Counter = Counter()
-
-            for batch in tqdm(dataloader):
-
-                logits, labels = encoder.get_scores_and_labels(batch)
-
-                if len(labels) > 0:
-                    # decode embeddings into prototype space
-                    if self.metric_space_decoder is not None:
-                        logits = self.metric_space_decoder(logits)
-
-                    for logit, _label in zip(logits, labels):
-                        counter.update(_label)
-
-                        idx = encoder.label_dictionary.get_idx_for_item(_label[0])
-
-                        new_prototypes[idx] += logit
-
-                # embeddings need to be removed so that memory doesn't fill up
-                store_embeddings(batch, storage_mode="none")
-
-            # TODO: changes required
-            for label, count in counter.most_common():
-                average_prototype = new_prototypes[encoder.label_dictionary.get_idx_for_item(label)] / count
-                new_prototypes[encoder.label_dictionary.get_idx_for_item(label)] = average_prototype
-
-            for label in exempt_labels:
-                label_idx = encoder.label_dictionary.get_idx_for_item(label)
-                new_prototypes[label_idx] = self.prototype_vectors[label_idx]
-
-            self.prototype_vectors.data = new_prototypes.to(flair.device)

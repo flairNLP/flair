@@ -45,12 +45,6 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         loss, count = self.tars_model.forward_loss(sentences)
         return loss, count
 
-    def _prepare_tensors(self, data_points: List[Sentence]) -> Tuple[torch.Tensor, ...]:
-        return self.tars_model._prepare_tensors(data_points)
-
-    def forward(self, *args: torch.Tensor) -> torch.Tensor:
-        return self.tars_model.forward(*args)
-
     @property
     def tars_embeddings(self):
         raise NotImplementedError
@@ -675,7 +669,7 @@ class TARSClassifier(FewshotClassifier):
 
         # initialize a bare-bones sequence tagger
         self.tars_model = TextClassifier(
-            document_embeddings=embeddings,
+            embeddings=embeddings,
             label_dictionary=tars_dictionary,
             label_type=self.static_label_type,
             **tagger_args,
@@ -738,13 +732,30 @@ class TARSClassifier(FewshotClassifier):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
+
+        # get the serialized embeddings
+        tars_model = state.get("tars_model")
+        if hasattr(tars_model, "embeddings"):
+            embeddings = tars_model.embeddings
+        else:
+            embeddings = tars_model.document_embeddings
+
+        # remap state dict for models serialized with Flair <= 0.11.3
+        import re
+
+        state_dict = state["state_dict"]
+        for key in list(state_dict.keys()):
+            state_dict[re.sub("^tars_model.document_embeddings\\.", "tars_model.embeddings.", key)] = state_dict.pop(
+                key
+            )
+
         # init new TARS classifier
         model: TARSClassifier = super()._init_model_with_state_dict(
             state,
             task_name=state["current_task"],
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type", "default_label"),
-            embeddings=state.get("tars_model").document_embeddings,
+            embeddings=embeddings,
             num_negative_labels_to_sample=state.get("num_negative_labels_to_sample"),
             **kwargs,
         )
@@ -770,7 +781,7 @@ class TARSClassifier(FewshotClassifier):
 
     @property
     def tars_embeddings(self):
-        return self.tars_model.document_embeddings
+        return self.tars_model.embeddings
 
     def predict(
         self,
@@ -865,12 +876,13 @@ class TARSClassifier(FewshotClassifier):
                         loss_and_count = self.tars_model.predict(
                             tars_sentence,
                             label_name=label_name,
-                            return_loss=True,
+                            return_loss=return_loss,
                             return_probabilities_for_all_classes=True if label_threshold < 0.5 else False,
                         )
 
-                        overall_loss += loss_and_count[0].item()
-                        overall_count += loss_and_count[1]
+                        if return_loss:
+                            overall_loss += loss_and_count[0].item()
+                            overall_count += loss_and_count[1]
 
                         # add all labels that according to TARS match the text and are above threshold
                         for predicted_tars_label in tars_sentence.get_labels(label_name):

@@ -232,7 +232,7 @@ def test_text_classifier(results_base_path, tasks_base_path):
     label_dict = corpus.make_label_dictionary(label_type="city")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=DocumentPoolEmbeddings([turian_embeddings]),
+        embeddings=DocumentPoolEmbeddings([turian_embeddings]),
         label_dictionary=label_dict,
         label_type="city",
         multi_label=False,
@@ -285,7 +285,7 @@ def test_text_classifier_transformer_finetune(results_base_path, tasks_base_path
     label_dict = corpus.make_label_dictionary(label_type="city")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=TransformerDocumentEmbeddings("distilbert-base-uncased"),
+        embeddings=TransformerDocumentEmbeddings("distilbert-base-uncased"),
         label_dictionary=label_dict,
         label_type="city",
         multi_label=False,
@@ -345,7 +345,7 @@ def test_text_classifier_multi(results_base_path, tasks_base_path):
     label_dict = corpus.make_label_dictionary(label_type="city")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=DocumentPoolEmbeddings([turian_embeddings], fine_tune_mode="linear"),
+        embeddings=DocumentPoolEmbeddings([turian_embeddings], fine_tune_mode="linear"),
         label_dictionary=label_dict,
         label_type="city",
         multi_label=True,

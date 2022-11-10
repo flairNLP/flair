@@ -17,6 +17,8 @@ from torch.utils.data.dataset import ConcatDataset, Subset
 import flair
 from flair.file_utils import Tqdm
 
+T_co = typing.TypeVar("T_co", covariant=True)
+
 log = logging.getLogger("flair")
 
 
@@ -200,12 +202,31 @@ class Label:
     """
 
     __slots__ = ["value", "score", "data_point"]
-
+    
     def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0):
-        self.value = value
-        self.score = score
+        self._value = value
+        self._score = score
         self.data_point: DataPoint = data_point
         super().__init__()
+        
+    @property
+    def value(self) -> str:
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        if not value and value != "":
+            raise ValueError("Incorrect label value provided. Label value needs to be set.")
+        else:
+            self._value = value
+
+    @property
+    def score(self) -> float:
+        return self._score
+
+    @score.setter
+    def score(self, score):
+        self._score = score
 
     def to_dict(self):
         return {"value": self.value, "confidence": self.score}
@@ -407,6 +428,9 @@ class DataPoint:
     def __hash__(self):
         return hash(self.unlabeled_identifier)
 
+    def __len__(self):
+        raise NotImplementedError
+
 
 DT = typing.TypeVar("DT", bound=DataPoint)
 DT2 = typing.TypeVar("DT2", bound=DataPoint)
@@ -525,6 +549,9 @@ class Token(_PartOfSentence):
     def embedding(self):
         return self.get_embedding()
 
+    def __len__(self):
+        return 1
+
     def __repr__(self):
         return self.__str__()
 
@@ -591,7 +618,7 @@ class Span(_PartOfSentence):
 
     @property
     def embedding(self):
-        pass
+        return self.get_embedding()
 
 
 class Relation(_PartOfSentence):
@@ -1186,12 +1213,12 @@ class Image(DataPoint):
         pass
 
 
-class Corpus:
+class Corpus(typing.Generic[T_co]):
     def __init__(
         self,
-        train: Dataset = None,
-        dev: Dataset = None,
-        test: Dataset = None,
+        train: Optional[Dataset[T_co]] = None,
+        dev: Optional[Dataset[T_co]] = None,
+        test: Optional[Dataset[T_co]] = None,
         name: str = "corpus",
         sample_missing_splits: Union[bool, str] = True,
     ):
@@ -1215,20 +1242,20 @@ class Corpus:
             dev, train = randomly_split_into_two_datasets(train, dev_size)
 
         # set train dev and test data
-        self._train: Optional[Dataset] = train
-        self._test: Optional[Dataset] = test
-        self._dev: Optional[Dataset] = dev
+        self._train: Optional[Dataset[T_co]] = train
+        self._test: Optional[Dataset[T_co]] = test
+        self._dev: Optional[Dataset[T_co]] = dev
 
     @property
-    def train(self) -> Optional[Dataset]:
+    def train(self) -> Optional[Dataset[T_co]]:
         return self._train
 
     @property
-    def dev(self) -> Optional[Dataset]:
+    def dev(self) -> Optional[Dataset[T_co]]:
         return self._dev
 
     @property
-    def test(self) -> Optional[Dataset]:
+    def test(self) -> Optional[Dataset[T_co]]:
         return self._test
 
     def downsample(
