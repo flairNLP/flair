@@ -204,30 +204,11 @@ class Label:
     __slots__ = ["value", "score", "data_point"]
     
     def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0):
-        self._value = value
-        self._score = score
+        self.value: str = value
+        self.score: float = score
         self.data_point: DataPoint = data_point
         super().__init__()
         
-    @property
-    def value(self) -> str:
-        return self._value
-
-    @value.setter
-    def value(self, value):
-        if not value and value != "":
-            raise ValueError("Incorrect label value provided. Label value needs to be set.")
-        else:
-            self._value = value
-
-    @property
-    def score(self) -> float:
-        return self._score
-
-    @score.setter
-    def score(self, score):
-        self._score = score
-
     def to_dict(self):
         return {"value": self.value, "confidence": self.score}
 
