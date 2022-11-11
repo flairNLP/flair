@@ -26,7 +26,7 @@ class OcrJsonDataset(FlairDataset):
         """
         Instantiates a Dataset from a OCR-Json format.
         The folder is structured with a "images" folder and a "tagged" folder.
-        Those folders contain respectively .jpg an .json files with matching file name.
+        Those folders contain respectively .jpg and .json files with matching file name.
         The json contains 3 fields "words", "bbox", "labels" which are lists of equal length
         "words" is a list of strings, containing the ocr texts,
         "bbox" is a list of int-Tuples, containing left, top, right, bottom

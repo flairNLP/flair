@@ -452,7 +452,6 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         if self.tokenizer_needs_ocr_boxes:
             tokenizer_kwargs["boxes"] = [[t.get_metadata("bbox") for t in tokens] for tokens in flair_tokens]
         else:
-
             tokenizer_kwargs["is_split_into_words"] = True
 
         batch_encoding = self.tokenizer(
@@ -521,30 +520,30 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                     self,
                     [[t.text for t in tokens] for tokens in flair_tokens],
                 )
-                # word_ids is only supported for the fast rust tokenizers. Some models like "xlm-mlm-ende-1024" do not have
+                # word_ids is only supported for fast rust tokenizers. Some models like "xlm-mlm-ende-1024" do not have
                 # a fast tokenizer implementation, hence we need to fall back to our own reconstruction of word_ids.
 
-            if self.allow_long_sentences:
-                new_offsets = []
-                new_lengths = []
-                assert cpu_overflow_to_sample_mapping is not None
-                for sent_id in cpu_overflow_to_sample_mapping:
-                    new_offsets.append(offsets[sent_id])
-                    new_lengths.append(sentence_lengths[sent_id])
-                offsets = new_offsets
-                sentence_lengths = new_lengths
-
-            word_ids = torch.tensor(
-                [
-                    [
-                        -100 if (val is None or val < offset or val >= offset + length) else val - offset
-                        for val in _word_ids
-                    ]
-                    for _word_ids, offset, length in zip(word_ids_list, offsets, sentence_lengths)
-                ],
-                device=device,
-            )
             if self.token_embedding:
+                if self.allow_long_sentences:
+                    new_offsets = []
+                    new_lengths = []
+                    assert cpu_overflow_to_sample_mapping is not None
+                    for sent_id in cpu_overflow_to_sample_mapping:
+                        new_offsets.append(offsets[sent_id])
+                        new_lengths.append(sentence_lengths[sent_id])
+                    offsets = new_offsets
+                    sentence_lengths = new_lengths
+
+                word_ids = torch.tensor(
+                    [
+                        [
+                            -100 if (val is None or val < offset or val >= offset + length) else val - offset
+                            for val in _word_ids
+                        ]
+                        for _word_ids, offset, length in zip(word_ids_list, offsets, sentence_lengths)
+                    ],
+                    device=device,
+                )
                 model_kwargs["word_ids"] = word_ids
             if self.needs_manual_ocr:
                 bbox = [
