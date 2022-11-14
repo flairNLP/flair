@@ -31,6 +31,10 @@ class BaseModelTest:
         pytest.skip("This test requires the `multi_class_corpus` fixture to be defined")
 
     @pytest.fixture
+    def multi_corpus(self, tasks_base_path):
+        pytest.skip("This test requires the `multi_corpus` fixture to be defined")
+
+    @pytest.fixture
     def example_sentence(self):
         yield Sentence("I love Berlin")
 
@@ -53,13 +57,20 @@ class BaseModelTest:
         pass
 
     def build_model(self, embeddings, label_dict, **kwargs):
+        model_args = dict(self.model_args)
+        for k in kwargs.keys():
+            if k in model_args:
+                del model_args[k]
         return self.model_cls(
             embeddings=embeddings,
             label_dictionary=label_dict,
             label_type=self.train_label_type,
-            **self.model_args,
+            **model_args,
             **kwargs,
         )
+
+    def has_embedding(self, sentence):
+        return sentence.get_embedding().cpu().numpy().size > 0
 
     @pytest.mark.integration
     def test_load_use_model(self, example_sentence):
@@ -105,6 +116,39 @@ class BaseModelTest:
         loaded_model.predict(example_sentence)
         loaded_model.predict([example_sentence, self.empty_sentence])
         loaded_model.predict([self.empty_sentence])
+        del loaded_model
+
+    @pytest.mark.integration
+    def test_train_load_use_model_multi_corpus(self, results_base_path, multi_corpus, embeddings, example_sentence, train_test_sentence):
+        flair.set_seed(123)
+        label_dict = multi_corpus.make_label_dictionary(label_type=self.train_label_type)
+
+        model = self.build_model(embeddings, label_dict)
+        corpus = self.transform_corpus(model, multi_corpus)
+
+        trainer = ModelTrainer(model, corpus)
+
+        if self.finetune_instead_of_train:
+            trainer.fine_tune(results_base_path, shuffle=False, **self.training_args)
+        else:
+            trainer.train(results_base_path, shuffle=False, **self.training_args)
+
+        model.predict(train_test_sentence)
+        self.assert_training_example(train_test_sentence)
+
+        for label in train_test_sentence.get_labels(self.train_label_type):
+            assert label.value is not None
+            assert 0.0 <= label.score <= 1.0
+            assert isinstance(label.score, float)
+
+        del trainer, model, corpus
+
+        loaded_model = self.model_cls.load(results_base_path / "final-model.pt")
+
+        loaded_model.predict(example_sentence)
+        loaded_model.predict([example_sentence, self.empty_sentence])
+        loaded_model.predict([self.empty_sentence])
+        del loaded_model
 
     @pytest.mark.integration
     def test_train_resume_classifier(
@@ -145,6 +189,17 @@ class BaseModelTest:
         loss, count = model.forward_loss([labeled_sentence])
         assert loss.size() == ()
         assert count == len(labeled_sentence.get_labels(self.train_label_type))
+
+    def test_load_use_model_keep_embedding(self, example_sentence):
+        if self.pretrained_model is None:
+            pytest.skip("For this test `pretrained_model` needs to be set.")
+        loaded_model = self.model_cls.load(self.pretrained_model)
+
+        assert not self.has_embedding(example_sentence)
+
+        loaded_model.predict(example_sentence, embedding_storage_mode="cpu")
+        assert self.has_embedding(example_sentence)
+        del loaded_model
 
     def test_train_load_use_model_multi_label(
         self, results_base_path, multi_class_corpus, embeddings, example_sentence, multiclass_train_test_sentence

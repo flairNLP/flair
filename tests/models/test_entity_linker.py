@@ -10,6 +10,9 @@ from tests.model_test_utils import BaseModelTest
 class TestEntityLinker(BaseModelTest):
     model_cls = EntityLinker
     train_label_type = "nel"
+    training_args = dict(
+        max_epochs=2
+    )
 
     @pytest.fixture
     def embeddings(self):
