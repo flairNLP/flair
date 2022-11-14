@@ -2,12 +2,11 @@ import pytest
 from torch.optim import SGD, Adam
 
 import flair
-from flair.data import Sentence, MultiCorpus
+from flair.data import MultiCorpus, Sentence
 from flair.datasets import ClassificationCorpus
 from flair.embeddings import DocumentPoolEmbeddings, FlairEmbeddings, WordEmbeddings
-from flair.models import TextClassifier, SequenceTagger
+from flair.models import SequenceTagger, TextClassifier
 from flair.trainers import ModelTrainer
-
 
 turian_embeddings = WordEmbeddings("turian")
 

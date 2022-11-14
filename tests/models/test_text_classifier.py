@@ -64,11 +64,14 @@ class TestTextClassifier(BaseModelTest):
         loaded_model.predict([self.empty_sentence])
 
     @pytest.mark.integration
-    def test_predict_with_prob(self, example_sentence):
-        loaded_model = self.model_cls.load(self.pretrained_model)
-        loaded_model.predict(example_sentence, return_probabilities_for_all_classes=True)
-        assert len(example_sentence.get_labels(loaded_model.label_type)) == len(loaded_model.label_dictionary)
-        assert sum([label.score for label in example_sentence.get_labels(loaded_model.label_type)]) > 1 - 1e-5
+    def test_predict_with_prob(self, example_sentence, loaded_pretrained_model):
+        loaded_pretrained_model.predict(example_sentence, return_probabilities_for_all_classes=True)
+        assert len(example_sentence.get_labels(loaded_pretrained_model.label_type)) == len(
+            loaded_pretrained_model.label_dictionary
+        )
+        assert (
+            sum([label.score for label in example_sentence.get_labels(loaded_pretrained_model.label_type)]) > 1 - 1e-5
+        )
 
     @pytest.mark.integration
     def test_train_load_use_classifier_flair(self, results_base_path, corpus, example_sentence, train_test_sentence):

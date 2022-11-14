@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Type
 import pytest
 
 import flair
-from flair.data import Sentence, Dictionary
+from flair.data import Dictionary, Sentence
 from flair.nn import Model
 from flair.trainers import ModelTrainer
 
@@ -72,16 +72,18 @@ class BaseModelTest:
     def has_embedding(self, sentence):
         return sentence.get_embedding().cpu().numpy().size > 0
 
-    @pytest.mark.integration
-    def test_load_use_model(self, example_sentence):
+    @pytest.fixture
+    def loaded_pretrained_model(self):
         if self.pretrained_model is None:
             pytest.skip("For this test `pretrained_model` needs to be set.")
-        loaded_model = self.model_cls.load(self.pretrained_model)
+        yield self.model_cls.load(self.pretrained_model)
 
-        loaded_model.predict(example_sentence)
-        loaded_model.predict([example_sentence, self.empty_sentence])
-        loaded_model.predict([self.empty_sentence])
-        del loaded_model
+    @pytest.mark.integration
+    def test_load_use_model(self, example_sentence, loaded_pretrained_model):
+        loaded_pretrained_model.predict(example_sentence)
+        loaded_pretrained_model.predict([example_sentence, self.empty_sentence])
+        loaded_pretrained_model.predict([self.empty_sentence])
+        del loaded_pretrained_model
 
         example_sentence.clear_embeddings()
         self.empty_sentence.clear_embeddings()
@@ -119,7 +121,9 @@ class BaseModelTest:
         del loaded_model
 
     @pytest.mark.integration
-    def test_train_load_use_model_multi_corpus(self, results_base_path, multi_corpus, embeddings, example_sentence, train_test_sentence):
+    def test_train_load_use_model_multi_corpus(
+        self, results_base_path, multi_corpus, embeddings, example_sentence, train_test_sentence
+    ):
         flair.set_seed(123)
         label_dict = multi_corpus.make_label_dictionary(label_type=self.train_label_type)
 
@@ -190,16 +194,13 @@ class BaseModelTest:
         assert loss.size() == ()
         assert count == len(labeled_sentence.get_labels(self.train_label_type))
 
-    def test_load_use_model_keep_embedding(self, example_sentence):
-        if self.pretrained_model is None:
-            pytest.skip("For this test `pretrained_model` needs to be set.")
-        loaded_model = self.model_cls.load(self.pretrained_model)
+    def test_load_use_model_keep_embedding(self, example_sentence, loaded_pretrained_model):
 
         assert not self.has_embedding(example_sentence)
 
-        loaded_model.predict(example_sentence, embedding_storage_mode="cpu")
+        loaded_pretrained_model.predict(example_sentence, embedding_storage_mode="cpu")
         assert self.has_embedding(example_sentence)
-        del loaded_model
+        del loaded_pretrained_model
 
     def test_train_load_use_model_multi_label(
         self, results_base_path, multi_class_corpus, embeddings, example_sentence, multiclass_train_test_sentence
