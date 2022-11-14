@@ -415,11 +415,11 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 self.tokenizer.model_max_length,
                 self.tokenizer.pad_token_id,
             )
-            lengths = (unpacked_ids != self.tokenizer.pad_token_id).sum(dim=1)
+            sub_token_lengths = (unpacked_ids != self.tokenizer.pad_token_id).sum(dim=1)
         else:
             cpu_overflow_to_sample_mapping = None
-            lengths = (input_ids != self.tokenizer.pad_token_id).sum(dim=1)
-        model_kwargs["lengths"] = lengths
+            sub_token_lengths = (input_ids != self.tokenizer.pad_token_id).sum(dim=1)
+        model_kwargs["sub_token_lengths"] = sub_token_lengths
 
         # set language IDs for XLM-style transformers
         if self.use_lang_emb and getattr(self.tokenizer, "lang2id") is not None:
@@ -441,6 +441,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                     model_kwargs["langs"][sentence_idx : sentence_idx + part_length] = lang_id
                     sentence_idx += part_length
         if self.token_embedding:
+            model_kwargs["token_lengths"] = torch.tensor(sentence_lengths, device=device)
             if self.tokenizer.is_fast:
                 word_ids_list = [batch_encoding.word_ids(i) for i in range(input_ids.size()[0])]
             else:
@@ -614,7 +615,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
     def collect_dynamic_axes(cls, embedding: "TransformerEmbeddings", tensors):
         dynamic_axes = dict()
         for k, v in tensors.items():
-            if k == "lengths":
+            if k in ["sub_token_lengths", "token_lengths"]:
                 dynamic_axes[k] = {0: "sent-count"}
                 continue
             if k == "word_ids":
@@ -671,11 +672,15 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
             else:
                 providers = ["CPUExecutionProvider"]
 
+        desired_keys_order = [
+            param for param in inspect.signature(embedding.__call__).parameters.keys() if param in example_tensors
+        ]
+
         torch.onnx.export(
             embedding,
             [example_tensors],
             path,
-            input_names=list(example_tensors.keys()),
+            input_names=desired_keys_order,
             output_names=output_names,
             dynamic_axes=dynamic_axes,
             opset_version=opset_version,
@@ -1022,7 +1027,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     def forward(
         self,
         input_ids: torch.Tensor,
-        lengths: torch.LongTensor,
+        sub_token_lengths: torch.LongTensor,
+        token_lengths: Optional[torch.LongTensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
         overflow_to_sample_mapping: Optional[torch.Tensor] = None,
         word_ids: Optional[torch.Tensor] = None,
@@ -1068,33 +1074,34 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             else:
                 if self.cls_pooling == "cls":
                     document_embeddings = sentence_hidden_states[
-                        torch.arange(sentence_hidden_states.shape[0]), lengths - 1
+                        torch.arange(sentence_hidden_states.shape[0]), sub_token_lengths - 1
                     ]
                 elif self.cls_pooling == "mean":
-                    document_embeddings = document_mean_pooling(sentence_hidden_states, lengths)
+                    document_embeddings = document_mean_pooling(sentence_hidden_states, sub_token_lengths)
                 elif self.cls_pooling == "max":
-                    document_embeddings = document_max_pooling(sentence_hidden_states, lengths)
+                    document_embeddings = document_max_pooling(sentence_hidden_states, sub_token_lengths)
                 else:
                     raise ValueError(f"cls pooling method: `{self.cls_pooling}` is not implemented")
             result["document_embeddings"] = document_embeddings
 
         if self.token_embedding:
             assert word_ids is not None
+            assert token_lengths is not None
             all_token_embeddings = torch.zeros(
-                word_ids.shape[0], int(lengths.max()), self.embedding_length_internal, device=flair.device
+                word_ids.shape[0], int(token_lengths.max()), self.embedding_length_internal, device=flair.device
             )
             true_tensor = torch.ones_like(word_ids[:, :1], dtype=torch.bool)
             if self.subtoken_pooling == "first":
                 gain_mask = word_ids[:, 1:] != word_ids[:, : word_ids.shape[1] - 1]
                 first_mask = torch.cat([true_tensor, gain_mask], dim=1)
                 all_token_embeddings = fill_masked_elements(
-                    all_token_embeddings, sentence_hidden_states, first_mask, word_ids, lengths
+                    all_token_embeddings, sentence_hidden_states, first_mask, word_ids, token_lengths
                 )
             elif self.subtoken_pooling == "last":
                 gain_mask = word_ids[:, 1:] != word_ids[:, : word_ids.shape[1] - 1]
                 last_mask = torch.cat([gain_mask, true_tensor], dim=1)
                 all_token_embeddings = fill_masked_elements(
-                    all_token_embeddings, sentence_hidden_states, last_mask, word_ids, lengths
+                    all_token_embeddings, sentence_hidden_states, last_mask, word_ids, token_lengths
                 )
             elif self.subtoken_pooling == "first_last":
                 gain_mask = word_ids[:, 1:] != word_ids[:, : word_ids.shape[1] - 1]
@@ -1105,18 +1112,18 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                     sentence_hidden_states,
                     first_mask,
                     word_ids,
-                    lengths,
+                    token_lengths,
                 )
                 all_token_embeddings[:, :, sentence_hidden_states.shape[2] :] = fill_masked_elements(
                     all_token_embeddings[:, :, sentence_hidden_states.shape[2] :],
                     sentence_hidden_states,
                     last_mask,
                     word_ids,
-                    lengths,
+                    token_lengths,
                 )
             elif self.subtoken_pooling == "mean":
                 all_token_embeddings = fill_mean_token_embeddings(
-                    all_token_embeddings, sentence_hidden_states, word_ids, lengths
+                    all_token_embeddings, sentence_hidden_states, word_ids, token_lengths
                 )
             else:
                 raise ValueError(f"subtoken pooling method: `{self.subtoken_pooling}` is not implemented")
