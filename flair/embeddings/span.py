@@ -20,6 +20,8 @@ class SpanEmbeddingFromExternal(Embeddings[Span], Generic[DT]):
                  add_lower_case_lookup: bool = False,
                  add_substring_gazetteer_lookup: bool = False,
                  add_first_last_token_gazetteer_lookup: bool = False,
+                 transform_gazetteer_to_latent: bool = False,
+                 latent_gazetteer_embedding_dimension: int = 10,
                  **kwargs,
                  ):
         """
@@ -42,6 +44,8 @@ class SpanEmbeddingFromExternal(Embeddings[Span], Generic[DT]):
         self.add_lower_case_lookup = add_lower_case_lookup
         self.add_first_last_token_gazetteer_lookup = add_first_last_token_gazetteer_lookup
         self.add_substring_gazetteer_lookup = add_substring_gazetteer_lookup
+        self.transform_gazetteer_to_latent = transform_gazetteer_to_latent
+        self.latent_gazetteer_embedding_dimension = latent_gazetteer_embedding_dimension
 
         self.gazetteer = self._prepare_gazetteer()
 
@@ -51,13 +55,20 @@ class SpanEmbeddingFromExternal(Embeddings[Span], Generic[DT]):
 
         self.__gazetteer_vector_length = len(next(iter(self.gazetteer.values())))  # one entry in gaz to get its size
         self.__embedding_length = self.__gazetteer_vector_length
-        self.__embedding_type = "span-level"
         if self.add_lower_case_lookup:
             self.__embedding_length += self.__gazetteer_vector_length
         if self.add_first_last_token_gazetteer_lookup:
             self.__embedding_length += (self.__gazetteer_vector_length * 2)
         if self.add_substring_gazetteer_lookup:
             self.__embedding_length += self.__gazetteer_vector_length
+
+        if self.transform_gazetteer_to_latent:
+            self.gazetteer_to_latent_layer = torch.nn.Linear(self.__embedding_length,
+                                                             self.latent_gazetteer_embedding_dimension)
+
+            self.__embedding_length = self.latent_gazetteer_embedding_dimension # resetting to latent dim
+
+        self.__embedding_type = "span-level"
 
         self.to(flair.device)
 
@@ -70,7 +81,8 @@ class SpanEmbeddingFromExternal(Embeddings[Span], Generic[DT]):
             span_string = span_string.lower()
 
         if span_string in self.gazetteer:
-            gaz_vector = torch.tensor(self.gazetteer[span_string], device=flair.device, dtype=torch.float)
+            #gaz_vector = torch.tensor(self.gazetteer[span_string], device=flair.device, dtype=torch.float)
+            gaz_vector = self.gazetteer[span_string]
         else:
             # gaz_vector = torch.neg(torch.ones(self.__gazetteer_vector_length, device=flair.device, dtype=torch.float))
             gaz_vector = torch.zeros(self.__gazetteer_vector_length, device=flair.device, dtype=torch.float)
@@ -98,7 +110,12 @@ class SpanEmbeddingFromExternal(Embeddings[Span], Generic[DT]):
                                                          for t in span.tokens]),dim=0)
                 embeddings.append(substring_mean)
 
-            span.set_embedding(self.name, torch.cat(embeddings))
+            embeddings = torch.cat(embeddings)
+
+            if self.transform_gazetteer_to_latent:
+                embeddings = self.gazetteer_to_latent_layer(embeddings)
+
+            span.set_embedding(self.name, embeddings)
 
     def __str__(self):
         return self.name
@@ -246,6 +263,7 @@ class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
             log.info(f"---- Header is: {header}")
 
             gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
+            #gazetteer = {row[0]: torch.tensor(map(float, row[1:]), device=flair.device, dtype=torch.float) for row in reader}  # read rest in dict
 
         print(f"---- Length of used gazetteer:\t", len(gazetteer))
 
@@ -283,7 +301,8 @@ class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
                 rt_vector = np.concatenate((normalized_tag_counts, confidence, [ratio_tagged_untagged]), 0)
                 #rt_vector = np.round(rt_vector, 4)
 
-                gazetteer[key] = np.around(rt_vector, decimals=5).tolist()
+                #gazetteer[key] = np.around(rt_vector, decimals=5).tolist()
+                gazetteer[key] = torch.tensor(np.around(rt_vector, decimals=5), device=flair.device, dtype=torch.float)
 
             if self.gazetteer_prepare_method == "normalize":
                 # Filter tagged counts and get tagged sum
@@ -294,8 +313,8 @@ class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
                 # compute normalized tag counts and confidence
                 normalized_tag_counts = vector_tag_counts / sum_tagged
 
-                gazetteer[key] = np.around(np.array(normalized_tag_counts), decimals=5).tolist()
-
+                #gazetteer[key] = np.around(np.array(normalized_tag_counts), decimals=5).tolist()
+                gazetteer[key] = torch.tensor(np.around(np.array(normalized_tag_counts), decimals=5), device=flair.device, dtype=torch.float)
 
         global_end = time.time()
         print(f"---- Converting took {round(global_end - global_start, 2)} seconds")
@@ -365,6 +384,8 @@ class ExpandingGazetteerSpanEmbeddings(Embeddings[Span], Generic[DT]):
                  pooling: str = "min",
                  global_lowercasing: bool = False,
                  mapping_corpus_label_to_initial_gazetteer: Dict[str, str] = None,
+                 transform_gazetteer_to_latent: bool = False, # learn an intermediate linear layer transforming original gaz vector (e.g. one-hot) to latent vector
+                 latent_gazetteer_embedding_dimension: int = 10,
 
                  **kwargs,
                  ):
@@ -391,6 +412,9 @@ class ExpandingGazetteerSpanEmbeddings(Embeddings[Span], Generic[DT]):
         self.skip_first_epoch = skip_first_epoch
         self.global_lowercasing = global_lowercasing
         self.updated_partition: Dict[str, torch.Tensor] = {}
+
+        self.transform_gazetteer_to_latent = transform_gazetteer_to_latent
+        self.latent_gazetteer_embedding_dimension = latent_gazetteer_embedding_dimension
 
         # set the memory method
         self.pooling = pooling
@@ -431,7 +455,7 @@ class ExpandingGazetteerSpanEmbeddings(Embeddings[Span], Generic[DT]):
             initial_gazetteer_tmp = {}
             for k,v in self.initial_gazetteer.items():
                 original_vector = v
-                new_vector = torch.zeros(len(label2idx_combined))
+                new_vector = torch.zeros(len(label2idx_combined),  device=flair.device, dtype=torch.float)
                 for old_idx, entry in enumerate(original_vector):
                     label_name = idx2label_initial[old_idx]
                     new_idx = label2idx_combined[label_name]
@@ -450,9 +474,48 @@ class ExpandingGazetteerSpanEmbeddings(Embeddings[Span], Generic[DT]):
 
         self.__gazetteer_vector_length = len(self.label2idx)
         self.__embedding_length = self.__gazetteer_vector_length
+        if self.starting_with_gazetteer:
+            self.__embedding_length = starting_with_gazetteer.embedding_length # necessary because of latent dim
+
+        if self.transform_gazetteer_to_latent:
+            self.gazetteer_to_latent_layer = torch.nn.Linear(self.__embedding_length,
+                                                             self.latent_gazetteer_embedding_dimension)
+            self.__embedding_length = self.latent_gazetteer_embedding_dimension
+
         self.__embedding_type = "span-level"
 
         self.to(flair.device)
+
+    def _add_current_gazetteer_to_initial(self):
+        log.info(f"--- Adding the current gazetteer state to initial gazetteer:")
+        len_before = len(self.initial_gazetteer)
+        self.initial_gazetteer.update(self.gazetteer)
+        len_after = len(self.initial_gazetteer)
+        log.info(f"--- Initial gazetteer size \t {len_before} --> \t {len_after}")
+
+    def _add_initial_gazetteer_to_current(self):
+        log.info(f"--- Adding the initial gazetteer to current gazetteer:")
+        len_before = len(self.gazetteer)
+        self.gazetteer.update(self.initial_gazetteer)
+        len_after = len(self.gazetteer)
+        log.info(f"--- Gazetteer size \t {len_before} --> \t {len_after}")
+
+    def set_update_mode_latent_layer(self, mode):
+        if not self.gazetteer_to_latent_layer:
+            print("--- Trying to reset latent layer but not existent! ---")
+            return
+        else:
+            if mode == False:
+                for p in self.gazetteer_to_latent_layer.parameters():
+                    p.requires_grad = False
+            if mode == True:
+                for p in self.gazetteer_to_latent_layer.parameters():
+                    p.requires_grad = True
+
+    def _freeze_latent_layer_weights(self):
+        for p in self.gazetteer_to_latent_layer.parameters():
+            p.requires_grad = False
+
 
     def train(self, mode=True):
         super().train(mode=mode)
@@ -465,7 +528,8 @@ class ExpandingGazetteerSpanEmbeddings(Embeddings[Span], Generic[DT]):
 
                 if self.starting_with_gazetteer:
                     log.info("train mode resetting embeddings to just include initial gazetteer")
-                    self.gazetteer.update(self.initial_gazetteer)
+                    #self.gazetteer.update(self.initial_gazetteer)
+                    self._add_initial_gazetteer_to_current()
                 else:
                     log.info("train mode resetting embeddings")
                 log.info(f"--> resetting from {len_before} to {len(self.gazetteer)} entries")
@@ -486,6 +550,7 @@ class ExpandingGazetteerSpanEmbeddings(Embeddings[Span], Generic[DT]):
             span_string = span_string.lower()
 
         if span_string in self.gazetteer:
+            #gaz_vector = torch.tensor(self.gazetteer[span_string], device=flair.device, dtype=torch.float)
             gaz_vector = self.gazetteer[span_string]
 
         else:
@@ -522,7 +587,12 @@ class ExpandingGazetteerSpanEmbeddings(Embeddings[Span], Generic[DT]):
 
         for span in spans:
             embeddings = [self.get_gazetteer_embedding(span.text)]
-            span.set_embedding(self.name, torch.cat(embeddings))
+            embeddings = torch.cat(embeddings)
+
+            if self.transform_gazetteer_to_latent:
+                embeddings = self.gazetteer_to_latent_layer(embeddings)
+
+            span.set_embedding(self.name, embeddings)
 
     def _get_updated_partition_of_gazetteer(self):
         return self.updated_partition
