@@ -673,7 +673,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
                 providers = ["CPUExecutionProvider"]
 
         desired_keys_order = [
-            param for param in inspect.signature(embedding.__call__).parameters.keys() if param in example_tensors
+            param for param in inspect.signature(embedding.forward).parameters.keys() if param in example_tensors
         ]
 
         torch.onnx.export(
