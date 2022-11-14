@@ -36,6 +36,7 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
             update_during_eval: bool = True,
             update_during_train: bool = True,
             gazetteer_embeddings = None,
+            mask_gazetteer: bool = False,
             pooling_operation: str = "first_last",
             label_type: str = "ner",
             max_span_length: int = 5,
@@ -68,6 +69,7 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
         if word_embeddings:
             final_embedding_size += word_embeddings.embedding_length * 2 \
                 if pooling_operation == "first_last" else word_embeddings.embedding_length
+
         if gazetteer_embeddings:
             final_embedding_size += gazetteer_embeddings.embedding_length
         elif dynamic_gazetteer_embeddings:
@@ -101,6 +103,8 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
             # TODO: klappt das so? Werden die benutzt?
         else:
             self.gazetteer_embeddings = gazetteer_embeddings
+
+        self.mask_gazetteer = mask_gazetteer
 
         self.delete_goldsubspans_in_training = delete_goldsubspans_in_training
         self.concat_span_length_to_embedding = concat_span_length_to_embedding
@@ -192,8 +196,12 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
             span_embedding_parts.append(torch.tensor([len(prediction_data_point) / self.max_span_length]).to(flair.device))
 
         if self.gazetteer_embeddings:
-            self.gazetteer_embeddings.embed(prediction_data_point)
-            gazetteer_embedding = prediction_data_point.get_embedding(self.gazetteer_embeddings.get_names())
+            if not self.mask_gazetteer:
+                self.gazetteer_embeddings.embed(prediction_data_point)
+                gazetteer_embedding = prediction_data_point.get_embedding(self.gazetteer_embeddings.get_names())
+            else:
+                gazetteer_embedding = torch.zeros(self.gazetteer_embeddings.embedding_length, device=flair.device)
+
             span_embedding_parts.append(gazetteer_embedding)
 
         span_embedding = torch.cat(span_embedding_parts, 0)
@@ -329,6 +337,17 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
 
             return rt
 
+    def _init_weights(self, m):
+        if isinstance(m, torch.nn.Module):
+            for layer in m.modules():
+                if hasattr(layer, 'reset_parameters'):
+                    layer.reset_parameters()
+                    log.info(f"----- Resetting parameters for: {layer.__class__.__name__}")
+                else:
+                    log.info(f"----- Not Resetting for: {layer.__class__.__name__}")
+
+    def reset_decoder_parameters(self):
+        self.decoder.apply(self._init_weights)
 
     def _get_state_dict(self):
         model_state = {
@@ -357,7 +376,8 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                 symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
-                    f' --> {span.get_label("predicted").value} ({symbol})\n'
+                    f' --> {span.get_label("predicted").value} ({symbol})'
+                    f' \tscore:\t{round(span.get_label("predicted").score, 2)}\n'
                 )
                 printed.append(span)
 
@@ -366,7 +386,9 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                 if span.get_label("predicted").value != span.get_label(gold_label_type).value and span not in printed:
                     eval_line += (
                         f' - "{span.text}" / {span.get_label(gold_label_type).value}'
-                        f' --> {span.get_label("predicted").value} ("❌")\n'
+                        f' --> {span.get_label("predicted").value} ("❌")'
+                        f' \tscore:\t{round(span.get_label("predicted").score, 2)}\n'
+
                     )
                     printed.append(span)
 
@@ -395,7 +417,7 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
     def label_type(self):
         return self._label_type
 
-    def error_analysis(self, batch, gold_label_type, out_directory, save_gazetteer_to_file = True):
+    def error_analysis(self, batch, gold_label_type, out_directory, save_gazetteer_to_file = True, save_updated_gazetteer_to_file = True):
         lines = []
         lines_just_errors = []
 
@@ -416,15 +438,22 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
 
             for span in datapoint.get_spans(gold_label_type):
                 if self.gazetteer_embeddings:
-                    self.gazetteer_embeddings.embed(span)
-                    gazetteer_vector = span.get_embedding()
-                    if sum(gazetteer_vector) > 0.0:
+                    if not self.mask_gazetteer:
+                        self.gazetteer_embeddings.embed(span)
+                        gazetteer_embedding = span.get_embedding()
+                        original_gaz_entry = self.gazetteer_embeddings.gazetteer.get(span.text, torch.Tensor([]))
+
+                    else:
+                        gazetteer_embedding = torch.zeros(self.gazetteer_embeddings.embedding_length, device=flair.device)
+                        original_gaz_entry = gazetteer_embedding
+
+                    if sum(original_gaz_entry) > 0.0:
                         count_ground_truth_in_gazetteer +=1
                     else:
                         count_ground_truth_not_in_gazetteer +=1
 
                 else:
-                    gazetteer_vector = torch.Tensor([])  # dummy
+                    gazetteer_embedding = torch.Tensor([])  # dummy
 
                 symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
                 if span.get_label(gold_label_type).value == span.get_label("predicted").value:
@@ -437,16 +466,25 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                     f' --> {span.get_label("predicted").value} ({symbol})'
-                    f' \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_vector.tolist()]}\n'
+                    f' \t score:\t{round(span.get_label("predicted").score, 2)}'
+                    f' \t gazetteer entry \t {[round(e, 2) for e in original_gaz_entry.tolist()]}'
+                    f' \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_embedding.tolist()]}\n'
 
                 )
             # now add also the predicted spans that have *no* gold span equivalent
             for span in datapoint.get_spans("predicted"):
                 if self.gazetteer_embeddings:
-                    self.gazetteer_embeddings.embed(span) #TODO would be nice to have already stored span embeddings
-                    gazetteer_vector = span.get_embedding()
+                    if not self.mask_gazetteer:
+                        self.gazetteer_embeddings.embed(span) #TODO would be nice to have already stored span embeddings
+                        gazetteer_embedding = span.get_embedding()
+                        original_gaz_entry = self.gazetteer_embeddings.gazetteer.get(span.text, torch.Tensor([]))
+                    else:
+                        gazetteer_embedding = torch.zeros(self.gazetteer_embeddings.embedding_length, device=flair.device)
+                        original_gaz_entry = gazetteer_embedding
+
+
                 else:
-                    gazetteer_vector = torch.Tensor([])  # dummy
+                    gazetteer_embedding = torch.Tensor([])  # dummy
 
                 if span.get_label("predicted").value != span.get_label(gold_label_type).value and span not in printed:
                     count_error += 1
@@ -456,7 +494,9 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                     eval_line += (
                         f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                         f' --> {span.get_label("predicted").value} ("❌")'
-                        f' \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_vector.tolist()]}\n'
+                        f' \t score:\t{round(span.get_label("predicted").score, 2)}'
+                        f' \t gazetteer entry \t {[round(e, 2) for e in original_gaz_entry.tolist()]}'
+                        f' \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_embedding.tolist()]}\n'
 
                     )
 
@@ -479,10 +519,15 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                              }
 
         if self.dynamic_gazetteer_mining:
+            if len(self.gazetteer_embeddings.gazetteer) > 0:
+                percentage_updated_full = round(len(self.gazetteer_embeddings._get_updated_partition_of_gazetteer())/len(self.gazetteer_embeddings.gazetteer)*100,2)
+            else:
+                percentage_updated_full = 0.0
+
             add_dict = {"size_initial_gazetteer": len(self.gazetteer_embeddings.initial_gazetteer) if self.gazetteer_embeddings.initial_gazetteer else 0,
                         "size_full_gazetteer": len(self.gazetteer_embeddings.gazetteer),
                         "size_updated_partition_gazetteer": len(self.gazetteer_embeddings._get_updated_partition_of_gazetteer()),
-                        "percentage_updated_full": round(len(self.gazetteer_embeddings._get_updated_partition_of_gazetteer())/len(self.gazetteer_embeddings.gazetteer)*100,2)}
+                        "percentage_updated_full": percentage_updated_full}
             error_counts_dict.update(add_dict)
 
 
@@ -497,19 +542,23 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                 json.dump(error_counts_dict, fp)
 
             if save_gazetteer_to_file and self.gazetteer_embeddings:
+                save_updated_gazetteer_to_file = True
+
                 with open(Path(out_directory / "used_gazetteer_full.txt"), "w", encoding="utf-8") as fp:
                     for key, value in self.gazetteer_embeddings.gazetteer.items():
                         fp.write(f"{str(key)}\t{[round(e, 2) for e in value.tolist()]}\n")
-
-                if self.dynamic_gazetteer_mining:
-                    with open(Path(out_directory / "used_gazetteer_updated_parts.txt"), "w", encoding="utf-8") as fp:
-                        for key, value in self.gazetteer_embeddings._get_updated_partition_of_gazetteer().items():
-                            fp.write(f"{str(key)}\t{[round(e, 2) for e in value.tolist()]}\n")
 
                 if self.dynamic_gazetteer_embeddings.starting_with_gazetteer:
                     with open(Path(out_directory / "used_gazetteer_initial.txt"), "w", encoding="utf-8") as fp:
                         for key, value in self.gazetteer_embeddings.initial_gazetteer.items():
                             fp.write(f"{str(key)}\t{[round(e, 2) for e in value.tolist()]}\n")
+
+            if save_updated_gazetteer_to_file and self.gazetteer_embeddings:
+                if self.dynamic_gazetteer_mining:
+                    with open(Path(out_directory / "used_gazetteer_updated_parts.txt"), "w", encoding="utf-8") as fp:
+                        for key, value in self.gazetteer_embeddings._get_updated_partition_of_gazetteer().items():
+                            fp.write(f"{str(key)}\t{[round(e, 2) for e in value.tolist()]}\n")
+
 
 
         return error_counts_dict
