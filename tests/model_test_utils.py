@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Type
 import pytest
 
 import flair
-from flair.data import Sentence
+from flair.data import Sentence, Dictionary
 from flair.nn import Model
 from flair.trainers import ModelTrainer
 
@@ -37,6 +37,10 @@ class BaseModelTest:
     @pytest.fixture
     def train_test_sentence(self):
         yield Sentence("Berlin is a really nice city.")
+
+    @pytest.fixture
+    def labeled_sentence(self):
+        pytest.skip("This test requires the `labeled_sentence` fixture to be defined")
 
     @pytest.fixture
     def multiclass_train_test_sentence(self):
@@ -131,6 +135,16 @@ class BaseModelTest:
         self.assert_training_example(train_test_sentence)
 
         del trainer, checkpoint_model, corpus
+
+    def test_forward_loss(self, labeled_sentence, embeddings):
+        label_dict = Dictionary()
+        for label in labeled_sentence.get_labels(self.train_label_type):
+            label_dict.add_item(label.value)
+        model = self.build_model(embeddings, label_dict)
+
+        loss, count = model.forward_loss([labeled_sentence])
+        assert loss.size() == ()
+        assert count == len(labeled_sentence.get_labels(self.train_label_type))
 
     def test_train_load_use_model_multi_label(
         self, results_base_path, multi_class_corpus, embeddings, example_sentence, multiclass_train_test_sentence
