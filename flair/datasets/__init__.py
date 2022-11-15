@@ -147,6 +147,7 @@ from .entity_linking import (
 )
 
 # Expose all relation extraction datasets
+from .ocr import SROIE, OcrJsonDataset
 from .relation_extraction import (
     RE_ENGLISH_CONLL04,
     RE_ENGLISH_DRUGPROT,
@@ -296,6 +297,8 @@ from .treebanks import (
 
 __all__ = [
     "DataLoader",
+    "OcrJsonDataset",
+    "SROIE",
     "FlairDatapointDataset",
     "SentenceDataset",
     "MongoDataset",

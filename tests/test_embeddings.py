@@ -3,8 +3,10 @@ import warnings
 
 import pytest
 import torch
+from PIL import Image
+from transformers.utils import is_detectron2_available
 
-from flair.data import Dictionary, Sentence
+from flair.data import BoundingBox, Dictionary, Sentence
 from flair.embeddings import (
     DocumentCNNEmbeddings,
     DocumentLMEmbeddings,
@@ -203,6 +205,102 @@ def test_transformer_jit_embeddings(results_base_path):
     loaded_jit_token_embedding = sentence[5].get_embedding().clone()
     sentence.clear_embeddings()
     assert torch.isclose(jit_token_embedding, loaded_jit_token_embedding).all()
+
+
+@pytest.mark.integration
+def test_layoutlm_embeddings():
+    sentence = Sentence(["I", "love", "Berlin"])
+    sentence[0].add_metadata("bbox", BoundingBox(0, 0, 10, 10))
+    sentence[1].add_metadata("bbox", (12, 0, 22, 10))
+    sentence[2].add_metadata("bbox", (0, 12, 10, 22))
+    emb = TransformerWordEmbeddings("microsoft/layoutlm-base-uncased", layers="-1,-2,-3,-4", layer_mean=True)
+    emb.eval()
+    emb.embed(sentence)
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    condition=not is_detectron2_available(), reason="layoutlmV2 requires detectron2 to be installed manually."
+)
+def test_layoutlmv2_embeddings(tasks_base_path):
+    with Image.open(tasks_base_path / "example_images" / "i_love_berlin.png") as img:
+        img.load()
+        img = img.convert("RGB")
+
+    sentence = Sentence(["I", "love", "Berlin"])
+    sentence.add_metadata("image", img)
+    sentence[0].add_metadata("bbox", BoundingBox(0, 0, 10, 10))
+    sentence[1].add_metadata("bbox", (12, 0, 22, 10))
+    sentence[2].add_metadata("bbox", (0, 12, 10, 22))
+    emb = TransformerWordEmbeddings("microsoft/layoutlmv2-base-uncased", layers="-1,-2,-3,-4", layer_mean=True)
+    emb.eval()
+    emb.embed(sentence)
+
+
+@pytest.mark.integration
+def test_layoutlmv3_embeddings(tasks_base_path):
+    with Image.open(tasks_base_path / "example_images" / "i_love_berlin.png") as img:
+        img.load()
+        img = img.convert("RGB")
+
+    sentence = Sentence(["I", "love", "Berlin"])
+    sentence.add_metadata("image", img)
+    sentence[0].add_metadata("bbox", BoundingBox(0, 0, 10, 10))
+    sentence[1].add_metadata("bbox", (12, 0, 22, 10))
+    sentence[2].add_metadata("bbox", (0, 12, 10, 22))
+    emb = TransformerWordEmbeddings("microsoft/layoutlmv3-base", layers="-1,-2,-3,-4", layer_mean=True)
+    emb.eval()
+    emb.embed(sentence)
+
+
+@pytest.mark.integration
+def test_layoutlmv3_embeddings_with_long_context(tasks_base_path):
+    with Image.open(tasks_base_path / "example_images" / "i_love_berlin.png") as img:
+        img.load()
+        img = img.convert("RGB")
+
+    sentence = Sentence(["I", "love", "Berlin"] * 512)
+    sentence.add_metadata("image", img)
+    for i in range(512):
+        sentence[i * 3].add_metadata("bbox", BoundingBox(0, 0, 10, 10))
+        sentence[i * 3 + 1].add_metadata("bbox", (12, 0, 22, 10))
+        sentence[i * 3 + 2].add_metadata("bbox", (0, 12, 0, 10))
+    emb = TransformerWordEmbeddings("microsoft/layoutlmv3-base", layers="-1,-2,-3,-4", layer_mean=True)
+    emb.eval()
+    emb.embed(sentence)
+
+
+@pytest.mark.integration
+def test_ocr_embeddings_fails_when_no_bbox():
+    sentence = Sentence(["I", "love", "Berlin"])
+    emb = TransformerWordEmbeddings("microsoft/layoutlm-base-uncased", layers="-1,-2,-3,-4", layer_mean=True)
+    emb.eval()
+    with pytest.raises(ValueError):
+        emb.embed(sentence)
+
+
+@pytest.mark.integration
+def test_layoutlm_embeddings_with_context_warns_user():
+    sentence = Sentence(["I", "love", "Berlin"])
+    sentence[0].add_metadata("bbox", BoundingBox(0, 0, 10, 10))
+    sentence[1].add_metadata("bbox", (12, 0, 22, 10))
+    sentence[2].add_metadata("bbox", (0, 12, 10, 22))
+    with pytest.warns(UserWarning) as record:
+        TransformerWordEmbeddings("microsoft/layoutlm-base-uncased", layers="-1,-2,-3,-4", use_context=True)
+    assert len(record) == 1
+    assert "microsoft/layoutlm" in record[0].message.args[0]
+
+
+@pytest.mark.integration
+def test_layoutlmv3_without_image_embeddings_fails():
+    sentence = Sentence(["I", "love", "Berlin"])
+    sentence[0].add_metadata("bbox", BoundingBox(0, 0, 10, 10))
+    sentence[1].add_metadata("bbox", (12, 0, 22, 10))
+    sentence[2].add_metadata("bbox", (0, 12, 10, 22))
+    emb = TransformerWordEmbeddings("microsoft/layoutlmv3-base", layers="-1,-2,-3,-4", layer_mean=True)
+    emb.eval()
+    with pytest.raises(ValueError):
+        emb.embed(sentence)
 
 
 def test_transformer_force_max_length():

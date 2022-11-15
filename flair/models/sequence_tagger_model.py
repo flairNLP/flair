@@ -134,6 +134,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # ----- Dropout parameters -----
         # dropouts
+
+        # remove word dropout if there is no contact over the sequence dimension.
+        if not use_crf and not use_rnn:
+            word_dropout = 0.0
+
         self.use_dropout: float = dropout
         self.use_word_dropout: float = word_dropout
         self.use_locked_dropout: float = locked_dropout

@@ -6,8 +6,8 @@ def test_sentence_context():
     sentence = Sentence("George Washington ging nach Washington.")
     sentence._next_sentence = Sentence("Das ist eine schöne Stadt.")
 
-    assert sentence.right_context(1) == ["Das"]
-    assert sentence.right_context(10) == ["Das", "ist", "eine", "schöne", "Stadt", "."]
+    assert sentence.right_context(1) == [sentence._next_sentence[0]]
+    assert sentence.right_context(10) == sentence._next_sentence.tokens[:10]
 
 
 def test_equality():
