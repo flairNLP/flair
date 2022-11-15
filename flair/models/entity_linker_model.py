@@ -178,47 +178,57 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence]):
 
 class CandidateGenerationMethod():
 
-    def __init__(self, candidate_dict, mention_to_mentions):
-        self.candidate_dict = candidate_dict # for each actual mention a list of candidates
-        self.mention_to_mentions = mention_to_mentions # for each mention a set of 'actual mentions'
+    def __init__(self, candidate_dict):
+        self.candidate_dict = candidate_dict
+
+        self.simpler_mention_to_mentions = {}
+
+        for mention in candidate_dict:
+            # create mention without blanks
+            simplified_mention=mention.replace(' ','').lower()
+            # the simplified mention already occurred from another mention
+            if simplified_mention in self.simpler_mention_to_mentions:
+                self.simpler_mention_to_mentions[simplified_mention].add(mention)
+            # its the first occurrence of the simplified mention
+            else:
+                self.simpler_mention_to_mentions[simplified_mention] = set(mention)
+
 
         self.punc_remover = re.compile(r"[\W]+")
 
-    def find_mention(self, mention):
+        self.even_simpler_mention_to_mentions = {}
 
-        try:
-            corresponding_mentions = self.mention_to_mentions[mention]
-        except KeyError:
-            try:
-                corresponding_mentions = self.mention_to_mentions[mention.lower().replace(' ', '')]
-            except KeyError:
-                try:
-                    corresponding_mentions = self.mention_to_mentions[self.punc_remover.sub("", mention.lower())]
-                except KeyError:
-                    return []
-        return list(corresponding_mentions)
-
-    def get_candidates_for_mentions(self, mentions):
-        if not mentions:
-            return set()
-        else:
-            candidates = set()
-            for mention in mentions:
-                candidates.update(self.candidate_dict[mention])
-
-        return candidates
+        for mention in candidate_dict:
+            # create mention without blanks
+            simplified_mention = self.punc_remover.sub("", mention.lower())
+            # the simplified mention already occurred from another mention
+            if simplified_mention in self.even_simpler_mention_to_mentions:
+                self.even_simpler_mention_to_mentions[simplified_mention].add(mention)
+            # its the first occurrence of the simplified mention
+            else:
+                self.even_simpler_mention_to_mentions[simplified_mention] = set(mention)
 
     def get_candidates(self, mentions):
         candidate_set = set()
-        actual_mentions = []
-        for mention in mentions:
-
-            # take mention and see if it, or lower cased or even more simplified, is contained in list of mentions
-            # if so return the (list of) mentions
-            actual_mentions += self.find_mention(mention)
-
-        candidate_set = self.get_candidates_for_mentions(actual_mentions)
-
+        for org_mention in mentions:
+            try:
+               candidate_set.update(self.candidate_dict[org_mention])
+            except KeyError:
+                # check if mention without blanks exists
+                try:
+                    mention_without_blanks = org_mention.replace(' ','').lower()
+                    for mention in self.simpler_mention_to_mentions[mention_without_blanks]:
+                        candidate_set.update(self.candidate_dict[mention])
+                except KeyError:
+                    # check if even more simplified mention exists
+                    even_more_simplified_mention = self.punc_remover.sub("", org_mention.lower())
+                    try:
+                        for mention in self.even_simpler_mention_to_mentions[even_more_simplified_mention]:
+                            candidate_set.update(self.candidate_dict[mention])
+                    except KeyError:
+                        #possible 'fixes': sample 15 random entities or sample candidates with string similarity (like 15 most similar)
+                        pass
+                        #print('Unknown mention: '+ mention)
         return candidate_set
 
 
@@ -232,23 +242,28 @@ class CandidateDecoder(torch.nn.Module):
     ):
         super().__init__()
 
-        self.entity_dictionary = entity_dictionary # index for each entity (title or id)
+        self.use_minus_infinity_instead_of_selection = use_minus_infinity_instead_of_selection
 
-        self.mention_to_entity = torch.nn.Linear(mention_embedding_size, entity_embedding_size) # project mention embedding to entity embedding space
+        self.entity_dictionary = entity_dictionary  # index for each entity (title or id)
 
-        self.entity_embeddings = torch.nn.Linear(entity_embedding_size ,len(entity_dictionary), bias=False) # each entity is represented by a vector
+        self.mention_to_entity = torch.nn.Linear(mention_embedding_size,
+                                                 entity_embedding_size)  # project mention embedding to entity embedding space
+
+        self.entity_embeddings = torch.nn.Linear(entity_embedding_size, len(entity_dictionary),
+                                                 bias=False)  # each entity is represented by a vector
         # TODO: more sophisticated way than random for initialization for entity vectors??
 
         self.candidate_generation_method = candidate_generation_method
 
-    def forward(self,mention_embeddings, mentions):
+    def forward(self, mention_embeddings, mentions):
 
         # create the restricted set of entities for which we compute the scores batch-wise
         scoring_entity_set = self.candidate_generation_method.get_candidates(mentions)
 
         # if no entity set is given, score over all entities
         if scoring_entity_set:
-            indices_of_scoring_entities = [self.entity_dictionary.get_idx_for_item(entity) for entity in scoring_entity_set]
+            indices_of_scoring_entities = [self.entity_dictionary.get_idx_for_item(entity) for entity in
+                                           scoring_entity_set]
 
         # project mentions in entity representation
         projected_mention_embeddings = self.mention_to_entity(mention_embeddings)
@@ -256,6 +271,12 @@ class CandidateDecoder(torch.nn.Module):
         logits = self.entity_embeddings(projected_mention_embeddings)
         # if not scoring over all entities we return the corresponding indices
         if scoring_entity_set:
-            return logits, indices_of_scoring_entities
+            if not self.use_minus_infinity_instead_of_selection:
+                return logits, indices_of_scoring_entities
+            else:
+                # mask out (set to -inf) logits that are not in the proposed candidate set
+                masked_logits = -torch.inf * torch.ones(logits.size(), requires_grad=True, device=flair.device)
+                masked_logits[:, indices_of_scoring_entities] = logits[:, indices_of_scoring_entities]
+                return masked_logits, None
         else:
             return logits, None
