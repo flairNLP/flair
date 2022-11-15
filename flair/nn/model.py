@@ -612,7 +612,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT]):
 
         # push embedded_data_points through decoder to get the scores
         mentions = [span.text for span in data_points]
-        logits, ids_of_candidates_from_batch = self.decoder(embedded_data_points, mentions)
+        #logits, ids_of_candidates_from_batch = self.decoder(embedded_data_points, mentions)
+        logits, ids_of_candidates_from_batch = self.decoder.decode(embedded_data_points, mentions, labels)
 
         # mask logits of entities not in candidate list
         if ids_of_candidates_from_batch:
