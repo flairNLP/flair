@@ -646,7 +646,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         self.embeddings.embed(sentences)
 
         # get a tensor of data points
-        data_point_tensor = torch.stack([self._get_embedding_for_data_point(data_point) for data_point in data_points])
+        embeddings = [self._get_embedding_for_data_point(data_point) for data_point in data_points]
+        data_point_tensor = torch.stack(embeddings)
 
         # do dropout
         data_point_tensor = data_point_tensor.unsqueeze(1)
