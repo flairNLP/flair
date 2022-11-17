@@ -16,6 +16,82 @@ from typing import Dict, Generic
 log = logging.getLogger("flair")
 
 
+class SpanCountGazetteer(Embeddings[Span]):
+    def __init__(self,
+                 gazetteer_file: str,
+                 do_backoff_lookup: bool = True,
+                 max_confidence_count = 100,
+                 ):
+
+        self.name: str = "dictionary_gazetteer"
+        self.static_embeddings = True
+        self.__embedding_type = "span-level"
+        self.dictionary = {}
+
+        # backoff lookup
+        self.do_backoff_lookup = do_backoff_lookup
+        self.backoff_dictionary = {}
+
+        super().__init__()
+
+        log.info(f"---- Reading raw gazetteer file: {gazetteer_file}")
+        with open(gazetteer_file, mode='r') as inp:
+            log.info(f"---- Gazetteer file contains {sum(1 for line in inp)} lines...")
+            inp.seek(0)  # to start at beginning again
+            reader = csv.reader(inp)
+            header = next(reader)  # header line
+            log.info(f"---- Header is: {header}")
+            self.__gazetteer_vector_length = len(header)
+            self.__embedding_length = self.__gazetteer_vector_length * 2 if do_backoff_lookup else self.__gazetteer_vector_length
+
+            gazetteer = {row[0]: list(map(float, row[1:])) for row in reader}  # read rest in dict
+
+        print(f"---- Length of used gazetteer:\t", len(gazetteer))
+
+        for nr, (key, vector) in enumerate(gazetteer.items()):
+            # compute normalized tag counts and confidence, and concatenate
+            total_occurrences = np.sum(vector)
+            normalized = vector / total_occurrences
+            confidence = np.array([min(total_occurrences / max_confidence_count, 1)])
+            rt_vector = np.concatenate([normalized, confidence])
+
+            # add to gazetteer
+            self.dictionary[key] = np.around(rt_vector, decimals=2).tolist()
+
+            if self.do_backoff_lookup:
+                if key.lower() not in self.backoff_dictionary:
+                    self.backoff_dictionary[key.lower()] = np.around(rt_vector, decimals=2).tolist()
+
+    def get_gazetteer_embedding(self, key: str) -> torch.Tensor:
+
+        # get main and backoff vector
+        main_vector = self.dictionary[key] if key in self.dictionary else [0] * self.__gazetteer_vector_length
+
+        if self.do_backoff_lookup:
+            additional = self.backoff_dictionary[key.lower()] if key.lower() in self.backoff_dictionary \
+                else [0] * self.__gazetteer_vector_length
+            main_vector = main_vector + additional
+
+        return torch.tensor(main_vector, device=flair.device, dtype=torch.float)
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    @property
+    def embedding_type(self) -> str:
+        return self.__embedding_type
+
+    def _add_embeddings_internal(self, spans: List[Span]):
+        for span in spans:
+            # if self.add_lower_case_lookup:
+            #     embeddings.append(self.get_gazetteer_embedding(span.text.title()))
+            span.set_embedding(self.name, self.get_gazetteer_embedding(span.text))
+
+    def __str__(self):
+        return self.name
+
+
 class SpanDictionaryGazetteer(Embeddings[Span]):
     def __init__(self,
                  dictionary: Dict[str, List[int]],
@@ -304,23 +380,24 @@ class SpanGazetteerEmbeddings(SpanEmbeddingFromExternal[Span]):
         for nr, (key, vector) in enumerate(gazetteer.items()):
 
             if self.gazetteer_prepare_method == "normalize_confidence_ratio":
+
                 if time.time() - start >= 30:  # print progress every 30 seconds
                     print("done with \t", round(nr / len(gazetteer) * 100, 2), " % of gazetteer", end="\n")
                     start = time.time()
 
-                # Filter tagged counts and get tagged sum
-                vector_tag_counts = vector[:4]
-                sum_tagged = np.sum(vector_tag_counts)  # sum
-                ratio_tagged_untagged = vector[6]
+                # compute normalized tag counts and confidence, and concatenate
+                total_occurrences = np.sum(vector)
+                normalized = vector / total_occurrences
+                confidence = np.array([min(total_occurrences / self.counts_for_max_confidence, 1)])
+                rt_vector = np.concatenate([normalized, np.array([total_occurrences])])
+                if key == "Berlin":
+                    print(key, vector)
+                    print(total_occurrences)
+                    print(rt_vector)
+                    print(np.around(rt_vector, decimals=2).tolist())
 
-                # compute normalized tag counts and confidence
-                normalized_tag_counts = vector_tag_counts / sum_tagged
-                confidence = np.array([min(sum_tagged / self.counts_for_max_confidence, 1)])
-
-                rt_vector = np.concatenate((normalized_tag_counts, confidence, [ratio_tagged_untagged]), 0)
-                # rt_vector = np.round(rt_vector, 4)
-
-                gazetteer[key] = np.around(rt_vector, decimals=5).tolist()
+                # add to gazetteer
+                gazetteer[key] = np.around(rt_vector, decimals=2).tolist()
 
             if self.gazetteer_prepare_method == "normalize":
                 # Filter tagged counts and get tagged sum
