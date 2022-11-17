@@ -68,11 +68,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
         if concat_span_length_to_embedding:
             final_embedding_size += 1
 
-        print(embeddings.embedding_length)
-        print(gazetteer_embeddings.embedding_length)
-        print(final_embedding_size)
-        # asd
-
         # make sure the label dictionary has an "O" entry for "no tagged span"
         label_dictionary.add_item("O")
 
