@@ -514,7 +514,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         if self.token_embedding or self.needs_manual_ocr:
             model_kwargs["token_lengths"] = torch.tensor(sentence_lengths, device=device)
-        
+
             if self.tokenizer.is_fast:
                 word_ids_list = [batch_encoding.word_ids(i) for i in range(input_ids.size()[0])]
             else:
