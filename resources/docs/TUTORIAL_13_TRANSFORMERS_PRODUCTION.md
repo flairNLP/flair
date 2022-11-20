@@ -113,18 +113,20 @@ class JitWrapper(torch.nn.Module):
     def forward(
         self,
         input_ids: torch.Tensor,
-        lengths: torch.LongTensor,
+        sub_token_lengths: torch.LongTensor,
+        token_lengths: torch.LongTensor,
         attention_mask: torch.Tensor,
         overflow_to_sample_mapping: torch.Tensor,
         word_ids: torch.Tensor,
-    ) -> torch.Tensor:
+    ):
         return self.embedding.forward(
             input_ids=input_ids,
-            lengths=lengths,
+            sub_token_lengths=sub_token_lengths,
+            token_lengths=token_lengths,
             attention_mask=attention_mask,
             overflow_to_sample_mapping=overflow_to_sample_mapping,
             word_ids=word_ids,
-        )["token_embeddings"]
+    )["token_embeddings"]
 ````
 
 Now we can use the wrapper and `torch.jit.trace` to create a script module.
