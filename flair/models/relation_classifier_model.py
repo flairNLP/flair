@@ -181,18 +181,17 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     def _entity_pair_permutations(
         self,
         sentence: Sentence,
-    ) -> Iterator[Tuple[_Entity, _Entity, List[_Entity], Optional[str]]]:
+    ) -> Iterator[Tuple[_Entity, _Entity, Optional[str]]]:
         """
-        Yields all valid entity pair permutations (relation candidates) and
-        the set difference of all valid entities and the entity pair (the remainder).
+        Yields all valid entity pair permutations (relation candidates).
         If the passed sentence contains relation annotations,
         the relation gold label will be yielded along with the participating entities.
         The permutations are constructed by a filtered cross-product
         under the specification of `self.entity_label_types` and `self.entity_pair_labels`.
 
         :param sentence: A flair `Sentence` object with entity annotations
-        :return: Tuples of (HEAD, TAIL, List[REMAINDER], gold_label).
-                 The head, tail and remainder `_Entity`s have span references to the passed sentence.
+        :return: Tuples of (HEAD, TAIL, gold_label).
+                 The head and tail `_Entity`s have span references to the passed sentence.
         """
         valid_entities: List[_Entity] = list(self._valid_entities(sentence))
 
@@ -217,16 +216,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             ):
                 continue
 
-            # Obtain remainder entities
-            remainder: List[_Entity] = [
-                entity for entity in valid_entities if entity is not head and entity is not tail
-            ]
-
             # Obtain gold label, if existing
             original_relation: Relation = Relation(first=head.span, second=tail.span)
             gold_label: Optional[str] = relation_to_gold_label.get(original_relation.unlabeled_identifier)
 
-            yield head, tail, remainder, gold_label
+            yield head, tail, gold_label
 
     def _mask(self, entity: _Entity, role: str) -> str:
         if self.mask_type == "label-aware":
@@ -246,14 +240,14 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         gold_label: Optional[str] = None,
     ) -> EncodedSentence:
         """
-        Returns a new `Sentence` object with masked head, tail and remainder spans.
-        The label-aware mask is constructed from the head/tail/remainder span labels.
+        Returns a new `Sentence` object with masked head and tail spans.
+        The label-aware mask is constructed from the head/tail span labels.
         If provided, the masked sentence also has the corresponding gold label annotation in `self.label_type`.
 
         Example:
-            For the `head=Google`, `tail=Larry Page` and `remainder=[Sergey Brin]`
+            For the `head=Google`, `tail=Larry Page` and
             the sentence "Larry Page and Sergey Brin founded Google .",
-            the masked sentence is "[T-PER] and [R-PER] founded [H-ORG]".
+            the masked sentence is "[T-PER] and Sergey Brin founded [H-ORG]".
 
         :param head: The head `_Entity`
         :param tail: The tail `_Entity`
@@ -264,7 +258,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         original_sentence: Sentence = head.span.sentence
         assert original_sentence is tail.span.sentence, "The head and tail need to come from the same sentence."
 
-        # Pre-compute non-leading head, tail and remainder tokens for entity masking
+        # Pre-compute non-leading head and tail tokens for entity masking
         non_leading_head_tokens: List[Token] = head.span.tokens[1:]
         non_leading_tail_tokens: List[Token] = tail.span.tokens[1:]
 
@@ -319,7 +313,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         :return: Encoded sentences annotated with their gold relation and
                  the corresponding relation in the original sentence
         """
-        for head, tail, remainder, gold_label in self._entity_pair_permutations(sentence):
+        for head, tail, gold_label in self._entity_pair_permutations(sentence):
             masked_sentence: EncodedSentence = self._create_masked_sentence(
                 head=head,
                 tail=tail,
@@ -334,7 +328,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         with the option of disabling cross augmentation via `self.cross_augmentation`
         (and that the relation with reference to the original sentence is not returned).
         """
-        for head, tail, remainder, gold_label in self._entity_pair_permutations(sentence):
+        for head, tail, gold_label in self._entity_pair_permutations(sentence):
 
             if gold_label is None:
                 if self.cross_augmentation:
@@ -504,7 +498,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             # For each encoded sentence, transfer its prediction onto the original relation
             for encoded_sentence, original_relation in sentences_with_relation_reference:
                 for label in encoded_sentence.get_labels(prediction_label_type):
-                    original_relation.add_label(prediction_label_type, value=label.value, score=label.value)
+                    original_relation.add_label(prediction_label_type, value=label.value, score=label.score)
 
         else:
             raise ValueError("All passed sentences must be either uniformly encoded or not.")
