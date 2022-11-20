@@ -19,7 +19,7 @@ ftfy
 konoha<5.0.0,>=4.0.0
 janome
 gdown==4.4.0
-huggingface-hub>=0.8.1
+huggingface-hub==0.10.0
 conllu>=4.0
 more-itertools
 wikipedia-api
