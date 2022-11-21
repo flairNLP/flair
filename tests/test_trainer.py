@@ -128,7 +128,7 @@ def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_resume_tagger_with_additional_epochs(results_base_path, tasks_base_path):
-
+    flair.set_seed(1337)
     corpus_1 = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
     corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path).downsample(0.1)
 
