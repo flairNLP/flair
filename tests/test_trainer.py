@@ -150,8 +150,7 @@ def test_train_resume_tagger_with_additional_epochs(results_base_path, tasks_bas
     del model
 
     # load the checkpoint model and train until epoch 4
-    with pytest.warns(UserWarning):
-        checkpoint_model = SequenceTagger.load(results_base_path / "checkpoint.pt")
+    checkpoint_model = SequenceTagger.load(results_base_path / "checkpoint.pt")
     trainer.resume(model=checkpoint_model, additional_epochs=1)
 
     assert checkpoint_model.model_card["training_parameters"]["max_epochs"] == 2
