@@ -10,7 +10,7 @@ from tests.model_test_utils import BaseModelTest
 class TestRelationExtractor(BaseModelTest):
     model_cls = RelationExtractor
     train_label_type = "relation"
-    pretrained_model = "relation"
+    pretrained_model = "relations"
     model_args = dict(
         entity_label_type="ner",
         train_on_gold_pairs_only=True,
@@ -36,17 +36,30 @@ class TestRelationExtractor(BaseModelTest):
         )
 
     @pytest.fixture
+    def example_sentence(self):
+        sentence = Sentence(["Microsoft", "was", "found", "by", "Bill", "Gates"])
+        sentence[:1].add_label(typename="ner", value="ORG", score=1.0)
+        sentence[4:].add_label(typename="ner", value="PER", score=1.0)
+        yield sentence
+
+    @pytest.fixture
     def train_test_sentence(self):
         sentence = Sentence(["Apple", "was", "founded", "by", "Steve", "Jobs", "."])
         sentence[0:1].add_label("ner", "ORG")
         sentence[4:6].add_label("ner", "PER")
         yield sentence
 
+    @pytest.fixture
+    def embeddings(self):
+        return TransformerWordEmbeddings(model="distilbert-base-uncased", fine_tune=True)
+
     def assert_training_example(self, predicted_training_example):
         relations = predicted_training_example.get_relations("relation")
         assert len(relations) == 1
         assert relations[0].tag == "founded_by"
 
-    @pytest.fixture
-    def embeddings(self):
-        return TransformerWordEmbeddings(model="distilbert-base-uncased", fine_tune=True)
+    def has_embedding(self, sentence):
+        for token in sentence:
+            if token.get_embedding().cpu().numpy().size == 0:
+                return False
+        return True
