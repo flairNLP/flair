@@ -10,6 +10,7 @@ from tests.model_test_utils import BaseModelTest
 class TestRelationExtractor(BaseModelTest):
     model_cls = RelationExtractor
     train_label_type = "relation"
+    pretrained_model = "relation"
     model_args = dict(
         entity_label_type="ner",
         train_on_gold_pairs_only=True,
