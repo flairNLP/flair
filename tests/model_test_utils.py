@@ -173,11 +173,7 @@ class BaseModelTest:
         del model
         checkpoint_model = self.model_cls.load(results_base_path / "checkpoint.pt")
 
-        if self.finetune_instead_of_train:
-            trainer.resume(model=checkpoint_model, max_epochs=self.training_args.get("max_epochs", 2) + 4)
-        else:
-            with pytest.warns(UserWarning):
-                trainer.resume(model=checkpoint_model, max_epochs=self.training_args.get("max_epochs", 2) + 4)
+        trainer.resume(model=checkpoint_model, max_epochs=self.training_args.get("max_epochs", 2) + 4)
         checkpoint_model.predict(train_test_sentence)
 
         self.assert_training_example(train_test_sentence)

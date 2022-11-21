@@ -254,7 +254,8 @@ class ModelTrainer:
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
 
-        self.check_for_and_delete_previous_best_models(base_path)
+        if epoch == 0:
+            self.check_for_and_delete_previous_best_models(base_path)
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
