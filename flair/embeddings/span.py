@@ -68,8 +68,13 @@ class SpanCountGazetteer(Embeddings[Span]):
         main_vector = self.dictionary[key] if key in self.dictionary else [0] * self.__gazetteer_vector_length
 
         if self.do_backoff_lookup:
-            additional = self.backoff_dictionary[key.lower()] if key.lower() in self.backoff_dictionary \
-                else [0] * self.__gazetteer_vector_length
+
+            backoff_key = '___' + key.lower()
+            if backoff_key in self.dictionary:
+                additional = self.dictionary[backoff_key]
+            else:
+                additional = self.backoff_dictionary[key.lower()] if key.lower() in self.backoff_dictionary \
+                    else [0] * self.__gazetteer_vector_length
             main_vector = main_vector + additional
 
         return torch.tensor(main_vector, device=flair.device, dtype=torch.float)
