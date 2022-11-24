@@ -928,18 +928,25 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
             if links:
                 # Keep track which is the correct corresponding entity link, in cases where there is >1 link in a sentence
                 link_index = [
-                    j for j, v in enumerate(links) if (sentence[i].start_position >= v[0] and sentence[i].end_position <= v[1])
+                    j
+                    for j, v in enumerate(links)
+                    if (sentence[i].start_position >= v[0] and sentence[i].end_position <= v[1])
                 ]
                 # Write the token with a corresponding tag to file
                 try:
-                    if any(sentence[i].start_position == v[0] and sentence[i].end_position == v[1] for j, v in enumerate(links)):
+                    if any(
+                        sentence[i].start_position == v[0] and sentence[i].end_position == v[1]
+                        for j, v in enumerate(links)
+                    ):
                         outfile.writelines(sentence[i].text + "\tS-" + links[link_index[0]][2] + "\n")
                     elif any(
-                        sentence[i].start_position == v[0] and sentence[i].end_position != v[1] for j, v in enumerate(links)
+                        sentence[i].start_position == v[0] and sentence[i].end_position != v[1]
+                        for j, v in enumerate(links)
                     ):
                         outfile.writelines(sentence[i].text + "\tB-" + links[link_index[0]][2] + "\n")
                     elif any(
-                        sentence[i].start_position >= v[0] and sentence[i].end_position <= v[1] for j, v in enumerate(links)
+                        sentence[i].start_position >= v[0] and sentence[i].end_position <= v[1]
+                        for j, v in enumerate(links)
                     ):
                         outfile.writelines(sentence[i].text + "\tI-" + links[link_index[0]][2] + "\n")
                     else:
