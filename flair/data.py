@@ -504,8 +504,7 @@ class Token(_PartOfSentence):
         self.head_id: Optional[int] = head_id
         self.whitespace_after: int = whitespace_after
 
-        self.start_pos = start_position
-        self.end_pos = start_position + len(text)
+        self._start_position = start_position
 
         self._embeddings: Dict = {}
         self.tags_proba_dist: Dict[str, List[Label]] = {}
@@ -518,7 +517,7 @@ class Token(_PartOfSentence):
             raise ValueError
 
     @property
-    def text(self):
+    def text(self) -> str:
         return self.form
 
     @property
@@ -538,11 +537,15 @@ class Token(_PartOfSentence):
 
     @property
     def start_position(self) -> int:
-        return self.start_pos
+        return self._start_position
+
+    @start_position.setter
+    def start_position(self, value: int) -> None:
+        self._start_position = value
 
     @property
     def end_position(self) -> int:
-        return self.end_pos
+        return self.start_position + len(self.text)
 
     @property
     def embedding(self):
@@ -815,8 +818,7 @@ class Sentence(DataPoint):
         token.sentence = self
         token._internal_index = len(self.tokens) + 1
         if token.start_position == 0 and len(self) > 0:
-            token.start_pos = len(self.to_original_text()) + self[-1].whitespace_after
-            token.end_pos = token.start_pos + len(token.text)
+            token.start_position = len(self.to_original_text()) + self[-1].whitespace_after
 
         # append token to sentence
         self.tokens.append(token)
@@ -958,7 +960,7 @@ class Sentence(DataPoint):
         if len(self) == 0:
             return ""
         # otherwise, return concatenation of tokens with the correct offsets
-        return self[0].start_pos * " " + "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
+        return self[0].start_position * " " + "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
 
     def to_dict(self, tag_type: str = None):
         labels = []

@@ -385,8 +385,8 @@ class CoNLLWriter:
                     for flair_token in sentence.tokens:
                         token = flair_token.text.strip()
                         assert sentence.start_pos is not None
-                        assert flair_token.start_pos is not None
-                        offset = sentence.start_pos + flair_token.start_pos
+                        assert flair_token.start_position is not None
+                        offset = sentence.start_pos + flair_token.start_position
 
                         if current_entity and offset >= current_entity.char_span.stop:
                             in_entity = False

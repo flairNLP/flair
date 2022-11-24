@@ -701,8 +701,8 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
 
                 token_offsets = [
                     (
-                        sent.start_pos + (token.start_pos or 0) + offset,
-                        sent.start_pos + (token.end_pos or 0) + offset,
+                        sent.start_pos + (token.start_position or 0) + offset,
+                        sent.start_pos + (token.end_position or 0) + offset,
                     )
                     for token in sent.tokens
                 ]

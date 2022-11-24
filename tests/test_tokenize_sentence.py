@@ -32,7 +32,7 @@ def test_create_sentence_with_newline():
 
     sentence: Sentence = Sentence("I \t ich \n you \t du \n", use_tokenizer=False)
     assert 8 == len(sentence.tokens)
-    assert 0 == sentence.tokens[0].start_pos
+    assert 0 == sentence.tokens[0].start_position
     assert "\n" == sentence.tokens[3].text
 
 
@@ -100,11 +100,11 @@ def test_create_sentence_without_tokenizer():
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=False)
 
     assert 3 == len(sentence.tokens)
-    assert 0 == sentence.tokens[0].start_pos
+    assert 0 == sentence.tokens[0].start_position
     assert "I" == sentence.tokens[0].text
-    assert 2 == sentence.tokens[1].start_pos
+    assert 2 == sentence.tokens[1].start_position
     assert "love" == sentence.tokens[1].text
-    assert 7 == sentence.tokens[2].start_pos
+    assert 7 == sentence.tokens[2].start_position
     assert "Berlin." == sentence.tokens[2].text
 
 
@@ -112,13 +112,13 @@ def test_create_sentence_with_default_tokenizer():
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=True)
 
     assert 4 == len(sentence.tokens)
-    assert 0 == sentence.tokens[0].start_pos
+    assert 0 == sentence.tokens[0].start_position
     assert "I" == sentence.tokens[0].text
-    assert 2 == sentence.tokens[1].start_pos
+    assert 2 == sentence.tokens[1].start_position
     assert "love" == sentence.tokens[1].text
-    assert 7 == sentence.tokens[2].start_pos
+    assert 7 == sentence.tokens[2].start_position
     assert "Berlin" == sentence.tokens[2].text
-    assert 13 == sentence.tokens[3].start_pos
+    assert 13 == sentence.tokens[3].start_position
     assert "." == sentence.tokens[3].text
 
 
@@ -135,7 +135,7 @@ def test_create_sentence_with_segtok():
 def test_create_sentence_with_custom_tokenizer():
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=TokenizerWrapper(no_op_tokenizer))
     assert 1 == len(sentence.tokens)
-    assert 0 == sentence.tokens[0].start_pos
+    assert 0 == sentence.tokens[0].start_position
     assert "I love Berlin." == sentence.tokens[0].text
 
 
@@ -144,13 +144,13 @@ def test_create_sentence_with_spacy_tokenizer():
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=SpacyTokenizer("en_core_sci_sm"))
 
     assert 4 == len(sentence.tokens)
-    assert 0 == sentence.tokens[0].start_pos
+    assert 0 == sentence.tokens[0].start_position
     assert "I" == sentence.tokens[0].text
-    assert 2 == sentence.tokens[1].start_pos
+    assert 2 == sentence.tokens[1].start_position
     assert "love" == sentence.tokens[1].text
-    assert 7 == sentence.tokens[2].start_pos
+    assert 7 == sentence.tokens[2].start_position
     assert "Berlin" == sentence.tokens[2].text
-    assert 13 == sentence.tokens[3].start_pos
+    assert 13 == sentence.tokens[3].start_position
     assert "." == sentence.tokens[3].text
 
 
@@ -187,19 +187,19 @@ def test_create_sentence_using_scispacy_tokenizer():
     assert "motor" == sentence.tokens[11].text
     assert "neuron" == sentence.tokens[12].text
 
-    assert 0 == sentence.tokens[0].start_pos
-    assert 7 == sentence.tokens[1].start_pos
-    assert 11 == sentence.tokens[2].start_pos
-    assert 18 == sentence.tokens[3].start_pos
-    assert 27 == sentence.tokens[4].start_pos
-    assert 35 == sentence.tokens[5].start_pos
-    assert 36 == sentence.tokens[6].start_pos
-    assert 40 == sentence.tokens[7].start_pos
-    assert 42 == sentence.tokens[8].start_pos
-    assert 45 == sentence.tokens[9].start_pos
-    assert 48 == sentence.tokens[10].start_pos
-    assert 58 == sentence.tokens[11].start_pos
-    assert 64 == sentence.tokens[12].start_pos
+    assert 0 == sentence.tokens[0].start_position
+    assert 7 == sentence.tokens[1].start_position
+    assert 11 == sentence.tokens[2].start_position
+    assert 18 == sentence.tokens[3].start_position
+    assert 27 == sentence.tokens[4].start_position
+    assert 35 == sentence.tokens[5].start_position
+    assert 36 == sentence.tokens[6].start_position
+    assert 40 == sentence.tokens[7].start_position
+    assert 42 == sentence.tokens[8].start_position
+    assert 45 == sentence.tokens[9].start_position
+    assert 48 == sentence.tokens[10].start_position
+    assert 58 == sentence.tokens[11].start_position
+    assert 64 == sentence.tokens[12].start_position
 
     assert sentence.tokens[4].whitespace_after == 1
     assert sentence.tokens[5].whitespace_after != 1
