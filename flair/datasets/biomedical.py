@@ -5210,23 +5210,21 @@ class BIGSCIENCE_BIOMEDICAL_CORPUS(ColumnCorpus):
         dataset_dir_name = self.build_corpus_directory_name(dataset_name)
         data_folder = base_path / dataset_dir_name
 
-        # ToDo: We have each data set twice: 1) in .cache/huggingface and 2) in .flair/datasets - Is this a problem?
-        from datasets import load_dataset
-        dataset = load_dataset(full_dataset_name, name=dataset_name + "_bigbio_kb")
-        has_dev = "validation" in dataset
-
         train_file = data_folder / "train.conll"
-        dev_file = data_folder / "dev.conll"
         test_file = data_folder / "test.conll"
 
-        if not (train_file.exists() and (dev_file.exists() or not has_dev) and test_file.exists()):
+        if not (train_file.exists() and test_file.exists()):
+            # ToDo: We have each data set twice: 1) in .cache/huggingface and 2) in .flair/datasets - Is this a problem?
+            from datasets import load_dataset
+            dataset = load_dataset(full_dataset_name, name=dataset_name + "_bigbio_kb")
+
             splits = {
                 "train": self.to_internal_dataset(dataset, "train"),
                 "test": self.to_internal_dataset(dataset, "test")
             }
 
             # Not every dataset has a dev / validation set!
-            if has_dev:
+            if "validation" in dataset:
                 splits["dev"] = self.to_internal_dataset(dataset, "validation")
 
             # Perform type mapping if necessary
@@ -5291,6 +5289,7 @@ class BIGSCIENCE_BIOMEDICAL_CORPUS(ColumnCorpus):
                     Entity(char_span=entity_offset, entity_type=entity["type"])
                 )
 
+                # FIXME: This is just for debugging purposes
                 passage_text = id_to_text[passage_id]
                 doc_text = passage_text[entity_offset[0]:entity_offset[1]]
                 mention_text = entity["text"][0]
