@@ -198,7 +198,10 @@ class ModelTrainer:
         local_variables = locals()
         training_parameters = {}
         for parameter in signature(self.train).parameters:
-            training_parameters[parameter] = local_variables[parameter]
+            if isinstance(local_variables[parameter], Path):
+                training_parameters[parameter] = str(local_variables[parameter])
+            else:
+                training_parameters[parameter] = local_variables[parameter]
         model_card["training_parameters"] = training_parameters
 
         if epoch >= max_epochs:
