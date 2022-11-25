@@ -564,6 +564,11 @@ class ModelTrainer:
                 if average_over != 0:
                     train_loss /= average_over
 
+                try:
+                    self.model._post_process_after_epoch(corpus_for_negative_sampling = self.corpus.train) # for SpanTagger with Gazetteer Mining
+                except:
+                    pass
+
                 self.model.eval()
 
                 if save_model_each_k_epochs > 0 and epoch % save_model_each_k_epochs == 0:
