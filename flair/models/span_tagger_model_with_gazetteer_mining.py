@@ -1,8 +1,9 @@
 import logging
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-
 import torch
+from torch.utils.tensorboard import SummaryWriter
+
 
 import flair.embeddings
 import flair.nn
@@ -10,9 +11,9 @@ from flair.data import Dictionary, Sentence, Span, DT
 from flair.embeddings import Embeddings
 from flair.training_utils import store_embeddings
 
-
 import os
 import json
+import random
 from pathlib import Path
 
 log = logging.getLogger("flair")
@@ -35,6 +36,7 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
             dynamic_gazetteer_embeddings = None,
             update_during_eval: bool = True,
             update_during_train: bool = True,
+            use_which_corpus_labels: str = "predictions",
             gazetteer_embeddings = None,
             mask_gazetteer: bool = False,
             pooling_operation: str = "first_last",
@@ -44,6 +46,8 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
             concat_span_length_to_embedding: bool = False,
             resolve_overlaps: str = "by_token",
             decoder=None,
+            track_weights_with_tensorboard_directory = None, # path
+            use_MOE_decoder = False,
             **classifierargs,
     ):
         """
@@ -70,16 +74,26 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
             final_embedding_size += word_embeddings.embedding_length * 2 \
                 if pooling_operation == "first_last" else word_embeddings.embedding_length
 
+        gaz_dim = 0
         if gazetteer_embeddings:
-            final_embedding_size += gazetteer_embeddings.embedding_length
+            gaz_dim += gazetteer_embeddings.embedding_length
+
         elif dynamic_gazetteer_embeddings:
-            final_embedding_size += dynamic_gazetteer_embeddings.embedding_length
+            gaz_dim += dynamic_gazetteer_embeddings.embedding_length
 
         if concat_span_length_to_embedding:
-            final_embedding_size += 1
+            gaz_dim += 1
+
+        final_embedding_size += gaz_dim
 
         # make sure the label dictionary has an "O" entry for "no tagged span"
         label_dictionary.add_item("O")
+
+        if use_MOE_decoder:
+
+            decoder = MOE(span_representation_dim=word_embeddings.embedding_length * 2,
+                          gaz_representation_dim= gaz_dim,
+                          output_dim=len(label_dictionary))
 
         super(SpanTaggerWithGazetteerMining, self).__init__(
             label_dictionary=label_dictionary,
@@ -94,6 +108,9 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
             self.dynamic_gazetteer_mining = True
             self.update_during_train = update_during_train
             self.update_during_eval = update_during_eval
+            self.use_which_corpus_labels = use_which_corpus_labels
+            if self.use_which_corpus_labels not in ["predictions", "gold_annotations", "both"]:
+                raise KeyError('Parameter "use_which_corpus_labels" has to be one of: "predictions", "gold_annotations", "both"')
 
         else:
             self.dynamic_gazetteer_mining = False
@@ -132,6 +149,11 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
 
         self.aggregated_embedding = cases[pooling_operation]
 
+        self.track_weights_with_tensorboard_directory = track_weights_with_tensorboard_directory
+        if self.track_weights_with_tensorboard_directory:
+            self.tensorboard_writer = SummaryWriter(log_dir = self.track_weights_with_tensorboard_directory)
+            self.batch_count = 0
+
         self.to(flair.device)
 
     def emb_first(self, span: Span, embedding_names):
@@ -151,6 +173,25 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
     @property
     def _inner_embeddings(self) -> Embeddings[Sentence]:
         return self.word_embeddings
+
+    def _write_decoder_weights_to_tensorboard(self, batch_nr):
+        for layer_name, weight in self.named_parameters():
+            if "decoder" and "weight" in layer_name and "embeddings" not in layer_name:
+                if len(weight.size()) == 2:
+                    log.info(f"---- Writing to Tensorboard: {layer_name}, {weight.size()} ----")
+                    for out_dim in range(weight.size()[0]):
+                        specific_name = f"{layer_name}_out{out_dim}"
+                        weights = weight[out_dim]
+                        self.tensorboard_writer.add_histogram(specific_name, weights, batch_nr)
+                        range_to_show = list(range(self.final_embedding_size-(self.gazetteer_embeddings.embedding_length),
+                                              self.final_embedding_size))
+                        names_to_show = [f"gaz-dim{dim}" for dim in range_to_show]
+                        compare_with = [0,1,2,3,4] # some random 5 dimensions from transformer embeddings
+                        range_to_show.extend(compare_with)  # to compare to some of the word embeddings dimensions
+                        names_to_show.extend([f"transformer-dim{dim}" for dim in compare_with])
+                        rt_dict = {name: weights[dim]
+                                   for name, dim in zip(names_to_show,range_to_show)}
+                        self.tensorboard_writer.add_scalars(specific_name, rt_dict, batch_nr)
 
     def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Span]:
         if not isinstance(sentences, list):
@@ -292,50 +333,81 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                             predicted_span.add_label(label_type, value=span_prediction, score=span_score)
 
 
-    def _update_dynamic_gazetteer(self, batch, label_type, use_predictions=True):
+    def _update_dynamic_gazetteer(self, batch, label_type, use_which_corpus_labels="predictions"):
+        if not self.dynamic_gazetteer_mining:
+            return batch
         # TODO: right now this is done both in evaluating on dev AND test.
         # Not as problematic given that I use the predictions, not gold data directly, but should the latter change, we need to change the former!
 
-        if self.dynamic_gazetteer_embeddings.skip_first_epoch:
-            raise NotImplementedError
-            # TODO how to get nr of epochs we're in?
         else:
-            if use_predictions:
-                label_identifier = "predicted" # using only the spans predicted by the model
-            elif use_predictions == "both":
-                raise NotImplementedError # TODO using both the predicted and the gold annotations?
+            if self.dynamic_gazetteer_embeddings.skip_first_epoch:
+                raise NotImplementedError
+                # TODO how to get nr of epochs we're in?
             else:
-                label_identifier = label_type # using only the gold annotated spans
-                # TODO have not tested this so far
-            for sentence in batch:
-                for span in sentence.get_spans(label_identifier):
-                    span_text = span.text
-                    confidence = span.get_label(label_identifier).score
-                    span_prediction = span.get_label(label_identifier).value
-                    if confidence > self.dynamic_gazetteer_embeddings.confidence_threshold:
-                        self.dynamic_gazetteer_embeddings.update_gazetteer_embeddings(span_text, span_prediction, method = "replace")
+                if use_which_corpus_labels == "predictions":
+                    label_types = ["predicted"]
+                if use_which_corpus_labels == "gold_annotations":
+                    label_types = [label_type]
+                elif use_which_corpus_labels == "both":
+                    label_types = ["predicted", label_type]
+
+                for sentence in batch:
+                    for l in label_types:
+                        # TODO many double operations (both gold and predicted), make faster!
+                        for span in sentence.get_spans(l):
+                            span_text = span.text
+                            confidence = span.get_label(l).score
+                            span_label = span.get_label(l).value
+                            if confidence > self.dynamic_gazetteer_embeddings.confidence_threshold:
+                                self.dynamic_gazetteer_embeddings.update_gazetteer_embeddings(span_text, span_label)
+
+    # train the
+    def _post_process_after_epoch(self, corpus_for_negative_sampling):
+        if not self.dynamic_gazetteer_mining:
+            return
+        else:
+            if self.dynamic_gazetteer_embeddings.train_gazetteer_model_meanwhile:
+                if self.dynamic_gazetteer_embeddings.gaz_model.update:
+                    self.dynamic_gazetteer_embeddings._fine_tune_gaz_model_on_gazetteer(
+                        gazetteer=self.dynamic_gazetteer_embeddings.updated_partition, # TODO or use the full (seed+updates) one? or just the "newest" additions?
+                        corpus_for_negative_sampling=corpus_for_negative_sampling,
+                        max_span_length=self.max_span_length,
+                        )
 
     # DYNAMIC EMBEDDING UPDATE
+    # hacky, but:
     # overwriting forward_loss and predict as to include the dynamic gazetteer updating
     # so
-    # 1) do the prediction (we need the labels, not just the scores) and
-    # 2) update the embedding
+    # 1) do the prediction also in the forward_loss (we need the labels, not just the scores) and
+    # 2) update the embeddings
 
     def forward_loss(self, sentences) -> Tuple[torch.Tensor, int]:
         self.predict(sentences, label_name="predicted")
 
+        for sentence in sentences:
+            sentence.remove_labels("predicted")
+
         return super().forward_loss(sentences)
 
     def predict(self, sentences, **kwargs):
+
         rt = super().predict(sentences, **kwargs)
+
+        if self.track_weights_with_tensorboard_directory:
+            self.batch_count += 1
+            if self.batch_count %100 == 0:
+                log.info("---- Writing weights to tensorboard ----")
+                self._write_decoder_weights_to_tensorboard(batch_nr = self.batch_count)
 
         if self.dynamic_gazetteer_mining:
             if self.training and self.update_during_train:
-                self._update_dynamic_gazetteer(sentences, label_type=self.label_type, use_predictions=True)
+                self._update_dynamic_gazetteer(sentences, label_type=self.label_type, use_which_corpus_labels=self.use_which_corpus_labels)
             elif self.update_during_eval:
-                self._update_dynamic_gazetteer(sentences, label_type=self.label_type, use_predictions=True)
+                #self._update_dynamic_gazetteer(sentences, label_type=self.label_type, use_which_corpus_labels=self.use_which_corpus_labels)
+                self._update_dynamic_gazetteer(sentences, label_type=self.label_type, use_which_corpus_labels="predictions") # only use predictions to be fair?
 
-            return rt
+
+        return rt
 
     def _init_weights(self, m):
         if isinstance(m, torch.nn.Module):
@@ -417,7 +489,51 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
     def label_type(self):
         return self._label_type
 
-    def error_analysis(self, batch, gold_label_type, out_directory, save_gazetteer_to_file = True, save_updated_gazetteer_to_file = True):
+    def print_gazetteer_to_file(self, out_directory, save_updated_gazetteer_to_file = True):
+        if not os.path.exists(out_directory):
+            os.makedirs(out_directory)
+
+        if self.gazetteer_embeddings:
+            with open(Path(out_directory / "used_gazetteer_full.txt"), "w", encoding="utf-8") as fp:
+                for key, value in self.gazetteer_embeddings.gazetteer.items():
+                    fp.write(f"{str(key)}\t{[round(e, 2) for e in value.tolist()]}\n")
+
+            if hasattr(self.gazetteer_embeddings, "count_dict"):
+                with open(Path(out_directory / "count_dict_full.txt"), "w", encoding="utf-8") as fp:
+                    for key, value in self.gazetteer_embeddings.count_dict.items():
+                        fp.write(f"{str(key)}\t{[round(e, 2) for e in value.tolist()]}\n")
+
+            if self.dynamic_gazetteer_mining:
+                if self.dynamic_gazetteer_embeddings.starting_with_gazetteer:
+                    with open(Path(out_directory / "used_gazetteer_initial.txt"), "w", encoding="utf-8") as fp:
+                        for key, value in self.gazetteer_embeddings.initial_gazetteer.items():
+                            fp.write(f"{str(key)}\t{[round(e, 2) for e in value.tolist()]}\n")
+
+                if save_updated_gazetteer_to_file:
+                    if self.dynamic_gazetteer_mining:
+                        with open(Path(out_directory / "used_gazetteer_updated_parts.txt"), "w", encoding="utf-8") as fp:
+                            for key, value in self.gazetteer_embeddings._get_updated_partition_of_gazetteer().items():
+                                fp.write(f"{str(key)}\t{[round(e, 2) for e in value.tolist()]}\n")
+
+                if len(self.gazetteer_embeddings.gazetteer) > 0:
+                    percentage_updated_full = round(len(self.gazetteer_embeddings._get_updated_partition_of_gazetteer())/len(self.gazetteer_embeddings.gazetteer)*100,2)
+                else:
+                    percentage_updated_full = 0.0
+
+                info_dict  = {"size_initial_gazetteer": len(self.gazetteer_embeddings.initial_gazetteer) if self.gazetteer_embeddings.initial_gazetteer else 0,
+                              "size_full_gazetteer": len(self.gazetteer_embeddings.gazetteer),
+                              "size_updated_partition_gazetteer": len(self.gazetteer_embeddings._get_updated_partition_of_gazetteer()),
+                              "percentage_updated_full": percentage_updated_full}
+
+                with open(Path(out_directory / "info.json"), "w", encoding="utf-8") as fp:
+                    json.dump(info_dict, fp)
+
+
+    def error_analysis(self, batch, gold_label_type, out_directory,
+                       save_gazetteer_to_file = True,
+                       save_updated_gazetteer_to_file = True,
+                       add_weight_vector=True # means: print the weight vector if using a MOE decoder (hacky)
+                       ):
         lines = []
         lines_just_errors = []
 
@@ -426,7 +542,11 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
         count_ground_truth_in_gazetteer = 0
         count_ground_truth_not_in_gazetteer = 0
 
-        self.evaluate(batch, gold_label_type)
+        embedding_storage_mode = "none"
+        if add_weight_vector:
+            embedding_storage_mode = "cpu" # storing word_embeddings of sentences necessary to calc weight_vector
+
+        self.evaluate(batch, gold_label_type, embedding_storage_mode=embedding_storage_mode)
 
         for datapoint in batch:
 
@@ -462,11 +582,21 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                     count_error += 1
                     contains_error = True
 
+                if add_weight_vector:
+                    try:
+                        embedded = self._embed_prediction_data_point(span)
+                        with torch.no_grad():
+                            _, weight_vector = self.decoder.forward(embedded.unsqueeze(0), return_weight_vector = True)
+                    except:
+                        weight_vector = torch.Tensor([])  # dummy
+
+
                 printed.append(span)
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                     f' --> {span.get_label("predicted").value} ({symbol})'
                     f' \t score:\t{round(span.get_label("predicted").score, 2)}'
+                    f' \t weight: {round(float(weight_vector), 2)}'
                     f' \t gazetteer entry \t {[round(e, 2) for e in original_gaz_entry.tolist()]}'
                     f' \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_embedding.tolist()]}\n'
 
@@ -486,6 +616,14 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                 else:
                     gazetteer_embedding = torch.Tensor([])  # dummy
 
+                if add_weight_vector:
+                    try:
+                        embedded = self._embed_prediction_data_point(span)
+                        with torch.no_grad():
+                            _, weight_vector = self.decoder.forward(embedded.unsqueeze(0), return_weight_vector = True)
+                    except:
+                        weight_vector = torch.Tensor([])  # dummy
+
                 if span.get_label("predicted").value != span.get_label(gold_label_type).value and span not in printed:
                     count_error += 1
                     contains_error = True
@@ -495,6 +633,7 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                         f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                         f' --> {span.get_label("predicted").value} ("❌")'
                         f' \t score:\t{round(span.get_label("predicted").score, 2)}'
+                        f' \t weight: {round(float(weight_vector), 2)}'
                         f' \t gazetteer entry \t {[round(e, 2) for e in original_gaz_entry.tolist()]}'
                         f' \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_embedding.tolist()]}\n'
 
@@ -541,25 +680,62 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
             with open(Path(out_directory / "counts_and_percentages.json"), "w", encoding="utf-8") as fp:
                 json.dump(error_counts_dict, fp)
 
-            if save_gazetteer_to_file and self.gazetteer_embeddings:
-                save_updated_gazetteer_to_file = True
-
-                with open(Path(out_directory / "used_gazetteer_full.txt"), "w", encoding="utf-8") as fp:
-                    for key, value in self.gazetteer_embeddings.gazetteer.items():
-                        fp.write(f"{str(key)}\t{[round(e, 2) for e in value.tolist()]}\n")
-
-                if self.dynamic_gazetteer_embeddings.starting_with_gazetteer:
-                    with open(Path(out_directory / "used_gazetteer_initial.txt"), "w", encoding="utf-8") as fp:
-                        for key, value in self.gazetteer_embeddings.initial_gazetteer.items():
-                            fp.write(f"{str(key)}\t{[round(e, 2) for e in value.tolist()]}\n")
-
-            if save_updated_gazetteer_to_file and self.gazetteer_embeddings:
-                if self.dynamic_gazetteer_mining:
-                    with open(Path(out_directory / "used_gazetteer_updated_parts.txt"), "w", encoding="utf-8") as fp:
-                        for key, value in self.gazetteer_embeddings._get_updated_partition_of_gazetteer().items():
-                            fp.write(f"{str(key)}\t{[round(e, 2) for e in value.tolist()]}\n")
-
-
+            if save_gazetteer_to_file:
+                self.print_gazetteer_to_file(out_directory = out_directory,
+                                            save_updated_gazetteer_to_file=save_updated_gazetteer_to_file)
 
         return error_counts_dict
 
+
+
+
+class MOE(torch.nn.Module):
+    def __init__(self, span_representation_dim=768 * 2, gaz_representation_dim=4, shared_dim=256, output_dim = 5):
+        super().__init__()
+        self.span_representation_dim = span_representation_dim
+        self.gaz_representation_dim = gaz_representation_dim
+        self.shared_dim = shared_dim
+        self.output_dim = output_dim
+
+        self.span_linear = torch.nn.Linear(self.span_representation_dim, self.shared_dim)
+        self.gaz_linear = torch.nn.Linear(self.gaz_representation_dim, self.shared_dim)
+        self.moe = torch.nn.Sequential(torch.nn.Linear(self.shared_dim * 2, self.shared_dim*2),
+                                       torch.nn.ReLU(),
+                                       torch.nn.Linear(self.shared_dim*2, 1),
+                                       torch.nn.Sigmoid())
+        #self.moe3 = torch.nn.Sequential(torch.nn.Linear(self.span_representation_dim+self.gaz_representation_dim,
+        #                                                self.span_representation_dim+self.gaz_representation_dim),
+        #                                torch.nn.ReLU(),
+        #                                torch.nn.Linear(self.span_representation_dim+self.gaz_representation_dim,
+        #                                                self.span_representation_dim+self.gaz_representation_dim),
+        #                                torch.nn.Sigmoid())
+
+        self.out = torch.nn.Linear(self.shared_dim, output_dim)
+        #self.out2 = torch.nn.Linear(self.shared_dim*2, output_dim)
+        self.out3 = torch.nn.Linear(self.span_representation_dim+self.gaz_representation_dim, self.output_dim)
+
+    def forward(self, representation, return_weight_vector = False):
+        span_part = representation[:, :self.span_representation_dim]
+        gaz_part = representation[:, self.span_representation_dim:]
+        span_latent = self.span_linear(span_part)
+        gaz_latent = self.gaz_linear(gaz_part)
+        # variant 1
+        concat = torch.cat([span_latent, gaz_latent], dim=1)
+        weight_vector = self.moe(concat)
+        weighted = weight_vector * span_latent + (1-weight_vector) * gaz_latent
+        scores = self.out(weighted)
+
+        # variant 2
+        #weighted = torch.cat([weight_vector * span_latent, (1-weight_vector) * gaz_latent], dim=1)
+        #scores = self.out2(weighted)
+
+        # variant 3
+        #weight_vector = self.moe3(representation)
+        #weighted = weight_vector * representation
+        #scores = self.out3(weighted)
+
+
+        if return_weight_vector:
+            return scores, weight_vector
+        else:
+            return scores
