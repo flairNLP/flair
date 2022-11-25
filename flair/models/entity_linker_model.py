@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
 import torch
 
@@ -19,12 +19,13 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     """
 
     def __init__(
-        self,
-        embeddings: flair.embeddings.TokenEmbeddings,
-        label_dictionary: Dictionary,
-        pooling_operation: str = "first_last",
-        label_type: str = "nel",
-        **classifierargs,
+            self,
+            embeddings: flair.embeddings.TokenEmbeddings,
+            label_dictionary: Dictionary,
+            span_embeddings: Optional[flair.embeddings.Embeddings[Span]] = None,
+            pooling_operation: str = "first_last",
+            label_type: str = "nel",
+            **classifierargs,
     ):
         """
         Initializes an EntityLinker
@@ -36,10 +37,17 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         :param label_type: name of the label you use.
         """
 
+        final_embedding_size = 0
+        if embeddings:
+            final_embedding_size += embeddings.embedding_length * 2 \
+                if pooling_operation == "first_last" else embeddings.embedding_length
+        if span_embeddings:
+            final_embedding_size += span_embeddings.embedding_length
+
         super(EntityLinker, self).__init__(
             embeddings=embeddings,
             label_dictionary=label_dictionary,
-            final_embedding_size=embeddings.embedding_length * 2
+            final_embedding_size=final_embedding_size
             if pooling_operation == "first_last"
             else embeddings.embedding_length,
             **classifierargs,
@@ -59,6 +67,8 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first_last"')
 
         self.aggregated_embedding = cases[pooling_operation]
+
+        self.span_embeddings = span_embeddings
 
         self.to(flair.device)
 
@@ -83,7 +93,19 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         return bool(data_point.get_labels(self.label_type))
 
     def _get_embedding_for_data_point(self, prediction_data_point: Span) -> torch.Tensor:
-        return self.aggregated_embedding(prediction_data_point, self.embeddings.get_names())
+
+        span_embedding_parts = []
+        if self.embeddings:
+            span_embedding_parts.append(self.aggregated_embedding(prediction_data_point, self.embeddings.get_names()))
+
+        if self.span_embeddings:
+            self.span_embeddings.embed(prediction_data_point)
+            gazetteer_embedding = prediction_data_point.get_embedding(self.span_embeddings.get_names())
+            span_embedding_parts.append(gazetteer_embedding)
+
+        span_embedding = torch.cat(span_embedding_parts, 0)
+
+        return span_embedding
 
     def _get_state_dict(self):
         model_state = {

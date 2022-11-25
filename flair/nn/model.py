@@ -643,7 +643,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
     def _encode_data_points(self, sentences: List[DT], data_points: List[DT2]):
 
         # embed sentences
-        self.embeddings.embed(sentences)
+        if self.embeddings:
+            self.embeddings.embed(sentences)
 
         # get a tensor of data points
         embeddings = [self._get_embedding_for_data_point(data_point) for data_point in data_points]
