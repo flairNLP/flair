@@ -138,7 +138,7 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
 
                             # sentence splitting and tokenization
                             sentences = sentence_splitter.split(string)
-                            sentence_offsets = [sentence.start_pos or 0 for sentence in sentences]
+                            sentence_offsets = [sentence.start_position or 0 for sentence in sentences]
 
                             # iterate through all annotations and add to corresponding tokens
                             for mention_start, mention_length, wikiname in zip(indices, lengths, wikinames):
@@ -603,7 +603,7 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
 
                         # split sentences and tokenize
                         sentences = sentence_splitter.split(text)
-                        sentence_offsets = [sentence.start_pos or 0 for sentence in sentences]
+                        sentence_offsets = [sentence.start_position or 0 for sentence in sentences]
 
                         # iterate through all annotations and add to corresponding tokens
                         for elem in root:

@@ -712,8 +712,7 @@ class Sentence(DataPoint):
 
         self.language_code: Optional[str] = language_code
 
-        self.start_pos = start_position
-        self.end_pos = start_position + len(text)
+        self._start_position = start_position
 
         # the tokenizer used for this sentence
         if isinstance(use_tokenizer, Tokenizer):
@@ -1003,11 +1002,15 @@ class Sentence(DataPoint):
 
     @property
     def start_position(self) -> int:
-        return 0
+        return self._start_position
+
+    @start_position.setter
+    def start_position(self, value: int) -> None:
+        self._start_position = value
 
     @property
     def end_position(self) -> int:
-        return len(self.to_original_text())
+        return self[-1].end_position + self[-1].whitespace_after
 
     def get_language_code(self) -> str:
         if self.language_code is None:
