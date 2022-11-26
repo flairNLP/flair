@@ -732,30 +732,22 @@ class Sentence(DataPoint):
             words = tokenizer.tokenize(text)
         else:
             words = text
+            text = " ".join(words)
 
         # determine token positions and whitespace_after flag
-        current_offset = 0
-        previous_word_offset = -1
-        previous_token = None
+        current_offset: int = 0
+        previous_token: Optional[Token] = None
         for word in words:
-            try:
-                word_offset = text.index(word, current_offset)
-                start_position = word_offset
-                delta_offset = start_position - current_offset
-            except ValueError:
-                word_offset = previous_word_offset + 1
-                start_position = current_offset + 1 if current_offset > 0 else current_offset
-                delta_offset = start_position - current_offset
+            word_start_position: int = text.index(word, current_offset)
+            delta_offset: int = word_start_position - current_offset
 
-            if word:
-                token = Token(text=word, start_position=start_position)
-                self.add_token(token)
+            token: Token = Token(text=word, start_position=word_start_position)
+            self.add_token(token)
 
             if previous_token is not None:
                 previous_token.whitespace_after = delta_offset
 
-            current_offset = word_offset + len(word)
-            previous_word_offset = current_offset - 1
+            current_offset = token.end_position
             previous_token = token
 
         # the last token has no whitespace after
@@ -1010,7 +1002,9 @@ class Sentence(DataPoint):
 
     @property
     def end_position(self) -> int:
-        return self[-1].end_position + self[-1].whitespace_after
+        # The sentence's start position is not propagated to its tokens.
+        # Therefore, we need to add the sentence's start position to its last token's end position, including whitespaces.
+        return self.start_position + self[-1].end_position + self[-1].whitespace_after
 
     def get_language_code(self) -> str:
         if self.language_code is None:
