@@ -254,7 +254,8 @@ class ModelTrainer:
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
 
-        self.check_for_and_delete_previous_best_models(base_path)
+        if epoch == 0:
+            self.check_for_and_delete_previous_best_models(base_path)
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
@@ -303,7 +304,7 @@ class ModelTrainer:
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
-        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.0
+        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else -1.0
 
         dataset_size = _len_dataset(self.corpus.train)
         if train_with_dev:
@@ -612,7 +613,6 @@ class ModelTrainer:
                         exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{train_part_eval_result.loss}" f"\t{train_part_eval_result.log_line}"
-
                     log.info(
                         f"TRAIN_SPLIT : loss {train_part_eval_result.loss}"
                         f" - {main_evaluation_metric[1]}"
@@ -893,7 +893,7 @@ class ModelTrainer:
 
         if additional_epochs is not None:
             args_used_to_train_model["max_epochs"] = (
-                args_used_to_train_model.pop("epoch", kwargs.pop("epoch", 0)) + additional_epochs
+                args_used_to_train_model.get("epoch", kwargs.get("epoch", 0)) + additional_epochs
             )
 
         # resume training with these parameters

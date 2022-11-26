@@ -38,6 +38,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
         # auto-spawn on GPU if available
         self.to(flair.device)
 
+    @property
     def label_type(self):
         return self.label_name
 
@@ -88,8 +89,8 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
             if not sentences:
                 return sentences
-
-            reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
+            filtered_sentences = self._filter_empty_sentences(sentences)
+            reordered_sentences = sorted(filtered_sentences, key=lambda s: len(s), reverse=True)
 
             if len(reordered_sentences) == 0:
                 return sentences
@@ -167,9 +168,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
                     for label in sentence.get_labels(gold_label_type):
                         true_values.append(float(label.value))
 
-                results = []
-                for score in scores:
-                    results.append(score[0])
+                results = scores[:, 0].cpu().tolist()
 
                 eval_loss += loss
 
@@ -188,7 +187,6 @@ class TextRegressor(flair.nn.Model[Sentence]):
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
-
             log_line = f"{metric.mean_squared_error()}\t{metric.spearmanr()}" f"\t{metric.pearsonr()}"
             log_header = "MSE\tSPEARMAN\tPEARSON"
 
