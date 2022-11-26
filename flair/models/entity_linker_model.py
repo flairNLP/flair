@@ -47,9 +47,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         super(EntityLinker, self).__init__(
             embeddings=embeddings,
             label_dictionary=label_dictionary,
-            final_embedding_size=final_embedding_size
-            if pooling_operation == "first_last"
-            else embeddings.embedding_length,
+            final_embedding_size=final_embedding_size,
             **classifierargs,
         )
 
