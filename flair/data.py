@@ -16,6 +16,7 @@ from torch.utils.data.dataset import ConcatDataset, Subset
 
 import flair
 from flair.file_utils import Tqdm
+from flair.tokenization import SegtokTokenizer, SpaceTokenizer, Tokenizer
 
 T_co = typing.TypeVar("T_co", covariant=True)
 
@@ -661,25 +662,6 @@ class Relation(_PartOfSentence):
         pass
 
 
-class Tokenizer(ABC):
-    r"""An abstract class representing a :class:`Tokenizer`.
-
-    Tokenizers are used to represent algorithms and models to split plain text into
-    individual tokens / words. All subclasses should overwrite :meth:`tokenize`, which
-    splits the given plain text into tokens. Moreover, subclasses may overwrite
-    :meth:`name`, returning a unique identifier representing the tokenizer's
-    configuration.
-    """
-
-    @abstractmethod
-    def tokenize(self, text: str) -> List[str]:
-        raise NotImplementedError()
-
-    @property
-    def name(self) -> str:
-        return self.__class__.__name__
-
-
 class Sentence(DataPoint):
     """
     A Sentence is a list of tokens and is used to represent a sentence or text fragment.
@@ -719,8 +701,6 @@ class Sentence(DataPoint):
             tokenizer = use_tokenizer
 
         elif type(use_tokenizer) == bool:
-            from flair.tokenization import SegtokTokenizer, SpaceTokenizer
-
             tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
 
         else:

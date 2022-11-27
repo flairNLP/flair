@@ -10,7 +10,7 @@ import flair
 from flair.data import Corpus, MultiCorpus, Sentence
 from flair.datasets.sequence_labeling import ColumnCorpus
 from flair.file_utils import cached_path, unpack_file
-from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
+from flair.splitter import SegtokSentenceSplitter, SentenceSplitter
 
 log = logging.getLogger("flair")
 

@@ -19,7 +19,8 @@ from flair.datasets.biomedical import (
     InternalBioNerDataset,
     filter_nested_entities,
 )
-from flair.tokenization import NoSentenceSplitter, SentenceSplitter, SpaceTokenizer
+from flair.splitter import NoSentenceSplitter, SentenceSplitter
+from flair.tokenization import SpaceTokenizer
 
 
 def has_balanced_parantheses(text: str) -> bool:
