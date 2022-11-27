@@ -504,8 +504,7 @@ class Token(_PartOfSentence):
         self.head_id: Optional[int] = head_id
         self.whitespace_after: int = whitespace_after
 
-        self.start_pos = start_position
-        self.end_pos = start_position + len(text)
+        self._start_position = start_position
 
         self._embeddings: Dict = {}
         self.tags_proba_dist: Dict[str, List[Label]] = {}
@@ -518,7 +517,7 @@ class Token(_PartOfSentence):
             raise ValueError
 
     @property
-    def text(self):
+    def text(self) -> str:
         return self.form
 
     @property
@@ -538,11 +537,15 @@ class Token(_PartOfSentence):
 
     @property
     def start_position(self) -> int:
-        return self.start_pos
+        return self._start_position
+
+    @start_position.setter
+    def start_position(self, value: int) -> None:
+        self._start_position = value
 
     @property
     def end_position(self) -> int:
-        return self.end_pos
+        return self.start_position + len(self.text)
 
     @property
     def embedding(self):
@@ -709,8 +712,7 @@ class Sentence(DataPoint):
 
         self.language_code: Optional[str] = language_code
 
-        self.start_pos = start_position
-        self.end_pos = start_position + len(text)
+        self._start_position = start_position
 
         # the tokenizer used for this sentence
         if isinstance(use_tokenizer, Tokenizer):
@@ -730,30 +732,22 @@ class Sentence(DataPoint):
             words = tokenizer.tokenize(text)
         else:
             words = text
+            text = " ".join(words)
 
         # determine token positions and whitespace_after flag
-        current_offset = 0
-        previous_word_offset = -1
-        previous_token = None
+        current_offset: int = 0
+        previous_token: Optional[Token] = None
         for word in words:
-            try:
-                word_offset = text.index(word, current_offset)
-                start_position = word_offset
-                delta_offset = start_position - current_offset
-            except ValueError:
-                word_offset = previous_word_offset + 1
-                start_position = current_offset + 1 if current_offset > 0 else current_offset
-                delta_offset = start_position - current_offset
+            word_start_position: int = text.index(word, current_offset)
+            delta_offset: int = word_start_position - current_offset
 
-            if word:
-                token = Token(text=word, start_position=start_position)
-                self.add_token(token)
+            token: Token = Token(text=word, start_position=word_start_position)
+            self.add_token(token)
 
             if previous_token is not None:
                 previous_token.whitespace_after = delta_offset
 
-            current_offset = word_offset + len(word)
-            previous_word_offset = current_offset - 1
+            current_offset = token.end_position
             previous_token = token
 
         # the last token has no whitespace after
@@ -815,8 +809,7 @@ class Sentence(DataPoint):
         token.sentence = self
         token._internal_index = len(self.tokens) + 1
         if token.start_position == 0 and len(self) > 0:
-            token.start_pos = len(self.to_original_text()) + self[-1].whitespace_after
-            token.end_pos = token.start_pos + len(token.text)
+            token.start_position = len(self.to_original_text()) + self[-1].whitespace_after
 
         # append token to sentence
         self.tokens.append(token)
@@ -958,7 +951,7 @@ class Sentence(DataPoint):
         if len(self) == 0:
             return ""
         # otherwise, return concatenation of tokens with the correct offsets
-        return self[0].start_pos * " " + "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
+        return self[0].start_position * " " + "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
 
     def to_dict(self, tag_type: str = None):
         labels = []
@@ -1001,11 +994,17 @@ class Sentence(DataPoint):
 
     @property
     def start_position(self) -> int:
-        return 0
+        return self._start_position
+
+    @start_position.setter
+    def start_position(self, value: int) -> None:
+        self._start_position = value
 
     @property
     def end_position(self) -> int:
-        return len(self.to_original_text())
+        # The sentence's start position is not propagated to its tokens.
+        # Therefore, we need to add the sentence's start position to its last token's end position, including whitespaces.
+        return self.start_position + self[-1].end_position + self[-1].whitespace_after
 
     def get_language_code(self) -> str:
         if self.language_code is None:

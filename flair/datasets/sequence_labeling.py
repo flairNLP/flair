@@ -216,10 +216,10 @@ class JsonlDataset(FlairDataset):
         start_idx = -1
         end_idx = -1
         for token in sentence:
-            if token.start_pos <= start <= token.end_pos and start_idx == -1:
+            if token.start_position <= start <= token.end_position and start_idx == -1:
                 start_idx = token.idx - 1
 
-            if token.start_pos <= end <= token.end_pos and end_idx == -1:
+            if token.start_position <= end <= token.end_position and end_idx == -1:
                 end_idx = token.idx - 1
 
         # If end index is not found set to last token
@@ -740,12 +740,11 @@ class ColumnDataset(FlairDataset):
         if last_token is None:
             start = 0
         else:
-            assert last_token.end_pos is not None
-            start = last_token.end_pos
+            assert last_token.end_position is not None
+            start = last_token.end_position
             if last_token.whitespace_after > 0:
                 start += last_token.whitespace_after
-        token.start_pos = start
-        token.end_pos = token.start_pos + len(token.text)
+        token.start_position = start
         return token
 
     def _remap_label(self, tag):
