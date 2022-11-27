@@ -4,18 +4,20 @@ import pytest
 
 import flair
 from flair.data import Sentence, Token
-from flair.tokenization import (
-    JapaneseTokenizer,
+from flair.splitter import (
     NewlineSentenceSplitter,
     NoSentenceSplitter,
     SciSpacySentenceSplitter,
-    SciSpacyTokenizer,
     SegtokSentenceSplitter,
+    SpacySentenceSplitter,
+    TagSentenceSplitter,
+)
+from flair.tokenization import (
+    JapaneseTokenizer,
+    SciSpacyTokenizer,
     SegtokTokenizer,
     SpaceTokenizer,
-    SpacySentenceSplitter,
     SpacyTokenizer,
-    TagSentenceSplitter,
     TokenizerWrapper,
 )
 
