@@ -30,15 +30,14 @@ import flair
 from flair.data import MultiCorpus, Tokenizer
 from flair.datasets.sequence_labeling import ColumnCorpus, ColumnDataset
 from flair.file_utils import Tqdm, cached_path, unpack_file
-from flair.tokenization import (
+from flair.splitter import (
     NewlineSentenceSplitter,
     NoSentenceSplitter,
     SciSpacySentenceSplitter,
-    SciSpacyTokenizer,
     SentenceSplitter,
-    SpaceTokenizer,
     TagSentenceSplitter,
 )
+from flair.tokenization import SciSpacyTokenizer, SpaceTokenizer
 
 DISEASE_TAG = "Disease"
 CHEMICAL_TAG = "Chemical"
