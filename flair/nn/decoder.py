@@ -122,3 +122,21 @@ class PrototypicalDecoder(torch.nn.Module):
         scores = -distance
 
         return scores
+
+
+class LayerwiseDecoder(torch.nn.Module):
+    def __init__(self, n_layers: int, emb_size: int, n_labels: int):
+
+        super().__init__()
+
+        self.n_layers = n_layers
+        self.decoders = torch.nn.ModuleList(torch.nn.Linear(emb_size, n_labels) for _ in range(n_layers))
+        for decoder in self.decoders:
+            torch.nn.init.xavier_uniform_(decoder.weight)
+
+    def forward(self, embedded):
+        scores = []
+        for i in range(self.n_layers):
+            score = self.decoders[i](embedded[i])
+            scores.append(score)
+        return torch.stack(scores)
