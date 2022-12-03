@@ -721,12 +721,12 @@ class Sentence(DataPoint):
             text = Sentence._handle_problem_characters(text)
             words = tokenizer.tokenize(text)
         elif text and isinstance(text[0], Token):
-            for token in text:
-                self.add_token(token)
+            for t in text:
+                self.add_token(t)
             self.tokens[-1].whitespace_after = 0
             return
         else:
-            words = text
+            words = cast(List[str], text)
             text = " ".join(words)
 
         # determine token positions and whitespace_after flag

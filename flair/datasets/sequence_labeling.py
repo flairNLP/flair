@@ -2770,7 +2770,7 @@ class NER_MULTI_CONER_V2(MultiFileColumnCorpus):
             log.warning('Instructions for obtaining the data can be found here: https://multiconer.github.io/dataset"')
             log.warning("-" * 100)
 
-        if task  == "multi":
+        if task == "multi":
             train_files = list(data_folder.glob("*-train.conll"))
             dev_files = list(data_folder.glob("*-dev.conll"))
         else:
