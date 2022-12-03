@@ -2764,7 +2764,13 @@ class NER_MULTI_CONER_V2(MultiFileColumnCorpus):
 
         data_folder = base_path / dataset_name / "train_dev"
 
-        if task in ["multi"]:
+        if not data_folder.exists():
+            log.warning("-" * 100)
+            log.warning(f'WARNING: MultiCoNerV2 dataset not found at "{data_folder}".')
+            log.warning('Instructions for obtaining the data can be found here: https://multiconer.github.io/dataset"')
+            log.warning("-" * 100)
+
+        if task  == "multi":
             train_files = list(data_folder.glob("*-train.conll"))
             dev_files = list(data_folder.glob("*-dev.conll"))
         else:
