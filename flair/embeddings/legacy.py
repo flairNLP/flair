@@ -250,8 +250,7 @@ class CharLMEmbeddings(TokenEmbeddings):
             self.cache = SqliteDict(str(cache_path), autocommit=True)
 
         # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -375,8 +374,7 @@ class XLNetEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -441,8 +439,7 @@ class XLMEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -506,8 +503,7 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -569,8 +565,7 @@ class OpenAIGPT2Embeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -628,8 +623,7 @@ class RoBERTaEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -687,8 +681,7 @@ class CamembertEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -760,8 +753,7 @@ class XLMRobertaEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -1434,8 +1426,7 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
         self.indexer = ELMoTokenCharactersIndexer()
 
         # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 

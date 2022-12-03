@@ -77,16 +77,15 @@ def test_create_sentence_word_by_word():
     token4: Token = Token("are")
     token5: Token = Token("nice")
 
-    sentence: Sentence = Sentence([])
-
-    sentence.add_token(token1)
-    sentence.add_token(token2)
-    sentence.add_token(token3)
-    sentence.add_token(token4)
-    sentence.add_token(token5)
-
-    sentence.add_token("cities")
-    sentence.add_token(Token("."))
+    sentence: Sentence = Sentence([
+        token1,
+        token2,
+        token3,
+        token4,
+        token5,
+        Token("cities"),
+        Token(".")
+    ])
 
     assert "Munich and Berlin are nice cities ." == sentence.to_tokenized_string()
 
@@ -402,11 +401,12 @@ def test_print_sentence_plain(tasks_base_path):
 
 
 def test_infer_space_after():
-    sentence: Sentence = Sentence([])
-    sentence.add_token(Token("xyz"))
-    sentence.add_token(Token('"'))
-    sentence.add_token(Token("abc"))
-    sentence.add_token(Token('"'))
+    sentence: Sentence = Sentence([
+        Token("xyz"),
+        Token('"'),
+        Token("abc"),
+        Token('"')
+    ])
     sentence.infer_space_after()
 
     assert 'xyz " abc "' == sentence.to_tokenized_string()
@@ -449,11 +449,12 @@ def test_token_positions_when_creating_with_tokenizer():
 
 
 def test_token_positions_when_creating_word_by_word():
-    sentence: Sentence = Sentence([])
-    sentence.add_token(Token("I"))
-    sentence.add_token("love")
-    sentence.add_token("Berlin")
-    sentence.add_token(".")
+    sentence: Sentence = Sentence([
+        Token("I"),
+        Token("love"),
+        Token("Berlin"),
+        Token("."),
+    ])
 
     assert 0 == sentence.tokens[0].start_position
     assert 1 == sentence.tokens[0].end_position

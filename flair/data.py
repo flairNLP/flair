@@ -722,7 +722,7 @@ class Sentence(DataPoint):
             words = tokenizer.tokenize(text)
         elif text and isinstance(text[0], Token):
             for t in text:
-                self.add_token(t)
+                self._add_token(t)
             self.tokens[-1].whitespace_after = 0
             return
         else:
@@ -737,7 +737,7 @@ class Sentence(DataPoint):
             delta_offset: int = word_start_position - current_offset
 
             token: Token = Token(text=word, start_position=word_start_position)
-            self.add_token(token)
+            self._add_token(token)
 
             if previous_token is not None:
                 previous_token.whitespace_after = delta_offset
@@ -777,7 +777,7 @@ class Sentence(DataPoint):
                 return token
         return None
 
-    def add_token(self, token: Union[Token, str]):
+    def _add_token(self, token: Union[Token, str]):
 
         if isinstance(token, Token):
             assert token.sentence is None
