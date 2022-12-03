@@ -689,6 +689,13 @@ class ColumnDataset(FlairDataset):
                     if remapped != "O":
                         relation.add_label(typename="relation", value=remapped)
 
+            # parse comments such as '# id cd27886d-6895-4d02-a8df-e5fa763fa88f	domain=de-orcas'
+            # to set the metadata "domain" to "de-orcas"
+            for comment_row in comment.split("\t"):
+                if "=" in comment_row:
+                    key, value = comment_row.split("=", 2)
+                    sentence.add_metadata(key, value)
+
         if len(sentence) > 0:
             return sentence
 
