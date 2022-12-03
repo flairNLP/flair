@@ -29,7 +29,7 @@ from transformers import (
 )
 
 import flair
-from flair.data import Sentence, Token
+from flair.data import Sentence
 from flair.embeddings.base import ScalarMix
 from flair.embeddings.document import DocumentEmbeddings
 from flair.embeddings.token import StackedEmbeddings, TokenEmbeddings
