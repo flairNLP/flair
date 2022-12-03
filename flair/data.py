@@ -669,7 +669,7 @@ class Sentence(DataPoint):
 
     def __init__(
         self,
-        text: Union[str, List[str]],
+        text: Union[str, List[str], List[Token]],
         use_tokenizer: Union[bool, Tokenizer] = True,
         language_code: str = None,
         start_position: int = 0,
@@ -706,10 +706,25 @@ class Sentence(DataPoint):
         else:
             raise AssertionError("Unexpected type of parameter 'use_tokenizer'. Parameter should be bool or Tokenizer")
 
+        self.tokenized: Optional[str] = None
+
+        # some sentences represent a document boundary (but most do not)
+        self.is_document_boundary: bool = False
+
+        # internal variables to denote position inside dataset
+        self._previous_sentence: Optional[Sentence] = None
+        self._next_sentence: Optional[Sentence] = None
+        self._position_in_dataset: Optional[typing.Tuple[Dataset, int]] = None
+
         # if text is passed, instantiate sentence with tokens (words)
         if isinstance(text, str):
             text = Sentence._handle_problem_characters(text)
             words = tokenizer.tokenize(text)
+        elif text and isinstance(text[0], Token):
+            for token in text:
+                self.add_token(token)
+            self.tokens[-1].whitespace_after = 0
+            return
         else:
             words = text
             text = " ".join(words)
@@ -737,16 +752,6 @@ class Sentence(DataPoint):
         # log a warning if the dataset is empty
         if text == "":
             log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
-
-        self.tokenized: Optional[str] = None
-
-        # some sentences represent a document boundary (but most do not)
-        self.is_document_boundary: bool = False
-
-        # internal variables to denote position inside dataset
-        self._previous_sentence: Optional[Sentence] = None
-        self._next_sentence: Optional[Sentence] = None
-        self._position_in_dataset: Optional[typing.Tuple[Dataset, int]] = None
 
     @property
     def unlabeled_identifier(self):
