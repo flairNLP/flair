@@ -606,6 +606,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "rnn_type": self.rnn_type,
             "reproject_embeddings": self.reproject_embeddings,
             "weight_dict": self.weight_dict,
+            "train_initial_hidden_state": self.train_initial_hidden_state,
         }
 
         return model_state
@@ -635,6 +636,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             reproject_embeddings=state.get("reproject_embeddings", True),
             loss_weights=state.get("weight_dict"),
             init_from_state_dict=True,
+            train_initial_hidden_state=state.get("train_initial_hidden_state", False),
             **kwargs,
         )
 

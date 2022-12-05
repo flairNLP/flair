@@ -86,6 +86,25 @@ class TestSequenceTagger(BaseModelTest):
         del loaded_model
 
     @pytest.mark.integration
+    def test_train_load_use_tagger_with_trainable_hidden_state(
+        self, embeddings, results_base_path, corpus, example_sentence
+    ):
+        tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)
+
+        model = self.build_model(embeddings, tag_dictionary, train_initial_hidden_state=True)
+        trainer = ModelTrainer(model, corpus)
+
+        trainer.train(results_base_path, shuffle=False, **self.training_args)
+
+        del trainer, model, tag_dictionary, corpus
+        loaded_model = self.model_cls.load(results_base_path / "final-model.pt")
+
+        loaded_model.predict(example_sentence)
+        loaded_model.predict([example_sentence, self.empty_sentence])
+        loaded_model.predict([self.empty_sentence])
+        del loaded_model
+
+    @pytest.mark.integration
     def test_train_load_use_tagger_disjunct_tags(
         self, results_base_path, tasks_base_path, embeddings, example_sentence
     ):
