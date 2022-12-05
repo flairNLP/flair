@@ -162,7 +162,6 @@ class WordEmbeddings(TokenEmbeddings):
         If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
         set stable=True to use the stable embeddings as described in https://arxiv.org/abs/2110.02861
         """
-        self.embeddings = embeddings
 
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
@@ -174,6 +173,7 @@ class WordEmbeddings(TokenEmbeddings):
             name = str(embeddings_path)
 
         self.name = name
+        self.embeddings = embeddings if embeddings is not None else name
         self.static_embeddings = not fine_tune
         self.fine_tune = fine_tune
         self.force_cpu = force_cpu
@@ -223,6 +223,7 @@ class WordEmbeddings(TokenEmbeddings):
 
         self.device = None
         self.to(flair.device)
+        self.eval()
 
     def resolve_precomputed_path(self, embeddings: Optional[str]) -> Optional[Path]:
         if embeddings is None:
@@ -360,10 +361,7 @@ class WordEmbeddings(TokenEmbeddings):
         return f"'{self.embeddings}'"
 
     def train(self, mode=True):
-        if not self.fine_tune:
-            pass
-        else:
-            super(WordEmbeddings, self).train(mode)
+        super().train(self.fine_tune and mode)
 
     def to(self, device):
         if self.force_cpu:
@@ -421,7 +419,7 @@ class WordEmbeddings(TokenEmbeddings):
 
     @classmethod
     def from_params(cls, params: Dict[str, Any]) -> "WordEmbeddings":
-        return cls(**params)
+        return cls(embeddings=None, **params)
 
     def to_params(self) -> Dict[str, Any]:
         return {
@@ -430,6 +428,8 @@ class WordEmbeddings(TokenEmbeddings):
             "fine_tune": self.fine_tune,
             "force_cpu": self.force_cpu,
             "field": self.field,
+            "name": self.name,
+            "embedding_length": self.__embedding_length,
         }
 
 
@@ -471,6 +471,7 @@ class CharacterEmbeddings(TokenEmbeddings):
         self.__embedding_length = self.hidden_size_char * 2
 
         self.to(flair.device)
+        self.eval()
 
     @property
     def embedding_length(self) -> int:
@@ -1128,6 +1129,7 @@ class OneHotEmbeddings(TokenEmbeddings):
             self.layer_norm = None
 
         self.to(flair.device)
+        self.eval()
 
     @property
     def embedding_length(self) -> int:
@@ -1201,6 +1203,7 @@ class HashEmbeddings(TokenEmbeddings):
         torch.nn.init.xavier_uniform_(self.embedding_layer.weight)
 
         self.to(flair.device)
+        self.eval()
 
     @property
     def num_embeddings(self) -> int:
@@ -1216,7 +1219,7 @@ class HashEmbeddings(TokenEmbeddings):
             hash_function.update(bytes(str(text), "utf-8"))
             return int(hash_function.hexdigest(), 16) % self.__num_embeddings
 
-        context_idxs = [[get_idx_for_item(t.text) for t in sentence.tokens] for sentence in sentences]
+        context_idxs = [get_idx_for_item(t.text) for sentence in sentences for t in sentence.tokens]
 
         hash_sentences = torch.tensor(context_idxs, dtype=torch.long).to(flair.device)
 
