@@ -30,7 +30,12 @@ from transformers.utils import PaddingStrategy
 
 import flair
 from flair.data import Sentence, Token, log
-from flair.embeddings.base import DocumentEmbeddings, Embeddings, TokenEmbeddings
+from flair.embeddings.base import (
+    DocumentEmbeddings,
+    Embeddings,
+    TokenEmbeddings,
+    register_embeddings,
+)
 
 
 @torch.jit.script_if_tracing
@@ -61,11 +66,11 @@ def truncate_hidden_states(hidden_states: torch.Tensor, input_ids: torch.Tensor)
 
 @torch.jit.script_if_tracing
 def combine_strided_tensors(
-    hidden_states: torch.Tensor,
-    overflow_to_sample_mapping: torch.Tensor,
-    half_stride: int,
-    max_length: int,
-    default_value: int,
+        hidden_states: torch.Tensor,
+        overflow_to_sample_mapping: torch.Tensor,
+        half_stride: int,
+        max_length: int,
+        default_value: int,
 ) -> torch.Tensor:
     _, counts = torch.unique(overflow_to_sample_mapping, sorted=True, return_counts=True)
     sentence_count = int(overflow_to_sample_mapping.max().item() + 1)
@@ -85,9 +90,9 @@ def combine_strided_tensors(
         selected_sentences = hidden_states[overflow_to_sample_mapping == sentence_id]
         if selected_sentences.shape[0] > 1:
             start_part = selected_sentences[0, : half_stride + 1]
-            mid_part = selected_sentences[:, half_stride + 1 : max_length - 1 - half_stride]
+            mid_part = selected_sentences[:, half_stride + 1: max_length - 1 - half_stride]
             mid_part = torch.reshape(mid_part, (mid_part.shape[0] * mid_part.shape[1],) + mid_part.shape[2:])
-            end_part = selected_sentences[selected_sentences.shape[0] - 1, max_length - half_stride - 1 :]
+            end_part = selected_sentences[selected_sentences.shape[0] - 1, max_length - half_stride - 1:]
             sentence_hidden_state = torch.cat((start_part, mid_part, end_part), dim=0)
             sentence_hidden_states[sentence_id, : sentence_hidden_state.shape[0]] = torch.cat(
                 (start_part, mid_part, end_part), dim=0
@@ -100,11 +105,11 @@ def combine_strided_tensors(
 
 @torch.jit.script_if_tracing
 def fill_masked_elements(
-    all_token_embeddings: torch.Tensor,
-    sentence_hidden_states: torch.Tensor,
-    mask: torch.Tensor,
-    word_ids: torch.Tensor,
-    lengths: torch.LongTensor,
+        all_token_embeddings: torch.Tensor,
+        sentence_hidden_states: torch.Tensor,
+        mask: torch.Tensor,
+        word_ids: torch.Tensor,
+        lengths: torch.LongTensor,
 ):
     for i in torch.arange(int(all_token_embeddings.shape[0])):
         all_token_embeddings[i, : lengths[i], :] = insert_missing_embeddings(  # type: ignore
@@ -115,7 +120,7 @@ def fill_masked_elements(
 
 @torch.jit.script_if_tracing
 def insert_missing_embeddings(
-    token_embeddings: torch.Tensor, word_id: torch.Tensor, length: torch.LongTensor
+        token_embeddings: torch.Tensor, word_id: torch.Tensor, length: torch.LongTensor
 ) -> torch.Tensor:
     # in some cases we need to insert zero vectors for tokens without embedding.
     if token_embeddings.shape[0] < length:
@@ -134,7 +139,7 @@ def insert_missing_embeddings(
 
 @torch.jit.script_if_tracing
 def fill_mean_token_embeddings(
-    all_token_embeddings: torch.Tensor, sentence_hidden_states: torch.Tensor, word_ids: torch.Tensor
+        all_token_embeddings: torch.Tensor, sentence_hidden_states: torch.Tensor, word_ids: torch.Tensor
 ):
     for i in torch.arange(all_token_embeddings.shape[0]):
         for _id in torch.arange(int(word_ids[i].max()) + 1):
@@ -161,7 +166,7 @@ def document_max_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths:
 
 
 def _legacy_reconstruct_word_ids(
-    embedding: "TransformerBaseEmbeddings", flair_tokens: List[List[str]]
+        embedding: "TransformerBaseEmbeddings", flair_tokens: List[List[str]]
 ) -> List[List[Optional[int]]]:
     word_ids_list = []
     max_len = 0
@@ -271,29 +276,29 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
     """
 
     def __init__(
-        self,
-        name: str,
-        tokenizer: PreTrainedTokenizer,
-        embedding_length: int,
-        context_length: int,
-        context_dropout: float,
-        respect_document_boundaries: bool,
-        stride: int,
-        allow_long_sentences: bool,
-        fine_tune: bool,
-        truncate: bool,
-        use_lang_emb: bool,
-        document_embedding: bool = False,
-        token_embedding: bool = False,
-        force_device: Optional[torch.device] = None,
-        force_max_length: bool = False,
-        feature_extractor: Optional[FeatureExtractionMixin] = None,
-        needs_manual_ocr: Optional[bool] = None,
+            self,
+            name: str,
+            tokenizer: PreTrainedTokenizer,
+            embedding_length: int,
+            context_length: int,
+            context_dropout: float,
+            respect_document_boundaries: bool,
+            stride: int,
+            allow_long_sentences: bool,
+            fine_tune: bool,
+            truncate: bool,
+            use_lang_emb: bool,
+            is_document_embedding: bool = False,
+            is_token_embedding: bool = False,
+            force_device: Optional[torch.device] = None,
+            force_max_length: bool = False,
+            feature_extractor: Optional[FeatureExtractionMixin] = None,
+            needs_manual_ocr: Optional[bool] = None,
     ):
         self.name = name
         super().__init__()
-        self.document_embedding = document_embedding
-        self.token_embedding = token_embedding
+        self.document_embedding = is_document_embedding
+        self.token_embedding = is_token_embedding
         self.tokenizer: PreTrainedTokenizer = tokenizer
         self.embedding_length_internal = embedding_length
         self.context_length = context_length
@@ -323,9 +328,9 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             raise ValueError("either 'is_token_embedding' or 'is_document_embedding' needs to be set.")
 
     def to_args(self):
-        args = {
-            "token_embedding": self.token_embedding,
-            "document_embedding": self.document_embedding,
+        return {
+            "is_token_embedding": self.token_embedding,
+            "is_document_embedding": self.document_embedding,
             "allow_long_sentences": self.allow_long_sentences,
             "tokenizer": self.tokenizer,
             "context_length": self.context_length,
@@ -344,7 +349,19 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             args["needs_manual_ocr"] = self.needs_manual_ocr
         return args
 
-    def __getstate__(self):
+    def __setstate__(self, state):
+        embedding = self.from_params(state)
+        for key in embedding.__dict__.keys():
+            self.__dict__[key] = embedding.__dict__[key]
+
+    @classmethod
+    def from_params(cls, params):
+        tokenizer = cls._tokenizer_from_bytes(params.pop("tokenizer_data"))
+        feature_extractor = cls._feature_extractor_from_bytes(params.pop("feature_extractor_data", None))
+        embedding = cls.create_from_state(tokenizer=tokenizer, feature_extractor=feature_extractor, **params)
+        return embedding
+
+    def to_params(self):
         model_state = self.to_args()
         del model_state["tokenizer"]
         model_state["tokenizer_data"] = self.__tokenizer_bytes()
@@ -354,20 +371,15 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         return model_state
 
-    def __setstate__(self, state):
-        tokenizer = self._tokenizer_from_bytes(state.pop("tokenizer_data"))
-        feature_extractor = self._feature_extractor_from_bytes(state.pop("feature_extractor_data", None))
-        embedding = self.create_from_state(tokenizer=tokenizer, feature_extractor=feature_extractor, **state)
-        for key in embedding.__dict__.keys():
-            self.__dict__[key] = embedding.__dict__[key]
-
-    def _tokenizer_from_bytes(self, zip_data: BytesIO) -> PreTrainedTokenizer:
+    @classmethod
+    def _tokenizer_from_bytes(cls, zip_data: BytesIO) -> PreTrainedTokenizer:
         zip_obj = zipfile.ZipFile(zip_data)
         with tempfile.TemporaryDirectory() as temp_dir:
             zip_obj.extractall(temp_dir)
             return AutoTokenizer.from_pretrained(temp_dir, add_prefix_space=True)
 
-    def _feature_extractor_from_bytes(self, zip_data: Optional[BytesIO]) -> Optional[FeatureExtractionMixin]:
+    @classmethod
+    def _feature_extractor_from_bytes(cls, zip_data: Optional[BytesIO]) -> Optional[FeatureExtractionMixin]:
         if zip_data is None:
             return None
         zip_obj = zipfile.ZipFile(zip_data)
@@ -427,32 +439,32 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         # random check some tokens to save performance.
         if (self.needs_manual_ocr or self.tokenizer_needs_ocr_boxes) and not all(
-            [
-                flair_tokens[0][0].has_metadata("bbox"),
-                flair_tokens[0][-1].has_metadata("bbox"),
-                flair_tokens[-1][0].has_metadata("bbox"),
-                flair_tokens[-1][-1].has_metadata("bbox"),
-            ]
+                [
+                    flair_tokens[0][0].has_metadata("bbox"),
+                    flair_tokens[0][-1].has_metadata("bbox"),
+                    flair_tokens[-1][0].has_metadata("bbox"),
+                    flair_tokens[-1][-1].has_metadata("bbox"),
+                ]
         ):
             raise ValueError(f"The embedding '{self.name}' requires the ocr 'bbox' set as metadata on all tokens.")
 
         if self.feature_extractor is not None and not all(
-            [
-                sentences[0].has_metadata("image"),
-                sentences[-1].has_metadata("image"),
-            ]
+                [
+                    sentences[0].has_metadata("image"),
+                    sentences[-1].has_metadata("image"),
+                ]
         ):
             raise ValueError(f"The embedding '{self.name}' requires the 'image' set as metadata for all sentences.")
 
         return self.__build_transformer_model_inputs(sentences, offsets, lengths, flair_tokens, device)
 
     def __build_transformer_model_inputs(
-        self,
-        sentences: List[Sentence],
-        offsets: List[int],
-        sentence_lengths: List[int],
-        flair_tokens: List[List[Token]],
-        device: torch.device,
+            self,
+            sentences: List[Sentence],
+            offsets: List[int],
+            sentence_lengths: List[int],
+            flair_tokens: List[List[Token]],
+            device: torch.device,
     ):
         tokenizer_kwargs: Dict[str, Any] = {}
         if self.tokenizer_needs_ocr_boxes:
@@ -512,7 +524,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 sentence_idx = 0
                 for sentence, part_length in zip(sentences, sentence_part_lengths):
                     lang_id = lang2id.get(sentence.get_language_code(), 0)
-                    model_kwargs["langs"][sentence_idx : sentence_idx + part_length] = lang_id
+                    model_kwargs["langs"][sentence_idx: sentence_idx + part_length] = lang_id
                     sentence_idx += part_length
 
         if "bbox" in batch_encoding:
@@ -600,7 +612,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
     def __expand_sentence_with_context(self, sentence) -> Tuple[List[Token], int]:
         expand_context = self.context_length > 0 and (
-            not self.training or random.randint(1, 100) > (self.context_dropout * 100)
+                not self.training or random.randint(1, 100) > (self.context_dropout * 100)
         )
 
         left_context = []
@@ -639,6 +651,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             self.__extract_token_embeddings(token_embedding, sentences)
 
 
+@register_embeddings
 class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
     def __init__(self, onnx_model: str, providers: List = [], **kwargs):
         # onnx prepares numpy arrays, no mather if it runs on gpu or cpu, the input is on cpu first.
@@ -648,11 +661,12 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         self.create_session()
         self.eval()
 
-    def __getstate__(self):
-        state = super().__getstate__()
-        state["providers"] = self.providers
-        state["onnx_model"] = self.onnx_model
-        return state
+    def to_params(self):
+        params = super().to_params()
+        params["providers"] = self.providers
+        params["onnx_model"] = self.onnx_model
+        return params
+
 
     def create_session(self):
         try:
@@ -737,12 +751,12 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
 
     @classmethod
     def export_from_embedding(
-        cls,
-        path: Union[str, Path],
-        embedding: "TransformerEmbeddings",
-        example_sentences: List[Sentence],
-        opset_version: int = 13,
-        providers: List = None,
+            cls,
+            path: Union[str, Path],
+            embedding: "TransformerEmbeddings",
+            example_sentences: List[Sentence],
+            opset_version: int = 13,
+            providers: List = None,
     ):
         path = str(path)
         example_tensors = embedding.prepare_tensors(example_sentences)
@@ -787,6 +801,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         return cls(onnx_model=path, providers=providers, **embedding.to_args())
 
 
+@register_embeddings
 class TransformerJitEmbeddings(TransformerBaseEmbeddings):
     def __init__(self, jit_model: Union[bytes, ScriptModule], param_names: List[str], **kwargs):
         super().__init__(**kwargs)
@@ -801,8 +816,8 @@ class TransformerJitEmbeddings(TransformerBaseEmbeddings):
         self.to(flair.device)
         self.eval()
 
-    def __getstate__(self):
-        state = super().__getstate__()
+    def to_params(self):
+        state = super().to_params()
         buffer = BytesIO()
         torch.jit.save(self.jit_model, buffer)
         state["jit_model"] = buffer.getvalue()
@@ -829,7 +844,7 @@ class TransformerJitEmbeddings(TransformerBaseEmbeddings):
 
     @classmethod
     def parameter_to_list(
-        cls, embedding: "TransformerEmbeddings", wrapper: torch.nn.Module, sentences: List[Sentence]
+            cls, embedding: "TransformerEmbeddings", wrapper: torch.nn.Module, sentences: List[Sentence]
     ) -> Tuple[List[str], List[torch.Tensor]]:
         tensors = embedding.prepare_tensors(sentences)
         param_names = list(inspect.signature(wrapper.forward).parameters.keys())
@@ -839,62 +854,67 @@ class TransformerJitEmbeddings(TransformerBaseEmbeddings):
         return param_names, params
 
 
+@register_embeddings
 class TransformerJitWordEmbeddings(TokenEmbeddings, TransformerJitEmbeddings):
     def __init__(
-        self,
-        **kwargs,
+            self,
+            **kwargs,
     ):
         TransformerJitEmbeddings.__init__(self, **kwargs)
 
 
+@register_embeddings
 class TransformerJitDocumentEmbeddings(DocumentEmbeddings, TransformerJitEmbeddings):
     def __init__(
-        self,
-        **kwargs,
+            self,
+            **kwargs,
     ):
         TransformerJitEmbeddings.__init__(self, **kwargs)
 
 
+@register_embeddings
 class TransformerOnnxWordEmbeddings(TokenEmbeddings, TransformerOnnxEmbeddings):
     def __init__(
-        self,
-        **kwargs,
+            self,
+            **kwargs,
     ):
         TransformerOnnxEmbeddings.__init__(self, **kwargs)
 
 
+@register_embeddings
 class TransformerOnnxDocumentEmbeddings(DocumentEmbeddings, TransformerOnnxEmbeddings):
     def __init__(
-        self,
-        **kwargs,
+            self,
+            **kwargs,
     ):
         TransformerOnnxEmbeddings.__init__(self, **kwargs)
 
 
+@register_embeddings
 class TransformerEmbeddings(TransformerBaseEmbeddings):
     onnx_cls: Type[TransformerOnnxEmbeddings] = TransformerOnnxEmbeddings
 
     def __init__(
-        self,
-        model: str = "bert-base-uncased",
-        fine_tune: bool = True,
-        layers: str = "-1",
-        layer_mean: bool = True,
-        subtoken_pooling: str = "first",
-        cls_pooling: str = "cls",
-        is_token_embedding: bool = True,
-        is_document_embedding: bool = True,
-        allow_long_sentences: bool = False,
-        use_context: Union[bool, int] = False,
-        respect_document_boundaries: bool = True,
-        context_dropout: float = 0.5,
-        saved_config: Optional[PretrainedConfig] = None,
-        tokenizer_data: Optional[BytesIO] = None,
-        feature_extractor_data: Optional[BytesIO] = None,
-        name: Optional[str] = None,
-        force_max_length: bool = False,
-        needs_manual_ocr: Optional[bool] = None,
-        **kwargs,
+            self,
+            model: str = "bert-base-uncased",
+            fine_tune: bool = True,
+            layers: str = "-1",
+            layer_mean: bool = True,
+            subtoken_pooling: str = "first",
+            cls_pooling: str = "cls",
+            is_token_embedding: bool = True,
+            is_document_embedding: bool = True,
+            allow_long_sentences: bool = False,
+            use_context: Union[bool, int] = False,
+            respect_document_boundaries: bool = True,
+            context_dropout: float = 0.5,
+            saved_config: Optional[PretrainedConfig] = None,
+            tokenizer_data: Optional[BytesIO] = None,
+            feature_extractor_data: Optional[BytesIO] = None,
+            name: Optional[str] = None,
+            force_max_length: bool = False,
+            needs_manual_ocr: Optional[bool] = None,
+            **kwargs,
     ):
         self.instance_parameters = self.get_instance_parameters(locals=locals())
         del self.instance_parameters["saved_config"]
@@ -1052,32 +1072,6 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         # in case of doubt: token embedding has higher priority than document embedding
         return "word-level" if self.token_embedding else "sentence-level"
 
-    def __getstate__(self):
-        config_dict = self.model.config.to_dict()
-        super_state = super().__getstate__()
-        tokenizer_data = super_state["tokenizer_data"]
-
-        model_state = {
-            "model": self.base_model_name,
-            "fine_tune": self.fine_tune,
-            "layers": ",".join(map(str, self.layer_indexes)),
-            "layer_mean": self.layer_mean,
-            "subtoken_pooling": self.subtoken_pooling,
-            "cls_pooling": self.cls_pooling,
-            "is_token_embedding": self.token_embedding,
-            "is_document_embedding": self.document_embedding,
-            "allow_long_sentences": self.allow_long_sentences,
-            "config_state_dict": config_dict,
-            "tokenizer_data": tokenizer_data,
-            "name": self.name,
-            "context_length": self.context_length,
-            "respect_document_boundaries": self.respect_document_boundaries,
-            "context_dropout": self.context_dropout,
-            "force_max_length": self.force_max_length,
-        }
-
-        return model_state
-
     def __setstate__(self, state):
         config_state_dict = state.pop("config_state_dict", None)
         model_state_dict = state.pop("model_state_dict", None)
@@ -1133,26 +1127,47 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if model_state_dict:
             self.model.load_state_dict(model_state_dict)
 
+    @classmethod
+    def from_params(cls, params):
+        return cls.create_from_state(**params)
+
+    def to_params(self):
+        config_dict = self.model.config.to_dict()
+        super_params = super().to_params()
+
+        model_state = {
+            **super_params,
+            "model": self.base_model_name,
+            "fine_tune": self.fine_tune,
+            "layers": ",".join(map(str, self.layer_indexes)),
+            "layer_mean": self.layer_mean,
+            "subtoken_pooling": self.subtoken_pooling,
+            "cls_pooling": self.cls_pooling,
+            "config_state_dict": config_dict,
+        }
+
+        return model_state
+
     def _can_document_embedding_shortcut(self):
         # cls first pooling can be done without recreating sentence hidden states
         return (
-            self.document_embedding
-            and not self.token_embedding
-            and self.cls_pooling == "cls"
-            and self.initial_cls_token
+                self.document_embedding
+                and not self.token_embedding
+                and self.cls_pooling == "cls"
+                and self.initial_cls_token
         )
 
     def forward(
-        self,
-        input_ids: torch.Tensor,
-        sub_token_lengths: torch.LongTensor,
-        token_lengths: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        overflow_to_sample_mapping: Optional[torch.Tensor] = None,
-        word_ids: Optional[torch.Tensor] = None,
-        langs: Optional[torch.Tensor] = None,
-        bbox: Optional[torch.Tensor] = None,
-        pixel_values: Optional[torch.Tensor] = None,
+            self,
+            input_ids: torch.Tensor,
+            sub_token_lengths: torch.LongTensor,
+            token_lengths: Optional[torch.LongTensor] = None,
+            attention_mask: Optional[torch.Tensor] = None,
+            overflow_to_sample_mapping: Optional[torch.Tensor] = None,
+            word_ids: Optional[torch.Tensor] = None,
+            langs: Optional[torch.Tensor] = None,
+            bbox: Optional[torch.Tensor] = None,
+            pixel_values: Optional[torch.Tensor] = None,
     ):
         model_kwargs = {}
         if langs is not None:
@@ -1240,8 +1255,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                     word_ids,
                     token_lengths,
                 )
-                all_token_embeddings[:, :, sentence_hidden_states.shape[2] :] = fill_masked_elements(
-                    all_token_embeddings[:, :, sentence_hidden_states.shape[2] :],
+                all_token_embeddings[:, :, sentence_hidden_states.shape[2]:] = fill_masked_elements(
+                    all_token_embeddings[:, :, sentence_hidden_states.shape[2]:],
                     sentence_hidden_states,
                     last_mask,
                     word_ids,

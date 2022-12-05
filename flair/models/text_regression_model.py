@@ -210,7 +210,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "document_embeddings": self.document_embeddings,
+            "document_embeddings": self.document_embeddings.save_embedding(use_state_dict=False),
             "label_name": self.label_type,
         }
         return model_state

@@ -26,6 +26,7 @@ class LanguageModel(nn.Module):
         document_delimiter: str = "\n",
         dropout=0.1,
         recurrent_type="LSTM",
+        has_decoder=True,
     ):
 
         super(LanguageModel, self).__init__()
@@ -52,10 +53,13 @@ class LanguageModel(nn.Module):
         if nout is not None:
             self.proj: Optional[nn.Linear] = nn.Linear(hidden_size, nout)
             self.initialize(self.proj.weight)
-            self.decoder = nn.Linear(nout, len(dictionary))
+            hidden_size = nout
         else:
             self.proj = None
-            self.decoder = nn.Linear(hidden_size, len(dictionary))
+        if has_decoder:
+            self.decoder: Optional[nn.Linear] = nn.Linear(hidden_size, len(dictionary))
+        else:
+            self.decoder = None
 
         self.init_weights()
 
@@ -65,13 +69,14 @@ class LanguageModel(nn.Module):
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.detach().uniform_(-initrange, initrange)
-        self.decoder.bias.detach().fill_(0)
-        self.decoder.weight.detach().uniform_(-initrange, initrange)
+        if self.decoder is not None:
+            self.decoder.bias.detach().fill_(0)
+            self.decoder.weight.detach().uniform_(-initrange, initrange)
 
     def set_hidden(self, hidden):
         self.hidden = hidden
 
-    def forward(self, input, hidden, ordered_sequence_lengths=None):
+    def forward(self, input, hidden, ordered_sequence_lengths=None, decode=True):
         encoded = self.encoder(input)
         emb = self.drop(encoded)
 
@@ -89,13 +94,16 @@ class LanguageModel(nn.Module):
 
         output = self.drop(output)
 
-        decoded = self.decoder(output)
+        if decode:
+            decoded = self.decoder(output)
 
-        return (
-            decoded,
-            output,
-            hidden,
-        )
+            return (
+                decoded,
+                output,
+                hidden,
+            )
+        else:
+            return output, hidden
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).detach()
@@ -152,7 +160,7 @@ class LanguageModel(nn.Module):
         output_parts = []
         for batch in batches:
             batch = batch.transpose(0, 1)
-            _, rnn_output, hidden = self.forward(batch, hidden)
+            rnn_output, hidden = self.forward(batch, hidden, decode=False)
             output_parts.append(rnn_output)
 
         # concatenate all chunks to make final output
@@ -183,13 +191,13 @@ class LanguageModel(nn.Module):
         matrix.detach().uniform_(-stdv, stdv)
 
     @classmethod
-    def load_language_model(cls, model_file: Union[Path, str]):
+    def load_language_model(cls, model_file: Union[Path, str], has_decoder=True):
 
         state = torch.load(str(model_file), map_location=flair.device)
 
         document_delimiter = state.get("document_delimiter", "\n")
-
-        model = LanguageModel(
+        has_decoder = state.get("has_decoder", True) and has_decoder
+        model = cls(
             dictionary=state["dictionary"],
             is_forward_lm=state["is_forward_lm"],
             hidden_size=state["hidden_size"],
@@ -199,8 +207,9 @@ class LanguageModel(nn.Module):
             document_delimiter=document_delimiter,
             dropout=state["dropout"],
             recurrent_type=state.get("recurrent_type", "lstm"),
+            has_decoder=has_decoder,
         )
-        model.load_state_dict(state["state_dict"])
+        model.load_state_dict(state["state_dict"], strict=has_decoder)
         model.eval()
         model.to(flair.device)
 
@@ -217,7 +226,7 @@ class LanguageModel(nn.Module):
 
         optimizer_state_dict = state.get("optimizer_state_dict")
 
-        model = LanguageModel(
+        model = cls(
             dictionary=state["dictionary"],
             is_forward_lm=state["is_forward_lm"],
             hidden_size=state["hidden_size"],
@@ -263,6 +272,7 @@ class LanguageModel(nn.Module):
             "split": split,
             "loss": loss,
             "recurrent_type": self.recurrent_type,
+            "has_decoder": self.decoder is not None,
         }
 
         torch.save(model_state, str(file), pickle_protocol=4)
@@ -279,6 +289,7 @@ class LanguageModel(nn.Module):
             "document_delimiter": self.document_delimiter,
             "dropout": self.dropout,
             "recurrent_type": self.recurrent_type,
+            "has_decoder": self.decoder is not None,
         }
 
         torch.save(model_state, str(file), pickle_protocol=4)
@@ -408,6 +419,7 @@ class LanguageModel(nn.Module):
             "document_delimiter": self.document_delimiter,
             "dropout": self.dropout,
             "recurrent_type": self.recurrent_type,
+            "has_decoder": self.decoder is not None,
         }
 
         return model_state
@@ -428,9 +440,10 @@ class LanguageModel(nn.Module):
                 document_delimiter=d["document_delimiter"],
                 dropout=d["dropout"],
                 recurrent_type=d.get("recurrent_type", "lstm"),
+                has_decoder=d.get("has_decoder", True),
             )
 
-            language_model.load_state_dict(d["state_dict"])
+            language_model.load_state_dict(d["state_dict"], strict=d.get("has_decoder", True))
 
             # copy over state dictionary to self
             for key in language_model.__dict__.keys():

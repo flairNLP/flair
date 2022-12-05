@@ -8,7 +8,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 import flair
 from flair.data import Sentence
-from flair.embeddings.base import DocumentEmbeddings
+from flair.embeddings.base import DocumentEmbeddings, register_embeddings
 from flair.embeddings.token import FlairEmbeddings, StackedEmbeddings, TokenEmbeddings
 from flair.embeddings.transformer import (
     TransformerEmbeddings,
@@ -19,6 +19,7 @@ from flair.nn import LockedDropout, WordDropout
 log = logging.getLogger("flair")
 
 
+@register_embeddings
 class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
 
     onnx_cls = TransformerOnnxDocumentEmbeddings
@@ -57,6 +58,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
         return cls(**state)
 
 
+@register_embeddings
 class DocumentPoolEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
@@ -185,6 +187,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
         pass
 
 
+@register_embeddings
 class DocumentRNNEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
@@ -525,6 +528,7 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         return self.model.get_sentence_embedding_dimension()
 
 
+@register_embeddings
 class DocumentCNNEmbeddings(DocumentEmbeddings):
     def __init__(
         self,

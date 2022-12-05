@@ -17,6 +17,7 @@ from flair import file_utils
 from flair.data import DT, DT2, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
+from flair.embeddings.base import load_embeddings
 from flair.file_utils import Tqdm
 from flair.training_utils import Result, store_embeddings
 
@@ -76,6 +77,12 @@ class Model(torch.nn.Module, typing.Generic[DT]):
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
         """Initialize the model from a state dictionary."""
+        if "embeddings" in kwargs:
+            embeddings = kwargs.pop("embeddings")
+            if isinstance(embeddings, dict):
+                embeddings = load_embeddings(embeddings)
+            kwargs["embeddings"] = embeddings
+
         model = cls(**kwargs)
 
         model.load_state_dict(state["state_dict"])
