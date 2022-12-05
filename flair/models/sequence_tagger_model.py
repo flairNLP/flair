@@ -188,6 +188,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             self.linear = torch.nn.Linear(hidden_output_dim, len(self.label_dictionary))
         else:
             self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary))
+            self.train_initial_hidden_state = False
 
         # the loss function is Viterbi if using CRF, else regular Cross Entropy Loss
         self.loss_function = (
