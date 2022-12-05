@@ -19,17 +19,19 @@ from torch.nn import (
 
 import flair
 from flair.data import Image
-from flair.embeddings.base import Embeddings
+from flair.embeddings.base import Embeddings, register_embeddings
 
 log = logging.getLogger("flair")
 
 
+@register_embeddings
 class ImageEmbeddings(Embeddings[Image]):
     @property
     def embedding_type(self) -> str:
         return "image-level"
 
 
+@register_embeddings
 class IdentityImageEmbeddings(ImageEmbeddings):
     def __init__(self, transforms):
         import PIL as pythonimagelib
@@ -55,6 +57,7 @@ class IdentityImageEmbeddings(ImageEmbeddings):
         return self.name
 
 
+@register_embeddings
 class PrecomputedImageEmbeddings(ImageEmbeddings):
     def __init__(self, url2tensor_dict, name):
         self.url2tensor_dict = url2tensor_dict
@@ -78,6 +81,7 @@ class PrecomputedImageEmbeddings(ImageEmbeddings):
         return self.name
 
 
+@register_embeddings
 class NetworkImageEmbeddings(ImageEmbeddings):
     def __init__(self, name, pretrained=True, transforms=None):
         super().__init__()
@@ -142,6 +146,7 @@ class NetworkImageEmbeddings(ImageEmbeddings):
         return self.name
 
 
+@register_embeddings
 class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
     def __init__(self, feats_in, convnet_parms, posnet_parms, transformer_parms):
         super(ConvTransformNetworkImageEmbeddings, self).__init__()

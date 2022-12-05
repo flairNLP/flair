@@ -163,7 +163,6 @@ class BaseEmbeddingsTest:
         embedding_length_old = embeddings.embedding_length
 
         save_data = embeddings.save_embedding(use_state_dict=True)
-        del embeddings
         new_embeddings = load_embeddings(save_data)
 
         sentence_new: Sentence = Sentence("I love Berlin")
@@ -171,6 +170,7 @@ class BaseEmbeddingsTest:
         names_new = new_embeddings.get_names()
         embedding_length_new = new_embeddings.embedding_length
 
+        assert not new_embeddings.training
         assert names_old == names_new
         assert embedding_length_old == embedding_length_new
 
@@ -179,3 +179,7 @@ class BaseEmbeddingsTest:
                 assert (token_old.get_embedding(names_old) == token_new.get_embedding(names_new)).all()
         if self.is_document_embedding:
             assert (sentence_old.get_embedding(names_old) == sentence_new.get_embedding(names_new)).all()
+
+    def test_embeddings_load_in_eval_mode(self):
+        embeddings = self.create_embedding_with_args(self.default_args)
+        assert not embeddings.training

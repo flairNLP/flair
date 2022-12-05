@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union
+from typing import Any, Dict, List, Union, cast
 
 import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -8,7 +8,11 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 import flair
 from flair.data import Sentence
-from flair.embeddings.base import DocumentEmbeddings, register_embeddings
+from flair.embeddings.base import (
+    DocumentEmbeddings,
+    load_embeddings,
+    register_embeddings,
+)
 from flair.embeddings.token import FlairEmbeddings, StackedEmbeddings, TokenEmbeddings
 from flair.embeddings.transformer import (
     TransformerEmbeddings,
@@ -21,7 +25,6 @@ log = logging.getLogger("flair")
 
 @register_embeddings
 class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
-
     onnx_cls = TransformerOnnxDocumentEmbeddings
 
     def __init__(
@@ -100,6 +103,8 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         self.pooling = pooling
         self.name: str = f"document_{self.pooling}"
 
+        self.eval()
+
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
@@ -143,6 +148,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         return f"fine_tune_mode={self.fine_tune_mode}, pooling={self.pooling}"
 
 
+@register_embeddings
 class DocumentTFIDFEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
@@ -165,6 +171,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
         self.to(flair.device)
 
         self.name: str = "document_tfidf"
+        self.eval()
 
     @property
     def embedding_length(self) -> int:
@@ -378,12 +385,11 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
             child_module._apply(fn)
 
-    def __getstate__(self):
+    def to_params(self):
 
         # serialize the language models and the constructor arguments (but nothing else)
         model_state = {
-            "state_dict": self.state_dict(),
-            "embeddings": self.embeddings.embeddings,
+            "embeddings": self.embeddings.save_embedding(False),
             "hidden_size": self.rnn.hidden_size,
             "rnn_layers": self.rnn.num_layers,
             "reproject_words": self.reproject_words,
@@ -398,40 +404,55 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         return model_state
 
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "DocumentRNNEmbeddings":
+        stacked_embeddings = load_embeddings(params["embeddings"])
+        assert isinstance(stacked_embeddings, StackedEmbeddings)
+        return cls(
+            embeddings=stacked_embeddings.embeddings,
+            hidden_size=params["hidden_size"],
+            rnn_layers=params["rnn_layers"],
+            reproject_words=params["reproject_words"],
+            reproject_words_dimension=params["reproject_words_dimension"],
+            bidirectional=params["bidirectional"],
+            dropout=params["dropout"],
+            word_dropout=params["word_dropout"],
+            locked_dropout=params["locked_dropout"],
+            rnn_type=params["rnn_type"],
+            fine_tune=params["fine_tune"],
+        )
+
     def __setstate__(self, d):
+
+        # re-initialize language model with constructor arguments
+        language_model = DocumentRNNEmbeddings(
+            embeddings=d["embeddings"],
+            hidden_size=d["hidden_size"],
+            rnn_layers=d["rnn_layers"],
+            reproject_words=d["reproject_words"],
+            reproject_words_dimension=d["reproject_words_dimension"],
+            bidirectional=d["bidirectional"],
+            dropout=d["dropout"],
+            word_dropout=d["word_dropout"],
+            locked_dropout=d["locked_dropout"],
+            rnn_type=d["rnn_type"],
+            fine_tune=d["fine_tune"],
+        )
 
         # special handling for deserializing language models
         if "state_dict" in d:
-
-            # re-initialize language model with constructor arguments
-            language_model = DocumentRNNEmbeddings(
-                embeddings=d["embeddings"],
-                hidden_size=d["hidden_size"],
-                rnn_layers=d["rnn_layers"],
-                reproject_words=d["reproject_words"],
-                reproject_words_dimension=d["reproject_words_dimension"],
-                bidirectional=d["bidirectional"],
-                dropout=d["dropout"],
-                word_dropout=d["word_dropout"],
-                locked_dropout=d["locked_dropout"],
-                rnn_type=d["rnn_type"],
-                fine_tune=d["fine_tune"],
-            )
-
             language_model.load_state_dict(d["state_dict"])
 
-            # copy over state dictionary to self
-            for key in language_model.__dict__.keys():
-                self.__dict__[key] = language_model.__dict__[key]
+        # copy over state dictionary to self
+        for key in language_model.__dict__.keys():
+            self.__dict__[key] = language_model.__dict__[key]
 
-            # set the language model to eval() by default (this is necessary since FlairEmbeddings "protect" the LM
-            # in their "self.train()" method)
-            self.eval()
-
-        else:
-            self.__dict__ = d
+        # set the language model to eval() by default (this is necessary since FlairEmbeddings "protect" the LM
+        # in their "self.train()" method)
+        self.eval()
 
 
+@register_embeddings
 class DocumentLMEmbeddings(DocumentEmbeddings):
     def __init__(self, flair_embeddings: List[FlairEmbeddings]):
         super().__init__()
@@ -446,6 +467,7 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
                 self.static_embeddings = False
 
         self._embedding_length: int = sum(embedding.embedding_length for embedding in flair_embeddings)
+        self.eval()
 
     @property
     def embedding_length(self) -> int:
@@ -470,7 +492,21 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
 
         return sentences
 
+    def get_names(self) -> List[str]:
+        if "__names" not in self.__dict__:
+            self.__names = [name for embedding in self.embeddings for name in embedding.get_names()]
 
+        return self.__names
+
+    def to_params(self) -> Dict[str, Any]:
+        return {"flair_embeddings": [embedding.save_embedding(False) for embedding in self.embeddings]}
+
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "DocumentLMEmbeddings":
+        return cls([cast(FlairEmbeddings, load_embeddings(embedding)) for embedding in params["flair_embeddings"]])
+
+
+@register_embeddings
 class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
@@ -500,6 +536,7 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         self.batch_size = batch_size
         self.convert_to_numpy = convert_to_numpy
         self.static_embeddings = True
+        self.eval()
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 

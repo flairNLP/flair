@@ -558,6 +558,7 @@ class FlairEmbeddings(TokenEmbeddings):
         with_whitespace: bool = True,
         tokenized_lm: bool = True,
         is_lower: bool = False,
+        name: Optional[str] = None,
     ):
         """
         initializes contextual string embeddings using a character-level language model.
@@ -751,6 +752,9 @@ class FlairEmbeddings(TokenEmbeddings):
             self.lm = LanguageModel.load_language_model(model, has_decoder=False)
             self.name = str(model)
 
+        if name is not None:
+            self.name = name
+
         # embeddings are static if we don't do finetuning
         self.fine_tune = fine_tune
         self.static_embeddings = not fine_tune
@@ -778,9 +782,9 @@ class FlairEmbeddings(TokenEmbeddings):
 
         # unless fine-tuning is set, do not set language model to train() in order to disallow language model dropout
         if not self.fine_tune:
-            pass
+            super().train(mode=False)
         else:
-            super(FlairEmbeddings, self).train(mode)
+            super().train(mode)
 
     @property
     def embedding_length(self) -> int:
@@ -878,6 +882,7 @@ class FlairEmbeddings(TokenEmbeddings):
                 "dropout": self.lm.dropout,
                 "has_decoder": self.lm.decoder is not None,
             },
+            "name": self.name,
         }
 
     @classmethod
@@ -1228,6 +1233,7 @@ class HashEmbeddings(TokenEmbeddings):
         return self.name
 
 
+@register_embeddings
 class MuseCrosslingualEmbeddings(TokenEmbeddings):
     def __init__(
         self,
@@ -1318,7 +1324,6 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
 
 # TODO: keep for backwards compatibility, but remove in future
 class BPEmbSerializable(BPEmb):
-
     def __setstate__(self, state):
         from bpemb.util import sentencepiece_load
 
@@ -1342,6 +1347,7 @@ class BPEmbSerializable(BPEmb):
         state["spm"] = sentencepiece_load(self.model_file)
 
 
+@register_embeddings
 class BytePairEmbeddings(TokenEmbeddings):
     def __init__(
         self,
@@ -1415,6 +1421,7 @@ class BytePairEmbeddings(TokenEmbeddings):
         return "model={}".format(self.name)
 
 
+@register_embeddings
 class ELMoEmbeddings(TokenEmbeddings):
     """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018.
     ELMo word vectors can be constructed by combining layers in different ways.
@@ -1559,6 +1566,7 @@ class ELMoEmbeddings(TokenEmbeddings):
         )
 
 
+@register_embeddings
 class NILCEmbeddings(WordEmbeddings):
     def __init__(self, embeddings: str, model: str = "skip", size: int = 100):
         """
