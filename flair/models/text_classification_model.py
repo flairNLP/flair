@@ -162,6 +162,8 @@ class TextClassifierProbes(TextClassifier):
             n_layers=self.n_layers, emb_size=self.final_embedding_size, n_labels=len(self.label_dictionary)
         )
 
+        self.to(flair.device)
+
     def _encode_data_points(self, sentences, data_points):
 
         # embed sentences
@@ -169,11 +171,13 @@ class TextClassifierProbes(TextClassifier):
 
         # get a tensor of data points
         data_point_tensor = torch.stack([self._get_embedding_for_data_point(data_point) for data_point in data_points])
-        # reshape
+
+        # reshape & transpose
         data_point_tensor = torch.reshape(
             data_point_tensor,
-            (self.n_layers, data_point_tensor.size(0), int(data_point_tensor.size(1) / self.n_layers)),
+            (data_point_tensor.size(0), self.n_layers, int(data_point_tensor.size(1) / self.n_layers)),
         )
+        data_point_tensor = torch.transpose(data_point_tensor, 0, 1)
 
         # do dropout
         for i in range(self.n_layers):
