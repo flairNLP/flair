@@ -2559,6 +2559,7 @@ class NER_MASAKHANE(MultiCorpus):
     def __init__(
         self,
         languages: Union[str, List[str]] = "luo",
+        version: str = "v2",
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         **corpusargs,
@@ -2567,6 +2568,7 @@ class NER_MASAKHANE(MultiCorpus):
         Initialize the Masakhane corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data.
         It consists of ten African languages. Pass a language code or a list of language codes to initialize the corpus
         with the languages you require. If you pass "all", all languages will be initialized.
+        :version: Specifies version of the dataset. Currently, only "v1" and "v2" are supported, using "v2" as default.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -2587,19 +2589,56 @@ class NER_MASAKHANE(MultiCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        data_folder = base_path / dataset_name
+        supported_versions = ["v1", "v2"]
 
-        language_to_code = {
-            "amharic": "amh",
-            "hausa": "hau",
-            "igbo": "ibo",
-            "kinyarwanda": "kin",
-            "luganda": "lug",
-            "luo": "luo",
-            "naija": "pcm",
-            "swahili": "swa",
-            "yoruba": "yor",
-            "wolof": "wol",
+        if version not in supported_versions:
+            log.error(f"The specified version '{version}' is not in the list of supported version!")
+            log.error(f"Supported versions are '{supported_versions}'!")
+            raise Exception
+
+        data_folder = base_path / dataset_name / version
+
+        languages_to_code = {
+            "v1": {
+                "amharic": "amh",
+                "hausa": "hau",
+                "igbo": "ibo",
+                "kinyarwanda": "kin",
+                "luganda": "lug",
+                "luo": "luo",
+                "naija": "pcm",
+                "swahili": "swa",
+                "yoruba": "yor",
+                "wolof": "wol",
+            },
+            "v2": {
+                "bambara": "bam",
+                "ghomala": "bbj",
+                "ewe": "ewe",
+                "fon": "fon",
+                "hausa": "hau",
+                "igbo": "ibo",
+                "kinyarwanda": "kin",
+                "luganda": "lug",
+                "mossi": "mos",
+                "naija": "pcm",
+                "chichewa": "nya",
+                "chishona": "sna",
+                "kiswahili": "swa",
+                "setswana": "tsn",
+                "akan_twi": "twi",
+                "wolof": "wol",
+                "isixhosa": "xho",
+                "yoruba": "yor",
+                "isizulu": "zul",
+            },
+        }
+
+        language_to_code = languages_to_code[version]
+
+        data_paths = {
+            "v1": "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data",
+            "v2": "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/MasakhaNER2.0/data",
         }
 
         # use all languages if explicitly set to "all"
@@ -2621,13 +2660,13 @@ class NER_MASAKHANE(MultiCorpus):
             language_folder = data_folder / language
 
             # download data if necessary
-            data_path = f"https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/{language}/"
+            data_path = f"{data_paths[version]}/{language}/"
             cached_path(f"{data_path}dev.txt", language_folder)
             cached_path(f"{data_path}test.txt", language_folder)
             cached_path(f"{data_path}train.txt", language_folder)
 
             # initialize comlumncorpus and add it to list
-            log.info(f"Reading data for language {language}")
+            log.info(f"Reading data for language {language}@{version}")
             corp = ColumnCorpus(
                 data_folder=language_folder,
                 column_format=columns,
