@@ -323,7 +323,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             raise ValueError("either 'is_token_embedding' or 'is_document_embedding' needs to be set.")
 
     def to_args(self):
-        return {
+        args = {
             "token_embedding": self.token_embedding,
             "document_embedding": self.document_embedding,
             "allow_long_sentences": self.allow_long_sentences,
@@ -339,8 +339,10 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             "use_lang_emb": self.use_lang_emb,
             "force_max_length": self.force_max_length,
             "feature_extractor": self.feature_extractor,
-            "needs_manual_ocr": self.needs_manual_ocr,
         }
+        if hasattr(self, "needs_manual_ocr"):
+            args["needs_manual_ocr"] = self.needs_manual_ocr
+        return args
 
     def __getstate__(self):
         model_state = self.to_args()
@@ -1002,7 +1004,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
         # return length
         self.embedding_length_internal = self._calculate_embedding_length(transformer_model)
-        self.needs_manual_ocr = needs_manual_ocr
+        if needs_manual_ocr is not None:
+            self.needs_manual_ocr = needs_manual_ocr
 
         super().__init__(**self.to_args())
 
