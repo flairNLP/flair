@@ -99,10 +99,10 @@ def cached_path(url_or_filename: str, cache_dir: Union[str, Path]) -> Path:
         return get_from_cache(url_or_filename, dataset_cache)
     elif parsed.scheme == "s3":
         return download_s3_to_path(parsed.netloc, dataset_cache)
-    elif parsed.scheme == "" and Path(url_or_filename).exists():
+    elif len(parsed.scheme) < 2 and Path(url_or_filename).exists():
         # File, and it exists.
         return Path(url_or_filename)
-    elif parsed.scheme == "":
+    elif len(parsed.scheme) < 2:
         # File, but it doesn't exist.
         raise FileNotFoundError("file {} not found".format(url_or_filename))
     else:

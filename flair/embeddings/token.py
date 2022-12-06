@@ -1246,6 +1246,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
         self.__embedding_length: int = 300
         self.language_embeddings = {}
         super().__init__()
+        self.eval()
 
     @instance_lru_cache(maxsize=10000, typed=False)
     def get_cached_vec(self, language_code: str, word: str) -> torch.Tensor:
@@ -1393,6 +1394,7 @@ class BytePairEmbeddings(TokenEmbeddings):
 
         self.__embedding_length: int = self.embedder.emb.vector_size * 2
         super().__init__()
+        self.eval()
 
     @property
     def embedding_length(self) -> int:
