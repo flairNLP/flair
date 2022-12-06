@@ -253,7 +253,7 @@ def _assert_conllu_dataset(dataset):
         1,
         1,
         0,
-        1,
+        0,
     ]
 
     ner_spans1 = sent1.get_labels("ner")
@@ -360,7 +360,7 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         1,
         1,
         0,
-        1,
+        0,
     ]
 
     assert len(sent1.get_labels("Number")) == 4
