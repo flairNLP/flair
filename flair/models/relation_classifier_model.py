@@ -1,5 +1,6 @@
 import collections as co
 import itertools
+from abc import ABC
 from operator import itemgetter
 from typing import (
     Any,
@@ -15,6 +16,8 @@ from typing import (
     Tuple,
     Union,
     cast,
+    Literal,
+    Callable,
 )
 
 import torch
@@ -46,6 +49,40 @@ class _Entity(NamedTuple):
 
     span: Span
     label: Label
+
+
+class EncodingStrategy(ABC):
+    @staticmethod
+    def entity_mask(entity: _Entity, role: Literal["H", "T"]) -> str:
+        return f"[{role}-{entity.label.value}]"
+
+    @staticmethod
+    def entity_marker(entity: _Entity, role: Literal["H", "T"]) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in entity.span)
+        return f"[{role}] {space_tokenized_text} [/{role}]"
+
+    @staticmethod
+    def entity_marker_punctual(entity: _Entity, role: Literal["H", "T"]) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in entity.span)
+        if role == "H":
+            return f"@ {space_tokenized_text} @"
+        if role == "T":
+            return f"# {space_tokenized_text} #"
+        raise ValueError()  # TODO
+
+    @staticmethod
+    def typed_entity_marker(entity: _Entity, role: Literal["H", "T"]) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in entity.span)
+        return f"[{role}-{entity.label.value}] {space_tokenized_text} [/{role}-{entity.label.value}]"
+
+    @staticmethod
+    def typed_entity_marker_punctual(entity: _Entity, role: Literal["H", "T"]) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in entity.span)
+        if role == "H":
+            return f"@ * {entity.label.value} * {space_tokenized_text} @"
+        if role == "T":
+            return f"# ^ {entity.label.value} ^ {space_tokenized_text} #"
+        raise ValueError()  # TODO
 
 
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
@@ -84,10 +121,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
         entity_pair_labels: Optional[Set[Tuple[str, str]]] = None,
         entity_threshold: Optional[float] = None,
+        cross_augmentation: bool = True,
+        encoding_strategy: Callable[[_Entity, str], str] = EncodingStrategy.entity_marker,
         zero_tag_value: str = "O",
         allow_unk_tag: bool = True,
-        cross_augmentation: bool = True,
-        mask_type: str = "mark",
         **classifierargs,
     ) -> None:
         """
@@ -149,9 +186,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
         self.entity_pair_labels = entity_pair_labels
 
-        self.cross_augmentation = cross_augmentation
-        self.mask_type = mask_type
         self.entity_threshold = entity_threshold
+        self.cross_augmentation = cross_augmentation
+        self.encoding_strategy = encoding_strategy
 
         # Auto-spawn on GPU, if available
         self.to(flair.device)
@@ -222,17 +259,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
             yield head, tail, gold_label
 
-    def _mask(self, entity: _Entity, role: str) -> str:
-        if self.mask_type == "label-aware":
-            return f"[{role}-{entity.label.value}]"
-        if self.mask_type == "entity":
-            return f"[{role}-ENTITY]"
-        if self.mask_type == "mark":
-            return f"[[{role}-{entity.span.text}]]"
-
-        # by default, use "mark" masking
-        return f"[[{role}-{entity.span.text}]]"
-
     def _create_masked_sentence(
         self,
         head: _Entity,
@@ -269,10 +295,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         for token in original_sentence:
 
             if token is head.span[0]:
-                masked_sentence_tokens.append(self._mask(entity=head, role="H"))
+                masked_sentence_tokens.append(self.encoding_strategy(head, "H"))
 
             elif token is tail.span[0]:
-                masked_sentence_tokens.append(self._mask(entity=tail, role="T"))
+                masked_sentence_tokens.append(self.encoding_strategy(tail, "T"))
 
             elif all(
                 token is not non_leading_entity_token
@@ -514,10 +540,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             "entity_label_types": self.entity_label_types,
             "entity_pair_labels": self.entity_pair_labels,
             "entity_threshold": self.entity_threshold,
+            "cross_augmentation": self.cross_augmentation,
+            "encoding_strategy": self.encoding_strategy,
             "zero_tag_value": self.zero_tag_value,
             "allow_unk_tag": self.allow_unk_tag,
-            "cross_augmentation": self.cross_augmentation,
-            "mask_type": self.mask_type,
         }
         return model_state
 
@@ -531,10 +557,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             entity_label_types=state["entity_label_types"],
             entity_pair_labels=state["entity_pair_labels"],
             entity_threshold=state["entity_threshold"],
+            cross_augmentation=state["cross_augmentation"],
+            encoding_strategy=state["encoding_strategy"],
             zero_tag_value=state["zero_tag_value"],
             allow_unk_tag=state["allow_unk_tag"],
-            cross_augmentation=state["cross_augmentation"],
-            mask_type=state["mask_type"],
             **kwargs,
         )
 
