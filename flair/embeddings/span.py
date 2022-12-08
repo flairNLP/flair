@@ -27,7 +27,7 @@ class SpanEmbeddingFromExternal(Embeddings[Span], Generic[DT]):
                  latent_gazetteer_embedding_dimension: int = 10,
                  #train_gazetteer_model_meanwhile: Embeddings[Token] = None,
                  gazetteer_calculation_method: str = "normalize_using_counts",
-                 add_confidence = True, # TODO change back?
+                 add_confidence = False, # TODO change back?
                  **kwargs,
                  ):
         """
@@ -463,6 +463,7 @@ class ExpandingGazetteerSpanEmbeddings(Embeddings[Span], Generic[DT]):
                  train_gazetteer_model_meanwhile: Union[bool, Embeddings[Token]] = False,
                  use_gazetteer_model_predictions_mode: str = "as_backup",
                  gazetteer_calculation_method: str = "normalize_using_counts",
+                 add_confidence: bool = False,
                  **kwargs,
                  ):
         """
@@ -516,7 +517,7 @@ class ExpandingGazetteerSpanEmbeddings(Embeddings[Span], Generic[DT]):
         self.mapping_corpus_label_to_initial_gazetteer = mapping_corpus_label_to_initial_gazetteer
         self.initial_gazetteer = {}
         self.gazetteer_calculation_method = gazetteer_calculation_method
-        self.add_confidence = False
+        self.add_confidence = add_confidence
 
         if self.starting_with_gazetteer:
             self.gazetteer_calculation_method = self.starting_with_gazetteer.gazetteer_calculation_method
