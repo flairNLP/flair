@@ -16,8 +16,8 @@ from typing import (
     Tuple,
     Union,
     cast,
-    Literal,
-    Callable,
+    Protocol,
+    runtime_checkable,
 )
 
 import torch
@@ -26,7 +26,7 @@ from torch.utils.data.dataset import ConcatDataset, Dataset
 import flair
 from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.embeddings import DocumentEmbeddings
+from flair.embeddings import DocumentEmbeddings, TransformerDocumentEmbeddings
 from flair.tokenization import SpaceTokenizer
 
 
@@ -41,6 +41,125 @@ class EncodedSentence(Sentence):
     pass
 
 
+@runtime_checkable
+class EncodingStrategy(Protocol):
+    """
+    TODO: Write documentation
+    """
+
+    special_tokens: Set[str]
+
+    def encode_head(self, head_span: Span, label: Label) -> str:
+        """
+        TODO: Write documentation
+        """
+        ...
+
+    def encode_tail(self, tail_span: Span, label: Label) -> str:
+        """
+        TODO: Write documentation
+        """
+        ...
+
+
+class EntityMask(EncodingStrategy):
+    """
+    TODO: Write documentation
+    """
+
+    def __init__(self, special_tokens: Optional[Set[str]] = None) -> None:
+        self.special_tokens = {"[HEAD]", "[TAIL]"} if special_tokens is None else special_tokens
+
+    def encode_head(self, head_span: Span, label: Label) -> str:
+        return "[HEAD]"
+
+    def encode_tail(self, tail_span: Span, label: Label) -> str:
+        return "[TAIL]"
+
+
+class TypedEntityMask(EncodingStrategy):
+    """
+    TODO: Write documentation
+    """
+
+    def __init__(self) -> None:
+        self.special_tokens: Set[str] = set()
+
+    def encode_head(self, head: Span, label: Label) -> str:
+        return f"[HEAD-{label.value}]"
+
+    def encode_tail(self, tail: Span, label: Label) -> str:
+        return f"[TAIL-{label.value}]"
+
+
+class EntityMarker(EncodingStrategy):
+    """
+    TODO: Write documentation
+    """
+
+    def __init__(self, special_tokens: Optional[Set[str]] = None) -> None:
+        self.special_tokens = {"[HEAD]", "[\HEAD]", "[TAIL]", "[\TAIL]"} if special_tokens is None else special_tokens
+
+    def encode_head(self, head: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in head)
+        return f"[HEAD] {space_tokenized_text} [/HEAD]"
+
+    def encode_tail(self, tail: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in tail)
+        return f"[TAIL] {space_tokenized_text} [/TAIL]"
+
+
+class TypedEntityMarker(EncodingStrategy):
+    """
+    TODO: Write documentation
+    """
+
+    def __init__(self) -> None:
+        self.special_tokens: Set[str] = set()
+
+    def encode_head(self, head: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in head)
+        return f"[HEAD-{label.value}] {space_tokenized_text} [/HEAD-{label.value}]"
+
+    def encode_tail(self, tail: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in tail)
+        return f"[TAIL-{label.value}] {space_tokenized_text} [/TAIL-{label.value}]"
+
+
+class EntityMarkerPunct(EncodingStrategy):
+    """
+    TODO: Write documentation
+    """
+
+    def __init__(self) -> None:
+        self.special_tokens = set()
+
+    def encode_head(self, head: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in head)
+        return f"@ {space_tokenized_text} @"
+
+    def encode_tail(self, tail: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in tail)
+        return f"# {space_tokenized_text} #"
+
+
+class TypedEntityMarkerPunct(EncodingStrategy):
+    """
+    TODO: Write documentation
+    """
+
+    def __init__(self) -> None:
+        self.special_tokens = set()
+
+    def encode_head(self, head: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in head)
+        return f"@ * {label.value} * {space_tokenized_text} @"
+
+    def encode_tail(self, tail: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in tail)
+        return f"# ^ {label.value} ^ {space_tokenized_text} #"
+
+
 class _Entity(NamedTuple):
     """
     A `_Entity` encapsulates either a relation's head or a tail span, including its label.
@@ -49,40 +168,6 @@ class _Entity(NamedTuple):
 
     span: Span
     label: Label
-
-
-class EncodingStrategy(ABC):
-    @staticmethod
-    def entity_mask(entity: _Entity, role: Literal["H", "T"]) -> str:
-        return f"[{role}-{entity.label.value}]"
-
-    @staticmethod
-    def entity_marker(entity: _Entity, role: Literal["H", "T"]) -> str:
-        space_tokenized_text: str = " ".join(token.text for token in entity.span)
-        return f"[{role}] {space_tokenized_text} [/{role}]"
-
-    @staticmethod
-    def entity_marker_punctual(entity: _Entity, role: Literal["H", "T"]) -> str:
-        space_tokenized_text: str = " ".join(token.text for token in entity.span)
-        if role == "H":
-            return f"@ {space_tokenized_text} @"
-        if role == "T":
-            return f"# {space_tokenized_text} #"
-        raise ValueError()  # TODO
-
-    @staticmethod
-    def typed_entity_marker(entity: _Entity, role: Literal["H", "T"]) -> str:
-        space_tokenized_text: str = " ".join(token.text for token in entity.span)
-        return f"[{role}-{entity.label.value}] {space_tokenized_text} [/{role}-{entity.label.value}]"
-
-    @staticmethod
-    def typed_entity_marker_punctual(entity: _Entity, role: Literal["H", "T"]) -> str:
-        space_tokenized_text: str = " ".join(token.text for token in entity.span)
-        if role == "H":
-            return f"@ * {entity.label.value} * {space_tokenized_text} @"
-        if role == "T":
-            return f"# ^ {entity.label.value} ^ {space_tokenized_text} #"
-        raise ValueError()  # TODO
 
 
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
@@ -122,7 +207,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         entity_pair_labels: Optional[Set[Tuple[str, str]]] = None,
         entity_threshold: Optional[float] = None,
         cross_augmentation: bool = True,
-        encoding_strategy: Callable[[_Entity, str], str] = EncodingStrategy.entity_marker,
+        encoding_strategy: EncodingStrategy = TypedEntityMarker(),
         zero_tag_value: str = "O",
         allow_unk_tag: bool = True,
         **classifierargs,
@@ -148,14 +233,15 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                                    i.e. the model classifies the relation for each entity pair
                                    in the cross product of *all* entity pairs (inefficient).
         :param entity_threshold: Only pre-labelled entities above this threshold are taken into account by the model.
-        :param zero_tag_value: The label to use for out-of-class relations
-        :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
         :param cross_augmentation: If `True`, use cross augmentation to transform `Sentence`s into `EncodedSentenece`s.
                                    When cross augmentation is enabled, the transformation functions,
                                    e.g. `transform_corpus`, generate an encoded sentence for each entity pair
                                    in the cross product of all entities in the original sentence.
                                    When disabling cross augmentation, the transform functions only generate
                                    encoded sentences for each gold relation annotation in the original sentence.
+        :param encoding_strategy: TODO Write documentation
+        :param zero_tag_value: The label to use for out-of-class relations
+        :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
         :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
         """
         # Set label type and prepare label dictionary
@@ -295,10 +381,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         for token in original_sentence:
 
             if token is head.span[0]:
-                masked_sentence_tokens.append(self.encoding_strategy(head, "H"))
+                masked_sentence_tokens.append(self.encoding_strategy.encode_head(head.span, head.label))
 
             elif token is tail.span[0]:
-                masked_sentence_tokens.append(self.encoding_strategy(tail, "T"))
+                masked_sentence_tokens.append(self.encoding_strategy.encode_tail(tail.span, tail.label))
 
             elif all(
                 token is not non_leading_entity_token
