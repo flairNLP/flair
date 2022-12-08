@@ -89,11 +89,33 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
         # make sure the label dictionary has an "O" entry for "no tagged span"
         label_dictionary.add_item("O")
 
-        if use_MOE_decoder:
+        self.dropout = classifierargs.get("dropout", 0.0)
 
+        if use_MOE_decoder:
+            self.use_batchnorm_in_MOE = False # change back to False
+
+            ## variant with weigh as scalar and addition
             decoder = MOE(span_representation_dim=word_embeddings.embedding_length * 2,
                           gaz_representation_dim= gaz_dim,
-                          output_dim=len(label_dictionary))
+                          output_dim=len(label_dictionary),
+                          dropout = self.dropout,
+                          batchnorm = self.use_batchnorm_in_MOE)
+
+            ## variant with weight vector and multiplication
+            # decoder = MOE2(span_representation_dim=word_embeddings.embedding_length * 2,
+            #              gaz_representation_dim=gaz_dim,
+            #              output_dim=len(label_dictionary),
+            #              dropout = self.dropout,
+            #              batchnorm = self.use_batchnorm_in_MOE)
+
+            #decoder = MOE3(span_representation_dim=word_embeddings.embedding_length * 2,
+            #              gaz_representation_dim=gaz_dim,
+            #              output_dim=len(label_dictionary),
+            #              dropout = self.dropout,
+            #              batchnorm = self.use_batchnorm_in_MOE)
+
+
+            classifierargs["dropout"] = 0.0 # TODO good? in the DefaultClassifier dropout is applied BEFORE decoder so in our case also in the raw gaz embedding... To avoid double dropout set to False?
 
         super(SpanTaggerWithGazetteerMining, self).__init__(
             label_dictionary=label_dictionary,
@@ -361,18 +383,17 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                             if confidence > self.dynamic_gazetteer_embeddings.confidence_threshold:
                                 self.dynamic_gazetteer_embeddings.update_gazetteer_embeddings(span_text, span_label)
 
-    # train the
+
     def _post_process_after_epoch(self, corpus_for_negative_sampling):
-        if not self.dynamic_gazetteer_mining:
-            return
-        else:
-            if self.dynamic_gazetteer_embeddings.train_gazetteer_model_meanwhile:
-                if self.dynamic_gazetteer_embeddings.gaz_model.update:
-                    self.dynamic_gazetteer_embeddings._fine_tune_gaz_model_on_gazetteer(
-                        gazetteer=self.dynamic_gazetteer_embeddings.updated_partition, # TODO or use the full (seed+updates) one? or just the "newest" additions?
-                        corpus_for_negative_sampling=corpus_for_negative_sampling,
-                        max_span_length=self.max_span_length,
-                        )
+
+        if self.dynamic_gazetteer_mining and self.dynamic_gazetteer_embeddings.train_gazetteer_model_meanwhile:
+            if self.dynamic_gazetteer_embeddings.gaz_model.update:
+                self.dynamic_gazetteer_embeddings._fine_tune_gaz_model_on_gazetteer(
+                    gazetteer=self.dynamic_gazetteer_embeddings.updated_partition, # TODO or use the full (seed+updates) one? or just the "newest" additions?
+                    corpus_for_negative_sampling=corpus_for_negative_sampling,
+                    max_span_length=self.max_span_length,
+                    )
+
 
     # DYNAMIC EMBEDDING UPDATE
     # hacky, but:
@@ -574,6 +595,7 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
 
                 else:
                     gazetteer_embedding = torch.Tensor([])  # dummy
+                    original_gaz_entry = torch.Tensor([]) # dummy
 
                 symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
                 if span.get_label(gold_label_type).value == span.get_label("predicted").value:
@@ -588,8 +610,7 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                         with torch.no_grad():
                             _, weight_vector = self.decoder.forward(embedded.unsqueeze(0), return_weight_vector = True)
                     except:
-                        weight_vector = torch.Tensor([])  # dummy
-
+                        weight_vector = torch.Tensor([-1.0])  # dummy
 
                 printed.append(span)
                 eval_line += (
@@ -612,9 +633,9 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                         gazetteer_embedding = torch.zeros(self.gazetteer_embeddings.embedding_length, device=flair.device)
                         original_gaz_entry = gazetteer_embedding
 
-
                 else:
                     gazetteer_embedding = torch.Tensor([])  # dummy
+                    original_gaz_entry = torch.Tensor([]) # dummy
 
                 if add_weight_vector:
                     try:
@@ -622,7 +643,7 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
                         with torch.no_grad():
                             _, weight_vector = self.decoder.forward(embedded.unsqueeze(0), return_weight_vector = True)
                     except:
-                        weight_vector = torch.Tensor([])  # dummy
+                        weight_vector = torch.Tensor([-1.0])  # dummy
 
                 if span.get_label("predicted").value != span.get_label(gold_label_type).value and span not in printed:
                     count_error += 1
@@ -690,52 +711,164 @@ class SpanTaggerWithGazetteerMining(flair.nn.DefaultClassifier[Sentence, Span]):
 
 
 class MOE(torch.nn.Module):
-    def __init__(self, span_representation_dim=768 * 2, gaz_representation_dim=4, shared_dim=256, output_dim = 5):
+    def __init__(self, span_representation_dim=768 * 2, gaz_representation_dim=4, shared_dim=256, output_dim = 5, dropout = 0.0, batchnorm = False):
         super().__init__()
         self.span_representation_dim = span_representation_dim
         self.gaz_representation_dim = gaz_representation_dim
         self.shared_dim = shared_dim
         self.output_dim = output_dim
 
+        self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
+        self.batchnorm = batchnorm
+        if self.batchnorm:
+            self.BN = torch.nn.BatchNorm1d(self.span_representation_dim + self.gaz_representation_dim, affine=False)
+
+
         self.span_linear = torch.nn.Linear(self.span_representation_dim, self.shared_dim)
         self.gaz_linear = torch.nn.Linear(self.gaz_representation_dim, self.shared_dim)
+        # one weight for the span part, one for the gaz part, then adding
         self.moe = torch.nn.Sequential(torch.nn.Linear(self.shared_dim * 2, self.shared_dim*2),
                                        torch.nn.ReLU(),
                                        torch.nn.Linear(self.shared_dim*2, 1),
                                        torch.nn.Sigmoid())
-        #self.moe3 = torch.nn.Sequential(torch.nn.Linear(self.span_representation_dim+self.gaz_representation_dim,
-        #                                                self.span_representation_dim+self.gaz_representation_dim),
-        #                                torch.nn.ReLU(),
-        #                                torch.nn.Linear(self.span_representation_dim+self.gaz_representation_dim,
-        #                                                self.span_representation_dim+self.gaz_representation_dim),
-        #                                torch.nn.Sigmoid())
 
         self.out = torch.nn.Linear(self.shared_dim, output_dim)
-        #self.out2 = torch.nn.Linear(self.shared_dim*2, output_dim)
-        self.out3 = torch.nn.Linear(self.span_representation_dim+self.gaz_representation_dim, self.output_dim)
 
     def forward(self, representation, return_weight_vector = False):
+        if self.batchnorm:
+            representation = self.BN(representation)
+
         span_part = representation[:, :self.span_representation_dim]
         gaz_part = representation[:, self.span_representation_dim:]
+
         span_latent = self.span_linear(span_part)
         gaz_latent = self.gaz_linear(gaz_part)
-        # variant 1
+
+        span_latent = self.dropout(span_latent)
+        #gaz_latent = self.dropout(gaz_latent) # TODO good?
+
         concat = torch.cat([span_latent, gaz_latent], dim=1)
+
         weight_vector = self.moe(concat)
         weighted = weight_vector * span_latent + (1-weight_vector) * gaz_latent
         scores = self.out(weighted)
 
-        # variant 2
-        #weighted = torch.cat([weight_vector * span_latent, (1-weight_vector) * gaz_latent], dim=1)
-        #scores = self.out2(weighted)
-
-        # variant 3
-        #weight_vector = self.moe3(representation)
-        #weighted = weight_vector * representation
-        #scores = self.out3(weighted)
-
-
         if return_weight_vector:
             return scores, weight_vector
+        else:
+            return scores
+
+
+class MOE2(torch.nn.Module):
+    def __init__(self, span_representation_dim=768 * 2, gaz_representation_dim=4, shared_dim=256, output_dim = 5, dropout = 0.0, batchnorm = False):
+        super().__init__()
+        self.span_representation_dim = span_representation_dim
+        self.gaz_representation_dim = gaz_representation_dim
+        self.output_dim = output_dim
+        self.shared_dim = shared_dim
+
+        self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
+        self.batchnorm = batchnorm
+        if self.batchnorm:
+            self.BN = torch.nn.BatchNorm1d(self.span_representation_dim + self.gaz_representation_dim, affine=False)
+
+        self.span_linear = torch.nn.Linear(self.span_representation_dim, self.shared_dim)
+        self.gaz_linear = torch.nn.Linear(self.gaz_representation_dim, self.shared_dim)
+
+        ## a specific weight for each dimension, then multiply
+        self.moe = torch.nn.Sequential(torch.nn.Linear(self.shared_dim*2, self.shared_dim*2),
+                                       torch.nn.ReLU(),
+                                       torch.nn.Linear(self.shared_dim*2, self.shared_dim*2),
+                                       torch.nn.Softmax(dim=1))
+
+        #self.moe = torch.nn.Sequential(torch.nn.Linear(self.span_representation_dim+ self.gaz_representation_dim, self.span_representation_dim+ self.gaz_representation_dim),
+        #                               torch.nn.ReLU(),
+        #                               torch.nn.Linear(self.span_representation_dim+ self.gaz_representation_dim, self.span_representation_dim+ self.gaz_representation_dim),
+        #                               torch.nn.Softmax(dim=1))
+
+        self.out = torch.nn.Linear(self.shared_dim*2, self.output_dim)
+        #self.out = torch.nn.Linear(self.span_representation_dim + self.gaz_representation_dim, self.output_dim)
+
+    def forward(self, representation, return_weight_vector = False):
+        if self.batchnorm:
+            representation = self.BN(representation)
+        span_part = representation[:, :self.span_representation_dim]
+        gaz_part = representation[:, self.span_representation_dim:]
+        span_latent = self.span_linear(span_part)
+        gaz_latent = self.gaz_linear(gaz_part)
+
+        span_latent = self.dropout(span_latent)
+        gaz_latent = self.dropout(gaz_latent)
+
+        #weight_vector = self.moe(representation)
+
+        concat = torch.cat([span_latent, gaz_latent], dim=1)
+
+        weight_vector = self.moe(concat)
+
+        weighted = weight_vector * concat
+
+        scores = self.out(weighted)
+
+        if return_weight_vector:
+            with torch.no_grad():
+                weight_parts = (torch.sum(weight_vector[:, :self.shared_dim], dim=1),
+                                torch.sum(weight_vector[:, self.shared_dim:], dim=1),
+                                )
+                #weight_parts = (torch.sum(weight_vector[:, :self.span_representation_dim], dim=1),
+                #                torch.sum(weight_vector[:, self.span_representation_dim:], dim=1),
+                #                )
+
+                mean_weight_transformer = weight_parts[0] # to make error_analysis happy: mean weight of transformer positions as proxy...
+
+            return scores, mean_weight_transformer
+        else:
+            return scores
+
+
+class MOE3(torch.nn.Module):
+    def __init__(self, span_representation_dim=768 * 2, gaz_representation_dim=4, shared_dim=256, output_dim=5,
+                 dropout=0.0, batchnorm=False):
+        super().__init__()
+        self.span_representation_dim = span_representation_dim
+        self.gaz_representation_dim = gaz_representation_dim
+        self.output_dim = output_dim
+        self.shared_dim = shared_dim
+
+        self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
+        self.batchnorm = batchnorm
+        if self.batchnorm:
+            self.BN = torch.nn.BatchNorm1d(self.span_representation_dim + self.gaz_representation_dim, affine=False)
+
+        self.span_linear = torch.nn.Linear(self.span_representation_dim, self.shared_dim)
+        self.gaz_linear = torch.nn.Linear(self.gaz_representation_dim, self.shared_dim)
+
+        # like GAIN https://github.com/Mckysse/GAIN/blob/fce72db73388871070d0f0d534b3f4d9fadeefbf/weighted_fusion_crf/model/ner_model.py
+        self.w_omega = torch.nn.Parameter(torch.Tensor(self.shared_dim * 2, 1))
+        torch.nn.init.uniform_(self.w_omega, -0.1, 0.1)
+
+        self.out = torch.nn.Linear(self.shared_dim, self.output_dim)
+
+    def forward(self, representation, return_weight_vector=False):
+        if self.batchnorm:
+            representation = self.BN(representation)
+        span_part = representation[:, :self.span_representation_dim]
+        gaz_part = representation[:, self.span_representation_dim:]
+        span_latent = self.span_linear(span_part)
+        gaz_latent = self.gaz_linear(gaz_part)
+
+        span_latent = self.dropout(span_latent)
+        gaz_latent = self.dropout(gaz_latent)
+
+        concat = torch.cat([span_latent, gaz_latent], dim=1)
+
+        We = torch.sigmoid(torch.matmul(concat, self.w_omega))
+
+        weighted = We * span_latent + (1 - We) * gaz_latent
+
+        scores = self.out(weighted)
+
+        if return_weight_vector:
+            return scores, We
         else:
             return scores
