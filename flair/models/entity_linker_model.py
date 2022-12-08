@@ -1,10 +1,11 @@
 import logging
-from typing import Callable, Dict, List, Set, Optional
+from typing import Callable, Dict, List, Set, Optional, Tuple, Union
 
 import torch
 
 import flair.embeddings
 import flair.nn
+from flair.training_utils import store_embeddings
 from flair.data import Dictionary, Sentence, Span, DT, DT2
 from abc import abstractmethod
 import re
@@ -153,6 +154,21 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     def label_type(self):
         return self._label_type
 
+    def _mask_scores_with_candidates(self, scores: torch.Tensor, data_points: List[DT2]):
+
+        # get the candidates
+        mentions = [span.text for span in data_points]
+        candidate_set = self.candidate_generation_method.get_candidates(mentions)
+
+        if candidate_set:
+            indices_of_candidates = [self.label_dictionary.get_idx_for_item(candidate) for candidate in candidate_set]
+            # mask out (set to -inf) logits that are not in the proposed candidate set
+            masked_scores = -torch.inf * torch.ones(scores.size(), requires_grad=True, device=flair.device)
+            masked_scores[:, indices_of_candidates] = scores[:, indices_of_candidates]
+            return masked_scores
+
+        return scores
+
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
 
         # make a forward pass to produce embedded data points and labels
@@ -172,10 +188,10 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         data_point_tensor = self._encode_data_points(sentences, data_points)
 
         # decode
-        scores = self.decoder(data_point_tensor, data_points)
+        scores = self.decoder(data_point_tensor)
 
-        # if self.candidate_generation_method:
-        #     self._mask_scores_with_candidates(scores, data_points)
+        if self.candidate_generation_method:
+            self._mask_scores_with_candidates(scores, data_points)
 
         # calculate the loss
         return self._calculate_loss(scores, label_tensor)
@@ -247,10 +263,10 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
 
                 # pass data points through network and decode
                 data_point_tensor = self._encode_data_points(batch, data_points)
-                scores = self.decoder(data_point_tensor, data_points)
+                scores = self.decoder(data_point_tensor)
 
-                # if self.candidate_generation_method:
-                #     self._mask_scores_with_candidates(scores, data_points)
+                if self.candidate_generation_method:
+                    scores = self._mask_scores_with_candidates(scores, data_points)
 
                 # if anything could possibly be predicted
                 if len(data_points) > 0:
@@ -330,5 +346,32 @@ class SimpleCandidateGenerator(CandidateGenerationMethod):
 
         return candidates_for_all_mentions
 
+class EntityDecoder(torch.nn.Module):
+    """
+    Simple linear decoder with two linear layers. Can be used to reduce (or choose) the dimension
+    of the final linear layer ('entity embeddings'). Since one might deals with a huge entity set, chooseing a smaller
+    dimension can help to reduce memory usage.
+    """
 
+    def __init__(self,
+             entity_embedding_size: int,
+             mention_embedding_size: int,
+             number_entities: int
+    ):
+        super().__init__()
 
+        self.mention_to_entity = torch.nn.Linear(mention_embedding_size,
+                                                 entity_embedding_size)  # project mention embedding to entity embedding space
+
+        self.entity_embeddings = torch.nn.Linear(entity_embedding_size, number_entities,
+                                                 bias=False)  # each entity is represented by a vector
+
+    def forward(self, mention_embeddings):
+
+        # project mentions in entity representation
+        projected_mention_embeddings = self.mention_to_entity(mention_embeddings)
+
+        # compute scores
+        logits = self.entity_embeddings(projected_mention_embeddings)
+
+        return logits

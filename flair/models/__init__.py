@@ -1,5 +1,5 @@
 from .clustering import ClusteringModel
-from .entity_linker_model import EntityLinker, SimpleCandidateGenerator, CandidateGenerationMethod
+from .entity_linker_model import EntityLinker, SimpleCandidateGenerator, CandidateGenerationMethod, EntityDecoder
 from .language_model import LanguageModel
 from .lemmatizer_model import Lemmatizer
 from .multitask_model import MultitaskModel
@@ -16,6 +16,7 @@ __all__ = [
     "EntityLinker",
     "SimpleCandidateGenerator",
     "CandidateGenerationMethod",
+    "EntityDecoder",
     "LanguageModel",
     "Lemmatizer",
     "TextPairClassifier",
