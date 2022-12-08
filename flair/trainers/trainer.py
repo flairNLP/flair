@@ -118,6 +118,8 @@ class ModelTrainer:
         create_loss_file: bool = True,
         epoch: int = 0,
         use_tensorboard: bool = False,
+        use_wandb: bool = False,
+        wandb_logger = None,
         tensorboard_log_dir=None,
         metrics_for_tensorboard=[],
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
@@ -454,6 +456,13 @@ class ModelTrainer:
                         for i, lr in enumerate(current_learning_rate):
                             writer.add_scalar(f"learning_rate_{i}", lr, epoch)
 
+                if use_wandb:
+                    if len(current_learning_rate) == 1:
+                        wandb_logger.log({"learning_rate": current_learning_rate[0], "epoch": epoch})
+                    else:
+                        for i, lr in enumerate(current_learning_rate):
+                            wandb_logger.log({f"learning_rate_{i}": lr, "epoch": epoch})
+
                 all_lrs_too_small = all([lr < min_lr for lr, min_lr in zip(current_learning_rate, min_learning_rate)])
 
                 # stop training if learning rate becomes too small
@@ -561,6 +570,9 @@ class ModelTrainer:
                         if not param_selection_mode and write_weights:
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
+                        if use_wandb:
+                            wandb_logger.log({"loss_intermittent": intermittent_loss, "iteration": iteration, "batch": batch_no, "epoch": epoch})
+
                 if average_over != 0:
                     train_loss /= average_over
 
@@ -581,6 +593,9 @@ class ModelTrainer:
 
                 if use_tensorboard:
                     writer.add_scalar("train_loss", train_loss, epoch)
+
+                if use_wandb:
+                    wandb_logger.log({"train_loss": train_loss, "epoch": epoch})
 
                 # evaluate on train / dev / test split depending on training settings
                 result_line: str = ""
@@ -633,6 +648,13 @@ class ModelTrainer:
                                 train_part_eval_result.classification_report[metric_class_avg_type][metric_type],
                                 epoch,
                             )
+                    if use_wandb:
+                        wandb_logger.log({f"train_{main_evaluation_metric[1]}": train_part_eval_result.main_score})
+                        for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
+                            wandb_logger.log({
+                                f"train_{metric_class_avg_type}_{metric_type}":
+                                train_part_eval_result.classification_report[metric_class_avg_type][metric_type],
+                                "epoch": epoch})
 
                 if log_dev:
                     assert self.corpus.dev
@@ -677,6 +699,21 @@ class ModelTrainer:
                                 epoch,
                             )
 
+                    if use_wandb:
+                        wandb_logger.log({f"dev_{main_evaluation_metric[1]}": dev_eval_result.main_score, "epoch": epoch})
+
+                        wandb_logger.log({"dev_loss": dev_eval_result.loss,
+                                          "dev_score": dev_eval_result.main_score,
+                                          "epoch": epoch})
+                        for (
+                                metric_class_avg_type,
+                                metric_type,
+                        ) in metrics_for_tensorboard:
+                            wandb_logger.log({
+                                f"dev_{metric_class_avg_type}_{metric_type}":
+                                dev_eval_result.classification_report[metric_class_avg_type][metric_type],
+                                "epoch": epoch})
+
                 if log_test:
                     assert self.corpus.test
                     test_eval_result = self.model.evaluate(
@@ -713,6 +750,20 @@ class ModelTrainer:
                                 test_eval_result.classification_report[metric_class_avg_type][metric_type],
                                 epoch,
                             )
+
+                    if use_wandb:
+                        wandb_logger.log({f"test_{main_evaluation_metric[1]}": test_eval_result.main_score, "epoch": epoch})
+                        wandb_logger.log({"test_loss": test_eval_result.loss,
+                                          "test_score": test_eval_result.main_score,
+                                          "epoch": epoch})
+                        for (
+                                metric_class_avg_type,
+                                metric_type,
+                        ) in metrics_for_tensorboard:
+                            wandb_logger.log({
+                                f"test_{metric_class_avg_type}_{metric_type}":
+                                test_eval_result.classification_report[metric_class_avg_type][metric_type],
+                                "epoch": epoch})
 
                 # determine if this is the best model or if we need to anneal
                 current_epoch_has_best_model_so_far = False
@@ -846,6 +897,10 @@ class ModelTrainer:
             if use_tensorboard:
                 writer.close()
 
+        #if use_wandb:
+        #    wandb_logger.unwatch(self.model)
+        #    wandb_logger.finish()
+
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
             final_score = self.final_test(
@@ -919,51 +974,55 @@ class ModelTrainer:
         **trainer_args,
     ):
 
-        param_groups = []
-        manually_set_parameters = set()
+        if inspect.isclass(optimizer):
+            param_groups = []
+            manually_set_parameters = set()
 
-        if decoder_batchnorm_lr:
+            if decoder_batchnorm_lr:
 
-            if isinstance(decoder_batchnorm_lr, int):
-                manually_set_lr = learning_rate * decoder_batchnorm_lr
-            elif isinstance(decoder_batchnorm_lr, float):
-                manually_set_lr = decoder_batchnorm_lr
-            else:
-                manually_set_lr = learning_rate
+                if isinstance(decoder_batchnorm_lr, int):
+                    manually_set_lr = learning_rate * decoder_batchnorm_lr
+                elif isinstance(decoder_batchnorm_lr, float):
+                    manually_set_lr = decoder_batchnorm_lr
+                else:
+                    manually_set_lr = learning_rate
 
-            param_groups.append({"params": [p for p in self.model.decoder.BN.parameters() if p not in manually_set_parameters],
-                                  "lr": manually_set_lr})
-            log.info(
-                     f"Setting batch norm learning rate to {manually_set_lr} for the following "
-                     f"parameters: {[name for name, param in self.model.decoder.BN.named_parameters() if param not in manually_set_parameters]}"
-                 )
+                param_groups.append({"params": [p for p in self.model.decoder.BN.parameters() if p not in manually_set_parameters],
+                                      "lr": manually_set_lr})
+                log.info(
+                         f"Setting batch norm learning rate to {manually_set_lr} for the following "
+                         f"parameters: {[name for name, param in self.model.decoder.BN.named_parameters() if param not in manually_set_parameters]}"
+                     )
 
-            manually_set_parameters.update(self.model.decoder.BN.parameters())
+                manually_set_parameters.update(self.model.decoder.BN.parameters())
 
-        if decoder_lr:
+            if decoder_lr:
 
-            if isinstance(decoder_lr, int):
-                manually_set_lr = learning_rate * decoder_lr
-            elif isinstance(decoder_lr, float):
-                manually_set_lr = decoder_lr
-            else:
-                manually_set_lr = learning_rate
+                if isinstance(decoder_lr, int):
+                    manually_set_lr = learning_rate * decoder_lr
+                elif isinstance(decoder_lr, float):
+                    manually_set_lr = decoder_lr
+                else:
+                    manually_set_lr = learning_rate
 
 
-            param_groups.append({"params": [p for p in self.model.decoder.parameters() if p not in manually_set_parameters],
-                                  "lr": manually_set_lr})
-            log.info(
-                f"Setting learning rate to {manually_set_lr} for the following "
-                f"parameters: {[name for name, param in self.model.decoder.named_parameters() if param not in manually_set_parameters]}"
-            )
+                param_groups.append({"params": [p for p in self.model.decoder.parameters() if p not in manually_set_parameters],
+                                      "lr": manually_set_lr})
+                log.info(
+                    f"Setting learning rate to {manually_set_lr} for the following "
+                    f"parameters: {[name for name, param in self.model.decoder.named_parameters() if param not in manually_set_parameters]}"
+                )
 
-            manually_set_parameters.update(self.model.decoder.parameters())
+                manually_set_parameters.update(self.model.decoder.parameters())
 
-        # make a param group out of remaining params
-        param_groups.append({"params": [p for p in self.model.parameters() if p not in manually_set_parameters],
-                             "lr": learning_rate})
+            # make a param group out of remaining params
+            param_groups.append({"params": [p for p in self.model.parameters() if p not in manually_set_parameters],
+                                 "lr": learning_rate})
 
-        optimizer = optimizer(param_groups, lr = learning_rate)
+            optimizer = optimizer(param_groups)
+
+        else:
+            optimizer = optimizer
 
         return self.train(
             base_path=base_path,
