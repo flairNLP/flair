@@ -13,10 +13,11 @@ from collections import defaultdict
 
 log = logging.getLogger("flair")
 
-class CandidateGenerationMethod():
+
+class CandidateGenerationMethod:
     """Abstract base class for methods that, given a mention,
-     generate a set of candidates, so that the EntityLinker only
-     scores among these candidates and not all entities
+    generate a set of candidates, so that the EntityLinker only
+    scores among these candidates and not all entities
     """
 
     @abstractmethod
@@ -24,6 +25,7 @@ class CandidateGenerationMethod():
         """Given a list of entity mentions this methods returns a constrained set of entity
         candidates for the mentions"""
         raise NotImplementedError
+
 
 class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     """
@@ -303,12 +305,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             if return_loss:
                 return overall_loss, label_count
 
+
 class SimpleCandidateGenerator(CandidateGenerationMethod):
     """Straight forward candidate generator using mention-candidate lists,
     i.e. we assume to have a dictionary that stores mentions as keys and
     a list of possible candidates as values.
     These lists typically originate from large scale annotated corpora like Wikipedia.
     """
+
     def __init__(self, candidate_dict: Dict):
 
         # do not use defaultdict for the original candidate dict
@@ -324,12 +328,11 @@ class SimpleCandidateGenerator(CandidateGenerationMethod):
         self.even_more_simpler_mentions_candidate_dict = defaultdict(set)
         for mention in candidate_dict:
             # create mention without blanks and lower cased
-            simplified_mention = mention.replace(' ', '').lower()
+            simplified_mention = mention.replace(" ", "").lower()
             self.simpler_mentions_candidate_dict[simplified_mention].update(self.candidate_dict[mention])
             # create further reduced mention
             more_simplified_mention = self.punc_remover.sub("", mention.lower())
             self.even_more_simpler_mentions_candidate_dict[more_simplified_mention].update(self.candidate_dict[mention])
-
 
     def get_candidates(self, mentions: List[str]) -> Set[str]:
         candidates_for_all_mentions = set()
@@ -338,13 +341,15 @@ class SimpleCandidateGenerator(CandidateGenerationMethod):
             try:
                 candidates.update(self.candidate_dict[mention])
             except KeyError:
-                candidates = self.simpler_mentions_candidate_dict[mention.lower().replace(' ', '')]
+                candidates = self.simpler_mentions_candidate_dict[mention.lower().replace(" ", "")]
                 if not candidates:
                     candidates = self.even_more_simpler_mentions_candidate_dict[
-                        self.punc_remover.sub("", mention.lower())]
+                        self.punc_remover.sub("", mention.lower())
+                    ]
             candidates_for_all_mentions.update(candidates)
 
         return candidates_for_all_mentions
+
 
 class EntityDecoder(torch.nn.Module):
     """
@@ -353,18 +358,16 @@ class EntityDecoder(torch.nn.Module):
     dimension can help to reduce memory usage.
     """
 
-    def __init__(self,
-             entity_embedding_size: int,
-             mention_embedding_size: int,
-             number_entities: int
-    ):
+    def __init__(self, entity_embedding_size: int, mention_embedding_size: int, number_entities: int):
         super().__init__()
 
-        self.mention_to_entity = torch.nn.Linear(mention_embedding_size,
-                                                 entity_embedding_size)  # project mention embedding to entity embedding space
+        self.mention_to_entity = torch.nn.Linear(
+            mention_embedding_size, entity_embedding_size
+        )  # project mention embedding to entity embedding space
 
-        self.entity_embeddings = torch.nn.Linear(entity_embedding_size, number_entities,
-                                                 bias=False)  # each entity is represented by a vector
+        self.entity_embeddings = torch.nn.Linear(
+            entity_embedding_size, number_entities, bias=False
+        )  # each entity is represented by a vector
 
     def forward(self, mention_embeddings):
 
