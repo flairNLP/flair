@@ -1,6 +1,6 @@
 import collections as co
 import itertools
-from abc import ABC
+import logging
 from operator import itemgetter
 from typing import (
     Any,
@@ -28,6 +28,8 @@ from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Toke
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import DocumentEmbeddings, TransformerDocumentEmbeddings
 from flair.tokenization import SpaceTokenizer
+
+logger: logging.Logger = logging.getLogger("flair")
 
 
 class EncodedSentence(Sentence):
@@ -275,6 +277,18 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         self.entity_threshold = entity_threshold
         self.cross_augmentation = cross_augmentation
         self.encoding_strategy = encoding_strategy
+
+        # Add the special tokens from the encoding strategy
+        if self.encoding_strategy.special_tokens and isinstance(self.embeddings, TransformerDocumentEmbeddings):
+            special_tokens: List[str] = list(self.encoding_strategy.special_tokens)
+            tokenizer = self.embeddings.tokenizer
+            tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
+            self.embeddings.model.resize_token_embeddings(len(tokenizer))
+
+            logger.info(
+                f"{self.__class__.__name__}: "
+                f"Added {', '.join(special_tokens)} as additional special tokens to {self.embeddings.name}"
+            )
 
         # Auto-spawn on GPU, if available
         self.to(flair.device)
