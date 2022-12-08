@@ -69,8 +69,8 @@ class EntityMask(EncodingStrategy):
     TODO: Write documentation
     """
 
-    def __init__(self, special_tokens: Optional[Set[str]] = None) -> None:
-        self.special_tokens = {"[HEAD]", "[TAIL]"} if special_tokens is None else special_tokens
+    def __init__(self, add_special_tokens: bool = False) -> None:
+        self.special_tokens = {"[HEAD]", "[TAIL]"} if add_special_tokens else set()
 
     def encode_head(self, head_span: Span, label: Label) -> str:
         return "[HEAD]"
@@ -99,8 +99,8 @@ class EntityMarker(EncodingStrategy):
     TODO: Write documentation
     """
 
-    def __init__(self, special_tokens: Optional[Set[str]] = None) -> None:
-        self.special_tokens = {"[HEAD]", "[\HEAD]", "[TAIL]", "[\TAIL]"} if special_tokens is None else special_tokens
+    def __init__(self, add_special_tokens: bool = False) -> None:
+        self.special_tokens = {"[HEAD]", "[\HEAD]", "[TAIL]", "[\TAIL]"} if add_special_tokens else set()
 
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
