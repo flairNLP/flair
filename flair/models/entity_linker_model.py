@@ -1,10 +1,11 @@
 import logging
-from typing import Callable, Dict, List, Set, Optional
+from typing import Callable, Dict, List, Set, Optional, Tuple, Union
 
 import torch
 
 import flair.embeddings
 import flair.nn
+from flair.training_utils import store_embeddings
 from flair.data import Dictionary, Sentence, Span, DT, DT2
 from abc import abstractmethod
 import re
@@ -12,10 +13,11 @@ from collections import defaultdict
 
 log = logging.getLogger("flair")
 
-class CandidateGenerationMethod():
+
+class CandidateGenerationMethod:
     """Abstract base class for methods that, given a mention,
-     generate a set of candidates, so that the EntityLinker only
-     scores among these candidates and not all entities
+    generate a set of candidates, so that the EntityLinker only
+    scores among these candidates and not all entities
     """
 
     @abstractmethod
@@ -23,6 +25,7 @@ class CandidateGenerationMethod():
         """Given a list of entity mentions this methods returns a constrained set of entity
         candidates for the mentions"""
         raise NotImplementedError
+
 
 class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     """
@@ -38,7 +41,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         label_dictionary: Dictionary,
         pooling_operation: str = "first_last",
         label_type: str = "nel",
-        candidate_generation_method: Optional[CandidateGenerationMethod] = None,
         **classifierargs,
     ):
         """
@@ -74,8 +76,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first_last"')
 
         self.aggregated_embedding = cases[pooling_operation]
-
-        self.candidate_generation_method = candidate_generation_method
 
         self.to(flair.device)
 
@@ -171,14 +171,15 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         # pass data points through network to get encoded data point tensor
         data_point_tensor = self._encode_data_points(sentences, data_points)
 
-        # decode
-        scores = self.decoder(data_point_tensor, data_points)
+        if isinstance(self.decoder, CandidateDecoder):
 
-        # if self.candidate_generation_method:
-        #     self._mask_scores_with_candidates(scores, data_points)
+            return self.decoder.compute_loss(data_point_tensor, data_points, label_tensor)
 
-        # calculate the loss
-        return self._calculate_loss(scores, label_tensor)
+        else:
+            scores = self.decoder(data_point_tensor)
+
+            # calculate the loss
+            return self._calculate_loss(scores, label_tensor)
 
     def predict(
         self,
@@ -247,10 +248,12 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
 
                 # pass data points through network and decode
                 data_point_tensor = self._encode_data_points(batch, data_points)
-                scores = self.decoder(data_point_tensor, data_points)
-
-                # if self.candidate_generation_method:
-                #     self._mask_scores_with_candidates(scores, data_points)
+                if isinstance(self.decoder, CandidateDecoder):
+                    scores, ids_of_candidates_from_batch = self.decoder(data_point_tensor, data_points)
+                    if ids_of_candidates_from_batch:
+                        scores = self.decoder._mask_scores_with_candidates(scores, ids_of_candidates_from_batch)
+                else:
+                    scores = self.decoder(data_point_tensor)
 
                 # if anything could possibly be predicted
                 if len(data_points) > 0:
@@ -330,18 +333,15 @@ class SimpleCandidateGenerator(CandidateGenerationMethod):
 
         return candidates_for_all_mentions
 
-class EntityDecoder(torch.nn.Module):
-    """Base class for entity linking decoders that may involve candidates
-    The class is also useful when not using candidate lists to control the dimension (and thus memory consumption) of
-    the last linear layer ("entity embeddings"), since one might have millions of entities
-    """
+
+class CandidateDecoder(torch.nn.Module):
 
     def __init__(self,
-             entity_embedding_size: int,
-             mention_embedding_size: int,
-             entity_dictionary: Dictionary,
-             candidate_generation_method: CandidateGenerationMethod = None
-    ):
+                 entity_embedding_size: int,
+                 mention_embedding_size: int,
+                 entity_dictionary: Dictionary,
+                 candidate_generation_method: CandidateGenerationMethod = None
+                 ):
         super().__init__()
 
         self.entity_dictionary = entity_dictionary  # index for each entity (title or id)
@@ -354,7 +354,20 @@ class EntityDecoder(torch.nn.Module):
 
         self.candidate_generation_method = candidate_generation_method
 
+        self.logsotfmax = torch.nn.LogSoftmax(dim=1)
+        self.nllloss = torch.nn.NLLLoss()
 
+        self.cross_entropy = torch.nn.CrossEntropyLoss()
+
+    def _find_index(self, index: int, liste: list):
+        try:
+            new_ind = liste.index(index)
+        except ValueError:
+            new_ind = len(liste)
+            liste.append(index)
+        return new_ind
+
+    # return scores for all entities and entitiy ids for the candidates depending on the respective mentions
     def forward(self, mention_embeddings, mention_spans):
 
         # project mentions in entity representation
@@ -362,90 +375,44 @@ class EntityDecoder(torch.nn.Module):
         # compute scores
         logits = self.entity_embeddings(projected_mention_embeddings)
 
-        return logits
-
-class CandidateMaskingDecoder(EntityDecoder):
-
-    def __init__(
-        self,
-            entity_embedding_size: int,
-            mention_embedding_size: int,
-            entity_dictionary: Dictionary,
-            candidate_generation_method: CandidateGenerationMethod,
-    ):
-
-        super(CandidateMaskingDecoder, self).__init__(
-            entity_embedding_size=entity_embedding_size,
-            mention_embedding_size=mention_embedding_size,
-            entity_dictionary=entity_dictionary,
-            candidate_generation_method=candidate_generation_method,
-        )
-
-    def forward(self, mention_embeddings, mention_spans):
-
         # get candidates
         entity_mentions = [span.text for span in mention_spans]
-        set_of_candidates = self.candidate_generation_method.get_candidates(entity_mentions)
 
-        if set_of_candidates:
-            ids_of_candidates = [self.entity_dictionary.get_idx_for_item(entity) for entity in
-                                     set_of_candidates]
-            # mask out (set to -inf) logits that are not in the proposed candidate set
-            masked_scores = -torch.inf * torch.ones(data_point_tensor.size(), requires_grad=True,
-                                                    device=flair.device)
-            masked_scores[:, ids_of_candidates] = scores[:, ids_of_candidates]
-            return masked_scores
+        ids_of_candidates = []
+        if self.candidate_generation_method:
+            set_of_candidates = self.candidate_generation_method.get_candidates(entity_mentions)
 
-        return scores
+            # use set here, since it might happen that entity candidates generated are not contained in the
+            # dictionary, if this is the case for more than one, one could have multiple 0 in the list
+            ids_of_candidates = set(self.entity_dictionary.get_idx_for_item(entity) for entity in
+                                     set_of_candidates)
 
-class CandidateSelectinDecoder(EntityDecoder):
+        return logits, list(ids_of_candidates)
 
-    def __init__(
-        self,
-            entity_embedding_size: int,
-            mention_embedding_size: int,
-            entity_dictionary: Dictionary,
-            candidate_generation_method: CandidateGenerationMethod,
-    ):
+    # for forward_loss
+    def compute_loss(self, data_point_tensor, data_points, label_tensor):
 
-        super(CandidateSelectionDecoder, self).__init__(
-            entity_embedding_size=entity_embedding_size,
-            mention_embedding_size=mention_embedding_size,
-            entity_dictionary=entity_dictionary,
-            candidate_generation_method=candidate_generation_method,
-        )
+        logits, ids_of_candidates_from_batch = self.forward(data_point_tensor, data_points)
 
-    def _find_index(self, index: int, liste: list):
-        try:
-            new_ind = liste.index(ind)
-        except ValueError:
-            new_ind = len(liste)
-            liste.append(ind)
-        return new_ind
+        if ids_of_candidates_from_batch:
 
-    def forward(self, mention_embeddings, mention_spans):
+            # translate the global gold ids to the constrained set of candidate ids
+            translated_gold_label_ids = torch.tensor(
+                [self._find_index(x, ids_of_candidates_from_batch) for x in label_tensor],
+                device=flair.device)
 
-        # get candidates
-        entity_mentions = [span.text for span in mention_spans]
-        labels = [span.get_label('nel').value for span in labels]
-        set_of_candidates = self.candidate_generation_method.get_candidates(entity_mentions) #TODO: what if empty?
+            logits_of_batch_candidates = logits[:, torch.tensor(
+                ids_of_candidates_from_batch)]  # take only the logits of the restricted id set
 
+            return self.cross_entropy(logits_of_batch_candidates, translated_gold_label_ids)
+        else:
+            return self.cross_entropy(logits, label_tensor)
 
-        ids_of_candidates = [self.entity_dictionary.get_idx_for_item(entity) for entity in
-                                 set_of_candidates]
+    # use this method in prediction
+    def _mask_scores_with_candidates(self, scores: torch.Tensor, indices_of_candidates: List[int]):
 
-        # ids of gold label w.r.t. to all possible entities
-        global_gold_label_ids = [self.entity_dictionary.get_idx_for_item(label[0]) for label in labels]
+        # mask out (set to -inf) logits that are not in the proposed candidate set
+        masked_scores = -torch.inf * torch.ones(scores.size(), requires_grad=True, device=flair.device)
+        masked_scores[:, indices_of_candidates] = scores[:, indices_of_candidates]
+        return masked_scores
 
-        # translate the global gold ids to the constrained set of candidate ids
-        translated_gold_label_ids = torch.tensor(
-            [self._find_index(x, ids_of_candidates) for x in global_gold_label_ids],
-            device=flair.device)
-
-        logits_of_batch_candidates = logits[:, torch.tensor(
-            ids_of_candidates)]  # take only the logits of the restricted id set
-
-        # compute crossentropy loss
-        logsoftmax = self.logsotfmax(logits_of_batch_candidates)
-
-        return self.nllloss(logsoftmax, translated_gold_label_ids), len(labels)
