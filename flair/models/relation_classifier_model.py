@@ -243,8 +243,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     The Relation Classifier Model builds upon a text classifier.
     The model generates an encoded sentence for each entity pair
     in the cross product of all entities in the original sentence.
-    In the encoded representation, the entities in the current entity pair are masked with special control tokens.
-    (For an example, see the docstring of the `_encode_sentence_for_training` function.)
+    In the encoded representation, the entities in the current entity pair are masked/marked with control tokens.
+    (For an example, see the docstrings of different encoding strategies, e.g. :class:`TypedEntityMarker`.)
     Then, for each encoded sentence, the model takes its document embedding and puts the resulting
     text representation(s) through a linear layer to get the class relation label.
 
@@ -292,7 +292,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                                    in the cross product of all entities in the original sentence.
                                    When disabling cross augmentation, the transform functions only generate
                                    encoded sentences for each gold relation annotation in the original sentence.
-        :param encoding_strategy: TODO Write documentation
+        :param encoding_strategy: An instance of a class conforming the :class:`EncodingStrategy` protocol
         :param zero_tag_value: The label to use for out-of-class relations
         :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
         :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
@@ -417,19 +417,13 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         gold_label: Optional[str] = None,
     ) -> EncodedSentence:
         """
-        Returns a new `Sentence` object with masked head and tail spans.
-        The label-aware mask is constructed from the head/tail span labels.
-        If provided, the masked sentence also has the corresponding gold label annotation in `self.label_type`.
-
-        Example:
-            For the `head=Google`, `tail=Larry Page` and
-            the sentence "Larry Page and Sergey Brin founded Google .",
-            the masked sentence is "[T-PER] and Sergey Brin founded [H-ORG]".
+        Returns a new `Sentence` object with masked/marked head and tail spans according to the encoding strategy.
+        If provided, the encoded sentence also has the corresponding gold label annotation from `self.label_type`.
 
         :param head: The head `_Entity`
         :param tail: The tail `_Entity`
         :param gold_label: An optional gold label of the induced relation by the head and tail entity
-        :return: The masked sentence (with gold annotations)
+        :return: The `EncodedSentence` (with gold annotations)
         """
         # Some sanity checks
         original_sentence: Sentence = head.span.sentence
@@ -475,10 +469,12 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         sentence: Sentence,
     ) -> Iterator[Tuple[EncodedSentence, Relation]]:
         """
-        Yields masked entity pair sentences annotated with their gold relation for all valid entity pair permutations.
-        The created masked sentences are newly created sentences with no reference to the passed sentence.
+        Yields encoded sentences annotated with their gold relation and
+        the corresponding relation object in the original sentence for all valid entity pair permutations.
+        The created encoded sentences are newly created sentences with no reference to the passed sentence.
+
         Important properties:
-            - Every sentence has exactly one masked head and tail entity token. Therefore, every encoded sentence has
+            - Every sentence has exactly one encoded head and tail entity token. Therefore, every encoded sentence has
               **exactly** one induced relation annotation, the gold annotation or `self.zero_tag_value`.
             - The created relations have head and tail spans from the original passed sentence.
 
@@ -521,8 +517,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         """
         Transforms sentences into encoded sentences specific to the `RelationClassifier`.
         For more information on the internal sentence transformation procedure,
-        see the `RelationClassifier` architecture docstring and
-        the `_encode_sentence_for_training` and `_encode_sentence_for_inference` docstrings.
+        see the :class:`RelationClassifier` architecture and
+        the different :class:`EncodingStrategy` variants docstrings.
 
         :param sentences: A (list) of sentence(s) to transform
         :return: A list of encoded sentences specific to the `RelationClassifier`
@@ -541,8 +537,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         Transforms a dataset into a dataset containing encoded sentences specific to the `RelationClassifier`.
         The returned dataset is stored in memory.
         For more information on the internal sentence transformation procedure,
-        see the `RelationClassifier` architecture docstring and
-        the `_encode_sentence_for_training` and `_encode_sentence_for_inference` docstrings.
+        see the :class:`RelationClassifier` architecture and
+        the different :class:`EncodingStrategy` variants docstrings.
 
         :param dataset: A dataset of sentences to transform
         :return: A dataset of encoded sentences specific to the `RelationClassifier`
@@ -556,8 +552,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         Transforms a corpus into a corpus containing encoded sentences specific to the `RelationClassifier`.
         The splits of the returned corpus are stored in memory.
         For more information on the internal sentence transformation procedure,
-        see the `RelationClassifier` architecture docstring and
-        the `_encode_sentence_for_training` and `_encode_sentence_for_inference` docstrings.
+        see the :class:`RelationClassifier` architecture and
+        the different :class:`EncodingStrategy` variants docstrings.
 
         :param corpus: A corpus of sentences to transform
         :return: A corpus of encoded sentences specific to the `RelationClassifier`
