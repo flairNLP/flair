@@ -46,27 +46,37 @@ class EncodedSentence(Sentence):
 @runtime_checkable
 class EncodingStrategy(Protocol):
     """
-    TODO: Write documentation
+    The :class:`EncodingStrategy` protocol defines
+    the encoding of the head and tail entities in a sentence with a relation annotation.
     """
 
     special_tokens: Set[str]
 
     def encode_head(self, head_span: Span, label: Label) -> str:
         """
-        TODO: Write documentation
+        Returns the encoded string representation of the head span.
+        Multi-token head encodings tokens are separated by a space.
         """
         ...
 
     def encode_tail(self, tail_span: Span, label: Label) -> str:
         """
-        TODO: Write documentation
+        Returns the encoded string representation of the tail span.
+        Multi-token tail encodings tokens are separated by a space.
         """
         ...
 
 
 class EntityMask(EncodingStrategy):
     """
-    TODO: Write documentation
+    An `class`:EncodingStrategy: that masks the head and tail relation entities.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "[TAIL] and Sergey Brin founded [HEAD]" -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and [TAIL] founded [HEAD]"  -> Relation(head='Google', tail='Sergey Brin').
     """
 
     def __init__(self, add_special_tokens: bool = False) -> None:
@@ -81,7 +91,14 @@ class EntityMask(EncodingStrategy):
 
 class TypedEntityMask(EncodingStrategy):
     """
-    TODO: Write documentation
+    An `class`:EncodingStrategy: that masks the head and tail relation entities with their label.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "[TAIL-PER] and Sergey Brin founded [HEAD-ORG]" -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and [TAIL-PER] founded [HEAD-ORG]"  -> Relation(head='Google', tail='Sergey Brin').
     """
 
     def __init__(self) -> None:
@@ -96,7 +113,16 @@ class TypedEntityMask(EncodingStrategy):
 
 class EntityMarker(EncodingStrategy):
     """
-    TODO: Write documentation
+    An `class`:EncodingStrategy: that marks the head and tail relation entities.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "[HEAD] Larry Page [/HEAD] and Sergey Brin founded [TAIL] Google [\TAIL]"
+            -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and [HEAD] Sergey Brin [/HEAD] founded [TAIL] Google [\TAIL]"
+            -> Relation(head='Google', tail='Sergey Brin').
     """
 
     def __init__(self, add_special_tokens: bool = False) -> None:
@@ -113,7 +139,16 @@ class EntityMarker(EncodingStrategy):
 
 class TypedEntityMarker(EncodingStrategy):
     """
-    TODO: Write documentation
+    An `class`:EncodingStrategy: that marks the head and tail relation entities with their label.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "[HEAD-PER] Larry Page [/HEAD-PER] and Sergey Brin founded [TAIL-ORG] Google [\TAIL-ORG]"
+            -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and [HEAD-PER] Sergey Brin [/HEAD-PER] founded [TAIL-ORG] Google [\TAIL-ORG]"
+            -> Relation(head='Google', tail='Sergey Brin').
     """
 
     def __init__(self) -> None:
@@ -130,7 +165,14 @@ class TypedEntityMarker(EncodingStrategy):
 
 class EntityMarkerPunct(EncodingStrategy):
     """
-    TODO: Write documentation
+    An alternate version of `class`:EntityMarker: with punctuations as control tokens.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "@ Larry Page @ and Sergey Brin founded # Google #" -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and @ Sergey Brin @ founded # Google #" -> Relation(head='Google', tail='Sergey Brin').
     """
 
     def __init__(self) -> None:
@@ -147,7 +189,16 @@ class EntityMarkerPunct(EncodingStrategy):
 
 class TypedEntityMarkerPunct(EncodingStrategy):
     """
-    TODO: Write documentation
+    An alternate version of `class`:TypedEntityMarker: with punctuations as control tokens.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "@ * PER * Larry Page @ and Sergey Brin founded # * ORG * Google #"
+            -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and @ * PER * Sergey Brin @ founded # * ORG * Google #"
+            -> Relation(head='Google', tail='Sergey Brin').
     """
 
     def __init__(self) -> None:
