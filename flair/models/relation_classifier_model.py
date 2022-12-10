@@ -410,7 +410,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
             yield head, tail, gold_label
 
-    def _create_masked_sentence(
+    def _encode_sentence(
         self,
         head: _Entity,
         tail: _Entity,
@@ -439,38 +439,41 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         non_leading_head_tokens: List[Token] = head.span.tokens[1:]
         non_leading_tail_tokens: List[Token] = tail.span.tokens[1:]
 
-        # We can not use the plaintext of the head/tail span in the sentence as the mask
+        # We can not use the plaintext of the head/tail span in the sentence as the mask/marker
         # since there may be multiple occurrences of the same entity mentioned in the sentence.
         # Therefore, we use the span's position in the sentence.
-        masked_sentence_tokens: List[str] = []
+        encoded_sentence_tokens: List[str] = []
         for token in original_sentence:
 
             if token is head.span[0]:
-                masked_sentence_tokens.append(self.encoding_strategy.encode_head(head.span, head.label))
+                encoded_sentence_tokens.append(self.encoding_strategy.encode_head(head.span, head.label))
 
             elif token is tail.span[0]:
-                masked_sentence_tokens.append(self.encoding_strategy.encode_tail(tail.span, tail.label))
+                encoded_sentence_tokens.append(self.encoding_strategy.encode_tail(tail.span, tail.label))
 
             elif all(
                 token is not non_leading_entity_token
                 for non_leading_entity_token in itertools.chain(non_leading_head_tokens, non_leading_tail_tokens)
             ):
-                masked_sentence_tokens.append(token.text)
+                encoded_sentence_tokens.append(token.text)
 
         # Create masked sentence
-        masked_sentence: EncodedSentence = EncodedSentence(
-            " ".join(masked_sentence_tokens), use_tokenizer=SpaceTokenizer()
+        encoded_sentence: EncodedSentence = EncodedSentence(
+            " ".join(encoded_sentence_tokens), use_tokenizer=SpaceTokenizer()
         )
 
         if gold_label is not None:
             # Add gold relation annotation as sentence label
             # Using the sentence label instead of annotating a separate `Relation` object is easier to manage since,
             # during prediction, the forward pass does not need any knowledge about the entities in the sentence.
-            masked_sentence.add_label(typename=self.label_type, value=gold_label, score=1.0)
+            encoded_sentence.add_label(typename=self.label_type, value=gold_label, score=1.0)
 
-        return masked_sentence
+        return encoded_sentence
 
-    def _encode_sentence_for_inference(self, sentence: Sentence) -> Iterator[Tuple[EncodedSentence, Relation]]:
+    def _encode_sentence_for_inference(
+        self,
+        sentence: Sentence,
+    ) -> Iterator[Tuple[EncodedSentence, Relation]]:
         """
         Yields masked entity pair sentences annotated with their gold relation for all valid entity pair permutations.
         The created masked sentences are newly created sentences with no reference to the passed sentence.
@@ -479,19 +482,12 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
               **exactly** one induced relation annotation, the gold annotation or `self.zero_tag_value`.
             - The created relations have head and tail spans from the original passed sentence.
 
-        Example:
-            For the `founded_by` relation from `ORG` to `PER` and
-            the sentence "Larry Page and Sergey Brin founded Google .",
-            the masked sentences and relations are
-            - "[T-PER] and Sergey Brin founded [H-ORG]" -> Relation(head='Google', tail='Larry Page')  and
-            - "Larry Page and [T-PER] founded [H-ORG]"  -> Relation(head='Google', tail='Sergey Brin').
-
         :param sentence: A flair `Sentence` object with entity annotations
         :return: Encoded sentences annotated with their gold relation and
                  the corresponding relation in the original sentence
         """
         for head, tail, gold_label in self._entity_pair_permutations(sentence):
-            masked_sentence: EncodedSentence = self._create_masked_sentence(
+            masked_sentence: EncodedSentence = self._encode_sentence(
                 head=head,
                 tail=tail,
                 gold_label=gold_label if gold_label is not None else self.zero_tag_value,
@@ -513,7 +509,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                 else:
                     continue  # Skip generated data points that do not express an originally annotated relation
 
-            masked_sentence: EncodedSentence = self._create_masked_sentence(
+            masked_sentence: EncodedSentence = self._encode_sentence(
                 head=head,
                 tail=tail,
                 gold_label=gold_label,
