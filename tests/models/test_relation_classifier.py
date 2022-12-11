@@ -10,9 +10,9 @@ from flair.embeddings import TransformerDocumentEmbeddings
 from flair.models import RelationClassifier
 from flair.models.relation_classifier_model import (
     EncodedSentence,
+    EncodingStrategy,
     EntityMask,
     TypedEntityMask,
-    EncodingStrategy,
 )
 from tests.model_test_utils import BaseModelTest
 
