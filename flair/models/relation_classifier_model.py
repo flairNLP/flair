@@ -248,6 +248,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     Then, for each encoded sentence, the model takes its document embedding and puts the resulting
     text representation(s) through a linear layer to get the class relation label.
 
+    The implemented encoding strategies are taken from this paper by Zhou et al.: https://arxiv.org/abs/2102.01373
+
     Note: Currently, the model has no multi-label support.
     """
 
