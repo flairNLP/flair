@@ -109,6 +109,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         model_state = {
             **super()._get_state_dict(),
             "word_embeddings": self.embeddings,
+            "span_embeddings": self.span_embeddings,
             "label_type": self.label_type,
             "label_dictionary": self.label_dictionary,
             "pooling_operation": self.pooling_operation,
@@ -157,6 +158,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         return super()._init_model_with_state_dict(
             state,
             embeddings=state.get("word_embeddings"),
+            span_embeddings=state.get("span_embeddings", None),
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type"),
             pooling_operation=state.get("pooling_operation"),
