@@ -176,7 +176,7 @@ class EntityMarkerPunct(EncodingStrategy):
     """
 
     def __init__(self) -> None:
-        self.special_tokens = set()
+        self.special_tokens: Set[str] = set()
 
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
@@ -202,7 +202,7 @@ class TypedEntityMarkerPunct(EncodingStrategy):
     """
 
     def __init__(self) -> None:
-        self.special_tokens = set()
+        self.special_tokens: Set[str] = set()
 
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
