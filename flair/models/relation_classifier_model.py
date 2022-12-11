@@ -11,12 +11,12 @@ from typing import (
     List,
     NamedTuple,
     Optional,
+    Protocol,
     Sequence,
     Set,
     Tuple,
     Union,
     cast,
-    Protocol,
     runtime_checkable,
 )
 
