@@ -112,7 +112,7 @@ class TypedEntityMask(EncodingStrategy):
 
 
 class EntityMarker(EncodingStrategy):
-    """
+    r"""
     An `class`:EncodingStrategy: that marks the head and tail relation entities.
 
     Example:
@@ -126,19 +126,19 @@ class EntityMarker(EncodingStrategy):
     """
 
     def __init__(self, add_special_tokens: bool = False) -> None:
-        self.special_tokens = {"[HEAD]", "[\HEAD]", "[TAIL]", "[\TAIL]"} if add_special_tokens else set()
+        self.special_tokens = {"[HEAD]", r"[\HEAD]", "[TAIL]", r"[\TAIL]"} if add_special_tokens else set()
 
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
-        return f"[HEAD] {space_tokenized_text} [/HEAD]"
+        return rf"[HEAD] {space_tokenized_text} [/HEAD]"
 
     def encode_tail(self, tail: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in tail)
-        return f"[TAIL] {space_tokenized_text} [/TAIL]"
+        return rf"[TAIL] {space_tokenized_text} [/TAIL]"
 
 
 class TypedEntityMarker(EncodingStrategy):
-    """
+    r"""
     An `class`:EncodingStrategy: that marks the head and tail relation entities with their label.
 
     Example:
@@ -156,11 +156,11 @@ class TypedEntityMarker(EncodingStrategy):
 
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
-        return f"[HEAD-{label.value}] {space_tokenized_text} [/HEAD-{label.value}]"
+        return rf"[HEAD-{label.value}] {space_tokenized_text} [/HEAD-{label.value}]"
 
     def encode_tail(self, tail: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in tail)
-        return f"[TAIL-{label.value}] {space_tokenized_text} [/TAIL-{label.value}]"
+        return rf"[TAIL-{label.value}] {space_tokenized_text} [/TAIL-{label.value}]"
 
 
 class EntityMarkerPunct(EncodingStrategy):
@@ -725,13 +725,17 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 def inspect_relations(
     corpus: Corpus[Sentence],
     relation_label_type: str,
-    entity_label_types: Optional[Union[Sequence[str], str]] = None,
-) -> DefaultDict[str, Counter[Tuple[str, str]]]:
-    if entity_label_types is not None and not isinstance(entity_label_types, Sequence):
-        entity_label_types = [entity_label_types]
+    entity_label_types: Optional[Union[Set[Union[None, str]], str]] = None,
+) -> Tuple[DefaultDict[str, Counter[Tuple[str, str]]], Counter[str]]:
+
+    if entity_label_types is None:
+        entity_label_types = {None}
+    elif not isinstance(entity_label_types, Set):
+        entity_label_types = {entity_label_types}
 
     # Dictionary of [<relation label>, <counter of relation entity labels (HEAD, TAIL)>]
     relations: DefaultDict[str, Counter[Tuple[str, str]]] = co.defaultdict(co.Counter)
+    entity_word_counter = co.Counter()
 
     data_loader: DataLoader = DataLoader(
         ConcatDataset(split for split in [corpus.train, corpus.dev, corpus.test] if split is not None),
@@ -742,19 +746,23 @@ def inspect_relations(
         for relation in sentence.get_relations(relation_label_type):
             entity_counter = relations[relation.get_label(relation_label_type).value]
 
-            head_relation_label: str
-            tail_relation_label: str
-            if entity_label_types is None:
-                head_relation_label = relation.first.get_label().value
-                tail_relation_label = relation.second.get_label().value
-            else:
-                head_relation_label = next(
-                    relation.first.get_label(label_type).value for label_type in entity_label_types
-                )
-                tail_relation_label = next(
-                    relation.second.get_label(label_type).value for label_type in entity_label_types
-                )
+            head_relation_label = next(relation.first.get_label(label_type).value for label_type in entity_label_types)
+            tail_relation_label = next(relation.second.get_label(label_type).value for label_type in entity_label_types)
 
             entity_counter.update([(head_relation_label, tail_relation_label)])
+            entity_word_counter.update([(relation.first.text, relation.second.text)])
 
-    return relations
+    return relations, entity_word_counter
+
+
+def infer_entity_pair_labels(
+    corpus: Corpus[Sentence],
+    relation_label_type: str,
+    entity_label_types: Optional[Union[Set[str], str]] = None,
+) -> Set[Tuple[str, str]]:
+
+    relations, _ = inspect_relations(corpus, relation_label_type, entity_label_types)
+    entity_pair_labels: Set[Tuple[str, str]] = {
+        entity_pair for entity_pair_counter in relations.values() for entity_pair in entity_pair_counter.keys()
+    }
+    return entity_pair_labels
