@@ -123,6 +123,7 @@ class ModelTrainer:
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
         scheduler_state_dict: Optional[Dict[str, Any]] = None,
         save_optimizer_state: bool = False,
+        shuffle_first_epoch: bool = False,
         **kwargs,
     ) -> dict:
         """
@@ -479,10 +480,14 @@ class ModelTrainer:
 
                 start_time = time.time()
 
+                shuffle_data_this_epoch = shuffle
+                if not shuffle_first_epoch and epoch == 1:
+                    shuffle_data_this_epoch = False
+
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
-                    shuffle=shuffle if epoch > 1 else False,  # never shuffle the first epoch
+                    shuffle=shuffle_data_this_epoch,  
                     num_workers=0 if num_workers is None else num_workers,
                     sampler=sampler,
                     drop_last=True
