@@ -164,9 +164,11 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
 @register_embeddings
 class DocumentTFIDFEmbeddings(DocumentEmbeddings):
+
     def __init__(
         self,
-        train_dataset,
+        train_dataset: List[Sentence],
+        vectorizer: Optional[TfidfVectorizer] = None,
         **vectorizer_params,
     ):
         """The constructor for DocumentTFIDFEmbeddings.
@@ -177,8 +179,13 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
 
         import numpy as np
 
-        self.vectorizer = TfidfVectorizer(dtype=np.float32, **vectorizer_params)
-        self.vectorizer.fit([s.to_original_text() for s in train_dataset])
+        if vectorizer is not None:
+            self.vectorizer = vectorizer
+            if len(train_dataset) > 0:
+                raise ValueError("Cannot initialize document tfidf embeddings with a vectorizer and with a dataset")
+        else:
+            self.vectorizer = TfidfVectorizer(dtype=np.float32, **vectorizer_params)
+            self.vectorizer.fit([s.to_original_text() for s in train_dataset])
 
         self.__embedding_length: int = len(self.vectorizer.vocabulary_)
 
@@ -206,6 +213,15 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
+
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "DocumentTFIDFEmbeddings":
+        return cls(train_dataset=[], vectorizer=params["vectorizer"])
+
+    def to_params(self) -> Dict[str, Any]:
+        return {
+            "vectorizer": self.vectorizer,
+        }
 
 
 @register_embeddings
