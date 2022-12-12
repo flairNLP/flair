@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Union, cast, Optional
+from typing import Any, Dict, List, Optional, Union, cast
 
 import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -164,7 +164,6 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
 @register_embeddings
 class DocumentTFIDFEmbeddings(DocumentEmbeddings):
-
     def __init__(
         self,
         train_dataset: List[Sentence],
@@ -542,13 +541,11 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         self,
         model: str = "bert-base-nli-mean-tokens",
         batch_size: int = 1,
-        convert_to_numpy: bool = False,
     ):
         """
         :param model: string name of models from SentencesTransformer Class
         :param name: string name of embedding type which will be set to Sentence object
         :param batch_size: int number of sentences to processed in one batch
-        :param convert_to_numpy: bool whether the encode() returns a numpy array or PyTorch tensor
         """
         super().__init__()
 
@@ -561,10 +558,12 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
             log.warning("-" * 100)
             pass
 
-        self.model = SentenceTransformer(model)
+        self.model_name = model
+        self.model = SentenceTransformer(
+            model, cache_folder=str(flair.cache_root / "embeddings" / "sentence-transformer")
+        )
         self.name = "sentence-transformers-" + str(model)
         self.batch_size = batch_size
-        self.convert_to_numpy = convert_to_numpy
         self.static_embeddings = True
         self.eval()
 
@@ -585,7 +584,7 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         # convert to plain strings, embedded in a list for the encode function
         sentences_plain_text = [sentence.to_plain_string() for sentence in sentences]
 
-        embeddings = self.model.encode(sentences_plain_text, convert_to_numpy=self.convert_to_numpy)
+        embeddings = self.model.encode(sentences_plain_text, convert_to_numpy=False)
         for sentence, embedding in zip(sentences, embeddings):
             sentence.set_embedding(self.name, embedding)
 
@@ -593,6 +592,16 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         """Returns the length of the embedding vector."""
         return self.model.get_sentence_embedding_dimension()
+
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "SentenceTransformerDocumentEmbeddings":
+        return cls(**params)
+
+    def to_params(self) -> Dict[str, Any]:
+        return {
+            "model": self.model_name,
+            "batch_size": self.batch_size,
+        }
 
 
 @register_embeddings
