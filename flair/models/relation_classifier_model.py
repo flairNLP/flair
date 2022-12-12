@@ -1,6 +1,7 @@
 import collections as co
 import itertools
 import logging
+from abc import ABC, abstractmethod
 from operator import itemgetter
 from typing import (
     Any,
@@ -20,7 +21,6 @@ from typing import (
 
 import torch
 from torch.utils.data.dataset import ConcatDataset, Dataset
-from typing_extensions import Protocol, runtime_checkable
 
 import flair
 from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
@@ -42,15 +42,18 @@ class EncodedSentence(Sentence):
     pass
 
 
-@runtime_checkable
-class EncodingStrategy(Protocol):
+class EncodingStrategy(ABC):
     """
     The :class:`EncodingStrategy` protocol defines
     the encoding of the head and tail entities in a sentence with a relation annotation.
     """
 
-    special_tokens: Set[str]
+    special_tokens: Set[str] = set()
 
+    def __init__(self, add_special_tokens: bool = False) -> None:
+        self.add_special_tokens = add_special_tokens
+
+    @abstractmethod
     def encode_head(self, head_span: Span, label: Label) -> str:
         """
         Returns the encoded string representation of the head span.
@@ -58,6 +61,7 @@ class EncodingStrategy(Protocol):
         """
         ...
 
+    @abstractmethod
     def encode_tail(self, tail_span: Span, label: Label) -> str:
         """
         Returns the encoded string representation of the tail span.
@@ -78,8 +82,7 @@ class EntityMask(EncodingStrategy):
         - "Larry Page and [TAIL] founded [HEAD]"  -> Relation(head='Google', tail='Sergey Brin').
     """
 
-    def __init__(self, add_special_tokens: bool = False) -> None:
-        self.special_tokens = {"[HEAD]", "[TAIL]"} if add_special_tokens else set()
+    special_tokens: Set[str] = {"[HEAD]", "[TAIL]"}
 
     def encode_head(self, head_span: Span, label: Label) -> str:
         return "[HEAD]"
@@ -99,9 +102,6 @@ class TypedEntityMask(EncodingStrategy):
         - "[TAIL-PER] and Sergey Brin founded [HEAD-ORG]" -> Relation(head='Google', tail='Larry Page')  and
         - "Larry Page and [TAIL-PER] founded [HEAD-ORG]"  -> Relation(head='Google', tail='Sergey Brin').
     """
-
-    def __init__(self) -> None:
-        self.special_tokens: Set[str] = set()
 
     def encode_head(self, head: Span, label: Label) -> str:
         return f"[HEAD-{label.value}]"
@@ -124,8 +124,7 @@ class EntityMarker(EncodingStrategy):
             -> Relation(head='Google', tail='Sergey Brin').
     """
 
-    def __init__(self, add_special_tokens: bool = False) -> None:
-        self.special_tokens = {"[HEAD]", "[/HEAD]", "[TAIL]", "[/TAIL]"} if add_special_tokens else set()
+    special_tokens: Set[str] = {"[HEAD]", "[/HEAD]", "[TAIL]", "[/TAIL]"}
 
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
@@ -150,9 +149,6 @@ class TypedEntityMarker(EncodingStrategy):
             -> Relation(head='Google', tail='Sergey Brin').
     """
 
-    def __init__(self) -> None:
-        self.special_tokens: Set[str] = set()
-
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
         return f"[HEAD-{label.value}] {space_tokenized_text} [/HEAD-{label.value}]"
@@ -173,9 +169,6 @@ class EntityMarkerPunct(EncodingStrategy):
         - "@ Larry Page @ and Sergey Brin founded # Google #" -> Relation(head='Google', tail='Larry Page')  and
         - "Larry Page and @ Sergey Brin @ founded # Google #" -> Relation(head='Google', tail='Sergey Brin').
     """
-
-    def __init__(self) -> None:
-        self.special_tokens: Set[str] = set()
 
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
@@ -199,9 +192,6 @@ class TypedEntityMarkerPunct(EncodingStrategy):
         - "Larry Page and @ * PER * Sergey Brin @ founded # * ORG * Google #"
             -> Relation(head='Google', tail='Sergey Brin').
     """
-
-    def __init__(self) -> None:
-        self.special_tokens: Set[str] = set()
 
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
@@ -331,7 +321,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         self.encoding_strategy = encoding_strategy
 
         # Add the special tokens from the encoding strategy
-        if self.encoding_strategy.special_tokens and isinstance(self.embeddings, TransformerDocumentEmbeddings):
+        if (
+            self.encoding_strategy.add_special_tokens
+            and self.encoding_strategy.special_tokens
+            and isinstance(self.embeddings, TransformerDocumentEmbeddings)
+        ):
             special_tokens: List[str] = list(self.encoding_strategy.special_tokens)
             tokenizer = self.embeddings.tokenizer
             tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
