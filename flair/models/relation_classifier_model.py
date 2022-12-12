@@ -112,42 +112,42 @@ class TypedEntityMask(EncodingStrategy):
 
 
 class EntityMarker(EncodingStrategy):
-    r"""
+    """
     An `class`:EncodingStrategy: that marks the head and tail relation entities.
 
     Example:
         For the `founded_by` relation from `ORG` to `PER` and
         the sentence "Larry Page and Sergey Brin founded Google .",
         the encoded sentences and relations are
-        - "[HEAD] Larry Page [/HEAD] and Sergey Brin founded [TAIL] Google [\TAIL]"
+        - "[HEAD] Larry Page [/HEAD] and Sergey Brin founded [TAIL] Google [/TAIL]"
             -> Relation(head='Google', tail='Larry Page')  and
-        - "Larry Page and [HEAD] Sergey Brin [/HEAD] founded [TAIL] Google [\TAIL]"
+        - "Larry Page and [HEAD] Sergey Brin [/HEAD] founded [TAIL] Google [/TAIL]"
             -> Relation(head='Google', tail='Sergey Brin').
     """
 
     def __init__(self, add_special_tokens: bool = False) -> None:
-        self.special_tokens = {"[HEAD]", r"[\HEAD]", "[TAIL]", r"[\TAIL]"} if add_special_tokens else set()
+        self.special_tokens = {"[HEAD]", "[\HEAD]", "[TAIL]", "[\TAIL]"} if add_special_tokens else set()
 
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
-        return rf"[HEAD] {space_tokenized_text} [/HEAD]"
+        return f"[HEAD] {space_tokenized_text} [/HEAD]"
 
     def encode_tail(self, tail: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in tail)
-        return rf"[TAIL] {space_tokenized_text} [/TAIL]"
+        return f"[TAIL] {space_tokenized_text} [/TAIL]"
 
 
 class TypedEntityMarker(EncodingStrategy):
-    r"""
+    """
     An `class`:EncodingStrategy: that marks the head and tail relation entities with their label.
 
     Example:
         For the `founded_by` relation from `ORG` to `PER` and
         the sentence "Larry Page and Sergey Brin founded Google .",
         the encoded sentences and relations are
-        - "[HEAD-PER] Larry Page [/HEAD-PER] and Sergey Brin founded [TAIL-ORG] Google [\TAIL-ORG]"
+        - "[HEAD-PER] Larry Page [/HEAD-PER] and Sergey Brin founded [TAIL-ORG] Google [/TAIL-ORG]"
             -> Relation(head='Google', tail='Larry Page')  and
-        - "Larry Page and [HEAD-PER] Sergey Brin [/HEAD-PER] founded [TAIL-ORG] Google [\TAIL-ORG]"
+        - "Larry Page and [HEAD-PER] Sergey Brin [/HEAD-PER] founded [TAIL-ORG] Google [/TAIL-ORG]"
             -> Relation(head='Google', tail='Sergey Brin').
     """
 
@@ -156,11 +156,11 @@ class TypedEntityMarker(EncodingStrategy):
 
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
-        return rf"[HEAD-{label.value}] {space_tokenized_text} [/HEAD-{label.value}]"
+        return f"[HEAD-{label.value}] {space_tokenized_text} [/HEAD-{label.value}]"
 
     def encode_tail(self, tail: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in tail)
-        return rf"[TAIL-{label.value}] {space_tokenized_text} [/TAIL-{label.value}]"
+        return f"[TAIL-{label.value}] {space_tokenized_text} [/TAIL-{label.value}]"
 
 
 class EntityMarkerPunct(EncodingStrategy):
