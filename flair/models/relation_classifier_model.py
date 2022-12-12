@@ -11,17 +11,16 @@ from typing import (
     List,
     NamedTuple,
     Optional,
-    Protocol,
     Sequence,
     Set,
     Tuple,
     Union,
     cast,
-    runtime_checkable,
 )
 
 import torch
 from torch.utils.data.dataset import ConcatDataset, Dataset
+from typing_extensions import Protocol, runtime_checkable
 
 import flair
 from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
