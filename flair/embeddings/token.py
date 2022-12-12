@@ -2,6 +2,7 @@ import hashlib
 import logging
 import os
 import re
+import tempfile
 from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -11,16 +12,17 @@ import numpy as np
 import torch
 from bpemb import BPEmb
 from gensim.models import KeyedVectors
+from gensim.models.fasttext import FastTextKeyedVectors, load_facebook_vectors
 from torch import nn
 
 import flair
-from flair.data import Corpus, Dictionary, Sentence, Token, _iter_dataset
+from flair.data import Corpus, Dictionary, Sentence, _iter_dataset
 from flair.embeddings.base import TokenEmbeddings, load_embeddings, register_embeddings
 from flair.embeddings.transformer import (
     TransformerEmbeddings,
     TransformerOnnxWordEmbeddings,
 )
-from flair.file_utils import cached_path, instance_lru_cache, open_inside_zip, extract_single_zip_file
+from flair.file_utils import cached_path, extract_single_zip_file, instance_lru_cache
 
 log = logging.getLogger("flair")
 
@@ -66,7 +68,7 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
 class StackedEmbeddings(TokenEmbeddings):
     """A stack of embeddings, used if you need to combine several different embedding types."""
 
-    def __init__(self, embeddings: List[TokenEmbeddings]):
+    def __init__(self, embeddings: List[TokenEmbeddings], overwrite_names: bool = True):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -74,7 +76,8 @@ class StackedEmbeddings(TokenEmbeddings):
 
         # IMPORTANT: add embeddings as torch modules
         for i, embedding in enumerate(embeddings):
-            embedding.name = f"{str(i)}-{embedding.name}"
+            if overwrite_names:
+                embedding.name = f"{str(i)}-{embedding.name}"
             self.add_module(f"list_embedding_{str(i)}", embedding)
 
         self.name: str = "Stack"
@@ -87,6 +90,7 @@ class StackedEmbeddings(TokenEmbeddings):
         self.__embedding_length: int = 0
         for embedding in embeddings:
             self.__embedding_length += embedding.embedding_length
+        self.eval()
 
     def embed(self, sentences: Union[Sentence, List[Sentence]], static_embeddings: bool = True):
         # if only one sentence is passed, convert to list of sentence
@@ -135,7 +139,7 @@ class StackedEmbeddings(TokenEmbeddings):
     @classmethod
     def from_params(cls, params):
         embeddings = [load_embeddings(p) for p in params["embeddings"]]
-        return cls(embeddings=embeddings)
+        return cls(embeddings=embeddings, overwrite_names=False)
 
     def to_params(self):
         return {"embeddings": [emb.save_embedding(use_state_dict=False) for emb in self.embeddings]}
@@ -1019,7 +1023,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 class FastTextEmbeddings(TokenEmbeddings):
     """FastText Embeddings with oov functionality"""
 
-    def __init__(self, embeddings: str, use_local: bool = True, field: str = None):
+    def __init__(self, embeddings: str, use_local: bool = True, field: str = None, name: Optional[str] = None):
         """
         Initializes fasttext word embeddings. Constructor downloads required embedding file and stores in cache
         if use_local is False.
@@ -1044,9 +1048,10 @@ class FastTextEmbeddings(TokenEmbeddings):
 
         self.static_embeddings = True
 
-        self.precomputed_word_embeddings: gensim.models.FastText = gensim.models.FastText.load_fasttext_format(
-            str(embeddings)
-        )
+        if embeddings_path.suffix == ".bin":
+            self.precomputed_word_embeddings: FastTextKeyedVectors = load_facebook_vectors(str(embeddings_path))
+        else:
+            self.precomputed_word_embeddings = FastTextKeyedVectors.load(str(embeddings_path))
 
         self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
 
@@ -1059,10 +1064,7 @@ class FastTextEmbeddings(TokenEmbeddings):
 
     @instance_lru_cache(maxsize=10000, typed=False)
     def get_cached_vec(self, word: str) -> torch.Tensor:
-        try:
-            word_embedding = self.precomputed_word_embeddings.wv[word]
-        except IndexError:
-            word_embedding = np.zeros(self.embedding_length, dtype="float")
+        word_embedding = self.precomputed_word_embeddings.get_vector(word)
 
         word_embedding = torch.tensor(word_embedding.tolist(), device=flair.device, dtype=torch.float)
         return word_embedding
@@ -1089,6 +1091,22 @@ class FastTextEmbeddings(TokenEmbeddings):
 
     def extra_repr(self):
         return f"'{self.embeddings}'"
+
+    @classmethod
+    def from_params(cls, params):
+        fasttext_binary = params.pop("fasttext_binary")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            out_path = temp_path / "fasttext.model"
+            out_path.write_bytes(fasttext_binary)
+            return cls(**params, embeddings=str(out_path), use_local=True)
+
+    def to_params(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            out_path = temp_path / "fasttext.model"
+            self.precomputed_word_embeddings.save(str(out_path))
+            return {"name": self.name, "field": self.field, "fasttext_binary": out_path.read_bytes()}
 
 
 @register_embeddings
@@ -1181,6 +1199,18 @@ class OneHotEmbeddings(TokenEmbeddings):
 
         return cls(vocab_dictionary, field=field, **kwargs)
 
+    @classmethod
+    def from_params(cls, params):
+        return cls(**params)
+
+    def to_params(self):
+        return {
+            "vocab_dictionary": self.vocab_dictionary,
+            "field": self.field,
+            "embedding_length": self.__embedding_length,
+            "stable": self.layer_norm is not None,
+        }
+
 
 @register_embeddings
 class HashEmbeddings(TokenEmbeddings):
@@ -1234,6 +1264,17 @@ class HashEmbeddings(TokenEmbeddings):
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def from_params(cls, params):
+        return cls(**params)
+
+    def to_params(self):
+        return {
+            "num_embeddings": self.num_embeddings,
+            "embedding_length": self.embedding_length,
+            "hash_method": self.__hash_method,
+        }
 
 
 @register_embeddings
@@ -1325,9 +1366,23 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
     def __str__(self):
         return self.name
 
+    @classmethod
+    def from_params(cls, params):
+        return cls()
+
+    def to_params(self):
+        return {}
+
 
 # TODO: keep for backwards compatibility, but remove in future
 class BPEmbSerializable(BPEmb):
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # save the sentence piece model as binary file (not as path which may change)
+        state["spm_model_binary"] = open(self.model_file, mode="rb").read()
+        state["spm"] = None
+        return state
+
     def __setstate__(self, state):
         from bpemb.util import sentencepiece_load
 
@@ -1361,6 +1416,7 @@ class BytePairEmbeddings(TokenEmbeddings):
         cache_dir=None,
         model_file_path: Path = None,
         embedding_file_path: Path = None,
+        name: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -1390,6 +1446,8 @@ class BytePairEmbeddings(TokenEmbeddings):
 
         if not language:
             self.name = f"bpe-custom-{self.embedder.vs}-{self.embedder.dim}"
+        if name is not None:
+            self.name = name
         self.static_embeddings = True
 
         self.__embedding_length: int = self.embedder.emb.vector_size * 2
@@ -1425,150 +1483,26 @@ class BytePairEmbeddings(TokenEmbeddings):
     def extra_repr(self):
         return "model={}".format(self.name)
 
+    @classmethod
+    def from_params(cls, params):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            model_file_path = temp_path / "model.spm"
+            model_file_path.write_bytes(params["spm_model_binary"])
+            embedding_file_path = temp_path / "word2vec.bin"
+            embedding_file_path.write_bytes(params["word2vec_binary"])
+            return cls(name=params["name"], model_file_path=model_file_path, embedding_file_path=embedding_file_path)
 
-@register_embeddings
-class ELMoEmbeddings(TokenEmbeddings):
-    """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018.
-    ELMo word vectors can be constructed by combining layers in different ways.
-    Default is to concatene the top 3 layers in the LM."""
+    def to_params(self):
+        if not self.embedder.emb_file.exists():
+            self.embedder.emb_file = self.embedder.emb_file.with_suffix(".bin")
+            self.embedder.emb.save_word2vec_format(str(self.embedder.emb_file), binary=True)
 
-    def __init__(
-        self,
-        model: str = "original",
-        options_file: str = None,
-        weight_file: str = None,
-        embedding_mode: str = "all",
-    ):
-        super().__init__()
-
-        self.instance_parameters = self.get_instance_parameters(locals=locals())
-
-        try:
-            import allennlp.commands.elmo
-        except ModuleNotFoundError:
-            log.warning("-" * 100)
-            log.warning('ATTENTION! The library "allennlp" is not installed!')
-            log.warning('To use ELMoEmbeddings, please first install with "pip install allennlp==0.9.0"')
-            log.warning("-" * 100)
-            pass
-
-        assert embedding_mode in ["all", "top", "average"]
-
-        self.name = f"elmo-{model}-{embedding_mode}"
-        self.static_embeddings = True
-
-        if not options_file or not weight_file:
-            # the default model for ELMo is the 'original' model, which is very large
-            options_file = allennlp.commands.elmo.DEFAULT_OPTIONS_FILE
-            weight_file = allennlp.commands.elmo.DEFAULT_WEIGHT_FILE
-            # alternatively, a small, medium or portuguese model can be selected by passing the appropriate mode name
-            if model == "small":
-                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_options.json"
-                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_weights.hdf5"
-            if model == "medium":
-                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_options.json"
-                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_weights.hdf5"
-            if model in ["large", "5.5B"]:
-                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json"
-                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5"
-            if model == "pt" or model == "portuguese":
-                options_file = (
-                    "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_options.json"
-                )
-                weight_file = (
-                    "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_weights.hdf5"
-                )
-            if model == "pubmed":
-                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json"
-                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5"
-
-        if embedding_mode == "all":
-            self.embedding_mode_fn = self.use_layers_all
-        elif embedding_mode == "top":
-            self.embedding_mode_fn = self.use_layers_top
-        elif embedding_mode == "average":
-            self.embedding_mode_fn = self.use_layers_average
-
-            # put on Cuda if available
-        from flair import device
-
-        if re.fullmatch(r"cuda:[0-9]+", str(device)):
-            cuda_device = int(str(device).split(":")[-1])
-        elif str(device) == "cpu":
-            cuda_device = -1
-        else:
-            cuda_device = 0
-
-        self.ee = allennlp.commands.elmo.ElmoEmbedder(
-            options_file=options_file, weight_file=weight_file, cuda_device=cuda_device
-        )
-
-        # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence([Token("hello")])
-        embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(embedded_dummy[0][0].get_embedding())
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def use_layers_all(self, x):
-        return torch.cat(x, 0)
-
-    def use_layers_top(self, x):
-        return x[-1]
-
-    def use_layers_average(self, x):
-        return torch.mean(torch.stack(x), 0)
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        # ELMoEmbeddings before Release 0.5 did not set self.embedding_mode_fn
-        if not getattr(self, "embedding_mode_fn", None):
-            self.embedding_mode_fn = self.use_layers_all
-
-        sentence_words: List[List[str]] = []
-        for sentence in sentences:
-            sentence_words.append([token.text for token in sentence])
-
-        embeddings = self.ee.embed_batch(sentence_words)
-
-        for i, sentence in enumerate(sentences):
-
-            sentence_embeddings = embeddings[i]
-
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                elmo_embedding_layers = [
-                    torch.FloatTensor(sentence_embeddings[0, token_idx, :]),
-                    torch.FloatTensor(sentence_embeddings[1, token_idx, :]),
-                    torch.FloatTensor(sentence_embeddings[2, token_idx, :]),
-                ]
-                word_embedding = self.embedding_mode_fn(elmo_embedding_layers)
-                token.set_embedding(self.name, word_embedding)
-
-        return sentences
-
-    def extra_repr(self):
-        return "model={}".format(self.name)
-
-    def __str__(self):
-        return self.name
-
-    def __setstate__(self, state):
-        self.__dict__ = state
-
-        if re.fullmatch(r"cuda:[0-9]+", str(flair.device)):
-            cuda_device = int(str(flair.device).split(":")[-1])
-        elif str(flair.device) == "cpu":
-            cuda_device = -1
-        else:
-            cuda_device = 0
-
-        self.ee.cuda_device = cuda_device
-
-        self.ee.elmo_bilm.to(device=flair.device)
-        self.ee.elmo_bilm._elmo_lstm._states = tuple(
-            [state.to(flair.device) for state in self.ee.elmo_bilm._elmo_lstm._states]
-        )
+        return {
+            "name": self.name,
+            "spm_model_binary": self.embedder.spm.serialized_model_proto(),
+            "word2vec_binary": self.embedder.emb_file.read_bytes(),
+        }
 
 
 @register_embeddings
