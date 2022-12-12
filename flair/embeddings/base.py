@@ -102,7 +102,7 @@ class Embeddings(torch.nn.Module, Generic[DT]):
     def __getstate__(self):
         return self.__dict__.copy()
 
-    def save_embedding(self, use_state_dict: bool = True):
+    def save_embeddings(self, use_state_dict: bool = True):
         params = self.to_params()
         if use_state_dict:
             params["state_dict"] = self.state_dict()

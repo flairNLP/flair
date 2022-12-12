@@ -37,7 +37,7 @@ def test_stacked_embeddings_stay_the_same_after_saving_and_loading():
     names_old = embeddings.get_names()
     embedding_length_old = embeddings.embedding_length
 
-    save_data = embeddings.save_embedding(use_state_dict=True)
+    save_data = embeddings.save_embeddings(use_state_dict=True)
     new_embeddings = load_embeddings(save_data)
 
     sentence_new: Sentence = Sentence("I love Berlin")

@@ -754,7 +754,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         path: Union[str, Path],
         embedding: "TransformerEmbeddings",
         example_sentences: List[Sentence],
-        opset_version: int = 13,
+        opset_version: int = 14,
         providers: List = None,
     ):
         path = str(path)
@@ -787,10 +787,9 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         desired_keys_order = [
             param for param in inspect.signature(embedding.forward).parameters.keys() if param in example_tensors
         ]
-
         torch.onnx.export(
             embedding,
-            [example_tensors],
+            (example_tensors,),
             path,
             input_names=desired_keys_order,
             output_names=output_names,
@@ -822,6 +821,10 @@ class TransformerJitEmbeddings(TransformerBaseEmbeddings):
         state["jit_model"] = buffer.getvalue()
         state["param_names"] = self.param_names
         return state
+
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
+        return cls(**params)
 
     def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
         parameters = []
@@ -1228,7 +1231,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             assert word_ids is not None
             assert token_lengths is not None
             all_token_embeddings = torch.zeros(
-                word_ids.shape[0], int(token_lengths.max()), self.embedding_length_internal, device=flair.device
+                word_ids.shape[0], token_lengths.max(), self.embedding_length_internal, device=flair.device  # type: ignore
             )
             true_tensor = torch.ones_like(word_ids[:, :1], dtype=torch.bool)
             if self.subtoken_pooling == "first":

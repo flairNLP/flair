@@ -593,7 +593,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         """Returns the state dictionary for this model."""
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.embeddings.save_embedding(use_state_dict=False),
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "hidden_size": self.hidden_size,
             "tag_dictionary": self.label_dictionary,
             "tag_format": self.tag_format,

@@ -663,7 +663,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.encoder_embeddings.save_embedding(use_state_dict=False),
+            "embeddings": self.encoder_embeddings.save_embeddings(use_state_dict=False),
             "rnn_input_size": self.rnn_input_size,
             "rnn_hidden_size": self.rnn_hidden_size,
             "rnn_layers": self.rnn_layers,

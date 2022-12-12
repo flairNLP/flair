@@ -158,7 +158,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         return {
             "pooling": self.pooling,
             "fine_tune_mode": self.fine_tune_mode,
-            "embeddings": self.embeddings.save_embedding(False),
+            "embeddings": self.embeddings.save_embeddings(False),
         }
 
 
@@ -418,7 +418,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         # serialize the language models and the constructor arguments (but nothing else)
         model_state = {
-            "embeddings": self.embeddings.save_embedding(False),
+            "embeddings": self.embeddings.save_embeddings(False),
             "hidden_size": self.rnn.hidden_size,
             "rnn_layers": self.rnn.num_layers,
             "reproject_words": self.reproject_words,
@@ -528,7 +528,7 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
         return self.__names
 
     def to_params(self) -> Dict[str, Any]:
-        return {"flair_embeddings": [embedding.save_embedding(False) for embedding in self.embeddings]}
+        return {"flair_embeddings": [embedding.save_embeddings(False) for embedding in self.embeddings]}
 
     @classmethod
     def from_params(cls, params: Dict[str, Any]) -> "DocumentLMEmbeddings":
@@ -764,7 +764,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
 
     def to_params(self) -> Dict[str, Any]:
         return {
-            "embeddings": self.embeddings.save_embedding(False),
+            "embeddings": self.embeddings.save_embeddings(False),
             "kernels": self.kernels,
             "reproject_words": self.reproject_words,
             "reproject_words_dimension": self.embeddings_dimension,

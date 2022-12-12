@@ -142,7 +142,7 @@ class StackedEmbeddings(TokenEmbeddings):
         return cls(embeddings=embeddings, overwrite_names=False)
 
     def to_params(self):
-        return {"embeddings": [emb.save_embedding(use_state_dict=False) for emb in self.embeddings]}
+        return {"embeddings": [emb.save_embeddings(use_state_dict=False) for emb in self.embeddings]}
 
 
 @register_embeddings
@@ -1015,7 +1015,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
         return {
             "pooling": self.pooling,
             "only_capitalized": self.only_capitalized,
-            "contextual_embeddings": self.context_embeddings.save_embedding(use_state_dict=False),
+            "contextual_embeddings": self.context_embeddings.save_embeddings(use_state_dict=False),
         }
 
 
