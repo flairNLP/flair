@@ -126,7 +126,7 @@ class EntityMarker(EncodingStrategy):
     """
 
     def __init__(self, add_special_tokens: bool = False) -> None:
-        self.special_tokens = {"[HEAD]", "[\HEAD]", "[TAIL]", "[\TAIL]"} if add_special_tokens else set()
+        self.special_tokens = {"[HEAD]", "[/HEAD]", "[TAIL]", "[/TAIL]"} if add_special_tokens else set()
 
     def encode_head(self, head: Span, label: Label) -> str:
         space_tokenized_text: str = " ".join(token.text for token in head)
