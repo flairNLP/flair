@@ -1,5 +1,5 @@
 from operator import itemgetter
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set, Tuple, Dict
 
 import pytest
 from torch.utils.data import Dataset
@@ -19,6 +19,56 @@ from flair.models.relation_classifier_model import (
     EntityMarkerPunct,
 )
 from tests.model_test_utils import BaseModelTest
+
+
+encoding_strategies: Dict[EncodingStrategy, List[Tuple[str, str]]] = {
+    EntityMask(): [("[HEAD]", "[TAIL]") for _ in range(7)],
+    TypedEntityMask(): [
+        ("[HEAD-ORG]", "[TAIL-PER]"),
+        ("[HEAD-ORG]", "[TAIL-PER]"),
+        ("[HEAD-ORG]", "[TAIL-PER]"),
+        ("[HEAD-LOC]", "[TAIL-PER]"),
+        ("[HEAD-ORG]", "[TAIL-PER]"),
+        ("[HEAD-LOC]", "[TAIL-PER]"),
+        ("[HEAD-LOC]", "[TAIL-PER]"),
+    ],
+    EntityMarker(): [
+        ("[HEAD] Google [/HEAD]", "[TAIL] Larry Page [/TAIL]"),
+        ("[HEAD] Google [/HEAD]", "[TAIL] Sergey Brin [/TAIL]"),
+        ("[HEAD] Microsoft [/HEAD]", "[TAIL] Bill Gates [/TAIL]"),
+        ("[HEAD] Berlin [/HEAD]", "[TAIL] Konrad Zuse [/TAIL]"),
+        ("[HEAD] MIT [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
+        ("[HEAD] Berlin [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
+        ("[HEAD] Germany [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
+    ],
+    TypedEntityMarker(): [
+        ("[HEAD-ORG] Google [/HEAD-ORG]", "[TAIL-PER] Larry Page [/TAIL-PER]"),
+        ("[HEAD-ORG] Google [/HEAD-ORG]", "[TAIL-PER] Sergey Brin [/TAIL-PER]"),
+        ("[HEAD-ORG] Microsoft [/HEAD-ORG]", "[TAIL-PER] Bill Gates [/TAIL-PER]"),
+        ("[HEAD-LOC] Berlin [/HEAD-LOC]", "[TAIL-PER] Konrad Zuse [/TAIL-PER]"),
+        ("[HEAD-ORG] MIT [/HEAD-ORG]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
+        ("[HEAD-LOC] Berlin [/HEAD-LOC]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
+        ("[HEAD-LOC] Germany [/HEAD-LOC]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
+    ],
+    EntityMarkerPunct(): [
+        ("@ Google @", "# Larry Page #"),
+        ("@ Google @", "# Sergey Brin #"),
+        ("@ Microsoft @", "# Bill Gates #"),
+        ("@ Berlin @", "# Konrad Zuse #"),
+        ("@ MIT @", "# Joseph Weizenbaum #"),
+        ("@ Berlin @", "# Joseph Weizenbaum #"),
+        ("@ Germany @", "# Joseph Weizenbaum #"),
+    ],
+    TypedEntityMarkerPunct(): [
+        ("@ * ORG * Google @", "# ^ PER ^ Larry Page #"),
+        ("@ * ORG * Google @", "# ^ PER ^ Sergey Brin #"),
+        ("@ * ORG * Microsoft @", "# ^ PER ^ Bill Gates #"),
+        ("@ * LOC * Berlin @", "# ^ PER ^ Konrad Zuse #"),
+        ("@ * ORG * MIT @", "# ^ PER ^ Joseph Weizenbaum #"),
+        ("@ * LOC * Berlin @", "# ^ PER ^ Joseph Weizenbaum #"),
+        ("@ * LOC * Germany @", "# ^ PER ^ Joseph Weizenbaum #"),
+    ],
+}
 
 
 class TestRelationClassifier(BaseModelTest):
@@ -132,80 +182,8 @@ class TestRelationClassifier(BaseModelTest):
     )
     @pytest.mark.parametrize(
         "encoding_strategy, encoded_entity_pairs",
-        [
-            (EntityMask(), [("[HEAD]", "[TAIL]") for _ in range(7)]),
-            (
-                TypedEntityMask(),
-                [
-                    ("[HEAD-ORG]", "[TAIL-PER]"),
-                    ("[HEAD-ORG]", "[TAIL-PER]"),
-                    ("[HEAD-ORG]", "[TAIL-PER]"),
-                    ("[HEAD-LOC]", "[TAIL-PER]"),
-                    ("[HEAD-ORG]", "[TAIL-PER]"),
-                    ("[HEAD-LOC]", "[TAIL-PER]"),
-                    ("[HEAD-LOC]", "[TAIL-PER]"),
-                ],
-            ),
-            (
-                EntityMarker(),
-                [
-                    ("[HEAD] Google [/HEAD]", "[TAIL] Larry Page [/TAIL]"),
-                    ("[HEAD] Google [/HEAD]", "[TAIL] Sergey Brin [/TAIL]"),
-                    ("[HEAD] Microsoft [/HEAD]", "[TAIL] Bill Gates [/TAIL]"),
-                    ("[HEAD] Berlin [/HEAD]", "[TAIL] Konrad Zuse [/TAIL]"),
-                    ("[HEAD] MIT [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
-                    ("[HEAD] Berlin [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
-                    ("[HEAD] Germany [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
-                ],
-            ),
-            (
-                TypedEntityMarker(),
-                [
-                    ("[HEAD-ORG] Google [/HEAD-ORG]", "[TAIL-PER] Larry Page [/TAIL-PER]"),
-                    ("[HEAD-ORG] Google [/HEAD-ORG]", "[TAIL-PER] Sergey Brin [/TAIL-PER]"),
-                    ("[HEAD-ORG] Microsoft [/HEAD-ORG]", "[TAIL-PER] Bill Gates [/TAIL-PER]"),
-                    ("[HEAD-LOC] Berlin [/HEAD-LOC]", "[TAIL-PER] Konrad Zuse [/TAIL-PER]"),
-                    ("[HEAD-ORG] MIT [/HEAD-ORG]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
-                    ("[HEAD-LOC] Berlin [/HEAD-LOC]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
-                    ("[HEAD-LOC] Germany [/HEAD-LOC]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
-                ],
-            ),
-            (
-                EntityMarkerPunct(),
-                [
-                    ("@ Google @", "# Larry Page #"),
-                    ("@ Google @", "# Sergey Brin #"),
-                    ("@ Microsoft @", "# Bill Gates #"),
-                    ("@ Berlin @", "# Konrad Zuse #"),
-                    ("@ MIT @", "# Joseph Weizenbaum #"),
-                    ("@ Berlin @", "# Joseph Weizenbaum #"),
-                    ("@ Germany @", "# Joseph Weizenbaum #"),
-                ],
-            ),
-            (
-                TypedEntityMarkerPunct(),
-                [
-                    ("@ * ORG * Google @", "# ^ PER ^ Larry Page #"),
-                    ("@ * ORG * Google @", "# ^ PER ^ Sergey Brin #"),
-                    ("@ * ORG * Microsoft @", "# ^ PER ^ Bill Gates #"),
-                    ("@ * LOC * Berlin @", "# ^ PER ^ Konrad Zuse #"),
-                    ("@ * ORG * MIT @", "# ^ PER ^ Joseph Weizenbaum #"),
-                    ("@ * LOC * Berlin @", "# ^ PER ^ Joseph Weizenbaum #"),
-                    ("@ * LOC * Germany @", "# ^ PER ^ Joseph Weizenbaum #"),
-                ],
-            ),
-        ],
-        ids=[
-            c.__name__
-            for c in (
-                EntityMask,
-                TypedEntityMask,
-                EntityMarker,
-                TypedEntityMarker,
-                EntityMarkerPunct,
-                TypedEntityMarkerPunct,
-            )
-        ],
+        encoding_strategies.items(),
+        ids=[type(encoding_strategy).__name__ for encoding_strategy in encoding_strategies],
     )
     def test_transform_corpus(
         self,
