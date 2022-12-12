@@ -13,6 +13,10 @@ from flair.models.relation_classifier_model import (
     EncodingStrategy,
     EntityMask,
     TypedEntityMask,
+    EntityMarker,
+    TypedEntityMarker,
+    TypedEntityMarkerPunct,
+    EntityMarkerPunct,
 )
 from tests.model_test_utils import BaseModelTest
 
@@ -142,20 +146,64 @@ class TestRelationClassifier(BaseModelTest):
                     ("[HEAD-LOC]", "[TAIL-PER]"),
                 ],
             ),
-            # (EntityMarker(), []),
-            # (TypedEntityMarker(), []),
-            # (EntityMarkerPunct(), []),
-            # (TypedEntityMarker(), []),
+            (
+                EntityMarker(),
+                [
+                    ("[HEAD] Google [/HEAD]", "[TAIL] Larry Page [/TAIL]"),
+                    ("[HEAD] Google [/HEAD]", "[TAIL] Sergey Brin [/TAIL]"),
+                    ("[HEAD] Microsoft [/HEAD]", "[TAIL] Bill Gates [/TAIL]"),
+                    ("[HEAD] Berlin [/HEAD]", "[TAIL] Konrad Zuse [/TAIL]"),
+                    ("[HEAD] MIT [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
+                    ("[HEAD] Berlin [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
+                    ("[HEAD] Germany [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
+                ],
+            ),
+            (
+                TypedEntityMarker(),
+                [
+                    ("[HEAD-ORG] Google [/HEAD-ORG]", "[TAIL-PER] Larry Page [/TAIL-PER]"),
+                    ("[HEAD-ORG] Google [/HEAD-ORG]", "[TAIL-PER] Sergey Brin [/TAIL-PER]"),
+                    ("[HEAD-ORG] Microsoft [/HEAD-ORG]", "[TAIL-PER] Bill Gates [/TAIL-PER]"),
+                    ("[HEAD-LOC] Berlin [/HEAD-LOC]", "[TAIL-PER] Konrad Zuse [/TAIL-PER]"),
+                    ("[HEAD-ORG] MIT [/HEAD-ORG]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
+                    ("[HEAD-LOC] Berlin [/HEAD-LOC]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
+                    ("[HEAD-LOC] Germany [/HEAD-LOC]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
+                ],
+            ),
+            (
+                EntityMarkerPunct(),
+                [
+                    ("@ Google @", "# Larry Page #"),
+                    ("@ Google @", "# Sergey Brin #"),
+                    ("@ Microsoft @", "# Bill Gates #"),
+                    ("@ Berlin @", "# Konrad Zuse #"),
+                    ("@ MIT @", "# Joseph Weizenbaum #"),
+                    ("@ Berlin @", "# Joseph Weizenbaum #"),
+                    ("@ Germany @", "# Joseph Weizenbaum #"),
+                ],
+            ),
+            (
+                TypedEntityMarkerPunct(),
+                [
+                    ("@ * ORG * Google @", "# ^ PER ^ Larry Page #"),
+                    ("@ * ORG * Google @", "# ^ PER ^ Sergey Brin #"),
+                    ("@ * ORG * Microsoft @", "# ^ PER ^ Bill Gates #"),
+                    ("@ * LOC * Berlin @", "# ^ PER ^ Konrad Zuse #"),
+                    ("@ * ORG * MIT @", "# ^ PER ^ Joseph Weizenbaum #"),
+                    ("@ * LOC * Berlin @", "# ^ PER ^ Joseph Weizenbaum #"),
+                    ("@ * LOC * Germany @", "# ^ PER ^ Joseph Weizenbaum #"),
+                ],
+            ),
         ],
         ids=[
             c.__name__
             for c in (
                 EntityMask,
                 TypedEntityMask,
-                # EntityMarker,
-                # TypedEntityMarker,
-                # EntityMarkerPunct,
-                # TypedEntityMarkerPunct,
+                EntityMarker,
+                TypedEntityMarker,
+                EntityMarkerPunct,
+                TypedEntityMarkerPunct,
             )
         ],
     )
