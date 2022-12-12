@@ -275,13 +275,35 @@ def open_inside_zip(
     encoding: str = "utf8",
 ) -> typing.Iterable:
     cached_archive_path = cached_path(archive_path, cache_dir=Path(cache_dir))
-    archive = zipfile.ZipFile(cached_archive_path, "r")
-    if member_path is None:
-        members_list = archive.namelist()
-        member_path = get_the_only_file_in_the_archive(members_list, archive_path)
-    member_path = cast(str, member_path)
-    member_file = archive.open(member_path, "r")
+    with zipfile.ZipFile(cached_archive_path, "r") as archive:
+        if member_path is None:
+            members_list = archive.namelist()
+            member_path = get_the_only_file_in_the_archive(members_list, archive_path)
+        member_path = cast(str, member_path)
+        member_file = archive.open(member_path, "r")
     return io.TextIOWrapper(member_file, encoding=encoding)
+
+
+def extract_single_zip_file(
+    archive_path: str,
+    cache_dir: Union[str, Path],
+    member_path: Optional[str] = None,
+) -> Path:
+    cache_dir = Path(cache_dir)
+    cached_archive_path = cached_path(archive_path, cache_dir=cache_dir)
+    if flair.cache_root not in cache_dir.parents:
+        dataset_cache = flair.cache_root / cache_dir
+    else:
+        dataset_cache = cache_dir
+    with zipfile.ZipFile(cached_archive_path, "r") as archive:
+        if member_path is None:
+            members_list = archive.namelist()
+            member_path = get_the_only_file_in_the_archive(members_list, archive_path)
+        output_path = dataset_cache / member_path
+
+        if not output_path.exists():
+            archive.extract(member_path, dataset_cache)
+        return output_path
 
 
 def get_the_only_file_in_the_archive(members_list: Sequence[str], archive_path: str) -> str:

@@ -20,7 +20,7 @@ from flair.embeddings.transformer import (
     TransformerEmbeddings,
     TransformerOnnxWordEmbeddings,
 )
-from flair.file_utils import cached_path, instance_lru_cache, open_inside_zip
+from flair.file_utils import cached_path, instance_lru_cache, open_inside_zip, extract_single_zip_file
 
 log = logging.getLogger("flair")
 
@@ -182,9 +182,9 @@ class WordEmbeddings(TokenEmbeddings):
         super().__init__()
 
         if embeddings_path is not None:
-            if embeddings_path.suffix == ".bin":
+            if embeddings_path.suffix in [".bin", ".txt"]:
                 precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
-                    str(embeddings_path), binary=True
+                    str(embeddings_path), binary=embeddings_path.suffix == ".bin"
                 )
             else:
                 precomputed_word_embeddings = gensim.models.KeyedVectors.load(str(embeddings_path))
@@ -1586,39 +1586,31 @@ class NILCEmbeddings(WordEmbeddings):
 
         base_path = "http://143.107.183.175:22980/download.php?file=embeddings/"
 
-        cache_dir = Path("embeddings") / embeddings.lower()
+        cache_dir = Path("embeddings") / ("nilc-" + embeddings.lower())
 
         # GLOVE embeddings
         if embeddings.lower() == "glove":
             cached_path(f"{base_path}{embeddings}/{embeddings}_s{size}.zip", cache_dir=cache_dir)
-            embeddings_path = cached_path(f"{base_path}{embeddings}/{embeddings}_s{size}.zip", cache_dir=cache_dir)
+            embeddings_path = f"{base_path}{embeddings}/{embeddings}_s{size}.zip"
 
         elif embeddings.lower() in ["fasttext", "wang2vec", "word2vec"]:
             cached_path(f"{base_path}{embeddings}/{model}_s{size}.zip", cache_dir=cache_dir)
-            embeddings_path = cached_path(f"{base_path}{embeddings}/{model}_s{size}.zip", cache_dir=cache_dir)
+            embeddings_path = f"{base_path}{embeddings}/{model}_s{size}.zip"
 
         elif not Path(embeddings).exists():
             raise ValueError(f'The given embeddings "{embeddings}" is not available or is not a valid path.')
         else:
-            embeddings_path = Path(embeddings)
-
-        self.name: str = str(embeddings_path)
-        self.static_embeddings = True
+            embeddings_path = embeddings
 
         log.info("Reading embeddings from %s" % embeddings_path)
-        self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
-            open_inside_zip(str(embeddings_path), cache_dir=cache_dir)
+        super().__init__(
+            embeddings=str(extract_single_zip_file(embeddings_path, cache_dir=cache_dir)), name="NILC-" + embeddings
         )
 
-        self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
-        super(TokenEmbeddings, self).__init__()
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def __str__(self):
-        return self.name
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "WordEmbeddings":
+        #  no need to recreate as NILCEmbeddings
+        return WordEmbeddings(embeddings=None, **params)
 
 
 def replace_with_language_code(string: str):
