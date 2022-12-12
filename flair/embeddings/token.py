@@ -564,6 +564,7 @@ class FlairEmbeddings(TokenEmbeddings):
         tokenized_lm: bool = True,
         is_lower: bool = False,
         name: Optional[str] = None,
+        has_decoder: bool = False
     ):
         """
         initializes contextual string embeddings using a character-level language model.
@@ -754,7 +755,7 @@ class FlairEmbeddings(TokenEmbeddings):
             self.lm: LanguageModel = model
             self.name = f"Task-LSTM-{self.lm.hidden_size}-{self.lm.nlayers}-{self.lm.is_forward_lm}"
         else:
-            self.lm = LanguageModel.load_language_model(model, has_decoder=False)
+            self.lm = LanguageModel.load_language_model(model, has_decoder=with_decoder)
             self.name = str(model)
 
         if name is not None:
