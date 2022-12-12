@@ -1,5 +1,5 @@
 from operator import itemgetter
-from typing import List, Optional, Set, Tuple, Dict
+from typing import Dict, List, Optional, Set, Tuple
 
 import pytest
 from torch.utils.data import Dataset
@@ -11,15 +11,14 @@ from flair.models import RelationClassifier
 from flair.models.relation_classifier_model import (
     EncodedSentence,
     EncodingStrategy,
-    EntityMask,
-    TypedEntityMask,
     EntityMarker,
+    EntityMarkerPunct,
+    EntityMask,
     TypedEntityMarker,
     TypedEntityMarkerPunct,
-    EntityMarkerPunct,
+    TypedEntityMask,
 )
 from tests.model_test_utils import BaseModelTest
-
 
 encoding_strategies: Dict[EncodingStrategy, List[Tuple[str, str]]] = {
     EntityMask(): [("[HEAD]", "[TAIL]") for _ in range(7)],
