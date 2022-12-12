@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Union, cast
+from typing import Any, Dict, List, Union, cast, Optional
 
 import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -77,7 +77,9 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
-        if isinstance(embeddings, TokenEmbeddings):
+        if isinstance(embeddings, StackedEmbeddings):
+            embeddings = embeddings.embeddings
+        elif isinstance(embeddings, TokenEmbeddings):
             embeddings = [embeddings]
 
         self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
@@ -146,6 +148,18 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
     def extra_repr(self):
         return f"fine_tune_mode={self.fine_tune_mode}, pooling={self.pooling}"
+
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "DocumentPoolEmbeddings":
+        embeddings = cast(StackedEmbeddings, load_embeddings(params.pop("embeddings"))).embeddings
+        return cls(embeddings=embeddings, **params)
+
+    def to_params(self) -> Dict[str, Any]:
+        return {
+            "pooling": self.pooling,
+            "fine_tune_mode": self.fine_tune_mode,
+            "embeddings": self.embeddings.save_embedding(False),
+        }
 
 
 @register_embeddings
@@ -603,7 +617,13 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         if self.reproject_words and reproject_words_dimension is not None:
             self.embeddings_dimension = reproject_words_dimension
 
-        self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings, self.embeddings_dimension)
+        if self.reproject_words:
+            self.word_reprojection_map: Optional[torch.nn.Linear] = torch.nn.Linear(
+                self.length_of_all_token_embeddings, self.embeddings_dimension
+            )
+            torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
+        else:
+            self.word_reprojection_map = None
 
         # CNN
         self.__embedding_length: int = sum([kernel_num for kernel_num, kernel_size in self.kernels])
@@ -621,8 +641,6 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         self.dropout = torch.nn.Dropout(dropout) if dropout > 0.0 else None
         self.locked_dropout = LockedDropout(locked_dropout) if locked_dropout > 0.0 else None
         self.word_dropout = WordDropout(word_dropout) if word_dropout > 0.0 else None
-
-        torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 
         self.to(flair.device)
         self.min_sequence_length = max(kernel_size for _, kernel_size in self.kernels)
@@ -682,7 +700,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
             sentence_tensor = self.word_dropout(sentence_tensor)
 
         # reproject if set
-        if self.reproject_words:
+        if self.word_reprojection_map is not None:
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 
         # push CNN
@@ -713,3 +731,20 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
     def _apply(self, fn):
         for child_module in self.children():
             child_module._apply(fn)
+
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "DocumentCNNEmbeddings":
+        embeddings = cast(StackedEmbeddings, load_embeddings(params.pop("embeddings"))).embeddings
+        return cls(embeddings=embeddings, **params)
+
+    def to_params(self) -> Dict[str, Any]:
+        return {
+            "embeddings": self.embeddings.save_embedding(False),
+            "kernels": self.kernels,
+            "reproject_words": self.reproject_words,
+            "reproject_words_dimension": self.embeddings_dimension,
+            "dropout": 0.0 if self.dropout is None else self.dropout.p,
+            "word_dropout": 0.0 if self.word_dropout is None else self.word_dropout.p,
+            "locked_dropout": 0.0 if self.locked_dropout is None else self.locked_dropout.dropout_rate,
+            "fine_tune": not self.static_embeddings,
+        }

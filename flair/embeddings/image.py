@@ -24,7 +24,6 @@ from flair.embeddings.base import Embeddings, register_embeddings
 log = logging.getLogger("flair")
 
 
-@register_embeddings
 class ImageEmbeddings(Embeddings[Image]):
     @property
     def embedding_type(self) -> str:

@@ -85,13 +85,10 @@ class Embeddings(torch.nn.Module, Generic[DT]):
 
     @classmethod
     def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
-        # legacy loading via pickle
-        obj = cls.__new__(cls)
-        obj.__setstate__(params)
-        return obj
+        raise NotImplementedError()
 
     def to_params(self) -> Dict[str, Any]:
-        return self.__getstate__()
+        raise NotImplementedError()
 
     @classmethod
     def load_embedding(cls, params: Dict[str, Any]):
