@@ -685,6 +685,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "de-ner-legal": "flair/ner-german-legal",
             "fr-ner": "flair/ner-french",
             "nl-ner": "flair/ner-dutch",
+            "ner-ukrainian": "dchaplinsky/flair-uk-ner",
+            # Language-specific POS models
+            "pos-ukrainian": "dchaplinsky/flair-uk-pos",
         }
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
