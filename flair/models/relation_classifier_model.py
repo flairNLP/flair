@@ -1,12 +1,8 @@
-import collections as co
 import itertools
 import logging
 from abc import ABC, abstractmethod
-from operator import itemgetter
 from typing import (
     Any,
-    Counter,
-    DefaultDict,
     Dict,
     Iterator,
     List,
@@ -20,7 +16,7 @@ from typing import (
 )
 
 import torch
-from torch.utils.data.dataset import ConcatDataset, Dataset
+from torch.utils.data.dataset import Dataset
 
 import flair
 from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
