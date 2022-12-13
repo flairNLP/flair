@@ -243,6 +243,8 @@ You can pass text in any of these languages to the model. In particular, the NER
 | 'ml-pos' | POS-tagging | Malayalam | 30000 Malayalam sentences  | **83** | [sabiqueqb](https://github.com/sabiqueqb) |
 | 'ml-upos' | POS-tagging | Malayalam | 30000 Malayalam sentences | **87** | [sabiqueqb](https://github.com/sabiqueqb) |
 | 'pt-pos-clinical' | POS-tagging | Portuguese | [PUCPR](https://github.com/HAILab-PUCPR/portuguese-clinical-pos-tagger) | **92.39** | [LucasFerroHAILab](https://github.com/LucasFerroHAILab) for clinical texts |
+| '[ner-ukrainian](https://huggingface.co/dchaplinsky/flair-uk-ner)' | NER (4-class) | Ukrainian |  [NER-UK dataset](https://github.com/lang-uk/ner-uk)  | **86.05** (F1)  | [dchaplinsky](https://github.com/dchaplinsky) |
+| '[pos-ukrainian](https://huggingface.co/dchaplinsky/flair-uk-pos)' | POS-tagging | Ukrainian |  [Ukrainian UD](https://universaldependencies.org/treebanks/uk_iu/index.html)  | **97.93** (F1)  | [dchaplinsky](https://github.com/dchaplinsky) |
 
 
 ### Tagging a German sentence
