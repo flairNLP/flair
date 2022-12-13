@@ -1,4 +1,5 @@
 from .clustering import ClusteringModel
+from .generative_entity_linker_model import GenerativeEntityLinker, CandidateGenerationMethod, SimpleCandidateGenerator, PrefixTree, GenerativeDecoder
 from .entity_linker_model import EntityLinker
 from .language_model import LanguageModel
 from .lemmatizer_model import Lemmatizer
@@ -13,7 +14,11 @@ from .text_classification_model import TextClassifier
 from .word_tagger_model import WordTagger
 
 __all__ = [
-    "EntityLinker",
+    "GenerativeEntityLinker",
+    "CandidateGenerationMethod",
+    "SimpleCandidateGenerator",
+    "PrefixTree",
+    "GenerativeDecoder",
     "LanguageModel",
     "Lemmatizer",
     "TextPairClassifier",
