@@ -1133,6 +1133,9 @@ class DataPair(DataPoint, typing.Generic[DT, DT2]):
     def text(self):
         return self.first.text + " || " + self.second.text
 
+    def to_original_text(self):
+        return self.text
+
 
 TextPair = DataPair[Sentence, Sentence]
 
