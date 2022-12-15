@@ -8,6 +8,8 @@ import flair.embeddings
 import flair.nn
 from flair.data import Dictionary, Sentence, Span, DT
 from flair.training_utils import store_embeddings
+import re
+from collections import defaultdict
 
 from transformers import GPT2Config, GPT2Model, GPT2Tokenizer
 
@@ -27,10 +29,10 @@ class GenerativeEntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     def __init__(
         self,
         embeddings: flair.embeddings.TokenEmbeddings,
-        #label_dictionary: Dictionary,
-        decoder,#: GenerativeDecoder,
+        decoder,  #: GenerativeDecoder,
         pooling_operation: str = "first_last",
         label_type: str = "nel",
+        label_dictionary=None,
         **classifierargs,
     ):
         """
@@ -183,9 +185,9 @@ class GenerativeEntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         label_name: Optional[str] = None,
         return_loss=False,
         embedding_storage_mode="none",
-        prefix_tree = None,
-        max_num_steps = 40,
-        beam_size = 5
+        prefix_trie=None,
+        max_num_steps=40,
+        beam_size=5,
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
@@ -212,8 +214,8 @@ class GenerativeEntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             reordered_sentences = self._sort_data(sentences)
             reordered_sentences = [sentence for sentence in reordered_sentences if self._filter_data_point(sentence)]
 
-            if len(reordered_sentences) == 0:
-                return sentences
+            if len(reordered_sentences) == 0 and return_loss:
+                return torch.zeros(1, device=flair.device), 0
 
             overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
@@ -230,9 +232,12 @@ class GenerativeEntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
                 # generative inference for each mention separately
                 outputs = []
                 for mention_embedding in data_point_tensor:
-                    output_string = self.decoder.generative_inference(embedded_mention=mention_embedding.unsqueeze(0),
-                                                                      prefix_tree=prefix_tree, beam_size=beam_size,
-                                                                      max_num_steps=max_num_steps)
+                    output_string = self.decoder.generative_inference(
+                        embedded_mention=mention_embedding.unsqueeze(0),
+                        prefix_trie=prefix_trie,
+                        beam_size=beam_size,
+                        max_num_steps=max_num_steps,
+                    )
                     outputs.append(output_string)
 
                 # if anything could possibly be predicted
@@ -241,7 +246,7 @@ class GenerativeEntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
                     sentence.remove_labels(label_name)
 
                     if return_loss:
-                        gold_labels = [span.get_label('nel').value for span in data_points]
+                        gold_labels = [span.get_label("nel").value for span in data_points]
                         for gold_label, prediction in zip(gold_labels, outputs):
                             if gold_label != prediction:
                                 overall_loss += 1
@@ -255,6 +260,7 @@ class GenerativeEntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             if return_loss:
                 return overall_loss, label_count
 
+
 class CandidateGenerationMethod:
     """Abstract base class for methods that, given a mention,
     generate a set of candidates, so that the EntityLinker only
@@ -267,12 +273,14 @@ class CandidateGenerationMethod:
         candidates for the mentions"""
         raise NotImplementedError
 
+
 class SimpleCandidateGenerator(CandidateGenerationMethod):
     """Straight forward candidate generator using mention-candidate lists,
     i.e. we assume to have a dictionary that stores mentions as keys and
     a list of possible candidates as values.
     These lists typically originate from large scale annotated corpora like Wikipedia.
     """
+
     def __init__(self, candidate_dict: Dict):
 
         # do not use defaultdict for the original candidate dict
@@ -288,12 +296,11 @@ class SimpleCandidateGenerator(CandidateGenerationMethod):
         self.even_more_simpler_mentions_candidate_dict = defaultdict(set)
         for mention in candidate_dict:
             # create mention without blanks and lower cased
-            simplified_mention = mention.replace(' ', '').lower()
+            simplified_mention = mention.replace(" ", "").lower()
             self.simpler_mentions_candidate_dict[simplified_mention].update(self.candidate_dict[mention])
             # create further reduced mention
             more_simplified_mention = self.punc_remover.sub("", mention.lower())
             self.even_more_simpler_mentions_candidate_dict[more_simplified_mention].update(self.candidate_dict[mention])
-
 
     def get_candidates(self, mentions: List[str]) -> Set[str]:
         candidates_for_all_mentions = set()
@@ -302,33 +309,37 @@ class SimpleCandidateGenerator(CandidateGenerationMethod):
             try:
                 candidates.update(self.candidate_dict[mention])
             except KeyError:
-                candidates = self.simpler_mentions_candidate_dict[mention.lower().replace(' ', '')]
+                candidates = self.simpler_mentions_candidate_dict[mention.lower().replace(" ", "")]
                 if not candidates:
                     candidates = self.even_more_simpler_mentions_candidate_dict[
-                        self.punc_remover.sub("", mention.lower())]
+                        self.punc_remover.sub("", mention.lower())
+                    ]
             candidates_for_all_mentions.update(candidates)
 
         return candidates_for_all_mentions
 
-class GenerativeDecoder(torch.nn.Module):
-    # TODO: add init parameters to use any generative decoder and tokenizer
 
-    def __init__(self, label_type: str = 'nel'):
-        my_config = GPT2Config(n_positions=40, # maximum sequence length
-                               n_embd= 2*768, # dim of embeddings and hidden states (2* encoder dim if I do pooling, otherwise same as encoder dim)
-                               n_layer= 4, # number of hidden layers
-                               # embd_pdrop=0, # TODO: this is only for testing, later I should leave it at the default value 0.1
-                               # resid_pdrop=0,
-                               # attn_pdrop=0,
-                               # summary_first_dropout=0
-                               )
+class GenerativeDecoder(torch.nn.Module):
+    # TODO: add possibility to add other decoder (not only GPT2)
+    def __init__(self, max_seq_length=40, embedding_dim=2 * 768, num_layers=4, label_type: str = "nel"):
+
+        my_config = GPT2Config(
+            n_positions=max_seq_length,  # maximum sequence length
+            n_embd=embedding_dim,  # dim of embeddings and hidden states (2* encoder dim if I do pooling,
+            # otherwise same as encoder dim)
+            n_layer=num_layers,  # number of hidden layers
+            # embd_pdrop=0, # for testing one can set the dropouts to 0
+            # resid_pdrop=0,
+            # attn_pdrop=0,
+            # summary_first_dropout=0
+        )
         super().__init__()
 
         self.transformer_decoder = GPT2Model(my_config)
 
         self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 
-        self.final_linear_layer = torch.nn.Linear(my_config.n_embd, my_config.vocab_size , bias=False)
+        self.final_linear_layer = torch.nn.Linear(my_config.n_embd, my_config.vocab_size, bias=False)
 
         self.softmax = torch.nn.Softmax(dim=1)
 
@@ -336,10 +347,9 @@ class GenerativeDecoder(torch.nn.Module):
 
     def _get_token_ids(self, label: str):
 
-        input_ids = self.tokenizer(label)['input_ids']
+        input_ids = self.tokenizer(label)["input_ids"]
 
         return torch.tensor(input_ids + [self.tokenizer.eos_token_id], device=flair.device)
-
 
     def teacher_forcing_decode(self, embedded_data_points, data_points):
 
@@ -352,16 +362,26 @@ class GenerativeDecoder(torch.nn.Module):
         for span in data_points:
             label = span.get_label(self.label_type).value
             input_ids = self._get_token_ids(label)
+            # it might happen that a label is too large for the tranformer decoder, i.e. exceeds the maximum sequence length
+            if len(input_ids) > self.transformer_decoder.config.n_positions:
+                print(
+                    f"Warning: Label: {label} (length {len(input_ids)}) exceeds width of decoder (length {self.transformer_decoder.config.n_positions}).\n"
+                    f"Label will be cut off and cannot correctly be generated."
+                )
+                input_ids = input_ids[: self.transformer_decoder.config.n_positions]
             labels_input_ids.append(input_ids)
             label_embedding_vectors.append(self.transformer_decoder.wte(input_ids[:-1]))
-
-        # labels_input_ids = [self.label_to_input_ids[label[0]] for label in labels]
-        # label_embedding_vectors = [self.transformer_decoder.wte(ids[:-1]) for ids in labels_input_ids]
 
         # num mentions, max sequence length, mention_emb_dim
         padded_label_embedding_vectors = pad_sequence(label_embedding_vectors, batch_first=True)
 
-        attention_mask = torch.tensor([[1] * (vec.size()[0] + 1) + [0]*(padded_label_embedding_vectors.size()[1] - vec.size()[0]) for vec in label_embedding_vectors], device=flair.device)
+        attention_mask = torch.tensor(
+            [
+                [1] * (vec.size()[0] + 1) + [0] * (padded_label_embedding_vectors.size()[1] - vec.size()[0])
+                for vec in label_embedding_vectors
+            ],
+            device=flair.device,
+        )
 
         decoder_input_vectors = torch.cat([hidden_states_encoder, padded_label_embedding_vectors], dim=1)
 
@@ -372,9 +392,9 @@ class GenerativeDecoder(torch.nn.Module):
 
         return logits, attention_mask, labels_input_ids
 
-    def generative_inference(self, embedded_mention, max_num_steps=40, prefix_tree: Dict = None, beam_size=5):
+    def generative_inference(self, embedded_mention, max_num_steps=40, prefix_trie: Dict = None, beam_size=5):
 
-        #past_key_values = None
+        # past_key_values = None
 
         with torch.no_grad():
             # first step:
@@ -382,22 +402,26 @@ class GenerativeDecoder(torch.nn.Module):
 
             # beams
             logits = self.final_linear_layer(output.last_hidden_state[-1, :])
-            logits[self.tokenizer.eos_token_id] = -torch.inf # exclude end_of_sentence token for first prediction
+            logits[self.tokenizer.eos_token_id] = -torch.inf  # exclude end_of_sentence token for first prediction
 
-            if prefix_tree:
-                sensible_continuations = list(prefix_tree.keys())
+            if prefix_trie:
+                sensible_continuations = list(prefix_trie.keys())
                 # TODO: if sensible continuations has length 1 I do not need to contunue prediction but can directly recursively scroll through the tree
                 masked_logits = -torch.inf * torch.ones(logits.size(), requires_grad=True, device=flair.device)
                 masked_logits[sensible_continuations] = logits[sensible_continuations]
+
+                # temporary fix: it may happen that there are less sensible conitnuations than the beam_size,
+                # in this case we need to reduce the beam size
+                beam_size = min(beam_size, len(sensible_continuations))
 
                 output_probabilities = torch.nn.functional.softmax(masked_logits, dim=0)
 
                 probabilities, indices = torch.topk(output_probabilities, beam_size, dim=0)
 
-                beam_sequences = [[[index.item()], torch.log(prob), prefix_tree[index.item()]] for index, prob in
-                                  zip(indices, probabilities)]
-
-                #prefix_tree = prefix_tree[output_id.item()]
+                beam_sequences = [
+                    [[index.item()], torch.log(prob), prefix_trie[index.item()]]
+                    for index, prob in zip(indices, probabilities)
+                ]
 
             else:
                 output_probabilities = torch.nn.functional.softmax(logits, dim=0)
@@ -409,7 +433,9 @@ class GenerativeDecoder(torch.nn.Module):
             final_candidates = []
 
             # create next input
-            beam_mention_embedding = embedded_mention.repeat(beam_size, 1, 1) # initial embedding repeated beam_size times
+            beam_mention_embedding = embedded_mention.repeat(
+                beam_size, 1, 1
+            )  # initial embedding repeated beam_size times
             indices_embeddings = self.transformer_decoder.wte(indices).unsqueeze(1)
 
             embedded_beams = torch.cat((beam_mention_embedding, indices_embeddings), dim=1)
@@ -418,13 +444,13 @@ class GenerativeDecoder(torch.nn.Module):
             # size: #beams, 2, hidden_dim
             output = self.transformer_decoder.forward(inputs_embeds=embedded_beams)
 
-            for gen_step in range(1, max_num_steps):
+            for gen_step in range(1, max_num_steps - 1):
 
-                #past_key_values = output.past_key_values
+                # past_key_values = output.past_key_values
 
-                logits = self.final_linear_layer(output.last_hidden_state[:,-1, :])
+                logits = self.final_linear_layer(output.last_hidden_state[:, -1, :])
 
-                if prefix_tree:
+                if prefix_trie:
                     # for each sequence in the beam there is a particular subtree
                     masked_logits = -torch.inf * torch.ones(logits.size(), requires_grad=True, device=flair.device)
                     for i, beam in enumerate(beam_sequences):
@@ -439,25 +465,25 @@ class GenerativeDecoder(torch.nn.Module):
 
                 log_probs = torch.log(output_probabilities)
 
-                scores, indices = torch.topk(log_probs, beam_size, dim=1) # TODO: decreasing beam_size??!!
+                scores, indices = torch.topk(log_probs, beam_size, dim=1)  # TODO: decreasing beam_size??!!
 
                 all_expanded_candidates = []
                 for i, seq in enumerate(beam_sequences):
                     for index, score in zip(indices[i, :], scores[i, :]):
                         if not score == -torch.inf and not torch.isnan(score):
-                            if prefix_tree:
+                            if prefix_trie:
                                 candidate = [seq[0] + [index.item()], seq[1] + score, seq[2][index.item()]]
                             else:
                                 candidate = [seq[0] + [index.item()], seq[1] + score]
                             all_expanded_candidates.append(candidate)
 
-                ordered_candidates = sorted(all_expanded_candidates, key=lambda tup:tup[1], reverse=True)
+                ordered_candidates = sorted(all_expanded_candidates, key=lambda tup: tup[1], reverse=True)
 
                 beam_sequences = []
                 new_indices = []
                 for cand in ordered_candidates:
-                    if cand[0][-1] == self.tokenizer.eos_token_id: # end of sequence predicted
-                        cand[1] = cand[1]/len(cand[0])
+                    if cand[0][-1] == self.tokenizer.eos_token_id:  # end of sequence predicted
+                        cand[1] = cand[1] / len(cand[0])
                         final_candidates.append(cand)
                     else:
                         beam_sequences.append(cand)
@@ -468,7 +494,7 @@ class GenerativeDecoder(torch.nn.Module):
 
                 # TODO: when do we stop?
                 # I fear that small sequences will be preferred
-                # Especially if we use a prefix tree there will be many finished sequences early on
+                # Especially if we use a prefix trie there will be many finished sequences early on
                 # But luckily this only concerns the testing stage I will have enough possibilities to test, given a trained model
                 # One possibility would be:
                 # as soon as the final_list is large enough we stop and finish the beam_size times many unfisnished sequences in the beam greedily
@@ -487,7 +513,7 @@ class GenerativeDecoder(torch.nn.Module):
         # add a sequence without eos-token to make sure at least one sequence is contained in final sequence list
         if beam_sequences:
             cand = beam_sequences[0]
-            cand[1] = cand[1]/len(cand[0])
+            cand[1] = cand[1] / len(cand[0])
             final_candidates.append(cand)
 
         # TODO: Here I could add a greedy decoding for the remaining unfinished sequences in the beam
@@ -495,21 +521,24 @@ class GenerativeDecoder(torch.nn.Module):
         ordered_final_candidates = sorted(final_candidates, key=lambda tup: tup[1], reverse=True)
 
         generated_sequence = ordered_final_candidates[0][0]
-        text_generated_sequence = [self.tokenizer.convert_ids_to_tokens(int(output_id)) for output_id in generated_sequence]
+        if generated_sequence[-1] == self.tokenizer.eos_token_id:
+            generated_sequence = generated_sequence[:-1]
+        text_generated_sequence = [self.tokenizer.convert_ids_to_tokens(output_id) for output_id in generated_sequence]
 
         # transform ids to text output
-        output_string = ''.join(text_generated_sequence)
+        output_string = "".join(text_generated_sequence)
 
         return output_string
 
 
 # TODO: Tree with nodes
 """
-class BinaryTreeNode:
+class TreeNode:
   def __init__(self, index):
     self.index = index
     self.children = []
 """
+
 
 class PrefixTree(object):
     def __init__(self, sequences: List[List[int]]):
@@ -520,7 +549,7 @@ class PrefixTree(object):
                 PrefixTree._add_to_trie(sequence, self.trie_dict)
                 self.len += 1
 
-        self.depth =  self._compute_depth(self.trie_dict)
+        self.depth = self._compute_depth(self.trie_dict)
 
     def _add_to_trie(sequence: List[int], trie_dict: Dict):
         if sequence:
