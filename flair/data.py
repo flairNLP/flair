@@ -3,7 +3,7 @@ import logging
 import re
 import typing
 from abc import ABC, abstractmethod
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, namedtuple
 from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
@@ -16,6 +16,9 @@ from torch.utils.data.dataset import ConcatDataset, Subset
 
 import flair
 from flair.file_utils import Tqdm
+from flair.tokenization import SegtokTokenizer, SpaceTokenizer, Tokenizer
+
+T_co = typing.TypeVar("T_co", covariant=True)
 
 log = logging.getLogger("flair")
 
@@ -35,6 +38,9 @@ def _len_dataset(dataset: Optional[Dataset]) -> int:
 
     loader = DataLoader(dataset, batch_size=1, num_workers=0)
     return len(loader)
+
+
+BoundingBox = namedtuple("BoundingBox", ["left", "top", "right", "bottom"])
 
 
 class Dictionary:
@@ -199,7 +205,7 @@ class Label:
     score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
-    def __init__(self, data_point: "DataPoint", value: Optional[str], score: float = 1.0):
+    def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0):
         self._value = value
         self._score = score
         self.data_point: DataPoint = data_point
@@ -210,7 +216,7 @@ class Label:
         self.score = score
 
     @property
-    def value(self):
+    def value(self) -> str:
         return self._value
 
     @value.setter
@@ -221,7 +227,7 @@ class Label:
             self._value = value
 
     @property
-    def score(self):
+    def score(self) -> float:
         return self._score
 
     @score.setter
@@ -270,6 +276,7 @@ class DataPoint:
     def __init__(self):
         self.annotation_layers = {}
         self._embeddings: Dict[str, torch.Tensor] = {}
+        self._metadata: Dict[str, typing.Any] = {}
 
     @property
     @abstractmethod
@@ -280,12 +287,19 @@ class DataPoint:
         self._embeddings[name] = vector
 
     def get_embedding(self, names: Optional[List[str]] = None) -> torch.Tensor:
-        embeddings = self.get_each_embedding(names)
+        # if one embedding name, directly return it
+        if names and len(names) == 1:
+            if names[0] in self._embeddings:
+                return self._embeddings[names[0]].to(flair.device)
+            else:
+                return torch.tensor([], device=flair.device)
 
+        # if multiple embedding names, concatenate them
+        embeddings = self.get_each_embedding(names)
         if embeddings:
             return torch.cat(embeddings, dim=0)
-
-        return torch.tensor([], device=flair.device)
+        else:
+            return torch.tensor([], device=flair.device)
 
     def get_each_embedding(self, embedding_names: Optional[List[str]] = None) -> List[torch.Tensor]:
         embeddings = []
@@ -317,6 +331,15 @@ class DataPoint:
             return True
         else:
             return False
+
+    def add_metadata(self, key: str, value: typing.Any) -> None:
+        self._metadata[key] = value
+
+    def get_metadata(self, key: str) -> typing.Any:
+        return self._metadata[key]
+
+    def has_metadata(self, key: str) -> bool:
+        return key in self._metadata
 
     def add_label(self, typename: str, value: str, score: float = 1.0):
 
@@ -419,6 +442,9 @@ class DataPoint:
     def __hash__(self):
         return hash(self.unlabeled_identifier)
 
+    def __len__(self):
+        raise NotImplementedError
+
 
 DT = typing.TypeVar("DT", bound=DataPoint)
 DT2 = typing.TypeVar("DT2", bound=DataPoint)
@@ -479,8 +505,7 @@ class Token(_PartOfSentence):
         self.head_id: Optional[int] = head_id
         self.whitespace_after: int = whitespace_after
 
-        self.start_pos = start_position
-        self.end_pos = start_position + len(text)
+        self._start_position = start_position
 
         self._embeddings: Dict = {}
         self.tags_proba_dist: Dict[str, List[Label]] = {}
@@ -493,7 +518,7 @@ class Token(_PartOfSentence):
             raise ValueError
 
     @property
-    def text(self):
+    def text(self) -> str:
         return self.form
 
     @property
@@ -513,15 +538,22 @@ class Token(_PartOfSentence):
 
     @property
     def start_position(self) -> int:
-        return self.start_pos
+        return self._start_position
+
+    @start_position.setter
+    def start_position(self, value: int) -> None:
+        self._start_position = value
 
     @property
     def end_position(self) -> int:
-        return self.end_pos
+        return self.start_position + len(self.text)
 
     @property
     def embedding(self):
         return self.get_embedding()
+
+    def __len__(self):
+        return 1
 
     def __repr__(self):
         return self.__str__()
@@ -567,7 +599,7 @@ class Span(_PartOfSentence):
 
     @property
     def text(self) -> str:
-        return " ".join([t.text for t in self.tokens])
+        return "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
 
     @property
     def unlabeled_identifier(self) -> str:
@@ -587,7 +619,7 @@ class Span(_PartOfSentence):
 
     @property
     def embedding(self):
-        pass
+        return self.get_embedding()
 
 
 class Relation(_PartOfSentence):
@@ -630,25 +662,6 @@ class Relation(_PartOfSentence):
         pass
 
 
-class Tokenizer(ABC):
-    r"""An abstract class representing a :class:`Tokenizer`.
-
-    Tokenizers are used to represent algorithms and models to split plain text into
-    individual tokens / words. All subclasses should overwrite :meth:`tokenize`, which
-    splits the given plain text into tokens. Moreover, subclasses may overwrite
-    :meth:`name`, returning a unique identifier representing the tokenizer's
-    configuration.
-    """
-
-    @abstractmethod
-    def tokenize(self, text: str) -> List[str]:
-        raise NotImplementedError()
-
-    @property
-    def name(self) -> str:
-        return self.__class__.__name__
-
-
 class Sentence(DataPoint):
     """
     A Sentence is a list of tokens and is used to represent a sentence or text fragment.
@@ -656,7 +669,7 @@ class Sentence(DataPoint):
 
     def __init__(
         self,
-        text: Union[str, List[str]],
+        text: Union[str, List[str], List[Token]],
         use_tokenizer: Union[bool, Tokenizer] = True,
         language_code: str = None,
         start_position: int = 0,
@@ -681,60 +694,17 @@ class Sentence(DataPoint):
 
         self.language_code: Optional[str] = language_code
 
-        self.start_pos = start_position
-        self.end_pos = start_position + len(text)
+        self._start_position = start_position
 
         # the tokenizer used for this sentence
         if isinstance(use_tokenizer, Tokenizer):
             tokenizer = use_tokenizer
 
         elif type(use_tokenizer) == bool:
-            from flair.tokenization import SegtokTokenizer, SpaceTokenizer
-
             tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
 
         else:
             raise AssertionError("Unexpected type of parameter 'use_tokenizer'. Parameter should be bool or Tokenizer")
-
-        # if text is passed, instantiate sentence with tokens (words)
-        if isinstance(text, str):
-            text = Sentence._handle_problem_characters(text)
-            words = tokenizer.tokenize(text)
-        else:
-            words = text
-
-        # determine token positions and whitespace_after flag
-        current_offset = 0
-        previous_word_offset = -1
-        previous_token = None
-        for word in words:
-            try:
-                word_offset = text.index(word, current_offset)
-                start_position = word_offset
-                delta_offset = start_position - current_offset
-            except ValueError:
-                word_offset = previous_word_offset + 1
-                start_position = current_offset + 1 if current_offset > 0 else current_offset
-                delta_offset = start_position - current_offset
-
-            if word:
-                token = Token(text=word, start_position=start_position)
-                self.add_token(token)
-
-            if previous_token is not None:
-                previous_token.whitespace_after = delta_offset
-
-            current_offset = word_offset + len(word)
-            previous_word_offset = current_offset - 1
-            previous_token = token
-
-        # the last token has no whitespace after
-        if len(self) > 0:
-            self.tokens[-1].whitespace_after = 0
-
-        # log a warning if the dataset is empty
-        if text == "":
-            log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
 
         self.tokenized: Optional[str] = None
 
@@ -746,9 +716,46 @@ class Sentence(DataPoint):
         self._next_sentence: Optional[Sentence] = None
         self._position_in_dataset: Optional[typing.Tuple[Dataset, int]] = None
 
+        # if text is passed, instantiate sentence with tokens (words)
+        if isinstance(text, str):
+            text = Sentence._handle_problem_characters(text)
+            words = tokenizer.tokenize(text)
+        elif text and isinstance(text[0], Token):
+            for t in text:
+                self._add_token(t)
+            self.tokens[-1].whitespace_after = 0
+            return
+        else:
+            words = cast(List[str], text)
+            text = " ".join(words)
+
+        # determine token positions and whitespace_after flag
+        current_offset: int = 0
+        previous_token: Optional[Token] = None
+        for word in words:
+            word_start_position: int = text.index(word, current_offset)
+            delta_offset: int = word_start_position - current_offset
+
+            token: Token = Token(text=word, start_position=word_start_position)
+            self._add_token(token)
+
+            if previous_token is not None:
+                previous_token.whitespace_after = delta_offset
+
+            current_offset = token.end_position
+            previous_token = token
+
+        # the last token has no whitespace after
+        if len(self) > 0:
+            self.tokens[-1].whitespace_after = 0
+
+        # log a warning if the dataset is empty
+        if text == "":
+            log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
+
     @property
     def unlabeled_identifier(self):
-        return f'Sentence: "{self.to_tokenized_string()}"'
+        return f'Sentence[{len(self)}]: "{self.text}"'
 
     def get_relations(self, type: str) -> List[Relation]:
         relations: List[Relation] = []
@@ -770,7 +777,7 @@ class Sentence(DataPoint):
                 return token
         return None
 
-    def add_token(self, token: Union[Token, str]):
+    def _add_token(self, token: Union[Token, str]):
 
         if isinstance(token, Token):
             assert token.sentence is None
@@ -787,8 +794,7 @@ class Sentence(DataPoint):
         token.sentence = self
         token._internal_index = len(self.tokens) + 1
         if token.start_position == 0 and len(self) > 0:
-            token.start_pos = len(self.to_original_text()) + self[-1].whitespace_after
-            token.end_pos = token.start_pos + len(token.text)
+            token.start_position = len(self.to_original_text()) + self[-1].whitespace_after
 
         # append token to sentence
         self.tokens.append(token)
@@ -823,10 +829,10 @@ class Sentence(DataPoint):
             token.clear_embeddings(embedding_names)
 
     @lru_cache(maxsize=1)  # cache last context, as training repeats calls
-    def left_context(self, context_length: int, respect_document_boundaries: bool = True):
+    def left_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
-        left_context: List[str] = []
-        while True:
+        left_context: List[Token] = []
+        while len(left_context) < context_length:
             sentence = sentence.previous_sentence()
             if sentence is None:
                 break
@@ -834,28 +840,22 @@ class Sentence(DataPoint):
             if respect_document_boundaries and sentence.is_document_boundary:
                 break
 
-            left_context = [t.text for t in sentence.tokens] + left_context
-            if len(left_context) > context_length:
-                left_context = left_context[-context_length:]
-                break
-        return left_context
+            left_context = sentence.tokens + left_context
+        return left_context[-context_length:]
 
     @lru_cache(maxsize=1)  # cache last context, as training repeats calls
-    def right_context(self, context_length: int, respect_document_boundaries: bool = True):
+    def right_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
-        right_context: List[str] = []
-        while True:
+        right_context: List[Token] = []
+        while len(right_context) < context_length:
             sentence = sentence.next_sentence()
             if sentence is None:
                 break
             if respect_document_boundaries and sentence.is_document_boundary:
                 break
 
-            right_context += [t.text for t in sentence.tokens]
-            if len(right_context) > context_length:
-                right_context = right_context[:context_length]
-                break
-        return right_context
+            right_context += sentence.tokens
+        return right_context[:context_length]
 
     def __str__(self):
         return self.to_tagged_string()
@@ -882,7 +882,7 @@ class Sentence(DataPoint):
 
     @property
     def text(self):
-        return self.to_tokenized_string()
+        return self.to_original_text()
 
     def to_tokenized_string(self) -> str:
 
@@ -932,17 +932,11 @@ class Sentence(DataPoint):
         return self
 
     def to_original_text(self) -> str:
-        str = ""
-        pos = 0
-        for t in self.tokens:
-            while t.start_pos > pos:
-                str += " "
-                pos += 1
-
-            str += t.text
-            pos += len(t.text)
-
-        return str
+        # if sentence has no tokens, return empty string
+        if len(self) == 0:
+            return ""
+        # otherwise, return concatenation of tokens with the correct offsets
+        return self[0].start_position * " " + "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
 
     def to_dict(self, tag_type: str = None):
         labels = []
@@ -985,11 +979,17 @@ class Sentence(DataPoint):
 
     @property
     def start_position(self) -> int:
-        return 0
+        return self._start_position
+
+    @start_position.setter
+    def start_position(self, value: int) -> None:
+        self._start_position = value
 
     @property
     def end_position(self) -> int:
-        return len(self.to_original_text())
+        # The sentence's start position is not propagated to its tokens.
+        # Therefore, we need to add the sentence's start position to its last token's end position, including whitespaces.
+        return self.start_position + self[-1].end_position + self[-1].whitespace_after
 
     def get_language_code(self) -> str:
         if self.language_code is None:
@@ -1172,12 +1172,12 @@ class Image(DataPoint):
         pass
 
 
-class Corpus:
+class Corpus(typing.Generic[T_co]):
     def __init__(
         self,
-        train: Dataset = None,
-        dev: Dataset = None,
-        test: Dataset = None,
+        train: Optional[Dataset[T_co]] = None,
+        dev: Optional[Dataset[T_co]] = None,
+        test: Optional[Dataset[T_co]] = None,
         name: str = "corpus",
         sample_missing_splits: Union[bool, str] = True,
     ):
@@ -1201,20 +1201,20 @@ class Corpus:
             dev, train = randomly_split_into_two_datasets(train, dev_size)
 
         # set train dev and test data
-        self._train: Optional[Dataset] = train
-        self._test: Optional[Dataset] = test
-        self._dev: Optional[Dataset] = dev
+        self._train: Optional[Dataset[T_co]] = train
+        self._test: Optional[Dataset[T_co]] = test
+        self._dev: Optional[Dataset[T_co]] = dev
 
     @property
-    def train(self) -> Optional[Dataset]:
+    def train(self) -> Optional[Dataset[T_co]]:
         return self._train
 
     @property
-    def dev(self) -> Optional[Dataset]:
+    def dev(self) -> Optional[Dataset[T_co]]:
         return self._dev
 
     @property
-    def test(self) -> Optional[Dataset]:
+    def test(self) -> Optional[Dataset[T_co]]:
         return self._test
 
     def downsample(

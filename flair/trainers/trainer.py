@@ -198,7 +198,10 @@ class ModelTrainer:
         local_variables = locals()
         training_parameters = {}
         for parameter in signature(self.train).parameters:
-            training_parameters[parameter] = local_variables[parameter]
+            if isinstance(local_variables[parameter], Path):
+                training_parameters[parameter] = str(local_variables[parameter])
+            else:
+                training_parameters[parameter] = local_variables[parameter]
         model_card["training_parameters"] = training_parameters
 
         if epoch >= max_epochs:
@@ -254,7 +257,8 @@ class ModelTrainer:
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
 
-        self.check_for_and_delete_previous_best_models(base_path)
+        if epoch == 0:
+            self.check_for_and_delete_previous_best_models(base_path)
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
@@ -303,7 +307,7 @@ class ModelTrainer:
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
-        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.0
+        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else -1.0
 
         dataset_size = _len_dataset(self.corpus.train)
         if train_with_dev:
@@ -473,6 +477,8 @@ class ModelTrainer:
                     log_line(log)
                     break
 
+                start_time = time.time()
+
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
@@ -491,11 +497,8 @@ class ModelTrainer:
                 modulo = max(1, int(total_number_of_batches / 10))
 
                 # process mini-batches
-                batch_time = 0.0
                 average_over = 0
                 for batch_no, batch in enumerate(batch_loader):
-
-                    start_time = time.time()
 
                     # zero the gradients on the model and optimizer
                     self.model.zero_grad()
@@ -545,7 +548,6 @@ class ModelTrainer:
 
                     seen_batches += 1
 
-                    batch_time += time.time() - start_time
                     if seen_batches % modulo == 0:
                         momentum_info = ""
                         if cycle_momentum:
@@ -556,13 +558,13 @@ class ModelTrainer:
                         intermittent_loss = train_loss / average_over if average_over > 0 else train_loss / seen_batches
 
                         log.info(
-                            f"epoch {epoch} - iter {seen_batches}/"
-                            f"{total_number_of_batches} - loss "
-                            f"{intermittent_loss:.8f} - samples/sec:"
-                            f" {mini_batch_size * modulo / batch_time:.2f}"
+                            f"epoch {epoch}"
+                            f" - iter {seen_batches}/{total_number_of_batches}"
+                            f" - loss {intermittent_loss:.8f}"
+                            f" - time (sec): {(time.time() - start_time):.2f}"
+                            f" - samples/sec: {average_over / (time.time() - start_time):.2f}"
                             f" - lr: {lr_info}{momentum_info}"
                         )
-                        batch_time = 0.0
                         iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode and write_weights:
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
@@ -614,7 +616,6 @@ class ModelTrainer:
                         exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{train_part_eval_result.loss}" f"\t{train_part_eval_result.log_line}"
-
                     log.info(
                         f"TRAIN_SPLIT : loss {train_part_eval_result.loss}"
                         f" - {main_evaluation_metric[1]}"
@@ -895,7 +896,7 @@ class ModelTrainer:
 
         if additional_epochs is not None:
             args_used_to_train_model["max_epochs"] = (
-                args_used_to_train_model.pop("epoch", kwargs.pop("epoch", 0)) + additional_epochs
+                args_used_to_train_model.get("epoch", kwargs.get("epoch", 0)) + additional_epochs
             )
 
         # resume training with these parameters

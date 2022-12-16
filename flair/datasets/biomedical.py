@@ -30,14 +30,15 @@ import flair
 from flair.data import MultiCorpus, Tokenizer
 from flair.datasets.sequence_labeling import ColumnCorpus, ColumnDataset
 from flair.file_utils import Tqdm, cached_path, unpack_file
-from flair.tokenization import (
+
+from flair.splitter import (
+    NewlineSentenceSplitter,
     NoSentenceSplitter,
     SciSpacySentenceSplitter,
-    SciSpacyTokenizer,
     SentenceSplitter,
-    SpaceTokenizer,
     TagSentenceSplitter,
 )
+from flair.tokenization import SciSpacyTokenizer, SpaceTokenizer
 
 DISEASE_TAG = "Disease"
 CHEMICAL_TAG = "Chemical"
@@ -385,9 +386,9 @@ class CoNLLWriter:
 
                     for flair_token in sentence.tokens:
                         token = flair_token.text.strip()
-                        assert sentence.start_pos is not None
-                        assert flair_token.start_pos is not None
-                        offset = sentence.start_pos + flair_token.start_pos
+                        assert sentence.start_position is not None
+                        assert flair_token.start_position is not None
+                        offset = sentence.start_position + flair_token.start_position
 
                         if current_entity and offset >= current_entity.char_span.stop:
                             in_entity = False

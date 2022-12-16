@@ -127,9 +127,9 @@ class UniversalDependenciesDataset(FlairDataset):
 
         return sentence
 
-    def _read_next_sentence(self, file):
+    def _read_next_sentence(self, file) -> Sentence:
         line = file.readline()
-        sentence: Sentence = Sentence([])
+        tokens: List[Token] = []
 
         # current token ID
         token_idx = 0
@@ -146,7 +146,7 @@ class UniversalDependenciesDataset(FlairDataset):
 
             # end of sentence
             if line == "":
-                if len(sentence) > 0:
+                if len(tokens) > 0:
                     break
 
             # comments
@@ -175,7 +175,7 @@ class UniversalDependenciesDataset(FlairDataset):
                     token.add_label("lemma", str(fields[2]))
                     if len(fields) > 9 and "SpaceAfter=No" in fields[9]:
                         token.whitespace_after = 0
-                    sentence.add_token(token)
+                    tokens.append(token)
                     token_idx += 1
 
             # normal single-word tokens
@@ -220,12 +220,12 @@ class UniversalDependenciesDataset(FlairDataset):
                     # go through all tokens in subword and set whitespace_after information
                     for i in range(current_multiword_last_token - current_multiword_first_token):
                         # print(i)
-                        sentence[-(i + 1)].whitespace_after = 0
-
-                sentence.add_token(token)
+                        tokens[-(i + 1)].whitespace_after = 0
+                tokens.append(token)
 
             line = file.readline()
-        return sentence
+
+        return Sentence(tokens)
 
 
 class UD_ENGLISH(UniversalDependenciesCorpus):

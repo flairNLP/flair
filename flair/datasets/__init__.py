@@ -147,6 +147,7 @@ from .entity_linking import (
 )
 
 # Expose all relation extraction datasets
+from .ocr import SROIE, OcrJsonDataset
 from .relation_extraction import (
     RE_ENGLISH_CONLL04,
     RE_ENGLISH_DRUGPROT,
@@ -197,6 +198,7 @@ from .sequence_labeling import (
     NER_JAPANESE,
     NER_MASAKHANE,
     NER_MULTI_CONER,
+    NER_MULTI_CONER_V2,
     NER_MULTI_WIKIANN,
     NER_MULTI_WIKINER,
     NER_MULTI_XTREME,
@@ -296,6 +298,8 @@ from .treebanks import (
 
 __all__ = [
     "DataLoader",
+    "OcrJsonDataset",
+    "SROIE",
     "FlairDatapointDataset",
     "SentenceDataset",
     "MongoDataset",
@@ -478,6 +482,7 @@ __all__ = [
     "ColumnCorpus",
     "ColumnDataset",
     "NER_MULTI_CONER",
+    "NER_MULTI_CONER_V2",
     "FeideggerCorpus",
     "FeideggerDataset",
     "GLUE_MNLI",
