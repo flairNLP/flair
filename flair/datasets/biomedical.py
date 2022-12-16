@@ -31,7 +31,6 @@ from flair.data import MultiCorpus, Tokenizer
 from flair.datasets.sequence_labeling import ColumnCorpus, ColumnDataset
 from flair.file_utils import Tqdm, cached_path, unpack_file
 from flair.tokenization import (
-    NewlineSentenceSplitter,
     NoSentenceSplitter,
     SciSpacySentenceSplitter,
     SciSpacyTokenizer,
@@ -189,7 +188,9 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
     num_entities_after = sum([len(x) for x in dataset.entities_per_document.values()])
     if num_entities_before != num_entities_after:
         removed = num_entities_before - num_entities_after
-        warn(f"Corpus modified by filtering nested entities. Removed {removed} entities. Keep {num_entities_after} entities.")
+        warn(
+            f"Corpus modified by filtering nested entities. Removed {removed} entities. Keep {num_entities_after} entities."
+        )
 
 
 def bioc_to_internal(bioc_file: Path):
@@ -632,7 +633,7 @@ class HUNER_GENE_BIO_INFER(HunerDataset):
             "Gene/protein/RNA": GENE_TAG,
             "Gene": GENE_TAG,
             "DNA_family_or_group": GENE_TAG,
-            "Protein_family_or_group": GENE_TAG
+            "Protein_family_or_group": GENE_TAG,
         }
 
         train_data = filter_and_map_entities(train_data, entity_type_mapping)
@@ -681,7 +682,7 @@ class JNLPBA(ColumnCorpus):
             unpack_file(train_data_path, download_dir)
 
             test_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
-            test_data_path = cached_path(train_data_url, download_dir)
+            test_data_path = cached_path(test_data_url, download_dir)
             unpack_file(test_data_path, download_dir)
 
             train_file = download_dir / "Genia4ERtask2.iob2"
@@ -1824,9 +1825,7 @@ class HUNER_GENE_IEPA(HunerDataset):
         train_data = IEPA.parse_dataset(corpus_folder / "IEPA-train.xml")
         test_data = IEPA.parse_dataset(corpus_folder / "IEPA-test.xml")
 
-        entity_type_mapping = {
-            "Protein": GENE_TAG
-        }
+        entity_type_mapping = {"Protein": GENE_TAG}
 
         train_data = filter_and_map_entities(train_data, entity_type_mapping)
         test_data = filter_and_map_entities(test_data, entity_type_mapping)
