@@ -30,7 +30,6 @@ import flair
 from flair.data import MultiCorpus, Tokenizer
 from flair.datasets.sequence_labeling import ColumnCorpus, ColumnDataset
 from flair.file_utils import Tqdm, cached_path, unpack_file
-
 from flair.splitter import (
     NoSentenceSplitter,
     SciSpacySentenceSplitter,
