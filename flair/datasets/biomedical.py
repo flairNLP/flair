@@ -2627,7 +2627,7 @@ class OSIRIS(ColumnCorpus):
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
-        url = "https://github.com/rockt/SETH/blob/master/resources/OSIRIS/corpus.xml?raw=true"
+        url = "https://github.com/hu-ner/hunflair-corpora/raw/main/osiris/OSIRIScorpusv02.tar"
         data_path = cached_path(url, data_dir)
         unpack_file(data_path, data_dir)
 
@@ -2691,7 +2691,7 @@ class HUNER_GENE_OSIRIS(HunerDataset):
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         original_file = OSIRIS.download_dataset(data_dir)
-        corpus = OSIRIS.parse_dataset(original_file)
+        corpus = OSIRIS.parse_dataset(original_file / "OSIRIScorpusv02")
 
         entity_type_mapping = {"ge": GENE_TAG}
         return filter_and_map_entities(corpus, entity_type_mapping)
