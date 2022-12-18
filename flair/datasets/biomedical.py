@@ -1235,7 +1235,7 @@ class KaewphanCorpusHelper:
 
     @staticmethod
     def download_cll_dataset(data_folder: Path):
-        data_url = "http://bionlp-www.utu.fi/cell-lines/CLL_corpus.tar.gz"
+        data_url = "https://github.com/hu-ner/hunflair-corpora/raw/main/cll/CLL_corpus.tar.gz"
         data_path = cached_path(data_url, data_folder)
         unpack_file(data_path, data_folder)
 
@@ -1282,7 +1282,7 @@ class KaewphanCorpusHelper:
 
     @staticmethod
     def download_gellus_dataset(data_folder: Path):
-        data_url = "http://bionlp-www.utu.fi/cell-lines/Gellus_corpus.tar.gz"
+        data_url = "https://github.com/hu-ner/hunflair-corpora/raw/main/gellus/Gellus_corpus.tar.gz"
         data_path = cached_path(data_url, data_folder)
         unpack_file(data_path, data_folder)
 
@@ -2105,7 +2105,7 @@ class VARIOME(ColumnCorpus):
 
     @staticmethod
     def download_dataset(data_dir: Path):
-        data_url = "http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/hvp_bioc.xml.zip"
+        data_url = "https://github.com/hu-ner/hunflair-corpora/raw/main/variome/hvp_bioc.xml.zip"
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, data_dir)
 
