@@ -1,11 +1,11 @@
 import inspect
+import logging
 import os
 import tempfile
 from operator import itemgetter
 from pathlib import Path
 from typing import Callable, List, Type
 
-import logging
 import pytest
 from tqdm import tqdm  # type: ignore
 
@@ -22,7 +22,6 @@ from flair.datasets.biomedical import (
 )
 from flair.splitter import NoSentenceSplitter, SentenceSplitter
 from flair.tokenization import SpaceTokenizer
-
 
 logger = logging.getLogger("flair")
 logger.propagate = True
@@ -208,7 +207,7 @@ def test_filter_nested_entities(caplog):
     dataset = InternalBioNerDataset(documents={}, entities_per_document=entities_per_document)
     caplog.set_level(logging.WARNING)
     filter_nested_entities(dataset)
-    assert 'WARNING: Corpus modified by filtering nested entities.' in caplog.text
+    assert "WARNING: Corpus modified by filtering nested entities." in caplog.text
 
     for key, entities in dataset.entities_per_document.items():
         assert key in target
