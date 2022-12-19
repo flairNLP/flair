@@ -179,7 +179,10 @@ class MultitaskModel(flair.nn.Classifier):
         Returns the state dict of the multitask model which has multiple models underneath.
         :return model_state: model state for the multitask model
         """
+        initial_model_state = super()._get_state_dict()
+        initial_model_state["state_dict"] = {}  # the model state is stored per model already.
         model_state = {
+            **initial_model_state,
             "model_states": {task: model._get_state_dict() for task, model in self.tasks.items()},
             "loss_factors": [self.loss_factors[task] for task in self.tasks.keys()],
         }
@@ -196,7 +199,7 @@ class MultitaskModel(flair.nn.Classifier):
         loss_factors = state["loss_factors"]
 
         for task, task_state in state["model_states"].items():
-            models.append(AutoFlairClassifier.load(task_state["state_dict"]))
+            models.append(AutoFlairClassifier.load(task_state))
             tasks.append(task)
 
         model = cls(models=models, task_ids=tasks, loss_factors=loss_factors, **kwargs)

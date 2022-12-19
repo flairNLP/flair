@@ -71,6 +71,9 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         """Returns the state dictionary for this model."""
         state_dict = {"state_dict": self.state_dict()}
 
+        if hasattr(self, "model_name"):
+            state_dict["__cls__"] = self.model_name
+
         return state_dict
 
     @classmethod

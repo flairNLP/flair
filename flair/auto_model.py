@@ -59,7 +59,7 @@ class ModelRegisterMixin(Generic[MT]):
         for model_cls in cls.MODEL_CLASSES.values():
             try:
                 model_cls._init_model_with_state_dict(state)
-            except KeyError:
+            except Exception:
                 continue
             return model_cls
         raise Exception("Could not infer model type by state")
