@@ -664,7 +664,7 @@ class FlairEmbeddings(TokenEmbeddings):
             "uk-backward": "https://huggingface.co/dchaplinsky/flair-uk-backward/resolve/main/best-lm.pt"
         }
 
-        if type(model) == str:
+        if isinstance(model, str):
 
             # load model if in pretrained model map
             if model.lower() in self.PRETRAINED_MODEL_ARCHIVE_MAP:
