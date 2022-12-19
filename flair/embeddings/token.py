@@ -665,7 +665,6 @@ class FlairEmbeddings(TokenEmbeddings):
         }
 
         if isinstance(model, str):
-
             # load model if in pretrained model map
             if model.lower() in self.PRETRAINED_MODEL_ARCHIVE_MAP:
                 base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[model.lower()]
