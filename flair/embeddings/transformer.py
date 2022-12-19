@@ -669,6 +669,8 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
 
     @classmethod
     def from_params(cls, params: Dict[str, Any]) -> "TransformerOnnxEmbeddings":
+        params["tokenizer"] = cls._tokenizer_from_bytes(params.pop("tokenizer_data"))
+        params["feature_extractor"] = cls._feature_extractor_from_bytes(params.pop("feature_extractor_data", None))
         return cls(**params)
 
     def create_session(self):
@@ -828,6 +830,8 @@ class TransformerJitEmbeddings(TransformerBaseEmbeddings):
 
     @classmethod
     def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
+        params["tokenizer"] = cls._tokenizer_from_bytes(params.pop("tokenizer_data"))
+        params["feature_extractor"] = cls._feature_extractor_from_bytes(params.pop("feature_extractor_data", None))
         return cls(**params)
 
     def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
@@ -1234,8 +1238,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if self.token_embedding:
             assert word_ids is not None
             assert token_lengths is not None
-            all_token_embeddings = torch.zeros(
-                word_ids.shape[0], token_lengths.max(), self.embedding_length_internal, device=flair.device  # type: ignore
+            all_token_embeddings = torch.zeros(  # type: ignore
+                word_ids.shape[0], token_lengths.max(), self.embedding_length_internal, device=flair.device
             )
             true_tensor = torch.ones_like(word_ids[:, :1], dtype=torch.bool)
             if self.subtoken_pooling == "first":
