@@ -661,7 +661,7 @@ class FlairEmbeddings(TokenEmbeddings):
             "am-forward": f"{am_path}/best-lm.pt",
             # Ukrainian
             "uk-forward": "https://huggingface.co/dchaplinsky/flair-uk-forward/resolve/main/best-lm.pt",
-            "uk-backward": "https://huggingface.co/dchaplinsky/flair-uk-backward/resolve/main/best-lm.pt"
+            "uk-backward": "https://huggingface.co/dchaplinsky/flair-uk-backward/resolve/main/best-lm.pt",
         }
 
         if isinstance(model, str):
