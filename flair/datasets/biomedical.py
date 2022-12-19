@@ -19,7 +19,6 @@ from tarfile import (
     TarError,
 )
 from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
-from warnings import warn
 from zipfile import BadZipFile, LargeZipFile
 
 import ftfy
@@ -187,8 +186,8 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
     num_entities_after = sum([len(x) for x in dataset.entities_per_document.values()])
     if num_entities_before != num_entities_after:
         removed = num_entities_before - num_entities_after
-        warn(
-            f"Corpus modified by filtering nested entities. Removed {removed} entities. Keep {num_entities_after} entities."
+        logger.warning(
+            f"WARNING: Corpus modified by filtering nested entities. Removed {removed} entities. Keep {num_entities_after} entities."
         )
 
 
@@ -478,7 +477,7 @@ class HunerDataset(ColumnCorpus, ABC):
             self.sentence_splitter = sentence_splitter if sentence_splitter else SciSpacySentenceSplitter()
         else:
             if sentence_splitter:
-                warn(
+                logger.warning(
                     f"The corpus {self.__class__.__name__} has a pre-defined sentence splitting, "
                     f"thus just the tokenizer of the given sentence splitter is used"
                 )
