@@ -667,6 +667,10 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         params["onnx_model"] = self.onnx_model
         return params
 
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "TransformerOnnxEmbeddings":
+        return cls(**params)
+
     def create_session(self):
         try:
             import onnxruntime
