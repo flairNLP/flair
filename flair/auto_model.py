@@ -68,7 +68,7 @@ class ModelRegisterMixin(Generic[MT]):
     def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> MT:
         model_cls: Optional[Type[MT]] = None
         if not isinstance(model_path, dict):
-            model_cls, model_path = cls._fetch_model(model_path)
+            model_cls, model_path = cls._fetch_model(str(model_path))
             state = load_torch_state(model_path)
         else:
             state = model_path

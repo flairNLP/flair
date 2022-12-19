@@ -84,6 +84,8 @@ class Model(torch.nn.Module, typing.Generic[DT]):
 
         model = cls(**kwargs)
 
+        model.load_state_dict(state["state_dict"])
+
         return model
 
     @staticmethod
