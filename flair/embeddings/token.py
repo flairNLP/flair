@@ -755,7 +755,7 @@ class FlairEmbeddings(TokenEmbeddings):
             self.lm: LanguageModel = model
             self.name = f"Task-LSTM-{self.lm.hidden_size}-{self.lm.nlayers}-{self.lm.is_forward_lm}"
         else:
-            self.lm = LanguageModel.load_language_model(model, has_decoder=with_decoder)
+            self.lm = LanguageModel.load_language_model(model, has_decoder=has_decoder)
             self.name = str(model)
 
         if name is not None:
