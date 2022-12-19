@@ -4,9 +4,9 @@ from typing import List
 import torch
 
 import flair.nn
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Dictionary, Sentence, Token
 from flair.embeddings import TokenEmbeddings
-from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 
 log = logging.getLogger("flair")
 

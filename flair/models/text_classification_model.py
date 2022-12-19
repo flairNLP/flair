@@ -6,9 +6,9 @@ import torch
 
 import flair.embeddings
 import flair.nn
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Sentence
 from flair.file_utils import cached_path
-from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 
 log = logging.getLogger("flair")
 

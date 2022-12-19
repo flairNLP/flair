@@ -10,6 +10,7 @@ from sklearn.preprocessing import minmax_scale
 from tqdm import tqdm
 
 import flair
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Dictionary, Sentence, Span
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import (
@@ -20,7 +21,6 @@ from flair.embeddings import (
 from flair.file_utils import cached_path
 from flair.models.sequence_tagger_model import SequenceTagger
 from flair.models.text_classification_model import TextClassifier
-from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")
