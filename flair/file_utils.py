@@ -11,6 +11,7 @@ import re
 import shutil
 import tempfile
 import typing
+import warnings
 import zipfile
 from pathlib import Path
 from typing import Optional, Sequence, Tuple, Union, cast
@@ -18,6 +19,7 @@ from urllib.parse import urlparse
 
 import boto3
 import requests
+import torch
 from botocore import UNSIGNED
 from botocore.config import Config
 from tqdm import tqdm as _tqdm
@@ -365,3 +367,13 @@ def instance_lru_cache(*cache_args, **cache_kwargs):
         return create_cache
 
     return decorator
+
+
+def load_torch_state(model_file: Union[str, Path]) -> typing.Dict[str, typing.Any]:
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        # load_big_file is a workaround byhttps://github.com/highway11git
+        # to load models on some Mac/Windows setups
+        # see https://github.com/zalandoresearch/flair/issues/351
+        f = load_big_file(str(model_file))
+        return torch.load(f, map_location="cpu")

@@ -8,10 +8,12 @@ from torch import logsumexp
 from torch.optim import Optimizer
 
 import flair
+from flair.auto_model import AutoFlairModel
 from flair.data import Dictionary
 from flair.nn.recurrent import create_recurrent_layer
 
 
+@AutoFlairModel.register
 class LanguageModel(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 

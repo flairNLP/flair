@@ -12,19 +12,20 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import Dictionary, Label, Sentence, Span
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
+from flair.data import Dictionary, Label, Sentence, Span, get_spans_from_bio
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
+from flair.models.sequence_tagger_utils.crf import CRF
+from flair.models.sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
 from flair.training_utils import store_embeddings
-
-from .sequence_tagger_utils.bioes import get_spans_from_bio
-from .sequence_tagger_utils.crf import CRF
-from .sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
 
 log = logging.getLogger("flair")
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class SequenceTagger(flair.nn.Classifier[Sentence]):
     def __init__(
         self,

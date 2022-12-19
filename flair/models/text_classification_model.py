@@ -8,10 +8,13 @@ import flair.embeddings
 import flair.nn
 from flair.data import Sentence
 from flair.file_utils import cached_path
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 
 log = logging.getLogger("flair")
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
     """
     Text Classification Model

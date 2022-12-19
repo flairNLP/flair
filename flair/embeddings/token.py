@@ -564,7 +564,7 @@ class FlairEmbeddings(TokenEmbeddings):
         tokenized_lm: bool = True,
         is_lower: bool = False,
         name: Optional[str] = None,
-        has_decoder: bool = False
+        has_decoder: bool = False,
     ):
         """
         initializes contextual string embeddings using a character-level language model.
@@ -726,7 +726,7 @@ class FlairEmbeddings(TokenEmbeddings):
             "am-forward": f"{am_path}/best-lm.pt",
             # Ukrainian
             "uk-forward": "https://huggingface.co/dchaplinsky/flair-uk-forward/resolve/main/best-lm.pt",
-            "uk-backward": "https://huggingface.co/dchaplinsky/flair-uk-backward/resolve/main/best-lm.pt"
+            "uk-backward": "https://huggingface.co/dchaplinsky/flair-uk-backward/resolve/main/best-lm.pt",
         }
 
         if type(model) == str:

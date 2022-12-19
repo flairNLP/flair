@@ -4,9 +4,12 @@ import torch
 
 import flair.embeddings
 import flair.nn
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Sentence, TextPair
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
     """
     Text Pair Classification Model for tasks such as Recognizing Textual Entailment, build upon TextClassifier.

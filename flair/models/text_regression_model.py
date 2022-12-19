@@ -12,11 +12,14 @@ import flair.embeddings
 from flair.data import Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings.base import load_embeddings
+from flair.nn.model import AutoFlairClassifier, AutoFlairModel
 from flair.training_utils import MetricRegression, Result, store_embeddings
 
 log = logging.getLogger("flair")
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class TextRegressor(flair.nn.Model[Sentence]):
     def __init__(
         self,

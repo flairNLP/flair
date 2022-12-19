@@ -13,12 +13,11 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
-from flair import file_utils
 from flair.data import DT, DT2, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
-from flair.file_utils import Tqdm
+from flair.file_utils import Tqdm, load_torch_state
 from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
@@ -85,7 +84,6 @@ class Model(torch.nn.Module, typing.Generic[DT]):
 
         model = cls(**kwargs)
 
-        model.load_state_dict(state["state_dict"])
         return model
 
     @staticmethod
@@ -125,6 +123,8 @@ class Model(torch.nn.Module, typing.Generic[DT]):
                     training_parameters["scheduler"] = scheduler.__class__
 
             model_state["model_card"] = self.model_card
+            if hasattr(self, "model_name"):
+                model_state["__cls__"] = self.model_name
 
         # save model
         torch.save(model_state, str(model_file), pickle_protocol=4)
@@ -137,21 +137,20 @@ class Model(torch.nn.Module, typing.Generic[DT]):
                 self.model_card["training_parameters"]["scheduler"] = scheduler
 
     @classmethod
-    def load(cls, model_path: Union[str, Path]):
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]):
         """
         Loads the model from the given file.
-        :param model_path: the model file
+        :param model_path: the model file or the already loaded state dict
         :return: the loaded text classifier model
         """
-        model_file = cls._fetch_model(str(model_path))
+        if not isinstance(model_path, dict):
+            model_file = cls._fetch_model(str(model_path))
+            state = load_torch_state(model_file)
+        else:
+            state = model_path
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            # load_big_file is a workaround byhttps://github.com/highway11git
-            # to load models on some Mac/Windows setups
-            # see https://github.com/zalandoresearch/flair/issues/351
-            f = file_utils.load_big_file(str(model_file))
-            state = torch.load(f, map_location="cpu")
+        if "__cls__" in state:
+            state.pop("__cls__")
 
         model = cls._init_model_with_state_dict(state)
 

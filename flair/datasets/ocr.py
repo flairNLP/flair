@@ -7,9 +7,8 @@ import PIL
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import BoundingBox, Corpus, FlairDataset, Sentence
+from flair.data import BoundingBox, Corpus, FlairDataset, Sentence, get_spans_from_bio
 from flair.datasets.base import find_train_dev_test_files
-from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
 
 
 class OcrJsonDataset(FlairDataset):

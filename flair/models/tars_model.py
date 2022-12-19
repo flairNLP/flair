@@ -20,6 +20,7 @@ from flair.embeddings import (
 from flair.file_utils import cached_path
 from flair.models.sequence_tagger_model import SequenceTagger
 from flair.models.text_classification_model import TextClassifier
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")
@@ -312,6 +313,8 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         return
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class TARSTagger(FewshotClassifier):
     """
     TARS model for sequence tagging. In the backend, the model uses a BERT based 5-class
@@ -616,6 +619,8 @@ class TARSTagger(FewshotClassifier):
         return lines
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class TARSClassifier(FewshotClassifier):
     """
     TARS model for text classification. In the backend, the model uses a BERT based binary

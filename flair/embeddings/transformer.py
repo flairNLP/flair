@@ -328,7 +328,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             raise ValueError("either 'is_token_embedding' or 'is_document_embedding' needs to be set.")
 
     def to_args(self):
-        return {
+        args = {
             "is_token_embedding": self.token_embedding,
             "is_document_embedding": self.document_embedding,
             "allow_long_sentences": self.allow_long_sentences,

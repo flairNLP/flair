@@ -6,10 +6,13 @@ import torch
 import flair.nn
 from flair.data import Dictionary, Sentence, Token
 from flair.embeddings import TokenEmbeddings
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 
 log = logging.getLogger("flair")
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
     """
     This is a simple class of models that tags individual words in text.

@@ -1,5 +1,5 @@
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import torch
 import torch.nn.functional as F
@@ -31,7 +31,7 @@ class ImageEmbeddings(Embeddings[Image]):
 
     def to_params(self) -> Dict[str, Any]:
         # legacy pickle-like saving for image embeddings, as implementation details are not obvious
-        return self.__getstate__()
+        return self.__getstate__()  # type: ignore
 
     @classmethod
     def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
@@ -45,6 +45,7 @@ class ImageEmbeddings(Embeddings[Image]):
 class IdentityImageEmbeddings(ImageEmbeddings):
     def __init__(self, transforms):
         import PIL as pythonimagelib
+
         self.PIL = pythonimagelib
         self.name = "Identity"
         self.transforms = transforms

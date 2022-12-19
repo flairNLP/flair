@@ -5,11 +5,14 @@ import torch
 
 import flair.embeddings
 import flair.nn
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Dictionary, Sentence, Span
 
 log = logging.getLogger("flair")
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     """
     Entity Linking Model
