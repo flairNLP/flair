@@ -187,7 +187,8 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
     if num_entities_before != num_entities_after:
         removed = num_entities_before - num_entities_after
         logger.warning(
-            f"WARNING: Corpus modified by filtering nested entities. Removed {removed} entities. Keep {num_entities_after} entities."
+            f"WARNING: Corpus modified by filtering nested entities. "
+            f"Removed {removed} entities. Keep {num_entities_after} entities."
         )
 
 
@@ -478,7 +479,7 @@ class HunerDataset(ColumnCorpus, ABC):
         else:
             if sentence_splitter:
                 logger.warning(
-                    f"The corpus {self.__class__.__name__} has a pre-defined sentence splitting, "
+                    f"WARNING: The corpus {self.__class__.__name__} has a pre-defined sentence splitting, "
                     f"thus just the tokenizer of the given sentence splitter is used"
                 )
                 self.sentence_splitter.tokenizer = sentence_splitter.tokenizer
