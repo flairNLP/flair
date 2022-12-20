@@ -693,7 +693,7 @@ class ColumnDataset(FlairDataset):
             # to set the metadata "domain" to "de-orcas"
             for comment_row in comment.split("\t"):
                 if "=" in comment_row:
-                    key, value = comment_row.split("=", 2)
+                    key, value = comment_row.split("=", 1)
                     sentence.add_metadata(key, value)
 
         if len(sentence) > 0:

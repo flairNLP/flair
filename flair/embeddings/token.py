@@ -661,11 +661,10 @@ class FlairEmbeddings(TokenEmbeddings):
             "am-forward": f"{am_path}/best-lm.pt",
             # Ukrainian
             "uk-forward": "https://huggingface.co/dchaplinsky/flair-uk-forward/resolve/main/best-lm.pt",
-            "uk-backward": "https://huggingface.co/dchaplinsky/flair-uk-backward/resolve/main/best-lm.pt"
+            "uk-backward": "https://huggingface.co/dchaplinsky/flair-uk-backward/resolve/main/best-lm.pt",
         }
 
-        if type(model) == str:
-
+        if isinstance(model, str):
             # load model if in pretrained model map
             if model.lower() in self.PRETRAINED_MODEL_ARCHIVE_MAP:
                 base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[model.lower()]
