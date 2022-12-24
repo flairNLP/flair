@@ -3,20 +3,12 @@ import stat
 import re
 import pickle
 import logging
-from statistics import mode
-from xmlrpc.client import Boolean
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data.dataloader import DataLoader
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 from transformers import (
-    AutoTokenizer,
-    AutoModel,
-    default_data_collator,
     PreTrainedTokenizer,
     PreTrainedModel,
 )
@@ -36,14 +28,12 @@ from pathlib import Path
 import subprocess
 import tempfile
 import faiss
-from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import Normalizer
-from scipy.sparse import csr_matrix
+from flair.embeddings import TransformerDocumentEmbeddings
 
 log = logging.getLogger("flair")
 
 
-class SparseEncoder:
+class SparseWordVectorizer:
     """
     Class to encode a list of mentions into a sparse tensor.
 
@@ -80,12 +70,15 @@ class SparseEncoder:
             pickle.dump(self.encoder, fout)
             log.info("Sparse encoder saved in {}".format(path))
 
-    def load_encoder(self, path: Path):
+    @classmethod
+    def load(cls, path: Path):
+        use_cuda = flair.device == "cuda"
+        newVectorizer = cls(use_cuda)
         with open(path, "rb") as fin:
-            self.encoder = pickle.load(fin)
+            newVectorizer.encoder = pickle.load(fin)
             log.info("Sparse encoder loaded from {}".format(path))
 
-        return self
+        return newVectorizer
 
 
 class TextPreprocess:
@@ -93,7 +86,7 @@ class TextPreprocess:
     Text Preprocess module
     Support lowercase, removing punctuation, typo correction
 
-    SSlightly modifed from Sung et al. 2020
+    Slightly modifed from Sung et al. 2020
     Biomedical Entity Representations with Synonym Marginalization
     https://github.com/dmis-lab/BioSyn/blob/master/src/biosyn/preprocesser.py#L5
     """
@@ -129,17 +122,6 @@ class TextPreprocess:
         text = text.strip()
 
         return text
-
-
-class NamesDataset(torch.utils.data.Dataset):
-    def __init__(self, encodings) -> None:
-        self.encodings = encodings
-
-    def __getitem__(self, idx):
-        return {key: val[idx].clone().detach() for key, val in self.encodings.items()}
-
-    def __len__(self):
-        return len(self.encodings.input_ids)
 
 
 class Ab3P:
@@ -285,8 +267,14 @@ class DictionaryDataset:
         return data
 
 
-class BioEntityLinkingModel:
-    def __init__(self, use_sparse_embeds: bool, max_length: int) -> None:
+class BiEncoderEntityLiker:
+    """
+    A class to load a model and use it to encode a dictionary and entities
+    """
+
+    def __init__(
+        self, use_sparse_embeds: bool, max_length: int, index_use_cuda: bool
+    ) -> None:
         self.use_sparse_embeds = use_sparse_embeds
         self.max_length = max_length
 
@@ -296,14 +284,27 @@ class BioEntityLinkingModel:
         self.sparse_encoder = None
         self.sparse_weight = None
 
-        self.use_cuda = torch.cuda.is_available()
+        self.index_use_cuda = index_use_cuda and flair.device.type == "cuda"
+
+        self.dense_dictionary_index = None
+        self.dict_sparse_embeds = None
+
+        self.dictionary = None
 
     def load_model(
         self,
         model_name_or_path: Union[str, Path],
         dictionary_name_or_path: str,
         mean_centering: bool,
+        batch_size: int = 1024,
     ):
+        """
+        Load the model and embed the dictionary
+        :param model_name_or_path: The path of the model
+        :param dictionary_name_or_path: The path of the dictionary
+        :param mean_centering: Whether to mean center the dictionary embeddings
+        :param batch_size: The batch size for embedding the dictionary
+        """
         self.load_dense_encoder(model_name_or_path)
 
         if self.use_sparse_embeds:
@@ -314,27 +315,24 @@ class BioEntityLinkingModel:
             model_name_or_path=model_name_or_path,
             dictionary_name_or_path=dictionary_name_or_path,
             mean_centering=mean_centering,
+            batch_size=batch_size,
         )
 
         return self
 
-    # always used
     def load_dense_encoder(
         self, model_name_or_path: Union[str, Path]
     ) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
-        # load dense encoder from path or from hugging face
-        self.encoder = AutoModel.from_pretrained(model_name_or_path)
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            model_name_or_path, use_fast=True, do_lower_case=True
-        )
-        if self.use_cuda:
-            self.encoder = self.encoder.to("cuda")
 
-        return self.encoder, self.tokenizer
+        self.encoder = TransformerDocumentEmbeddings(
+            model_name_or_path, is_token_embedding=False
+        )
+
+        return self.encoder
 
     def load_sparse_encoder(
         self, model_name_or_path: Union[str, Path]
-    ) -> SparseEncoder:
+    ) -> SparseWordVectorizer:
         sparse_encoder_path = os.path.join(model_name_or_path, "sparse_encoder.pk")
         # check file exists
         if not os.path.isfile(sparse_encoder_path):
@@ -347,7 +345,7 @@ class BioEntityLinkingModel:
                 cache_dir=flair.cache_root / "models" / model_name_or_path,
             )
 
-        self.sparse_encoder = SparseEncoder().load_encoder(path=sparse_encoder_path)
+        self.sparse_encoder = SparseWordVectorizer.load(path=sparse_encoder_path)
 
         return self.sparse_encoder
 
@@ -373,13 +371,16 @@ class BioEntityLinkingModel:
 
         return self.sparse_weight
 
-    def embed_sparse(self, names: list, show_progress: bool = False) -> np.ndarray:
+    def embed_sparse(
+        self, names: list, show_progress: bool = False, batch_size: int = 1024
+    ) -> np.ndarray:
         """
         Embedding data into sparse representations
         :param names np.array: An array of names
+        :param show_progress bool: Whether to show a progress bar
+        :param batch_size int: The batch size for embedding
         :returns sparse_embeds np.array: A list of sparse embeddings
         """
-        batch_size = 1024
         sparse_embeds = []
 
         if show_progress:
@@ -400,26 +401,21 @@ class BioEntityLinkingModel:
 
         return sparse_embeds
 
-    # Attention: uses cuda
     def embed_dense(
         self,
         names: np.ndarray,
         show_progress: bool = False,
         batch_size: int = 2048,
-        agg_mode: str = "cls",
     ) -> np.ndarray:
         """
         Embedding data into dense representations for SapBert
         :param names: np.array of names
         :param show_progress: bool to toggle progress bar
         :param batch_size: batch size
-        :param agg_mode: options are 'cls', 'mean_all_tol' and 'mean'
-        :return dense_embeds: list of dense embeddings
+        :return dense_embeds: list of dense embeddings of the names
         """
         self.encoder.eval()  # prevent dropout
 
-        # Difference: batch size given as parameter
-        batch_size = batch_size
         dense_embeds = []
 
         with torch.no_grad():
@@ -432,44 +428,24 @@ class BioEntityLinkingModel:
                 iterations = range(0, len(names), batch_size)
 
             for start in iterations:
+
+                # make batch
                 end = min(start + batch_size, len(names))
-                batch = names[start:end]
-                batch_tokenized_names = self.tokenizer.batch_encode_plus(
-                    batch,
-                    add_special_tokens=True,
-                    truncation=True,
-                    max_length=self.max_length,
-                    padding="max_length",
-                    return_tensors="pt",
-                )
-                batch_tokenized_names_cuda = {}
-                for k, v in batch_tokenized_names.items():
-                    batch_tokenized_names_cuda[k] = v.cuda()
+                batch = [Sentence(name) for name in names[start:end]]
 
-                last_hidden_state = self.encoder(**batch_tokenized_names_cuda)[0]
-                if agg_mode == "cls":
-                    batch_dense_embeds = last_hidden_state[:, 0, :]  # [CLS]
-                elif agg_mode == "mean_all_tok":
-                    batch_dense_embeds = last_hidden_state.mean(1)  # pooling
-                elif agg_mode == "mean":
-                    batch_dense_embeds = (
-                        last_hidden_state
-                        * batch_tokenized_names_cuda["attention_mask"].unsqueeze(-1)
-                    ).sum(1) / batch_tokenized_names_cuda["attention_mask"].sum(
-                        -1
-                    ).unsqueeze(
-                        -1
-                    )
-                else:
-                    raise ValueError("agg_mode must be 'cls', 'mean_all_tok' or 'mean'")
+                # embed batch
+                self.encoder.embed(batch)
 
-                batch_dense_embeds = batch_dense_embeds.cpu().detach().numpy()
-                dense_embeds.append(batch_dense_embeds)
-        dense_embeds = np.concatenate(dense_embeds, axis=0)
+                dense_embeds += [
+                    name.embedding.cpu().detach().numpy() for name in batch
+                ]
 
-        return dense_embeds
+                if flair.device.type == "cuda":
+                    torch.cuda.empty_cache()
 
-    def get_score_matrix(
+        return np.array(dense_embeds)
+
+    def get_sparse_similarity_scores(
         self,
         query_embeds: np.ndarray,
         dict_embeds: np.ndarray,
@@ -494,7 +470,7 @@ class BioEntityLinkingModel:
 
         return score_matrix
 
-    def retrieve_candidate(
+    def retrieve_sparse_topk_candidates(
         self,
         score_matrix: np.ndarray,
         topk: int,
@@ -504,7 +480,7 @@ class BioEntityLinkingModel:
         """
         Return sorted topk idxes (descending order)
         :param score_matrix: 2d numpy array of scores
-        :param topk: number of candidates
+        :param topk: number of candidates to retrieve
         :return res: d numpy array of ids [# of query , # of dict]
         :return scores: numpy array of top scores
         """
@@ -514,7 +490,9 @@ class BioEntityLinkingModel:
         for i in tqdm(
             np.arange(0, score_matrix.shape[0], batch_size), disable=not show_progress
         ):
-            score_matrix_tmp = torch.tensor(score_matrix[i : i + batch_size]).cuda()
+            score_matrix_tmp = torch.tensor(
+                score_matrix[i : i + batch_size], device=flair.device
+            )
             sorted_values, matrix_sorted = torch.sort(
                 score_matrix_tmp, dim=1, descending=True
             )
@@ -529,13 +507,12 @@ class BioEntityLinkingModel:
 
         return res.numpy(), scores.numpy()
 
-    # possible values for agg_mode: cls|mean_pool|nospec
     def get_predictions(
         self,
         mention: str,
         topk: int,
         tgt_space_mean_vec: np.ndarray = None,
-        agg_mode: str = "cls",
+        batch_size: int = 1024,
     ) -> np.ndarray:
         """
         Return the topk predictions for a mention and their scores
@@ -554,24 +531,33 @@ class BioEntityLinkingModel:
         # normalize mention vector
         faiss.normalize_L2(mention_dense_embeds)
 
+        assert (
+            self.dense_dictionary_index is not None
+        ), "Index not built yet, please run load_model to embed your dictionary before calling get_predictions"
+
         # if using sparse embeds: calculate hybrid scores with dense and sparse embeds
         if self.use_sparse_embeds:
+            assert (
+                self.dict_sparse_embeds is not None
+            ), "Index not built yet, please run load_model to embed your dictionary before calling get_predictions"
             # search for more than topk candidates to use them when combining with sparse scores
             # get candidates from dense embeddings
             dense_scores, dense_ids = self.dense_dictionary_index.search(
                 x=mention_dense_embeds, k=topk + 10
             )
             # get sparse embeds for mention
-            mention_sparse_embeds = self.embed_sparse(names=[mention])
+            mention_sparse_embeds = self.embed_sparse(
+                names=[mention], batch_size=batch_size
+            )
             # normalize mention vector
             faiss.normalize_L2(mention_sparse_embeds)
 
             # get candidates from sprase embeddings
             sparse_weight = self.get_sparse_weight().item()
-            sparse_score_matrix = self.get_score_matrix(
+            sparse_score_matrix = self.get_sparse_similarity_scores(
                 query_embeds=mention_sparse_embeds, dict_embeds=self.dict_sparse_embeds
             )
-            sparse_ids, sparse_distances = self.retrieve_candidate(
+            sparse_ids, sparse_distances = self.retrieve_sparse_topk_candidates(
                 score_matrix=sparse_score_matrix, topk=topk + 10
             )
 
@@ -626,6 +612,7 @@ class BioEntityLinkingModel:
         model_name_or_path: str,
         dictionary_name_or_path: str,
         mean_centering: bool,
+        batch_size: int,
     ):
         # check for embedded dictionary in cache
         dictionary_name = os.path.splitext(os.path.basename(dictionary_name_or_path))[0]
@@ -638,37 +625,11 @@ class BioEntityLinkingModel:
 
         # If exists, load the cached dictionary indices
         if os.path.exists(cached_dictionary_path):
-            with open(cached_dictionary_path, "rb") as cached_file:
-                cached_dictionary = pickle.load(cached_file)
-            log.info(
-                "Loaded dictionary from cached file {}".format(cached_dictionary_path)
-            )
-
-            (self.dictionary, self.dict_sparse_embeds, self.dense_dictionary_index,) = (
-                cached_dictionary["dictionary"],
-                cached_dictionary["dict_sparse_embeds"],
-                cached_dictionary["dense_dictionary_index"],
-            )
-            self.dense_dictionary_index = faiss.index_cpu_to_gpu(
-                faiss.StandardGpuResources(), 0, self.dense_dictionary_index
-            )
+            self.load_cached_dictionary(cached_dictionary_path)
 
         # else, load and embed
         else:
-            # use provided dictionary
-            if dictionary_name_or_path == "ctd-disease":
-                self.dictionary = NEL_CTD_DISEASE_DICT().data
-            elif dictionary_name_or_path == "ctd-chemical":
-                self.dictionary = NEL_CTD_CHEMICAL_DICT().data
-            elif dictionary_name_or_path == "ncbi-gene":
-                self.dictionary = NEL_NCBI_GENE_DICT().data
-            elif dictionary_name_or_path == "ncbi-taxonomy":
-                self.dictionary = NEL_NCBI_TAXONOMY_DICT().data
-            # use custom dictionary file
-            else:
-                self.dictionary = DictionaryDataset(
-                    dictionary_path=dictionary_name_or_path
-                ).data
+            self.load_dictionary(dictionary_name_or_path)
 
             # embed dictionary
             dictionary_names = [row[0] for row in self.dictionary]
@@ -679,12 +640,12 @@ class BioEntityLinkingModel:
                     names=dictionary_names, show_progress=True
                 )
                 self.dict_sparse_embeds = self.embed_sparse(
-                    names=dictionary_names, show_progress=True
+                    names=dictionary_names, show_progress=True, batch_size=batch_size
                 )
 
             # create only dense embeddings
             else:
-                self.dict_dense_embeds = self.sapbert_embed_dense(
+                self.dict_dense_embeds = self.embed_dense(
                     names=dictionary_names, show_progress=True
                 )
                 self.dict_sparse_embeds = None
@@ -694,26 +655,24 @@ class BioEntityLinkingModel:
             # to use cosine similarity, we normalize the vectors and then use inner product
             faiss.normalize_L2(self.dict_dense_embeds)
 
-            dense_index = faiss.IndexFlatIP(dimension)
-            self.dense_dictionary_index = faiss.index_cpu_to_gpu(
-                faiss.StandardGpuResources(), 0, dense_index
-            )
+            self.dense_dictionary_index = faiss.IndexFlatIP(dimension)
+            if self.index_use_cuda:
+                self.dense_dictionary_index = faiss.index_cpu_to_gpu(
+                    faiss.StandardGpuResources(), 0, self.dense_dictionary_index
+                )
             self.dense_dictionary_index.add(self.dict_dense_embeds)
 
-            # create a cpu version of the index to cache (IO does not work with gpu index)
-            cache_index_dense = faiss.index_gpu_to_cpu(self.dense_dictionary_index)
-
-            # cache dictionary
-            cached_dictionary = {
-                "dictionary": self.dictionary,
-                "sparse_dictionary_embeds": self.dict_sparse_embeds,
-                "dense_dictionary_index": cache_index_dense,
-            }
-            if not os.path.exists(cache_folder):
-                os.mkdir(cache_folder)
-            with open(cached_dictionary_path, "wb") as cache_file:
-                pickle.dump(cached_dictionary, cache_file)
-            print("Saving dictionary into cached file {}".format(cache_folder))
+            if self.index_use_cuda:
+                # create a cpu version of the index to cache (IO does not work with gpu index)
+                cache_index_dense = faiss.index_gpu_to_cpu(self.dense_dictionary_index)
+                # cache dictionary
+                self.cache_dictionary(
+                    cache_index_dense, cache_folder, cached_dictionary_path
+                )
+            else:
+                self.cache_dictionary(
+                    self.dense_dictionary_index, cache_folder, cached_dictionary_path
+                )
 
         # apply mean centering
         if mean_centering:
@@ -722,8 +681,52 @@ class BioEntityLinkingModel:
         else:
             self.tgt_space_mean_vec = None
 
+    def load_cached_dictionary(self, cached_dictionary_path: str):
+        with open(cached_dictionary_path, "rb") as cached_file:
+            cached_dictionary = pickle.load(cached_file)
+            log.info(
+                "Loaded dictionary from cached file {}".format(cached_dictionary_path)
+            )
 
-class BiomedicalEntityLinking:
+            (self.dictionary, self.dict_sparse_embeds, self.dense_dictionary_index,) = (
+                cached_dictionary["dictionary"],
+                cached_dictionary["sparse_dictionary_embeds"],
+                cached_dictionary["dense_dictionary_index"],
+            )
+            self.dense_dictionary_index = faiss.index_cpu_to_gpu(
+                faiss.StandardGpuResources(), 0, self.dense_dictionary_index
+            )
+
+    def load_dictionary(self, dictionary_name_or_path: str):
+        # use provided dictionary
+        if dictionary_name_or_path == "ctd-disease":
+            self.dictionary = NEL_CTD_DISEASE_DICT().data
+        elif dictionary_name_or_path == "ctd-chemical":
+            self.dictionary = NEL_CTD_CHEMICAL_DICT().data
+        elif dictionary_name_or_path == "ncbi-gene":
+            self.dictionary = NEL_NCBI_GENE_DICT().data
+        elif dictionary_name_or_path == "ncbi-taxonomy":
+            self.dictionary = NEL_NCBI_TAXONOMY_DICT().data
+        # use custom dictionary file
+        else:
+            self.dictionary = DictionaryDataset(
+                dictionary_path=dictionary_name_or_path
+            ).data
+
+    def cache_dictionary(self, cache_index_dense, cache_folder, cached_dictionary_path):
+        cached_dictionary = {
+            "dictionary": self.dictionary,
+            "sparse_dictionary_embeds": self.dict_sparse_embeds,
+            "dense_dictionary_index": cache_index_dense,
+        }
+        if not os.path.exists(cache_folder):
+            os.mkdir(cache_folder)
+        with open(cached_dictionary_path, "wb") as cache_file:
+            pickle.dump(cached_dictionary, cache_file)
+        print("Saving dictionary into cached file {}".format(cache_folder))
+
+
+class MultiBiEncoderEntityLinker:
     """
     Biomedical Entity Linker for HunFlair
     Can predict top k entities on sentences annotated with biomedical entity mentions
@@ -731,33 +734,35 @@ class BiomedicalEntityLinking:
 
     def __init__(
         self,
-        model,
-        ab3p,
+        models: List[BiEncoderEntityLiker],
+        ab3p=None,
     ) -> None:
         """
         Initalize class, called by classmethod load
-        :param model: object containing the dense and sparse encoders
+        :param models: list of objects containing the dense and sparse encoders
         :param ab3p_path: path to ab3p model
         """
-        self.model = model
+        self.models = models
         self.text_preprocessor = TextPreprocess()
         self.ab3p = ab3p
 
     @classmethod
     def load(
         cls,
-        model_name,
-        dictionary_path: Union[str, Path] = None,
+        model_names: Union[List[str], str],
+        dictionary_names_or_paths: Union[str, Path, List[str], List[Path]] = None,
         use_sparse_and_dense_embeds: bool = True,
         max_length=25,
+        batch_size=1024,
+        index_use_cuda=False,
         use_ab3p: bool = True,
         ab3p_path: Path = None,
     ):
         """
         Load a model for biomedical named entity normalization on sentences annotated with
         biomedical entity mentions
-        :param model_name: Name of pretrained model to use. Possible values for pretrained models are:
-        chemical, disease, gene, sapbert-bc5cdr-disease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease,
+        :param model_names: List of names of pretrained models to use. Possible values for pretrained models are:
+        chemical, disease, gene, sapbert-bc5cdr-dissaease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease,
         biobert-ncbi-disease, biobert-bc5cdr-chemical, biosyn-biobert-bc2gn, biosyn-sapbert-bc2gn, sapbert
         :param dictionary_path: Name of one of the provided dictionaries listing all possible ids and their synonyms
         or a path to a dictionary file with each line in the format: id||name, with one line for each name of a concept.
@@ -765,14 +770,72 @@ class BiomedicalEntityLinking:
         taxonomy and ncbi-taxonomy
         :param use_sparse_and_dense_embeds: If True, uses a combinations of sparse and dense embeddings for the dictionary and the mentions
         If False, uses only dense embeddings
+        :param batch_size: Batch size for the dense encoder
         """
+        # validate input: check that amount of models and dictionaries match
+        if isinstance(model_names, str):
+            model_names = [model_names]
+
+        # case one dictionary for all models
+        if isinstance(dictionary_names_or_paths, str) or isinstance(
+            dictionary_names_or_paths, Path
+        ):
+            dictionary_names_or_paths = [dictionary_names_or_paths] * len(model_names)
+        # case no dictionary provided
+        elif dictionary_names_or_paths is None:
+            dictionary_names_or_paths = [None] * len(model_names)
+        # case one model, multiple dictionaries
+        elif len(model_names) == 1:
+            model_names = model_names * len(dictionary_names_or_paths)
+        # case mismatching amount of models and dictionaries
+        elif len(model_names) != len(dictionary_names_or_paths):
+            raise ValueError(
+                "Amount of models and dictionaries must match. Got {} models and {} dictionaries".format(
+                    len(model_names), len(dictionary_names_or_paths)
+                )
+            )
+        assert len(model_names) == len(dictionary_names_or_paths)
+
+        models = []
+
+        for model_name, dictionary_name_or_path in zip(
+            model_names, dictionary_names_or_paths
+        ):
+            model = BiEncoderEntityLiker(
+                use_sparse_embeds=use_sparse_and_dense_embeds,
+                max_length=max_length,
+                index_use_cuda=index_use_cuda,
+            )
+
+            # get the paths for the model and dictionary
+            model_path = cls.__get_model_path(model_name, use_sparse_and_dense_embeds)
+            dictionary_path = cls.__get_dictionary_path(
+                dictionary_name_or_path, model_name=model_name
+            )
+
+            model.load_model(
+                model_name_or_path=model_path,
+                dictionary_name_or_path=dictionary_path,
+                mean_centering=False,
+                batch_size=batch_size,
+            )
+            models.append(model)
+
+        # load ab3p model
+        ab3p = Ab3P.load(ab3p_path) if use_ab3p else None
+
+        return cls(models, ab3p)
+
+    @staticmethod
+    def __get_model_path(
+        model_name: str, use_sparse_and_dense_embeds
+    ) -> BiEncoderEntityLiker:
         model_name = model_name.lower()
         model_path = model_name
 
         # if a provided model is used,
         # modify model name to huggingface path
 
-        # BioSyn
         if model_name in [
             "sapbert-bc5cdr-disease",
             "sapbert-ncbi-disease",
@@ -786,7 +849,6 @@ class BiomedicalEntityLinking:
             model_path = "dmis-lab/biosyn-" + model_name
         elif model_name == "sapbert":
             model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
-            use_sparse_and_dense_embeds = False
         elif use_sparse_and_dense_embeds:
             if model_name == "disease":
                 model_path = "dmis-lab/biosyn-sapbert-bc5cdr-disease"
@@ -803,12 +865,10 @@ class BiomedicalEntityLinking:
                 raise ValueError(
                     "No trained model for gene entity linking using only dense embeddings."
                 )
+        return model_path
 
-        # Initalize model
-        model = BioEntityLinkingModel(
-            use_sparse_embeds=use_sparse_and_dense_embeds, max_length=max_length
-        )
-
+    @staticmethod
+    def __get_dictionary_path(dictionary_path: str, model_name: str):
         # determine dictionary to use
         if dictionary_path == "disease":
             dictionary_path = "ctd-disease"
@@ -847,16 +907,7 @@ class BiomedicalEntityLinking:
                 )
                 raise ValueError("Invalid dictionary")
 
-        model.load_model(
-            model_name_or_path=model_path,
-            dictionary_name_or_path=dictionary_path,
-            mean_centering=False,
-        )
-
-        # load ab3p model
-        ab3p = Ab3P.load(ab3p_path) if use_ab3p else None
-
-        return cls(model, ab3p)
+        return dictionary_path
 
     def predict(
         self,
@@ -881,55 +932,57 @@ class BiomedicalEntityLinking:
         if self.ab3p is not None:
             abbreviation_dict = self.ab3p.build_abbreviation_dict(sentences)
 
-        for sentence in sentences:
-            for entity in sentence.get_labels(input_entity_annotation_layer):
-                # preprocess mention
-                if abbreviation_dict is not None:
-                    parsed_tokens = []
-                    for token in entity.span:
-                        token = self.text_preprocessor.run(token.text)
-                        if token in abbreviation_dict:
-                            parsed_tokens.append(abbreviation_dict[token.lower()])
-                        elif len(token) != 0:
-                            parsed_tokens.append(token)
-                    mention = " ".join(parsed_tokens)
-                else:
-                    mention = self.text_preprocessor.run(entity.span.text)
+        for model in self.models:
 
-                # get predictions from dictionary
-                predictions = self.model.get_predictions(mention, topk)
+            for sentence in sentences:
+                for entity in sentence.get_labels(input_entity_annotation_layer):
+                    # preprocess mention
+                    if abbreviation_dict is not None:
+                        parsed_tokens = []
+                        for token in entity.span:
+                            token = self.text_preprocessor.run(token.text)
+                            if token in abbreviation_dict:
+                                parsed_tokens.append(abbreviation_dict[token.lower()])
+                            elif len(token) != 0:
+                                parsed_tokens.append(token)
+                        mention = " ".join(parsed_tokens)
+                    else:
+                        mention = self.text_preprocessor.run(entity.span.text)
 
-                # add predictions to entity
-                label_name = (
-                    (input_entity_annotation_layer + "_nen")
-                    if (input_entity_annotation_layer is not None)
-                    else "nen"
-                )
-                for prediction in predictions:
-                    # if concept unique id is made up of mulitple ids, seperated by '|'
-                    # seperate it into cui and additional_labels
-                    cui = prediction[1]
-                    if "|" in cui:
-                        labels = cui.split("|")
-                        cui = labels[0]
-                        additional_labels = labels[1:]
-                    else:
-                        additional_labels = None
-                    # determine ontology:
-                    if ":" in cui:
-                        cui_parts = cui.split(":")
-                        ontology = ":".join(cui_parts[0:-1])
-                        cui = cui_parts[-1]
-                    else:
-                        ontology = None
-                    sentence.add_complex_label(
-                        typename=label_name,
-                        label=EntityLinkingLabel(
-                            span=entity.span,
-                            id=cui,
-                            concept_name=prediction[0],
-                            additional_ids=additional_labels,
-                            ontology=ontology,
-                            score=prediction[2].astype(float),
-                        ),
+                    # get predictions from dictionary
+                    predictions = model.get_predictions(mention, topk)
+
+                    # add predictions to entity
+                    label_name = (
+                        (input_entity_annotation_layer + "_nen")
+                        if (input_entity_annotation_layer is not None)
+                        else "nen"
                     )
+                    for prediction in predictions:
+                        # if concept unique id is made up of mulitple ids, seperated by '|'
+                        # seperate it into cui and additional_labels
+                        cui = prediction[1]
+                        if "|" in cui:
+                            labels = cui.split("|")
+                            cui = labels[0]
+                            additional_labels = labels[1:]
+                        else:
+                            additional_labels = None
+                        # determine ontology:
+                        if ":" in cui:
+                            cui_parts = cui.split(":")
+                            ontology = ":".join(cui_parts[0:-1])
+                            cui = cui_parts[-1]
+                        else:
+                            ontology = None
+                        sentence.add_complex_label(
+                            typename=label_name,
+                            label=EntityLinkingLabel(
+                                span=entity.span,
+                                id=cui,
+                                concept_name=prediction[0],
+                                additional_ids=additional_labels,
+                                ontology=ontology,
+                                score=prediction[2].astype(float),
+                            ),
+                        )

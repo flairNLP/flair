@@ -1,4 +1,4 @@
-from .biomedical_entity_linking import BiomedicalEntityLinking
+from .biomedical_entity_linking import MultiBiEncoderEntityLinker
 from .dependency_parser_model import DependencyParser
 from .entity_linker_model import EntityLinker
 from .language_model import LanguageModel
