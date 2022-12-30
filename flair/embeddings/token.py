@@ -12,7 +12,7 @@ import torch
 from bpemb import BPEmb
 from gensim.models import KeyedVectors
 from torch import nn
-from torch.nn import RNNBase
+from torch.nn import RNNBase, Dropout
 
 import flair
 from flair.data import Corpus, Dictionary, Sentence, Token, _iter_dataset
@@ -68,7 +68,8 @@ class ReadoutLayer(TokenEmbeddings):
                  embeddings: TransformerWordEmbeddings,
                  lstm_states: int = 64,
                  bidirectional=False,
-                 locked_dropout=0.5,
+                 locked_dropout=0.0,
+                 dropout=0.0,
                  reproject_embeddings=True,
                  encode_positions=False,
                  ):
@@ -84,6 +85,7 @@ class ReadoutLayer(TokenEmbeddings):
         self.__embedding_length: int = lstm_states * 2 if bidirectional else lstm_states
 
         self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
+        self.dropout = Dropout(dropout)
         self.reproject_embeddings = reproject_embeddings
 
 
@@ -125,6 +127,7 @@ class ReadoutLayer(TokenEmbeddings):
 
         # apply dropout
         stacked_token_embeddings = self.locked_dropout(stacked_token_embeddings)
+        stacked_token_embeddings = self.dropout(stacked_token_embeddings)
 
         if self.reproject_embeddings:
             stacked_token_embeddings = self.embedding2nn(stacked_token_embeddings)
