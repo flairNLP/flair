@@ -1262,7 +1262,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
         return self.forward(**tensors)
 
-    def export_onnx(self, path: str, example_sentences: List[Sentence], **kwargs) -> TransformerOnnxEmbeddings:
+    def export_onnx(self, path: Union[str, Path], example_sentences: List[Sentence], **kwargs) -> TransformerOnnxEmbeddings:
         """
         Export TransformerEmbeddings to OnnxFormat.
         :param example_sentences: a list of sentences that will be used for tracing. It is recommended to take 2-4

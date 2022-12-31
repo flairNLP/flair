@@ -261,3 +261,29 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         sentence = Sentence("El pasto es verde.")
         embeddings = TransformerWordEmbeddings("PlanTL-GOB-ES/roberta-base-biomedical-es", layers="-1")
         embeddings.embed(sentence)
+
+    @pytest.mark.skipif(importlib.util.find_spec("onnxruntime") is None, reason="Onnx export require 'onnxruntime'")
+    def test_onnx_export_works(self, results_base_path):
+        texts = [
+            "I live in Berlin",
+            "I live in Vienna",
+            "Berlin to Germany is like Vienna to Austria",
+        ]
+
+        normal_sentences = [
+            Sentence(text) for text in texts
+        ]
+        onnx_sentences = [
+            Sentence(text) for text in texts
+        ]
+
+        embeddings = TransformerWordEmbeddings("distilbert-base-uncased")
+        results_base_path.mkdir(exist_ok=True, parents=True)
+        onnx_embeddings = embeddings.export_onnx(results_base_path / "onnx-export.onnx", normal_sentences)
+
+        embeddings.embed(normal_sentences)
+        onnx_embeddings.embed(onnx_sentences)
+
+        for sent_a, sent_b in zip(normal_sentences, onnx_sentences):
+            for token_a, token_b in zip(sent_a, sent_b):
+                assert torch.isclose(token_a.get_embedding(), token_b.get_embedding(), atol=1e-6).all()

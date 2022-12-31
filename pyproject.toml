@@ -18,6 +18,8 @@ flake8-ignore = ["E203", "W503"]  # See https://github.com/PyCQA/pycodestyle/iss
 addopts = "--flake8 --mypy --isort"
 filterwarnings = [
     "error",  # Convert all warnings to errors
+    'ignore:torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables',  # Distilbert warning
+    'ignore:TorchScript will treat type annotations of Tensor:UserWarning',  # Torch onnx export warns about it ignoring types, however we still like types.
     'ignore:Please use `triu` from the `scipy.linalg` namespace, the `scipy.linalg.special_matrices` namespace is deprecated.',  # ignore gensim using deprecated scipy
     'ignore:bilinear is deprecated and will be removed in Pillow 10',  # huggingface layoutlmv2 has deprecated calls.
     'ignore:nearest is deprecated and will be removed in Pillow 10',  # huggingface layoutlmv2 has deprecated calls.
