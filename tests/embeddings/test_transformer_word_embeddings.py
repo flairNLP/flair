@@ -41,7 +41,6 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             def forward(
                 self,
                 input_ids: torch.Tensor,
-                sub_token_lengths: torch.LongTensor,
                 token_lengths: torch.LongTensor,
                 attention_mask: torch.Tensor,
                 overflow_to_sample_mapping: torch.Tensor,
@@ -49,7 +48,6 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             ):
                 return self.embedding.forward(
                     input_ids=input_ids,
-                    sub_token_lengths=sub_token_lengths,
                     token_lengths=token_lengths,
                     attention_mask=attention_mask,
                     overflow_to_sample_mapping=overflow_to_sample_mapping,
@@ -66,7 +64,6 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             "attention_mask",
             "input_ids",
             "overflow_to_sample_mapping",
-            "sub_token_lengths",
             "token_lengths",
             "word_ids",
         ]
@@ -270,12 +267,8 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             "Berlin to Germany is like Vienna to Austria",
         ]
 
-        normal_sentences = [
-            Sentence(text) for text in texts
-        ]
-        onnx_sentences = [
-            Sentence(text) for text in texts
-        ]
+        normal_sentences = [Sentence(text) for text in texts]
+        onnx_sentences = [Sentence(text) for text in texts]
 
         embeddings = TransformerWordEmbeddings("distilbert-base-uncased")
         results_base_path.mkdir(exist_ok=True, parents=True)

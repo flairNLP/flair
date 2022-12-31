@@ -1215,8 +1215,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if self.token_embedding:
             assert word_ids is not None
             assert token_lengths is not None
-            all_token_embeddings = torch.zeros(
-                word_ids.shape[0], token_lengths.max(), self.embedding_length_internal, device=flair.device  # type: ignore
+            all_token_embeddings = torch.zeros(  # type: ignore
+                word_ids.shape[0], token_lengths.max(), self.embedding_length_internal, device=flair.device
             )
             true_tensor = torch.ones_like(word_ids[:, :1], dtype=torch.bool)
             if self.subtoken_pooling == "first":
@@ -1262,7 +1262,9 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
         return self.forward(**tensors)
 
-    def export_onnx(self, path: Union[str, Path], example_sentences: List[Sentence], **kwargs) -> TransformerOnnxEmbeddings:
+    def export_onnx(
+        self, path: Union[str, Path], example_sentences: List[Sentence], **kwargs
+    ) -> TransformerOnnxEmbeddings:
         """
         Export TransformerEmbeddings to OnnxFormat.
         :param example_sentences: a list of sentences that will be used for tracing. It is recommended to take 2-4
