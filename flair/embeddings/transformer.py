@@ -221,6 +221,8 @@ def _reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens
         special_tokens.append(embedding.tokenizer.bos_token)
     if embedding.tokenizer._cls_token:
         special_tokens.append(embedding.tokenizer.cls_token)
+    if embedding.tokenizer._sep_token:
+        special_tokens.append(embedding.tokenizer.sep_token)
 
     # iterate over subtokens and reconstruct tokens
     for subtoken_id, subtoken in enumerate(subtokens):
@@ -243,7 +245,6 @@ def _reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens
         subtoken_count += 1
 
         reconstructed_token = reconstructed_token + subtoken
-        print(reconstructed_token)
 
         if reconstructed_token.lower() == token_text:
             # we cannot handle unk_tokens perfectly, so let's assume that one unk_token corresponds to one token.
