@@ -109,6 +109,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         model_state = {
             **super()._get_state_dict(),
             "word_embeddings": self.embeddings,
+            "span_embeddings": self.span_embeddings,
             "label_type": self.label_type,
             "label_dictionary": self.label_dictionary,
             "pooling_operation": self.pooling_operation,
@@ -125,13 +126,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             for span in datapoint.get_spans(gold_label_type):
                 span_string = ""
                 if self.span_embeddings:
-                    # self.span_embeddings.embed(span)
+                    self.span_embeddings.embed(span) # necessary for gold spans that didn't get "entity" so are not yet embedded (?)
                     embedding = span.get_embedding().tolist()
+                    #print(span, embedding)
                     span_string = f'(' \
                                   f'MISC: {round(embedding[0], 2)}, ' \
                                   f'ORG: {round(embedding[1], 2)}, ' \
                                   f'PER: {round(embedding[2], 2)}, ' \
-                                  f'LOC: {round(embedding[3], 2)},' \
+                                  f'LOC: {round(embedding[3], 2)}, ' \
                                   f'total: {round(embedding[4], 2)}' \
                                   f')'
 
@@ -157,6 +159,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         return super()._init_model_with_state_dict(
             state,
             embeddings=state.get("word_embeddings"),
+            span_embeddings=state.get("span_embeddings"),
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type"),
             pooling_operation=state.get("pooling_operation"),
