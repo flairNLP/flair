@@ -844,6 +844,8 @@ class ModelTrainer:
         finally:
             if use_tensorboard:
                 writer.close()
+        optimizer.zero_grad(set_to_none=True)
+        del optimizer
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
