@@ -126,16 +126,21 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             for span in datapoint.get_spans(gold_label_type):
                 span_string = ""
                 if self.span_embeddings:
-                    self.span_embeddings.embed(span) # necessary for gold spans that didn't get "entity" so are not yet embedded (?)
+                    self.span_embeddings.embed(span)
                     embedding = span.get_embedding().tolist()
                     #print(span, embedding)
-                    span_string = f'(' \
-                                  f'MISC: {round(embedding[0], 2)}, ' \
-                                  f'ORG: {round(embedding[1], 2)}, ' \
-                                  f'PER: {round(embedding[2], 2)}, ' \
-                                  f'LOC: {round(embedding[3], 2)}, ' \
-                                  f'total: {round(embedding[4], 2)}' \
-                                  f')'
+                    # span_string = f'(' \
+                    #               f'MISC: {round(embedding[0], 2)}, ' \
+                    #               f'ORG: {round(embedding[1], 2)}, ' \
+                    #               f'PER: {round(embedding[2], 2)}, ' \
+                    #               f'LOC: {round(embedding[3], 2)}, ' \
+                    #               f'total: {round(embedding[4], 2)}' \
+                    #               f')'
+
+                    span_string = f'('
+                    for i in range(len(embedding)):
+                        span_string+=f'{round(embedding[i], 2)}, '
+                    span_string += f')'
 
                 symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
                 eval_line += (
