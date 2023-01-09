@@ -19,13 +19,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     """
 
     def __init__(
-            self,
-            embeddings: flair.embeddings.TokenEmbeddings,
-            label_dictionary: Dictionary,
-            span_embeddings: Optional[flair.embeddings.Embeddings[Span]] = None,
-            pooling_operation: str = "first_last",
-            label_type: str = "nel",
-            **classifierargs,
+        self,
+        embeddings: flair.embeddings.TokenEmbeddings,
+        label_dictionary: Dictionary,
+        span_embeddings: Optional[flair.embeddings.Embeddings[Span]] = None,
+        pooling_operation: str = "first_last",
+        label_type: str = "nel",
+        input_span_label_type: Optional[str] = None,
+        **classifierargs,
     ):
         """
         Initializes an EntityLinker
@@ -35,12 +36,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         E.g. 'average' means that as text representation we take the average of the embeddings of the words in the mention. 'first&last' concatenates
         the embedding of the first and the embedding of the last word.
         :param label_type: name of the label you use.
+        :param input_span_label_type: name of the label you use to gather input spans.
         """
 
         final_embedding_size = 0
         if embeddings:
-            final_embedding_size += embeddings.embedding_length * 2 \
-                if pooling_operation == "first_last" else embeddings.embedding_length
+            final_embedding_size += (
+                embeddings.embedding_length * 2 if pooling_operation == "first_last" else embeddings.embedding_length
+            )
         if span_embeddings:
             final_embedding_size += span_embeddings.embedding_length
 
@@ -53,6 +56,10 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
 
         self.pooling_operation = pooling_operation
         self._label_type = label_type
+        if input_span_label_type is None:
+            self.input_span_label_type = label_type
+        else:
+            self.input_span_label_type = input_span_label_type
 
         cases: Dict[str, Callable[[Span, List[str]], torch.Tensor]] = {
             "average": self.emb_mean,
@@ -85,10 +92,17 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         return torch.mean(torch.cat([token.get_embedding(embedding_names) for token in span], 0), 0)
 
     def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Span]:
-        return sentence.get_spans(self.label_type)
+        span_type = self.input_span_label_type
+        if self.training:
+            span_type = self.label_type
+
+        return sentence.get_spans(span_type)
 
     def _filter_data_point(self, data_point: Sentence) -> bool:
-        return bool(data_point.get_labels(self.label_type))
+        span_type = self.input_span_label_type
+        if self.training:
+            span_type = self.label_type
+        return bool(data_point.get_labels(span_type))
 
     def _get_embedding_for_data_point(self, prediction_data_point: Span) -> torch.Tensor:
 
@@ -111,6 +125,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             "word_embeddings": self.embeddings,
             "span_embeddings": self.span_embeddings,
             "label_type": self.label_type,
+            "input_span_label_type": self.input_span_label_type,
             "label_dictionary": self.label_dictionary,
             "pooling_operation": self.pooling_operation,
             "loss_weights": self.weight_dict,
@@ -161,6 +176,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             span_embeddings=state.get("span_embeddings", None),
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type"),
+            input_span_label_type=state.get("input_span_label_type"),
             pooling_operation=state.get("pooling_operation"),
             loss_weights=state.get("loss_weights", {"<unk>": 0.3}),
             **kwargs,

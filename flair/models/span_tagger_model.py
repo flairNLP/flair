@@ -28,18 +28,18 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
     """
 
     def __init__(
-            self,
-            embeddings: flair.embeddings.TokenEmbeddings,
-            label_dictionary: Dictionary,
-            gazetteer_embeddings = None,
-            pooling_operation: str = "first_last",
-            label_type: str = "ner",
-            max_span_length: int = 5,
-            delete_goldsubspans_in_training: bool = False,
-            concat_span_length_to_embedding: bool = False,
-            resolve_overlaps: str = "by_token",
-            decoder=None,
-            **classifierargs,
+        self,
+        embeddings: flair.embeddings.TokenEmbeddings,
+        label_dictionary: Dictionary,
+        gazetteer_embeddings=None,
+        pooling_operation: str = "first_last",
+        label_type: str = "ner",
+        max_span_length: int = 5,
+        delete_goldsubspans_in_training: bool = False,
+        concat_span_length_to_embedding: bool = False,
+        resolve_overlaps: str = "by_token",
+        decoder=None,
+        **classifierargs,
     ):
         """
         Initializes a SpanTagger
@@ -61,8 +61,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
         """
         final_embedding_size = 0
         if embeddings:
-            final_embedding_size += embeddings.embedding_length * 2 \
-                if pooling_operation == "first_last" else embeddings.embedding_length
+            final_embedding_size += (
+                embeddings.embedding_length * 2 if pooling_operation == "first_last" else embeddings.embedding_length
+            )
         if gazetteer_embeddings:
             final_embedding_size += gazetteer_embeddings.embedding_length
         if concat_span_length_to_embedding:
@@ -95,7 +96,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
             "average": self.emb_mean,
             "first": self.emb_first,
             "last": self.emb_last,
-            "first_last": self.emb_firstAndLast
+            "first_last": self.emb_firstAndLast,
         }
 
         if pooling_operation not in cases:
@@ -103,7 +104,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
 
         if resolve_overlaps not in ["keep_overlaps", "no_boundary_clashes", "by_token", "prefer_longer"]:
             raise KeyError(
-                'resolve_overlaps has to be one of "keep_overlaps", "no_boundary_clashes", "by_token", "prefer_longer"')
+                'resolve_overlaps has to be one of "keep_overlaps", "no_boundary_clashes", "by_token", "prefer_longer"'
+            )
 
         self.aggregated_embedding = cases[pooling_operation]
 
@@ -130,7 +132,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
         # create list of all possible spans (consider given max_span_length)
         tokens = [token for token in sentence]
         for span_len in range(1, self.max_span_length + 1):
-            spans.extend([Span(tokens[n:n + span_len]) for n in range(len(tokens) - span_len + 1)])
+            spans.extend([Span(tokens[n : n + span_len]) for n in range(len(tokens) - span_len + 1)])
 
         # delete spans that are subspans of labeled spans (to help make gazetteer training signal more clear)
         if self.delete_goldsubspans_in_training and self.training:
@@ -142,14 +144,19 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                 goldspan_tokens = [token for token in goldspan.tokens]
                 for span_len in range(1, self.max_span_length + 1):
                     gold_subspans.extend(
-                        [Span(goldspan_tokens[n:n + span_len]) for n in
-                         range(len(goldspan_tokens) - span_len + 1)])
+                        [Span(goldspan_tokens[n : n + span_len]) for n in range(len(goldspan_tokens) - span_len + 1)]
+                    )
 
-            gold_subspans = [span for span in gold_subspans if
-                             not span.has_label(self.label_type)]  # FULL goldspans should be kept!
+            gold_subspans = [
+                span for span in gold_subspans if not span.has_label(self.label_type)
+            ]  # FULL goldspans should be kept!
 
             # finally: remove the gold_subspans from spans_sentence
-            spans = [span for span in spans if span.unlabeled_identifier not in [s.unlabeled_identifier for s in gold_subspans]]
+            spans = [
+                span
+                for span in spans
+                if span.unlabeled_identifier not in [s.unlabeled_identifier for s in gold_subspans]
+            ]
 
         return spans
 
@@ -227,9 +234,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                         # only add if none of the token is part of an already (so "higher") labeled span
                         if tag_span:
                             already_seen_token_indices.extend(token.idx for token in span_tokens)
-                            predicted_span = Span(
-                                [sentence.get_token(token.idx) for token in span_tokens]
-                            )
+                            predicted_span = Span([sentence.get_token(token.idx) for token in span_tokens])
                             predicted_span.add_label(label_type, value=span_prediction, score=span_score)
 
                 if self.resolve_overlaps == "no_boundary_clashes":
@@ -244,16 +249,16 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
 
                         # check if boundaries clash, if yes set tag_span = False
                         for (start_already, end_already) in already_predicted_spans:
-                            if (start_candidate < start_already <= end_candidate < end_already or
-                                    start_already < start_candidate <= end_already < end_candidate):
+                            if (
+                                start_candidate < start_already <= end_candidate < end_already
+                                or start_already < start_candidate <= end_already < end_candidate
+                            ):
                                 tag_span = False
                                 break
 
                         if tag_span:
                             already_predicted_spans.append((start_candidate, end_candidate))
-                            predicted_span = Span(
-                                [sentence.get_token(token.idx) for token in span_tokens]
-                            )
+                            predicted_span = Span([sentence.get_token(token.idx) for token in span_tokens])
                             predicted_span.add_label(label_type, value=span_prediction, score=span_score)
 
     def _get_state_dict(self):
@@ -311,7 +316,6 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
             resolve_overlaps=state["resolve_overlaps"],
             gazetteer_embeddings=state["gazetteer_embeddings"],
             concat_span_length_to_embedding=state["concat_span_length_to_embedding"],
-
             **kwargs,
         )
 
@@ -340,12 +344,12 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
 
             for span in datapoint.get_spans(gold_label_type):
                 if self.gazetteer_embeddings:
-                    self.gazetteer_embeddings.embed(span) #TODO would be nice to have already stored span embeddings
+                    self.gazetteer_embeddings.embed(span)  # TODO would be nice to have already stored span embeddings
                     gazetteer_vector = span.get_embedding()
                     if sum(gazetteer_vector) > 0.0:
-                        count_ground_truth_in_gazetteer +=1
+                        count_ground_truth_in_gazetteer += 1
                     else:
-                        count_ground_truth_not_in_gazetteer +=1
+                        count_ground_truth_not_in_gazetteer += 1
 
                 else:
                     gazetteer_vector = torch.Tensor([])  # dummy
@@ -361,13 +365,12 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                     f' --> {span.get_label("predicted").value} ({symbol})'
-                    f' \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_vector.tolist()]}\n'
-
+                    f" \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_vector.tolist()]}\n"
                 )
             # now add also the predicted spans that have *no* gold span equivalent
             for span in datapoint.get_spans("predicted"):
                 if self.gazetteer_embeddings:
-                    self.gazetteer_embeddings.embed(span) #TODO would be nice to have already stored span embeddings
+                    self.gazetteer_embeddings.embed(span)  # TODO would be nice to have already stored span embeddings
                     gazetteer_vector = span.get_embedding()
                 else:
                     gazetteer_vector = torch.Tensor([])  # dummy
@@ -380,8 +383,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                     eval_line += (
                         f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                         f' --> {span.get_label("predicted").value} ("❌")'
-                        f' \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_vector.tolist()]}\n'
-
+                        f" \t gazetteer embedding \t {[round(e, 2) for e in gazetteer_vector.tolist()]}\n"
                     )
 
             lines.append(eval_line)
@@ -390,17 +392,23 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
 
         percentage_true_all = round(count_true / (count_true + count_error) * 100, 2)
         if self.gazetteer_embeddings:
-            percentage_found_all = round(count_ground_truth_in_gazetteer / (count_ground_truth_in_gazetteer + count_ground_truth_not_in_gazetteer) * 100, 2)
+            percentage_found_all = round(
+                count_ground_truth_in_gazetteer
+                / (count_ground_truth_in_gazetteer + count_ground_truth_not_in_gazetteer)
+                * 100,
+                2,
+            )
         else:
             percentage_found_all = 0.0
 
-        error_counts_dict = {"count_true": count_true,
-                             "count_error": count_error,
-                             "percentage_true_all": percentage_true_all,
-                             "count_ground_truth_in_gazetteer": count_ground_truth_in_gazetteer,
-                             "count_ground_truth_not_in_gazetteer": count_ground_truth_not_in_gazetteer,
-                             "percentage_found_all": percentage_found_all,
-                             }
+        error_counts_dict = {
+            "count_true": count_true,
+            "count_error": count_error,
+            "percentage_true_all": percentage_true_all,
+            "count_ground_truth_in_gazetteer": count_ground_truth_in_gazetteer,
+            "count_ground_truth_not_in_gazetteer": count_ground_truth_not_in_gazetteer,
+            "percentage_found_all": percentage_found_all,
+        }
 
         if out_directory:
             if not os.path.exists(out_directory):
@@ -413,4 +421,3 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                 json.dump(error_counts_dict, fp)
 
         return error_counts_dict
-

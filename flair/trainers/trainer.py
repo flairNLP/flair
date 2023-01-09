@@ -487,10 +487,10 @@ class ModelTrainer:
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
-                    shuffle=shuffle_data_this_epoch,  
+                    shuffle=shuffle_data_this_epoch,
                     num_workers=0 if num_workers is None else num_workers,
                     sampler=sampler,
-                    drop_last=True
+                    drop_last=True,
                 )
 
                 self.model.train()
@@ -942,12 +942,16 @@ class ModelTrainer:
             else:
                 manually_set_lr = learning_rate
 
-            param_groups.append({"params": [p for p in self.model.decoder.BN.parameters() if p not in manually_set_parameters],
-                                  "lr": manually_set_lr})
+            param_groups.append(
+                {
+                    "params": [p for p in self.model.decoder.BN.parameters() if p not in manually_set_parameters],
+                    "lr": manually_set_lr,
+                }
+            )
             log.info(
-                     f"Setting batch norm learning rate to {manually_set_lr} for the following "
-                     f"parameters: {[name for name, param in self.model.decoder.BN.named_parameters() if param not in manually_set_parameters]}"
-                 )
+                f"Setting batch norm learning rate to {manually_set_lr} for the following "
+                f"parameters: {[name for name, param in self.model.decoder.BN.named_parameters() if param not in manually_set_parameters]}"
+            )
 
             manually_set_parameters.update(self.model.decoder.BN.parameters())
 
@@ -960,9 +964,12 @@ class ModelTrainer:
             else:
                 manually_set_lr = learning_rate
 
-
-            param_groups.append({"params": [p for p in self.model.decoder.parameters() if p not in manually_set_parameters],
-                                  "lr": manually_set_lr})
+            param_groups.append(
+                {
+                    "params": [p for p in self.model.decoder.parameters() if p not in manually_set_parameters],
+                    "lr": manually_set_lr,
+                }
+            )
             log.info(
                 f"Setting learning rate to {manually_set_lr} for the following "
                 f"parameters: {[name for name, param in self.model.decoder.named_parameters() if param not in manually_set_parameters]}"
@@ -971,10 +978,11 @@ class ModelTrainer:
             manually_set_parameters.update(self.model.decoder.parameters())
 
         # make a param group out of remaining params
-        param_groups.append({"params": [p for p in self.model.parameters() if p not in manually_set_parameters],
-                             "lr": learning_rate})
+        param_groups.append(
+            {"params": [p for p in self.model.parameters() if p not in manually_set_parameters], "lr": learning_rate}
+        )
 
-        optimizer = optimizer(param_groups, lr = learning_rate)
+        optimizer = optimizer(param_groups, lr=learning_rate)
 
         return self.train(
             base_path=base_path,
