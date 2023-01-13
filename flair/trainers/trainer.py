@@ -230,9 +230,6 @@ class ModelTrainer(Pluggable):
 
         self.mini_batch_size = mini_batch_size
 
-        if not eval_batch_size:
-            eval_batch_size = mini_batch_size
-
         if epoch >= max_epochs:
             log.warning(f"Starting at epoch {epoch + 1}/{max_epochs}. No training will be done.")
 

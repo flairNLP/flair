@@ -47,6 +47,7 @@ class BasicPerformancePlugin(MetricBasePlugin):
         eval_on_train_shuffle,
         embeddings_storage_mode,
         eval_batch_size,
+        mini_batch_size,
         num_workers,
         exclude_labels,
         main_evaluation_metric,
@@ -66,7 +67,7 @@ class BasicPerformancePlugin(MetricBasePlugin):
         self.embeddings_storage_mode = embeddings_storage_mode
 
         self.eval_kw = {
-            "mini_batch_size": eval_batch_size,
+            "mini_batch_size": eval_batch_size or mini_batch_size,
             "num_workers": num_workers,
             "exclude_labels": exclude_labels,
             "main_evaluation_metric": main_evaluation_metric,
