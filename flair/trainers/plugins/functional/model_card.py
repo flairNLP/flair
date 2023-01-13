@@ -1,6 +1,5 @@
-from typing import Any, Dict
-
 from pathlib import Path
+from typing import Any, Dict
 
 import torch
 
@@ -33,8 +32,7 @@ class ModelCardPlugin(TrainerPlugin):
 
         # remember all parameters used in train() call
         self.model_card["training_parameters"] = {
-            k: str(v) if isinstance(v, Path) else v
-            for k, v in training_parameters.items()
+            k: str(v) if isinstance(v, Path) else v for k, v in training_parameters.items()
         }
 
         # remember all activated plugins

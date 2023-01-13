@@ -55,6 +55,8 @@ class MetricName:
             return self.name == tuple(other.split("/"))
         elif isinstance(other, MetricName):
             return self.name == other.name
+        elif other is None:
+            return False
         else:
             return self.name == tuple(other)
 

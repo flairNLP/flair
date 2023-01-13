@@ -31,7 +31,7 @@ class BestModelPlugin(TrainerPlugin):
     ):
         # minimize training loss if training with dev data, else maximize dev score
         self.minimize_objective = train_with_dev or anneal_against_dev_loss
-        self.best_validation_score = 100000000000 if self.minimize_objective else -1.0
+        self.best_value = None
 
         if train_with_dev:
             self.primary_metric = "train/loss"
@@ -55,8 +55,10 @@ class BestModelPlugin(TrainerPlugin):
         assert self.primary_value is not None
 
         # determine if this is the best model
-        if (self.minimize_objective and self.primary_value < self.best_value) or (
-            not self.minimize_objective and self.primary_value > self.best_value
+        if (
+            self.best_value is None  # first seen model is always best
+            or (self.minimize_objective and self.primary_value < self.best_value)
+            or (not self.minimize_objective and self.primary_value > self.best_value)
         ):
             # new best validation score
             self.best_value = self.primary_value

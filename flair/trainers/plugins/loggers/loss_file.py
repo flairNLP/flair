@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 from flair.nn import Classifier
 from flair.trainers.plugins.base import TrainerPlugin
@@ -13,7 +13,7 @@ class LossFilePlugin(TrainerPlugin):
 
         self.loss_txt = None
 
-        self.current_row = None
+        self.current_row: Optional[Dict[MetricName, str]] = None
         self.headers = None
         self.metrics_to_collect = metrics_to_collect
 
@@ -63,7 +63,7 @@ class LossFilePlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_epoch(self, epoch, **kw):
-        self.recorded_values = {"epoch": epoch}
+        self.current_row = {"epoch": str(epoch)}
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):
@@ -81,14 +81,14 @@ class LossFilePlugin(TrainerPlugin):
     @TrainerPlugin.hook
     def after_evaluation(self, epoch, **kw):
         if self.loss_txt is not None:
-            self.current_row["timestamp"] = f"{datetime.datetime.now():%H:%M:%S}"
+            self.current_row["timestamp"] = f"{datetime.now():%H:%M:%S}"
 
             # output log file
             with open(self.loss_txt, "a") as f:
                 # make headers on first epoch
                 if epoch == 1:
                     # delete all headers were no value was recorded
-                    for k in self.headers.keys():
+                    for k in list(self.headers.keys()):
                         if k not in self.current_row:
                             del self.headers[k]
 
@@ -96,6 +96,8 @@ class LossFilePlugin(TrainerPlugin):
                     f.write("\t".join(self.headers.values()))
 
                 for col in self.headers.keys():
+                    assert isinstance(self.current_row[col], str)
+
                     f.write("\t".join([self.current_row[col]]))
 
             self.current_row = {}
