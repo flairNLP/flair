@@ -1240,6 +1240,11 @@ class EarlyExitSequenceTagger(SequenceTagger):
         weighted_loss: bool = True,
         **seqtaggerargs
     ):
+        """
+        Adds Early-Exit functionality to the SequenceTagger
+        :param weighted_loss: controls whether to compute a weighted or a simple average loss
+        over all the early-exit layers.
+        """
         super().__init__(
             embeddings = embeddings,
             tag_dictionary = tag_dictionary,
@@ -1392,6 +1397,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
         :param label_name: which label to predict
         :param return_loss: whether to return loss value
         :param embedding_storage_mode: determines where to store embeddings - can be "gpu", "cpu" or None.
+        :param layer_idx: determines which layer is used to write the predictions to spans or tokens.
         """
         if abs(layer_idx) > self.n_layers:
             raise ValueError('Layer index out of range')
@@ -1500,6 +1506,13 @@ class EarlyExitSequenceTagger(SequenceTagger):
     ) -> Result:
         import numpy as np
         import sklearn
+
+        """
+        This override contains solely the following chagne:
+        :param layer_idx: determines which layer is used to write the predictions to spans or tokens.
+        This parameters is passed onto the :predict: method to allow for the evaluation of each early-exit
+        layer individually.
+        """
 
         # make sure <unk> is contained in gold_label_dictionary, if given
         if gold_label_dictionary and not gold_label_dictionary.add_unk:
