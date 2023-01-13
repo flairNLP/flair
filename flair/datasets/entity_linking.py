@@ -10,7 +10,7 @@ import flair
 from flair.data import Corpus, MultiCorpus, Sentence
 from flair.datasets.sequence_labeling import ColumnCorpus
 from flair.file_utils import cached_path, unpack_file
-from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
+from flair.splitter import SegtokSentenceSplitter, SentenceSplitter
 
 log = logging.getLogger("flair")
 
@@ -138,7 +138,7 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
 
                             # sentence splitting and tokenization
                             sentences = sentence_splitter.split(string)
-                            sentence_offsets = [sentence.start_pos or 0 for sentence in sentences]
+                            sentence_offsets = [sentence.start_position or 0 for sentence in sentences]
 
                             # iterate through all annotations and add to corresponding tokens
                             for mention_start, mention_length, wikiname in zip(indices, lengths, wikinames):
@@ -158,10 +158,10 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
                                 # set annotation for tokens of entity mention
                                 first = True
                                 for token in sentences[sentence_index].tokens:
-                                    assert token.start_pos is not None
-                                    assert token.end_pos is not None
+                                    assert token.start_position is not None
+                                    assert token.end_position is not None
                                     if (
-                                        token.start_pos >= mention_start and token.end_pos <= mention_end
+                                        token.start_position >= mention_start and token.end_position <= mention_end
                                     ):  # token belongs to entity mention
                                         if first:
                                             token.set_label(typename="nel", value="B-" + wikiname)
@@ -603,7 +603,7 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
 
                         # split sentences and tokenize
                         sentences = sentence_splitter.split(text)
-                        sentence_offsets = [sentence.start_pos or 0 for sentence in sentences]
+                        sentence_offsets = [sentence.start_position or 0 for sentence in sentences]
 
                         # iterate through all annotations and add to corresponding tokens
                         for elem in root:
@@ -631,10 +631,10 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
                                 # set annotation for tokens of entity mention
                                 first = True
                                 for token in sentences[sentence_index].tokens:
-                                    assert token.start_pos is not None
-                                    assert token.end_pos is not None
+                                    assert token.start_position is not None
+                                    assert token.end_position is not None
                                     if (
-                                        token.start_pos >= mention_start and token.end_pos <= mention_end
+                                        token.start_position >= mention_start and token.end_position <= mention_end
                                     ):  # token belongs to entity mention
                                         assert elem[1].text is not None
                                         if first:
@@ -928,18 +928,25 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
             if links:
                 # Keep track which is the correct corresponding entity link, in cases where there is >1 link in a sentence
                 link_index = [
-                    j for j, v in enumerate(links) if (sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1])
+                    j
+                    for j, v in enumerate(links)
+                    if (sentence[i].start_position >= v[0] and sentence[i].end_position <= v[1])
                 ]
                 # Write the token with a corresponding tag to file
                 try:
-                    if any(sentence[i].start_pos == v[0] and sentence[i].end_pos == v[1] for j, v in enumerate(links)):
+                    if any(
+                        sentence[i].start_position == v[0] and sentence[i].end_position == v[1]
+                        for j, v in enumerate(links)
+                    ):
                         outfile.writelines(sentence[i].text + "\tS-" + links[link_index[0]][2] + "\n")
                     elif any(
-                        sentence[i].start_pos == v[0] and sentence[i].end_pos != v[1] for j, v in enumerate(links)
+                        sentence[i].start_position == v[0] and sentence[i].end_position != v[1]
+                        for j, v in enumerate(links)
                     ):
                         outfile.writelines(sentence[i].text + "\tB-" + links[link_index[0]][2] + "\n")
                     elif any(
-                        sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1] for j, v in enumerate(links)
+                        sentence[i].start_position >= v[0] and sentence[i].end_position <= v[1]
+                        for j, v in enumerate(links)
                     ):
                         outfile.writelines(sentence[i].text + "\tI-" + links[link_index[0]][2] + "\n")
                     else:

@@ -298,6 +298,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
             label_dictionary=label_dictionary,
             label_type="-".join(label_dictionary.get_items()),
             multi_label=multi_label,
+            force_switch=True,  # overwrite any older configuration
         )
 
         try:

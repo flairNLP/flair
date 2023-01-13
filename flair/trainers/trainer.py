@@ -405,7 +405,7 @@ class ModelTrainer(Pluggable):
 
         if additional_epochs is not None:
             args_used_to_train_model["max_epochs"] = (
-                args_used_to_train_model.pop("epoch", kwargs.pop("epoch", 0)) + additional_epochs
+                args_used_to_train_model.get("epoch", kwargs.get("epoch", 0)) + additional_epochs
             )
 
         # resume training with these parameters

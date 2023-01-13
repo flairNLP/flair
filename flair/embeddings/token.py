@@ -659,10 +659,12 @@ class FlairEmbeddings(TokenEmbeddings):
             "fr-impresso-hipe-v1-backward": f"{clef_hipe_path}/fr-hipe-flair-v1-backward/best-lm.pt",
             # Amharic
             "am-forward": f"{am_path}/best-lm.pt",
+            # Ukrainian
+            "uk-forward": "https://huggingface.co/dchaplinsky/flair-uk-forward/resolve/main/best-lm.pt",
+            "uk-backward": "https://huggingface.co/dchaplinsky/flair-uk-backward/resolve/main/best-lm.pt",
         }
 
-        if type(model) == str:
-
+        if isinstance(model, str):
             # load model if in pretrained model map
             if model.lower() in self.PRETRAINED_MODEL_ARCHIVE_MAP:
                 base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[model.lower()]
@@ -1396,8 +1398,7 @@ class ELMoEmbeddings(TokenEmbeddings):
         )
 
         # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence([])
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence([Token("hello")])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0][0].get_embedding())
 

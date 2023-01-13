@@ -16,6 +16,7 @@ from torch.utils.data.dataset import ConcatDataset, Subset
 
 import flair
 from flair.file_utils import Tqdm
+from flair.tokenization import SegtokTokenizer, SpaceTokenizer, Tokenizer
 
 T_co = typing.TypeVar("T_co", covariant=True)
 
@@ -504,8 +505,7 @@ class Token(_PartOfSentence):
         self.head_id: Optional[int] = head_id
         self.whitespace_after: int = whitespace_after
 
-        self.start_pos = start_position
-        self.end_pos = start_position + len(text)
+        self._start_position = start_position
 
         self._embeddings: Dict = {}
         self.tags_proba_dist: Dict[str, List[Label]] = {}
@@ -518,7 +518,7 @@ class Token(_PartOfSentence):
             raise ValueError
 
     @property
-    def text(self):
+    def text(self) -> str:
         return self.form
 
     @property
@@ -538,11 +538,15 @@ class Token(_PartOfSentence):
 
     @property
     def start_position(self) -> int:
-        return self.start_pos
+        return self._start_position
+
+    @start_position.setter
+    def start_position(self, value: int) -> None:
+        self._start_position = value
 
     @property
     def end_position(self) -> int:
-        return self.end_pos
+        return self.start_position + len(self.text)
 
     @property
     def embedding(self):
@@ -658,25 +662,6 @@ class Relation(_PartOfSentence):
         pass
 
 
-class Tokenizer(ABC):
-    r"""An abstract class representing a :class:`Tokenizer`.
-
-    Tokenizers are used to represent algorithms and models to split plain text into
-    individual tokens / words. All subclasses should overwrite :meth:`tokenize`, which
-    splits the given plain text into tokens. Moreover, subclasses may overwrite
-    :meth:`name`, returning a unique identifier representing the tokenizer's
-    configuration.
-    """
-
-    @abstractmethod
-    def tokenize(self, text: str) -> List[str]:
-        raise NotImplementedError()
-
-    @property
-    def name(self) -> str:
-        return self.__class__.__name__
-
-
 class Sentence(DataPoint):
     """
     A Sentence is a list of tokens and is used to represent a sentence or text fragment.
@@ -684,7 +669,7 @@ class Sentence(DataPoint):
 
     def __init__(
         self,
-        text: Union[str, List[str]],
+        text: Union[str, List[str], List[Token]],
         use_tokenizer: Union[bool, Tokenizer] = True,
         language_code: str = None,
         start_position: int = 0,
@@ -709,60 +694,17 @@ class Sentence(DataPoint):
 
         self.language_code: Optional[str] = language_code
 
-        self.start_pos = start_position
-        self.end_pos = start_position + len(text)
+        self._start_position = start_position
 
         # the tokenizer used for this sentence
         if isinstance(use_tokenizer, Tokenizer):
             tokenizer = use_tokenizer
 
         elif type(use_tokenizer) == bool:
-            from flair.tokenization import SegtokTokenizer, SpaceTokenizer
-
             tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
 
         else:
             raise AssertionError("Unexpected type of parameter 'use_tokenizer'. Parameter should be bool or Tokenizer")
-
-        # if text is passed, instantiate sentence with tokens (words)
-        if isinstance(text, str):
-            text = Sentence._handle_problem_characters(text)
-            words = tokenizer.tokenize(text)
-        else:
-            words = text
-
-        # determine token positions and whitespace_after flag
-        current_offset = 0
-        previous_word_offset = -1
-        previous_token = None
-        for word in words:
-            try:
-                word_offset = text.index(word, current_offset)
-                start_position = word_offset
-                delta_offset = start_position - current_offset
-            except ValueError:
-                word_offset = previous_word_offset + 1
-                start_position = current_offset + 1 if current_offset > 0 else current_offset
-                delta_offset = start_position - current_offset
-
-            if word:
-                token = Token(text=word, start_position=start_position)
-                self.add_token(token)
-
-            if previous_token is not None:
-                previous_token.whitespace_after = delta_offset
-
-            current_offset = word_offset + len(word)
-            previous_word_offset = current_offset - 1
-            previous_token = token
-
-        # the last token has no whitespace after
-        if len(self) > 0:
-            self.tokens[-1].whitespace_after = 0
-
-        # log a warning if the dataset is empty
-        if text == "":
-            log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
 
         self.tokenized: Optional[str] = None
 
@@ -773,6 +715,43 @@ class Sentence(DataPoint):
         self._previous_sentence: Optional[Sentence] = None
         self._next_sentence: Optional[Sentence] = None
         self._position_in_dataset: Optional[typing.Tuple[Dataset, int]] = None
+
+        # if text is passed, instantiate sentence with tokens (words)
+        if isinstance(text, str):
+            text = Sentence._handle_problem_characters(text)
+            words = tokenizer.tokenize(text)
+        elif text and isinstance(text[0], Token):
+            for t in text:
+                self._add_token(t)
+            self.tokens[-1].whitespace_after = 0
+            return
+        else:
+            words = cast(List[str], text)
+            text = " ".join(words)
+
+        # determine token positions and whitespace_after flag
+        current_offset: int = 0
+        previous_token: Optional[Token] = None
+        for word in words:
+            word_start_position: int = text.index(word, current_offset)
+            delta_offset: int = word_start_position - current_offset
+
+            token: Token = Token(text=word, start_position=word_start_position)
+            self._add_token(token)
+
+            if previous_token is not None:
+                previous_token.whitespace_after = delta_offset
+
+            current_offset = token.end_position
+            previous_token = token
+
+        # the last token has no whitespace after
+        if len(self) > 0:
+            self.tokens[-1].whitespace_after = 0
+
+        # log a warning if the dataset is empty
+        if text == "":
+            log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
 
     @property
     def unlabeled_identifier(self):
@@ -798,7 +777,7 @@ class Sentence(DataPoint):
                 return token
         return None
 
-    def add_token(self, token: Union[Token, str]):
+    def _add_token(self, token: Union[Token, str]):
 
         if isinstance(token, Token):
             assert token.sentence is None
@@ -815,8 +794,7 @@ class Sentence(DataPoint):
         token.sentence = self
         token._internal_index = len(self.tokens) + 1
         if token.start_position == 0 and len(self) > 0:
-            token.start_pos = len(self.to_original_text()) + self[-1].whitespace_after
-            token.end_pos = token.start_pos + len(token.text)
+            token.start_position = len(self.to_original_text()) + self[-1].whitespace_after
 
         # append token to sentence
         self.tokens.append(token)
@@ -958,7 +936,7 @@ class Sentence(DataPoint):
         if len(self) == 0:
             return ""
         # otherwise, return concatenation of tokens with the correct offsets
-        return self[0].start_pos * " " + "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
+        return self[0].start_position * " " + "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
 
     def to_dict(self, tag_type: str = None):
         labels = []
@@ -1001,11 +979,17 @@ class Sentence(DataPoint):
 
     @property
     def start_position(self) -> int:
-        return 0
+        return self._start_position
+
+    @start_position.setter
+    def start_position(self, value: int) -> None:
+        self._start_position = value
 
     @property
     def end_position(self) -> int:
-        return len(self.to_original_text())
+        # The sentence's start position is not propagated to its tokens.
+        # Therefore, we need to add the sentence's start position to its last token's end position, including whitespaces.
+        return self.start_position + self[-1].end_position + self[-1].whitespace_after
 
     def get_language_code(self) -> str:
         if self.language_code is None:

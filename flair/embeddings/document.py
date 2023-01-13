@@ -283,7 +283,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             self.word_dropout = None
 
         self.rnn.zero_grad()
-
         # embed words in the sentence
         self.embeddings.embed(sentences)
 
@@ -585,7 +584,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 
         self.to(flair.device)
-
+        self.min_sequence_length = max(kernel_size for _, kernel_size in self.kernels)
         self.eval()
 
     @property
@@ -608,10 +607,10 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         self.embeddings.embed(sentences)
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
-        longest_token_sequence_in_batch: int = max(lengths)
+        padding_length: int = max(max(lengths), self.min_sequence_length)
 
         pre_allocated_zero_tensor = torch.zeros(
-            self.embeddings.embedding_length * longest_token_sequence_in_batch,
+            self.embeddings.embedding_length * padding_length,
             dtype=torch.float,
             device=flair.device,
         )
@@ -619,7 +618,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         all_embs: List[torch.Tensor] = list()
         for sentence in sentences:
             all_embs += [emb for token in sentence for emb in token.get_each_embedding()]
-            nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
+            nb_padding_tokens = padding_length - len(sentence)
 
             if nb_padding_tokens > 0:
                 t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
@@ -628,7 +627,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
-                longest_token_sequence_in_batch,
+                padding_length,
                 self.embeddings.embedding_length,
             ]
         )

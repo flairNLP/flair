@@ -16,7 +16,7 @@ import flair
 from flair.data import Sentence
 from flair.datasets.sequence_labeling import ColumnCorpus
 from flair.file_utils import cached_path
-from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
+from flair.splitter import SegtokSentenceSplitter, SentenceSplitter
 
 log = logging.getLogger("flair")
 
@@ -687,10 +687,10 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
             (abstract_offset, abstract_sentences),
         ]:
             for sent in sents:
-                assert sent.start_pos is not None
-                assert sent.end_pos is not None
-                sent_char_start = sent.start_pos + offset
-                sent_char_end = sent.end_pos + offset
+                assert sent.start_position is not None
+                assert sent.end_position is not None
+                sent_char_start = sent.start_position + offset
+                sent_char_end = sent.end_position + offset
 
                 entities_in_sent = set()
                 for entity_id, (_, char_start, char_end, _) in entities.items():
@@ -701,8 +701,8 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
 
                 token_offsets = [
                     (
-                        sent.start_pos + (token.start_pos or 0) + offset,
-                        sent.start_pos + (token.end_pos or 0) + offset,
+                        sent.start_position + (token.start_position or 0) + offset,
+                        sent.start_position + (token.end_position or 0) + offset,
                     )
                     for token in sent.tokens
                 ]
