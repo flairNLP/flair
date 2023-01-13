@@ -19,6 +19,8 @@ class TensorboardLogger(TrainerPlugin):
         self.tracked_metrics = tracked_metrics
         self.writer = None
 
+        self._warned = False
+
     @TrainerPlugin.hook
     def before_training_setup(self, **kw):
         try:
@@ -43,7 +45,9 @@ class TensorboardLogger(TrainerPlugin):
             if record.is_scalar:
                 self.writer.add_scalar(str(record.name), record.value, record.global_step, walltime=record.walltime)
         else:
-            log.warning("Logging anything other than scalars to TensorBoard is currently not supported.")
+            if not self._warned:
+                log.warning("Logging anything other than scalars to TensorBoard is currently not supported.")
+                self._warned = True
 
     @TrainerPlugin.hook
     def _training_finally(self, **kw):

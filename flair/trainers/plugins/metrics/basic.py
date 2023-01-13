@@ -5,7 +5,11 @@ import torch
 
 from flair.data import _len_dataset
 from flair.trainers.plugins.base import TrainerPlugin
-from flair.trainers.plugins.metrics.base import MetricBasePlugin, MetricRecord
+from flair.trainers.plugins.metrics.base import (
+    MetricBasePlugin,
+    MetricName,
+    MetricRecord,
+)
 from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")
@@ -113,13 +117,18 @@ class BasicPerformancePlugin(MetricBasePlugin):
 
     def flat_dict_items(self, d, composite_key=()):
         for key, value in d.items():
-            if isinstance(value, dict):
-                yield from self.flat_dict_items(value, composite_key=composite_key + (key,))
+            if isinstance(key, str):
+                key = composite_key + (key,)
             else:
-                yield composite_key + (key,), value
+                key = composite_key + tuple(key)
+
+            if isinstance(value, dict):
+                yield from self.flat_dict_items(value, composite_key=key)
+            else:
+                yield key, value
 
     def transform_eval_result(self, result, prefix=(), **kw):
-        for key, value in self.flat_dict_items(result.scores, composite_key=prefix):
+        for key, value in self.flat_dict_items(result.scores, composite_key=MetricName(prefix)):
             try:
                 yield MetricRecord.scalar(name=key, value=float(value), **kw)
             except TypeError:
@@ -131,7 +140,7 @@ class BasicPerformancePlugin(MetricBasePlugin):
                     value = str(value)
                     yield MetricRecord.string(name=key, value=value, **kw)
 
-        yield MetricRecord.string(identifier=prefix + ("detailed_result",), value=result.detailed_results, **kw)
+        yield MetricRecord.string(name=MetricName(prefix) + "detailed_result", value=result.detailed_results, **kw)
 
     # yielded metric values are automatically published via the trainer
     @MetricBasePlugin.hook
@@ -143,7 +152,7 @@ class BasicPerformancePlugin(MetricBasePlugin):
             # depending on memory mode, embeddings are moved to CPU, GPU or deleted
             store_embeddings(self.corpus.train, self.embeddings_storage_mode)
 
-            yield from self.transform_eval_result(train_eval_result, "train_eval")
+            yield from self.transform_eval_result(train_eval_result, "train_eval", global_step=epoch)
 
         if self.log_train_part:
             train_part_eval_result = self.model.evaluate(self.train_part, **self.eval_kw)
@@ -155,7 +164,7 @@ class BasicPerformancePlugin(MetricBasePlugin):
                 f" {round(train_part_eval_result.main_score, 4)}"
             )
 
-            yield from self.transform_eval_result(train_part_eval_result, "train_part")
+            yield from self.transform_eval_result(train_part_eval_result, "train_part", global_step=epoch)
 
         if self.log_dev:
             assert self.corpus.dev
@@ -171,7 +180,7 @@ class BasicPerformancePlugin(MetricBasePlugin):
             # depending on memory mode, embeddings are moved to CPU, GPU or deleted
             store_embeddings(self.corpus.dev, self.embeddings_storage_mode)
 
-            yield from self.transform_eval_result(train_part_eval_result, "dev")
+            yield from self.transform_eval_result(dev_eval_result, "dev", global_step=epoch)
 
         if self.log_test:
             assert self.corpus.test
@@ -192,7 +201,7 @@ class BasicPerformancePlugin(MetricBasePlugin):
             # depending on memory mode, embeddings are moved to CPU, GPU or deleted
             store_embeddings(self.corpus.test, self.embeddings_storage_mode)
 
-            yield from self.transform_eval_result(test_eval_result, "test")
+            yield from self.transform_eval_result(test_eval_result, "test", global_step=epoch)
 
         @TrainerPlugin.hook
         def collecting_train_return_values(self, **kw):

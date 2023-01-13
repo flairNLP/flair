@@ -433,20 +433,21 @@ class Classifier(Model[DT], typing.Generic[DT]):
             "\n\nBy class:\n" + classification_report
         )
 
-        scores: Dict[Tuple[str, ...], Any] = {}
+        scores: Dict[Union[Tuple[str, ...], str], Any] = {}
 
         for avg_type in ("micro avg", "macro avg"):
-            for metric_type in ("f-score", "accuracy", "precision", "recall"):
+            for metric_type in ("f1-score", "precision", "recall"):
                 if avg_type == "micro avg" and avg_type not in classification_report_dict:
                     value = classification_report_dict["accuracy"]
 
                 else:
-                    classification_report_dict[avg_type][metric_type]
+
+                    value = classification_report_dict[avg_type][metric_type]
 
                 scores[(avg_type, metric_type)] = value
 
-        scores[("accuracy",)] = accuracy_score
-        scores[("loss",)] = eval_loss.item()
+        scores["accuracy"] = accuracy_score
+        scores["loss"] = eval_loss.item()
 
         if average_over > 0:
             eval_loss /= average_over

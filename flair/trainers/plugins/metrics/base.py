@@ -11,24 +11,24 @@ RecordType = Enum("RecordType", ["scalar", "image", "histogram", "string", "scal
 
 class MetricName:
     def __init__(self, name):
-        self.name: Tuple[str, ...]
+        self.parts: Tuple[str, ...]
 
         if isinstance(name, str):
-            self.name = tuple(name.split("/"))
+            self.parts = tuple(name.split("/"))
         else:
-            self.name = tuple(name)
+            self.parts = tuple(name)
 
     def __str__(self) -> str:
-        return "/".join(self.name)
+        return "/".join(self.parts)
 
     def __repr__(self) -> str:
         return str(self)
 
     def __iter__(self) -> Iterator[str]:
-        return iter(self.name)
+        return iter(self.parts)
 
     def __getitem__(self, i) -> Union["MetricName", str]:
-        item = self.name[i]
+        item = self.parts[i]
 
         if isinstance(i, slice):
             item = self.__class__(item)
@@ -37,31 +37,31 @@ class MetricName:
 
     def __add__(self, other) -> "MetricName":
         if isinstance(other, str):
-            return self.__class__(self.name + (other,))
+            return self.__class__(self.parts + (other,))
         elif isinstance(other, MetricName):
-            return self.__class__(self.name + other.name)
+            return self.__class__(self.parts + other.parts)
         else:
-            return self.__class__(self.name + tuple(other))
+            return self.__class__(self.parts + tuple(other))
 
     def __radd__(self, other) -> "MetricName":
         if isinstance(other, str):
-            return self.__class__((other,) + self.name)
+            return self.__class__((other,) + self.parts)
         else:
             # no need to check for MetricName, as __add__ of other would be called in this case
-            return self.__class__(tuple(other) + self.name)
+            return self.__class__(tuple(other) + self.parts)
 
     def __eq__(self, other) -> bool:
         if isinstance(other, str):
-            return self.name == tuple(other.split("/"))
+            return self.parts == tuple(other.split("/"))
         elif isinstance(other, MetricName):
-            return self.name == other.name
+            return self.parts == other.parts
         elif other is None:
             return False
         else:
-            return self.name == tuple(other)
+            return self.parts == tuple(other)
 
     def __hash__(self):
-        return hash(self.name)
+        return hash(self.parts)
 
 
 @dataclass

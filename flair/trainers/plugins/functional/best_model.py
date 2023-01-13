@@ -27,6 +27,7 @@ class BestModelPlugin(TrainerPlugin):
         self,
         train_with_dev,
         anneal_against_dev_loss,
+        main_evaluation_metric,
         **kw,
     ):
         # minimize training loss if training with dev data, else maximize dev score
@@ -38,12 +39,14 @@ class BestModelPlugin(TrainerPlugin):
         elif anneal_against_dev_loss:
             self.primary_metric = "dev/loss"
         else:
-            self.primary_metric = "dev/score"
+            self.primary_metric = ("dev",) + main_evaluation_metric
             self.auxiliary_metric = "dev/loss"
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):
         # record relevant values for scheduling
+        print("Metric recorded:", record.name, self.primary_metric)
+
         if record.name == self.primary_metric:
             self.primary_value = record.value
 
