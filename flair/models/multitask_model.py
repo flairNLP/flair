@@ -162,12 +162,12 @@ class MultitaskModel(flair.nn.Classifier):
             )
             all_classification_report[task_id] = result.classification_report
 
+        scores = {"loss": loss.item() / len(batch_split)}
+
         return Result(
-            loss=loss.item() / len(batch_split),
             main_score=main_score / len(batch_split),
             detailed_results=all_detailed_results,
-            log_header="",
-            log_line="",
+            scores=scores,
             classification_report=all_classification_report,
         )
 

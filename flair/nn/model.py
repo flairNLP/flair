@@ -437,20 +437,29 @@ class Classifier(Model[DT], typing.Generic[DT]):
             "\n\nBy class:\n" + classification_report
         )
 
-        # line for log file
-        log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
+        scores: Dict[Tuple[str, ...], Any] = {}
+
+        for avg_type in ("micro avg", "macro avg"):
+            for metric_type in ("f-score", "accuracy", "precision", "recall"):
+                if avg_type == "micro avg" and avg_type not in classification_report_dict:
+                    value = classification_report_dict["accuracy"]
+
+                else:
+                    classification_report_dict[avg_type][metric_type]
+
+                scores[(avg_type, metric_type)] = value
+
+        scores[("accuracy",)] = accuracy_score
+        scores[("loss",)] = eval_loss.item()
 
         if average_over > 0:
             eval_loss /= average_over
 
         result = Result(
             main_score=main_score,
-            log_line=log_line,
-            log_header=log_header,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            loss=eval_loss.item(),
+            scores=scores,
         )
 
         return result
