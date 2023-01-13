@@ -403,13 +403,9 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
             if "micro avg" in classification_report_dict:
                 # micro average is only computed if zero-label exists (for instance "O")
-                precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
-                recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
                 micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
             else:
                 # if no zero-label exists (such as in POS tagging) micro average is equal to accuracy
-                precision_score = round(classification_report_dict["accuracy"], 4)
-                recall_score = round(classification_report_dict["accuracy"], 4)
                 micro_f_score = round(classification_report_dict["accuracy"], 4)
 
             # same for the main score
@@ -425,7 +421,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
                 "Could be an error in your corpus or how you "
                 "initialize the trainer!"
             )
-            accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.0
+            accuracy_score = micro_f_score = macro_f_score = main_score = 0.0
             classification_report = ""
             classification_report_dict = {}
 
