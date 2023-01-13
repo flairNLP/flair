@@ -188,6 +188,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             self.linear = torch.nn.Linear(hidden_output_dim, len(self.label_dictionary))
         else:
             self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary))
+            self.train_initial_hidden_state = False
 
         # the loss function is Viterbi if using CRF, else regular Cross Entropy Loss
         self.loss_function = (
@@ -606,6 +607,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "rnn_type": self.rnn_type,
             "reproject_embeddings": self.reproject_embeddings,
             "weight_dict": self.weight_dict,
+            "train_initial_hidden_state": self.train_initial_hidden_state,
         }
 
         return model_state
@@ -635,6 +637,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             reproject_embeddings=state.get("reproject_embeddings", True),
             loss_weights=state.get("weight_dict"),
             init_from_state_dict=True,
+            train_initial_hidden_state=state.get("train_initial_hidden_state", False),
             **kwargs,
         )
 
@@ -682,6 +685,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "de-ner-legal": "flair/ner-german-legal",
             "fr-ner": "flair/ner-french",
             "nl-ner": "flair/ner-dutch",
+            "ner-ukrainian": "dchaplinsky/flair-uk-ner",
+            # Language-specific POS models
+            "pos-ukrainian": "dchaplinsky/flair-uk-pos",
         }
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"

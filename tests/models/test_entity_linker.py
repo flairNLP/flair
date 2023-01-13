@@ -1,7 +1,7 @@
 import pytest
 
 from flair.data import Sentence
-from flair.datasets import NEL_ENGLISH_AQUAINT
+from flair.datasets import NEL_ENGLISH_AIDA
 from flair.embeddings import TransformerWordEmbeddings
 from flair.models import EntityLinker
 from tests.model_test_utils import BaseModelTest
@@ -18,7 +18,7 @@ class TestEntityLinker(BaseModelTest):
 
     @pytest.fixture
     def corpus(self, tasks_base_path):
-        yield NEL_ENGLISH_AQUAINT().downsample(0.05)
+        yield NEL_ENGLISH_AIDA().downsample(0.05)
 
     @pytest.fixture
     def train_test_sentence(self):

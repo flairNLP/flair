@@ -288,6 +288,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         force_device: Optional[torch.device] = None,
         force_max_length: bool = False,
         feature_extractor: Optional[FeatureExtractionMixin] = None,
+        needs_manual_ocr: Optional[bool] = None,
     ):
         self.name = name
         super().__init__()
@@ -312,6 +313,8 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         # The layoutlm tokenizer doesn't handle ocr themselves
         self.needs_manual_ocr = isinstance(self.tokenizer, (LayoutLMTokenizer, LayoutLMTokenizerFast))
+        if needs_manual_ocr is not None:
+            self.needs_manual_ocr = needs_manual_ocr
 
         if (self.tokenizer_needs_ocr_boxes or self.needs_manual_ocr) and self.context_length > 0:
             warnings.warn(f"using '{name}' with additional context, might lead to bad results.", UserWarning)
@@ -320,7 +323,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             raise ValueError("either 'is_token_embedding' or 'is_document_embedding' needs to be set.")
 
     def to_args(self):
-        return {
+        args = {
             "token_embedding": self.token_embedding,
             "document_embedding": self.document_embedding,
             "allow_long_sentences": self.allow_long_sentences,
@@ -337,6 +340,9 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             "force_max_length": self.force_max_length,
             "feature_extractor": self.feature_extractor,
         }
+        if hasattr(self, "needs_manual_ocr"):
+            args["needs_manual_ocr"] = self.needs_manual_ocr
+        return args
 
     def __getstate__(self):
         model_state = self.to_args()
@@ -887,6 +893,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         feature_extractor_data: Optional[BytesIO] = None,
         name: Optional[str] = None,
         force_max_length: bool = False,
+        needs_manual_ocr: Optional[bool] = None,
         **kwargs,
     ):
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -997,6 +1004,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
         # return length
         self.embedding_length_internal = self._calculate_embedding_length(transformer_model)
+        if needs_manual_ocr is not None:
+            self.needs_manual_ocr = needs_manual_ocr
 
         super().__init__(**self.to_args())
 

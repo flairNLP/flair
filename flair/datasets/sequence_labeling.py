@@ -632,8 +632,8 @@ class ColumnDataset(FlairDataset):
         self, lines, word_level_tag_columns: Dict[int, str], span_level_tag_columns: Optional[Dict[int, str]] = None
     ):
 
-        sentence: Sentence = Sentence(text=[])
         token: Optional[Token] = None
+        tokens: List[Token] = []
         filtered_lines = []
         comments = []
         for line in lines:
@@ -646,7 +646,9 @@ class ColumnDataset(FlairDataset):
 
             # otherwise, this line is a token. parse and add to sentence
             token = self._parse_token(line, word_level_tag_columns, token)
-            sentence.add_token(token)
+            tokens.append(token)
+
+        sentence: Sentence = Sentence(text=tokens)
 
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token:
@@ -686,6 +688,13 @@ class ColumnDataset(FlairDataset):
                     remapped = self._remap_label(label)
                     if remapped != "O":
                         relation.add_label(typename="relation", value=remapped)
+
+            # parse comments such as '# id cd27886d-6895-4d02-a8df-e5fa763fa88f	domain=de-orcas'
+            # to set the metadata "domain" to "de-orcas"
+            for comment_row in comment.split("\t"):
+                if "=" in comment_row:
+                    key, value = comment_row.split("=", 1)
+                    sentence.add_metadata(key, value)
 
         if len(sentence) > 0:
             return sentence
@@ -2550,6 +2559,7 @@ class NER_MASAKHANE(MultiCorpus):
     def __init__(
         self,
         languages: Union[str, List[str]] = "luo",
+        version: str = "v2",
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         **corpusargs,
@@ -2558,6 +2568,7 @@ class NER_MASAKHANE(MultiCorpus):
         Initialize the Masakhane corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data.
         It consists of ten African languages. Pass a language code or a list of language codes to initialize the corpus
         with the languages you require. If you pass "all", all languages will be initialized.
+        :version: Specifies version of the dataset. Currently, only "v1" and "v2" are supported, using "v2" as default.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -2578,19 +2589,56 @@ class NER_MASAKHANE(MultiCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        data_folder = base_path / dataset_name
+        supported_versions = ["v1", "v2"]
 
-        language_to_code = {
-            "amharic": "amh",
-            "hausa": "hau",
-            "igbo": "ibo",
-            "kinyarwanda": "kin",
-            "luganda": "lug",
-            "luo": "luo",
-            "naija": "pcm",
-            "swahili": "swa",
-            "yoruba": "yor",
-            "wolof": "wol",
+        if version not in supported_versions:
+            log.error(f"The specified version '{version}' is not in the list of supported version!")
+            log.error(f"Supported versions are '{supported_versions}'!")
+            raise Exception
+
+        data_folder = base_path / dataset_name / version
+
+        languages_to_code = {
+            "v1": {
+                "amharic": "amh",
+                "hausa": "hau",
+                "igbo": "ibo",
+                "kinyarwanda": "kin",
+                "luganda": "lug",
+                "luo": "luo",
+                "naija": "pcm",
+                "swahili": "swa",
+                "yoruba": "yor",
+                "wolof": "wol",
+            },
+            "v2": {
+                "bambara": "bam",
+                "ghomala": "bbj",
+                "ewe": "ewe",
+                "fon": "fon",
+                "hausa": "hau",
+                "igbo": "ibo",
+                "kinyarwanda": "kin",
+                "luganda": "lug",
+                "mossi": "mos",
+                "naija": "pcm",
+                "chichewa": "nya",
+                "chishona": "sna",
+                "kiswahili": "swa",
+                "setswana": "tsn",
+                "akan_twi": "twi",
+                "wolof": "wol",
+                "isixhosa": "xho",
+                "yoruba": "yor",
+                "isizulu": "zul",
+            },
+        }
+
+        language_to_code = languages_to_code[version]
+
+        data_paths = {
+            "v1": "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data",
+            "v2": "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/MasakhaNER2.0/data",
         }
 
         # use all languages if explicitly set to "all"
@@ -2612,13 +2660,13 @@ class NER_MASAKHANE(MultiCorpus):
             language_folder = data_folder / language
 
             # download data if necessary
-            data_path = f"https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/{language}/"
+            data_path = f"{data_paths[version]}/{language}/"
             cached_path(f"{data_path}dev.txt", language_folder)
             cached_path(f"{data_path}test.txt", language_folder)
             cached_path(f"{data_path}train.txt", language_folder)
 
             # initialize comlumncorpus and add it to list
-            log.info(f"Reading data for language {language}")
+            log.info(f"Reading data for language {language}@{version}")
             corp = ColumnCorpus(
                 data_folder=language_folder,
                 column_format=columns,
@@ -2641,20 +2689,14 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
         task: str = "multi",
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        use_dev_as_test: bool = True,
         **corpusargs,
     ):
         """
-        Initialize the MultiCoNer corpus. This is only possible if you've applied and downloaded it to your machine.
-        Apply for the corpus from here https://multiconer.github.io/dataset and unpack the .zip file's content into
-        a folder called 'multiconer'. Then set the base_path parameter in the constructor to the path to the
-        parent directory where the multiconer folder resides. You can also create the multiconer in
-        the {FLAIR_CACHE_ROOT}/datasets folder to leave the path empty.
+        Download and Initialize the MultiCoNer corpus.
+        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
         :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
         POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
-        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -2673,9 +2715,11 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
             "ru": "RU-Russian",
             "tr": "TR-Turkish",
             "zh": "ZH-Chinese",
+            "mix": "MIX_Code_mixed",
+            "multi": "MULTI_Multilingual",
         }
 
-        possible_tasks = ["multi", "code-switch"] + list(folders.keys())
+        possible_tasks = list(folders.keys())
         task = task.lower()
 
         if task not in possible_tasks:
@@ -2687,31 +2731,96 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        data_folder = base_path / dataset_name
+        data_folder = cached_path("s3://multiconer", base_path / dataset_name) / "multiconer2022"
 
-        # check if data there
+        train_files = [data_folder / folders[task] / f"{task}_train.conll"]
+        dev_files = [data_folder / folders[task] / f"{task}_dev.conll"]
+        test_files = [data_folder / folders[task] / f"{task}_test.conll"]
+
+        super().__init__(
+            train_files=train_files,
+            dev_files=dev_files,
+            test_files=test_files,
+            column_format=columns,
+            comment_symbol="# id ",
+            in_memory=in_memory,
+            **corpusargs,
+        )
+
+
+class NER_MULTI_CONER_V2(MultiFileColumnCorpus):
+    def __init__(
+        self,
+        task: str = "multi",
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        use_dev_as_test: bool = True,
+        **corpusargs,
+    ):
+        """
+        Initialize the MultiCoNer V2 corpus for the Semeval2023 workshop. This is only possible if you've applied and downloaded it to your machine.
+        Apply for the corpus from here https://multiconer.github.io/dataset and unpack the .zip file's content into
+        a folder called 'ner_multi_coner_v2'. Then set the base_path parameter in the constructor to the path to the
+        parent directory where the ner_multi_coner_v2 folder resides. You can also create the multiconer in
+        the {FLAIR_CACHE_ROOT}/datasets folder to leave the path empty.
+        :param base_path: Path to the ner_multi_coner_v2 corpus (i.e. 'ner_multi_coner_v2' folder) on your machine
+        POS tags or chunks respectively
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
+        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
+        """
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        folders = {
+            "bn": "BN-Bangla",
+            "de": "DE-German",
+            "en": "EN-English",
+            "es": "ES-Espanish",
+            "fa": "FA-Farsi",
+            "fr": "FR-French",
+            "hi": "HI-Hindi",
+            "it": "IT-Italian",
+            "pt": "PT-Portuguese",
+            "sv": "SV-Swedish",
+            "uk": "UK-Ukrainian",
+            "zh": "ZH-Chinese",
+        }
+
+        possible_tasks = list(folders.keys()) + ["multi"]
+        task = task.lower()
+
+        if task not in possible_tasks:
+            raise ValueError(f"task has to be one of {possible_tasks}, but is '{task}'")
+
+        # column format
+        columns = {0: "text", 3: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name / "train_dev"
+
         if not data_folder.exists():
             log.warning("-" * 100)
-            log.warning(f'WARNING: MultiCoNer dataset not found at "{data_folder}".')
+            log.warning(f'WARNING: MultiCoNerV2 dataset not found at "{data_folder}".')
             log.warning('Instructions for obtaining the data can be found here: https://multiconer.github.io/dataset"')
             log.warning("-" * 100)
 
-        if task in ["multi", "code-switch"]:
-            # code-switch uses the same training data than multi but provides a different test set.
-            # as the test set is not published, those two tasks are the same.
-            train_files = list(data_folder.rglob("*_train.conll"))
-            dev_files = list(data_folder.rglob("*_dev.conll"))
+        if task == "multi":
+            train_files = list(data_folder.glob("*-train.conll"))
+            dev_files = list(data_folder.glob("*-dev.conll"))
         else:
-            train_files = [data_folder / folders[task] / f"{task}_train.conll"]
-            dev_files = [data_folder / folders[task] / f"{task}_dev.conll"]
+            train_files = [data_folder / f"{task}-train.conll"]
+            dev_files = [data_folder / f"{task}-dev.conll"]
+        test_files = []
 
         if use_dev_as_test:
             test_files = dev_files
             dev_files = []
-        else:
-            test_files = []
-
-        super(NER_MULTI_CONER, self).__init__(
+        super().__init__(
             train_files=train_files,
             dev_files=dev_files,
             test_files=test_files,

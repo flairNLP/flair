@@ -1,4 +1,5 @@
 import inspect
+import logging
 import os
 import tempfile
 from operator import itemgetter
@@ -21,6 +22,9 @@ from flair.datasets.biomedical import (
 )
 from flair.splitter import NoSentenceSplitter, SentenceSplitter
 from flair.tokenization import SpaceTokenizer
+
+logger = logging.getLogger("flair")
+logger.propagate = True
 
 
 def has_balanced_parantheses(text: str) -> bool:
@@ -179,7 +183,7 @@ def assert_conll_writer_output(
     assert contents == expected_output
 
 
-def test_filter_nested_entities():
+def test_filter_nested_entities(caplog):
     entities_per_document = {
         "d0": [Entity((0, 1), "t0"), Entity((2, 3), "t1")],
         "d1": [Entity((0, 6), "t0"), Entity((2, 3), "t1"), Entity((4, 5), "t2")],
@@ -201,8 +205,9 @@ def test_filter_nested_entities():
     }
 
     dataset = InternalBioNerDataset(documents={}, entities_per_document=entities_per_document)
-    with pytest.warns(UserWarning):
-        filter_nested_entities(dataset)
+    caplog.set_level(logging.WARNING)
+    filter_nested_entities(dataset)
+    assert "WARNING: Corpus modified by filtering nested entities." in caplog.text
 
     for key, entities in dataset.entities_per_document.items():
         assert key in target

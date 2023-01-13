@@ -1,5 +1,5 @@
 from operator import itemgetter
-from typing import List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 import pytest
 from torch.utils.data import Dataset
@@ -8,8 +8,66 @@ from flair.data import Relation, Sentence
 from flair.datasets import ColumnCorpus, DataLoader
 from flair.embeddings import TransformerDocumentEmbeddings
 from flair.models import RelationClassifier
-from flair.models.relation_classifier_model import EncodedSentence
+from flair.models.relation_classifier_model import (
+    EncodedSentence,
+    EncodingStrategy,
+    EntityMarker,
+    EntityMarkerPunct,
+    EntityMask,
+    TypedEntityMarker,
+    TypedEntityMarkerPunct,
+    TypedEntityMask,
+)
 from tests.model_test_utils import BaseModelTest
+
+encoding_strategies: Dict[EncodingStrategy, List[Tuple[str, str]]] = {
+    EntityMask(): [("[HEAD]", "[TAIL]") for _ in range(7)],
+    TypedEntityMask(): [
+        ("[HEAD-ORG]", "[TAIL-PER]"),
+        ("[HEAD-ORG]", "[TAIL-PER]"),
+        ("[HEAD-ORG]", "[TAIL-PER]"),
+        ("[HEAD-LOC]", "[TAIL-PER]"),
+        ("[HEAD-LOC]", "[TAIL-PER]"),
+        ("[HEAD-LOC]", "[TAIL-PER]"),
+        ("[HEAD-ORG]", "[TAIL-PER]"),
+    ],
+    EntityMarker(): [
+        ("[HEAD] Google [/HEAD]", "[TAIL] Larry Page [/TAIL]"),
+        ("[HEAD] Google [/HEAD]", "[TAIL] Sergey Brin [/TAIL]"),
+        ("[HEAD] Microsoft [/HEAD]", "[TAIL] Bill Gates [/TAIL]"),
+        ("[HEAD] Berlin [/HEAD]", "[TAIL] Konrad Zuse [/TAIL]"),
+        ("[HEAD] Berlin [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
+        ("[HEAD] Germany [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
+        ("[HEAD] MIT [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
+    ],
+    TypedEntityMarker(): [
+        ("[HEAD-ORG] Google [/HEAD-ORG]", "[TAIL-PER] Larry Page [/TAIL-PER]"),
+        ("[HEAD-ORG] Google [/HEAD-ORG]", "[TAIL-PER] Sergey Brin [/TAIL-PER]"),
+        ("[HEAD-ORG] Microsoft [/HEAD-ORG]", "[TAIL-PER] Bill Gates [/TAIL-PER]"),
+        ("[HEAD-LOC] Berlin [/HEAD-LOC]", "[TAIL-PER] Konrad Zuse [/TAIL-PER]"),
+        ("[HEAD-LOC] Berlin [/HEAD-LOC]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
+        ("[HEAD-LOC] Germany [/HEAD-LOC]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
+        ("[HEAD-ORG] MIT [/HEAD-ORG]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
+    ],
+    EntityMarkerPunct(): [
+        ("@ Google @", "# Larry Page #"),
+        ("@ Google @", "# Sergey Brin #"),
+        ("@ Microsoft @", "# Bill Gates #"),
+        ("@ Berlin @", "# Konrad Zuse #"),
+        ("@ Berlin @", "# Joseph Weizenbaum #"),
+        ("@ Germany @", "# Joseph Weizenbaum #"),
+        ("@ MIT @", "# Joseph Weizenbaum #"),
+    ],
+    TypedEntityMarkerPunct(): [
+        ("@ * ORG * Google @", "# ^ PER ^ Larry Page #"),
+        ("@ * ORG * Google @", "# ^ PER ^ Sergey Brin #"),
+        ("@ * ORG * Microsoft @", "# ^ PER ^ Bill Gates #"),
+        ("@ * LOC * Berlin @", "# ^ PER ^ Konrad Zuse #"),
+        ("@ * LOC * Berlin @", "# ^ PER ^ Joseph Weizenbaum #"),
+        ("@ * LOC * Germany @", "# ^ PER ^ Joseph Weizenbaum #"),
+        ("@ * ORG * MIT @", "# ^ PER ^ Joseph Weizenbaum #"),
+    ],
+}
 
 
 class TestRelationClassifier(BaseModelTest):
@@ -118,61 +176,63 @@ class TestRelationClassifier(BaseModelTest):
             for sentence in map(itemgetter(0), data_loader)
         } == ground_truth
 
-    def test_transform_corpus_with_cross_augmentation(self, corpus: ColumnCorpus, embeddings) -> None:
+    @pytest.mark.parametrize(
+        "cross_augmentation", [True, False], ids=["with_cross_augmentation", "without_cross_augmentation"]
+    )
+    @pytest.mark.parametrize(
+        "encoding_strategy, encoded_entity_pairs",
+        encoding_strategies.items(),
+        ids=[type(encoding_strategy).__name__ for encoding_strategy in encoding_strategies],
+    )
+    def test_transform_corpus(
+        self,
+        corpus: ColumnCorpus,
+        embeddings: TransformerDocumentEmbeddings,
+        cross_augmentation: bool,
+        encoding_strategy: EncodingStrategy,
+        encoded_entity_pairs: List[Tuple[str, str]],
+    ) -> None:
         label_dictionary = corpus.make_label_dictionary("relation")
-        model: RelationClassifier = self.build_model(embeddings, label_dictionary, cross_augmentation=True)
+        model: RelationClassifier = self.build_model(
+            embeddings, label_dictionary, cross_augmentation=cross_augmentation, encoding_strategy=encoding_strategy
+        )
         transformed_corpus = model.transform_corpus(corpus)
 
         # Check sentence masking and relation label annotation on
-        # training, validation and test dataset (in this test they are the same)
+        # training, validation and test dataset (in this test the splits are the same)
         ground_truth: Set[Tuple[str, Tuple[str, ...]]] = {
             # Entity pair permutations of: "Larry Page and Sergey Brin founded Google ."
-            ("[[T-Larry Page]] and Sergey Brin founded [[H-Google]] .", ("founded_by",)),
-            ("Larry Page and [[T-Sergey Brin]] founded [[H-Google]] .", ("founded_by",)),
+            (f"{encoded_entity_pairs[0][1]} and Sergey Brin founded {encoded_entity_pairs[0][0]} .", ("founded_by",)),
+            (f"Larry Page and {encoded_entity_pairs[1][1]} founded {encoded_entity_pairs[1][0]} .", ("founded_by",)),
             # Entity pair permutations of: "Microsoft was founded by Bill Gates ."
-            ("[[H-Microsoft]] was founded by [[T-Bill Gates]] .", ("founded_by",)),
+            (f"{encoded_entity_pairs[2][0]} was founded by {encoded_entity_pairs[2][1]} .", ("founded_by",)),
             # Entity pair permutations of: "Konrad Zuse was born in Berlin on 22 June 1910 ."
-            ("[[T-Konrad Zuse]] was born in [[H-Berlin]] on 22 June 1910 .", ("place_of_birth",)),
+            (
+                f"{encoded_entity_pairs[3][1]} was born in {encoded_entity_pairs[3][0]} on 22 June 1910 .",
+                ("place_of_birth",),
+            ),
             # Entity pair permutations of: "Joseph Weizenbaum , a professor at MIT , was born in Berlin , Germany."
-            ("[[T-Joseph Weizenbaum]] , a professor at [[H-MIT]] , was born in Berlin , Germany .", ("O",)),
             (
-                "[[T-Joseph Weizenbaum]] , a professor at MIT , was born in [[H-Berlin]] , Germany .",
+                f"{encoded_entity_pairs[4][1]} , a professor at MIT , "
+                f"was born in {encoded_entity_pairs[4][0]} , Germany .",
                 ("place_of_birth",),
             ),
             (
-                "[[T-Joseph Weizenbaum]] , a professor at MIT , was born in Berlin , [[H-Germany]] .",
-                ("place_of_birth",),
-            ),
-        }
-        for split in (transformed_corpus.train, transformed_corpus.dev, transformed_corpus.test):
-            self.check_transformation_correctness(split, ground_truth)
-
-    def test_transform_corpus_without_cross_augmentation(self, corpus: ColumnCorpus, embeddings) -> None:
-        label_dictionary = corpus.make_label_dictionary("relation")
-        embeddings = TransformerDocumentEmbeddings(model="distilbert-base-uncased", layers="-1", fine_tune=True)
-        model: RelationClassifier = self.build_model(embeddings, label_dictionary, cross_augmentation=False)
-
-        transformed_corpus = model.transform_corpus(corpus)
-
-        # Check sentence masking and relation label annotation on
-        # training, validation and test dataset (in this test they are the same)
-        ground_truth: Set[Tuple[str, Tuple[str, ...]]] = {
-            # Entity pair permutations of: "Larry Page and Sergey Brin founded Google ."
-            ("[[T-Larry Page]] and Sergey Brin founded [[H-Google]] .", ("founded_by",)),
-            ("Larry Page and [[T-Sergey Brin]] founded [[H-Google]] .", ("founded_by",)),
-            # Entity pair permutations of: "Microsoft was founded by Bill Gates ."
-            ("[[H-Microsoft]] was founded by [[T-Bill Gates]] .", ("founded_by",)),
-            # Entity pair permutations of: "Konrad Zuse was born in Berlin on 22 June 1910 ."
-            ("[[T-Konrad Zuse]] was born in [[H-Berlin]] on 22 June 1910 .", ("place_of_birth",)),
-            # Entity pair permutations of: "Joseph Weizenbaum , a professor at MIT , was born in Berlin , Germany ."
-            (
-                "[[T-Joseph Weizenbaum]] , a professor at MIT , was born in [[H-Berlin]] , Germany .",
-                ("place_of_birth",),
-            ),
-            (
-                "[[T-Joseph Weizenbaum]] , a professor at MIT , was born in Berlin , [[H-Germany]] .",
+                f"{encoded_entity_pairs[5][1]} , a professor at MIT , "
+                f"was born in Berlin , {encoded_entity_pairs[5][0]} .",
                 ("place_of_birth",),
             ),
         }
+
+        if cross_augmentation:
+            # This sentence is only included if we transform the corpus with cross augmentation
+            ground_truth.add(
+                (
+                    f"{encoded_entity_pairs[6][1]} , a professor at {encoded_entity_pairs[6][0]} , "
+                    f"was born in Berlin , Germany .",
+                    ("O",),
+                )
+            )
+
         for split in (transformed_corpus.train, transformed_corpus.dev, transformed_corpus.test):
             self.check_transformation_correctness(split, ground_truth)
