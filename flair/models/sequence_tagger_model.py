@@ -1,22 +1,25 @@
+import itertools
 import logging
 import sys
 import tempfile
+from collections import Counter
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 from urllib.error import HTTPError
 
 import torch
 import torch.nn
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import Dictionary, Label, Sentence, Span
+from flair.data import Dictionary, Label, Sentence, Span, DT
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.embeddings import StackedEmbeddings, TokenEmbeddings
-from flair.file_utils import cached_path, unzip_file
-from flair.training_utils import store_embeddings
+from flair.embeddings import StackedEmbeddings, TokenEmbeddings, TransformerWordEmbeddings
+from flair.file_utils import cached_path, unzip_file, Tqdm
+from flair.training_utils import store_embeddings, Result
 
 from .sequence_tagger_utils.bioes import get_spans_from_bio
 from .sequence_tagger_utils.crf import CRF
@@ -1226,3 +1229,522 @@ class MultiTagger:
             models.append(model)
 
         return cls(taggers)
+
+
+class EarlyExitSequenceTagger(SequenceTagger):
+    def __init__(
+        self,
+        embeddings: TransformerWordEmbeddings, # layer_mean = False, layers = "all"
+        tag_dictionary: Dictionary,
+        tag_type: str,
+        weighted_loss: bool = True,
+        **seqtaggerargs
+    ):
+        super().__init__(
+            embeddings = embeddings,
+            tag_dictionary = tag_dictionary,
+            tag_type = tag_type,
+            use_rnn = False,
+            use_crf = False, 
+            reproject_embeddings = False,
+            **seqtaggerargs
+        )
+        
+        if embeddings.layer_mean:
+            raise AssertionError("layer_mean must be disabled for the transformer embeddings")
+        self.n_layers = len(embeddings.layer_indexes) # the output of the emb layer before the transformer blocks counts as well
+        self.final_embedding_size = int(embeddings.embedding_length / self.n_layers)
+        self.linear = torch.nn.ModuleList(
+            torch.nn.Linear(self.final_embedding_size, len(self.label_dictionary)) 
+            for _ in range(self.n_layers)
+            )
+        self.weighted_loss = weighted_loss
+
+    def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.LongTensor, torch.Tensor]:
+        names = self.embeddings.get_names()
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        longest_token_sequence_in_batch: int = max(lengths)
+        pre_allocated_zero_tensor = torch.zeros(
+            self.embeddings.embedding_length * longest_token_sequence_in_batch,
+            dtype=torch.float,
+            device=flair.device,
+        )
+        all_embs = list()
+        for sentence in sentences:
+            all_embs += [emb for token in sentence for emb in token.get_each_embedding(names)]
+            nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
+
+            if nb_padding_tokens > 0:
+                t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
+                all_embs.append(t)
+
+        sentence_tensor = torch.cat(all_embs).view(
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.n_layers,
+                self.final_embedding_size,
+            ]
+        )
+        return torch.LongTensor(lengths), sentence_tensor
+
+    def forward(self, sentence_tensor: torch.Tensor, lengths: torch.LongTensor):  # type: ignore[override]
+        """
+        Forward propagation through network.
+        :param sentence_tensor: A tensor representing the batch of sentences.
+        :param lengths: A IntTensor representing the lengths of the respective sentences.
+        """
+        scores = []
+        for i in range(self.n_layers):
+            sentence_layer_tensor = sentence_tensor[:, :, i, :]
+            if self.use_dropout:
+                sentence_layer_tensor = self.dropout(sentence_layer_tensor)
+            if self.use_word_dropout:
+                sentence_layer_tensor = self.word_dropout(sentence_layer_tensor)
+            if self.use_locked_dropout:
+                sentence_layer_tensor = self.locked_dropout(sentence_layer_tensor)
+
+            # linear map to tag space
+            features = self.linear[i](sentence_layer_tensor)
+
+            # -- A tensor of shape (aggregated sequence length for all sentences in batch, tagset size) for linear layer
+            layer_scores = self._get_scores_from_features(features, lengths)
+            scores.append(layer_scores)
+
+        return torch.stack(scores)
+
+    def _calculate_loss(self, scores: torch.Tensor, labels: torch.LongTensor) -> Tuple[torch.Tensor, int]:
+
+        if labels.size(0) == 0:
+            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+
+        if self.weighted_loss:
+            layer_weights = torch.arange(1, self.n_layers+1, device=flair.device)
+            layer_weighted_loss = 0
+            for i in range(self.n_layers):
+                layer_loss = self.loss_function(scores[i], labels)
+                layer_weighted_loss += layer_weights[i] * layer_loss
+            loss = layer_weighted_loss / sum(layer_weights)
+
+        else:
+            loss = 0
+            for i in range(self.n_layers):
+                loss += self.loss_function(scores[i], labels)
+            loss = loss / self.n_layers
+
+        return loss, len(labels)
+
+    def _standard_inference(self, features: torch.Tensor, batch: List[Sentence], probabilities_for_all_classes: bool):
+        """
+        Softmax over emission scores from forward propagation.
+        :param features: sentence tensor from forward propagation
+        :param batch: list of sentence
+        :param probabilities_for_all_classes: whether to return score for each tag in tag dictionary
+        """
+        softmax_batch = F.softmax(features, dim=2).cpu()
+        full_scores_batch, full_prediction_batch = torch.max(softmax_batch, dim=2)
+        predictions = []
+        all_tags = []
+
+        for i in range(self.n_layers):
+            layer_predictions = []
+            scores_batch, prediction_batch = full_scores_batch[i], full_prediction_batch[i]
+            for sentence in batch:
+                scores = scores_batch[: len(sentence)]
+                predictions_for_sentence = prediction_batch[: len(sentence)]
+                layer_predictions.append(
+                    [
+                        (self.label_dictionary.get_item_for_index(prediction), score.item())
+                        for token, score, prediction in zip(sentence, scores, predictions_for_sentence)
+                    ]
+                )
+                scores_batch = scores_batch[len(sentence) :]
+                prediction_batch = prediction_batch[len(sentence) :]
+            predictions.append(layer_predictions)
+
+        if probabilities_for_all_classes:
+            for i in range(self.n_layers):
+                lengths = [len(sentence) for sentence in batch]
+                layer_tags = self._all_scores_for_token(batch, softmax_batch[i], lengths)
+                all_tags.append(layer_tags)
+
+        return predictions, all_tags
+
+
+    def predict(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size: int = 32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
+        force_token_predictions: bool = False,
+        layer_idx: int = -1,
+    ):  # type: ignore
+        """
+        Predicts labels for current batch with Softmax.
+        :param sentences: List of sentences in batch
+        :param mini_batch_size: batch size for test data
+        :param return_probabilities_for_all_classes: Whether to return probabilites for all classes
+        :param verbose: whether to use progress bar
+        :param label_name: which label to predict
+        :param return_loss: whether to return loss value
+        :param embedding_storage_mode: determines where to store embeddings - can be "gpu", "cpu" or None.
+        """
+        if abs(layer_idx) > self.n_layers:
+            raise ValueError('Layer index out of range')
+
+        if label_name is None:
+            label_name = self.tag_type
+
+        with torch.no_grad():
+            if not sentences:
+                return sentences
+
+            # make sure its a list
+            if not isinstance(sentences, list) and not isinstance(sentences, flair.data.Dataset):
+                sentences = [sentences]
+
+            # filter empty sentences
+            sentences = [sentence for sentence in sentences if len(sentence) > 0]
+
+            # reverse sort all sequences by their length
+            reordered_sentences = sorted(sentences, key=len, reverse=True)
+
+            if len(reordered_sentences) == 0:
+                return sentences
+
+            dataloader = DataLoader(
+                dataset=FlairDatapointDataset(reordered_sentences),
+                batch_size=mini_batch_size,
+            )
+            # progress bar for verbosity
+            if verbose:
+                dataloader = tqdm(dataloader, desc="Batch inference")
+
+            overall_loss = torch.zeros(1, device=flair.device)
+            label_count = 0
+            for batch in dataloader:
+
+                # stop if all sentences are empty
+                if not batch:
+                    continue
+
+                # get features from forward propagation
+                sentence_tensor, lengths = self._prepare_tensors(batch)
+                features = self.forward(sentence_tensor, lengths)
+
+                # remove previously predicted labels of this type
+                for sentence in batch:
+                    sentence.remove_labels(label_name)
+
+                # if return_loss, get loss value
+                if return_loss:
+                    gold_labels = self._prepare_label_tensor(batch)
+                    loss = self._calculate_loss(features, gold_labels)
+                    overall_loss += loss[0]
+                    label_count += loss[1]
+
+                # make predictions
+                predictions, all_tags = self._standard_inference(
+                    features, batch, return_probabilities_for_all_classes
+                )
+
+                # add predictions to Sentence
+                for sentence, sentence_predictions in zip(batch, predictions[layer_idx]):
+
+                    # BIOES-labels need to be converted to spans
+                    if self.predict_spans and not force_token_predictions:
+                        sentence_tags = [label[0] for label in sentence_predictions]
+                        sentence_scores = [label[1] for label in sentence_predictions]
+                        predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
+                        for predicted_span in predicted_spans:
+                            span: Span = sentence[predicted_span[0][0] : predicted_span[0][-1] + 1]
+                            span.add_label(label_name, value=predicted_span[2], score=predicted_span[1])
+
+                    # token-labels can be added directly ("O" and legacy "_" predictions are skipped)
+                    else:
+                        for token, label in zip(sentence.tokens, sentence_predictions):
+                            if label[0] in ["O", "_"]:
+                                continue
+                            token.add_label(typename=label_name, value=label[0], score=label[1])
+
+                # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
+                if len(all_tags) > 0:
+                    for (sentence, sent_all_tags) in zip(batch, all_tags[layer_idx]):
+                        for (token, token_all_tags) in zip(sentence.tokens, sent_all_tags):
+                            token.add_tags_proba_dist(label_name, token_all_tags)
+
+                store_embeddings(sentences, storage_mode=embedding_storage_mode)
+
+            if return_loss:
+                return overall_loss, label_count
+
+
+    def evaluate(
+        self,
+        data_points: Union[List[DT], Dataset],
+        gold_label_type: str,
+        out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
+        mini_batch_size: int = 32,
+        num_workers: Optional[int] = 8,
+        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        exclude_labels: List[str] = [],
+        gold_label_dictionary: Optional[Dictionary] = None,
+        return_loss: bool = True,
+        layer_idx = -1,
+        **kwargs,
+    ) -> Result:
+        import numpy as np
+        import sklearn
+
+        # make sure <unk> is contained in gold_label_dictionary, if given
+        if gold_label_dictionary and not gold_label_dictionary.add_unk:
+            raise AssertionError("gold_label_dictionary must have add_unk set to true in initialization.")
+
+        # read Dataset into data loader, if list of sentences passed, make Dataset first
+        if not isinstance(data_points, Dataset):
+            data_points = FlairDatapointDataset(data_points)
+
+        with torch.no_grad():
+
+            # loss calculation
+            eval_loss = torch.zeros(1, device=flair.device)
+            average_over = 0
+
+            # variables for printing
+            lines: List[str] = []
+
+            # variables for computing scores
+            all_spans: Set[str] = set()
+            all_true_values = {}
+            all_predicted_values = {}
+
+            loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=0)
+
+            sentence_id = 0
+            for batch in Tqdm.tqdm(loader):
+
+                # remove any previously predicted labels
+                for datapoint in batch:
+                    datapoint.remove_labels("predicted")
+
+                # predict for batch
+                loss_and_count = self.predict(
+                    batch,
+                    embedding_storage_mode=embedding_storage_mode,
+                    mini_batch_size=mini_batch_size,
+                    label_name="predicted",
+                    return_loss=return_loss,
+                    layer_idx=layer_idx,
+                )
+
+                if return_loss:
+                    if isinstance(loss_and_count, tuple):
+                        average_over += loss_and_count[1]
+                        eval_loss += loss_and_count[0]
+                    else:
+                        eval_loss += loss_and_count
+
+                # get the gold labels
+                for datapoint in batch:
+
+                    for gold_label in datapoint.get_labels(gold_label_type):
+                        representation = str(sentence_id) + ": " + gold_label.unlabeled_identifier
+
+                        value = gold_label.value
+                        if gold_label_dictionary and gold_label_dictionary.get_idx_for_item(value) == 0:
+                            value = "<unk>"
+
+                        if representation not in all_true_values:
+                            all_true_values[representation] = [value]
+                        else:
+                            all_true_values[representation].append(value)
+
+                        if representation not in all_spans:
+                            all_spans.add(representation)
+
+                    for predicted_span in datapoint.get_labels("predicted"):
+                        representation = str(sentence_id) + ": " + predicted_span.unlabeled_identifier
+
+                        # add to all_predicted_values
+                        if representation not in all_predicted_values:
+                            all_predicted_values[representation] = [predicted_span.value]
+                        else:
+                            all_predicted_values[representation].append(predicted_span.value)
+
+                        if representation not in all_spans:
+                            all_spans.add(representation)
+
+                    sentence_id += 1
+
+                store_embeddings(batch, embedding_storage_mode)
+
+                # make printout lines
+                if out_path:
+                    lines.extend(self._print_predictions(batch, gold_label_type))
+
+            # convert true and predicted values to two span-aligned lists
+            true_values_span_aligned = []
+            predicted_values_span_aligned = []
+            for span in all_spans:
+                list_of_gold_values_for_span = all_true_values[span] if span in all_true_values else ["O"]
+                # delete exluded labels if exclude_labels is given
+                for excluded_label in exclude_labels:
+                    if excluded_label in list_of_gold_values_for_span:
+                        list_of_gold_values_for_span.remove(excluded_label)
+                # if after excluding labels, no label is left, ignore the datapoint
+                if not list_of_gold_values_for_span:
+                    continue
+                true_values_span_aligned.append(list_of_gold_values_for_span)
+                predicted_values_span_aligned.append(
+                    all_predicted_values[span] if span in all_predicted_values else ["O"]
+                )
+
+            # write all_predicted_values to out_file if set
+            if out_path:
+                with open(Path(out_path), "w", encoding="utf-8") as outfile:
+                    outfile.write("".join(lines))
+
+            # make the evaluation dictionary
+            evaluation_label_dictionary = Dictionary(add_unk=False)
+            evaluation_label_dictionary.add_item("O")
+            for true_values in all_true_values.values():
+                for label in true_values:
+                    evaluation_label_dictionary.add_item(label)
+            for predicted_values in all_predicted_values.values():
+                for label in predicted_values:
+                    evaluation_label_dictionary.add_item(label)
+
+        # check if this is a multi-label problem
+        multi_label = False
+        for true_instance, predicted_instance in zip(true_values_span_aligned, predicted_values_span_aligned):
+            if len(true_instance) > 1 or len(predicted_instance) > 1:
+                multi_label = True
+                break
+
+        log.info(f"Evaluating as a multi-label problem: {multi_label}")
+
+        # compute numbers by formatting true and predicted such that Scikit-Learn can use them
+        y_true = []
+        y_pred = []
+        if multi_label:
+            # multi-label problems require a multi-hot vector for each true and predicted label
+            for true_instance in true_values_span_aligned:
+                y_true_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
+                for true_value in true_instance:
+                    y_true_instance[evaluation_label_dictionary.get_idx_for_item(true_value)] = 1
+                y_true.append(y_true_instance.tolist())
+
+            for predicted_values in predicted_values_span_aligned:
+                y_pred_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
+                for predicted_value in predicted_values:
+                    y_pred_instance[evaluation_label_dictionary.get_idx_for_item(predicted_value)] = 1
+                y_pred.append(y_pred_instance.tolist())
+        else:
+            # single-label problems can do with a single index for each true and predicted label
+            y_true = [
+                evaluation_label_dictionary.get_idx_for_item(true_instance[0])
+                for true_instance in true_values_span_aligned
+            ]
+            y_pred = [
+                evaluation_label_dictionary.get_idx_for_item(predicted_instance[0])
+                for predicted_instance in predicted_values_span_aligned
+            ]
+
+        # now, calculate evaluation numbers
+        target_names = []
+        labels = []
+
+        counter = Counter(itertools.chain.from_iterable(all_true_values.values()))
+        counter.update(list(itertools.chain.from_iterable(all_predicted_values.values())))
+
+        for label_name, count in counter.most_common():
+            if label_name == "O":
+                continue
+            target_names.append(label_name)
+            labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
+
+        # there is at least one gold label or one prediction (default)
+        if len(all_true_values) + len(all_predicted_values) > 1:
+            classification_report = sklearn.metrics.classification_report(
+                y_true,
+                y_pred,
+                digits=4,
+                target_names=target_names,
+                zero_division=0,
+                labels=labels,
+            )
+
+            classification_report_dict = sklearn.metrics.classification_report(
+                y_true,
+                y_pred,
+                target_names=target_names,
+                zero_division=0,
+                output_dict=True,
+                labels=labels,
+            )
+
+            accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
+            macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
+
+            # if there is only one label, then "micro avg" = "macro avg"
+            if len(target_names) == 1:
+                classification_report_dict["micro avg"] = classification_report_dict["macro avg"]
+
+            if "micro avg" in classification_report_dict:
+                # micro average is only computed if zero-label exists (for instance "O")
+                precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
+                recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
+                micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
+            else:
+                # if no zero-label exists (such as in POS tagging) micro average is equal to accuracy
+                precision_score = round(classification_report_dict["accuracy"], 4)
+                recall_score = round(classification_report_dict["accuracy"], 4)
+                micro_f_score = round(classification_report_dict["accuracy"], 4)
+
+            # same for the main score
+            if "micro avg" not in classification_report_dict and main_evaluation_metric[0] == "micro avg":
+                main_score = classification_report_dict["accuracy"]
+            else:
+                main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
+
+        else:
+            # issue error and default all evaluation numbers to 0.
+            log.error(
+                "ACHTUNG! No gold labels and no all_predicted_values found! "
+                "Could be an error in your corpus or how you "
+                "initialize the trainer!"
+            )
+            accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.0
+            classification_report = ""
+            classification_report_dict = {}
+
+        detailed_result = (
+            "\nResults:"
+            f"\n- F-score (micro) {micro_f_score}"
+            f"\n- F-score (macro) {macro_f_score}"
+            f"\n- Accuracy {accuracy_score}"
+            "\n\nBy class:\n" + classification_report
+        )
+
+        # line for log file
+        log_header = "PRECISION\tRECALL\tF1\tACCURACY"
+        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
+
+        if average_over > 0:
+            eval_loss /= average_over
+
+        result = Result(
+            main_score=main_score,
+            log_line=log_line,
+            log_header=log_header,
+            detailed_results=detailed_result,
+            classification_report=classification_report_dict,
+            loss=eval_loss.item(),
+        )
+
+        return result

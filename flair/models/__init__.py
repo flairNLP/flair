@@ -7,7 +7,7 @@ from .pairwise_classification_model import TextPairClassifier
 from .regexp_tagger import RegexpTagger
 from .relation_classifier_model import RelationClassifier
 from .relation_extractor_model import RelationExtractor
-from .sequence_tagger_model import MultiTagger, SequenceTagger
+from .sequence_tagger_model import MultiTagger, SequenceTagger, EarlyExitSequenceTagger
 from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier, TextClassifierProbes
 from .word_tagger_model import WordTagger
@@ -22,6 +22,7 @@ __all__ = [
     "RegexpTagger",
     "MultiTagger",
     "SequenceTagger",
+    "EarlyExitSequenceTagger",
     "WordTagger",
     "FewshotClassifier",
     "TARSClassifier",
