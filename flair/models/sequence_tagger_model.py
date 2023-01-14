@@ -1265,6 +1265,8 @@ class EarlyExitSequenceTagger(SequenceTagger):
             )
         self.weighted_loss = weighted_loss
 
+        self.to(flair.device)
+
     def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.LongTensor, torch.Tensor]:
         names = self.embeddings.get_names()
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
