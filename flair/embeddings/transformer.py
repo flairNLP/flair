@@ -83,7 +83,7 @@ def combine_strided_tensors(
 
     for sentence_id in torch.arange(0, sentence_hidden_states.shape[0]):
         selected_sentences = hidden_states[overflow_to_sample_mapping == sentence_id]
-        if selected_sentences.shape[0] > 1:
+        if selected_sentences.size(0) > 1:
             start_part = selected_sentences[0, : half_stride + 1]
             mid_part = selected_sentences[:, half_stride + 1 : max_length - 1 - half_stride]
             mid_part = torch.reshape(mid_part, (mid_part.shape[0] * mid_part.shape[1],) + mid_part.shape[2:])
@@ -494,7 +494,8 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             cpu_overflow_to_sample_mapping = None
             sub_token_lengths = (input_ids != self.tokenizer.pad_token_id).sum(dim=1)
             padded_tokens = flair_tokens
-        model_kwargs["sub_token_lengths"] = sub_token_lengths
+        if self.document_embedding and not (self.cls_pooling == "cls" and self.initial_cls_token):
+            model_kwargs["sub_token_lengths"] = sub_token_lengths
 
         # set language IDs for XLM-style transformers
         if self.use_lang_emb and getattr(self.tokenizer, "lang2id") is not None:
@@ -563,7 +564,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         if self.feature_extractor is not None:
             images = [sent.get_metadata("image") for sent in sentences]
-            image_encodings = self.feature_extractor(images, return_tensors="pt")["pixel_values"]
+            image_encodings = self.feature_extractor(images, return_tensors="pt")["pixel_values"]  # type: ignore
             if cpu_overflow_to_sample_mapping is not None:
                 batched_image_encodings = [image_encodings[i] for i in cpu_overflow_to_sample_mapping]
                 image_encodings = torch.stack(batched_image_encodings)
@@ -778,7 +779,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
 
         torch.onnx.export(
             embedding,
-            [example_tensors],
+            (example_tensors,),
             path,
             input_names=desired_keys_order,
             output_names=output_names,
@@ -1146,7 +1147,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     def forward(
         self,
         input_ids: torch.Tensor,
-        sub_token_lengths: torch.LongTensor,
+        sub_token_lengths: Optional[torch.LongTensor] = None,
         token_lengths: Optional[torch.LongTensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
         overflow_to_sample_mapping: Optional[torch.Tensor] = None,
@@ -1199,6 +1200,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             if self.cls_pooling == "cls" and self.initial_cls_token:
                 document_embeddings = sentence_hidden_states[:, 0]
             else:
+                assert sub_token_lengths is not None
                 if self.cls_pooling == "cls":
                     document_embeddings = sentence_hidden_states[
                         torch.arange(sentence_hidden_states.shape[0]), sub_token_lengths - 1
@@ -1214,8 +1216,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if self.token_embedding:
             assert word_ids is not None
             assert token_lengths is not None
-            all_token_embeddings = torch.zeros(
-                word_ids.shape[0], int(token_lengths.max()), self.embedding_length_internal, device=flair.device
+            all_token_embeddings = torch.zeros(  # type: ignore
+                word_ids.shape[0], token_lengths.max(), self.embedding_length_internal, device=flair.device
             )
             true_tensor = torch.ones_like(word_ids[:, :1], dtype=torch.bool)
             if self.subtoken_pooling == "first":
@@ -1261,7 +1263,9 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
         return self.forward(**tensors)
 
-    def export_onnx(self, path: str, example_sentences: List[Sentence], **kwargs) -> TransformerOnnxEmbeddings:
+    def export_onnx(
+        self, path: Union[str, Path], example_sentences: List[Sentence], **kwargs
+    ) -> TransformerOnnxEmbeddings:
         """
         Export TransformerEmbeddings to OnnxFormat.
         :param example_sentences: a list of sentences that will be used for tracing. It is recommended to take 2-4
