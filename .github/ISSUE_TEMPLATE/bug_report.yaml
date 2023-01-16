@@ -26,6 +26,7 @@ body:
         from flair.datasets import WNUT_17
         corpus = WNUT_17()
         ....
+      render: python
     validations:
       required: true
   - type: textarea
@@ -45,6 +46,7 @@ body:
         File "flair\flair\embeddings\token.py", line 84, in __init__
         self.__embedding_type: str = embeddings[0].embedding_type
         IndexError: list index out of range
+      render: ""
     validations:
       required: false
   - type: textarea
