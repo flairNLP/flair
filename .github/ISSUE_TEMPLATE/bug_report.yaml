@@ -2,7 +2,7 @@ name: Bug Report
 description: Create a report to help us improve
 title: "[Bug]: "
 labels: ["bug"]
-assignees: ''
+assignees: []
 body:
   - type: markdown
     attributes:
@@ -26,7 +26,6 @@ body:
         from flair.datasets import WNUT_17
         corpus = WNUT_17()
         ....
-      value: ""
     validations:
       required: true
   - type: textarea
@@ -34,8 +33,6 @@ body:
     attributes:
       label: Expected behaivor
       description: A clear and concise description of what you expected to happen.
-      placeholder: ""
-      value: ""
     validations:
       required: true
   - type: textarea
@@ -48,7 +45,6 @@ body:
         File "flair\flair\embeddings\token.py", line 84, in __init__
         self.__embedding_type: str = embeddings[0].embedding_type
         IndexError: list index out of range
-      value: ""
     validations:
       required: false
   - type: textarea
@@ -57,7 +53,6 @@ body:
       label: Screenshots
       description: If applicable, add screenshots to help explain your problem.
       placeholder: if applicable, copy paste an image in here
-      value: ""
     validations:
       required: false
   - type: textarea
@@ -65,8 +60,6 @@ body:
     attributes:
       label: Additional Context
       description: Add anything worthy to add that wasn't mentioned yet.
-      placeholder: ""
-      value: ""
     validations:
       required: false
   - type: textarea
