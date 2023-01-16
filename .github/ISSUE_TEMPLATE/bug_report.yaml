@@ -66,7 +66,7 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Please run the [collect_env.py](/collect_env.py) and paste it's output in here
+      description: Please run the [collect_env.py](collect_env.py) and paste it's output in here
       placeholder: python collect_env.py
     validations:
       required: true
