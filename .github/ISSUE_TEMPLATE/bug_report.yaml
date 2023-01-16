@@ -21,12 +21,11 @@ body:
     attributes:
       label: To Reproduce
       description: Steps to reproduce the behavior (e.g. which model did you train? what parameters did you use? etc.).
-      placeholder: """
-      import flair
-      from flair.datasets import WNUT_17
-      corpus = WNUT_17()
-      ....
-      """
+      placeholder: |
+        import flair
+        from flair.datasets import WNUT_17
+        corpus = WNUT_17()
+        ....
       value: ""
     validations:
       required: true
@@ -35,8 +34,7 @@ body:
     attributes:
       label: Expected behaivor
       description: A clear and concise description of what you expected to happen.
-      placeholder: """
-      """
+      placeholder: ""
       value: ""
     validations:
       required: true
@@ -45,12 +43,11 @@ body:
     attributes:
       label: Logs and Stack traces
       description: If applicable, please past any relevant logs or error messages, please don't cut off the stack trace.
-      placeholder: """
-      Traceback (most recent call last):
-      File \"flair\flair\embeddings\token.py\", line 84, in __init__
-      self.__embedding_type: str = embeddings[0].embedding_type
-      IndexError: list index out of range
-      """
+      placeholder: |
+        Traceback (most recent call last):
+        File "flair\flair\embeddings\token.py", line 84, in __init__
+        self.__embedding_type: str = embeddings[0].embedding_type
+        IndexError: list index out of range
       value: ""
     validations:
       required: false
@@ -59,7 +56,7 @@ body:
     attributes:
       label: Screenshots
       description: If applicable, add screenshots to help explain your problem.
-      placeholder: "if applicable, copy paste an image in here"
+      placeholder: if applicable, copy paste an image in here
       value: ""
     validations:
       required: false
