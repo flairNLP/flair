@@ -1238,12 +1238,15 @@ class EarlyExitSequenceTagger(SequenceTagger):
         tag_dictionary: Dictionary,
         tag_type: str,
         weighted_loss: bool = True,
+        last_layer_only: bool = False,
         **seqtaggerargs
     ):
         """
         Adds Early-Exit functionality to the SequenceTagger
         :param weighted_loss: controls whether to compute a weighted or a simple average loss
         over all the early-exit layers.
+        :param last_layer_only: allows to use outputs of the last layer only to train the
+        model (like in the case of the regular SequenceTagger).
         """
         super().__init__(
             embeddings = embeddings,
@@ -1264,6 +1267,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
             for _ in range(self.n_layers)
             )
         self.weighted_loss = weighted_loss
+        self.last_layer_only = last_layer_only
 
         self.to(flair.device)
 
@@ -1325,19 +1329,21 @@ class EarlyExitSequenceTagger(SequenceTagger):
         if labels.size(0) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
-        if self.weighted_loss:
-            layer_weights = torch.arange(1, self.n_layers+1, device=flair.device)
-            layer_weighted_loss = 0
-            for i in range(self.n_layers):
-                layer_loss = self.loss_function(scores[i], labels)
-                layer_weighted_loss += layer_weights[i] * layer_loss
-            loss = layer_weighted_loss / sum(layer_weights)
-
+        if self.last_layer_only:
+            loss = self.loss_function(scores[-1], labels)
         else:
-            loss = 0
-            for i in range(self.n_layers):
-                loss += self.loss_function(scores[i], labels)
-            loss = loss / self.n_layers
+            if self.weighted_loss:
+                layer_weights = torch.arange(1, self.n_layers+1, device=flair.device)
+                layer_weighted_loss = 0
+                for i in range(self.n_layers):
+                    layer_loss = self.loss_function(scores[i], labels)
+                    layer_weighted_loss += layer_weights[i] * layer_loss
+                loss = layer_weighted_loss / sum(layer_weights)
+            else:
+                loss = 0
+                for i in range(self.n_layers):
+                    loss += self.loss_function(scores[i], labels)
+                loss = loss / self.n_layers
 
         return loss, len(labels)
 
