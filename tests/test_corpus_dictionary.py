@@ -4,7 +4,7 @@ import pytest
 
 import flair
 from flair.data import Corpus, Dictionary, Label, Sentence
-from flair.datasets import FlairDatapointDataset, SentenceDataset
+from flair.datasets import FlairDatapointDataset, SentenceDataset, ColumnCorpus
 
 
 def test_dictionary_get_items_with_unk():
@@ -288,3 +288,29 @@ def test_classification_corpus_multi_labels_with_negative_examples(tasks_base_pa
     assert len(corpus.train) == 8
     assert len(corpus.dev) == 5
     assert len(corpus.test) == 6
+
+
+def test_misalignment_spans(tasks_base_path):
+    example_txt = """George B-NAME
+Washington I-NAME
+went O
+\t O
+Washington B-CITY
+and O
+enjoyed O
+some O
+coffee B-BEVERAGE
+"""
+    train_path = tasks_base_path / "tmp" / "train.txt"
+    try:
+        train_path.parent.mkdir(exist_ok=True, parents=True)
+        train_path.write_text(example_txt, encoding="utf-8")
+        corpus = ColumnCorpus(
+            data_folder=train_path.parent, column_format={0: "text", 1: "ner"}, train_file=train_path.name
+        )
+        sentence = corpus.train[0]
+        span_texts = [span.text for span in sentence.get_spans("ner")]
+        assert span_texts == ["George Washington", "Washington", "coffee"]
+    finally:
+        train_path.unlink(missing_ok=True)
+        train_path.parent.rmdir()
