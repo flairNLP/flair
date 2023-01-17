@@ -922,51 +922,55 @@ class ModelTrainer:
         **trainer_args,
     ):
 
-        param_groups = []
-        manually_set_parameters = set()
+        if inspect.isclass(optimizer):
+            param_groups = []
+            manually_set_parameters = set()
 
-        if decoder_batchnorm_lr:
+            if decoder_batchnorm_lr:
 
-            if isinstance(decoder_batchnorm_lr, int):
-                manually_set_lr = learning_rate * decoder_batchnorm_lr
-            elif isinstance(decoder_batchnorm_lr, float):
-                manually_set_lr = decoder_batchnorm_lr
-            else:
-                manually_set_lr = learning_rate
+                if isinstance(decoder_batchnorm_lr, int):
+                    manually_set_lr = learning_rate * decoder_batchnorm_lr
+                elif isinstance(decoder_batchnorm_lr, float):
+                    manually_set_lr = decoder_batchnorm_lr
+                else:
+                    manually_set_lr = learning_rate
 
-            param_groups.append({"params": [p for p in self.model.decoder.BN.parameters() if p not in manually_set_parameters],
-                                  "lr": manually_set_lr})
-            log.info(
-                     f"Setting batch norm learning rate to {manually_set_lr} for the following "
-                     f"parameters: {[name for name, param in self.model.decoder.BN.named_parameters() if param not in manually_set_parameters]}"
-                 )
+                param_groups.append({"params": [p for p in self.model.decoder.BN.parameters() if p not in manually_set_parameters],
+                                      "lr": manually_set_lr})
+                log.info(
+                         f"Setting batch norm learning rate to {manually_set_lr} for the following "
+                         f"parameters: {[name for name, param in self.model.decoder.BN.named_parameters() if param not in manually_set_parameters]}"
+                     )
 
-            manually_set_parameters.update(self.model.decoder.BN.parameters())
+                manually_set_parameters.update(self.model.decoder.BN.parameters())
 
-        if decoder_lr:
+            if decoder_lr:
 
-            if isinstance(decoder_lr, int):
-                manually_set_lr = learning_rate * decoder_lr
-            elif isinstance(decoder_lr, float):
-                manually_set_lr = decoder_lr
-            else:
-                manually_set_lr = learning_rate
+                if isinstance(decoder_lr, int):
+                    manually_set_lr = learning_rate * decoder_lr
+                elif isinstance(decoder_lr, float):
+                    manually_set_lr = decoder_lr
+                else:
+                    manually_set_lr = learning_rate
 
 
-            param_groups.append({"params": [p for p in self.model.decoder.parameters() if p not in manually_set_parameters],
-                                  "lr": manually_set_lr})
-            log.info(
-                f"Setting learning rate to {manually_set_lr} for the following "
-                f"parameters: {[name for name, param in self.model.decoder.named_parameters() if param not in manually_set_parameters]}"
-            )
+                param_groups.append({"params": [p for p in self.model.decoder.parameters() if p not in manually_set_parameters],
+                                      "lr": manually_set_lr})
+                log.info(
+                    f"Setting learning rate to {manually_set_lr} for the following "
+                    f"parameters: {[name for name, param in self.model.decoder.named_parameters() if param not in manually_set_parameters]}"
+                )
 
-            manually_set_parameters.update(self.model.decoder.parameters())
+                manually_set_parameters.update(self.model.decoder.parameters())
 
-        # make a param group out of remaining params
-        param_groups.append({"params": [p for p in self.model.parameters() if p not in manually_set_parameters],
-                             "lr": learning_rate})
+            # make a param group out of remaining params
+            param_groups.append({"params": [p for p in self.model.parameters() if p not in manually_set_parameters],
+                                 "lr": learning_rate})
 
-        optimizer = optimizer(param_groups, lr = learning_rate)
+            optimizer = optimizer(param_groups, lr = learning_rate)
+
+        else:
+            optimizer = optimizer
 
         return self.train(
             base_path=base_path,
