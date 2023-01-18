@@ -548,7 +548,7 @@ class TARSTagger(FewshotClassifier):
                         for tuple in sorted_x:
                             # get the span and its label
                             label = tuple[0]
-                            # label = span.get_labels("tars_temp_label")[0].value
+
                             label_length = (
                                 0 if not self.prefix else len(label.value.split(" ")) + len(self.separator.split(" "))
                             )
@@ -560,17 +560,20 @@ class TARSTagger(FewshotClassifier):
                                 if corresponding_token is None:
                                     tag_this = False
                                     continue
-                                if token.idx in already_set_indices:
+                                if corresponding_token.idx in already_set_indices:
                                     tag_this = False
                                     continue
 
                             # only add if all tokens have no label
                             if tag_this:
-                                already_set_indices.extend(token.idx for token in label.data_point)
+                                # make and add a corresponding predicted span
                                 predicted_span = Span(
                                     [sentence.get_token(token.idx - label_length) for token in label.data_point]
                                 )
                                 predicted_span.add_label(label_name, value=label.value, score=label.score)
+
+                                # set indices so that no token can be tagged twice
+                                already_set_indices.extend(token.idx for token in predicted_span)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
