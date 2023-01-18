@@ -1,6 +1,3 @@
-# type: ignore
-# ignore this file since "from hyperopt import hp" causes a deprecation warning
-
 import shutil
 
 import pytest
