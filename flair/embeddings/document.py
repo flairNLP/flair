@@ -426,7 +426,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             self.eval()
 
         else:
-            self.__dict__ = d
+            super().__setstate__(d)
 
 
 class DocumentLMEmbeddings(DocumentEmbeddings):
