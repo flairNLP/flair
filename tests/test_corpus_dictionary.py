@@ -4,7 +4,7 @@ import pytest
 
 import flair
 from flair.data import Corpus, Dictionary, Label, Sentence
-from flair.datasets import FlairDatapointDataset, SentenceDataset, ColumnCorpus
+from flair.datasets import ColumnCorpus, FlairDatapointDataset, SentenceDataset
 
 
 def test_dictionary_get_items_with_unk():
@@ -312,5 +312,5 @@ coffee B-BEVERAGE
         span_texts = [span.text for span in sentence.get_spans("ner")]
         assert span_texts == ["George Washington", "Washington", "coffee"]
     finally:
-        train_path.unlink(missing_ok=True)
+        train_path.unlink()
         train_path.parent.rmdir()
