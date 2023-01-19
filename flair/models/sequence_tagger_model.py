@@ -1237,6 +1237,9 @@ class EarlyExitSequenceTagger(SequenceTagger):
         embeddings: TransformerWordEmbeddings, # layer_mean = False, layers = "all"
         tag_dictionary: Dictionary,
         tag_type: str,
+        use_rnn = False,
+        use_crf = False, 
+        reproject_embeddings = False,
         weighted_loss: bool = True,
         last_layer_only: bool = False,
         **seqtaggerargs
@@ -1252,9 +1255,9 @@ class EarlyExitSequenceTagger(SequenceTagger):
             embeddings = embeddings,
             tag_dictionary = tag_dictionary,
             tag_type = tag_type,
-            use_rnn = False,
-            use_crf = False, 
-            reproject_embeddings = False,
+            use_rnn = use_rnn,
+            use_crf = use_crf, 
+            reproject_embeddings = reproject_embeddings,
             **seqtaggerargs
         )
         
@@ -1333,7 +1336,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
             loss = self.loss_function(scores[-1], labels)
         else:
             if self.weighted_loss:
-                layer_weights = torch.arange(1, self.n_layers+1, device=flair.device)
+                layer_weights = torch.arange(self.n_layers, device=flair.device)
                 layer_weighted_loss = 0
                 for i in range(self.n_layers):
                     layer_loss = self.loss_function(scores[i], labels)
@@ -1341,9 +1344,9 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 loss = layer_weighted_loss / sum(layer_weights)
             else:
                 loss = 0
-                for i in range(self.n_layers):
+                for i in range(1, self.n_layers):
                     loss += self.loss_function(scores[i], labels)
-                loss = loss / self.n_layers
+                loss = loss / (self.n_layers - 1)
 
         return loss, len(labels)
 
