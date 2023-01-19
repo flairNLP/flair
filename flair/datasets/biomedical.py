@@ -350,8 +350,10 @@ class CoNLLWriter:
 
     def process_dataset(self, datasets: Dict[str, InternalBioNerDataset], out_dir: Path):
         self.write_to_conll(datasets["train"], out_dir / "train.conll")
-        self.write_to_conll(datasets["dev"], out_dir / "dev.conll")
         self.write_to_conll(datasets["test"], out_dir / "test.conll")
+
+        if "dev" in datasets:
+            self.write_to_conll(datasets["dev"], out_dir / "dev.conll")
 
     def write_to_conll(self, dataset: InternalBioNerDataset, output_file: Path):
         os.makedirs(str(output_file.parent), exist_ok=True)
