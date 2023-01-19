@@ -24,7 +24,8 @@ filterwarnings = [
     'ignore:bilinear is deprecated and will be removed in Pillow 10',  # huggingface layoutlmv2 has deprecated calls.
     'ignore:nearest is deprecated and will be removed in Pillow 10',  # huggingface layoutlmv2 has deprecated calls.
     'ignore:The `device` argument is deprecated and will be removed in v5 of Transformers.',  # hf layoutlmv3 calls deprecated hf.
-    "ignore:the imp module is deprecated:DeprecationWarning:past"  # ignore DeprecationWarning from hyperopt dependency
+    "ignore:the imp module is deprecated:DeprecationWarning:past",  # ignore DeprecationWarning from hyperopt dependency
+    "ignore:.*imp module.*:DeprecationWarning",  # ignore DeprecationWarnings that involve imp module
 ]
 markers = [
     "integration",
