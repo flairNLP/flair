@@ -713,7 +713,7 @@ class ModelTrainer:
                 # determine if this is the best model or if we need to anneal
                 current_epoch_has_best_model_so_far = False
                 # default mode: anneal against dev score
-                if not train_with_dev and not anneal_against_dev_loss:
+                if not train_with_dev and not anneal_against_dev_loss and self.corpus.dev is not None:
                     if dev_score > best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_score
@@ -722,7 +722,7 @@ class ModelTrainer:
                         scheduler.step(dev_score, dev_eval_result.loss)
 
                 # alternative: anneal against dev loss
-                if not train_with_dev and anneal_against_dev_loss:
+                if not train_with_dev and anneal_against_dev_loss and self.corpus.dev is not None:
                     if dev_eval_result.loss < best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_eval_result.loss
