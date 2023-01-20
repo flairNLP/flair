@@ -1479,6 +1479,51 @@ class Corpus(typing.Generic[T_co]):
 
         return label_dictionary
 
+    def _corrupt_labels(self, noise_share: float, labels: List[str], label_type: str, seed: int):
+        """
+        Simulates uniform label noise distribution in the train split.
+        :noise_share: the desired share of noise in the train split.
+        :labels: an array of all unique labels in the dataset.
+        :label_type: for which type of labels should the noise be simulated.
+        :seed: to replicate the simulation.
+        """
+        import numpy as np
+
+        if noise_share < 0 or noise_share > 1:
+            raise ValueError("noise_share must be between 0 and 1")
+
+        assert self.train
+        datasets = [self.train]
+
+        data: ConcatDataset = ConcatDataset(datasets)
+
+        orig_label_p = 1 - noise_share
+        other_label_p = noise_share/(len(labels)-1)
+
+        corrupted_count = 0
+        total_label_count = 0
+
+        log.info("Generating noisy labels. Progress:")
+
+        flair.set_seed(seed)
+        for data_point in Tqdm.tqdm(_iter_dataset(data)):
+            for label in data_point.get_labels(label_type):
+                total_label_count += 1
+                orig_label = label.value
+                prob_dist = [other_label_p] * len(labels)
+                prob_dist[labels.index(orig_label)] = orig_label_p
+                # sample randomly from a label distribution according to the probabilities defined by the desired noise share
+                new_label = np.random.choice(a=labels, p=prob_dist)
+                # replace the old label with the new one
+                label.value = new_label
+                # keep track of the old (clean) label using another label type category
+                label.data_point.add_label(label_type + '_clean', orig_label)
+                # keep track of how many labels in total are flipped
+                if new_label != orig_label:
+                    corrupted_count += 1
+
+        log.info(f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count/total_label_count)*100, 2)}%.")
+
     def get_label_distribution(self):
         class_to_count = defaultdict(lambda: 0)
         for sent in self.train:
