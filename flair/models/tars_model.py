@@ -1,4 +1,5 @@
 import logging
+import typing
 from abc import ABC
 from collections import OrderedDict
 from pathlib import Path
@@ -11,7 +12,7 @@ from sklearn.preprocessing import minmax_scale
 from tqdm import tqdm
 
 import flair
-from flair.data import Dictionary, Sentence, Span
+from flair.data import Dictionary, Sentence, Span, Corpus
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import (
     TokenEmbeddings,
@@ -307,6 +308,12 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
             self._drop_task("ZeroShot")
 
         return
+
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[str]:
+        yield from super().get_used_tokens(corpus)
+        for label in self.get_current_label_dictionary().idx2item.keys():
+            yield [label.decode("utf-8")]
+        yield [self.separator]
 
 
 class TARSTagger(FewshotClassifier):

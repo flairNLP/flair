@@ -1,10 +1,11 @@
+import typing
 from typing import List
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Sentence, TextPair
+from flair.data import Sentence, TextPair, Corpus
 
 
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
@@ -111,3 +112,8 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             embed_separately=state.get("embed_separately"),
             **kwargs,
         )
+
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[str]:
+        for sentence_pair in corpus.get_all_sentences():
+            yield [t.text for t in sentence_pair.first]
+            yield [t.text for t in sentence_pair.second]

@@ -1,5 +1,6 @@
 import itertools
 import logging
+import typing
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -705,3 +706,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     @property
     def allow_unk_tag(self) -> bool:
         return self._allow_unk_tag
+
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[str]:
+        yield from super().get_used_tokens(corpus)
+        for sentence in corpus.get_all_sentences():
+            for span in sentence.get_spans(self.label_type):
+                yield self.encoding_strategy.encode_head(span, span.get_label(self.label_type))
+                yield self.encoding_strategy.encode_tail(span, span.get_label(self.label_type))

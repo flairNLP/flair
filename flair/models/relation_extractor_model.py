@@ -6,7 +6,7 @@ import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Relation, Sentence
+from flair.data import Relation, Sentence, Corpus
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")

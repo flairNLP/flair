@@ -14,7 +14,7 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
-from flair.data import DT, DT2, Dictionary, Sentence
+from flair.data import DT, DT2, Dictionary, Sentence, Corpus
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
@@ -232,6 +232,15 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
                 "This model has no model card (likely because it is not yet "
                 "trained or was trained with Flair version < 0.9.1)"
             )
+
+    @property
+    def supports_smaller_training_vocab(self) -> bool:
+        # the smaller training vocab expects classification tasks, otherwise it won't work.
+        return False
+
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[str]:
+        pass
+
 
 
 class Classifier(Model[DT], typing.Generic[DT], ABC):
@@ -541,6 +550,15 @@ class Classifier(Model[DT], typing.Generic[DT], ABC):
             )
             lines.append(eval_line)
         return lines
+
+    @property
+    def supports_smaller_training_vocab(self) -> bool:
+        # the smaller training vocab expects classification tasks, otherwise it won't work.
+        return True
+
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[str]:
+        for sentence in corpus.get_all_sentences():
+            yield [t.text for t in sentence]
 
 
 class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):

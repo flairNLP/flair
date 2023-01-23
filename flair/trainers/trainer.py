@@ -13,7 +13,9 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 import torch
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
+from transformer_smaller_training_vocab import reduce_train_vocab
 
+from flair.embeddings import TransformerEmbeddings, Embeddings, StackedEmbeddings
 from flair.nn import Model
 
 try:
@@ -123,6 +125,7 @@ class ModelTrainer:
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
         scheduler_state_dict: Optional[Dict[str, Any]] = None,
         save_optimizer_state: bool = False,
+        reduce_transformer_vocab: bool = False,
         shuffle_first_epoch: bool = False,
         **kwargs,
     ) -> dict:
@@ -386,6 +389,23 @@ class ModelTrainer:
         train_loss_history = []
 
         micro_batch_size = mini_batch_chunk_size
+
+        if not self.model.supports_smaller_training_vocab:
+            reduce_transformer_vocab = False
+
+        if reduce_transformer_vocab:
+            transformer_embeddings = get_transformer_embeddings(self)
+            if not transformer_embeddings:
+                reduce_transformer_vocab = False
+            else:
+                tokens = list(self.model.get_used_tokens(self.corpus))
+                vocab_contexts = [
+                    reduce_train_vocab(model=emb.model, tokenizer=emb.tokenizer, texts=tokens)
+                    for emb in transformer_embeddings
+                ]
+                for context in vocab_contexts:
+                    context.__enter__()
+
 
         # this field stores the names of all dynamic embeddings in the model (determined after first forward pass)
         dynamic_embeddings = None
@@ -867,6 +887,11 @@ class ModelTrainer:
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
+        if reduce_transformer_vocab:
+            for context in vocab_contexts:
+                context.__exit__()
+            if save_final_model and not param_selection_mode:
+                self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
 
         if create_file_logs:
             log_handler.close()
@@ -1081,3 +1106,24 @@ class ModelTrainer:
         log_line(log)
 
         return Path(learning_rate_tsv)
+
+
+def get_transformer_embeddings(trainer: ModelTrainer) -> List[TransformerEmbeddings]:
+    embeddings = getattr(trainer.model, "embeddings", None)
+
+    if embeddings is None:
+        log.warning(f"Could not extract embeddings of Model of type {type(trainer.model)}")
+        return []
+
+    transformer_embeddings = set()
+
+    def scan_embeddings(emb: Embeddings):
+        if isinstance(emb, StackedEmbeddings):
+            for sub_emb in emb.embeddings:
+                scan_embeddings(sub_emb)
+        if isinstance(emb, TransformerEmbeddings):
+            transformer_embeddings.add(emb)
+
+    scan_embeddings(embeddings)
+
+    return list(transformer_embeddings)
