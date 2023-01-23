@@ -117,6 +117,7 @@ class OcrJsonDataset(FlairDataset):
             sentence = self._load_example(self.file_names[index])
 
             # set sentence context using partials TODO: pointer to dataset is really inefficient
+            sentence._has_context = True
             sentence._position_in_dataset = (self, index)
 
         return sentence

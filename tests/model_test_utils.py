@@ -4,6 +4,8 @@ import pytest
 
 import flair
 from flair.data import Dictionary, Sentence
+from flair.embeddings import TransformerEmbeddings
+from flair.models import FewshotClassifier
 from flair.nn import Model
 from flair.trainers import ModelTrainer
 
@@ -122,7 +124,7 @@ class BaseModelTest:
 
     @pytest.mark.integration
     def test_train_load_use_model_multi_corpus(
-        self, results_base_path, multi_corpus, embeddings, example_sentence, train_test_sentence
+            self, results_base_path, multi_corpus, embeddings, example_sentence, train_test_sentence
     ):
         flair.set_seed(123)
         label_dict = multi_corpus.make_label_dictionary(label_type=self.train_label_type)
@@ -156,7 +158,7 @@ class BaseModelTest:
 
     @pytest.mark.integration
     def test_train_resume_classifier(
-        self, results_base_path, corpus, embeddings, example_sentence, train_test_sentence
+            self, results_base_path, corpus, embeddings, example_sentence, train_test_sentence
     ):
         flair.set_seed(123)
         label_dict = corpus.make_label_dictionary(label_type=self.train_label_type)
@@ -199,7 +201,7 @@ class BaseModelTest:
         del loaded_pretrained_model
 
     def test_train_load_use_model_multi_label(
-        self, results_base_path, multi_class_corpus, embeddings, example_sentence, multiclass_train_test_sentence
+            self, results_base_path, multi_class_corpus, embeddings, example_sentence, multiclass_train_test_sentence
     ):
         flair.set_seed(123)
         label_dict = multi_class_corpus.make_label_dictionary(label_type=self.train_label_type)
@@ -237,3 +239,27 @@ class BaseModelTest:
         loaded_model.predict(example_sentence)
         loaded_model.predict([example_sentence, self.empty_sentence])
         loaded_model.predict([self.empty_sentence])
+
+    def test_context_is_set_correctly(self):
+        sentences = [
+            Sentence("this is a very very very long sentence"),
+            Sentence("this is a shorter sentence"),
+            Sentence(""),
+            Sentence("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+            Sentence("b"),
+        ]
+        embedding = TransformerEmbeddings("distilbert-base-cased", use_context=True)
+        label_dictionary = Dictionary()
+        model = self.build_model(embedding, label_dictionary)
+
+        if isinstance(model, FewshotClassifier):
+            model.add_and_switch_to_new_task("test", ["a", "b"], "label")
+
+        model.predict(sentences)
+
+        for first, second in zip(sentences[:-1], sentences[1:]):
+            assert first.next_sentence() == second
+            assert first == second.previous_sentence()
+
+        assert sentences[0].previous_sentence() is None
+        assert sentences[-1].next_sentence() is None

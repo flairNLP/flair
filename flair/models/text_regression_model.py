@@ -89,6 +89,8 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
             if not sentences:
                 return sentences
+
+            Sentence.set_context_for_sentences(sentences)
             filtered_sentences = self._filter_empty_sentences(sentences)
             reordered_sentences = sorted(filtered_sentences, key=lambda s: len(s), reverse=True)
 

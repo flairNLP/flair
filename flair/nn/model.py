@@ -731,6 +731,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             if not isinstance(sentences, list):
                 sentences = [sentences]
 
+            if isinstance(sentences[0], Sentence):
+                Sentence.set_context_for_sentences(typing.cast(List[Sentence], sentences))
+
             reordered_sentences = self._sort_data(sentences)
 
             if len(reordered_sentences) == 0:
