@@ -124,7 +124,7 @@ class BaseModelTest:
 
     @pytest.mark.integration
     def test_train_load_use_model_multi_corpus(
-            self, results_base_path, multi_corpus, embeddings, example_sentence, train_test_sentence
+        self, results_base_path, multi_corpus, embeddings, example_sentence, train_test_sentence
     ):
         flair.set_seed(123)
         label_dict = multi_corpus.make_label_dictionary(label_type=self.train_label_type)
@@ -158,7 +158,7 @@ class BaseModelTest:
 
     @pytest.mark.integration
     def test_train_resume_classifier(
-            self, results_base_path, corpus, embeddings, example_sentence, train_test_sentence
+        self, results_base_path, corpus, embeddings, example_sentence, train_test_sentence
     ):
         flair.set_seed(123)
         label_dict = corpus.make_label_dictionary(label_type=self.train_label_type)
@@ -201,7 +201,7 @@ class BaseModelTest:
         del loaded_pretrained_model
 
     def test_train_load_use_model_multi_label(
-            self, results_base_path, multi_class_corpus, embeddings, example_sentence, multiclass_train_test_sentence
+        self, results_base_path, multi_class_corpus, embeddings, example_sentence, multiclass_train_test_sentence
     ):
         flair.set_seed(123)
         label_dict = multi_class_corpus.make_label_dictionary(label_type=self.train_label_type)

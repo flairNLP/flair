@@ -1065,7 +1065,12 @@ class Sentence(DataPoint):
         Return True or False depending on whether context is set (for instance in dataloader or elsewhere)
         :return: True if context is set, else False
         """
-        return self._has_context or self._previous_sentence is not None or self._position_in_dataset is not None
+        return (
+            self._has_context
+            or self._previous_sentence is not None
+            or self._next_sentence is not None
+            or self._position_in_dataset is not None
+        )
 
     def copy_context_from_sentence(self, sentence: "Sentence") -> None:
         self._previous_sentence = sentence._previous_sentence
