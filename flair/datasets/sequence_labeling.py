@@ -660,6 +660,8 @@ class ColumnDataset(FlairDataset):
                     bioes_tags = [
                         re.split(self.column_delimiter, line.rstrip())[span_column] for line in filtered_lines
                     ]
+
+                    # discard tags from tokens that are not added to the sentence
                     bioes_tags = [tag for tag, token in zip(bioes_tags, tokens) if token._internal_index is not None]
                     predicted_spans = get_spans_from_bio(bioes_tags)
                     for span_indices, score, label in predicted_spans:
