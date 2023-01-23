@@ -904,7 +904,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
         return [self.name, self.context_embeddings.name]
 
     def __setstate__(self, d):
-        self.__dict__ = d
+        super().__setstate__(d)
 
         if flair.device != "cpu":
             for key in self.word_embeddings:
@@ -1448,7 +1448,7 @@ class ELMoEmbeddings(TokenEmbeddings):
         return self.name
 
     def __setstate__(self, state):
-        self.__dict__ = state
+        super().__setstate__(state)
 
         if re.fullmatch(r"cuda:[0-9]+", str(flair.device)):
             cuda_device = int(str(flair.device).split(":")[-1])

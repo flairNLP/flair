@@ -691,7 +691,7 @@ class CamembertEmbeddings(TokenEmbeddings):
         return state
 
     def __setstate__(self, d):
-        self.__dict__ = d
+        super().__setstate__(d)
 
         # 1-camembert-base -> camembert-base
         if any(char.isdigit() for char in self.name):
@@ -763,7 +763,7 @@ class XLMRobertaEmbeddings(TokenEmbeddings):
         return state
 
     def __setstate__(self, d):
-        self.__dict__ = d
+        super().__setstate__(d)
 
         # 1-xlm-roberta-large -> xlm-roberta-large
         self.tokenizer = self.tokenizer = XLMRobertaTokenizer.from_pretrained("-".join(self.name.split("-")[1:]))
