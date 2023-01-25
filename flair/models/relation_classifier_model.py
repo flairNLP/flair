@@ -19,7 +19,6 @@ import torch
 from torch.utils.data.dataset import Dataset
 
 import flair
-from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import DocumentEmbeddings, TransformerDocumentEmbeddings
@@ -212,8 +211,6 @@ class _Entity(NamedTuple):
 # TODO: This closely shadows the RelationExtractor name. Maybe we need a better name here.
 #  - MaskedRelationClassifier ?
 #   This depends if this relation classification architecture should replace or offer as an alternative.
-@AutoFlairModel.register
-@AutoFlairClassifier.register
 class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSentence]):
     """
     ---- Task ----

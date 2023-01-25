@@ -1,8 +1,9 @@
+import inspect
 import itertools
 import logging
 import typing
 import warnings
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -23,7 +24,7 @@ from flair.training_utils import Result, store_embeddings
 log = logging.getLogger("flair")
 
 
-class Model(torch.nn.Module, typing.Generic[DT]):
+class Model(torch.nn.Module, typing.Generic[DT], ABC):
     """Abstract base class for all downstream task models in Flair,
     such as SequenceTagger and TextClassifier.
     Every new type of model must implement these methods."""
@@ -148,22 +149,60 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         :param model_path: the model file or the already loaded state dict
         :return: the loaded text classifier model
         """
-        if not isinstance(model_path, dict):
-            model_file = cls._fetch_model(str(model_path))
-            state = load_torch_state(model_file)
+        # if this class is abstract, go through all inheriting classes and try to fetch and load the model
+        if inspect.isabstract(cls):
+
+            # get all non-abstract subclasses
+            subclasses = get_non_abstract_subclasses(cls)
+
+            # try to fetch the model for each subclass. if fetching is possible, load model and return it
+            for model_cls in subclasses:
+                try:
+                    new_model_path = model_cls._fetch_model(model_path)
+                    if new_model_path != model_path:
+                        return model_cls.load(new_model_path)
+                except Exception:
+                    # skip any invalid loadings, e.g. not found on huggingface hub
+                    continue
+
+            # if the model cannot be fetched, load as a file
+            state = load_torch_state(model_path)
+
+            # get model class from state and use it to load model
+            cls_name = state.pop("__cls__", None)
+            if cls_name is not None:
+                return cls_name.load(state)
+
+            # older (flair 11.3 and below) models do not contain cls information. Try all subclasses.
+            else:
+                for model_cls in subclasses:
+                    try:
+                        model = model_cls.load(state)
+                        return model
+                    except Exception:
+                        # skip any invalid loadings, e.g. not found on huggingface hub
+                        continue
+
+            raise ValueError(f"Could not find any model with name '{model_path}'")
+
         else:
-            state = model_path
+            # if this class is not abstract, fetch the model and load it
+            if not isinstance(model_path, dict):
+                model_file = cls._fetch_model(str(model_path))
+                state = load_torch_state(model_file)
+            else:
+                state = model_path
 
-        if "__cls__" in state:
-            state.pop("__cls__")
+            if "__cls__" in state:
+                state.pop("__cls__")
 
-        model = cls._init_model_with_state_dict(state)
+            model = cls._init_model_with_state_dict(state)
 
-        if "model_card" in state:
-            model.model_card = state["model_card"]
+            if "model_card" in state:
+                model.model_card = state["model_card"]
 
-        model.eval()
-        model.to(flair.device)
+            model.eval()
+            model.to(flair.device)
 
         return model
 
@@ -196,7 +235,7 @@ class Model(torch.nn.Module, typing.Generic[DT]):
             )
 
 
-class Classifier(Model[DT], typing.Generic[DT]):
+class Classifier(Model[DT], typing.Generic[DT], ABC):
     """Abstract base class for all Flair models that do classification,
     both single- and multi-label. It inherits from flair.nn.Model and adds an
     unified evaluate() function so that all classification models use the same
@@ -508,7 +547,7 @@ class Classifier(Model[DT], typing.Generic[DT]):
         return lines
 
 
-class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
+class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
     """Default base class for all Flair models that do classification, both
     single- and multi-label. It inherits from flair.nn.Classifier and thus from
     flair.nn.Model. All features shared by all classifiers are implemented here,
@@ -877,3 +916,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             state["decoder"] = self.decoder
 
         return state
+
+
+def get_non_abstract_subclasses(cls):
+    all_subclasses = []
+    for subclass in cls.__subclasses__():
+        all_subclasses.extend(get_non_abstract_subclasses(subclass))
+        if inspect.isabstract(subclass):
+            continue
+        all_subclasses.append(subclass)
+
+    return all_subclasses

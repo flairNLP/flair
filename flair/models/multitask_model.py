@@ -6,15 +6,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import torch
 
 import flair.nn
-from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import DT, Dictionary, Sentence
 from flair.training_utils import Result
 
 log = logging.getLogger("flair")
 
 
-@AutoFlairModel.register
-@AutoFlairClassifier.register
 class MultitaskModel(flair.nn.Classifier):
     """
     Multitask Model class which acts as wrapper for creating custom multitask models.

@@ -1,4 +1,5 @@
 import logging
+from abc import ABC
 from collections import OrderedDict
 from pathlib import Path
 from typing import List, Optional, Set, Tuple, Union
@@ -10,7 +11,6 @@ from sklearn.preprocessing import minmax_scale
 from tqdm import tqdm
 
 import flair
-from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Dictionary, Sentence, Span
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import (
@@ -26,7 +26,7 @@ from flair.training_utils import store_embeddings
 log = logging.getLogger("flair")
 
 
-class FewshotClassifier(flair.nn.Classifier[Sentence]):
+class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
     def __init__(self):
         self._current_task = None
         self._task_specific_attributes = {}
@@ -313,8 +313,6 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         return
 
 
-@AutoFlairModel.register
-@AutoFlairClassifier.register
 class TARSTagger(FewshotClassifier):
     """
     TARS model for sequence tagging. In the backend, the model uses a BERT based 5-class
@@ -622,8 +620,6 @@ class TARSTagger(FewshotClassifier):
         return lines
 
 
-@AutoFlairModel.register
-@AutoFlairClassifier.register
 class TARSClassifier(FewshotClassifier):
     """
     TARS model for text classification. In the backend, the model uses a BERT based binary

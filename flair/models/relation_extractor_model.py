@@ -6,15 +6,12 @@ import torch
 
 import flair.embeddings
 import flair.nn
-from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Relation, Sentence
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
 
 
-@AutoFlairModel.register
-@AutoFlairClassifier.register
 class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
     def __init__(
         self,
