@@ -90,7 +90,6 @@ __all__ = [
     "OpenAIGPT2Embeddings",
     "OpenAIGPTEmbeddings",
     "RoBERTaEmbeddings",
-    "TransformerXLEmbeddings",
     "XLMEmbeddings",
     "XLMRobertaEmbeddings",
     "XLNetEmbeddings",

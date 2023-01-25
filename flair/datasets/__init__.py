@@ -424,7 +424,6 @@ __all__ = [
     "WSD_TRAINOMATIC",
     "WSD_UFSAC",
     "WSD_WORDNET_GLOSS_TAGGED",
-    "EntityLinkingCorpus",
     "RE_ENGLISH_CONLL04",
     "RE_ENGLISH_DRUGPROT",
     "RE_ENGLISH_SEMEVAL2010",

@@ -729,8 +729,7 @@ class FlairEmbeddings(TokenEmbeddings):
             "uk-backward": "https://huggingface.co/dchaplinsky/flair-uk-backward/resolve/main/best-lm.pt",
         }
 
-        if type(model) == str:
-
+        if isinstance(model, str):
             # load model if in pretrained model map
             if model.lower() in self.PRETRAINED_MODEL_ARCHIVE_MAP:
                 base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[model.lower()]
@@ -1002,7 +1001,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
         return [self.name, self.context_embeddings.name]
 
     def __setstate__(self, d):
-        self.__dict__ = d
+        super().__setstate__(d)
 
         if flair.device.type != "cpu":
             for key in self.word_embeddings:

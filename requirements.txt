@@ -17,7 +17,6 @@ tabulate
 langdetect
 lxml
 ftfy
-konoha<5.0.0,>=4.0.0
 janome
 gdown==4.4.0
 huggingface-hub==0.10.0
