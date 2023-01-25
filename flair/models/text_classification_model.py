@@ -194,7 +194,7 @@ class TextClassifierProbes(TextClassifier):
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
 
-        layer_weights = torch.arange(1, self.n_layers+1, device=flair.device)
+        layer_weights = torch.arange(self.n_layers, device=flair.device)
         layer_weighted_loss = 0
 
         for i in range(self.n_layers):
