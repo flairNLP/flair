@@ -4,9 +4,12 @@ import torch
 
 import flair.embeddings
 import flair.nn
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Sentence, TextPair
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
     """
     Text Pair Classification Model for tasks such as Recognizing Textual Entailment, build upon TextClassifier.
@@ -89,7 +92,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "document_embeddings": self.embeddings,
+            "document_embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "multi_label": self.multi_label,

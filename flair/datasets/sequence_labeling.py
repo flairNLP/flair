@@ -10,10 +10,17 @@ from typing import Any, Dict, List, Optional, Union
 from torch.utils.data import ConcatDataset, Dataset
 
 import flair
-from flair.data import Corpus, FlairDataset, MultiCorpus, Relation, Sentence, Token
+from flair.data import (
+    Corpus,
+    FlairDataset,
+    MultiCorpus,
+    Relation,
+    Sentence,
+    Token,
+    get_spans_from_bio,
+)
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file
-from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
 
 log = logging.getLogger("flair")
 

@@ -6,12 +6,15 @@ import torch
 
 import flair.embeddings
 import flair.nn
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Relation, Sentence
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
     def __init__(
         self,
@@ -126,7 +129,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.embeddings,
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "entity_label_type": self.entity_label_type,

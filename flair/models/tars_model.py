@@ -10,6 +10,7 @@ from sklearn.preprocessing import minmax_scale
 from tqdm import tqdm
 
 import flair
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Dictionary, Sentence, Span
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import (
@@ -312,6 +313,8 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
         return
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class TARSTagger(FewshotClassifier):
     """
     TARS model for sequence tagging. In the backend, the model uses a BERT based 5-class
@@ -619,6 +622,8 @@ class TARSTagger(FewshotClassifier):
         return lines
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class TARSClassifier(FewshotClassifier):
     """
     TARS model for text classification. In the backend, the model uses a BERT based binary

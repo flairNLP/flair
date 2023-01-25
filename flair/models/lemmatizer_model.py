@@ -7,6 +7,7 @@ from torch import nn
 
 import flair.embeddings
 import flair.nn
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Dictionary, Sentence, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.training_utils import Result, store_embeddings
@@ -14,6 +15,8 @@ from flair.training_utils import Result, store_embeddings
 log = logging.getLogger("flair")
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class Lemmatizer(flair.nn.Classifier[Sentence]):
     def __init__(
         self,
@@ -663,7 +666,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.encoder_embeddings,
+            "embeddings": self.encoder_embeddings.save_embeddings(use_state_dict=False),
             "rnn_input_size": self.rnn_input_size,
             "rnn_hidden_size": self.rnn_hidden_size,
             "rnn_layers": self.rnn_layers,

@@ -4,12 +4,15 @@ from typing import List
 import torch
 
 import flair.nn
+from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Dictionary, Sentence, Token
 from flair.embeddings import TokenEmbeddings
 
 log = logging.getLogger("flair")
 
 
+@AutoFlairModel.register
+@AutoFlairClassifier.register
 class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
     """
     This is a simple class of models that tags individual words in text.
@@ -45,7 +48,7 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.embeddings,
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "tag_dictionary": self.label_dictionary,
             "tag_type": self.tag_type,
         }
