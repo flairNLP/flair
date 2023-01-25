@@ -295,6 +295,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         force_max_length: bool = False,
         feature_extractor: Optional[FeatureExtractionMixin] = None,
         needs_manual_ocr: Optional[bool] = None,
+        use_context_separator: bool = True,
     ):
         self.name = name
         super().__init__()
@@ -313,6 +314,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         self.fine_tune = fine_tune
         self.force_max_length = force_max_length
         self.feature_extractor = feature_extractor
+        self.use_context_separator = use_context_separator
 
         tokenizer_params = list(inspect.signature(self.tokenizer.__call__).parameters.keys())
         self.tokenizer_needs_ocr_boxes = "boxes" in tokenizer_params
@@ -345,6 +347,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             "use_lang_emb": self.use_lang_emb,
             "force_max_length": self.force_max_length,
             "feature_extractor": self.feature_extractor,
+            "use_context_separator": self.use_context_separator,
         }
         if hasattr(self, "needs_manual_ocr"):
             args["needs_manual_ocr"] = self.needs_manual_ocr
@@ -612,7 +615,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             lengths.append(len(sentence))
         return sentence_tokens, offsets, lengths
 
-    def __expand_sentence_with_context(self, sentence) -> Tuple[List[Token], int]:
+    def _expand_sentence_with_context(self, sentence) -> Tuple[List[Token], int]:
         expand_context = self.context_length > 0 and (
             not self.training or random.randint(1, 100) > (self.context_dropout * 100)
         )
@@ -623,6 +626,10 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         if expand_context:
             left_context = sentence.left_context(self.context_length, self.respect_document_boundaries)
             right_context = sentence.right_context(self.context_length, self.respect_document_boundaries)
+
+            if self.use_context_separator:
+                left_context = left_context + [Token(self.tokenizer.sep_token)]
+                right_context = [Token(self.tokenizer.sep_token)] + right_context
 
         expanded_sentence = left_context + sentence.tokens + right_context
 
@@ -926,6 +933,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         name: Optional[str] = None,
         force_max_length: bool = False,
         needs_manual_ocr: Optional[bool] = None,
+        use_context_separator: bool = True,
         **kwargs,
     ):
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -1038,6 +1046,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         self.embedding_length_internal = self._calculate_embedding_length(transformer_model)
         if needs_manual_ocr is not None:
             self.needs_manual_ocr = needs_manual_ocr
+        if use_context_separator is not None:
+            self.use_context_separator = use_context_separator
 
         super().__init__(**self.to_args())
 
