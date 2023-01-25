@@ -90,11 +90,11 @@ class MultitaskModel(flair.nn.Classifier):
         """
         batch_to_task_mapping: Dict[str, List[int]] = {}
         for sentence_id, sentence in enumerate(sentences):
-            multitask_id = random.choice(sentence.get_labels("multitask_id"))
-            if multitask_id.value in batch_to_task_mapping:
-                batch_to_task_mapping[multitask_id.value].append(sentence_id)
-            elif multitask_id.value not in batch_to_task_mapping:
-                batch_to_task_mapping[multitask_id.value] = [sentence_id]
+            for multitask_id in sentence.get_labels("multitask_id"):
+                if multitask_id.value in batch_to_task_mapping:
+                    batch_to_task_mapping[multitask_id.value].append(sentence_id)
+                elif multitask_id.value not in batch_to_task_mapping:
+                    batch_to_task_mapping[multitask_id.value] = [sentence_id]
         return batch_to_task_mapping
 
     def evaluate(
