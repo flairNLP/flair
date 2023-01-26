@@ -3640,6 +3640,54 @@ class NER_TURKU(ColumnCorpus):
         )
 
 
+class NER_UKRAINIAN(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ):
+        """
+        Initialize the Ukrainian NER corpus from lang-uk project. The first time you call this constructor it will
+        automatically download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_path = "https://raw.githubusercontent.com/lang-uk/flair-ner/master/fixed-split"
+        test_file = "test.iob"
+        train_file = "train.iob"
+        cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
+
+        super(NER_UKRAINIAN, self).__init__(
+            data_folder,
+            columns,
+            test_file=test_file,
+            train_file=train_file,
+            column_delimiter=" ",
+            encoding="utf-8",
+            in_memory=in_memory,
+            **corpusargs,
+        )
+
+
 class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
     def __init__(
         self,
