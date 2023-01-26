@@ -628,8 +628,8 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             right_context = sentence.right_context(self.context_length, self.respect_document_boundaries)
 
             if self.use_context_separator:
-                left_context = left_context + [Token(self.tokenizer.sep_token)]
-                right_context = [Token(self.tokenizer.sep_token)] + right_context
+                left_context = left_context + [Token(self.use_context_separator)]
+                right_context = [Token(self.use_context_separator)] + right_context
 
         expanded_sentence = left_context + sentence.tokens + right_context
 
@@ -1046,8 +1046,16 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         self.embedding_length_internal = self._calculate_embedding_length(transformer_model)
         if needs_manual_ocr is not None:
             self.needs_manual_ocr = needs_manual_ocr
+
+        # add special context
+        self.use_context_separator = False
         if use_context_separator is not None:
-            self.use_context_separator = use_context_separator
+            if use_context_separator is True:
+                self.use_context_separator = self.tokenizer.sep_token
+            if type(use_context_separator) == str:
+                self.use_context_separator = use_context_separator
+                self.tokenizer.add_special_tokens({"additional_special_tokens": [use_context_separator]})
+                transformer_model.resize_token_embeddings(len(self.tokenizer))
 
         super().__init__(**self.to_args())
 
@@ -1055,6 +1063,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         self.initial_cls_token: bool = self._has_initial_cls_token()
 
         self.model = transformer_model
+
         self.to(flair.device)
         # when initializing, embeddings are in eval mode by default
         self.eval()
