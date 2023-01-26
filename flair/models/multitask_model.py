@@ -196,8 +196,6 @@ class MultitaskModel(flair.nn.Classifier):
         tasks = []
         loss_factors = state["loss_factors"]
 
-        from flair.models import TextClassifier
-
         for task, task_state in state["model_states"].items():
             models.append(Classifier.load(task_state))
             tasks.append(task)
