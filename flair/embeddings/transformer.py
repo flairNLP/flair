@@ -609,7 +609,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         sentence_tokens = []
         for sentence in sentences:
             # flair specific pre-tokenization
-            tokens, offset = self.__expand_sentence_with_context(sentence)
+            tokens, offset = self._expand_sentence_with_context(sentence)
             sentence_tokens.append(tokens)
             offsets.append(offset)
             lengths.append(len(sentence))
