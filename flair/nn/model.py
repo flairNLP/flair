@@ -72,8 +72,8 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         """Returns the state dictionary for this model."""
         state_dict = {"state_dict": self.state_dict()}
 
-        if hasattr(self, "model_name"):
-            state_dict["__cls__"] = self.model_name
+        # Always include the name of the Model class for which the state dict holds
+        state_dict["__cls__"] = self.__class__.__name__
 
         return state_dict
 
@@ -129,8 +129,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
                     training_parameters["scheduler"] = scheduler.__class__
 
             model_state["model_card"] = self.model_card
-            if hasattr(self, "model_name"):
-                model_state["__cls__"] = self.model_name
 
         # save model
         torch.save(model_state, str(model_file), pickle_protocol=4)
@@ -166,22 +164,25 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
                     continue
 
             # if the model cannot be fetched, load as a file
-            state = load_torch_state(model_path)
+            state = model_path if isinstance(model_path, dict) else load_torch_state(str(model_path))
 
-            # get model class from state and use it to load model
+            # try to get model class from state
             cls_name = state.pop("__cls__", None)
-            if cls_name is not None:
-                return cls_name.load(state)
-
-            # older (flair 11.3 and below) models do not contain cls information. Try all subclasses.
-            else:
+            if cls_name:
                 for model_cls in subclasses:
-                    try:
-                        model = model_cls.load(state)
-                        return model
-                    except Exception:
-                        # skip any invalid loadings, e.g. not found on huggingface hub
-                        continue
+                    if cls_name == model_cls.__name__:
+                        return model_cls.load(state)
+
+            # older (flair 11.3 and below) models do not contain cls information. In this case, try all subclasses
+            for model_cls in subclasses:
+                # if str(model_cls) == "<class 'flair.models.pairwise_classification_model.TextPairClassifier'>": continue
+                try:
+                    model = model_cls.load(state)
+                    return model
+                except Exception as e:
+                    print(e)
+                    # skip any invalid loadings, e.g. not found on huggingface hub
+                    continue
 
             raise ValueError(f"Could not find any model with name '{model_path}'")
 
