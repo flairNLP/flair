@@ -628,8 +628,8 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             right_context = sentence.right_context(self.context_length, self.respect_document_boundaries)
 
             if self.use_context_separator:
-                left_context = left_context + [Token(self.use_context_separator)]
-                right_context = [Token(self.use_context_separator)] + right_context
+                left_context = left_context + [Token("[KONTEXT]")]
+                right_context = [Token("[KONTEXT]")] + right_context
 
         expanded_sentence = left_context + sentence.tokens + right_context
 
