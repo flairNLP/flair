@@ -1047,15 +1047,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if needs_manual_ocr is not None:
             self.needs_manual_ocr = needs_manual_ocr
 
-        # add special context
-        self.use_context_separator = False
-        if use_context_separator is not None:
-            if use_context_separator is True:
-                self.use_context_separator = self.tokenizer.sep_token
-            if type(use_context_separator) == str:
-                self.use_context_separator = use_context_separator
-                self.tokenizer.add_special_tokens({"additional_special_tokens": [use_context_separator]})
-                transformer_model.resize_token_embeddings(len(self.tokenizer))
+        # If we use a context separator, add a new special token
+        self.use_context_separator = use_context_separator
+        if use_context_separator:
+            self.tokenizer.add_special_tokens({"additional_special_tokens": ["[KONTEXT]"]})
+            transformer_model.resize_token_embeddings(len(self.tokenizer))
 
         super().__init__(**self.to_args())
 
@@ -1121,6 +1117,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if "layer_indexes" in state:
             layer_indexes = state.pop("layer_indexes")
             state["layers"] = ",".join(map(str, layer_indexes))
+
+        if "use_context_separator" not in state:
+            # legacy Flair <= 0.12
+            state["use_context_separator"] = False
 
         if "use_scalar_mix" in state:
             # legacy Flair <= 0.7
