@@ -428,6 +428,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         if isinstance(sentences, Sentence):
             sentences = [sentences]
 
+        Sentence.set_context_for_sentences(sentences)
+
         # filter empty sentences
         sentences = [sentence for sentence in sentences if len(sentence) > 0]
         if len(sentences) == 0:

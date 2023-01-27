@@ -2,7 +2,7 @@ import logging
 import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, cast
 from urllib.error import HTTPError
 
 import torch
@@ -442,7 +442,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         Predicts labels for current batch with CRF or Softmax.
         :param sentences: List of sentences in batch
         :param mini_batch_size: batch size for test data
-        :param return_probabilities_for_all_classes: Whether to return probabilites for all classes
+        :param return_probabilities_for_all_classes: Whether to return probabilities for all classes
         :param verbose: whether to use progress bar
         :param label_name: which label to predict
         :param return_loss: whether to return loss value
@@ -455,9 +455,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if not sentences:
                 return sentences
 
-            # make sure its a list
+            # make sure it's a list
             if not isinstance(sentences, list) and not isinstance(sentences, flair.data.Dataset):
                 sentences = [sentences]
+
+            Sentence.set_context_for_sentences(cast(List[Sentence], sentences))
 
             # filter empty sentences
             sentences = [sentence for sentence in sentences if len(sentence) > 0]

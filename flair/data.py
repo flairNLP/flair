@@ -713,6 +713,7 @@ class Sentence(DataPoint):
 
         # internal variables to denote position inside dataset
         self._previous_sentence: Optional[Sentence] = None
+        self._has_context: bool = False
         self._next_sentence: Optional[Sentence] = None
         self._position_in_dataset: Optional[typing.Tuple[Dataset, int]] = None
 
@@ -1064,7 +1065,30 @@ class Sentence(DataPoint):
         Return True or False depending on whether context is set (for instance in dataloader or elsewhere)
         :return: True if context is set, else False
         """
-        return self._previous_sentence is not None or self._position_in_dataset is not None
+        return (
+            self._has_context
+            or self._previous_sentence is not None
+            or self._next_sentence is not None
+            or self._position_in_dataset is not None
+        )
+
+    def copy_context_from_sentence(self, sentence: "Sentence") -> None:
+        self._previous_sentence = sentence._previous_sentence
+        self._next_sentence = sentence._next_sentence
+        self._position_in_dataset = sentence._position_in_dataset
+
+    @classmethod
+    def set_context_for_sentences(cls, sentences: List["Sentence"]) -> None:
+        previous_sentence = None
+        for sentence in sentences:
+            if sentence.is_context_set():
+                continue
+            sentence._previous_sentence = previous_sentence
+            sentence._next_sentence = None
+            sentence._has_context = True
+            if previous_sentence is not None:
+                previous_sentence._next_sentence = sentence
+            previous_sentence = sentence
 
     def get_labels(self, label_type: str = None):
 

@@ -208,7 +208,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence]):
             for tag in label_dictionary:
                 if tag == "<unk>" or tag == "O":
                     continue
-                if tag[1] == "-":
+                if len(tag) > 1 and tag[1] == "-":
                     tag = tag[2:]
                     tag_dictionary.add_item(tag)
                 else:
@@ -409,7 +409,7 @@ class TARSTagger(FewshotClassifier):
                     [tars_sentence.get_token(token.idx + label_length) for token in entity_label.data_point]
                 )
                 new_span.add_label(self.static_label_type, value="entity")
-
+        tars_sentence.copy_context_from_sentence(sentence)
         return tars_sentence
 
     def _get_state_dict(self):
@@ -494,6 +494,8 @@ class TARSTagger(FewshotClassifier):
 
         if not isinstance(sentences, list):
             sentences = [sentences]
+
+        Sentence.set_context_for_sentences(sentences)
 
         reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
 
@@ -724,7 +726,7 @@ class TARSClassifier(FewshotClassifier):
         tars_label = self.LABEL_MATCH if label in sentence_labels else self.LABEL_NO_MATCH
 
         tars_sentence = Sentence(label_text_pair, use_tokenizer=False).add_label(self.static_label_type, tars_label)
-
+        tars_sentence.copy_context_from_sentence(sentence)
         return tars_sentence
 
     def _get_state_dict(self):
@@ -834,16 +836,7 @@ class TARSClassifier(FewshotClassifier):
         if isinstance(sentences, Sentence):
             sentences = [sentences]
 
-        # set context if not set already
-        previous_sentence = None
-        for sentence in sentences:
-            if sentence.is_context_set():
-                continue
-            sentence._previous_sentence = previous_sentence
-            sentence._next_sentence = None
-            if previous_sentence:
-                previous_sentence._next_sentence = sentence
-            previous_sentence = sentence
+        Sentence.set_context_for_sentences(sentences)
 
         reordered_sentences = sorted(sentences, key=lambda s: len(s), reverse=True)
 

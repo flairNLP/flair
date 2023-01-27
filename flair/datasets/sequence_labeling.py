@@ -796,6 +796,7 @@ class ColumnDataset(FlairDataset):
             )
 
             # set sentence context using partials TODO: pointer to dataset is really inefficient
+            sentence._has_context = True
             sentence._position_in_dataset = (self, index)
 
         return sentence
