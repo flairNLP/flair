@@ -1142,12 +1142,7 @@ class UD_TURKISH(UniversalDependenciesCorpus):
 
 
 class UD_UKRAINIAN(UniversalDependenciesCorpus):
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            in_memory: bool = True,
-            split_multiwords: bool = True
-    ):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
