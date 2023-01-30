@@ -182,44 +182,45 @@ The following datasets are supported (**click category to expand**):
 
 #### Named Entity Recognition
 
-| Object | Languages | Description |
-| -------------    | ------------- |-------------  |
-| 'CONLL_03' | English  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download) |
-| 'CONLL_03_GERMAN' | German  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download) |
-| 'CONLL_03_DUTCH' | Dutch  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER |
-| 'CONLL_03_SPANISH' | Spanish  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER |
-| 'NER_ARABIC_ANER' | Arabic  |  [Arabic Named Entity Recognition Corpus](http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp) 4-class NER |
-| 'NER_ARABIC_AQMAR' | Arabic  |  [American and Qatari Modeling of Arabic](http://www.cs.cmu.edu/~ark/AQMAR/) 4-class NER (modified) |
-| 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
-| 'NER_CHINESE_WEIBO' | Chinese  | [Weibo NER corpus](https://paperswithcode.com/sota/chinese-named-entity-recognition-on-weibo-ner/).  |
-| 'NER_DANISH_DANE' | Danish | [DaNE dataset](https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank) |
-| 'NER_ENGLISH_MOVIE_SIMPLE' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - simple NER |
-| 'NER_ENGLISH_MOVIE_COMPLEX' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - complex NER |
-| 'NER_ENGLISH_PERSON' | English | [PERSON_NER](https://github.com/das-sudeshna/genid) NER with person names |
-| 'NER_ENGLISH_RESTAURANT' | English  |  [NER dataset for restaurant reviews](https://groups.csail.mit.edu/sls/downloads/restaurant/) |
-| 'NER_ENGLISH_SEC_FILLINGS' | English | [SEC-fillings](https://github.com/juand-r/entity-recognition-datasets) with 4-class NER labels from (Alvarado et al, 2015)[https://aclanthology.org/U15-1010/] here |
-| 'NER_ENGLISH_STACKOVERFLOW' | English  | NER on StackOverflow posts |
-| 'NER_ENGLISH_TWITTER' | English  |  [Twitter NER dataset](https://github.com/aritter/twitter_nlp/) |
-| 'NER_ENGLISH_WIKIGOLD' | English  |  [Wikigold](https://github.com/juand-r/entity-recognition-datasets/tree/master/data/wikigold) a manually annotated collection of Wikipedia text |
-| 'NER_ENGLISH_WNUT_2020' | English  |  [WNUT-20](https://github.com/jeniyat/WNUT_2020_NER) named entity extraction |
-| 'NER_ENGLISH_WEBPAGES' | English  | 4-class NER on web pages from [Ratinov and Roth (2009)](https://aclanthology.org/W09-1119/) |
-| 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) |
-| 'NER_GERMAN_BIOFID' | German  |  [CoNLL-03](https://www.aclweb.org/anthology/K19-1081/) Biodiversity literature NER |
-| 'NER_GERMAN_EUROPARL' | German | [German Europarl dataset](https://nlpado.de/~sebastian/software/ner_german.shtml) NER in German EU parliament speeches |
-| 'NER_GERMAN_GERMEVAL' | German  |  [GermEval 14 NER](https://sites.google.com/site/germeval2014ner/data/) corpus |
-| 'NER_GERMAN_LEGAL' | German | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents |
-| 'NER_GERMAN_POLITICS' | German | [NEMGP](https://www.thomas-zastrow.de/nlp/) corpus |
-| 'NER_HIPE_2022' | 5 languages | NER dataset for [HIPE-2022](https://hipe-eval.github.io/HIPE-2022/) (Identifying Historical People, Places and other Entities)
-| 'NER_HUNGARIAN' | Hungarian | NER on Hungarian business news |
-| 'NER_ICELANDIC' | Icelandic | NER on Icelandic |
-| 'NER_JAPANESE' | Japanese | [Japanese NER](https://github.com/Hironsan/IOB2Corpus) dataset automatically generated from Wikipedia |
-| 'NER_MASAKHANE' | 10 languages | [MasakhaNER: Named Entity Recognition for African Languages](https://github.com/masakhane-io/masakhane-ner) corpora |
-| 'NER_SWEDISH' | Swedish | [Swedish Spraakbanken NER](https://github.com/klintan/swedish-ner-corpus/) 4-class NER |
-| 'NER_TURKU' | Finnish | [TURKU_NER](https://github.com/TurkuNLP/turku-ner-corpus) NER corpus created by the Turku NLP Group, University of Turku, Finland |
-| 'NER_MULTI_WIKIANN' | 282 languages  | Gigantic [corpus for cross-lingual NER derived from Wikipedia](https://elisa-ie.github.io/wikiann/).  |
-| 'NER_MULTI_WIKINER' | 8 languages | [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia (English, German, French, Italian, Spanish, Portuguese, Polish, Russian) |
-| 'NER_MULTI_XTREME' | 176 languages  |  [Xtreme](https://github.com/google-research/xtreme) corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages |
-| 'WNUT_17' | English  |  [WNUT-17](https://noisy-text.github.io/2017/files/) emerging entity detection |
+| Object                      | Languages     | Description                                                                                                                                                                                        |
+|-----------------------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 'CONLL_03'                  | English       | [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download)                                                                                                  |
+| 'CONLL_03_GERMAN'           | German        | [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download)                                                                                                  |
+| 'CONLL_03_DUTCH'            | Dutch         | [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER                                                                                                                             |
+| 'CONLL_03_SPANISH'          | Spanish       | [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER                                                                                                                             |
+| 'NER_ARABIC_ANER'           | Arabic        | [Arabic Named Entity Recognition Corpus](http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp) 4-class NER                                                                                        |
+| 'NER_ARABIC_AQMAR'          | Arabic        | [American and Qatari Modeling of Arabic](http://www.cs.cmu.edu/~ark/AQMAR/) 4-class NER (modified)                                                                                                 |
+| 'NER_BASQUE'                | Basque        | [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/)                                                                                                                                             |
+| 'NER_CHINESE_WEIBO'         | Chinese       | [Weibo NER corpus](https://paperswithcode.com/sota/chinese-named-entity-recognition-on-weibo-ner/).                                                                                                |
+| 'NER_DANISH_DANE'           | Danish        | [DaNE dataset](https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank)                                                                                     |
+| 'NER_ENGLISH_MOVIE_SIMPLE'  | English       | [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - simple NER                                                                                                    |
+| 'NER_ENGLISH_MOVIE_COMPLEX' | English       | [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - complex NER                                                                                                   |
+| 'NER_ENGLISH_PERSON'        | English       | [PERSON_NER](https://github.com/das-sudeshna/genid) NER with person names                                                                                                                          |
+| 'NER_ENGLISH_RESTAURANT'    | English       | [NER dataset for restaurant reviews](https://groups.csail.mit.edu/sls/downloads/restaurant/)                                                                                                       |
+| 'NER_ENGLISH_SEC_FILLINGS'  | English       | [SEC-fillings](https://github.com/juand-r/entity-recognition-datasets) with 4-class NER labels from (Alvarado et al, 2015)[https://aclanthology.org/U15-1010/] here                                |
+| 'NER_ENGLISH_STACKOVERFLOW' | English       | NER on StackOverflow posts                                                                                                                                                                         |
+| 'NER_ENGLISH_TWITTER'       | English       | [Twitter NER dataset](https://github.com/aritter/twitter_nlp/)                                                                                                                                     |
+| 'NER_ENGLISH_WIKIGOLD'      | English       | [Wikigold](https://github.com/juand-r/entity-recognition-datasets/tree/master/data/wikigold) a manually annotated collection of Wikipedia text                                                     |
+| 'NER_ENGLISH_WNUT_2020'     | English       | [WNUT-20](https://github.com/jeniyat/WNUT_2020_NER) named entity extraction                                                                                                                        |
+| 'NER_ENGLISH_WEBPAGES'      | English       | 4-class NER on web pages from [Ratinov and Roth (2009)](https://aclanthology.org/W09-1119/)                                                                                                        |
+| 'NER_FINNISH'               | Finnish       | [Finer-data](https://github.com/mpsilfve/finer-data)                                                                                                                                               |
+| 'NER_GERMAN_BIOFID'         | German        | [CoNLL-03](https://www.aclweb.org/anthology/K19-1081/) Biodiversity literature NER                                                                                                                 |
+| 'NER_GERMAN_EUROPARL'       | German        | [German Europarl dataset](https://nlpado.de/~sebastian/software/ner_german.shtml) NER in German EU parliament speeches                                                                             |
+| 'NER_GERMAN_GERMEVAL'       | German        | [GermEval 14 NER](https://sites.google.com/site/germeval2014ner/data/) corpus                                                                                                                      |
+| 'NER_GERMAN_LEGAL'          | German        | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents                                                                                 |
+| 'NER_GERMAN_POLITICS'       | German        | [NEMGP](https://www.thomas-zastrow.de/nlp/) corpus                                                                                                                                                 |
+| 'NER_HIPE_2022'             | 5 languages   | NER dataset for [HIPE-2022](https://hipe-eval.github.io/HIPE-2022/) (Identifying Historical People, Places and other Entities)                                                                     |
+| 'NER_HUNGARIAN'             | Hungarian     | NER on Hungarian business news                                                                                                                                                                     |
+| 'NER_ICELANDIC'             | Icelandic     | NER on Icelandic                                                                                                                                                                                   |
+| 'NER_JAPANESE'              | Japanese      | [Japanese NER](https://github.com/Hironsan/IOB2Corpus) dataset automatically generated from Wikipedia                                                                                              |
+| 'NER_MASAKHANE'             | 10 languages  | [MasakhaNER: Named Entity Recognition for African Languages](https://github.com/masakhane-io/masakhane-ner) corpora                                                                                |
+| 'NER_SWEDISH'               | Swedish       | [Swedish Spraakbanken NER](https://github.com/klintan/swedish-ner-corpus/) 4-class NER                                                                                                             |
+| 'NER_TURKU'                 | Finnish       | [TURKU_NER](https://github.com/TurkuNLP/turku-ner-corpus) NER corpus created by the Turku NLP Group, University of Turku, Finland                                                                  |
+| 'NER_UKRAINIAN'             | Ukrainian     | [lang-uk](https://github.com/lang-uk/flair-ner) NER corpus created by the [Lang-uk community](https://lang.org.ua/en/)                                                                             |
+| 'NER_MULTI_WIKIANN'         | 282 languages | Gigantic [corpus for cross-lingual NER derived from Wikipedia](https://elisa-ie.github.io/wikiann/).                                                                                               |
+| 'NER_MULTI_WIKINER'         | 8 languages   | [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia (English, German, French, Italian, Spanish, Portuguese, Polish, Russian) |
+| 'NER_MULTI_XTREME'          | 176 languages | [Xtreme](https://github.com/google-research/xtreme) corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages                                             |
+| 'WNUT_17'                   | English       | [WNUT-17](https://noisy-text.github.io/2017/files/) emerging entity detection                                                                                                                      |
 
 </details>
 
@@ -304,41 +305,42 @@ for the purpose of training multilingual frame detection systems.
 
 #### Universal Dependency Treebanks
 
-| Object | Languages | Description |
-| -------------    | ------------- |------------- |
-| 'UD_ARABIC'| Arabic  |  Universal Dependency Treebank for [Arabic](https://github.com/UniversalDependencies/UD_Arabic-PADT) |
-| 'UD_BASQUE'| Basque  |  Universal Dependency Treebank for [Basque](https://github.com/UniversalDependencies/UD_Basque-BDT) |
-| 'UD_BULGARIAN'| Bulgarian  |  Universal Dependency Treebank for [Bulgarian](https://github.com/UniversalDependencies/UD_Bulgarian-BTB)
-| 'UD_CATALAN', | Catalan  |  Universal Dependency Treebank for [Catalan](https://github.com/UniversalDependencies/UD_Catalan-AnCora) |
-| 'UD_CHINESE' | Chinese  |  Universal Dependency Treebank for [Chinese](https://github.com/UniversalDependencies/UD_Chinese-GSD) |
-| 'UD_CHINESE_KYOTO' | Classical Chinese  |  Universal Dependency Treebank for Classical [Chinese](https://github.com/UniversalDependencies/UD_Classical_Chinese-Kyoto/tree/dev) |
-| 'UD_CROATIAN' | Croatian  |  Universal Dependency Treebank for [Croatian](https://github.com/UniversalDependencies/UD_Croatian-SET) |
-| 'UD_CZECH' | Czech  |  Very large Universal Dependency Treebank for [Czech](https://github.com/UniversalDependencies/UD_Czech-PDT) |
-| 'UD_DANISH' | Danish  |  Universal Dependency Treebank for [Danish](https://github.com/UniversalDependencies/UD_Danish-DDT) |
-| 'UD_DUTCH' | Dutch  |  Universal Dependency Treebank for [Dutch](https://github.com/UniversalDependencies/UD_Dutch-Alpino) |
-| 'UD_ENGLISH' | English  |  Universal Dependency Treebank for [English](https://github.com/UniversalDependencies/UD_English-EWT) |
-| 'UD_FINNISH' | Finnish  |  Universal Dependency Treebank for [Finnish](https://github.com/UniversalDependencies/UD_Finnish-TDT) |
-| 'UD_FRENCH' | French  |  Universal Dependency Treebank for [French](https://github.com/UniversalDependencies/UD_French-GSD) |
-|'UD_GERMAN' | German  |  Universal Dependency Treebank for [German](https://github.com/UniversalDependencies/UD_German-GSD) |
-|'UD_GERMAN-HDT' | German  |  Very large Universal Dependency Treebank for [German](https://github.com/UniversalDependencies/UD_German-HDT) |
-|'UD_HEBREW' | Hebrew  |  Universal Dependency Treebank for [Hebrew](https://github.com/UniversalDependencies/UD_Hebrew-HTB) |
-|'UD_HINDI' | Hindi  |  Universal Dependency Treebank for [Hindi](https://github.com/UniversalDependencies/UD_Hindi-HDTB) |
-|'UD_INDONESIAN' | Indonesian  |  Universal Dependency Treebank for [Indonesian](https://github.com/UniversalDependencies/UD_Indonesian-GSD) |
-| 'UD_ITALIAN' | Italian  |  Universal Dependency Treebank for [Italian](https://github.com/UniversalDependencies/UD_Italian-ISDT) |
-| 'UD_JAPANESE'| Japanese  |  Universal Dependency Treebank for [Japanese](https://github.com/UniversalDependencies/UD_Japanese-GSD) |
-|'UD_KOREAN' | Korean  |  Universal Dependency Treebank for [Korean](https://github.com/UniversalDependencies/UD_Korean-Kaist) |
-| 'UD_NORWEGIAN',  | Norwegian  |  Universal Dependency Treebank for [Norwegian](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal) |
-|  'UD_PERSIAN' | Persian / Farsi  |  Universal Dependency Treebank for [Persian](https://github.com/UniversalDependencies/UD_Persian-Seraji) |
-| 'UD_POLISH'  |  Polish |  Universal Dependency Treebank for [Polish](https://github.com/UniversalDependencies/UD_Polish-LFG) |
-|'UD_PORTUGUESE' | Portuguese  |  Universal Dependency Treebank for [Portuguese](https://github.com/UniversalDependencies/UD_Portuguese-Bosque) |
-| 'UD_ROMANIAN' | Romanian  |  Universal Dependency Treebank for [Romanian](https://github.com/UniversalDependencies/UD_Romanian-RRT)  |
-| 'UD_RUSSIAN' | Russian  |  Universal Dependency Treebank for [Russian](https://github.com/UniversalDependencies/UD_Russian-SynTagRus) |
-| 'UD_SERBIAN' | Serbian  |  Universal Dependency Treebank for [Serbian](https://github.com/UniversalDependencies/UD_Serbian-SET)|
-| 'UD_SLOVAK' | Slovak  |  Universal Dependency Treebank for [Slovak](https://github.com/UniversalDependencies/UD_Slovak-SNK) |
-| 'UD_SLOVENIAN' | Slovenian  |  Universal Dependency Treebank for [Slovenian](https://github.com/UniversalDependencies/UD_Slovenian-SSJ) |
-| 'UD_SPANISH'  | Spanish  |  Universal Dependency Treebank for [Spanish](https://github.com/UniversalDependencies/UD_Spanish-GSD) |
-|  'UD_SWEDISH' | Swedish  |  Universal Dependency Treebank for [Swedish](https://github.com/UniversalDependencies/UD_Swedish-Talbanken) |
-|  'UD_TURKISH' | Turkish  |  Universal Dependency Treebank for [Tturkish](https://github.com/UniversalDependencies/UD_Turkish-IMST) |
+| Object             | Languages         | Description                                                                                                                         |
+|--------------------|-------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| 'UD_ARABIC'        | Arabic            | Universal Dependency Treebank for [Arabic](https://github.com/UniversalDependencies/UD_Arabic-PADT)                                 |
+| 'UD_BASQUE'        | Basque            | Universal Dependency Treebank for [Basque](https://github.com/UniversalDependencies/UD_Basque-BDT)                                  |
+| 'UD_BULGARIAN'     | Bulgarian         | Universal Dependency Treebank for [Bulgarian](https://github.com/UniversalDependencies/UD_Bulgarian-BTB)                            
+| 'UD_CATALAN',      | Catalan           | Universal Dependency Treebank for [Catalan](https://github.com/UniversalDependencies/UD_Catalan-AnCora)                             |
+| 'UD_CHINESE'       | Chinese           | Universal Dependency Treebank for [Chinese](https://github.com/UniversalDependencies/UD_Chinese-GSD)                                |
+| 'UD_CHINESE_KYOTO' | Classical Chinese | Universal Dependency Treebank for Classical [Chinese](https://github.com/UniversalDependencies/UD_Classical_Chinese-Kyoto/tree/dev) |
+| 'UD_CROATIAN'      | Croatian          | Universal Dependency Treebank for [Croatian](https://github.com/UniversalDependencies/UD_Croatian-SET)                              |
+| 'UD_CZECH'         | Czech             | Very large Universal Dependency Treebank for [Czech](https://github.com/UniversalDependencies/UD_Czech-PDT)                         |
+| 'UD_DANISH'        | Danish            | Universal Dependency Treebank for [Danish](https://github.com/UniversalDependencies/UD_Danish-DDT)                                  |
+| 'UD_DUTCH'         | Dutch             | Universal Dependency Treebank for [Dutch](https://github.com/UniversalDependencies/UD_Dutch-Alpino)                                 |
+| 'UD_ENGLISH'       | English           | Universal Dependency Treebank for [English](https://github.com/UniversalDependencies/UD_English-EWT)                                |
+| 'UD_FINNISH'       | Finnish           | Universal Dependency Treebank for [Finnish](https://github.com/UniversalDependencies/UD_Finnish-TDT)                                |
+| 'UD_FRENCH'        | French            | Universal Dependency Treebank for [French](https://github.com/UniversalDependencies/UD_French-GSD)                                  |
+| 'UD_GERMAN'        | German            | Universal Dependency Treebank for [German](https://github.com/UniversalDependencies/UD_German-GSD)                                  |
+| 'UD_GERMAN-HDT'    | German            | Very large Universal Dependency Treebank for [German](https://github.com/UniversalDependencies/UD_German-HDT)                       |
+| 'UD_HEBREW'        | Hebrew            | Universal Dependency Treebank for [Hebrew](https://github.com/UniversalDependencies/UD_Hebrew-HTB)                                  |
+| 'UD_HINDI'         | Hindi             | Universal Dependency Treebank for [Hindi](https://github.com/UniversalDependencies/UD_Hindi-HDTB)                                   |
+| 'UD_INDONESIAN'    | Indonesian        | Universal Dependency Treebank for [Indonesian](https://github.com/UniversalDependencies/UD_Indonesian-GSD)                          |
+| 'UD_ITALIAN'       | Italian           | Universal Dependency Treebank for [Italian](https://github.com/UniversalDependencies/UD_Italian-ISDT)                               |
+| 'UD_JAPANESE'      | Japanese          | Universal Dependency Treebank for [Japanese](https://github.com/UniversalDependencies/UD_Japanese-GSD)                              |
+| 'UD_KOREAN'        | Korean            | Universal Dependency Treebank for [Korean](https://github.com/UniversalDependencies/UD_Korean-Kaist)                                |
+| 'UD_NORWEGIAN',    | Norwegian         | Universal Dependency Treebank for [Norwegian](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal)                        |
+| 'UD_PERSIAN'       | Persian / Farsi   | Universal Dependency Treebank for [Persian](https://github.com/UniversalDependencies/UD_Persian-Seraji)                             |
+| 'UD_POLISH'        | Polish            | Universal Dependency Treebank for [Polish](https://github.com/UniversalDependencies/UD_Polish-LFG)                                  |
+| 'UD_PORTUGUESE'    | Portuguese        | Universal Dependency Treebank for [Portuguese](https://github.com/UniversalDependencies/UD_Portuguese-Bosque)                       |
+| 'UD_ROMANIAN'      | Romanian          | Universal Dependency Treebank for [Romanian](https://github.com/UniversalDependencies/UD_Romanian-RRT)                              |
+| 'UD_RUSSIAN'       | Russian           | Universal Dependency Treebank for [Russian](https://github.com/UniversalDependencies/UD_Russian-SynTagRus)                          |
+| 'UD_SERBIAN'       | Serbian           | Universal Dependency Treebank for [Serbian](https://github.com/UniversalDependencies/UD_Serbian-SET)                                |
+| 'UD_SLOVAK'        | Slovak            | Universal Dependency Treebank for [Slovak](https://github.com/UniversalDependencies/UD_Slovak-SNK)                                  |
+| 'UD_SLOVENIAN'     | Slovenian         | Universal Dependency Treebank for [Slovenian](https://github.com/UniversalDependencies/UD_Slovenian-SSJ)                            |
+| 'UD_SPANISH'       | Spanish           | Universal Dependency Treebank for [Spanish](https://github.com/UniversalDependencies/UD_Spanish-GSD)                                |
+| 'UD_SWEDISH'       | Swedish           | Universal Dependency Treebank for [Swedish](https://github.com/UniversalDependencies/UD_Swedish-Talbanken)                          |
+| 'UD_TURKISH'       | Turkish           | Universal Dependency Treebank for [Tturkish](https://github.com/UniversalDependencies/UD_Turkish-IMST)                              |
+| 'UD_UKRAINIAN'     | Ukrainian         | Universal Dependency Treebank for [Ukrainian](https://github.com/UniversalDependencies/UD_Ukrainian-IU)                             |
 
 </details>
 

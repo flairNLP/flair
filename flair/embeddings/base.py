@@ -1,7 +1,7 @@
 import inspect
 import logging
 from abc import abstractmethod
-from typing import Dict, Generic, List, Sequence, Union
+from typing import Any, Dict, Generic, List, Sequence, Type, Union
 
 import torch
 from torch.nn import Parameter, ParameterList
@@ -14,6 +14,8 @@ log = logging.getLogger("flair")
 
 class Embeddings(torch.nn.Module, Generic[DT]):
     """Abstract base class for all embeddings. Every new type of embedding must implement these methods."""
+
+    embeddings_name: str  # class-variable referring to the "class embedding name"
 
     def __init__(self):
         """Set some attributes that would otherwise result in errors. Overwrite these in your embedding class."""
@@ -80,6 +82,29 @@ class Embeddings(torch.nn.Module, Generic[DT]):
             if class_attribute in instance_parameter_names
         }
         return instance_parameters
+
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
+        raise NotImplementedError()
+
+    def to_params(self) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    @classmethod
+    def load_embedding(cls, params: Dict[str, Any]):
+        state_dict = params.pop("state_dict", None)
+
+        embedding = cls.from_params(params)
+        if state_dict is not None:
+            embedding.load_state_dict(state_dict)
+        return embedding
+
+    def save_embeddings(self, use_state_dict: bool = True):
+        params = self.to_params()
+        if use_state_dict:
+            params["state_dict"] = self.state_dict()
+        params["__cls__"] = type(self).embeddings_name
+        return params
 
 
 class ScalarMix(torch.nn.Module):
@@ -172,3 +197,31 @@ class TokenEmbeddings(Embeddings[Sentence]):
                 if self.name not in token._embeddings.keys():
                     return False
         return True
+
+
+EMBEDDING_CLASSES: Dict[str, Type[Embeddings]] = {}
+
+
+def register_embeddings(*args):
+    name = None
+
+    def _register(cls):
+        nonlocal name
+        if name is None:
+            name = cls.__name__
+        cls.embeddings_name = name
+        EMBEDDING_CLASSES[name] = cls
+        return cls
+
+    if len(args) == 1 and callable(args[0]):
+        return _register(args[0])
+    elif len(args) > 0:
+        name = args[0]
+
+    return _register
+
+
+def load_embeddings(params: Dict[str, Any]) -> Embeddings:
+    cls_name = params.pop("__cls__")
+    cls = EMBEDDING_CLASSES[cls_name]
+    return cls.load_embedding(params)

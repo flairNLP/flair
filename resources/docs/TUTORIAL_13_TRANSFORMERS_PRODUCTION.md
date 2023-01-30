@@ -26,8 +26,8 @@ sentences = list(CONLL_03().test)[:5]
 
 ## TransformerOnnxEmbeddings
 
-To use OnnxEmbeddings, you need to install the [here](https://onnxruntime.ai/docs/execution-providers/)
-which can be done via `pip install onnx-runtime`
+To use OnnxEmbeddings, you need to install any [execution provider](https://onnxruntime.ai/docs/execution-providers/) and the onnxruntime:
+which can be done via `pip install onnxruntime`
 
 To export the OnnxEmbeddings there is only one line to run:
 ```python

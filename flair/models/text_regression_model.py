@@ -11,6 +11,7 @@ import flair
 import flair.embeddings
 from flair.data import Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
+from flair.embeddings.base import load_embeddings
 from flair.training_utils import MetricRegression, Result, store_embeddings
 
 log = logging.getLogger("flair")
@@ -89,6 +90,8 @@ class TextRegressor(flair.nn.Model[Sentence]):
 
             if not sentences:
                 return sentences
+
+            Sentence.set_context_for_sentences(sentences)
             filtered_sentences = self._filter_empty_sentences(sentences)
             reordered_sentences = sorted(filtered_sentences, key=lambda s: len(s), reverse=True)
 
@@ -210,15 +213,18 @@ class TextRegressor(flair.nn.Model[Sentence]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "document_embeddings": self.document_embeddings,
+            "document_embeddings": self.document_embeddings.save_embeddings(use_state_dict=False),
             "label_name": self.label_type,
         }
         return model_state
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
+        embeddings = state["document_embeddings"]
+        if isinstance(embeddings, dict):
+            embeddings = load_embeddings(embeddings)
         return super()._init_model_with_state_dict(
-            state, document_embeddings=state.get("document_embeddings"), label_name=state.get("label_name"), **kwargs
+            state, document_embeddings=embeddings, label_name=state.get("label_name"), **kwargs
         )
 
     @staticmethod

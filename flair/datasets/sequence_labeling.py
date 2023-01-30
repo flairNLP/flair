@@ -10,10 +10,17 @@ from typing import Any, Dict, List, Optional, Union
 from torch.utils.data import ConcatDataset, Dataset
 
 import flair
-from flair.data import Corpus, FlairDataset, MultiCorpus, Relation, Sentence, Token
+from flair.data import (
+    Corpus,
+    FlairDataset,
+    MultiCorpus,
+    Relation,
+    Sentence,
+    Token,
+    get_spans_from_bio,
+)
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file
-from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
 
 log = logging.getLogger("flair")
 
@@ -647,7 +654,6 @@ class ColumnDataset(FlairDataset):
             # otherwise, this line is a token. parse and add to sentence
             token = self._parse_token(line, word_level_tag_columns, token)
             tokens.append(token)
-
         sentence: Sentence = Sentence(text=tokens)
 
         # check if this sentence is a document boundary
@@ -661,6 +667,9 @@ class ColumnDataset(FlairDataset):
                     bioes_tags = [
                         re.split(self.column_delimiter, line.rstrip())[span_column] for line in filtered_lines
                     ]
+
+                    # discard tags from tokens that are not added to the sentence
+                    bioes_tags = [tag for tag, token in zip(bioes_tags, tokens) if token._internal_index is not None]
                     predicted_spans = get_spans_from_bio(bioes_tags)
                     for span_indices, score, label in predicted_spans:
                         span = sentence[span_indices[0] : span_indices[-1] + 1]
@@ -787,6 +796,7 @@ class ColumnDataset(FlairDataset):
             )
 
             # set sentence context using partials TODO: pointer to dataset is really inefficient
+            sentence._has_context = True
             sentence._position_in_dataset = (self, index)
 
         return sentence
@@ -3627,6 +3637,54 @@ class NER_TURKU(ColumnCorpus):
             encoding="latin-1",
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
+            **corpusargs,
+        )
+
+
+class NER_UKRAINIAN(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ):
+        """
+        Initialize the Ukrainian NER corpus from lang-uk project. The first time you call this constructor it will
+        automatically download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_path = "https://raw.githubusercontent.com/lang-uk/flair-ner/master/fixed-split"
+        test_file = "test.iob"
+        train_file = "train.iob"
+        cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
+
+        super(NER_UKRAINIAN, self).__init__(
+            data_folder,
+            columns,
+            test_file=test_file,
+            train_file=train_file,
+            column_delimiter=" ",
+            encoding="utf-8",
+            in_memory=in_memory,
             **corpusargs,
         )
 

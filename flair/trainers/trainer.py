@@ -556,13 +556,13 @@ class ModelTrainer:
                         lr_info = ",".join([f"{lr:.6f}" for lr in current_learning_rate])
 
                         intermittent_loss = train_loss / average_over if average_over > 0 else train_loss / seen_batches
-
+                        end_time = time.time()
                         log.info(
                             f"epoch {epoch}"
                             f" - iter {seen_batches}/{total_number_of_batches}"
                             f" - loss {intermittent_loss:.8f}"
-                            f" - time (sec): {(time.time() - start_time):.2f}"
-                            f" - samples/sec: {average_over / (time.time() - start_time):.2f}"
+                            f" - time (sec): {end_time - start_time:.2f}"
+                            f" - samples/sec: {average_over / (end_time - start_time):.2f}"
                             f" - lr: {lr_info}{momentum_info}"
                         )
                         iteration = epoch * total_number_of_batches + batch_no

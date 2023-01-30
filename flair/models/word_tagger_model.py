@@ -45,7 +45,7 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.embeddings,
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "tag_dictionary": self.label_dictionary,
             "tag_type": self.tag_type,
         }

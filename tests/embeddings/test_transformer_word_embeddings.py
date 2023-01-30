@@ -97,6 +97,48 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         sentence.clear_embeddings()
         assert torch.isclose(jit_token_embedding, loaded_jit_token_embedding).all()
 
+    def test_transformers_context_expansion(self, results_base_path):
+        emb = TransformerWordEmbeddings(
+            "distilbert-base-uncased", use_context=True, use_context_separator=True, respect_document_boundaries=True
+        )
+
+        # previous and next sentence as context
+        sentence_previous = Sentence("How is it?")
+        sentence_next = Sentence("Then again, maybe not...")
+
+        # test expansion for sentence without context
+        sentence = Sentence("This is great!")
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert " ".join([token.text for token in expanded]) == "[SATZ] This is great ! [SATZ]"
+
+        # test expansion for with previous and next as context
+        sentence = Sentence("This is great.")
+        sentence._previous_sentence = sentence_previous
+        sentence._next_sentence = sentence_next
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert (
+            " ".join([token.text for token in expanded])
+            == "How is it ? [SATZ] This is great . [SATZ] Then again , maybe not ..."
+        )
+
+        # test expansion if first sentence is document boundary
+        sentence = Sentence("This is great?")
+        sentence_previous.is_document_boundary = True
+        sentence._previous_sentence = sentence_previous
+        sentence._next_sentence = sentence_next
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert (
+            " ".join([token.text for token in expanded]) == "[SATZ] This is great ? [SATZ] Then again , maybe not ..."
+        )
+
+        # test expansion if we don't use context
+        emb.context_length = 0
+        sentence = Sentence("I am here.")
+        sentence._previous_sentence = sentence_previous
+        sentence._next_sentence = sentence_next
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert " ".join([token.text for token in expanded]) == "I am here ."
+
     @pytest.mark.integration
     def test_layoutlm_embeddings(self):
         sentence = Sentence(["I", "love", "Berlin"])
