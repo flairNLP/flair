@@ -35,7 +35,6 @@ def load_big_file(f: str):
     :param f:
     :return:
     """
-    logger.info(f"loading file {f}")
     with open(f, "rb") as f_in:
         # mmap seems to be much more memory efficient
         bf = mmap.mmap(f_in.fileno(), 0, access=mmap.ACCESS_READ)
@@ -369,11 +368,11 @@ def instance_lru_cache(*cache_args, **cache_kwargs):
     return decorator
 
 
-def load_torch_state(model_file: Union[str, Path]) -> typing.Dict[str, typing.Any]:
+def load_torch_state(model_file: str) -> typing.Dict[str, typing.Any]:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
         # load_big_file is a workaround byhttps://github.com/highway11git
         # to load models on some Mac/Windows setups
         # see https://github.com/zalandoresearch/flair/issues/351
-        f = load_big_file(str(model_file))
+        f = load_big_file(model_file)
         return torch.load(f, map_location="cpu")

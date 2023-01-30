@@ -5,8 +5,6 @@ from pathlib import Path
 import torch
 from transformers import set_seed as hf_set_seed
 
-from flair.auto_model import AutoFlairClassifier, AutoFlairModel
-
 # global variable: cache_root
 cache_root = Path(os.getenv("FLAIR_CACHE_ROOT", Path(Path.home(), ".flair")))
 
@@ -66,6 +64,4 @@ __all__ = [
     "trainers",
     "visual",
     "datasets",
-    "AutoFlairModel",
-    "AutoFlairClassifier",
 ]

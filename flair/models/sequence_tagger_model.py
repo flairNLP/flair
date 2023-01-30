@@ -12,7 +12,6 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
 
 import flair.nn
-from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import Dictionary, Label, Sentence, Span, get_spans_from_bio
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import StackedEmbeddings, TokenEmbeddings
@@ -24,8 +23,6 @@ from flair.training_utils import store_embeddings
 log = logging.getLogger("flair")
 
 
-@AutoFlairModel.register
-@AutoFlairClassifier.register
 class SequenceTagger(flair.nn.Classifier[Sentence]):
     def __init__(
         self,

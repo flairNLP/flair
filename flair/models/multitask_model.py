@@ -6,15 +6,13 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import torch
 
 import flair.nn
-from flair.auto_model import AutoFlairClassifier, AutoFlairModel
 from flair.data import DT, Dictionary, Sentence
+from flair.nn import Classifier
 from flair.training_utils import Result
 
 log = logging.getLogger("flair")
 
 
-@AutoFlairModel.register
-@AutoFlairClassifier.register
 class MultitaskModel(flair.nn.Classifier):
     """
     Multitask Model class which acts as wrapper for creating custom multitask models.
@@ -199,7 +197,7 @@ class MultitaskModel(flair.nn.Classifier):
         loss_factors = state["loss_factors"]
 
         for task, task_state in state["model_states"].items():
-            models.append(AutoFlairClassifier.load(task_state))
+            models.append(Classifier.load(task_state))
             tasks.append(task)
 
         model = cls(models=models, task_ids=tasks, loss_factors=loss_factors, **kwargs)
