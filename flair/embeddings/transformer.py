@@ -37,6 +37,8 @@ from flair.embeddings.base import (
     register_embeddings,
 )
 
+SENTENCE_BOUNDARY_TAG: str = "[SATZ]"
+
 
 @torch.jit.script_if_tracing
 def pad_sequence_embeddings(all_hidden_states: List[torch.Tensor]) -> torch.Tensor:
@@ -628,8 +630,8 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             right_context = sentence.right_context(self.context_length, self.respect_document_boundaries)
 
             if self.use_context_separator:
-                left_context = left_context + [Token("[KONTEXT]")]
-                right_context = [Token("[KONTEXT]")] + right_context
+                left_context = left_context + [Token(SENTENCE_BOUNDARY_TAG)]
+                right_context = [Token(SENTENCE_BOUNDARY_TAG)] + right_context
 
         expanded_sentence = left_context + sentence.tokens + right_context
 
@@ -1050,7 +1052,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         # If we use a context separator, add a new special token
         self.use_context_separator = use_context_separator
         if use_context_separator:
-            self.tokenizer.add_special_tokens({"additional_special_tokens": ["[KONTEXT]"]})
+            self.tokenizer.add_special_tokens({"additional_special_tokens": [SENTENCE_BOUNDARY_TAG]})
             transformer_model.resize_token_embeddings(len(self.tokenizer))
 
         super().__init__(**self.to_args())
