@@ -515,7 +515,7 @@ class Token(_PartOfSentence):
         if isinstance(self._internal_index, int):
             return self._internal_index
         else:
-            raise ValueError
+            return -1
 
     @property
     def text(self) -> str:
