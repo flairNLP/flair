@@ -16,6 +16,7 @@ from torch.utils.data.dataset import ConcatDataset
 from transformer_smaller_training_vocab import reduce_train_vocab
 
 from flair.embeddings import TransformerEmbeddings, Embeddings, StackedEmbeddings
+from flair.models import FewshotClassifier
 from flair.nn import Model
 
 try:
@@ -1109,7 +1110,11 @@ class ModelTrainer:
 
 
 def get_transformer_embeddings(trainer: ModelTrainer) -> List[TransformerEmbeddings]:
-    embeddings = getattr(trainer.model, "embeddings", None)
+
+    if isinstance(trainer.model, FewshotClassifier):
+        embeddings = trainer.model.tars_embeddings
+    else:
+        embeddings = getattr(trainer.model, "embeddings", None)
 
     if embeddings is None:
         log.warning(f"Could not extract embeddings of Model of type {type(trainer.model)}")
