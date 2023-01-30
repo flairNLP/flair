@@ -890,7 +890,7 @@ class ModelTrainer:
             log.info("Test data not provided setting final score to 0")
         if reduce_transformer_vocab:
             for context in vocab_contexts:
-                context.__exit__()
+                context.__exit__(*sys.exc_info())
             if save_final_model and not param_selection_mode:
                 self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
 
