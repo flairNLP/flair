@@ -311,7 +311,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
 
     def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[str]:
         yield from super().get_used_tokens(corpus)
-        for label in self.get_current_label_dictionary().idx2item.keys():
+        for label in self.get_current_label_dictionary().idx2item:
             yield [label.decode("utf-8")]
         yield [self.separator]
 
