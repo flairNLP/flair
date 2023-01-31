@@ -126,7 +126,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.embeddings,
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "entity_label_type": self.entity_label_type,

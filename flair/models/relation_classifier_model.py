@@ -452,7 +452,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             # Using the sentence label instead of annotating a separate `Relation` object is easier to manage since,
             # during prediction, the forward pass does not need any knowledge about the entities in the sentence.
             encoded_sentence.add_label(typename=self.label_type, value=gold_label, score=1.0)
-
+        encoded_sentence.copy_context_from_sentence(original_sentence)
         return encoded_sentence
 
     def _encode_sentence_for_inference(
@@ -639,7 +639,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
         elif all(not isinstance(sentence, EncodedSentence) for sentence in sentences):
             # Deal with the case where all sentences are standard (non-encoded) sentences
-
+            Sentence.set_context_for_sentences(cast(List[Sentence], sentences))
             sentences_with_relation_reference: List[Tuple[EncodedSentence, Relation]] = list(
                 itertools.chain.from_iterable(self._encode_sentence_for_inference(sentence) for sentence in sentences)
             )
@@ -668,7 +668,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     def _get_state_dict(self) -> Dict[str, Any]:
         model_state: Dict[str, Any] = {
             **super()._get_state_dict(),
-            "embeddings": self.embeddings,
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "entity_label_types": self.entity_label_types,

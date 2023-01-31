@@ -41,7 +41,6 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             def forward(
                 self,
                 input_ids: torch.Tensor,
-                sub_token_lengths: torch.LongTensor,
                 token_lengths: torch.LongTensor,
                 attention_mask: torch.Tensor,
                 overflow_to_sample_mapping: torch.Tensor,
@@ -49,7 +48,6 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             ):
                 return self.embedding.forward(
                     input_ids=input_ids,
-                    sub_token_lengths=sub_token_lengths,
                     token_lengths=token_lengths,
                     attention_mask=attention_mask,
                     overflow_to_sample_mapping=overflow_to_sample_mapping,
@@ -66,7 +64,6 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             "attention_mask",
             "input_ids",
             "overflow_to_sample_mapping",
-            "sub_token_lengths",
             "token_lengths",
             "word_ids",
         ]
@@ -99,6 +96,48 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         loaded_jit_token_embedding = sentence[5].get_embedding().clone()
         sentence.clear_embeddings()
         assert torch.isclose(jit_token_embedding, loaded_jit_token_embedding).all()
+
+    def test_transformers_context_expansion(self, results_base_path):
+        emb = TransformerWordEmbeddings(
+            "distilbert-base-uncased", use_context=True, use_context_separator=True, respect_document_boundaries=True
+        )
+
+        # previous and next sentence as context
+        sentence_previous = Sentence("How is it?")
+        sentence_next = Sentence("Then again, maybe not...")
+
+        # test expansion for sentence without context
+        sentence = Sentence("This is great!")
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert " ".join([token.text for token in expanded]) == "[SATZ] This is great ! [SATZ]"
+
+        # test expansion for with previous and next as context
+        sentence = Sentence("This is great.")
+        sentence._previous_sentence = sentence_previous
+        sentence._next_sentence = sentence_next
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert (
+            " ".join([token.text for token in expanded])
+            == "How is it ? [SATZ] This is great . [SATZ] Then again , maybe not ..."
+        )
+
+        # test expansion if first sentence is document boundary
+        sentence = Sentence("This is great?")
+        sentence_previous.is_document_boundary = True
+        sentence._previous_sentence = sentence_previous
+        sentence._next_sentence = sentence_next
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert (
+            " ".join([token.text for token in expanded]) == "[SATZ] This is great ? [SATZ] Then again , maybe not ..."
+        )
+
+        # test expansion if we don't use context
+        emb.context_length = 0
+        sentence = Sentence("I am here.")
+        sentence._previous_sentence = sentence_previous
+        sentence._next_sentence = sentence_next
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert " ".join([token.text for token in expanded]) == "I am here ."
 
     @pytest.mark.integration
     def test_layoutlm_embeddings(self):
@@ -261,3 +300,25 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         sentence = Sentence("El pasto es verde.")
         embeddings = TransformerWordEmbeddings("PlanTL-GOB-ES/roberta-base-biomedical-es", layers="-1")
         embeddings.embed(sentence)
+
+    @pytest.mark.skipif(importlib.util.find_spec("onnxruntime") is None, reason="Onnx export require 'onnxruntime'")
+    def test_onnx_export_works(self, results_base_path):
+        texts = [
+            "I live in Berlin",
+            "I live in Vienna",
+            "Berlin to Germany is like Vienna to Austria",
+        ]
+
+        normal_sentences = [Sentence(text) for text in texts]
+        onnx_sentences = [Sentence(text) for text in texts]
+
+        embeddings = TransformerWordEmbeddings("distilbert-base-uncased")
+        results_base_path.mkdir(exist_ok=True, parents=True)
+        onnx_embeddings = embeddings.export_onnx(results_base_path / "onnx-export.onnx", normal_sentences)
+
+        embeddings.embed(normal_sentences)
+        onnx_embeddings.embed(onnx_sentences)
+
+        for sent_a, sent_b in zip(normal_sentences, onnx_sentences):
+            for token_a, token_b in zip(sent_a, sent_b):
+                assert torch.isclose(token_a.get_embedding(), token_b.get_embedding(), atol=1e-6).all()

@@ -66,6 +66,10 @@ class ModelTrainer(Pluggable):
         self.reset_training_attributes()
 
     def reset_training_attributes(self):
+        if self.optimizer is not None:
+            self.optimizer.zero_grad(set_to_none=True)
+            del self.optimizer
+
         self.optimizer = None
         self.base_path = None
         self.mini_batch_size = None

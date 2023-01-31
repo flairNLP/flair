@@ -7,9 +7,8 @@ import PIL
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import BoundingBox, Corpus, FlairDataset, Sentence
+from flair.data import BoundingBox, Corpus, FlairDataset, Sentence, get_spans_from_bio
 from flair.datasets.base import find_train_dev_test_files
-from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
 
 
 class OcrJsonDataset(FlairDataset):
@@ -117,6 +116,7 @@ class OcrJsonDataset(FlairDataset):
             sentence = self._load_example(self.file_names[index])
 
             # set sentence context using partials TODO: pointer to dataset is really inefficient
+            sentence._has_context = True
             sentence._position_in_dataset = (self, index)
 
         return sentence

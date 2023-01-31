@@ -1141,6 +1141,28 @@ class UD_TURKISH(UniversalDependenciesCorpus):
         super(UD_TURKISH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
+class UD_UKRAINIAN(UniversalDependenciesCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Ukrainian-IU/master"
+        cached_path(f"{ud_path}/uk_iu-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/uk_iu-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/uk_iu-ud-train.conllu", Path("datasets") / dataset_name)
+
+        super(UD_UKRAINIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+
+
 class UD_PERSIAN(UniversalDependenciesCorpus):
     def __init__(
         self,

@@ -2,7 +2,7 @@ import logging
 import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, cast
 from urllib.error import HTTPError
 
 import torch
@@ -12,15 +12,13 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import Dictionary, Label, Sentence, Span
+from flair.data import Dictionary, Label, Sentence, Span, get_spans_from_bio
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
+from flair.models.sequence_tagger_utils.crf import CRF
+from flair.models.sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
 from flair.training_utils import store_embeddings
-
-from .sequence_tagger_utils.bioes import get_spans_from_bio
-from .sequence_tagger_utils.crf import CRF
-from .sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
 
 log = logging.getLogger("flair")
 
@@ -441,7 +439,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         Predicts labels for current batch with CRF or Softmax.
         :param sentences: List of sentences in batch
         :param mini_batch_size: batch size for test data
-        :param return_probabilities_for_all_classes: Whether to return probabilites for all classes
+        :param return_probabilities_for_all_classes: Whether to return probabilities for all classes
         :param verbose: whether to use progress bar
         :param label_name: which label to predict
         :param return_loss: whether to return loss value
@@ -454,9 +452,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if not sentences:
                 return sentences
 
-            # make sure its a list
+            # make sure it's a list
             if not isinstance(sentences, list) and not isinstance(sentences, flair.data.Dataset):
                 sentences = [sentences]
+
+            Sentence.set_context_for_sentences(cast(List[Sentence], sentences))
 
             # filter empty sentences
             sentences = [sentence for sentence in sentences if len(sentence) > 0]
@@ -593,7 +593,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         """Returns the state dictionary for this model."""
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.embeddings,
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "hidden_size": self.hidden_size,
             "tag_dictionary": self.label_dictionary,
             "tag_format": self.tag_format,

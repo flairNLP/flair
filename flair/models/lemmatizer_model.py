@@ -425,6 +425,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         if isinstance(sentences, Sentence):
             sentences = [sentences]
 
+        Sentence.set_context_for_sentences(sentences)
+
         # filter empty sentences
         sentences = [sentence for sentence in sentences if len(sentence) > 0]
         if len(sentences) == 0:
@@ -663,7 +665,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.encoder_embeddings,
+            "embeddings": self.encoder_embeddings.save_embeddings(use_state_dict=False),
             "rnn_input_size": self.rnn_input_size,
             "rnn_hidden_size": self.rnn_hidden_size,
             "rnn_layers": self.rnn_layers,

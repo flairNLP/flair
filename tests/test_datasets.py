@@ -220,7 +220,7 @@ def test_download_load_data(tasks_base_path):
     # get training, test and dev data for full English UD corpus from web
     corpus = flair.datasets.UD_ENGLISH()
 
-    assert len(corpus.train) == 12543
+    assert len(corpus.train) == 12544
     assert len(corpus.dev) == 2001
     assert len(corpus.test) == 2077
 

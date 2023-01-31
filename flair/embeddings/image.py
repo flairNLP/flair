@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import Any, Dict, List
 
 import torch
 import torch.nn.functional as F
@@ -19,7 +19,7 @@ from torch.nn import (
 
 import flair
 from flair.data import Image
-from flair.embeddings.base import Embeddings
+from flair.embeddings.base import Embeddings, register_embeddings
 
 log = logging.getLogger("flair")
 
@@ -29,7 +29,19 @@ class ImageEmbeddings(Embeddings[Image]):
     def embedding_type(self) -> str:
         return "image-level"
 
+    def to_params(self) -> Dict[str, Any]:
+        # legacy pickle-like saving for image embeddings, as implementation details are not obvious
+        return self.__getstate__()  # type: ignore
 
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
+        # legacy pickle-like loading for image embeddings, as implementation details are not obvious
+        embedding = cls.__new__(cls)
+        embedding.__setstate__(params)
+        return embedding
+
+
+@register_embeddings
 class IdentityImageEmbeddings(ImageEmbeddings):
     def __init__(self, transforms):
         import PIL as pythonimagelib
@@ -55,6 +67,7 @@ class IdentityImageEmbeddings(ImageEmbeddings):
         return self.name
 
 
+@register_embeddings
 class PrecomputedImageEmbeddings(ImageEmbeddings):
     def __init__(self, url2tensor_dict, name):
         self.url2tensor_dict = url2tensor_dict
@@ -78,6 +91,7 @@ class PrecomputedImageEmbeddings(ImageEmbeddings):
         return self.name
 
 
+@register_embeddings
 class NetworkImageEmbeddings(ImageEmbeddings):
     def __init__(self, name, pretrained=True, transforms=None):
         super().__init__()
@@ -142,6 +156,7 @@ class NetworkImageEmbeddings(ImageEmbeddings):
         return self.name
 
 
+@register_embeddings
 class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
     def __init__(self, feats_in, convnet_parms, posnet_parms, transformer_parms):
         super(ConvTransformNetworkImageEmbeddings, self).__init__()

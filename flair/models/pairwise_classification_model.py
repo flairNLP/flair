@@ -89,7 +89,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "document_embeddings": self.embeddings,
+            "document_embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "multi_label": self.multi_label,

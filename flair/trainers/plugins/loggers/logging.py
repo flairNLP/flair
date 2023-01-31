@@ -102,12 +102,14 @@ class LoggingPlugin(TrainerPlugin):
                 self.total_loss / self.average_over if self.average_over > 0 else self.train_loss / (batch_no + 1)
             )
 
+            end_time = time.time()
+
             log.info(
                 f"epoch {epoch}"
                 f" - iter {batch_no + 1}/{total_number_of_batches}"
                 f" - loss {intermittent_loss:.8f}"
-                f" - time (sec): {(time.time() - self.start_time):.2f}"
-                f" - samples/sec: {self.average_over / (time.time() - self.start_time):.2f}"
+                f" - time (sec): {(end_time - self.start_time):.2f}"
+                f" - samples/sec: {self.average_over / (end_time - self.start_time):.2f}"
                 f" - {self.lr_info}{self.momentum_info}"
             )
 
