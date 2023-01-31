@@ -1162,6 +1162,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
     @classmethod
     def from_params(cls, params):
+        params["use_context"] = params.pop("context_length", 0)
         return cls.create_from_state(**params)
 
     def to_params(self):
