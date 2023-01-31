@@ -110,6 +110,13 @@ class ModelTrainer(Pluggable):
 
         return train_data
 
+    def backward(self, loss):
+        """Calls backward on the loss.
+
+        This allows plugins to overwrite the backward call.
+        """
+        loss.backward()
+
     def train(
         self,
         base_path: Union[Path, str],
@@ -325,7 +332,7 @@ class ModelTrainer(Pluggable):
                             **batch_step_kw,
                         )
 
-                        loss.backward()
+                        self.backward(loss)
 
                         self.dispatch(
                             "after_training_batch_step", loss=loss, datapoint_count=datapoint_count, **batch_step_kw

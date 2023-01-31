@@ -13,6 +13,7 @@ class AmpPlugin(TrainerPlugin):
         super().__init__()
         self.use = None
         self.opt_level = None
+        self.wrapped_backward = None
 
     @TrainerPlugin.hook
     def before_training_setup(self, use_amp, amp_opt_level, **kw):
@@ -29,6 +30,19 @@ class AmpPlugin(TrainerPlugin):
                     "to enable mixed-precision training."
                 )
 
+    def detach(self, *args, **kwargs):
+        super().detach(*args, **kwargs)
+
+        self.trainer.backward = self.wrapped_backward
+        self.wrapped_backward = None
+
+    def backward(self, loss):
+        optimizer = self.trainer.optimizer
+
+        if self.use:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+
     @TrainerPlugin.hook
     def after_optimizer_setup(self, **kw):
         optimizer = self.trainer.optimizer
@@ -36,13 +50,7 @@ class AmpPlugin(TrainerPlugin):
         if self.use:
             self.trainer.model, self.trainer.optimizer = amp.initialize(self.model, optimizer, opt_level=self.opt_level)
 
-    @TrainerPlugin.hook
-    def before_training_batch_backward(self, loss, **kw):
-        optimizer = self.trainer.optimizer
+            # replace trainers backward function
+            self.wrapped_backward = self.trainer.backward
 
-        if self.use:
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                loss_scale = scaled_loss.detach() / loss.detach()
-
-            # instead of scaling the loss, scale the gradient
-            loss.backward_hook(lambda grad: grad * loss_scale)
+            self.trainer.backward = self.backward
