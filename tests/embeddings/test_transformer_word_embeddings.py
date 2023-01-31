@@ -109,7 +109,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         # test expansion for sentence without context
         sentence = Sentence("This is great!")
         expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
-        assert " ".join([token.text for token in expanded]) == "[SATZ] This is great ! [SATZ]"
+        assert " ".join([token.text for token in expanded]) == "[FLERT] This is great ! [FLERT]"
 
         # test expansion for with previous and next as context
         sentence = Sentence("This is great.")
@@ -118,7 +118,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
         assert (
             " ".join([token.text for token in expanded])
-            == "How is it ? [SATZ] This is great . [SATZ] Then again , maybe not ..."
+            == "How is it ? [FLERT] This is great . [FLERT] Then again , maybe not ..."
         )
 
         # test expansion if first sentence is document boundary
@@ -128,7 +128,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         sentence._next_sentence = sentence_next
         expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
         assert (
-            " ".join([token.text for token in expanded]) == "[SATZ] This is great ? [SATZ] Then again , maybe not ..."
+            " ".join([token.text for token in expanded]) == "[FLERT] This is great ? [FLERT] Then again , maybe not ..."
         )
 
         # test expansion if we don't use context

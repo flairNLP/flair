@@ -37,7 +37,7 @@ from flair.embeddings.base import (
     register_embeddings,
 )
 
-SENTENCE_BOUNDARY_TAG: str = "[SATZ]"
+SENTENCE_BOUNDARY_TAG: str = "[FLERT]"
 
 
 @torch.jit.script_if_tracing
