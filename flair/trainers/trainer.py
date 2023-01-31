@@ -66,7 +66,7 @@ class ModelTrainer(Pluggable):
         self.reset_training_attributes()
 
     def reset_training_attributes(self):
-        if self.optimizer is not None:
+        if hasattr(self, "optimizer") and self.optimizer is not None:
             self.optimizer.zero_grad(set_to_none=True)
             del self.optimizer
 
