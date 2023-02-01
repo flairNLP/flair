@@ -21,6 +21,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         dict(layers="-1,-2,-3,-4", layer_mean=False),
         dict(layers="all", layer_mean=True),
         dict(layers="all", layer_mean=False),
+        dict(layers="all", layer_mean=True, subtoken_pooling="mean"),
     ]
 
     name_field = "embeddings"
