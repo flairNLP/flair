@@ -288,6 +288,22 @@ class ModelTrainer:
 
         weight_extractor = WeightExtractor(base_path)
 
+        if not self.model.supports_smaller_training_vocab:
+            reduce_transformer_vocab = False
+
+        if reduce_transformer_vocab:
+            transformer_embeddings = get_transformer_embeddings(self)
+            if not transformer_embeddings:
+                reduce_transformer_vocab = False
+            else:
+                tokens = list(self.model.get_used_tokens(self.corpus))
+                vocab_contexts = [
+                    reduce_train_vocab(model=emb.model, tokenizer=emb.tokenizer, texts=tokens)
+                    for emb in transformer_embeddings
+                ]
+                for context in vocab_contexts:
+                    context.__enter__()
+
         # if optimizer class is passed, instantiate:
         if inspect.isclass(optimizer):
             kwargs["lr"] = learning_rate
@@ -390,22 +406,6 @@ class ModelTrainer:
         train_loss_history = []
 
         micro_batch_size = mini_batch_chunk_size
-
-        if not self.model.supports_smaller_training_vocab:
-            reduce_transformer_vocab = False
-
-        if reduce_transformer_vocab:
-            transformer_embeddings = get_transformer_embeddings(self)
-            if not transformer_embeddings:
-                reduce_transformer_vocab = False
-            else:
-                tokens = list(self.model.get_used_tokens(self.corpus))
-                vocab_contexts = [
-                    reduce_train_vocab(model=emb.model, tokenizer=emb.tokenizer, texts=tokens)
-                    for emb in transformer_embeddings
-                ]
-                for context in vocab_contexts:
-                    context.__enter__()
 
 
         # this field stores the names of all dynamic embeddings in the model (determined after first forward pass)
