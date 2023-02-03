@@ -37,7 +37,7 @@ from flair.embeddings.base import (
     register_embeddings,
 )
 
-SENTENCE_BOUNDARY_TAG: str = "[SATZ]"
+SENTENCE_BOUNDARY_TAG: str = "[FLERT]"
 
 
 @torch.jit.script_if_tracing
@@ -1165,6 +1165,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
     @classmethod
     def from_params(cls, params):
+        params["use_context"] = params.pop("context_length", 0)
         return cls.create_from_state(**params)
 
     def to_params(self):
