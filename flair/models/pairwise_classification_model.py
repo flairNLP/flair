@@ -38,6 +38,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             **classifierargs,
             embeddings=embeddings,
             final_embedding_size=2 * embeddings.embedding_length if embed_separately else embeddings.embedding_length,
+            should_embed_sentence=False,
         )
 
         self._label_type = label_type
@@ -48,11 +49,11 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             # set separator to concatenate two sentences
             self.sep = " "
             if isinstance(
-                self.document_embeddings,
+                self.embeddings,
                 flair.embeddings.document.TransformerDocumentEmbeddings,
             ):
-                if self.document_embeddings.tokenizer.sep_token:
-                    self.sep = " " + str(self.document_embeddings.tokenizer.sep_token) + " "
+                if self.embeddings.tokenizer.sep_token:
+                    self.sep = " " + str(self.embeddings.tokenizer.sep_token) + " "
                 else:
                     self.sep = " [SEP] "
 
