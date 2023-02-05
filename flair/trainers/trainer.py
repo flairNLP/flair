@@ -508,13 +508,13 @@ class ModelTrainer:
                     if not shuffle_first_epoch and epoch == 1:
                         shuffle_data_this_epoch = False
 
-                batch_loader = DataLoader(
-                    train_data,
-                    batch_size=mini_batch_size,
-                    shuffle=shuffle_data_this_epoch,
-                    num_workers=0 if num_workers is None else num_workers,
-                    sampler=sampler,
-                )
+                    batch_loader = DataLoader(
+                        train_data,
+                        batch_size=mini_batch_size,
+                        shuffle=shuffle_data_this_epoch,
+                        num_workers=0 if num_workers is None else num_workers,
+                        sampler=sampler,
+                    )
 
                     self.model.train()
 
@@ -525,12 +525,12 @@ class ModelTrainer:
 
                     modulo = max(1, int(total_number_of_batches / 10))
 
-                # process mini-batches
-                average_over = 0
-                for batch_no, batch in enumerate(batch_loader):
-                    # zero the gradients on the model and optimizer
-                    self.model.zero_grad()
-                    optimizer.zero_grad()
+                    # process mini-batches
+                    average_over = 0
+                    for batch_no, batch in enumerate(batch_loader):
+                        # zero the gradients on the model and optimizer
+                        self.model.zero_grad()
+                        optimizer.zero_grad()
 
                         # if necessary, make batch_steps
                         batch_steps = [batch]
@@ -539,23 +539,23 @@ class ModelTrainer:
                                 batch[x : x + micro_batch_size] for x in range(0, len(batch), micro_batch_size)
                             ]
 
-                    # forward and backward for batch
-                    for batch_step in batch_steps:
-                        # forward pass
-                        loss, datapoint_count = self.model.forward_loss(batch_step)
-                        average_over += datapoint_count
-                        # Backward
-                        if use_amp:
-                            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                                scaled_loss.backward()
-                        else:
-                            loss.backward()
-                        train_loss += loss.item()
+                        # forward and backward for batch
+                        for batch_step in batch_steps:
+                            # forward pass
+                            loss, datapoint_count = self.model.forward_loss(batch_step)
+                            average_over += datapoint_count
+                            # Backward
+                            if use_amp:
+                                with amp.scale_loss(loss, optimizer) as scaled_loss:
+                                    scaled_loss.backward()
+                            else:
+                                loss.backward()
+                            train_loss += loss.item()
 
-                        # identify dynamic embeddings (always deleted) on first sentence
+                            # identify dynamic embeddings (always deleted) on first sentence
 
-                        if dynamic_embeddings is None:
-                            dynamic_embeddings = identify_dynamic_embeddings(batch)
+                            if dynamic_embeddings is None:
+                                dynamic_embeddings = identify_dynamic_embeddings(batch)
 
                             # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                             store_embeddings(batch, embeddings_storage_mode, dynamic_embeddings)
@@ -640,31 +640,31 @@ class ModelTrainer:
                         # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                         store_embeddings(self.corpus.train, embeddings_storage_mode, dynamic_embeddings)
 
-                if log_train_part:
-                    train_part_eval_result = self.model.evaluate(
-                        train_part,
-                        gold_label_type=self.model.label_type,
-                        mini_batch_size=eval_batch_size,
-                        num_workers=num_workers,
-                        embedding_storage_mode=embeddings_storage_mode,
-                        main_evaluation_metric=main_evaluation_metric,
-                        gold_label_dictionary=gold_label_dictionary_for_eval,
-                        exclude_labels=exclude_labels,
-                    )
-                    result_line += f"\t{train_part_eval_result.loss}" f"\t{train_part_eval_result.log_line}"
-                    log.info(
-                        f"TRAIN_SPLIT : loss {train_part_eval_result.loss}"
-                        f" - {main_evaluation_metric[1]}"
-                        f" ({main_evaluation_metric[0]})"
-                        f" {round(train_part_eval_result.main_score, 4)}"
-                    )
-                    if use_tensorboard:
-                        for metric_class_avg_type, metric_type in metrics_for_tensorboard:
-                            writer.add_scalar(
-                                f"train_{metric_class_avg_type}_{metric_type}",
-                                train_part_eval_result.classification_report[metric_class_avg_type][metric_type],
-                                epoch,
-                            )
+                    if log_train_part:
+                        train_part_eval_result = self.model.evaluate(
+                            train_part,
+                            gold_label_type=self.model.label_type,
+                            mini_batch_size=eval_batch_size,
+                            num_workers=num_workers,
+                            embedding_storage_mode=embeddings_storage_mode,
+                            main_evaluation_metric=main_evaluation_metric,
+                            gold_label_dictionary=gold_label_dictionary_for_eval,
+                            exclude_labels=exclude_labels,
+                        )
+                        result_line += f"\t{train_part_eval_result.loss}" f"\t{train_part_eval_result.log_line}"
+                        log.info(
+                            f"TRAIN_SPLIT : loss {train_part_eval_result.loss}"
+                            f" - {main_evaluation_metric[1]}"
+                            f" ({main_evaluation_metric[0]})"
+                            f" {round(train_part_eval_result.main_score, 4)}"
+                        )
+                        if use_tensorboard:
+                            for metric_class_avg_type, metric_type in metrics_for_tensorboard:
+                                writer.add_scalar(
+                                    f"train_{metric_class_avg_type}_{metric_type}",
+                                    train_part_eval_result.classification_report[metric_class_avg_type][metric_type],
+                                    epoch,
+                                )
 
                     if log_dev:
                         assert self.corpus.dev
@@ -801,13 +801,13 @@ class ModelTrainer:
                     if log_bad_epochs:
                         log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
 
-                if loss_txt is not None:
-                    # output log file
-                    with open(loss_txt, "a") as f:
-                        # make headers on first epoch
-                        if epoch == 1:
-                            bad_epoch_header = "BAD_EPOCHS\t" if log_bad_epochs else ""
-                            f.write(f"EPOCH\tTIMESTAMP\t{bad_epoch_header}LEARNING_RATE\tTRAIN_LOSS")
+                    if loss_txt is not None:
+                        # output log file
+                        with open(loss_txt, "a") as f:
+                            # make headers on first epoch
+                            if epoch == 1:
+                                bad_epoch_header = "BAD_EPOCHS\t" if log_bad_epochs else ""
+                                f.write(f"EPOCH\tTIMESTAMP\t{bad_epoch_header}LEARNING_RATE\tTRAIN_LOSS")
 
                                 if log_train:
                                     f.write("\tTRAIN_" + "\tTRAIN_".join(train_eval_result.log_header.split("\t")))
