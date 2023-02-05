@@ -20,7 +20,16 @@ import torch
 from torch.utils.data.dataset import Dataset
 
 import flair
-from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
+from flair.data import (
+    Corpus,
+    Dictionary,
+    Label,
+    Relation,
+    Sentence,
+    Span,
+    Token,
+    _iter_dataset,
+)
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import DocumentEmbeddings, TransformerDocumentEmbeddings
 from flair.tokenization import SpaceTokenizer
@@ -707,9 +716,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     def allow_unk_tag(self) -> bool:
         return self._allow_unk_tag
 
-    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[str]:
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
         yield from super().get_used_tokens(corpus)
-        for sentence in corpus.get_all_sentences():
+        for sentence in _iter_dataset(corpus.get_all_sentences()):
             for span in sentence.get_spans(self.label_type):
-                yield self.encoding_strategy.encode_head(span, span.get_label(self.label_type))
-                yield self.encoding_strategy.encode_tail(span, span.get_label(self.label_type))
+                yield self.encoding_strategy.encode_head(span, span.get_label(self.label_type)).split(" ")
+                yield self.encoding_strategy.encode_tail(span, span.get_label(self.label_type)).split(" ")

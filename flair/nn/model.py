@@ -14,7 +14,7 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
-from flair.data import DT, DT2, Dictionary, Sentence, Corpus
+from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
@@ -238,7 +238,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         # the smaller training vocab expects classification tasks, otherwise it won't work.
         return False
 
-    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[str]:
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
         pass
 
 
@@ -555,8 +555,8 @@ class Classifier(Model[DT], typing.Generic[DT], ABC):
         # the smaller training vocab expects classification tasks, otherwise it won't work.
         return True
 
-    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[str]:
-        for sentence in corpus.get_all_sentences():
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+        for sentence in _iter_dataset(corpus.get_all_sentences()):
             yield [t.text for t in sentence]
 
 

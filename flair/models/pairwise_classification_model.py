@@ -5,7 +5,7 @@ import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Sentence, TextPair, Corpus
+from flair.data import Corpus, Sentence, TextPair, _iter_dataset
 
 
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
@@ -114,7 +114,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             **kwargs,
         )
 
-    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[str]:
-        for sentence_pair in corpus.get_all_sentences():
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+        for sentence_pair in _iter_dataset(corpus.get_all_sentences()):
             yield [t.text for t in sentence_pair.first]
             yield [t.text for t in sentence_pair.second]

@@ -16,7 +16,7 @@ from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
 from transformer_smaller_training_vocab import reduce_train_vocab
 
-from flair.embeddings import TransformerEmbeddings, Embeddings, StackedEmbeddings
+from flair.embeddings import Embeddings, StackedEmbeddings, TransformerEmbeddings
 from flair.models import FewshotClassifier
 from flair.nn import Model
 
