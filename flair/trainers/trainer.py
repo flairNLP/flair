@@ -364,7 +364,6 @@ class ModelTrainer:
 
         # if training also uses dev/train data, include in training set
         if train_with_dev or train_with_test:
-
             parts = [self.corpus.train]
             if train_with_dev and self.corpus.dev:
                 parts.append(self.corpus.dev)
@@ -505,7 +504,6 @@ class ModelTrainer:
                 # process mini-batches
                 average_over = 0
                 for batch_no, batch in enumerate(batch_loader):
-
                     # zero the gradients on the model and optimizer
                     self.model.zero_grad()
                     optimizer.zero_grad()
@@ -517,7 +515,6 @@ class ModelTrainer:
 
                     # forward and backward for batch
                     for batch_step in batch_steps:
-
                         # forward pass
                         loss, datapoint_count = self.model.forward_loss(batch_step)
                         average_over += datapoint_count
@@ -634,7 +631,7 @@ class ModelTrainer:
                         f" {round(train_part_eval_result.main_score, 4)}"
                     )
                     if use_tensorboard:
-                        for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
+                        for metric_class_avg_type, metric_type in metrics_for_tensorboard:
                             writer.add_scalar(
                                 f"train_{metric_class_avg_type}_{metric_type}",
                                 train_part_eval_result.classification_report[metric_class_avg_type][metric_type],
@@ -779,7 +776,6 @@ class ModelTrainer:
                 if loss_txt is not None:
                     # output log file
                     with open(loss_txt, "a") as f:
-
                         # make headers on first epoch
                         if epoch == 1:
                             bad_epoch_header = "BAD_EPOCHS\t" if log_bad_epochs else ""
@@ -889,7 +885,6 @@ class ModelTrainer:
         additional_epochs: Optional[int] = None,
         **trainer_args,
     ):
-
         assert model.model_card is not None
         self.model = model
         # recover all arguments that were used to train this model
@@ -929,7 +924,6 @@ class ModelTrainer:
         decoder_lr_factor: float = 1.0,
         **trainer_args,
     ):
-
         # If set, add a factor to the learning rate of all parameters with 'embeddings' not in name
         if decoder_lr_factor != 1.0:
             optimizer = optimizer(

@@ -146,7 +146,6 @@ class ELMoEmbeddings(TokenEmbeddings):
         embeddings = self.ee.embed_batch(sentence_words)
 
         for i, sentence in enumerate(sentences):
-
             sentence_embeddings = embeddings[i]
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
@@ -419,10 +418,8 @@ class CharLMEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         # if cache is used, try setting embeddings from cache first
         if "cache" in self.__dict__ and self.cache is not None:
-
             # try populating embeddings from cache
             all_embeddings_retrieved_from_cache: bool = True
             for sentence in sentences:
@@ -458,7 +455,6 @@ class CharLMEmbeddings(TokenEmbeddings):
             offset_backward: int = len(sentence_text) + len(start_marker)
 
             for token in sentence.tokens:
-
                 offset_forward += len(token.text)
 
                 if self.is_forward_lm:
@@ -1187,12 +1183,10 @@ class BertEmbeddings(TokenEmbeddings):
             self.token_subtoken_count = token_subtoken_count
 
     def _convert_sentences_to_features(self, sentences, max_sequence_length: int) -> [BertInputFeatures]:
-
         max_sequence_length = max_sequence_length + 2
 
         features: List[BertEmbeddings.BertInputFeatures] = []
-        for (sentence_index, sentence) in enumerate(sentences):
-
+        for sentence_index, sentence in enumerate(sentences):
             bert_tokenization: List[str] = []
             token_subtoken_count: Dict[int, int] = {}
 
@@ -1261,9 +1255,7 @@ class BertEmbeddings(TokenEmbeddings):
         all_encoder_layers = self.model(all_input_ids, attention_mask=all_input_masks)[-1]
 
         with torch.no_grad():
-
             for sentence_index, sentence in enumerate(sentences):
-
                 feature = features[sentence_index]
 
                 # get aggregated embeddings for each BERT-subtoken in sentence
@@ -1349,7 +1341,6 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
                 everything_embedded = False
 
         if not everything_embedded:
-
             self.embeddings.embed(sentences)
 
             for sentence in sentences:
@@ -1465,7 +1456,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
         # go through each sentence in batch
         for i, sentence in enumerate(sentences):
-
             lengths.append(len(sentence.tokens))
 
             word_embeddings = []

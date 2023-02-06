@@ -108,7 +108,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
     def _print_predictions(self, batch, gold_label_type):
         lines = []
         for datapoint in batch:
-
             eval_line = f"\n{datapoint.to_original_text()}\n"
 
             for relation in datapoint.get_relations(gold_label_type):
@@ -139,7 +138,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-
         return super()._init_model_with_state_dict(
             state,
             embeddings=state.get("embeddings"),
@@ -159,7 +157,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
     @staticmethod
     def _fetch_model(model_name) -> str:
-
         model_map = {}
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"

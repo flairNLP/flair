@@ -71,7 +71,6 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-
         import re
 
         # remap state dict for models serialized with Flair <= 0.11.3
@@ -92,7 +91,6 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
 
     @staticmethod
     def _fetch_model(model_name) -> str:
-
         model_map = {}
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 

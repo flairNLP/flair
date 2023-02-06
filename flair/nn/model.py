@@ -108,7 +108,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
         # write out a "model card" if one is set
         if self.model_card is not None:
-
             # special handling for optimizer:
             # remember optimizer class and state dictionary
             if "training_parameters" in self.model_card:
@@ -149,7 +148,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         """
         # if this class is abstract, go through all inheriting classes and try to fetch and load the model
         if inspect.isabstract(cls):
-
             # get all non-abstract subclasses
             subclasses = get_non_abstract_subclasses(cls)
 
@@ -268,7 +266,6 @@ class Classifier(Model[DT], typing.Generic[DT], ABC):
             data_points = FlairDatapointDataset(data_points)
 
         with torch.no_grad():
-
             # loss calculation
             eval_loss = torch.zeros(1, device=flair.device)
             average_over = 0
@@ -285,7 +282,6 @@ class Classifier(Model[DT], typing.Generic[DT], ABC):
 
             sentence_id = 0
             for batch in Tqdm.tqdm(loader):
-
                 # remove any previously predicted labels
                 for datapoint in batch:
                     datapoint.remove_labels("predicted")
@@ -308,7 +304,6 @@ class Classifier(Model[DT], typing.Generic[DT], ABC):
 
                 # get the gold labels
                 for datapoint in batch:
-
                     for gold_label in datapoint.get_labels(gold_label_type):
                         representation = str(sentence_id) + ": " + gold_label.unlabeled_identifier
 
@@ -572,7 +567,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         inverse_model: bool = False,
         train_on_gold_pairs_only: bool = False,
     ):
-
         super().__init__()
 
         # set the embeddings
@@ -692,7 +686,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             )
 
     def _encode_data_points(self, sentences: List[DT], data_points: List[DT2]):
-
         # embed sentences
         self.embeddings.embed(sentences)
 
@@ -709,7 +702,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         return data_point_tensor
 
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
-
         # make a forward pass to produce embedded data points and labels
         sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
 
@@ -736,7 +728,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         return self.loss_function(scores, labels), labels.size(0)
 
     def _sort_data(self, data_points: List[DT]) -> List[DT]:
-
         if len(data_points) == 0:
             return []
 
@@ -806,7 +797,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
             for batch in batches:
-
                 # filter data points in batch
                 batch = [dp for dp in batch if self._filter_data_point(dp)]
 

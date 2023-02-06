@@ -198,7 +198,6 @@ class LanguageModelTrainer:
         amp_opt_level: str = "O1",
         **kwargs,
     ):
-
         if use_amp:
             if sys.version_info < (3, 0):
                 raise RuntimeError("Apex currently only supports Python 3. Aborting.")
@@ -266,7 +265,6 @@ class LanguageModelTrainer:
                 # iterate through training data, starting at
                 # self.split (for checkpointing)
                 for curr_split, train_slice in enumerate(training_generator, self.split):
-
                     if sequence_length < grow_to_sequence_length:
                         sequence_length += 1
                     log.info(f"Sequence length is {sequence_length}")

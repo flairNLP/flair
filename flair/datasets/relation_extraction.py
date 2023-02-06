@@ -98,10 +98,8 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
         target_filenames = [train_filename, "semeval2010-task8-test.conllu"]
 
         with zipfile.ZipFile(data_file) as zip_file:
-
             for source_file_path, target_filename in zip(source_file_paths, target_filenames):
                 with zip_file.open(source_file_path, mode="r") as source_file:
-
                     target_file_path = Path(data_folder) / target_filename
                     with open(target_file_path, mode="w", encoding="utf-8") as target_file:
                         # write CoNLL-U Plus header
@@ -280,10 +278,8 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
         ]
 
         with zipfile.ZipFile(data_file) as zip_file:
-
             for source_file_path, target_filename in zip(source_file_paths, target_filenames):
                 with zip_file.open(source_file_path, mode="r") as source_file:
-
                     target_file_path = Path(data_folder) / target_filename
                     with open(target_file_path, mode="w", encoding="utf-8") as target_file:
                         # write CoNLL-U Plus header
@@ -437,7 +433,6 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
 
         for source_filename, target_filename in zip(source_filenames, target_filenames):
             with open(source_data_folder / source_filename, mode="r") as source_file:
-
                 with open(data_folder / target_filename, mode="w", encoding="utf-8") as target_file:
                     # write CoNLL-U Plus header
                     target_file.write("# global.columns = id form ner\n")
@@ -719,7 +714,6 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
                 )
 
                 for entity_id, entity_span in ordered_entities:
-
                     entity_id_to_token_idx[entity_id] = entity_span
 
                     # check if first tag row is already occupied
