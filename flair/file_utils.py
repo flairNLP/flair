@@ -28,6 +28,18 @@ import flair
 
 logger = logging.getLogger("flair")
 
+url_proxies: Optional[typing.Dict[str, str]] = None
+
+
+def set_proxies(proxies: typing.Dict[str, str]) -> None:
+    """
+    Allows for data downloaded from urls to be forwarded to a proxy, see https://requests.readthedocs.io/en/latest/user/advanced/#proxies
+    :param proxies: A dictionary of proxies according to the requests documentation.
+    :return: None
+    """
+    global url_proxies
+    url_proxies = proxies
+
 
 def load_big_file(f: str):
     """
@@ -184,41 +196,6 @@ def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True
         os.remove(str(file))
 
 
-def download_file(url: str, cache_dir: Union[str, Path]):
-    cache_dir = Path(cache_dir)
-    cache_dir.mkdir(parents=True, exist_ok=True)
-
-    filename = re.sub(r".+/", "", url)
-    # get cache path to put the file
-    cache_path = cache_dir / filename
-
-    # Download to temporary file, then copy to cache dir once finished.
-    # Otherwise you get corrupt cache entries if the download gets interrupted.
-    fd, temp_filename = tempfile.mkstemp()
-    logger.info("%s not found in cache, downloading to %s", url, temp_filename)
-
-    # GET file object
-    req = requests.get(url, stream=True)
-    content_length = req.headers.get("Content-Length")
-    total = int(content_length) if content_length is not None else None
-    progress = Tqdm.tqdm(unit="B", total=total)
-    with open(temp_filename, "wb") as temp_file:
-        for chunk in req.iter_content(chunk_size=1024):
-            if chunk:  # filter out keep-alive new chunks
-                progress.update(len(chunk))
-                temp_file.write(chunk)
-
-    progress.close()
-
-    logger.info("copying %s to cache at %s", temp_filename, cache_path)
-    shutil.copyfile(temp_filename, str(cache_path))
-    logger.info("removing temp file %s", temp_filename)
-    os.close(fd)
-    os.remove(temp_filename)
-
-    progress.close()
-
-
 # TODO(joelgrus): do we want to do checksums or anything like that?
 def get_from_cache(url: str, cache_dir: Path) -> Path:
     """
@@ -248,7 +225,7 @@ def get_from_cache(url: str, cache_dir: Path) -> Path:
         logger.info("%s not found in cache, downloading to %s", url, temp_filename)
 
         # GET file object
-        req = requests.get(url, stream=True, headers={"User-Agent": "Flair"})
+        req = requests.get(url, stream=True, headers={"User-Agent": "Flair"}, proxies=url_proxies)
         content_length = req.headers.get("Content-Length")
         total = int(content_length) if content_length is not None else None
         progress = Tqdm.tqdm(unit="B", total=total, unit_scale=True, unit_divisor=1024)
