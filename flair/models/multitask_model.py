@@ -42,13 +42,13 @@ class MultitaskModel(flair.nn.Classifier):
         if not loss_factors:
             loss_factors = [1.0] * len(models)
 
-        label_types = dict()
         for task_id, model, loss_factor in zip(task_ids_internal, models, loss_factors):
             self.add_module(task_id, model)
             self.tasks[task_id] = model
             self.loss_factors[task_id] = loss_factor
-            label_types[task_id] = model.label_type
-        self._label_type = label_types
+
+            # the multi task model has several labels
+            self._label_type = model.label_type
         self.to(flair.device)
 
     def forward(self, *args) -> torch.Tensor:
