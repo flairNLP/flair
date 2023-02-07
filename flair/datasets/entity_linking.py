@@ -23,6 +23,18 @@ class ZELDA(MultiFileColumnCorpus):
         column_format={0: "text", 2: "nel"},
         **corpusargs,
     ):
+        """
+        Initialize ZELDA Entity Linking corpus introduced in "ZELDA: A Comprehensive Benchmark for Supervised
+        Entity Disambiguation" (Milich and Akbik, 2023).
+        When calling the constructor for the first time, the dataset gets automatically downloaded.
+
+        Parameters
+        ----------
+        base_path : Union[str, Path], optional
+            Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+            to point to a different folder but typically this should not be necessary.
+        in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
