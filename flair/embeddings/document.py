@@ -122,7 +122,6 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         self.embeddings.embed(sentences)
 
         for sentence in sentences:
-
             word_embeddings = torch.cat([token.get_embedding().unsqueeze(0) for token in sentence.tokens], dim=0).to(
                 flair.device
             )
@@ -390,7 +389,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             sentence.set_embedding(self.name, embedding)
 
     def _apply(self, fn):
-
         # models that were serialized using torch versions older than 1.4.0 lack the _flat_weights_names attribute
         # check if this is the case and if so, set it
         for child_module in self.children():
@@ -415,7 +413,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             child_module._apply(fn)
 
     def to_params(self):
-
         # serialize the language models and the constructor arguments (but nothing else)
         model_state = {
             "embeddings": self.embeddings.save_embeddings(False),
@@ -452,7 +449,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         )
 
     def __setstate__(self, d):
-
         # re-initialize language model with constructor arguments
         language_model = DocumentRNNEmbeddings(
             embeddings=d["embeddings"],
@@ -503,13 +499,11 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
         return self._embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
-
         for embedding in self.embeddings:
             embedding.embed(sentences)
 
             # iterate over sentences
             for sentence in sentences:
-
                 # if its a forward LM, take last state
                 if embedding.is_forward_lm:
                     sentence.set_embedding(
@@ -568,7 +562,6 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         self.eval()
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         sentence_batches = [
             sentences[i * self.batch_size : (i + 1) * self.batch_size]
             for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)
@@ -580,7 +573,6 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         return sentences
 
     def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
-
         # convert to plain strings, embedded in a list for the encode function
         sentences_plain_text = [sentence.to_plain_string() for sentence in sentences]
 

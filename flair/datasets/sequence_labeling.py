@@ -486,7 +486,6 @@ class ColumnDataset(FlairDataset):
 
         # now load all sentences
         with open(str(self.path_to_column_file), encoding=self.encoding) as file:
-
             # skip first line if to selected
             if skip_first_line:
                 file.readline()
@@ -538,7 +537,6 @@ class ColumnDataset(FlairDataset):
                 self.sentences_raw: List[List[str]] = []
 
                 while True:
-
                     # read lines for next sentence, but don't parse
                     sentence_raw = self._read_next_sentence(file)
 
@@ -557,7 +555,6 @@ class ColumnDataset(FlairDataset):
         self.word_level_tag_columns = {self.text_column: "text"}
         # read first sentence to determine which columns are span-labels
         with open(str(self.path_to_column_file), encoding=self.encoding) as file:
-
             # skip first line if to selected
             if skip_first_line:
                 file.readline()
@@ -579,7 +576,6 @@ class ColumnDataset(FlairDataset):
             # - problem cases are columns for which we see only O - in this case we default to Span
             for sentence in probe:
                 for column in column_name_map:
-
                     # skip assigned columns
                     if (
                         column in self.word_level_tag_columns
@@ -638,7 +634,6 @@ class ColumnDataset(FlairDataset):
     def _convert_lines_to_sentence(
         self, lines, word_level_tag_columns: Dict[int, str], span_level_tag_columns: Optional[Dict[int, str]] = None
     ):
-
         token: Optional[Token] = None
         tokens: List[Token] = []
         filtered_lines = []
@@ -709,7 +704,6 @@ class ColumnDataset(FlairDataset):
             return sentence
 
     def _parse_token(self, line: str, column_name_map: Dict[int, str], last_token: Optional[Token] = None) -> Token:
-
         # get fields from line
         fields: List[str] = re.split(self.column_delimiter, line.rstrip())
 
@@ -727,11 +721,9 @@ class ColumnDataset(FlairDataset):
                     and column != self.head_id_column
                     and column_name_map[column] != self.SPACE_AFTER_KEY
                 ):
-
                     # 'feats' and 'misc' column should be split into different fields
                     if column_name_map[column] in self.FEATS:
                         for feature in fields[column].split("|"):
-
                             # special handling for whitespace after
                             if feature == "SpaceAfter=No":
                                 token.whitespace_after = 0
@@ -782,7 +774,6 @@ class ColumnDataset(FlairDataset):
         return self.total_sentence_count
 
     def __getitem__(self, index: int = 0) -> Sentence:
-
         # if in memory, retrieve parsed sentence
         if self.in_memory:
             sentence = self.sentences[index]
@@ -1511,7 +1502,6 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1883,10 +1873,8 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
         github_url = "https://github.com/jeniyat/WNUT_2020_NER/archive/master.zip"
 
         for sample in ["train", "test", "dev"]:
-
             sample_file = data_folder / (sample + ".txt")
             if not sample_file.is_file():
-
                 zip_path = cached_path(f"{github_url}", Path("datasets") / dataset_name)
 
                 # unzip the downloaded repo and merge the train, dev and test datasets
@@ -2657,7 +2645,6 @@ class NER_MASAKHANE(MultiCorpus):
 
         corpora: List[Corpus] = []
         for language in languages:
-
             if language in language_to_code.keys():
                 language = language_to_code[language]
 
@@ -2894,7 +2881,6 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         # download data if necessary
         first = True
         for language in languages:
-
             language_folder = data_folder / language
             file_name = "wikiann-" + language + ".bio"
 
@@ -3363,12 +3349,10 @@ class NER_MULTI_XTREME(MultiCorpus):
 
         # download data if necessary
         for language in languages:
-
             language_folder = data_folder / language
 
             # if language not downloaded yet, download it
             if not language_folder.exists():
-
                 file_name = language + ".tar.gz"
                 # create folder
                 os.makedirs(language_folder)
@@ -3476,7 +3460,6 @@ class NER_MULTI_WIKINER(MultiCorpus):
 
         data_file = flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.train"
         if not data_file.is_file():
-
             cached_path(
                 f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2",
                 Path("datasets") / dataset_name,
@@ -3696,7 +3679,6 @@ class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -3730,7 +3712,6 @@ class KEYPHRASE_INSPEC(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -3767,7 +3748,6 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:

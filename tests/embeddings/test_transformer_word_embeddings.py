@@ -244,7 +244,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             0.5584433674812317,
         ]
 
-        for (token_de, token_en, exp_sim) in zip(sent_de, sent_en, expected_similarities):
+        for token_de, token_en, exp_sim in zip(sent_de, sent_en, expected_similarities):
             sim = cos(token_de.embedding, token_en.embedding).item()
             assert abs(exp_sim - sim) < 1e-5
 

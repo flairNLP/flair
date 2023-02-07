@@ -225,7 +225,6 @@ class ClassificationDataset(FlairDataset):
                         self.total_sentence_count += 1
 
                 if self.memory_mode == "partial" or self.memory_mode == "disk":
-
                     # first check if valid sentence
                     words = line.split()
                     l_len = 0
@@ -240,7 +239,6 @@ class ClassificationDataset(FlairDataset):
 
                     # if so, add to indices
                     if text and (label or allow_examples_without_labels):
-
                         if self.memory_mode == "partial":
                             self.lines.append(line)
                             self.total_sentence_count += 1
@@ -298,7 +296,6 @@ class ClassificationDataset(FlairDataset):
         return self.total_sentence_count
 
     def __getitem__(self, index: int = 0) -> Sentence:
-
         if self.memory_mode == "full":
             return self.sentences[index]
 
@@ -481,14 +478,12 @@ class CSVClassificationDataset(FlairDataset):
                 self.pair_columns.append(column)
 
         with open(self.path_to_file, encoding=encoding) as csv_file:
-
             csv_reader = csv.reader(csv_file, **fmtparams)
 
             if skip_header:
                 next(csv_reader, None)  # skip the headers
 
             for row in csv_reader:
-
                 # test if format is OK
                 wrong_format = False
                 for text_column in self.text_columns:
@@ -509,7 +504,6 @@ class CSVClassificationDataset(FlairDataset):
                     continue
 
                 if self.in_memory:
-
                     sentence = self._make_labeled_data_point(row)
 
                     self.sentences.append(sentence)
@@ -520,7 +514,6 @@ class CSVClassificationDataset(FlairDataset):
                 self.total_sentence_count += 1
 
     def _make_labeled_data_point(self, row):
-
         # make sentence from text (and filter for length)
         text = " ".join([row[text_column] for text_column in self.text_columns])
 
@@ -534,7 +527,6 @@ class CSVClassificationDataset(FlairDataset):
 
         # if a pair column is defined, make a sentence pair object
         if len(self.pair_columns) > 0:
-
             text = " ".join([row[pair_column] for pair_column in self.pair_columns])
 
             if self.max_chars_per_doc > 0:
@@ -734,7 +726,6 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         if not os.path.exists(data_folder):
             os.makedirs(data_folder)
         with open(data_folder / "train.txt", "a") as train_file:
-
             write_count = 0
             review_5_count = 0
             # download senteval datasets if necessary und unzip
@@ -1051,7 +1042,6 @@ class SENTIMENT_140(ClassificationCorpus):
 
         # download data if necessary
         if True or not (data_folder / "train.txt").is_file():
-
             # download senteval datasets if necessary und unzip
             sentiment_url = "https://cs.stanford.edu/people/alecmgo/trainingandtestdata.zip"
             cached_path(sentiment_url, Path("datasets") / dataset_name / "raw")
@@ -1064,7 +1054,6 @@ class SENTIMENT_140(ClassificationCorpus):
 
             # create train.txt file from CSV
             with open(data_folder / "train.txt", "w") as train_file:
-
                 with open(
                     senteval_folder / "training.1600000.processed.noemoticon.csv", encoding="latin-1"
                 ) as csv_train:
@@ -1077,7 +1066,6 @@ class SENTIMENT_140(ClassificationCorpus):
 
             # create test.txt file from CSV
             with open(data_folder / "test.txt", "w") as train_file:
-
                 with open(senteval_folder / "testdata.manual.2009.06.14.csv", encoding="latin-1") as csv_train:
                     csv_reader = csv.reader(csv_train)
 
@@ -1123,7 +1111,6 @@ class SENTEVAL_CR(ClassificationCorpus):
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
-
             # download senteval datasets if necessary und unzip
             senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
             cached_path(senteval_path, Path("datasets") / "senteval")
@@ -1136,7 +1123,6 @@ class SENTEVAL_CR(ClassificationCorpus):
 
             # create train.txt file by iterating over pos and neg file
             with open(data_folder / "train.txt", "a") as train_file:
-
                 with open(senteval_folder / "data" / "customerr" / "custrev.pos", encoding="latin1") as file:
                     for line in file:
                         train_file.write(f"__label__POSITIVE {line}")
@@ -1177,7 +1163,6 @@ class SENTEVAL_MR(ClassificationCorpus):
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
-
             # download senteval datasets if necessary und unzip
             senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
             cached_path(senteval_path, Path("datasets") / "senteval")
@@ -1190,7 +1175,6 @@ class SENTEVAL_MR(ClassificationCorpus):
 
             # create train.txt file by iterating over pos and neg file
             with open(data_folder / "train.txt", "a") as train_file:
-
                 with open(senteval_folder / "data" / "rt10662" / "rt-polarity.pos", encoding="latin1") as file:
                     for line in file:
                         train_file.write(f"__label__POSITIVE {line}")
@@ -1231,7 +1215,6 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
-
             # download senteval datasets if necessary und unzip
             senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
             cached_path(senteval_path, Path("datasets") / "senteval")
@@ -1244,7 +1227,6 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
 
             # create train.txt file by iterating over pos and neg file
             with open(data_folder / "train.txt", "a") as train_file:
-
                 with open(senteval_folder / "data" / "subj" / "subj.subjective", encoding="latin1") as file:
                     for line in file:
                         train_file.write(f"__label__SUBJECTIVE {line}")
@@ -1285,7 +1267,6 @@ class SENTEVAL_MPQA(ClassificationCorpus):
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
-
             # download senteval datasets if necessary und unzip
             senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
             cached_path(senteval_path, Path("datasets") / "senteval")
@@ -1298,7 +1279,6 @@ class SENTEVAL_MPQA(ClassificationCorpus):
 
             # create train.txt file by iterating over pos and neg file
             with open(data_folder / "train.txt", "a") as train_file:
-
                 with open(senteval_folder / "data" / "mpqa" / "mpqa.pos", encoding="latin1") as file:
                     for line in file:
                         train_file.write(f"__label__POSITIVE {line}")
@@ -1339,7 +1319,6 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
-
             # download senteval datasets if necessary und unzip
             cached_path(
                 "https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-train",
@@ -1399,7 +1378,6 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
-
             # download senteval datasets if necessary und unzip
             cached_path(
                 "https://raw.githubusercontent.com/AcademiaSinicaNLPLab/sentiment_dataset/master/data/stsa.fine.train",
@@ -1417,7 +1395,6 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
             # convert to FastText format
             for split in ["train", "dev", "test"]:
                 with open(data_folder / f"{split}.txt", "w") as train_file:
-
                     with open(data_folder / "raw" / f"stsa.fine.{split}", encoding="latin1") as file:
                         for line in file:
                             train_file.write(f"__label__{line[0]} {line[2:]}")
@@ -1513,7 +1490,6 @@ class GLUE_COLA(ClassificationCorpus):
     """
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
-
         folder_path = Path(folder_path)
         folder_path = folder_path / "CoLA.tsv"
 
@@ -1593,7 +1569,6 @@ class GO_EMOTIONS(ClassificationCorpus):
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
-
             # download datasets if necessary
             goemotions_url = "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/"
             for name in ["train.tsv", "test.tsv", "dev.tsv"]:
@@ -1608,7 +1583,6 @@ class GO_EMOTIONS(ClassificationCorpus):
             for name in ["train", "test", "dev"]:
                 with open(data_folder / (name + ".txt"), "w", encoding="utf-8") as txt_file:
                     with open(data_path / (name + ".tsv"), "r", encoding="utf-8") as tsv_file:
-
                         lines = tsv_file.readlines()
                         for line in lines:
                             row = line.split("\t")
@@ -1970,11 +1944,9 @@ class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
 
 def _download_wassa_if_not_there(emotion, data_folder, dataset_name):
     for split in ["train", "dev", "test"]:
-
         data_file = data_folder / f"{emotion}-{split}.txt"
 
         if not data_file.is_file():
-
             if split == "train":
                 url = f"http://saifmohammad.com/WebDocs/EmoInt%20Train%20Data/{emotion}-ratings-0to1.train.txt"
             if split == "dev":

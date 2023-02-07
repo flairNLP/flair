@@ -344,7 +344,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         """
         for label_type, valid_labels in self.entity_label_types.items():
             for entity_span in sentence.get_spans(type=label_type):
-
                 entity_label: Label = entity_span.get_label(label_type=label_type)
 
                 # Only use entities labelled with the specified labels for each label type
@@ -382,7 +381,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
         # Yield head and tail entity pairs from the cross product of all entities
         for head, tail in itertools.product(valid_entities, repeat=2):
-
             # Remove identity relation entity pairs
             if head.span is tail.span:
                 continue
@@ -429,7 +427,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         # Therefore, we use the span's position in the sentence.
         encoded_sentence_tokens: List[str] = []
         for token in original_sentence:
-
             if token is head.span[0]:
                 encoded_sentence_tokens.append(self.encoding_strategy.encode_head(head.span, head.label))
 
@@ -489,7 +486,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         (and that the relation with reference to the original sentence is not returned).
         """
         for head, tail, gold_label in self._entity_pair_permutations(sentence):
-
             if gold_label is None:
                 if self.cross_augmentation:
                     gold_label = self.zero_tag_value

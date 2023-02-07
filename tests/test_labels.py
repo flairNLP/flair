@@ -65,7 +65,6 @@ def test_token_tags():
 
 
 def test_span_tags():
-
     # set 3 labels for 2 spans (HU is tagged twice)
     sentence = Sentence("Humboldt Universität zu Berlin is located in Berlin .")
     sentence[0:4].add_label("ner", "Organization")
@@ -105,7 +104,6 @@ def test_span_tags():
 
 
 def test_different_span_tags():
-
     # set 3 labels for 2 spans (HU is tagged twice with different tags)
     sentence = Sentence("Humboldt Universität zu Berlin is located in Berlin .")
     sentence[0:4].add_label("ner", "Organization")
@@ -258,7 +256,6 @@ def test_mixed_labels():
 
 
 def test_data_point_equality():
-
     # example sentence
     sentence = Sentence("George Washington went to Washington .")
 

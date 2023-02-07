@@ -50,7 +50,6 @@ class TestSequenceTagger(BaseModelTest):
 
     @pytest.mark.integration
     def test_all_tag_proba_embedding(self, example_sentence, loaded_pretrained_model):
-
         loaded_pretrained_model.predict(example_sentence, return_probabilities_for_all_classes=True)
         for token in example_sentence:
             assert len(token.get_tags_proba_dist(loaded_pretrained_model.label_type)) == len(

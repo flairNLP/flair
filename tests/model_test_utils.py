@@ -193,7 +193,6 @@ class BaseModelTest:
         assert count == len(labeled_sentence.get_labels(self.train_label_type))
 
     def test_load_use_model_keep_embedding(self, example_sentence, loaded_pretrained_model):
-
         assert not self.has_embedding(example_sentence)
 
         loaded_pretrained_model.predict(example_sentence, embedding_storage_mode="cpu")

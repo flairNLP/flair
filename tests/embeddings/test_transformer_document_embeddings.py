@@ -21,7 +21,6 @@ class TestTransformerDocumentEmbeddings(BaseEmbeddingsTest):
 
 
 def test_if_loaded_embeddings_have_all_attributes(tasks_base_path):
-
     # dummy model with embeddings
     embeddings = TransformerDocumentEmbeddings(
         "distilbert-base-uncased",

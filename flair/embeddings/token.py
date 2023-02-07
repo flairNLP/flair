@@ -109,7 +109,6 @@ class StackedEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         for embedding in self.embeddings:
             embedding._add_embeddings_internal(sentences)
 
@@ -129,7 +128,6 @@ class StackedEmbeddings(TokenEmbeddings):
         return self.__names
 
     def get_named_embeddings_dict(self) -> Dict:
-
         named_embeddings_dict = {}
         for embedding in self.embeddings:
             named_embeddings_dict.update(embedding.get_named_embeddings_dict())
@@ -331,7 +329,6 @@ class WordEmbeddings(TokenEmbeddings):
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         tokens = [token for sentence in sentences for token in sentence.tokens]
 
         word_indices: List[int] = []
@@ -482,9 +479,7 @@ class CharacterEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
-
         for sentence in sentences:
-
             tokens_char_indices = []
 
             # translate words in sentence into ints using dictionary
@@ -778,7 +773,6 @@ class FlairEmbeddings(TokenEmbeddings):
         self.eval()
 
     def train(self, mode=True):
-
         # make compatible with serialized models (TODO: remove)
         if "fine_tune" not in self.__dict__:
             self.fine_tune = False
@@ -796,7 +790,6 @@ class FlairEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         # make compatible with serialized models (TODO: remove)
         if "with_whitespace" not in self.__dict__:
             self.with_whitespace = True
@@ -809,7 +802,6 @@ class FlairEmbeddings(TokenEmbeddings):
         gradient_context = torch.enable_grad() if self.fine_tune else torch.no_grad()
 
         with gradient_context:
-
             # if this is not possible, use LM to generate embedding. First, get text sentences
             text_sentences = (
                 [sentence.to_tokenized_string() for sentence in sentences]
@@ -839,7 +831,6 @@ class FlairEmbeddings(TokenEmbeddings):
                 offset_backward: int = len(sentence_text) + len(start_marker)
 
                 for token in sentence.tokens:
-
                     offset_forward += len(token.text)
                     if self.is_forward_lm:
                         offset_with_whitespace = offset_forward
@@ -908,7 +899,6 @@ class PooledFlairEmbeddings(TokenEmbeddings):
         only_capitalized: bool = False,
         **kwargs,
     ):
-
         super().__init__()
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
@@ -944,25 +934,21 @@ class PooledFlairEmbeddings(TokenEmbeddings):
             self.word_count = {}
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         self.context_embeddings.embed(sentences)
 
         # if we keep a pooling, it needs to be updated continuously
         for sentence in sentences:
             for token in sentence.tokens:
-
                 # update embedding
                 local_embedding = token._embeddings[self.context_embeddings.name].cpu()
 
                 # check token.text is empty or not
                 if token.text:
                     if token.text[0].isupper() or not self.only_capitalized:
-
                         if token.text not in self.word_embeddings:
                             self.word_embeddings[token.text] = local_embedding
                             self.word_count[token.text] = 1
                         else:
-
                             # set aggregation operation
                             if self.pooling == "mean":
                                 aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
@@ -1070,11 +1056,8 @@ class FastTextEmbeddings(TokenEmbeddings):
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         for i, sentence in enumerate(sentences):
-
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-
                 if "field" not in self.__dict__ or self.field is None:
                     word = token.text
                 else:
@@ -1154,7 +1137,6 @@ class OneHotEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         tokens = [t for sentence in sentences for t in sentence.tokens]
 
         if self.field == "text":
@@ -1217,7 +1199,6 @@ class HashEmbeddings(TokenEmbeddings):
     """Standard embeddings with Hashing Trick."""
 
     def __init__(self, num_embeddings: int = 1000, embedding_length: int = 300, hash_method="md5"):
-
         super().__init__()
         self.name = "hash"
         self.static_embeddings = False
@@ -1306,9 +1287,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         for i, sentence in enumerate(sentences):
-
             language_code = sentence.get_language_code()
             supported = [
                 "en",
@@ -1459,11 +1438,8 @@ class BytePairEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         for i, sentence in enumerate(sentences):
-
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-
                 word = token.text
 
                 if word.strip() == "":

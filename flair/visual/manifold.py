@@ -56,7 +56,6 @@ class Visualizer(object):
         contexts = []
 
         for sentence in sentences:
-
             strs = [x.text for x in sentence.tokens]
 
             for i, token in enumerate(strs):
