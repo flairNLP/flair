@@ -590,7 +590,6 @@ class ColumnDataset(FlairDataset):
             # check the first 5 sentences
             probe = []
             for i in range(5):
-
                 lines = self._read_next_sentence(file)
 
                 # check if lines were read (as the file may contain less than 5 sentences)
