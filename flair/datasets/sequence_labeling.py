@@ -4437,7 +4437,11 @@ class NER_NERMUD(MultiCorpus):
         github_path = "https://raw.githubusercontent.com/dhfbk/KIND/main/evalita-2023"
 
         for domain in domains:
-            print("Found domain:", domain)
+            if domain not in supported_domains:
+                log.error(f"Domain '{domain}' is not in list of supported domains!")
+                log.error(f"Supported are '{supported_domains}'!")
+                raise Exception()
+
             domain_folder = data_folder / domain.lower()
 
             for split in ["train", "dev"]:
