@@ -1198,7 +1198,7 @@ class CONLL_2012(MultiFileColumnCorpus):
             )
         )
 
-        def bioes_from_connl2012(tags):
+        def bioes_from_conll2012(tags):
             assert isinstance(tags, list)
 
             previous_label = None
@@ -1239,7 +1239,7 @@ class CONLL_2012(MultiFileColumnCorpus):
             name=str(data_folder),
             document_separator_line="#end document",
             comment_symbol="#begin",
-            preprocess_bioes_tags=bioes_from_connl2012,
+            preprocess_bioes_tags=bioes_from_conll2012,
             label_name_map={"-": "O"},
             span_level_tag_columns=[10],
             **corpusargs,
