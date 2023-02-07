@@ -7,6 +7,7 @@ import torch
 
 import flair.nn
 from flair.data import DT, Dictionary, Sentence
+from flair.nn import Classifier
 from flair.training_utils import Result
 
 log = logging.getLogger("flair")
@@ -77,8 +78,8 @@ class MultitaskModel(flair.nn.Classifier):
         sentences,
         **predictargs,
     ):
-        for task_id in self.tasks.keys():
-            self.tasks[task_id].predict(sentences, **predictargs)
+        for task in self.tasks.values():
+            task.predict(sentences, **predictargs)
 
     @staticmethod
     def split_batch_to_task_ids(sentences: Union[List[Sentence], Sentence]) -> Dict:
@@ -176,30 +177,30 @@ class MultitaskModel(flair.nn.Classifier):
         Returns the state dict of the multitask model which has multiple models underneath.
         :return model_state: model state for the multitask model
         """
-        model_state = {}
-
-        for task in self.tasks:
-            model_state[task] = {
-                "state_dict": self.__getattr__(task)._get_state_dict(),
-                "class": self.__getattr__(task).__class__,
-            }
+        initial_model_state = super()._get_state_dict()
+        initial_model_state["state_dict"] = {}  # the model state is stored per model already.
+        model_state = {
+            **initial_model_state,
+            "model_states": {task: model._get_state_dict() for task, model in self.tasks.items()},
+            "loss_factors": [self.loss_factors[task] for task in self.tasks.keys()],
+        }
 
         return model_state
 
-    @staticmethod
-    def _init_model_with_state_dict(state):
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
         """
         Initializes the model based on given state dict.
         """
         models = []
         tasks = []
+        loss_factors = state["loss_factors"]
 
-        for task, task_state in state.items():
-            if task != "model_card":
-                models.append(task_state["class"]._init_model_with_state_dict(task_state["state_dict"]))
-                tasks.append(task)
+        for task, task_state in state["model_states"].items():
+            models.append(Classifier.load(task_state))
+            tasks.append(task)
 
-        model = MultitaskModel(models=models, task_ids=tasks)
+        model = cls(models=models, task_ids=tasks, loss_factors=loss_factors, **kwargs)
         return model
 
     @property

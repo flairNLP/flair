@@ -1,10 +1,8 @@
-import collections as co
 import itertools
-from operator import itemgetter
+import logging
+from abc import ABC, abstractmethod
 from typing import (
     Any,
-    Counter,
-    DefaultDict,
     Dict,
     Iterator,
     List,
@@ -18,13 +16,15 @@ from typing import (
 )
 
 import torch
-from torch.utils.data.dataset import ConcatDataset, Dataset
+from torch.utils.data.dataset import Dataset
 
 import flair
 from flair.data import Corpus, Dictionary, Label, Relation, Sentence, Span, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.embeddings import DocumentEmbeddings
+from flair.embeddings import DocumentEmbeddings, TransformerDocumentEmbeddings
 from flair.tokenization import SpaceTokenizer
+
+logger: logging.Logger = logging.getLogger("flair")
 
 
 class EncodedSentence(Sentence):
@@ -36,6 +36,166 @@ class EncodedSentence(Sentence):
     """
 
     pass
+
+
+class EncodingStrategy(ABC):
+    """
+    The :class:`EncodingStrategy` protocol defines
+    the encoding of the head and tail entities in a sentence with a relation annotation.
+    """
+
+    special_tokens: Set[str] = set()
+
+    def __init__(self, add_special_tokens: bool = False) -> None:
+        self.add_special_tokens = add_special_tokens
+
+    @abstractmethod
+    def encode_head(self, head_span: Span, label: Label) -> str:
+        """
+        Returns the encoded string representation of the head span.
+        Multi-token head encodings tokens are separated by a space.
+        """
+        ...
+
+    @abstractmethod
+    def encode_tail(self, tail_span: Span, label: Label) -> str:
+        """
+        Returns the encoded string representation of the tail span.
+        Multi-token tail encodings tokens are separated by a space.
+        """
+        ...
+
+
+class EntityMask(EncodingStrategy):
+    """
+    An `class`:EncodingStrategy: that masks the head and tail relation entities.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "[TAIL] and Sergey Brin founded [HEAD]" -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and [TAIL] founded [HEAD]"  -> Relation(head='Google', tail='Sergey Brin').
+    """
+
+    special_tokens: Set[str] = {"[HEAD]", "[TAIL]"}
+
+    def encode_head(self, head_span: Span, label: Label) -> str:
+        return "[HEAD]"
+
+    def encode_tail(self, tail_span: Span, label: Label) -> str:
+        return "[TAIL]"
+
+
+class TypedEntityMask(EncodingStrategy):
+    """
+    An `class`:EncodingStrategy: that masks the head and tail relation entities with their label.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "[TAIL-PER] and Sergey Brin founded [HEAD-ORG]" -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and [TAIL-PER] founded [HEAD-ORG]"  -> Relation(head='Google', tail='Sergey Brin').
+    """
+
+    def encode_head(self, head: Span, label: Label) -> str:
+        return f"[HEAD-{label.value}]"
+
+    def encode_tail(self, tail: Span, label: Label) -> str:
+        return f"[TAIL-{label.value}]"
+
+
+class EntityMarker(EncodingStrategy):
+    """
+    An `class`:EncodingStrategy: that marks the head and tail relation entities.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "[HEAD] Larry Page [/HEAD] and Sergey Brin founded [TAIL] Google [/TAIL]"
+            -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and [HEAD] Sergey Brin [/HEAD] founded [TAIL] Google [/TAIL]"
+            -> Relation(head='Google', tail='Sergey Brin').
+    """
+
+    special_tokens: Set[str] = {"[HEAD]", "[/HEAD]", "[TAIL]", "[/TAIL]"}
+
+    def encode_head(self, head: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in head)
+        return f"[HEAD] {space_tokenized_text} [/HEAD]"
+
+    def encode_tail(self, tail: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in tail)
+        return f"[TAIL] {space_tokenized_text} [/TAIL]"
+
+
+class TypedEntityMarker(EncodingStrategy):
+    """
+    An `class`:EncodingStrategy: that marks the head and tail relation entities with their label.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "[HEAD-PER] Larry Page [/HEAD-PER] and Sergey Brin founded [TAIL-ORG] Google [/TAIL-ORG]"
+            -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and [HEAD-PER] Sergey Brin [/HEAD-PER] founded [TAIL-ORG] Google [/TAIL-ORG]"
+            -> Relation(head='Google', tail='Sergey Brin').
+    """
+
+    def encode_head(self, head: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in head)
+        return f"[HEAD-{label.value}] {space_tokenized_text} [/HEAD-{label.value}]"
+
+    def encode_tail(self, tail: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in tail)
+        return f"[TAIL-{label.value}] {space_tokenized_text} [/TAIL-{label.value}]"
+
+
+class EntityMarkerPunct(EncodingStrategy):
+    """
+    An alternate version of `class`:EntityMarker: with punctuations as control tokens.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "@ Larry Page @ and Sergey Brin founded # Google #" -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and @ Sergey Brin @ founded # Google #" -> Relation(head='Google', tail='Sergey Brin').
+    """
+
+    def encode_head(self, head: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in head)
+        return f"@ {space_tokenized_text} @"
+
+    def encode_tail(self, tail: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in tail)
+        return f"# {space_tokenized_text} #"
+
+
+class TypedEntityMarkerPunct(EncodingStrategy):
+    """
+    An alternate version of `class`:TypedEntityMarker: with punctuations as control tokens.
+
+    Example:
+        For the `founded_by` relation from `ORG` to `PER` and
+        the sentence "Larry Page and Sergey Brin founded Google .",
+        the encoded sentences and relations are
+        - "@ * PER * Larry Page @ and Sergey Brin founded # * ORG * Google #"
+            -> Relation(head='Google', tail='Larry Page')  and
+        - "Larry Page and @ * PER * Sergey Brin @ founded # * ORG * Google #"
+            -> Relation(head='Google', tail='Sergey Brin').
+    """
+
+    def encode_head(self, head: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in head)
+        return f"@ * {label.value} * {space_tokenized_text} @"
+
+    def encode_tail(self, tail: Span, label: Label) -> str:
+        space_tokenized_text: str = " ".join(token.text for token in tail)
+        return f"# ^ {label.value} ^ {space_tokenized_text} #"
 
 
 class _Entity(NamedTuple):
@@ -68,10 +228,12 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     The Relation Classifier Model builds upon a text classifier.
     The model generates an encoded sentence for each entity pair
     in the cross product of all entities in the original sentence.
-    In the encoded representation, the entities in the current entity pair are masked with special control tokens.
-    (For an example, see the docstring of the `_encode_sentence_for_training` function.)
+    In the encoded representation, the entities in the current entity pair are masked/marked with control tokens.
+    (For an example, see the docstrings of different encoding strategies, e.g. :class:`TypedEntityMarker`.)
     Then, for each encoded sentence, the model takes its document embedding and puts the resulting
     text representation(s) through a linear layer to get the class relation label.
+
+    The implemented encoding strategies are taken from this paper by Zhou et al.: https://arxiv.org/abs/2102.01373
 
     Note: Currently, the model has no multi-label support.
     """
@@ -84,10 +246,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
         entity_pair_labels: Optional[Set[Tuple[str, str]]] = None,
         entity_threshold: Optional[float] = None,
+        cross_augmentation: bool = True,
+        encoding_strategy: EncodingStrategy = TypedEntityMarker(),
         zero_tag_value: str = "O",
         allow_unk_tag: bool = True,
-        cross_augmentation: bool = True,
-        mask_type: str = "mark",
         **classifierargs,
     ) -> None:
         """
@@ -111,14 +273,15 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                                    i.e. the model classifies the relation for each entity pair
                                    in the cross product of *all* entity pairs (inefficient).
         :param entity_threshold: Only pre-labelled entities above this threshold are taken into account by the model.
-        :param zero_tag_value: The label to use for out-of-class relations
-        :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
         :param cross_augmentation: If `True`, use cross augmentation to transform `Sentence`s into `EncodedSentenece`s.
                                    When cross augmentation is enabled, the transformation functions,
                                    e.g. `transform_corpus`, generate an encoded sentence for each entity pair
                                    in the cross product of all entities in the original sentence.
                                    When disabling cross augmentation, the transform functions only generate
                                    encoded sentences for each gold relation annotation in the original sentence.
+        :param encoding_strategy: An instance of a class conforming the :class:`EncodingStrategy` protocol
+        :param zero_tag_value: The label to use for out-of-class relations
+        :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
         :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
         """
         # Set label type and prepare label dictionary
@@ -149,9 +312,25 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
         self.entity_pair_labels = entity_pair_labels
 
-        self.cross_augmentation = cross_augmentation
-        self.mask_type = mask_type
         self.entity_threshold = entity_threshold
+        self.cross_augmentation = cross_augmentation
+        self.encoding_strategy = encoding_strategy
+
+        # Add the special tokens from the encoding strategy
+        if (
+            self.encoding_strategy.add_special_tokens
+            and self.encoding_strategy.special_tokens
+            and isinstance(self.embeddings, TransformerDocumentEmbeddings)
+        ):
+            special_tokens: List[str] = list(self.encoding_strategy.special_tokens)
+            tokenizer = self.embeddings.tokenizer
+            tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
+            self.embeddings.model.resize_token_embeddings(len(tokenizer))
+
+            logger.info(
+                f"{self.__class__.__name__}: "
+                f"Added {', '.join(special_tokens)} as additional special tokens to {self.embeddings.name}"
+            )
 
         # Auto-spawn on GPU, if available
         self.to(flair.device)
@@ -222,37 +401,20 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
             yield head, tail, gold_label
 
-    def _mask(self, entity: _Entity, role: str) -> str:
-        if self.mask_type == "label-aware":
-            return f"[{role}-{entity.label.value}]"
-        if self.mask_type == "entity":
-            return f"[{role}-ENTITY]"
-        if self.mask_type == "mark":
-            return f"[[{role}-{entity.span.text}]]"
-
-        # by default, use "mark" masking
-        return f"[[{role}-{entity.span.text}]]"
-
-    def _create_masked_sentence(
+    def _encode_sentence(
         self,
         head: _Entity,
         tail: _Entity,
         gold_label: Optional[str] = None,
     ) -> EncodedSentence:
         """
-        Returns a new `Sentence` object with masked head and tail spans.
-        The label-aware mask is constructed from the head/tail span labels.
-        If provided, the masked sentence also has the corresponding gold label annotation in `self.label_type`.
-
-        Example:
-            For the `head=Google`, `tail=Larry Page` and
-            the sentence "Larry Page and Sergey Brin founded Google .",
-            the masked sentence is "[T-PER] and Sergey Brin founded [H-ORG]".
+        Returns a new `Sentence` object with masked/marked head and tail spans according to the encoding strategy.
+        If provided, the encoded sentence also has the corresponding gold label annotation from `self.label_type`.
 
         :param head: The head `_Entity`
         :param tail: The tail `_Entity`
         :param gold_label: An optional gold label of the induced relation by the head and tail entity
-        :return: The masked sentence (with gold annotations)
+        :return: The `EncodedSentence` (with gold annotations)
         """
         # Some sanity checks
         original_sentence: Sentence = head.span.sentence
@@ -262,59 +424,57 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         non_leading_head_tokens: List[Token] = head.span.tokens[1:]
         non_leading_tail_tokens: List[Token] = tail.span.tokens[1:]
 
-        # We can not use the plaintext of the head/tail span in the sentence as the mask
+        # We can not use the plaintext of the head/tail span in the sentence as the mask/marker
         # since there may be multiple occurrences of the same entity mentioned in the sentence.
         # Therefore, we use the span's position in the sentence.
-        masked_sentence_tokens: List[str] = []
+        encoded_sentence_tokens: List[str] = []
         for token in original_sentence:
 
             if token is head.span[0]:
-                masked_sentence_tokens.append(self._mask(entity=head, role="H"))
+                encoded_sentence_tokens.append(self.encoding_strategy.encode_head(head.span, head.label))
 
             elif token is tail.span[0]:
-                masked_sentence_tokens.append(self._mask(entity=tail, role="T"))
+                encoded_sentence_tokens.append(self.encoding_strategy.encode_tail(tail.span, tail.label))
 
             elif all(
                 token is not non_leading_entity_token
                 for non_leading_entity_token in itertools.chain(non_leading_head_tokens, non_leading_tail_tokens)
             ):
-                masked_sentence_tokens.append(token.text)
+                encoded_sentence_tokens.append(token.text)
 
         # Create masked sentence
-        masked_sentence: EncodedSentence = EncodedSentence(
-            " ".join(masked_sentence_tokens), use_tokenizer=SpaceTokenizer()
+        encoded_sentence: EncodedSentence = EncodedSentence(
+            " ".join(encoded_sentence_tokens), use_tokenizer=SpaceTokenizer()
         )
 
         if gold_label is not None:
             # Add gold relation annotation as sentence label
             # Using the sentence label instead of annotating a separate `Relation` object is easier to manage since,
             # during prediction, the forward pass does not need any knowledge about the entities in the sentence.
-            masked_sentence.add_label(typename=self.label_type, value=gold_label, score=1.0)
+            encoded_sentence.add_label(typename=self.label_type, value=gold_label, score=1.0)
+        encoded_sentence.copy_context_from_sentence(original_sentence)
+        return encoded_sentence
 
-        return masked_sentence
-
-    def _encode_sentence_for_inference(self, sentence: Sentence) -> Iterator[Tuple[EncodedSentence, Relation]]:
+    def _encode_sentence_for_inference(
+        self,
+        sentence: Sentence,
+    ) -> Iterator[Tuple[EncodedSentence, Relation]]:
         """
-        Yields masked entity pair sentences annotated with their gold relation for all valid entity pair permutations.
-        The created masked sentences are newly created sentences with no reference to the passed sentence.
+        Yields encoded sentences annotated with their gold relation and
+        the corresponding relation object in the original sentence for all valid entity pair permutations.
+        The created encoded sentences are newly created sentences with no reference to the passed sentence.
+
         Important properties:
-            - Every sentence has exactly one masked head and tail entity token. Therefore, every encoded sentence has
+            - Every sentence has exactly one encoded head and tail entity token. Therefore, every encoded sentence has
               **exactly** one induced relation annotation, the gold annotation or `self.zero_tag_value`.
             - The created relations have head and tail spans from the original passed sentence.
-
-        Example:
-            For the `founded_by` relation from `ORG` to `PER` and
-            the sentence "Larry Page and Sergey Brin founded Google .",
-            the masked sentences and relations are
-            - "[T-PER] and Sergey Brin founded [H-ORG]" -> Relation(head='Google', tail='Larry Page')  and
-            - "Larry Page and [T-PER] founded [H-ORG]"  -> Relation(head='Google', tail='Sergey Brin').
 
         :param sentence: A flair `Sentence` object with entity annotations
         :return: Encoded sentences annotated with their gold relation and
                  the corresponding relation in the original sentence
         """
         for head, tail, gold_label in self._entity_pair_permutations(sentence):
-            masked_sentence: EncodedSentence = self._create_masked_sentence(
+            masked_sentence: EncodedSentence = self._encode_sentence(
                 head=head,
                 tail=tail,
                 gold_label=gold_label if gold_label is not None else self.zero_tag_value,
@@ -336,7 +496,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                 else:
                     continue  # Skip generated data points that do not express an originally annotated relation
 
-            masked_sentence: EncodedSentence = self._create_masked_sentence(
+            masked_sentence: EncodedSentence = self._encode_sentence(
                 head=head,
                 tail=tail,
                 gold_label=gold_label,
@@ -348,8 +508,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         """
         Transforms sentences into encoded sentences specific to the `RelationClassifier`.
         For more information on the internal sentence transformation procedure,
-        see the `RelationClassifier` architecture docstring and
-        the `_encode_sentence_for_training` and `_encode_sentence_for_inference` docstrings.
+        see the :class:`RelationClassifier` architecture and
+        the different :class:`EncodingStrategy` variants docstrings.
 
         :param sentences: A (list) of sentence(s) to transform
         :return: A list of encoded sentences specific to the `RelationClassifier`
@@ -368,8 +528,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         Transforms a dataset into a dataset containing encoded sentences specific to the `RelationClassifier`.
         The returned dataset is stored in memory.
         For more information on the internal sentence transformation procedure,
-        see the `RelationClassifier` architecture docstring and
-        the `_encode_sentence_for_training` and `_encode_sentence_for_inference` docstrings.
+        see the :class:`RelationClassifier` architecture and
+        the different :class:`EncodingStrategy` variants docstrings.
 
         :param dataset: A dataset of sentences to transform
         :return: A dataset of encoded sentences specific to the `RelationClassifier`
@@ -383,8 +543,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         Transforms a corpus into a corpus containing encoded sentences specific to the `RelationClassifier`.
         The splits of the returned corpus are stored in memory.
         For more information on the internal sentence transformation procedure,
-        see the `RelationClassifier` architecture docstring and
-        the `_encode_sentence_for_training` and `_encode_sentence_for_inference` docstrings.
+        see the :class:`RelationClassifier` architecture and
+        the different :class:`EncodingStrategy` variants docstrings.
 
         :param corpus: A corpus of sentences to transform
         :return: A corpus of encoded sentences specific to the `RelationClassifier`
@@ -479,7 +639,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
         elif all(not isinstance(sentence, EncodedSentence) for sentence in sentences):
             # Deal with the case where all sentences are standard (non-encoded) sentences
-
+            Sentence.set_context_for_sentences(cast(List[Sentence], sentences))
             sentences_with_relation_reference: List[Tuple[EncodedSentence, Relation]] = list(
                 itertools.chain.from_iterable(self._encode_sentence_for_inference(sentence) for sentence in sentences)
             )
@@ -508,16 +668,16 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     def _get_state_dict(self) -> Dict[str, Any]:
         model_state: Dict[str, Any] = {
             **super()._get_state_dict(),
-            "embeddings": self.embeddings,
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "entity_label_types": self.entity_label_types,
             "entity_pair_labels": self.entity_pair_labels,
             "entity_threshold": self.entity_threshold,
+            "cross_augmentation": self.cross_augmentation,
+            "encoding_strategy": self.encoding_strategy,
             "zero_tag_value": self.zero_tag_value,
             "allow_unk_tag": self.allow_unk_tag,
-            "cross_augmentation": self.cross_augmentation,
-            "mask_type": self.mask_type,
         }
         return model_state
 
@@ -531,10 +691,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             entity_label_types=state["entity_label_types"],
             entity_pair_labels=state["entity_pair_labels"],
             entity_threshold=state["entity_threshold"],
+            cross_augmentation=state["cross_augmentation"],
+            encoding_strategy=state["encoding_strategy"],
             zero_tag_value=state["zero_tag_value"],
             allow_unk_tag=state["allow_unk_tag"],
-            cross_augmentation=state["cross_augmentation"],
-            mask_type=state["mask_type"],
             **kwargs,
         )
 
@@ -549,41 +709,3 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     @property
     def allow_unk_tag(self) -> bool:
         return self._allow_unk_tag
-
-
-def inspect_relations(
-    corpus: Corpus[Sentence],
-    relation_label_type: str,
-    entity_label_types: Optional[Union[Sequence[str], str]] = None,
-) -> DefaultDict[str, Counter[Tuple[str, str]]]:
-    if entity_label_types is not None and not isinstance(entity_label_types, Sequence):
-        entity_label_types = [entity_label_types]
-
-    # Dictionary of [<relation label>, <counter of relation entity labels (HEAD, TAIL)>]
-    relations: DefaultDict[str, Counter[Tuple[str, str]]] = co.defaultdict(co.Counter)
-
-    data_loader: DataLoader = DataLoader(
-        ConcatDataset(split for split in [corpus.train, corpus.dev, corpus.test] if split is not None),
-        batch_size=1,
-        num_workers=0,
-    )
-    for sentence in map(itemgetter(0), data_loader):
-        for relation in sentence.get_relations(relation_label_type):
-            entity_counter = relations[relation.get_label(relation_label_type).value]
-
-            head_relation_label: str
-            tail_relation_label: str
-            if entity_label_types is None:
-                head_relation_label = relation.first.get_label().value
-                tail_relation_label = relation.second.get_label().value
-            else:
-                head_relation_label = next(
-                    relation.first.get_label(label_type).value for label_type in entity_label_types
-                )
-                tail_relation_label = next(
-                    relation.second.get_label(label_type).value for label_type in entity_label_types
-                )
-
-            entity_counter.update([(head_relation_label, tail_relation_label)])
-
-    return relations

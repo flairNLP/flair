@@ -19,7 +19,6 @@ from tarfile import (
     TarError,
 )
 from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
-from warnings import warn
 from zipfile import BadZipFile, LargeZipFile
 
 import ftfy
@@ -31,7 +30,6 @@ from flair.data import MultiCorpus, Tokenizer
 from flair.datasets.sequence_labeling import ColumnCorpus, ColumnDataset
 from flair.file_utils import Tqdm, cached_path, unpack_file
 from flair.splitter import (
-    NewlineSentenceSplitter,
     NoSentenceSplitter,
     SciSpacySentenceSplitter,
     SentenceSplitter,
@@ -188,7 +186,10 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
     num_entities_after = sum([len(x) for x in dataset.entities_per_document.values()])
     if num_entities_before != num_entities_after:
         removed = num_entities_before - num_entities_after
-        warn(f"Corpus modified by filtering nested entities. Removed {removed} entities.")
+        logger.warning(
+            f"WARNING: Corpus modified by filtering nested entities. "
+            f"Removed {removed} entities. Keep {num_entities_after} entities."
+        )
 
 
 def bioc_to_internal(bioc_file: Path):
@@ -480,9 +481,9 @@ class HunerDataset(ColumnCorpus, ABC):
             self.sentence_splitter = sentence_splitter if sentence_splitter else SciSpacySentenceSplitter()
         else:
             if sentence_splitter:
-                warn(
-                    f"The corpus {self.__class__.__name__} has a pre-defined sentence splitting, "
-                    f"thus just the tokenizer of the given sentence splitter ist used"
+                logger.warning(
+                    f"WARNING: The corpus {self.__class__.__name__} has a pre-defined sentence splitting, "
+                    f"thus just the tokenizer of the given sentence splitter is used"
                 )
                 self.sentence_splitter.tokenizer = sentence_splitter.tokenizer
 
@@ -563,25 +564,28 @@ class BIO_INFER(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         train_file = data_folder / "train.conll"
+        test_file = data_folder / "test.conll"
 
-        if not (train_file.exists()):
+        if not (train_file.exists() and test_file.exists()):
             corpus_folder = self.download_dataset(data_folder)
-            corpus_data = self.parse_dataset(corpus_folder)
-
             sentence_splitter = NoSentenceSplitter(tokenizer=SpaceTokenizer())
 
+            train_data = self.parse_dataset(corpus_folder / "BioInfer-train.xml")
+            test_data = self.parse_dataset(corpus_folder / "BioInfer-test.xml")
+
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
-            conll_writer.write_to_conll(corpus_data, train_file)
+            conll_writer.write_to_conll(train_data, train_file)
+            conll_writer.write_to_conll(test_data, test_file)
 
         super(BIO_INFER, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
-        data_url = "http://mars.cs.utu.fi/BioInfer/files/BioInfer_corpus_1.1.1.zip"
+        data_url = "https://github.com/metalrt/ppi-dataset/archive/refs/heads/master.zip"
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, data_dir)
 
-        return data_dir / "BioInfer_corpus_1.1.1.xml"
+        return data_dir / "ppi-dataset-master/csv_output"
 
     @classmethod
     def parse_dataset(cls, original_file: Path):
@@ -592,66 +596,19 @@ class BIO_INFER(ColumnCorpus):
         sentence_elems = tree.xpath("//sentence")
         for s_id, sentence in enumerate(sentence_elems):
             sentence_id = str(s_id)
-            token_id_to_span = {}
-            sentence_text = ""
+            documents[sentence_id] = sentence.attrib["text"]
             entities_per_document[sentence_id] = []
 
-            for token in sentence.xpath(".//token"):
-                token_text = "".join(token.xpath(".//subtoken/@text"))
-                token_id = ".".join(token.attrib["id"].split(".")[1:])
-
-                if not sentence_text:
-                    token_id_to_span[token_id] = (0, len(token_text))
-                    sentence_text = token_text
-                else:
-                    token_id_to_span[token_id] = (
-                        len(sentence_text) + 1,
-                        len(token_text) + len(sentence_text) + 1,
+            for entity in sentence.xpath(".//entity"):
+                char_offsets = re.split("-|,", entity.attrib["charOffset"])
+                start_token = int(char_offsets[0])
+                end_token = int(char_offsets[-1])
+                entities_per_document[sentence_id].append(
+                    Entity(
+                        char_span=(start_token, end_token),
+                        entity_type=entity.attrib["type"],
                     )
-                    sentence_text += " " + token_text
-            documents[sentence_id] = sentence_text
-
-            entities = [
-                e for e in sentence.xpath(".//entity") if not e.attrib["type"].isupper()
-            ]  # all caps entity type apparently marks event trigger
-
-            for entity in entities:
-                token_nums = []
-                entity_character_starts = []
-                entity_character_ends = []
-
-                for subtoken in entity.xpath(".//nestedsubtoken"):
-                    token_id_parts = subtoken.attrib["id"].split(".")
-                    token_id = ".".join(token_id_parts[1:3])
-
-                    token_nums.append(int(token_id_parts[2]))
-                    entity_character_starts.append(token_id_to_span[token_id][0])
-                    entity_character_ends.append(token_id_to_span[token_id][1])
-
-                if token_nums and entity_character_starts and entity_character_ends:
-                    entity_tokens = list(zip(token_nums, entity_character_starts, entity_character_ends))
-
-                    start_token = entity_tokens[0]
-                    last_entity_token = entity_tokens[0]
-                    for entity_token in entity_tokens[1:]:
-                        if not (entity_token[0] - 1) == last_entity_token[0]:
-                            entities_per_document[sentence_id].append(
-                                Entity(
-                                    char_span=(start_token[1], last_entity_token[2]),
-                                    entity_type=entity.attrib["type"],
-                                )
-                            )
-                            start_token = entity_token
-
-                        last_entity_token = entity_token
-
-                    if start_token:
-                        entities_per_document[sentence_id].append(
-                            Entity(
-                                char_span=(start_token[1], last_entity_token[2]),
-                                entity_type=entity.attrib["type"],
-                            )
-                        )
+                )
 
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
@@ -669,17 +626,22 @@ class HUNER_GENE_BIO_INFER(HunerDataset):
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/bioinfer"
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
-        original_file = BIO_INFER.download_dataset(data_dir)
-        corpus = BIO_INFER.parse_dataset(original_file)
+        corpus_folder = BIO_INFER.download_dataset(data_dir)
+        train_data = BIO_INFER.parse_dataset(corpus_folder / "BioInfer-train.xml")
+        test_data = BIO_INFER.parse_dataset(corpus_folder / "BioInfer-test.xml")
 
         entity_type_mapping = {
             "Individual_protein": GENE_TAG,
             "Gene/protein/RNA": GENE_TAG,
             "Gene": GENE_TAG,
             "DNA_family_or_group": GENE_TAG,
+            "Protein_family_or_group": GENE_TAG,
         }
 
-        return filter_and_map_entities(corpus, entity_type_mapping)
+        train_data = filter_and_map_entities(train_data, entity_type_mapping)
+        test_data = filter_and_map_entities(test_data, entity_type_mapping)
+
+        return merge_datasets([train_data, test_data])
 
 
 class JNLPBA(ColumnCorpus):
@@ -721,9 +683,9 @@ class JNLPBA(ColumnCorpus):
             train_data_path = cached_path(train_data_url, download_dir)
             unpack_file(train_data_path, download_dir)
 
-            train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
-            train_data_path = cached_path(train_data_url, download_dir)
-            unpack_file(train_data_path, download_dir)
+            test_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
+            test_data_path = cached_path(test_data_url, download_dir)
+            unpack_file(test_data_path, download_dir)
 
             train_file = download_dir / "Genia4ERtask2.iob2"
             shutil.copy(train_file, data_folder / "train.conll")
@@ -1727,8 +1689,12 @@ class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
     HUNER version of the CHEMDNER corpus containing chemical annotations.
     """
 
+<<<<<<< HEAD
     def __init__(self, *args, download_folder=None, **kwargs):
         self.download_folder = download_folder
+=======
+    def __init__(self, *args, **kwargs):
+>>>>>>> master
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -1736,12 +1702,20 @@ class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/chemdner"
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+<<<<<<< HEAD
         self.download_folder = data_dir / "original"
         os.makedirs(str(self.download_folder), exist_ok=True)
         CHEMDNER.download_dataset(self.download_folder)
         train_data = bioc_to_internal(self.download_folder / "chemdner_corpus" / "training.bioc.xml")
         dev_data = bioc_to_internal(self.download_folder / "chemdner_corpus" / "development.bioc.xml")
         test_data = bioc_to_internal(self.download_folder / "chemdner_corpus" / "evaluation.bioc.xml")
+=======
+        os.makedirs(str(data_dir), exist_ok=True)
+        CHEMDNER.download_dataset(data_dir)
+        train_data = bioc_to_internal(data_dir / "chemdner_corpus" / "training.bioc.xml")
+        dev_data = bioc_to_internal(data_dir / "chemdner_corpus" / "development.bioc.xml")
+        test_data = bioc_to_internal(data_dir / "chemdner_corpus" / "evaluation.bioc.xml")
+>>>>>>> master
         all_data = merge_datasets([train_data, dev_data, test_data])
         all_data = filter_and_map_entities(
             all_data,
@@ -1774,13 +1748,10 @@ class IEPA(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Tokenizer = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param tokenizer: Custom implementation of :class:`Tokenizer` which
-             segments sentences into tokens (default :class:`SciSpacyTokenizer`)
         """
 
         if base_path is None:
@@ -1796,30 +1767,61 @@ class IEPA(ColumnCorpus):
 
         data_folder = base_path / dataset_name
 
-        if tokenizer is None:
-            tokenizer = SciSpacyTokenizer()
+        train_file = data_folder / "train.conll"
+        test_file = data_folder / "test.conll"
 
-        sentence_splitter = NewlineSentenceSplitter(tokenizer=tokenizer)
+        if not (train_file.exists() and test_file.exists()):
+            corpus_folder = self.download_dataset(data_folder)
+            sentence_splitter = NoSentenceSplitter(tokenizer=SpaceTokenizer())
 
-        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
-
-        if not (train_file.exists()):
-            download_dir = data_folder / "original"
-            os.makedirs(download_dir, exist_ok=True)
-            self.download_dataset(download_dir)
-
-            all_data = bioc_to_internal(download_dir / "iepa_bioc.xml")
+            train_data = self.parse_dataset(corpus_folder / "IEPA-train.xml")
+            test_data = self.parse_dataset(corpus_folder / "IEPA-test.xml")
 
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
-            conll_writer.write_to_conll(all_data, train_file)
+            conll_writer.write_to_conll(train_data, train_file)
+            conll_writer.write_to_conll(test_data, test_file)
 
         super(IEPA, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
-        data_url = "http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/iepa_bioc.xml.zip"
+        data_url = "https://github.com/metalrt/ppi-dataset/archive/refs/heads/master.zip"
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, data_dir)
+
+        return data_dir / "ppi-dataset-master/csv_output"
+
+    @classmethod
+    def parse_dataset(cls, original_file: Path):
+        documents: Dict[str, str] = {}
+        entities_per_document: Dict[str, List[Entity]] = {}
+
+        tree = etree.parse(str(original_file))
+        document_elems = tree.xpath("//document")
+        for document in document_elems:
+            document_id = "_".join(document.attrib["id"].split("."))
+            document_text = ""
+            entities_per_document[document_id] = []
+            sentence_elems = document.xpath(".//sentence")
+            for sentence in sentence_elems:
+                sentence_text = sentence.attrib["text"]
+                if document_text == "":
+                    document_text = sentence_text
+                else:
+                    document_text += " " + sentence_text
+                for entity in sentence.xpath(".//entity"):
+                    char_offsets = re.split("-|,", entity.attrib["charOffset"])
+                    start_token = int(char_offsets[0])
+                    end_token = int(char_offsets[-1])
+                    entities_per_document[document_id].append(
+                        Entity(
+                            char_span=(start_token, end_token),
+                            entity_type="Protein",
+                        )
+                    )
+            documents[document_id] = document_text
+
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class HUNER_GENE_IEPA(HunerDataset):
@@ -1834,17 +1836,17 @@ class HUNER_GENE_IEPA(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/iepa"
 
-    def get_corpus_sentence_splitter(self) -> SentenceSplitter:
-        return NewlineSentenceSplitter(tokenizer=SciSpacyTokenizer())
-
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
-        os.makedirs(str(data_dir), exist_ok=True)
-        IEPA.download_dataset(data_dir)
+        corpus_folder = IEPA.download_dataset(data_dir)
+        train_data = IEPA.parse_dataset(corpus_folder / "IEPA-train.xml")
+        test_data = IEPA.parse_dataset(corpus_folder / "IEPA-test.xml")
 
-        all_data = bioc_to_internal(data_dir / "iepa_bioc.xml")
-        all_data = filter_and_map_entities(all_data, {"Protein": GENE_TAG})
+        entity_type_mapping = {"Protein": GENE_TAG}
 
-        return all_data
+        train_data = filter_and_map_entities(train_data, entity_type_mapping)
+        test_data = filter_and_map_entities(test_data, entity_type_mapping)
+
+        return merge_datasets([train_data, test_data])
 
 
 class LINNEAUS(ColumnCorpus):
@@ -1899,7 +1901,7 @@ class LINNEAUS(ColumnCorpus):
 
     @staticmethod
     def download_and_parse_dataset(data_dir: Path):
-        data_url = "https://iweb.dl.sourceforge.net/project/linnaeus/Corpora/manual-corpus-species-1.0.tar.gz"
+        data_url = "https://sourceforge.net/projects/linnaeus/files/Corpora/manual-corpus-species-1.0.tar.gz"
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, data_dir)
 
@@ -2642,11 +2644,11 @@ class OSIRIS(ColumnCorpus):
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
-        url = "http://ibi.imim.es/OSIRIScorpusv02.tar"
+        url = "https://github.com/hu-ner/hunflair-corpora/raw/main/osiris/OSIRIScorpusv02.tar"
         data_path = cached_path(url, data_dir)
         unpack_file(data_path, data_dir)
 
-        return data_dir / "OSIRIScorpusv02"
+        return data_dir
 
     @classmethod
     def parse_dataset(cls, corpus_folder: Path, fix_annotation=True):
@@ -2706,7 +2708,7 @@ class HUNER_GENE_OSIRIS(HunerDataset):
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         original_file = OSIRIS.download_dataset(data_dir)
-        corpus = OSIRIS.parse_dataset(original_file)
+        corpus = OSIRIS.parse_dataset(original_file / "OSIRIScorpusv02")
 
         entity_type_mapping = {"ge": GENE_TAG}
         return filter_and_map_entities(corpus, entity_type_mapping)
@@ -4083,35 +4085,19 @@ class BIONLP2013_CG(BioNLPCorpus):
 
     @staticmethod
     def download_corpus(download_folder: Path) -> Tuple[Path, Path, Path]:
-        train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_training_data.tar.gz"
-        dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_development_data.tar.gz"
-        test_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_test_data.tar.gz"
+        url = "https://github.com/openbiocorpora/bionlp-st-2013-cg/archive/refs/heads/master.zip"
 
-        download_folder = download_folder / "original"
-
-        cached_path(train_url, download_folder)
-        cached_path(dev_url, download_folder)
-        cached_path(test_url, download_folder)
+        cached_path(url, download_folder)
 
         unpack_file(
-            download_folder / "BioNLP-ST_2013_CG_training_data.tar.gz",
-            download_folder,
-            keep=False,
-        )
-        unpack_file(
-            download_folder / "BioNLP-ST_2013_CG_development_data.tar.gz",
-            download_folder,
-            keep=False,
-        )
-        unpack_file(
-            download_folder / "BioNLP-ST_2013_CG_test_data.tar.gz",
+            download_folder / "master.zip",
             download_folder,
             keep=False,
         )
 
-        train_folder = download_folder / "BioNLP-ST_2013_CG_training_data"
-        dev_folder = download_folder / "BioNLP-ST_2013_CG_development_data"
-        test_folder = download_folder / "BioNLP-ST_2013_CG_test_data"
+        train_folder = download_folder / "bionlp-st-2013-cg-master/original-data/train"
+        dev_folder = download_folder / "bionlp-st-2013-cg-master/original-data/devel"
+        test_folder = download_folder / "bionlp-st-2013-cg-master/original-data/test"
 
         return train_folder, dev_folder, test_folder
 

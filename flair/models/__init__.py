@@ -10,6 +10,7 @@ from .relation_extractor_model import RelationExtractor
 from .sequence_tagger_model import MultiTagger, SequenceTagger
 from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier
+from .text_regression_model import TextRegressor
 from .word_tagger_model import WordTagger
 
 __all__ = [
@@ -27,6 +28,7 @@ __all__ = [
     "TARSClassifier",
     "TARSTagger",
     "TextClassifier",
+    "TextRegressor",
     "ClusteringModel",
     "MultitaskModel",
 ]

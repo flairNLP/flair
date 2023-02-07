@@ -2,6 +2,7 @@ from typing import Any, Dict, List
 
 from flair.embeddings import (
     DocumentCNNEmbeddings,
+    DocumentLMEmbeddings,
     DocumentPoolEmbeddings,
     DocumentRNNEmbeddings,
     FlairEmbeddings,
@@ -12,6 +13,7 @@ from tests.embedding_test_utils import BaseEmbeddingsTest
 
 word: TokenEmbeddings = WordEmbeddings("turian")
 flair_embedding: TokenEmbeddings = FlairEmbeddings("news-forward-fast")
+flair_embedding_back: TokenEmbeddings = FlairEmbeddings("news-backward-fast")
 
 
 class BaseDocumentsViaWordEmbeddingsTest(BaseEmbeddingsTest):
@@ -56,3 +58,9 @@ class TestDocumentCNNEmbeddings(BaseDocumentsViaWordEmbeddingsTest):
         kernels=((50, 2), (50, 3)),
     )
     valid_args = [dict(reproject_words_dimension=None), dict(reproject_words_dimension=100)]
+
+
+class TestDocumentLMEmbeddings(BaseDocumentsViaWordEmbeddingsTest):
+    embedding_cls = DocumentLMEmbeddings
+    base_embeddings = [flair_embedding, flair_embedding_back]
+    default_args: Dict[str, Any] = dict()

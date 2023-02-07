@@ -160,6 +160,7 @@ class JapaneseTokenizer(Tokenizer):
             )
             log.warning('- Install konoha with "pip install konoha[{tokenizer_name}]"')
             log.warning('  - You can choose tokenizer from ["mecab", "janome", "sudachi"].')
+            log.warning("Note that we Flair support only konoha<5.0.0,>=4.0.0")
             log.warning("-" * 100)
             exit()
 

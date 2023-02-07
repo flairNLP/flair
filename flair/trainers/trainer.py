@@ -123,6 +123,7 @@ class ModelTrainer:
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
         scheduler_state_dict: Optional[Dict[str, Any]] = None,
         save_optimizer_state: bool = False,
+        shuffle_first_epoch: bool = False,
         **kwargs,
     ) -> dict:
         """
@@ -479,10 +480,15 @@ class ModelTrainer:
 
                 start_time = time.time()
 
+                # if shuffle_first_epoch==False, the first epoch is not shuffled
+                shuffle_data_this_epoch = shuffle
+                if not shuffle_first_epoch and epoch == 1:
+                    shuffle_data_this_epoch = False
+
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
-                    shuffle=shuffle if epoch > 1 else False,  # never shuffle the first epoch
+                    shuffle=shuffle_first_epoch,
                     num_workers=0 if num_workers is None else num_workers,
                     sampler=sampler,
                 )
@@ -556,13 +562,13 @@ class ModelTrainer:
                         lr_info = ",".join([f"{lr:.6f}" for lr in current_learning_rate])
 
                         intermittent_loss = train_loss / average_over if average_over > 0 else train_loss / seen_batches
-
+                        end_time = time.time()
                         log.info(
                             f"epoch {epoch}"
                             f" - iter {seen_batches}/{total_number_of_batches}"
                             f" - loss {intermittent_loss:.8f}"
-                            f" - time (sec): {(time.time() - start_time):.2f}"
-                            f" - samples/sec: {average_over / (time.time() - start_time):.2f}"
+                            f" - time (sec): {end_time - start_time:.2f}"
+                            f" - samples/sec: {average_over / (end_time - start_time):.2f}"
                             f" - lr: {lr_info}{momentum_info}"
                         )
                         iteration = epoch * total_number_of_batches + batch_no
@@ -599,8 +605,13 @@ class ModelTrainer:
                         gold_label_dictionary=gold_label_dictionary_for_eval,
                         exclude_labels=exclude_labels,
                     )
-                    result_line += f"\t{train_eval_result.log_line}"
-
+                    result_line += f"\t{train_eval_result.loss}\t{train_eval_result.log_line}"
+                    log.info(
+                        f"TRAIN : loss {train_eval_result.loss} -"
+                        f" {main_evaluation_metric[1]}"
+                        f" ({main_evaluation_metric[0]}) "
+                        f" {round(train_eval_result.main_score, 4)}"
+                    )
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.train, embeddings_storage_mode, dynamic_embeddings)
 
@@ -844,6 +855,8 @@ class ModelTrainer:
         finally:
             if use_tensorboard:
                 writer.close()
+        optimizer.zero_grad(set_to_none=True)
+        del optimizer
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
