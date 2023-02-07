@@ -1689,12 +1689,7 @@ class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
     HUNER version of the CHEMDNER corpus containing chemical annotations.
     """
 
-<<<<<<< HEAD
-    def __init__(self, *args, download_folder=None, **kwargs):
-        self.download_folder = download_folder
-=======
     def __init__(self, *args, **kwargs):
->>>>>>> master
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -1702,20 +1697,11 @@ class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/chemdner"
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
-<<<<<<< HEAD
-        self.download_folder = data_dir / "original"
-        os.makedirs(str(self.download_folder), exist_ok=True)
-        CHEMDNER.download_dataset(self.download_folder)
-        train_data = bioc_to_internal(self.download_folder / "chemdner_corpus" / "training.bioc.xml")
-        dev_data = bioc_to_internal(self.download_folder / "chemdner_corpus" / "development.bioc.xml")
-        test_data = bioc_to_internal(self.download_folder / "chemdner_corpus" / "evaluation.bioc.xml")
-=======
         os.makedirs(str(data_dir), exist_ok=True)
         CHEMDNER.download_dataset(data_dir)
         train_data = bioc_to_internal(data_dir / "chemdner_corpus" / "training.bioc.xml")
         dev_data = bioc_to_internal(data_dir / "chemdner_corpus" / "development.bioc.xml")
         test_data = bioc_to_internal(data_dir / "chemdner_corpus" / "evaluation.bioc.xml")
->>>>>>> master
         all_data = merge_datasets([train_data, dev_data, test_data])
         all_data = filter_and_map_entities(
             all_data,
