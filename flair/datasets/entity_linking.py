@@ -20,7 +20,7 @@ class ZELDA(MultiFileColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = False,
-        column_format={0: "text", 2: "ner"},
+        column_format={0: "text", 2: "nel"},
         **corpusargs,
     ):
         if not base_path:
