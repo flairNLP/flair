@@ -800,7 +800,8 @@ class ONTONOTES(ColumnCorpus):
             self,
             version: str = "v4",
             language: str = "english",
-            in_memory: bool = True
+            in_memory: bool = True,
+            **corpusargs,
     ):
         assert language in ["english", "chinese", "arabic"]
         assert version in ["v4", "v12"]
@@ -828,7 +829,7 @@ class ONTONOTES(ColumnCorpus):
                         else:
                             zip_ref.extract(f, path=data_folder)
 
-        if not f"splits/{version}/{language}" in os.listdir(data_folder):
+        if not os.path.exists(data_folder/ f"splits/{version}/{language}"):
             log.info(f"OntoNotes splits for {version}/{language} have not been generated yet, generating it now.")
             import glob
 
@@ -1097,7 +1098,8 @@ class ONTONOTES(ColumnCorpus):
             data_folder / f"splits/{version}/{language}",
             column_format=column_format,
             in_memory=in_memory,
-            column_delimiter="\t"
+            column_delimiter="\t",
+            **corpusargs
         )
 
 
