@@ -813,7 +813,7 @@ class ColumnDataset(FlairDataset):
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace() or line == ""
         # document boundary is treated as a sperate sentence:
-        sentence_completed |= (line.strip() == self.document_separator_line)
+        sentence_completed |= line.strip() == self.document_separator_line
         return sentence_completed
 
     def is_in_memory(self) -> bool:
