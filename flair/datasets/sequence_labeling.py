@@ -1149,11 +1149,7 @@ class CONLL_2012(MultiFileColumnCorpus):
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
 
-        data_folder = self._get_data_folder(base_path)
-        archive_url = "https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded"
-
-        if not data_folder.exists():
-            unpack_file(cached_path(archive_url, data_folder), data_folder.parent, "zip", False)
+        data_folder = self._ensure_data_downloaded(base_path)
 
         load_spec = dict(
             version=version,
@@ -1178,30 +1174,43 @@ class CONLL_2012(MultiFileColumnCorpus):
         )
 
     @classmethod
-    def _get_data_folder(cls, base_path: Union[str, Path] = None) -> Path:
+    def _ensure_data_downloaded(cls, base_path: Union[str, Path] = None) -> Path:
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
             base_path = Path(base_path)
 
-        return base_path / "conll-2012"
+        data_folder = base_path / "conll-2012"
+
+        archive_url = "https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded"
+
+        if not data_folder.exists():
+            unpack_file(cached_path(archive_url, data_folder), data_folder.parent, "zip", False)
+
+        return data_folder
 
     @classmethod
     def _get_domains_path(
         cls,
-        base_path: Union[str, Path] = None,
+        data_folder: Path,
         portion: str = "train",
-        *,
         version: str = "v12",
         language: str = "english",
     ) -> Path:
-        data_folder = cls._get_data_folder(base_path)
-
         return data_folder / version / "data" / cls.portion_dirs[portion] / "data" / language / "annotations"
 
     @classmethod
-    def get_available_domains(cls, **kw) -> List[str]:
-        domains_path = cls._get_domains_path(**kw)
+    def get_available_domains(
+        cls,
+        base_path: Union[str, Path] = None,
+        portion: str = "train",
+        version: str = "v12",
+        language: str = "english",
+    ) -> List[str]:
+        data_folder = cls._ensure_data_downloaded()
+
+        domains_path = cls._get_domains_path(data_folder, portion=portion, version=version, language=language)
+
         return [domain_path.name for domain_path in domains_path.glob("*")]
 
     @classmethod
