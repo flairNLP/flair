@@ -317,6 +317,7 @@ class MultiFileColumnCorpus(Corpus):
                         preprocess_bioes_tags=preprocess_bioes_tags,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
+                        span_level_tag_columns=span_level_tag_columns,
                         default_whitespace_after=default_whitespace_after,
                     )
                     for train_file in train_files
@@ -343,6 +344,7 @@ class MultiFileColumnCorpus(Corpus):
                         preprocess_bioes_tags=preprocess_bioes_tags,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
+                        span_level_tag_columns=span_level_tag_columns,
                         default_whitespace_after=default_whitespace_after,
                     )
                     for test_file in test_files
@@ -369,6 +371,7 @@ class MultiFileColumnCorpus(Corpus):
                         preprocess_bioes_tags=preprocess_bioes_tags,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
+                        span_level_tag_columns=span_level_tag_columns,
                         default_whitespace_after=default_whitespace_after,
                     )
                     for dev_file in dev_files
