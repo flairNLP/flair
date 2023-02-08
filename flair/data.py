@@ -340,7 +340,7 @@ class EntityLinkingLabel(Label):
         concept_name: str,
         score: float = 1.0,
         additional_ids: Optional[Union[List[str], str]] = None,
-        ontology: Optional[str] = None,
+        database: Optional[str] = None,
     ):
         super().__init__(id, score)
         self.span = span
@@ -348,7 +348,7 @@ class EntityLinkingLabel(Label):
         if isinstance(additional_ids, str):
             additional_ids = [additional_ids]
         self.additional_ids = additional_ids
-        self.ontology = ontology
+        self.database = database
 
     def spawn(self, value: str, score: float = 1.0):
         return EntityLinkingLabel(
@@ -380,7 +380,7 @@ class EntityLinkingLabel(Label):
             self.value == other.value
             and self.span.id_text == other.span.id_text
             and self.concept_name == other.concept_name
-            and self.ontology == other.ontology
+            and self.database == other.database
             and self.score == other.score
         )
 
