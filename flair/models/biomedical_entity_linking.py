@@ -726,6 +726,39 @@ class BiEncoderEntityLiker:
         print("Saving dictionary into cached file {}".format(cache_folder))
 
 
+class ExactStringMatchEntityLinker:
+    def __init__(self):
+        self.dictionary = None
+
+    def load_model(
+        self,
+        dictionary_name_or_path: str,
+    ):
+        # use provided dictionary
+        if dictionary_name_or_path == "ctd-disease":
+            dictionary_data = NEL_CTD_DISEASE_DICT().data
+        elif dictionary_name_or_path == "ctd-chemical":
+            dictionary_data = NEL_CTD_CHEMICAL_DICT().data
+        elif dictionary_name_or_path == "ncbi-gene":
+            dictionary_data = NEL_NCBI_GENE_DICT().data
+        elif dictionary_name_or_path == "ncbi-taxonomy":
+            dictionary_data = NEL_NCBI_TAXONOMY_DICT().data
+        # use custom dictionary file
+        else:
+            dictionary_data = DictionaryDataset(
+                dictionary_path=dictionary_name_or_path
+            ).data
+
+        # make dictionary from array of tuples (entity, entity_id)
+        self.dictionary = {name: cui for name, cui in dictionary_data}
+
+    def get_predictions(self, mention: str, topk) -> np.ndarray:
+        if mention in self.dictionary:
+            return np.array([(mention, self.dictionary[mention], 1.0)])
+        else:
+            return []
+
+
 class MultiBiEncoderEntityLinker:
     """
     Biomedical Entity Linker for HunFlair
@@ -763,7 +796,7 @@ class MultiBiEncoderEntityLinker:
         biomedical entity mentions
         :param model_names: List of names of pretrained models to use. Possible values for pretrained models are:
         chemical, disease, gene, sapbert-bc5cdr-dissaease, sapbert-ncbi-disease, sapbert-bc5cdr-chemical, biobert-bc5cdr-disease,
-        biobert-ncbi-disease, biobert-bc5cdr-chemical, biosyn-biobert-bc2gn, biosyn-sapbert-bc2gn, sapbert
+        biobert-ncbi-disease, biobert-bc5cdr-chemical, biosyn-biobert-bc2gn, biosyn-sapbert-bc2gn, sapbert, exact-string-match
         :param dictionary_path: Name of one of the provided dictionaries listing all possible ids and their synonyms
         or a path to a dictionary file with each line in the format: id||name, with one line for each name of a concept.
         Possible values for dictionaries are: chemical, ctd-chemical, disease, bc5cdr-disease, gene, cnbci-gene,
@@ -801,24 +834,30 @@ class MultiBiEncoderEntityLinker:
         for model_name, dictionary_name_or_path in zip(
             model_names, dictionary_names_or_paths
         ):
-            model = BiEncoderEntityLiker(
-                use_sparse_embeds=use_sparse_and_dense_embeds,
-                max_length=max_length,
-                index_use_cuda=index_use_cuda,
-            )
-
             # get the paths for the model and dictionary
             model_path = cls.__get_model_path(model_name, use_sparse_and_dense_embeds)
             dictionary_path = cls.__get_dictionary_path(
                 dictionary_name_or_path, model_name=model_name
             )
 
-            model.load_model(
-                model_name_or_path=model_path,
-                dictionary_name_or_path=dictionary_path,
-                mean_centering=False,
-                batch_size=batch_size,
-            )
+            if model_path == "exact-string-match":
+                model = ExactStringMatchEntityLinker()
+                model.load_model(dictionary_path)
+
+            else:
+                model = BiEncoderEntityLiker(
+                    use_sparse_embeds=use_sparse_and_dense_embeds,
+                    max_length=max_length,
+                    index_use_cuda=index_use_cuda,
+                )
+
+                model.load_model(
+                    model_name_or_path=model_path,
+                    dictionary_name_or_path=dictionary_path,
+                    mean_centering=False,
+                    batch_size=batch_size,
+                )
+
             models.append(model)
 
         # load ab3p model
@@ -849,6 +888,8 @@ class MultiBiEncoderEntityLinker:
             model_path = "dmis-lab/biosyn-" + model_name
         elif model_name == "sapbert":
             model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
+        elif model_name == "exact-string-match":
+            model_path = "exact-string-match"
         elif use_sparse_and_dense_embeds:
             if model_name == "disease":
                 model_path = "dmis-lab/biosyn-sapbert-bc5cdr-disease"
