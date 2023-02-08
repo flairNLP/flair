@@ -664,9 +664,6 @@ class ColumnDataset(FlairDataset):
             if len(lines) > 0 and self.__line_completes_sentence(line):
                 break
 
-            if line.strip() == self.document_separator_line:
-                break
-
             line = file.readline()
         return lines
 
@@ -681,6 +678,8 @@ class ColumnDataset(FlairDataset):
         sentence: Sentence
 
         if len(lines) == 1 and lines[0].strip() == self.document_separator_line:
+            # In CoNNL 2012, document boundaries are not marked by a specific token, but a line ("#end document"
+            # without any of the other columns -> treating this line as a token will result in a parsing error)
             sentence = Sentence(text=[Token(lines[0])])
             sentence.is_document_boundary = True
 
@@ -813,6 +812,8 @@ class ColumnDataset(FlairDataset):
 
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace() or line == ""
+        # document boundary is treated as a sperate sentence:
+        sentence_completed |= (line.strip() == self.document_separator_line)
         return sentence_completed
 
     def is_in_memory(self) -> bool:
