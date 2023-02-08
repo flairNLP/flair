@@ -1200,7 +1200,7 @@ class CONLL_2012(MultiFileColumnCorpus):
         return data_folder / version / "data" / cls.portion_dirs[portion] / "data" / language / "annotations"
 
     @classmethod
-    def get_availabl_domains(cls, **kw) -> List[str]:
+    def get_available_domains(cls, **kw) -> List[str]:
         domains_path = cls._get_domains_path(**kw)
         return [domain_path.name for domain_path in domains_path.glob("*")]
 
