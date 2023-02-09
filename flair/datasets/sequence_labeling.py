@@ -7,7 +7,18 @@ import shutil
 import zipfile
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Iterator, Tuple, DefaultDict
+from typing import (
+    Any,
+    DefaultDict,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 from torch.utils.data import ConcatDataset, Dataset
 
@@ -795,312 +806,412 @@ class ColumnDataset(FlairDataset):
         return sentence
 
 
-class ONTONOTES(ColumnCorpus):
+class ONTONOTES(MultiFileColumnCorpus):
     def __init__(
-            self,
-            version: str = "v4",
-            language: str = "english",
-            in_memory: bool = True,
-            **corpusargs,
+        self,
+        base_path: Union[str, Path] = None,
+        version: str = "v4",
+        language: str = "english",
+        domain: Union[None, str, List[str], Dict[str, Union[None, str, List[str]]]] = None,
+        in_memory: bool = True,
+        **corpusargs,
     ):
-        assert language in ["english", "chinese", "arabic"]
         assert version in ["v4", "v12"]
         if version == "v12":
             assert language == "english"
+        else:
+            assert language in ["english", "chinese", "arabic"]
 
         column_format = {0: "text", 1: "pos", 2: "ner"}
 
-        base_path = flair.cache_root / "datasets"
-        dataset_name = self.__class__.__name__.lower()
-        data_folder = base_path / dataset_name
-        if not data_folder.exists():
-            log.info("OntoNotes dataset not found, downloading.")
-            dl_path = "https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded"
-            dl_dir = cached_path(dl_path, Path("datasets") / dataset_name)
+        processed_data_path = self._ensure_data_processed(base_path, language, version)
 
-            if not "conll-2012" in os.listdir(data_folder):
-                import zipfile
-                from tqdm import tqdm
-                log.info("OntoNotes dataset has not been extracted yet, extracting it now. This might take a while.")
-                with zipfile.ZipFile(dl_dir, "r") as zip_ref:
-                    for f in tqdm(zip_ref.namelist()):
-                        if f.endswith('/'):
-                            os.makedirs(data_folder / f)
-                        else:
-                            zip_ref.extract(f, path=data_folder)
+        kw = dict(version=version, language=language, domain=domain, processed_data_path=processed_data_path)
 
-        if not os.path.exists(data_folder/ f"splits/{version}/{language}"):
-            log.info(f"OntoNotes splits for {version}/{language} have not been generated yet, generating it now.")
-            import glob
-
-            def _process_coref_span_annotations_for_word(
-                    label: str,
-                    word_index: int,
-                    clusters: DefaultDict[int, List[Tuple[int, int]]],
-                    coref_stacks: DefaultDict[int, List[int]],
-            ) -> None:
-                """
-                For a given coref label, add it to a currently open span(s), complete a span(s) or
-                ignore it, if it is outside of all spans. This method mutates the clusters and coref_stacks
-                dictionaries.
-                # Parameters
-                label : `str`
-                    The coref label for this word.
-                word_index : `int`
-                    The word index into the sentence.
-                clusters : `DefaultDict[int, List[Tuple[int, int]]]`
-                    A dictionary mapping cluster ids to lists of inclusive spans into the
-                    sentence.
-                coref_stacks : `DefaultDict[int, List[int]]`
-                    Stacks for each cluster id to hold the start indices of active spans (spans
-                    which we are inside of when processing a given word). Spans with the same id
-                    can be nested, which is why we collect these opening spans on a stack, e.g:
-                    [Greg, the baker who referred to [himself]_ID1 as 'the bread man']_ID1
-                """
-                if label != "-":
-                    for segment in label.split("|"):
-                        # The conll representation of coref spans allows spans to
-                        # overlap. If spans end or begin at the same word, they are
-                        # separated by a "|".
-                        if segment[0] == "(":
-                            # The span begins at this word.
-                            if segment[-1] == ")":
-                                # The span begins and ends at this word (single word span).
-                                cluster_id = int(segment[1:-1])
-                                clusters[cluster_id].append((word_index, word_index))
-                            else:
-                                # The span is starting, so we record the index of the word.
-                                cluster_id = int(segment[1:])
-                                coref_stacks[cluster_id].append(word_index)
-                        else:
-                            # The span for this id is ending, but didn't start at this word.
-                            # Retrieve the start index from the document state and
-                            # add the span to the clusters for this id.
-                            cluster_id = int(segment[:-1])
-                            start = coref_stacks[cluster_id].pop()
-                            clusters[cluster_id].append((start, word_index))
-
-            def _process_span_annotations_for_word(
-                    annotations: List[str],
-                    span_labels: List[List[str]],
-                    current_span_labels: List[Optional[str]],
-            ) -> None:
-                """
-                Given a sequence of different label types for a single word and the current
-                span label we are inside, compute the BIO tag for each label and append to a list.
-                # Parameters
-                annotations : `List[str]`
-                    A list of labels to compute BIO tags for.
-                span_labels : `List[List[str]]`
-                    A list of lists, one for each annotation, to incrementally collect
-                    the BIO tags for a sequence.
-                current_span_labels : `List[Optional[str]]`
-                    The currently open span per annotation type, or `None` if there is no open span.
-                """
-                for annotation_index, annotation in enumerate(annotations):
-                    # strip all bracketing information to
-                    # get the actual propbank label.
-                    label = annotation.strip("()*")
-
-                    if "(" in annotation:
-                        # Entering into a span for a particular semantic role label.
-                        # We append the label and set the current span for this annotation.
-                        bio_label = "B-" + label
-                        span_labels[annotation_index].append(bio_label)
-                        current_span_labels[annotation_index] = label
-                    elif current_span_labels[annotation_index] is not None:
-                        # If there's no '(' token, but the current_span_label is not None,
-                        # then we are inside a span.
-                        bio_label = "I-" + current_span_labels[annotation_index]
-                        span_labels[annotation_index].append(bio_label)
-                    else:
-                        # We're outside a span.
-                        span_labels[annotation_index].append("O")
-                    # Exiting a span, so we reset the current span label for this annotation.
-                    if ")" in annotation:
-                        current_span_labels[annotation_index] = None
-
-            def _conll_rows_to_sentence(conll_rows: List[str]) -> Dict:
-                document_id: str = None
-                sentence_id: int = None
-                # The words in the sentence.
-                sentence: List[str] = []
-                # The pos tags of the words in the sentence.
-                pos_tags: List[str] = []
-                # the pieces of the parse tree.
-                parse_pieces: List[str] = []
-                # The lemmatised form of the words in the sentence which
-                # have SRL or word sense information.
-                predicate_lemmas: List[str] = []
-                # The FrameNet ID of the predicate.
-                predicate_framenet_ids: List[str] = []
-                # The sense of the word, if available.
-                word_senses: List[float] = []
-                # The current speaker, if available.
-                speakers: List[str] = []
-
-                verbal_predicates: List[str] = []
-                span_labels: List[List[str]] = []
-                current_span_labels: List[str] = []
-
-                # Cluster id -> List of (start_index, end_index) spans.
-                clusters: DefaultDict[int, List[Tuple[int, int]]] = defaultdict(list)
-                # Cluster id -> List of start_indices which are open for this id.
-                coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
-
-                for index, row in enumerate(conll_rows):
-                    conll_components = row.split()
-
-                    document_id = conll_components[0]
-                    sentence_id = int(conll_components[1])
-                    word = conll_components[3]
-                    pos_tag = conll_components[4]
-                    parse_piece = conll_components[5]
-
-                    # Replace brackets in text and pos tags
-                    # with a different token for parse trees.
-                    if pos_tag != "XX" and word != "XX":
-                        if word == "(":
-                            parse_word = "-LRB-"
-                        elif word == ")":
-                            parse_word = "-RRB-"
-                        else:
-                            parse_word = word
-                        if pos_tag == "(":
-                            pos_tag = "-LRB-"
-                        if pos_tag == ")":
-                            pos_tag = "-RRB-"
-                        (left_brackets, right_hand_side) = parse_piece.split("*")
-                        # only keep ')' if there are nested brackets with nothing in them.
-                        right_brackets = right_hand_side.count(")") * ")"
-                        parse_piece = f"{left_brackets} ({pos_tag} {parse_word}) {right_brackets}"
-                    else:
-                        # There are some bad annotations in the CONLL data.
-                        # They contain no information, so to make this explicit,
-                        # we just set the parse piece to be None which will result
-                        # in the overall parse tree being None.
-                        parse_piece = None
-
-                    lemmatised_word = conll_components[6]
-                    framenet_id = conll_components[7]
-                    word_sense = conll_components[8]
-                    speaker = conll_components[9]
-
-                    if not span_labels:
-                        # If this is the first word in the sentence, create
-                        # empty lists to collect the NER and SRL BIO labels.
-                        # We can't do this upfront, because we don't know how many
-                        # components we are collecting, as a sentence can have
-                        # variable numbers of SRL frames.
-                        span_labels = [[] for _ in conll_components[10:-1]]
-                        # Create variables representing the current label for each label
-                        # sequence we are collecting.
-                        current_span_labels = [None for _ in conll_components[10:-1]]
-
-                    _process_span_annotations_for_word(conll_components[10:-1], span_labels,
-                                                            current_span_labels)
-
-                    # If any annotation marks this word as a verb predicate,
-                    # we need to record its index. This also has the side effect
-                    # of ordering the verbal predicates by their location in the
-                    # sentence, automatically aligning them with the annotations.
-                    word_is_verbal_predicate = any("(V" in x for x in conll_components[11:-1])
-                    if word_is_verbal_predicate:
-                        verbal_predicates.append(word)
-
-                    _process_coref_span_annotations_for_word(conll_components[-1], index, clusters,
-                                                                  coref_stacks)
-
-                    sentence.append(word)
-                    pos_tags.append(pos_tag)
-                    parse_pieces.append(parse_piece)
-                    predicate_lemmas.append(lemmatised_word if lemmatised_word != "-" else None)
-                    predicate_framenet_ids.append(framenet_id if framenet_id != "-" else None)
-                    word_senses.append(float(word_sense) if word_sense != "-" else None)
-                    speakers.append(speaker if speaker != "-" else None)
-
-                named_entities = span_labels[0]
-                srl_frames = [(predicate, labels) for predicate, labels in zip(verbal_predicates, span_labels[1:])]
-
-                if all(parse_pieces):
-                    parse_tree = "".join(parse_pieces)
-                else:
-                    parse_tree = None
-                coref_span_tuples = {(cluster_id, span) for cluster_id, span_list in clusters.items() for span in
-                                     span_list}
-                return {
-                    "document_id": document_id,
-                    "sentence_id": sentence_id,
-                    "sentence": sentence,
-                    "pos_tags": pos_tags,
-                    "parse_tree": parse_tree,
-                    "predicate_lemmas": predicate_lemmas,
-                    "predicate_framenet_ids": predicate_framenet_ids,
-                    "word_senses": word_senses,
-                    "speakers": speakers,
-                    "named_entities": named_entities,
-                    "srl_frames": srl_frames,
-                    "coref_span_tuples": coref_span_tuples
-                }
-
-            def dataset_document_iterator(file_path: str) -> Iterator[List]:
-                """
-                An iterator over CONLL formatted files which yields documents, regardless
-                of the number of document annotations in a particular file. This is useful
-                for conll data which has been preprocessed, such as the preprocessing which
-                takes place for the 2012 CONLL Coreference Resolution task.
-                """
-                with open(file_path, "r", encoding="utf8") as open_file:
-                    conll_rows = []
-                    document: List = []
-                    for line in open_file:
-                        line = line.strip()
-                        if line != "" and not line.startswith("#"):
-                            # Non-empty line. Collect the annotation.
-                            conll_rows.append(line)
-                        else:
-                            if conll_rows:
-                                document.append(_conll_rows_to_sentence(conll_rows))
-                                conll_rows = []
-                        if line.startswith("#end document"):
-                            yield document
-                            document = []
-                    if document:
-                        # Collect any stragglers or files which might not
-                        # have the '#end document' format for the end of the file.
-                        yield document
-
-            def sentence_iterator(file_path: str) -> Iterator:
-                """
-                An iterator over the sentences in an individual CONLL formatted file.
-                """
-                for document in dataset_document_iterator(file_path):
-                    for sentence in document:
-                        yield sentence
-
-            for split in ["train", "development", "test"]:
-                split_dir = os.path.join(data_folder, f"conll-2012/{version}/data/{split}/data/{language}")
-                conll_files = sorted(glob.glob(os.path.join(split_dir, "**/*gold_conll"), recursive=True))
-
-                if not os.path.exists(data_folder / f"splits/{version}/{language}"):
-                    os.makedirs(data_folder / f"splits/{version}/{language}")
-
-                log.info(f"Generating {split} split for {version}/{language}")
-                with open(data_folder / f"splits/{version}/{language}/{split}", "w") as f:
-                    for idx, conll_file in enumerate(conll_files):
-                        for sent in sentence_iterator(conll_file):
-                            for token, pos_tag, ner_tag in zip(sent["sentence"], sent["pos_tags"], sent["named_entities"]):
-                                f.write(token + "\t" + pos_tag + "\t" + ner_tag + "\n")
-                            f.write("\n")
-
+        dev_files = list(self._get_processed_file_paths(split="development", **kw))
+        train_files = list(self._get_processed_file_paths(split="train", **kw))
+        test_files = list(self._get_processed_file_paths(split="test", **kw))
 
         super(ONTONOTES, self).__init__(
-            data_folder / f"splits/{version}/{language}",
+            dev_files=dev_files,
+            train_files=train_files,
+            test_files=test_files,
+            name="/".join((self.__class__.__name__, language, version)),
             column_format=column_format,
             in_memory=in_memory,
             column_delimiter="\t",
-            **corpusargs
+            **corpusargs,
         )
+
+    @classmethod
+    def get_available_domains(
+        cls,
+        base_path: Union[str, Path] = None,
+        version: str = "v12",
+        language: str = "english",
+        split: str = "train",
+    ) -> List[str]:
+        processed_data_path = cls._ensure_data_processed(base_path=base_path, language=language, version=version)
+
+        processed_split_path = processed_data_path / "splits" / version / language / split
+
+        return [domain_path.name for domain_path in processed_split_path.iterdir()]
+
+    @classmethod
+    def _get_processed_file_paths(
+        cls,
+        processed_data_path: Path,
+        split: str = "train",
+        version: str = "v12",
+        language: str = "english",
+        domain: Union[str, List[str], Dict[str, Union[None, str, List[str]]]] = None,
+    ) -> Iterable[Path]:
+        processed_split_path = processed_data_path / "splits" / version / language / split
+
+        if domain is None:
+            # use all domains
+            assert processed_split_path.exists(), f"Processed data not found (expected at: {processed_split_path})"
+            yield from sorted(processed_split_path.rglob("*"))
+
+        elif isinstance(domain, str):
+            domain_path = processed_split_path / domain
+            assert domain_path.exists(), f"Processed data not found (expected at: {domain_path})"
+            yield from sorted(domain_path.rglob("*"))
+
+        elif isinstance(domain, list):
+            for d in domain:
+                domain_path = processed_split_path / d
+                assert domain_path.exists(), f"Processed data not found (expected at: {domain_path})"
+                yield from sorted(domain_path.rglob("*"))
+
+        else:
+            assert isinstance(domain, dict)
+
+            for d, sources in domain.items():
+                domain_path = processed_split_path / d
+
+                assert domain_path.exists(), f"Processed data not found (expected at: {domain_path})"
+
+                if sources is None:
+                    yield from sorted(domain_path.rglob("*"))
+
+                elif isinstance(sources, str):
+                    source_path = domain_path / sources
+                    assert source_path.exists(), f"Processed data not found (expected at: {source_path})"
+                    yield source_path
+
+                else:
+                    assert isinstance(sources, list)
+
+                    for s in sources:
+                        source_path = domain_path / s
+                        assert source_path.exists(), f"Processed data not found (expected at: {source_path})"
+                        yield source_path
+
+    @classmethod
+    def _ensure_data_processed(cls, base_path, language: str, version: str):
+        raw_data_path = cls._ensure_data_downloaded(base_path)
+
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        dataset_name = cls.__name__.lower()
+
+        processed_data_path = base_path / dataset_name
+
+        processed_split_path = processed_data_path / "splits" / version / language
+
+        if not processed_split_path.exists():
+            log.info(f"OntoNotes splits for {version}/{language} have not been generated yet, generating it now.")
+
+            for split in ["train", "development", "test"]:
+                log.info(f"Generating {split} split for {version}/{language}")
+
+                raw_split_path = raw_data_path / version / "data" / split / "data" / language / "annotations"
+
+                # iter over all domains / sources and create target files
+
+                for raw_domain_path in raw_split_path.iterdir():
+                    for raw_source_path in raw_domain_path.iterdir():
+                        conll_files = sorted(raw_source_path.rglob("*gold_conll"))
+
+                        processed_source_path = processed_split_path / split / raw_domain_path.name / raw_source_path.name
+                        processed_source_path.parent.mkdir(parents=True, exist_ok=True)
+
+                        with open(processed_source_path, "w") as f:
+                            for conll_file in conll_files:
+                                for sent in cls.sentence_iterator(conll_file):
+                                    for row in zip(sent["sentence"], sent["pos_tags"], sent["named_entities"]):
+                                        f.write("\t".join(row) + "\n")
+                                    f.write("\n")
+        return processed_data_path
+
+    @classmethod
+    def _ensure_data_downloaded(cls, base_path: Union[str, Path] = None) -> Path:
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        data_folder = base_path / "conll-2012"
+
+        archive_url = "https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded"
+
+        if not data_folder.exists():
+            unpack_file(cached_path(archive_url, data_folder), data_folder.parent, "zip", False)
+
+        return data_folder
+
+    @classmethod
+    def _process_coref_span_annotations_for_word(
+        cls,
+        label: str,
+        word_index: int,
+        clusters: DefaultDict[int, List[Tuple[int, int]]],
+        coref_stacks: DefaultDict[int, List[int]],
+    ) -> None:
+        """
+        For a given coref label, add it to a currently open span(s), complete a span(s) or
+        ignore it, if it is outside of all spans. This method mutates the clusters and coref_stacks
+        dictionaries.
+        # Parameters
+        label : `str`
+            The coref label for this word.
+        word_index : `int`
+            The word index into the sentence.
+        clusters : `DefaultDict[int, List[Tuple[int, int]]]`
+            A dictionary mapping cluster ids to lists of inclusive spans into the
+            sentence.
+        coref_stacks : `DefaultDict[int, List[int]]`
+            Stacks for each cluster id to hold the start indices of active spans (spans
+            which we are inside of when processing a given word). Spans with the same id
+            can be nested, which is why we collect these opening spans on a stack, e.g:
+            [Greg, the baker who referred to [himself]_ID1 as 'the bread man']_ID1
+        """
+        if label != "-":
+            for segment in label.split("|"):
+                # The conll representation of coref spans allows spans to
+                # overlap. If spans end or begin at the same word, they are
+                # separated by a "|".
+                if segment[0] == "(":
+                    # The span begins at this word.
+                    if segment[-1] == ")":
+                        # The span begins and ends at this word (single word span).
+                        cluster_id = int(segment[1:-1])
+                        clusters[cluster_id].append((word_index, word_index))
+                    else:
+                        # The span is starting, so we record the index of the word.
+                        cluster_id = int(segment[1:])
+                        coref_stacks[cluster_id].append(word_index)
+                else:
+                    # The span for this id is ending, but didn't start at this word.
+                    # Retrieve the start index from the document state and
+                    # add the span to the clusters for this id.
+                    cluster_id = int(segment[:-1])
+                    start = coref_stacks[cluster_id].pop()
+                    clusters[cluster_id].append((start, word_index))
+
+    @classmethod
+    def _process_span_annotations_for_word(
+        cls,
+        annotations: List[str],
+        span_labels: List[List[str]],
+        current_span_labels: List[Optional[str]],
+    ) -> None:
+        """
+        Given a sequence of different label types for a single word and the current
+        span label we are inside, compute the BIO tag for each label and append to a list.
+        # Parameters
+        annotations : `List[str]`
+            A list of labels to compute BIO tags for.
+        span_labels : `List[List[str]]`
+            A list of lists, one for each annotation, to incrementally collect
+            the BIO tags for a sequence.
+        current_span_labels : `List[Optional[str]]`
+            The currently open span per annotation type, or `None` if there is no open span.
+        """
+        for annotation_index, annotation in enumerate(annotations):
+            # strip all bracketing information to
+            # get the actual propbank label.
+            label = annotation.strip("()*")
+
+            if "(" in annotation:
+                # Entering into a span for a particular semantic role label.
+                # We append the label and set the current span for this annotation.
+                bio_label = "B-" + label
+                span_labels[annotation_index].append(bio_label)
+                current_span_labels[annotation_index] = label
+            elif current_span_labels[annotation_index] is not None:
+                # If there's no '(' token, but the current_span_label is not None,
+                # then we are inside a span.
+                bio_label = "I-" + cast(str, current_span_labels[annotation_index])
+                span_labels[annotation_index].append(bio_label)
+            else:
+                # We're outside a span.
+                span_labels[annotation_index].append("O")
+            # Exiting a span, so we reset the current span label for this annotation.
+            if ")" in annotation:
+                current_span_labels[annotation_index] = None
+
+    @classmethod
+    def _conll_rows_to_sentence(cls, conll_rows: List[str]) -> Dict:
+        document_id: str = None
+        sentence_id: int = None
+        # The words in the sentence.
+        sentence: List[str] = []
+        # The pos tags of the words in the sentence.
+        pos_tags: List[str] = []
+        # the pieces of the parse tree.
+        parse_pieces: List[str] = []
+        # The lemmatised form of the words in the sentence which
+        # have SRL or word sense information.
+        predicate_lemmas: List[str] = []
+        # The FrameNet ID of the predicate.
+        predicate_framenet_ids: List[str] = []
+        # The sense of the word, if available.
+        word_senses: List[float] = []
+        # The current speaker, if available.
+        speakers: List[str] = []
+
+        verbal_predicates: List[str] = []
+        span_labels: List[List[str]] = []
+        current_span_labels: List[str] = []
+
+        # Cluster id -> List of (start_index, end_index) spans.
+        clusters: DefaultDict[int, List[Tuple[int, int]]] = defaultdict(list)
+        # Cluster id -> List of start_indices which are open for this id.
+        coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
+
+        for index, row in enumerate(conll_rows):
+            conll_components = row.split()
+
+            document_id = conll_components[0]
+            sentence_id = int(conll_components[1])
+            word = conll_components[3]
+            pos_tag = conll_components[4]
+            parse_piece = conll_components[5]
+
+            # Replace brackets in text and pos tags
+            # with a different token for parse trees.
+            if pos_tag != "XX" and word != "XX":
+                if word == "(":
+                    parse_word = "-LRB-"
+                elif word == ")":
+                    parse_word = "-RRB-"
+                else:
+                    parse_word = word
+                if pos_tag == "(":
+                    pos_tag = "-LRB-"
+                if pos_tag == ")":
+                    pos_tag = "-RRB-"
+                (left_brackets, right_hand_side) = parse_piece.split("*")
+                # only keep ')' if there are nested brackets with nothing in them.
+                right_brackets = right_hand_side.count(")") * ")"
+                parse_piece = f"{left_brackets} ({pos_tag} {parse_word}) {right_brackets}"
+            else:
+                # There are some bad annotations in the CONLL data.
+                # They contain no information, so to make this explicit,
+                # we just set the parse piece to be None which will result
+                # in the overall parse tree being None.
+                parse_piece = None
+
+            lemmatised_word = conll_components[6]
+            framenet_id = conll_components[7]
+            word_sense = conll_components[8]
+            speaker = conll_components[9]
+
+            if not span_labels:
+                # If this is the first word in the sentence, create
+                # empty lists to collect the NER and SRL BIO labels.
+                # We can't do this upfront, because we don't know how many
+                # components we are collecting, as a sentence can have
+                # variable numbers of SRL frames.
+                span_labels = [[] for _ in conll_components[10:-1]]
+                # Create variables representing the current label for each label
+                # sequence we are collecting.
+                current_span_labels = [None for _ in conll_components[10:-1]]
+
+            cls._process_span_annotations_for_word(conll_components[10:-1], span_labels, current_span_labels)
+
+            # If any annotation marks this word as a verb predicate,
+            # we need to record its index. This also has the side effect
+            # of ordering the verbal predicates by their location in the
+            # sentence, automatically aligning them with the annotations.
+            word_is_verbal_predicate = any("(V" in x for x in conll_components[11:-1])
+            if word_is_verbal_predicate:
+                verbal_predicates.append(word)
+
+            cls._process_coref_span_annotations_for_word(conll_components[-1], index, clusters, coref_stacks)
+
+            sentence.append(word)
+            pos_tags.append(pos_tag)
+            parse_pieces.append(parse_piece)
+            predicate_lemmas.append(lemmatised_word if lemmatised_word != "-" else None)
+            predicate_framenet_ids.append(framenet_id if framenet_id != "-" else None)
+            word_senses.append(float(word_sense) if word_sense != "-" else None)
+            speakers.append(speaker if speaker != "-" else None)
+
+        named_entities = span_labels[0]
+        srl_frames = [(predicate, labels) for predicate, labels in zip(verbal_predicates, span_labels[1:])]
+
+        if all(parse_pieces):
+            parse_tree = "".join(parse_pieces)
+        else:
+            parse_tree = None
+        coref_span_tuples = {(cluster_id, span) for cluster_id, span_list in clusters.items() for span in span_list}
+        return {
+            "document_id": document_id,
+            "sentence_id": sentence_id,
+            "sentence": sentence,
+            "pos_tags": pos_tags,
+            "parse_tree": parse_tree,
+            "predicate_lemmas": predicate_lemmas,
+            "predicate_framenet_ids": predicate_framenet_ids,
+            "word_senses": word_senses,
+            "speakers": speakers,
+            "named_entities": named_entities,
+            "srl_frames": srl_frames,
+            "coref_span_tuples": coref_span_tuples,
+        }
+
+    @classmethod
+    def dataset_document_iterator(cls, file_path: Union[Path, str]) -> Iterator[List]:
+        """
+        An iterator over CONLL formatted files which yields documents, regardless
+        of the number of document annotations in a particular file. This is useful
+        for conll data which has been preprocessed, such as the preprocessing which
+        takes place for the 2012 CONLL Coreference Resolution task.
+        """
+        with open(file_path, "r", encoding="utf8") as open_file:
+            conll_rows = []
+            document: List = []
+            for line in open_file:
+                line = line.strip()
+                if line != "" and not line.startswith("#"):
+                    # Non-empty line. Collect the annotation.
+                    conll_rows.append(line)
+                else:
+                    if conll_rows:
+                        document.append(cls._conll_rows_to_sentence(conll_rows))
+                        conll_rows = []
+                if line.startswith("#end document"):
+                    yield document
+                    document = []
+            if document:
+                # Collect any stragglers or files which might not
+                # have the '#end document' format for the end of the file.
+                yield document
+
+    @classmethod
+    def sentence_iterator(cls, file_path: Union[Path, str]) -> Iterator:
+        """
+        An iterator over the sentences in an individual CONLL formatted file.
+        """
+        for document in cls.dataset_document_iterator(file_path):
+            for sentence in document:
+                yield sentence
 
 
 class CONLL_03(ColumnCorpus):
