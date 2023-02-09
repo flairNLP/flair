@@ -847,7 +847,7 @@ class ONTONOTES(MultiFileColumnCorpus):
     def get_available_domains(
         cls,
         base_path: Union[str, Path] = None,
-        version: str = "v12",
+        version: str = "v4",
         language: str = "english",
         split: str = "train",
     ) -> List[str]:
@@ -862,7 +862,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         cls,
         processed_data_path: Path,
         split: str = "train",
-        version: str = "v12",
+        version: str = "v4",
         language: str = "english",
         domain: Union[str, List[str], Dict[str, Union[None, str, List[str]]]] = None,
     ) -> Iterable[Path]:
