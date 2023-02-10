@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from torch.utils.data import ConcatDataset, Dataset
 
@@ -273,9 +273,12 @@ class MultiFileColumnCorpus(Corpus):
         comment_symbol: str = None,
         encoding: str = "utf-8",
         document_separator_token: str = None,
+        document_separator_line: str = None,
         skip_first_line: bool = False,
         in_memory: bool = True,
         label_name_map: Dict[str, str] = None,
+        preprocess_bioes_tags: Callable[[List[str]], List[str]] = None,
+        span_level_tag_columns: List[int] = None,
         banned_sentences: List[str] = None,
         default_whitespace_after: int = 1,
         **corpusargs,
@@ -310,6 +313,8 @@ class MultiFileColumnCorpus(Corpus):
                         banned_sentences=banned_sentences,
                         in_memory=in_memory,
                         document_separator_token=document_separator_token,
+                        document_separator_line=document_separator_line,
+                        preprocess_bioes_tags=preprocess_bioes_tags,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
@@ -334,6 +339,8 @@ class MultiFileColumnCorpus(Corpus):
                         banned_sentences=banned_sentences,
                         in_memory=in_memory,
                         document_separator_token=document_separator_token,
+                        document_separator_line=document_separator_line,
+                        preprocess_bioes_tags=preprocess_bioes_tags,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
@@ -358,6 +365,8 @@ class MultiFileColumnCorpus(Corpus):
                         banned_sentences=banned_sentences,
                         in_memory=in_memory,
                         document_separator_token=document_separator_token,
+                        document_separator_line=document_separator_line,
+                        preprocess_bioes_tags=preprocess_bioes_tags,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
@@ -435,9 +444,12 @@ class ColumnDataset(FlairDataset):
         banned_sentences: List[str] = None,
         in_memory: bool = True,
         document_separator_token: str = None,
+        document_separator_line: str = None,
         encoding: str = "utf-8",
         skip_first_line: bool = False,
         label_name_map: Dict[str, str] = None,
+        preprocess_bioes_tags: Callable[[List[str]], List[str]] = None,
+        span_level_tag_columns: List[int] = None,
         default_whitespace_after: int = 1,
     ):
         """
@@ -460,7 +472,11 @@ class ColumnDataset(FlairDataset):
         self.column_delimiter = column_delimiter
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
+        self.document_separator_line = document_separator_line
         self.label_name_map = label_name_map
+
+        self.preprocess_bioes_tags = (lambda x: x) if (preprocess_bioes_tags is None) else preprocess_bioes_tags
+
         self.banned_sentences = banned_sentences
         self.default_whitespace_after = default_whitespace_after
 
@@ -481,8 +497,20 @@ class ColumnDataset(FlairDataset):
         # determine encoding of text file
         self.encoding = encoding
 
-        # identify which columns are spans and which are word-level
-        self._identify_span_columns(column_name_map, skip_first_line)
+        if span_level_tag_columns is None:
+            # identify which columns are spans and which are word-level
+            self._identify_span_columns(column_name_map, skip_first_line)
+
+        else:
+            self.span_level_tag_columns = {column: column_name_map[column] for column in span_level_tag_columns}
+
+            self.word_level_tag_columns = {
+                column: column_name
+                for column, column_name in column_name_map.items()
+                if column not in self.span_level_tag_columns
+            }
+
+            self.word_level_tag_columns[self.text_column] = "text"
 
         # now load all sentences
         with open(str(self.path_to_column_file), encoding=self.encoding) as file:
@@ -562,9 +590,14 @@ class ColumnDataset(FlairDataset):
             # check the first 5 sentences
             probe = []
             for i in range(5):
-                sentence = self._convert_lines_to_sentence(
-                    self._read_next_sentence(file), word_level_tag_columns=column_name_map
-                )
+                lines = self._read_next_sentence(file)
+
+                # check if lines were read (as the file may contain less than 5 sentences)
+                if len(lines) == 0:
+                    break
+
+                sentence = self._convert_lines_to_sentence(lines, word_level_tag_columns=column_name_map)
+
                 if sentence:
                     probe.append(sentence)
                 else:
@@ -628,6 +661,9 @@ class ColumnDataset(FlairDataset):
             if len(lines) > 0 and self.__line_completes_sentence(line):
                 break
 
+            if line.strip() == self.document_separator_line:
+                break
+
             line = file.readline()
         return lines
 
@@ -638,22 +674,30 @@ class ColumnDataset(FlairDataset):
         tokens: List[Token] = []
         filtered_lines = []
         comments = []
-        for line in lines:
-            # parse comments if possible
-            if self.comment_symbol is not None and line.startswith(self.comment_symbol):
-                comments.append(line)
-                continue
 
-            filtered_lines.append(line)
+        sentence: Sentence
 
-            # otherwise, this line is a token. parse and add to sentence
-            token = self._parse_token(line, word_level_tag_columns, token)
-            tokens.append(token)
-        sentence: Sentence = Sentence(text=tokens)
-
-        # check if this sentence is a document boundary
-        if sentence.to_original_text() == self.document_separator_token:
+        if len(lines) == 1 and lines[0].strip() == self.document_separator_line:
+            sentence = Sentence(text=[Token(lines[0])])
             sentence.is_document_boundary = True
+
+        else:
+            for line in lines:
+                # parse comments if possible
+                if self.comment_symbol is not None and line.startswith(self.comment_symbol):
+                    comments.append(line)
+                    continue
+
+                filtered_lines.append(line)
+
+                # otherwise, this line is a token. parse and add to sentence
+                token = self._parse_token(line, word_level_tag_columns, token)
+                tokens.append(token)
+            sentence = Sentence(text=tokens)
+
+            # check if this sentence is a document boundary
+            if sentence.to_original_text() == self.document_separator_token:
+                sentence.is_document_boundary = True
 
         # add span labels
         if span_level_tag_columns:
@@ -665,6 +709,7 @@ class ColumnDataset(FlairDataset):
 
                     # discard tags from tokens that are not added to the sentence
                     bioes_tags = [tag for tag, token in zip(bioes_tags, tokens) if token._internal_index is not None]
+                    bioes_tags = self.preprocess_bioes_tags(bioes_tags)
                     predicted_spans = get_spans_from_bio(bioes_tags)
                     for span_indices, score, label in predicted_spans:
                         span = sentence[span_indices[0] : span_indices[-1] + 1]
@@ -1054,6 +1099,148 @@ class CONLL_2000(ColumnCorpus):
             data_folder,
             columns,
             in_memory=in_memory,
+            **corpusargs,
+        )
+
+
+class CONLL_2012(MultiFileColumnCorpus):
+    version = "v12"
+    language = "english"
+
+    extension = "gold_conll"
+
+    portion_dirs = {
+        "test": "test",
+        "dev": "development",
+        "train": "train",
+    }
+
+    column_format = {
+        # 0: "file_name",
+        # 1: "file_part",
+        # 2: "token id",
+        3: "text",
+        4: "pos",
+        # 5: "parse_bit",
+        6: "lemma",
+        7: "frameset_id",
+        8: "word_sense",
+        # 9: "speaker",
+        10: "ner",
+    }
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        **corpusargs,
+    ):
+        """
+        Initialize the CoNLL-12 corpus.
+
+        If you call the constructor the first time the dataset gets automatically downloaded from the repository
+        (https://data.mendeley.com/datasets/zmycy7t9h9).
+        :param base_path: Path to the CoNLL-12 corpus (i.e. 'conll-2012' folder) on your machine.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        data_folder = base_path / "conll-2012"
+        archive_url = "https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded"
+
+        if not data_folder.exists():
+            unpack_file(cached_path(archive_url, data_folder), base_path, "zip", False)
+
+        dev_files = sorted(
+            list(
+                (
+                    data_folder
+                    / self.version
+                    / "data"
+                    / self.portion_dirs["dev"]
+                    / "data"
+                    / self.language
+                    / "annotations"
+                ).rglob(f"*.{self.extension}")
+            )
+        )
+
+        train_files = sorted(
+            list(
+                (
+                    data_folder
+                    / self.version
+                    / "data"
+                    / self.portion_dirs["train"]
+                    / "data"
+                    / self.language
+                    / "annotations"
+                ).rglob(f"*.{self.extension}")
+            )
+        )
+
+        test_files = sorted(
+            list(
+                (
+                    data_folder
+                    / self.version
+                    / "data"
+                    / self.portion_dirs["test"]
+                    / "data"
+                    / self.language
+                    / "annotations"
+                ).rglob(f"*.{self.extension}")
+            )
+        )
+
+        def bioes_from_conll2012(tags):
+            assert isinstance(tags, list)
+
+            previous_label = None
+            processed_tags = []
+
+            for tag in tags:
+                if tag.startswith("("):
+                    if tag.endswith(")"):
+                        # Labels spans a single token (e.g. "(ORG)")
+                        processed_tags.append("S-" + tag[1:-1])
+                    else:
+                        # Label spans multiple tokens (and starting at this token). E.g.
+                        # (ORG*
+                        #     *
+                        #     *)
+                        previous_label = tag[1:-1]
+                        processed_tags.append("B-" + previous_label)
+                elif previous_label is not None:
+                    # continuation of a previous label
+                    if tag.endswith(")"):
+                        tag = previous_label
+                        previous_label = None
+                        processed_tags.append("E-" + tag)
+                    else:
+                        assert tag == "*"
+                        processed_tags.append("I-" + previous_label)
+                else:
+                    # no label
+                    processed_tags.append("O")
+
+            return processed_tags
+
+        super().__init__(
+            self.column_format,
+            dev_files=dev_files,
+            train_files=train_files,
+            test_files=test_files,
+            name=str(data_folder),
+            document_separator_line="#end document",
+            comment_symbol="#begin",
+            preprocess_bioes_tags=bioes_from_conll2012,
+            label_name_map={"-": "O"},
+            span_level_tag_columns=[10],
             **corpusargs,
         )
 
