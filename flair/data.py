@@ -1487,21 +1487,30 @@ class Corpus(typing.Generic[T_co]):
 
         return label_dictionary
 
-    def _corrupt_labels(self, noise_share: float, labels: List[str], label_type: str, seed: int):
+    def _corrupt_labels(self, noise_share: float, label_type: str, labels: List[str], split: str = "train"):
         """
-        Simulates uniform label noise distribution in the train split.
+        Generates uniform label noise distribution the chosen dataset split.
         :noise_share: the desired share of noise in the train split.
-        :labels: an array of all unique labels in the dataset.
-        :label_type: for which type of labels should the noise be simulated.
-        :seed: to replicate the simulation.
+        :label_type: the type of labels for which the noise should be simulated.
+        :labels: an array with unique labels of said type (retrievable from label dictionary).
+        :split: in which dataset split the noise is to be simulated.
         """
         import numpy as np
 
         if noise_share < 0 or noise_share > 1:
-            raise ValueError("noise_share must be between 0 and 1")
+            raise ValueError("noise_share must be between 0 and 1.")
 
-        assert self.train
-        datasets = [self.train]
+        if split == "train":
+            assert self.train
+            datasets = [self.train]
+        elif split == "dev":
+            assert self.dev
+            datasets = [self.dev]
+        elif split == "test":
+            assert self.test
+            datasets = [self.test]
+        else:
+            raise ValueError("split must be either train, dev or test.")
 
         data: ConcatDataset = ConcatDataset(datasets)
 
@@ -1513,7 +1522,6 @@ class Corpus(typing.Generic[T_co]):
 
         log.info("Generating noisy labels. Progress:")
 
-        flair.set_seed(seed)
         for data_point in Tqdm.tqdm(_iter_dataset(data)):
             for label in data_point.get_labels(label_type):
                 total_label_count += 1
