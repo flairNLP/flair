@@ -8,11 +8,76 @@ import requests
 
 import flair
 from flair.data import Corpus, MultiCorpus, Sentence
-from flair.datasets.sequence_labeling import ColumnCorpus
+from flair.datasets.sequence_labeling import ColumnCorpus, MultiFileColumnCorpus
 from flair.file_utils import cached_path, unpack_file
 from flair.splitter import SegtokSentenceSplitter, SentenceSplitter
 
 log = logging.getLogger("flair")
+
+
+class ZELDA(MultiFileColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = False,
+        column_format={0: "text", 2: "nel"},
+        **corpusargs,
+    ):
+        """
+        Initialize ZELDA Entity Linking corpus introduced in "ZELDA: A Comprehensive Benchmark for Supervised
+        Entity Disambiguation" (Milich and Akbik, 2023).
+        When calling the constructor for the first time, the dataset gets automatically downloaded.
+
+        Parameters
+        ----------
+        base_path : Union[str, Path], optional
+            Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+            to point to a different folder but typically this should not be necessary.
+        in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        data_folder = base_path / dataset_name
+
+        # download and parse data if necessary
+        parsed_dataset = data_folder / "train_data" / "zelda_train.conll"
+        if not parsed_dataset.exists():
+            zelda_zip_path = "https://nlp.informatik.hu-berlin.de/resources/datasets/zelda/zelda.zip"
+            aquaint_el_zip = cached_path(f"{zelda_zip_path}", base_path)
+            unpack_file(aquaint_el_zip, base_path, "zip", False)
+
+        # paths to train and test splits
+        train_file = data_folder / "train_data" / "zelda_train.conll"
+        test_path = data_folder / "test_data" / "conll"
+        test_files = [
+            test_path / "test_aida-b.conll",
+            test_path / "test_cweb.conll",
+            test_path / "test_tweeki.conll",
+            test_path / "test_reddit-comments.conll",
+            test_path / "test_reddit-posts.conll",
+            test_path / "test_shadowlinks-top.conll",
+            test_path / "test_shadowlinks-shadow.conll",
+            test_path / "test_shadowlinks-tail.conll",
+            test_path / "test_wned-wiki.conll",
+        ]
+
+        # init corpus
+        super(ZELDA, self).__init__(
+            train_files=[train_file],
+            test_files=test_files,
+            column_format=column_format,
+            in_memory=in_memory,
+            document_separator_token="-DOCSTART-",
+            comment_symbol="# ",
+            **corpusargs,
+        )
 
 
 class NEL_ENGLISH_AQUAINT(ColumnCorpus):

@@ -144,6 +144,7 @@ from .entity_linking import (
     WSD_TRAINOMATIC,
     WSD_UFSAC,
     WSD_WORDNET_GLOSS_TAGGED,
+    ZELDA,
 )
 
 # Expose all relation extraction datasets
@@ -556,4 +557,5 @@ __all__ = [
     "UD_WOLOF",
     "UniversalDependenciesCorpus",
     "UniversalDependenciesDataset",
+    "ZELDA",
 ]
