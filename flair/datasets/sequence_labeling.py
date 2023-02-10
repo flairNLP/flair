@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 from torch.utils.data import ConcatDataset, Dataset
 
@@ -317,6 +317,7 @@ class MultiFileColumnCorpus(Corpus):
                         preprocess_bioes_tags=preprocess_bioes_tags,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
+                        span_level_tag_columns=span_level_tag_columns,
                         default_whitespace_after=default_whitespace_after,
                     )
                     for train_file in train_files
@@ -343,6 +344,7 @@ class MultiFileColumnCorpus(Corpus):
                         preprocess_bioes_tags=preprocess_bioes_tags,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
+                        span_level_tag_columns=span_level_tag_columns,
                         default_whitespace_after=default_whitespace_after,
                     )
                     for test_file in test_files
@@ -369,6 +371,7 @@ class MultiFileColumnCorpus(Corpus):
                         preprocess_bioes_tags=preprocess_bioes_tags,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
+                        span_level_tag_columns=span_level_tag_columns,
                         default_whitespace_after=default_whitespace_after,
                     )
                     for dev_file in dev_files
@@ -661,9 +664,6 @@ class ColumnDataset(FlairDataset):
             if len(lines) > 0 and self.__line_completes_sentence(line):
                 break
 
-            if line.strip() == self.document_separator_line:
-                break
-
             line = file.readline()
         return lines
 
@@ -678,6 +678,8 @@ class ColumnDataset(FlairDataset):
         sentence: Sentence
 
         if len(lines) == 1 and lines[0].strip() == self.document_separator_line:
+            # In CoNNL 2012, document boundaries are not marked by a specific token, but a line ("#end document"
+            # without any of the other columns -> treating this line as a token will result in a parsing error)
             sentence = Sentence(text=[Token(lines[0])])
             sentence.is_document_boundary = True
 
@@ -810,6 +812,8 @@ class ColumnDataset(FlairDataset):
 
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace() or line == ""
+        # document boundary is treated as a sperate sentence:
+        sentence_completed |= line.strip() == self.document_separator_line
         return sentence_completed
 
     def is_in_memory(self) -> bool:
@@ -1104,11 +1108,6 @@ class CONLL_2000(ColumnCorpus):
 
 
 class CONLL_2012(MultiFileColumnCorpus):
-    version = "v12"
-    language = "english"
-
-    extension = "gold_conll"
-
     portion_dirs = {
         "test": "test",
         "dev": "development",
@@ -1132,6 +1131,12 @@ class CONLL_2012(MultiFileColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
+        *,
+        version="v12",
+        language="english",
+        extension="gold_conll",
+        domain: Union[str, List[str]] = None,
+        source: Union[str, List[str], Dict[str, Union[str, List[str]]]] = None,
         **corpusargs,
     ):
         """
@@ -1144,105 +1149,181 @@ class CONLL_2012(MultiFileColumnCorpus):
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
 
+        data_folder = self._ensure_data_downloaded(base_path)
+
+        load_spec = dict(
+            version=version,
+            language=language,
+            domain=domain,
+            source=source,
+            extension=extension,
+        )
+
+        super().__init__(
+            self.column_format,
+            dev_files=self._get_file_paths(data_folder, "dev", **load_spec),
+            train_files=self._get_file_paths(data_folder, "train", **load_spec),
+            test_files=self._get_file_paths(data_folder, "test", **load_spec),
+            name=str(data_folder),
+            document_separator_line="#end document",
+            comment_symbol="#begin",
+            preprocess_bioes_tags=self._bioes_from_conll2012,
+            label_name_map={"-": "O"},
+            span_level_tag_columns=[10],
+            **corpusargs,
+        )
+
+    @classmethod
+    def _ensure_data_downloaded(cls, base_path: Union[str, Path] = None) -> Path:
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
             base_path = Path(base_path)
 
         data_folder = base_path / "conll-2012"
+
         archive_url = "https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded"
 
         if not data_folder.exists():
-            unpack_file(cached_path(archive_url, data_folder), base_path, "zip", False)
+            unpack_file(cached_path(archive_url, data_folder), data_folder.parent, "zip", False)
 
-        dev_files = sorted(
-            list(
-                (
-                    data_folder
-                    / self.version
-                    / "data"
-                    / self.portion_dirs["dev"]
-                    / "data"
-                    / self.language
-                    / "annotations"
-                ).rglob(f"*.{self.extension}")
-            )
+        return data_folder
+
+    @classmethod
+    def _get_domains_path(
+        cls,
+        data_folder: Path,
+        portion: str = "train",
+        version: str = "v12",
+        language: str = "english",
+    ) -> Path:
+        return data_folder / version / "data" / cls.portion_dirs[portion] / "data" / language / "annotations"
+
+    @classmethod
+    def get_available_domains(
+        cls,
+        base_path: Union[str, Path] = None,
+        portion: str = "train",
+        version: str = "v12",
+        language: str = "english",
+    ) -> List[str]:
+        data_folder = cls._ensure_data_downloaded()
+
+        domains_path = cls._get_domains_path(data_folder, portion=portion, version=version, language=language)
+
+        return [domain_path.name for domain_path in domains_path.glob("*")]
+
+    @classmethod
+    def _get_domain_directories(
+        cls,
+        domains_path: Path,
+        domain: str,
+        source: Union[str, List[str], None] = None,
+    ) -> Iterable[Path]:
+        if source is None:
+            yield domains_path / domain
+        elif isinstance(source, str):
+            yield domains_path / domain / source
+        else:
+            for single_source in source:
+                yield from cls._get_domain_directories(domains_path=domains_path, domain=domain, source=single_source)
+
+    @classmethod
+    def _get_file_paths(
+        cls,
+        data_folder: Path,
+        portion: str = "train",
+        *,
+        version: str = "v12",
+        language: str = "english",
+        domain: Union[str, List[str]] = None,
+        source: Union[str, List[str], Dict[str, Union[str, List[str]]]] = None,
+        extension: str = "gold_conll",
+    ) -> List[Path]:
+        domain_source: Union[str, List[str], None]
+
+        domains_path: Path = (
+            data_folder / version / "data" / cls.portion_dirs[portion] / "data" / language / "annotations"
         )
+        directories: List[Path] = list()
 
-        train_files = sorted(
-            list(
-                (
-                    data_folder
-                    / self.version
-                    / "data"
-                    / self.portion_dirs["train"]
-                    / "data"
-                    / self.language
-                    / "annotations"
-                ).rglob(f"*.{self.extension}")
-            )
-        )
+        if domain is None:
+            if source is None:
+                # use all domains
+                directories.append(domains_path)
+            elif isinstance(source, dict):
+                for domain, domain_source in source.items():
+                    directories.extend(
+                        cls._get_domain_directories(
+                            domains_path=domains_path,
+                            domain=domain,
+                            source=domain_source,
+                        )
+                    )
+            else:
+                raise TypeError("If `domain` is not set `source` a dict (domain -> sources) or None.")
 
-        test_files = sorted(
-            list(
-                (
-                    data_folder
-                    / self.version
-                    / "data"
-                    / self.portion_dirs["test"]
-                    / "data"
-                    / self.language
-                    / "annotations"
-                ).rglob(f"*.{self.extension}")
-            )
-        )
+        else:
+            # only use specified domains
+            if isinstance(domain, str):
+                domains = [domain]
+            else:
+                domains = domain
 
-        def bioes_from_conll2012(tags):
-            assert isinstance(tags, list)
-
-            previous_label = None
-            processed_tags = []
-
-            for tag in tags:
-                if tag.startswith("("):
-                    if tag.endswith(")"):
-                        # Labels spans a single token (e.g. "(ORG)")
-                        processed_tags.append("S-" + tag[1:-1])
-                    else:
-                        # Label spans multiple tokens (and starting at this token). E.g.
-                        # (ORG*
-                        #     *
-                        #     *)
-                        previous_label = tag[1:-1]
-                        processed_tags.append("B-" + previous_label)
-                elif previous_label is not None:
-                    # continuation of a previous label
-                    if tag.endswith(")"):
-                        tag = previous_label
-                        previous_label = None
-                        processed_tags.append("E-" + tag)
-                    else:
-                        assert tag == "*"
-                        processed_tags.append("I-" + previous_label)
+            for domain in domains:
+                if isinstance(source, dict):
+                    domain_source = source[domain]
                 else:
-                    # no label
-                    processed_tags.append("O")
+                    domain_source = source
 
-            return processed_tags
+                directories.extend(
+                    cls._get_domain_directories(
+                        domains_path=domains_path,
+                        domain=domain,
+                        source=domain_source,
+                    )
+                )
 
-        super().__init__(
-            self.column_format,
-            dev_files=dev_files,
-            train_files=train_files,
-            test_files=test_files,
-            name=str(data_folder),
-            document_separator_line="#end document",
-            comment_symbol="#begin",
-            preprocess_bioes_tags=bioes_from_conll2012,
-            label_name_map={"-": "O"},
-            span_level_tag_columns=[10],
-            **corpusargs,
-        )
+        file_paths: List[Path] = list()
+
+        for d in directories:
+            file_paths.extend(d.rglob(f"*.{extension}"))
+
+        return sorted(file_paths)
+
+    @staticmethod
+    def _bioes_from_conll2012(tags):
+        assert isinstance(tags, list)
+
+        previous_label = None
+        processed_tags = []
+
+        for tag in tags:
+            if tag.startswith("("):
+                if tag.endswith(")"):
+                    # Labels spans a single token (e.g. "(ORG)")
+                    processed_tags.append("S-" + tag[1:-1])
+                else:
+                    # Label spans multiple tokens (and starting at this token). E.g.
+                    # (ORG*
+                    #     *
+                    #     *)
+                    previous_label = tag[1:-1]
+                    processed_tags.append("B-" + previous_label)
+            elif previous_label is not None:
+                # continuation of a previous label
+                if tag.endswith(")"):
+                    tag = previous_label
+                    previous_label = None
+                    processed_tags.append("E-" + tag)
+                else:
+                    assert tag == "*"
+                    processed_tags.append("I-" + previous_label)
+            else:
+                # no label
+                processed_tags.append("O")
+
+        return processed_tags
 
 
 class WNUT_17(ColumnCorpus):
