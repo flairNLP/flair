@@ -99,7 +99,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                         self.label_dictionary.add_item("B-" + label)
                         self.label_dictionary.add_item("I-" + label)
             else:
+                if "O" not in tag_dictionary.get_items():
+                    tag_dictionary.add_item("O")
                 self.label_dictionary = tag_dictionary
+
 
         # is this a span prediction problem?
         self.predict_spans = self._determine_if_span_prediction_problem(self.label_dictionary)
