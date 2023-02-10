@@ -1432,6 +1432,7 @@ class FEWNERD(ColumnCorpus):
             data_folder / setting,
             column_format={0: "text", 1: "ner"},
             in_memory=in_memory,
+            span_level_tag_columns=[1],
             **corpusargs,
         )
 
