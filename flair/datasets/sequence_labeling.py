@@ -1127,6 +1127,47 @@ class BIOSCOPE(ColumnCorpus):
         )
 
 
+class FEWNERD(ColumnCorpus):
+    def __init__(
+        self,
+        setting: str = "supervised",
+        in_memory: bool = False,
+        **corpusargs,
+    ):
+        assert setting in ["supervised", "inter", "intra"]
+        _URLs = {
+            "supervised": "https://cloud.tsinghua.edu.cn/f/09265750ae6340429827/?dl=1",
+            "intra": "https://cloud.tsinghua.edu.cn/f/a0d3efdebddd4412b07c/?dl=1",
+            "inter": "https://cloud.tsinghua.edu.cn/f/165693d5e68b43558f9b/?dl=1",
+        }
+
+        base_path = flair.cache_root / "datasets"
+        dataset_name = self.__class__.__name__.lower()
+        data_folder = base_path / dataset_name / setting
+        if not data_folder.exists():
+            log.info(f"FewNERD ({setting}) dataset not found, downloading.")
+            dl_path = _URLs[setting]
+            dl_dir = cached_path(dl_path, Path("datasets") / dataset_name / setting)
+
+            if not setting in os.listdir(data_folder):
+                import zipfile
+                from tqdm import tqdm
+                log.info("FewNERD dataset has not been extracted yet, extracting it now. This might take a while.")
+                with zipfile.ZipFile(dl_dir, "r") as zip_ref:
+                    for f in tqdm(zip_ref.namelist()):
+                        if f.endswith('/'):
+                            os.makedirs(data_folder / f)
+                        else:
+                            zip_ref.extract(f, path=data_folder)
+
+        super(FEWNERD, self).__init__(
+            data_folder / setting,
+            column_format={0: "text", 1: "ner"},
+            in_memory=in_memory,
+            **corpusargs,
+        )
+
+
 class NER_ARABIC_ANER(ColumnCorpus):
     def __init__(
         self,
