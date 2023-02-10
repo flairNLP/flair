@@ -1399,7 +1399,6 @@ class FEWNERD(ColumnCorpus):
     def __init__(
         self,
         setting: str = "supervised",
-        in_memory: bool = False,
         **corpusargs,
     ):
         assert setting in ["supervised", "inter", "intra"]
@@ -1431,10 +1430,28 @@ class FEWNERD(ColumnCorpus):
         super(FEWNERD, self).__init__(
             data_folder / setting,
             column_format={0: "text", 1: "ner"},
-            in_memory=in_memory,
+            preprocess_bioes_tags=self._bioes_from_fewnerd,
             span_level_tag_columns=[1],
             **corpusargs,
         )
+
+    @staticmethod
+    def _bioes_from_fewnerd(tags):
+        assert isinstance(tags, list)
+
+        processed_tags = []
+        previous_tag = None
+
+        for tag in tags:
+            if tag == "O":
+                processed_tags.append("O")
+            elif previous_tag != tag and tag != "O":
+                processed_tags.append("B-" + tag)
+            elif previous_tag == tag and tag != "O":
+                processed_tags.append("I-" + tag)
+            previous_tag = tag
+
+        return processed_tags
 
 
 class NER_ARABIC_ANER(ColumnCorpus):
