@@ -5162,6 +5162,9 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         sentence_splitter: SentenceSplitter = None,
+        train_split_name: Union[str, bool] = None,
+        dev_split_name: Union[str, bool] = None,
+        test_split_name: Union[str, bool] = None,
     ):
         """
         :param dataset_name: Name of the dataset in the huggingface hub (e.g. nlmchem or bigbio/nlmchem)
@@ -5169,6 +5172,9 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Custom implementation of :class:`SentenceSplitter` which
             segments the text into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
+        :param train_split_name: Name of the training split in bigbio, usually train (default: None)
+        :param dev_split_name: Name of the development split in bigbio, usually validation (default: None)
+        :param test_split_name: Name of the test split in bigbio, usually test (default: None)
         """
 
         if base_path is None:
@@ -5190,31 +5196,25 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         data_folder = base_path / dataset_dir_name
 
         train_file = data_folder / "train.conll"
-        test_file = data_folder / "test.conll"
+        # test_file = data_folder / "test.conll"
 
         # Download data if necessary
-        # Some datasets only have train or test splits, not both
-        if not train_file.exists() and not test_file.exists():
+        # Some datasets in BigBio only have train or test splits, not both
+        # If only test split, assign it to train split
+        # If only train split, sample other from it (sample_missing_splits=True)
+        if not train_file.exists():
             from datasets import load_dataset
 
             dataset = load_dataset(full_dataset_name, name=dataset_name + "_bigbio_kb")
 
-            # Special case for ProGene: We need to use the split_0_train and split_0_test splits
-            train_split_name = None
             if "train" in dataset:
                 train_split_name = "train"
-            elif "split_0_train" in dataset:
-                train_split_name = "split_0_train"
-            test_split_name = None
             if "test" in dataset:
                 test_split_name = "test"
-            elif "split_0_test" in dataset:
-                test_split_name = "split_0_test"
-            validation_split_name = None
             if "validation" in dataset:
-                validation_split_name = "validation"
-            elif "split_0_validation" in dataset:
-                validation_split_name = "split_0_validation"
+                dev_split_name = "validation"
+
+            assert not (train_split_name is None and test_split_name is None)
 
             splits = {}
             # Not every dataset has a dev / validation set!
@@ -5222,8 +5222,10 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
                 splits["train"] = self.to_internal_dataset(dataset, train_split_name)
             if test_split_name is not None:
                 splits["test"] = self.to_internal_dataset(dataset, test_split_name)
-            if validation_split_name is not None:
-                splits["dev"] = self.to_internal_dataset(dataset, validation_split_name)
+            if dev_split_name is not None:
+                splits["dev"] = self.to_internal_dataset(dataset, dev_split_name)
+            if "train" not in splits and "test" in splits:
+                splits["train"] = splits.pop("test")
 
             # Perform type mapping if necessary
             type_mapping = self.get_entity_type_mapping()
@@ -5237,10 +5239,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
             conll_writer.process_dataset(splits, data_folder)
 
         super(BIGBIO_NER_CORPUS, self).__init__(
-            data_folder,
-            columns,
-            in_memory=in_memory,
-            comment_symbol="#",
+            data_folder, columns, in_memory=in_memory, comment_symbol="#", sample_missing_splits=True
         )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
@@ -5395,9 +5394,9 @@ class HUNER_DISEASE_BIORED(BIGBIO_NER_CORPUS):
         return self.__class__.__name__.lower()
 
 
-class HUNER_GENE_SPECIES_BIORED(BIGBIO_NER_CORPUS):
+class HUNER_SPECIES_BIORED(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_SPECIES_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+        super(HUNER_SPECIES_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"OrganismTaxon": SPECIES_TAG}
@@ -5406,9 +5405,9 @@ class HUNER_GENE_SPECIES_BIORED(BIGBIO_NER_CORPUS):
         return self.__class__.__name__.lower()
 
 
-class HUNER_GENE_CELL_LINE_BIORED(BIGBIO_NER_CORPUS):
+class HUNER_CELL_LINE_BIORED(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_CELL_LINE_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+        super(HUNER_CELL_LINE_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"CellLine": CELL_LINE_TAG}
@@ -5606,7 +5605,19 @@ class HUNER_GENE_GNORMPLUS(BIGBIO_NER_CORPUS):
 
 class HUNER_GENE_PROGENE(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_PROGENE, self).__init__(*args, dataset_name="progene", **kwargs)
+        # Special case for ProGene: We need to use the split_0_train and split_0_test splits
+        # as they are currently provided in BigBio
+        train_split_name = "split_0_train"
+        dev_split_name = "split_0_validation"
+        test_split_name = "split_0_test"
+        super(HUNER_GENE_PROGENE, self).__init__(
+            *args,
+            dataset_name="progene",
+            **kwargs,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"progene_text": GENE_TAG}
@@ -5624,6 +5635,139 @@ class HUNER_CHEMICAL_NLM_CHEM(BIGBIO_NER_CORPUS):
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
         return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_SETH_CORPUS(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_SETH_CORPUS, self).__init__(*args, dataset_name="seth_corpus", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Gene": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+# FIXME: Annotation missmatch from the source PubTator files
+# EXAMPLE: Annotation error (21904390) - Doc: p686k1684gene  vs. Mention: DKFZ p686k1684
+def map_fn(example):
+    example["entities"] = [
+        repair_doc_offsets(passages, entities) for passages, entities in zip(example["passages"], example["entities"])
+    ]
+    return example
+
+
+def repair_doc_offsets(passages, entities):
+    """
+    Some offsets are broken in tmvar_v3, we need to fix them. Replace doc in-place.
+    """
+
+    text = " ".join([passage["text"][0] for passage in passages])
+
+    sentences = text.split(". ")
+
+    sentence_indexes = [m.start() + 2 for m in re.finditer("\. ", text)]  # because the suffix is ". "
+    sentence_indexes = [0] + sentence_indexes
+
+    doc_entities = entities
+
+    if len(doc_entities) == 0:
+        return
+
+    # doc_entities = dataset[split].filter(lambda x: x["document_id"] == "21904390")[:]["entities"][0]
+
+    # print(sentence_indexes)
+    # print(len(sentences))
+    # print(text)
+    # print(doc_entities)
+
+    sentence_index = 0
+    entity_index = 0
+    current_offset = 0
+    next_sentence_offset = 0
+    next_entity_offset = text[current_offset:].find(doc_entities[entity_index]["text"][0])
+    while True:
+        if sentence_index >= len(sentence_indexes) and entity_index >= len(doc_entities):
+            break
+        if next_sentence_offset <= next_entity_offset:
+            sentence_end = sentence_indexes[sentence_index] + len(sentences[sentence_index]) + 2
+            # print(f"Sentence {sentence_index} @ offsets {sentence_indexes[sentence_index]} to {sentence_end}")
+            # print(sentences[sentence_index] + ". ")
+            sentence_index += 1
+            if sentence_index >= len(sentence_indexes):
+                next_sentence_offset = len(text)
+            else:
+                next_sentence_offset = sentence_indexes[sentence_index]
+            # print(f"DEBUG next_sentence_offset: {next_sentence_offset}")
+        else:  # next_entity_offset < next_sentence_offset
+            entity = doc_entities[entity_index]
+            entity_name = entity["text"][0]
+            given_offset_start = entity["offsets"][0][0]
+            given_offset_end = entity["offsets"][0][1]
+            # print(f"  {entity_name} @ offsets (real) {next_entity_offset} to {next_entity_offset + len(entity_name)}")
+            # print(f"  {text[given_offset_start:given_offset_end]} @ offset (given) {given_offset_start} to {given_offset_end}")
+            if given_offset_start != next_entity_offset:  # Mismatched entities
+                # print(doc_entities)
+                entity["offsets"][0][0] = next_entity_offset
+                entity["offsets"][0][1] = next_entity_offset + len(entity_name)
+                # print(doc_entities)
+            current_offset = next_entity_offset + len(entity_name)
+            entity_index += 1
+            if entity_index >= len(doc_entities):
+                next_entity_offset = len(text)
+            else:
+                next_entity_offset = current_offset + text[current_offset:].find(doc_entities[entity_index]["text"][0])
+
+    return doc_entities
+
+
+class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_TMVAR_V3, self).__init__(*args, dataset_name="tmvar_v3", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"['Gene']": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+    # Some offsets are broken in tmvar_v3, we need to fix them
+    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
+        """
+        Converts a dataset given in hugging datasets format to our internal corpus representation.
+        """
+        dataset = dataset.map(map_fn, batched=True)
+        return super(HUNER_GENE_TMVAR_V3, self).to_internal_dataset(dataset, split)
+
+
+class HUNER_SPECIES_TMVAR_V3(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_SPECIES_TMVAR_V3, self).__init__(*args, dataset_name="tmvar_v3", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"['Species']": SPECIES_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+    # Some offsets are broken in tmvar_v3, we need to fix them
+    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
+        """
+        Converts a dataset given in hugging datasets format to our internal corpus representation.
+        """
+        dataset = dataset.map(map_fn, batched=True)
+        return super(HUNER_SPECIES_TMVAR_V3, self).to_internal_dataset(dataset, split)
+
+
+# class HUNER_CELL_LINE_TMVAR_V3(BIGBIO_NER_CORPUS):
+#     def __init__(self, *args, **kwargs):
+#         super(HUNER_CELL_LINE_TMVAR_V3, self).__init__(*args, dataset_name="tmvar_v3", **kwargs)
+
+#     def get_entity_type_mapping(self) -> Optional[Dict]:
+#         return {"['CellLine']": CELL_LINE_TAG}
+
+#     def build_corpus_directory_name(self, dataset_name: str) -> str:
+#         return self.__class__.__name__.lower()
 
 
 # Already implemented earlier
