@@ -45,7 +45,7 @@ class Embeddings(torch.nn.Module, Generic[DT]):
         if not isinstance(data_points, list):
             data_points = [data_points]
 
-        if not self._everything_embedded(data_points) or not self.static_embeddings:
+        if not self._everything_embedded(data_points):
             self._add_embeddings_internal(data_points)
 
         return data_points
