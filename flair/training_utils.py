@@ -409,4 +409,4 @@ def identify_dynamic_embeddings(data_points: List[DataPoint]):
             return dynamic_embeddings
     if not all_embeddings:
         return None
-    return dynamic_embeddings
+    return list(set(dynamic_embeddings))
