@@ -871,18 +871,18 @@ class ONTONOTES(MultiFileColumnCorpus):
         if domain is None:
             # use all domains
             assert processed_split_path.exists(), f"Processed data not found (expected at: {processed_split_path})"
-            yield from sorted(processed_split_path.rglob("*"))
+            yield from sorted(filter(os.path.isfile, processed_split_path.rglob("*")))
 
         elif isinstance(domain, str):
             domain_path = processed_split_path / domain
             assert domain_path.exists(), f"Processed data not found (expected at: {domain_path})"
-            yield from sorted(domain_path.rglob("*"))
+            yield from sorted(filter(os.path.isfile, domain_path.rglob("*")))
 
         elif isinstance(domain, list):
             for d in domain:
                 domain_path = processed_split_path / d
                 assert domain_path.exists(), f"Processed data not found (expected at: {domain_path})"
-                yield from sorted(domain_path.rglob("*"))
+                yield from sorted(filter(os.path.isfile, domain_path.rglob("*")))
 
         else:
             assert isinstance(domain, dict)
