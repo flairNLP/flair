@@ -13,7 +13,7 @@ from torch.optim import Optimizer
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import DT, DataPoint, Dictionary, Sentence, _iter_dataset
+from flair.data import DT, Dictionary, Sentence, _iter_dataset
 
 log = logging.getLogger("flair")
 
@@ -390,7 +390,7 @@ def store_embeddings(
             data_point.to("cpu", pin_memory=pin_memory)
 
 
-def identify_dynamic_embeddings(data_points: List[DataPoint]):
+def identify_dynamic_embeddings(data_points: List[DT]):
     dynamic_embeddings = []
     all_embeddings = []
     for data_point in data_points:
