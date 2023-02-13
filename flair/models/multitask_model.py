@@ -164,7 +164,7 @@ class MultitaskModel(flair.nn.Classifier):
         for task_id, split in batch_split.items():
             result = self.tasks[task_id].evaluate(
                 data_points=[data_points[i] for i in split],
-                gold_label_type=gold_label_type[task_id],
+                gold_label_type=self.tasks[task_id].label_type,
                 out_path=f"{out_path}_{task_id}.txt" if out_path is not None else None,
                 embedding_storage_mode=embedding_storage_mode,
                 mini_batch_size=mini_batch_size,
@@ -190,7 +190,7 @@ class MultitaskModel(flair.nn.Classifier):
                 + task_id
                 + " - "
                 + "Label type: "
-                + self.label_type.get(task_id)
+                + self.tasks[task_id].label_type
                 + "\n\n"
                 + result.detailed_results
             )
