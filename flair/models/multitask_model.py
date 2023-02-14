@@ -28,6 +28,7 @@ class MultitaskModel(flair.nn.Classifier):
         models: List[flair.nn.Classifier],
         task_ids: Optional[List[str]] = None,
         loss_factors: Optional[List[float]] = None,
+        use_all_tasks: bool = False,
     ):
         """
         :param models: Key (Task ID) - Value (flair.nn.Model) Pairs to stack model
@@ -38,17 +39,18 @@ class MultitaskModel(flair.nn.Classifier):
 
         self.tasks: Dict[str, flair.nn.Classifier] = {}
         self.loss_factors: Dict[str, float] = {}
+        self.use_all_tasks = use_all_tasks
 
         if not loss_factors:
             loss_factors = [1.0] * len(models)
 
-        label_types = dict()
         for task_id, model, loss_factor in zip(task_ids_internal, models, loss_factors):
             self.add_module(task_id, model)
             self.tasks[task_id] = model
             self.loss_factors[task_id] = loss_factor
-            label_types[task_id] = model.label_type
-        self._label_type = label_types
+
+            # the multi task model has several labels
+            self._label_type = model.label_type
         self.to(flair.device)
 
     def forward(self, *args) -> torch.Tensor:
@@ -64,7 +66,7 @@ class MultitaskModel(flair.nn.Classifier):
         :param sentences: batch of sentences
         :return: loss
         """
-        batch_split = self.split_batch_to_task_ids(sentences)
+        batch_split = self.split_batch_to_task_ids(sentences, all_tasks=self.use_all_tasks)
         loss = torch.tensor(0.0, device=flair.device)
         count = 0
         for task_id, split in batch_split.items():
@@ -82,20 +84,25 @@ class MultitaskModel(flair.nn.Classifier):
             task.predict(sentences, **predictargs)
 
     @staticmethod
-    def split_batch_to_task_ids(sentences: Union[List[Sentence], Sentence]) -> Dict:
+    def split_batch_to_task_ids(sentences: Union[List[Sentence], Sentence], all_tasks: bool = False) -> Dict:
         """
         Splits a batch of sentences to its respective model. If single sentence is assigned to several tasks
         (i.e. same corpus but different tasks), then the model assignment for this batch is randomly choosen.
         :param sentences: batch of sentences
+        :param all_tasks: use all tasks of each sentence. If deactivated, a random task will be sampled
         :return: Key-value pairs as (task_id, list of sentences ids in batch)
         """
         batch_to_task_mapping: Dict[str, List[int]] = {}
         for sentence_id, sentence in enumerate(sentences):
-            multitask_id = random.choice(sentence.get_labels("multitask_id"))
-            if multitask_id.value in batch_to_task_mapping:
-                batch_to_task_mapping[multitask_id.value].append(sentence_id)
-            elif multitask_id.value not in batch_to_task_mapping:
-                batch_to_task_mapping[multitask_id.value] = [sentence_id]
+            if all_tasks:
+                multitask_ids = sentence.get_labels("multitask_id")
+            else:
+                multitask_ids = [random.choice(sentence.get_labels("multitask_id"))]
+            for multitask_id in multitask_ids:
+                if multitask_id.value in batch_to_task_mapping:
+                    batch_to_task_mapping[multitask_id.value].append(sentence_id)
+                elif multitask_id.value not in batch_to_task_mapping:
+                    batch_to_task_mapping[multitask_id.value] = [sentence_id]
         return batch_to_task_mapping
 
     def evaluate(
@@ -110,6 +117,7 @@ class MultitaskModel(flair.nn.Classifier):
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
+        evaluate_all: bool = True,
         **evalargs,
     ) -> Result:
         """
@@ -118,10 +126,35 @@ class MultitaskModel(flair.nn.Classifier):
             'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
         :param mini_batch_size: size of batches
         :param num_workers: number of workers for DataLoader class
+        :param evaluate_all: choose if all tasks should be evaluated, or a single one, depending on gold_label_type
         :return: Tuple of Result object and loss value (float)
         """
 
-        batch_split = self.split_batch_to_task_ids(data_points)
+        if not evaluate_all:
+            if gold_label_type not in self.tasks:
+                raise ValueError(
+                    "evaluating a single task on a multitask model requires 'gold_label_type' to be a valid task."
+                )
+            data = [
+                dp
+                for dp in data_points
+                if any(label.value == gold_label_type for label in dp.get_labels("multitask_id"))
+            ]
+            return self.tasks[gold_label_type].evaluate(
+                data,
+                gold_label_type=self.tasks[gold_label_type].label_type,
+                out_path=out_path,
+                embedding_storage_mode=embedding_storage_mode,
+                mini_batch_size=mini_batch_size,
+                num_workers=num_workers,
+                main_evaluation_metric=main_evaluation_metric,
+                exclude_labels=exclude_labels,
+                gold_label_dictionary=gold_label_dictionary,
+                return_loss=return_loss,
+                **evalargs,
+            )
+
+        batch_split = self.split_batch_to_task_ids(data_points, all_tasks=True)
 
         loss = torch.tensor(0.0, device=flair.device)
         main_score = 0.0
@@ -131,8 +164,8 @@ class MultitaskModel(flair.nn.Classifier):
         for task_id, split in batch_split.items():
             result = self.tasks[task_id].evaluate(
                 data_points=[data_points[i] for i in split],
-                gold_label_type=gold_label_type[task_id],
-                out_path=f"{out_path}_{task_id}.txt",
+                gold_label_type=self.tasks[task_id].label_type,
+                out_path=f"{out_path}_{task_id}.txt" if out_path is not None else None,
                 embedding_storage_mode=embedding_storage_mode,
                 mini_batch_size=mini_batch_size,
                 num_workers=mini_batch_size,
@@ -157,7 +190,7 @@ class MultitaskModel(flair.nn.Classifier):
                 + task_id
                 + " - "
                 + "Label type: "
-                + self.label_type.get(task_id)
+                + self.tasks[task_id].label_type
                 + "\n\n"
                 + result.detailed_results
             )
@@ -183,6 +216,7 @@ class MultitaskModel(flair.nn.Classifier):
             **initial_model_state,
             "model_states": {task: model._get_state_dict() for task, model in self.tasks.items()},
             "loss_factors": [self.loss_factors[task] for task in self.tasks.keys()],
+            "use_all_tasks": self.use_all_tasks,
         }
 
         return model_state
@@ -200,7 +234,13 @@ class MultitaskModel(flair.nn.Classifier):
             models.append(Classifier.load(task_state))
             tasks.append(task)
 
-        model = cls(models=models, task_ids=tasks, loss_factors=loss_factors, **kwargs)
+        model = cls(
+            models=models,
+            task_ids=tasks,
+            loss_factors=loss_factors,
+            use_all_tasks=state.get("use_all_tasks", False),
+            **kwargs,
+        )
         return model
 
     @property
