@@ -1059,27 +1059,27 @@ class ONTONOTES(MultiFileColumnCorpus):
 
     @classmethod
     def _conll_rows_to_sentence(cls, conll_rows: List[str]) -> Dict:
-        document_id: str = None
-        sentence_id: int = None
+        document_id: str
+        sentence_id: int
         # The words in the sentence.
         sentence: List[str] = []
         # The pos tags of the words in the sentence.
         pos_tags: List[str] = []
         # the pieces of the parse tree.
-        parse_pieces: List[str] = []
+        parse_pieces: List[Optional[str]] = []
         # The lemmatised form of the words in the sentence which
         # have SRL or word sense information.
-        predicate_lemmas: List[str] = []
+        predicate_lemmas: List[Optional[str]] = []
         # The FrameNet ID of the predicate.
-        predicate_framenet_ids: List[str] = []
+        predicate_framenet_ids: List[Optional[str]] = []
         # The sense of the word, if available.
-        word_senses: List[float] = []
+        word_senses: List[Optional[float]] = []
         # The current speaker, if available.
-        speakers: List[str] = []
+        speakers: List[Optional[str]] = []
 
         verbal_predicates: List[str] = []
         span_labels: List[List[str]] = []
-        current_span_labels: List[str] = []
+        current_span_labels: List[Optional[str]] = []
 
         # Cluster id -> List of (start_index, end_index) spans.
         clusters: DefaultDict[int, List[Tuple[int, int]]] = defaultdict(list)
@@ -1093,7 +1093,8 @@ class ONTONOTES(MultiFileColumnCorpus):
             sentence_id = int(conll_components[1])
             word = conll_components[3]
             pos_tag = conll_components[4]
-            parse_piece = conll_components[5]
+
+            parse_piece: Optional[str]
 
             # Replace brackets in text and pos tags
             # with a different token for parse trees.
@@ -1108,7 +1109,7 @@ class ONTONOTES(MultiFileColumnCorpus):
                     pos_tag = "-LRB-"
                 if pos_tag == ")":
                     pos_tag = "-RRB-"
-                (left_brackets, right_hand_side) = parse_piece.split("*")
+                (left_brackets, right_hand_side) = conll_components[5].split("*")
                 # only keep ')' if there are nested brackets with nothing in them.
                 right_brackets = right_hand_side.count(")") * ")"
                 parse_piece = f"{left_brackets} ({pos_tag} {parse_word}) {right_brackets}"
@@ -1159,7 +1160,8 @@ class ONTONOTES(MultiFileColumnCorpus):
         srl_frames = [(predicate, labels) for predicate, labels in zip(verbal_predicates, span_labels[1:])]
 
         if all(parse_pieces):
-            parse_tree = "".join(parse_pieces)
+            # this would not be reached if parse_pieces contained None, hence the cast
+            parse_tree = "".join(cast(List[str], parse_pieces))
         else:
             parse_tree = None
         coref_span_tuples = {(cluster_id, span) for cluster_id, span_list in clusters.items() for span in span_list}

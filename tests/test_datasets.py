@@ -8,10 +8,10 @@ import flair.datasets
 from flair.data import MultiCorpus, Sentence
 from flair.datasets import ColumnCorpus
 from flair.datasets.sequence_labeling import (
+    ONTONOTES,
     JsonlCorpus,
     JsonlDataset,
     MultiFileJsonlCorpus,
-    ONTONOTES
 )
 
 
@@ -846,6 +846,7 @@ def test_jsonl_corpus_loads_spans(tasks_base_path):
 
 def test_ontonotes_download():
     from urllib.parse import urlparse
+
     res = urlparse(ONTONOTES.archive_url)
     assert all([res.scheme, res.netloc])
 
@@ -853,6 +854,7 @@ def test_ontonotes_download():
 def test_ontonotes_extraction(tasks_base_path):
     import os
     import tempfile
+
     from flair.file_utils import unpack_file
 
     ontonotes_path = tasks_base_path / "ontonotes"
