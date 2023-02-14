@@ -106,9 +106,9 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
             decoded_predictions = [[(self.label_dictionary.get_item_for_index(pred), score) for pred, score in zip(sentence_preds, sentence_scores)]
                            for sentence_preds, sentence_scores in zip(preds, scores)]
 
-            return self.loss_fct(torch.nn.functional.softmax(logits, dim=-1), labels[pad_mask]), decoded_predictions
+            return self.loss_fct(logits, labels[pad_mask]), decoded_predictions
         else:
-            return self.loss_fct(torch.nn.functional.softmax(logits, dim=-1), labels[pad_mask])
+            return self.loss_fct(logits, labels[pad_mask])
 
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
         if len(sentences) == 0:
