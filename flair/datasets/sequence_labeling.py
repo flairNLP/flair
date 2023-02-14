@@ -797,7 +797,7 @@ class CONLL_03(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        column_format={0: "text", 1: "pos", 3: "ner"},
+        column_format={0: "text", 1: "pos", 2: "chunk", 3: "ner"},
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -824,12 +824,10 @@ class CONLL_03(ColumnCorpus):
 
         # check if data there
         if not data_folder.exists():
-            log.warning("-" * 100)
-            log.warning(f'WARNING: CoNLL-03 dataset not found at "{data_folder}".')
-            log.warning(
-                'Instructions for obtaining the data can be found here: https://www.clips.uantwerpen.be/conll2003/ner/"'
-            )
-            log.warning("-" * 100)
+            cached_path("https://data.deepai.org/conll2003.zip", Path("datasets") / dataset_name)
+            unpack_file(data_folder / "conll2003.zip", data_folder, "zip", True)
+            if "valid.txt" in os.listdir(data_folder):
+                os.rename(data_folder / "valid.txt", data_folder / "dev.txt")
 
         super(CONLL_03, self).__init__(
             data_folder,
