@@ -1515,7 +1515,7 @@ class Corpus(typing.Generic[T_co]):
         data: ConcatDataset = ConcatDataset(datasets)
 
         orig_label_p = 1 - noise_share
-        other_label_p = noise_share/(len(labels)-1)
+        other_label_p = noise_share / (len(labels) - 1)
 
         corrupted_count = 0
         total_label_count = 0
@@ -1533,12 +1533,14 @@ class Corpus(typing.Generic[T_co]):
                 # replace the old label with the new one
                 label.value = new_label
                 # keep track of the old (clean) label using another label type category
-                label.data_point.add_label(label_type + '_clean', orig_label)
+                label.data_point.add_label(label_type + "_clean", orig_label)
                 # keep track of how many labels in total are flipped
                 if new_label != orig_label:
                     corrupted_count += 1
 
-        log.info(f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count/total_label_count)*100, 2)}%.")
+        log.info(
+            f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count/total_label_count)*100, 2)}%."
+        )
 
     def get_label_distribution(self):
         class_to_count = defaultdict(lambda: 0)
