@@ -807,6 +807,8 @@ class ColumnDataset(FlairDataset):
 
 
 class ONTONOTES(MultiFileColumnCorpus):
+    archive_url = "https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded"
+
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -937,7 +939,9 @@ class ONTONOTES(MultiFileColumnCorpus):
                     for raw_source_path in raw_domain_path.iterdir():
                         conll_files = sorted(raw_source_path.rglob("*gold_conll"))
 
-                        processed_source_path = processed_split_path / split / raw_domain_path.name / raw_source_path.name
+                        processed_source_path = (
+                            processed_split_path / split / raw_domain_path.name / raw_source_path.name
+                        )
                         processed_source_path.parent.mkdir(parents=True, exist_ok=True)
 
                         with open(processed_source_path, "w") as f:
@@ -957,10 +961,8 @@ class ONTONOTES(MultiFileColumnCorpus):
 
         data_folder = base_path / "conll-2012"
 
-        archive_url = "https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded"
-
         if not data_folder.exists():
-            unpack_file(cached_path(archive_url, data_folder), data_folder.parent, "zip", False)
+            unpack_file(cached_path(self.archive_url, data_folder), data_folder.parent, "zip", False)
 
         return data_folder
 

@@ -843,11 +843,12 @@ def test_jsonl_corpus_loads_spans(tasks_base_path):
     example = corpus.train[0]
     assert len(example.get_spans("ner")) > 0
 
+
 def test_ontonotes_download():
     from urllib.parse import urlparse
-    res = urlparse(
-        "https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded")
+    res = urlparse(ONTONOTES.archive_url)
     assert all([res.scheme, res.netloc])
+
 
 def test_ontonotes_extraction(tasks_base_path):
     import os
