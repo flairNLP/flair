@@ -962,7 +962,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         data_folder = base_path / "conll-2012"
 
         if not data_folder.exists():
-            unpack_file(cached_path(self.archive_url, data_folder), data_folder.parent, "zip", False)
+            unpack_file(cached_path(cls.archive_url, data_folder), data_folder.parent, "zip", False)
 
         return data_folder
 
