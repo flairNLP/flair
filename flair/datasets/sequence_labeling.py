@@ -1128,19 +1128,23 @@ class FEWNERD(ColumnCorpus):
         dl_path = _URLs[setting]
         dl_dir = cached_path(dl_path, Path("datasets") / self.dataset_name / setting)
 
-        if not setting in os.listdir(self.data_folder):
+        if setting not in os.listdir(self.data_folder):
             import zipfile
+
             from tqdm import tqdm
+
             log.info("FewNERD dataset has not been extracted yet, extracting it now. This might take a while.")
             with zipfile.ZipFile(dl_dir, "r") as zip_ref:
                 for f in tqdm(zip_ref.namelist()):
-                    if f.endswith('/'):
+                    if f.endswith("/"):
                         os.makedirs(self.data_folder / f)
                     else:
                         zip_ref.extract(f, path=self.data_folder)
 
     def _generate_splits(self, setting):
-        log.info(f"FewNERD splits for {setting} have not been parsed into BIO format, parsing it now. This might take a while.")
+        log.info(
+            f"FewNERD splits for {setting} have not been parsed into BIO format, parsing it now. This might take a while."
+        )
         os.mkdir(self.bio_format_data)
         for split in os.listdir(self.data_folder / setting):
             with open(self.data_folder / setting / split, "r") as source:
@@ -1159,6 +1163,7 @@ class FEWNERD(ColumnCorpus):
                             elif previous_tag == tag and tag != "O":
                                 target.write(token + "\t" + "I-" + tag + "\n")
                             previous_tag = tag
+
 
 class BIOSCOPE(ColumnCorpus):
     def __init__(
