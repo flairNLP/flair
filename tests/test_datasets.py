@@ -11,6 +11,7 @@ from flair.datasets.sequence_labeling import (
     JsonlCorpus,
     JsonlDataset,
     MultiFileJsonlCorpus,
+    ONTONOTES
 )
 
 
@@ -841,6 +842,32 @@ def test_jsonl_corpus_loads_spans(tasks_base_path):
     assert corpus.train is not None
     example = corpus.train[0]
     assert len(example.get_spans("ner")) > 0
+
+def test_ontonotes_download():
+    from urllib.parse import urlparse
+    res = urlparse(
+        "https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded")
+    assert all([res.scheme, res.netloc])
+
+def test_ontonotes_extraction(tasks_base_path):
+    import os
+    import tempfile
+    from flair.file_utils import unpack_file
+
+    ontonotes_path = tasks_base_path / "ontonotes"
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        unpack_file(ontonotes_path / "tiny-conll-2012.zip", tmp_dir, "zip", True)
+        assert "conll-2012" in os.listdir(tmp_dir)
+
+        corpus = ONTONOTES(base_path=tmp_dir)
+        label_dictionary = corpus.make_label_dictionary("ner")
+
+        assert len(label_dictionary) == 15
+        assert label_dictionary.span_labels == True
+
+        domain_specific_corpus = ONTONOTES(base_path=tmp_dir, domain=["bc"])
+
+        assert len(corpus.train) > len(domain_specific_corpus.train)
 
 
 TRAIN_FILE = "tests/resources/tasks/jsonl/train.jsonl"
