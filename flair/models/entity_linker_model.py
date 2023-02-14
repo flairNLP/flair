@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional, Union
 
 import torch
 
@@ -19,12 +19,13 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     """
 
     def __init__(
-        self,
-        embeddings: flair.embeddings.TokenEmbeddings,
-        label_dictionary: Dictionary,
-        pooling_operation: str = "first_last",
-        label_type: str = "nel",
-        **classifierargs,
+            self,
+            embeddings: flair.embeddings.TokenEmbeddings,
+            label_dictionary: Dictionary,
+            pooling_operation: str = "first_last",
+            label_type: str = "nel",
+            candidates: Optional[Union[str, dict]] = None,
+            **classifierargs,
     ):
         """
         Initializes an EntityLinker
@@ -39,9 +40,8 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         super(EntityLinker, self).__init__(
             embeddings=embeddings,
             label_dictionary=label_dictionary,
-            final_embedding_size=embeddings.embedding_length * 2
-            if pooling_operation == "first_last"
-            else embeddings.embedding_length,
+            final_embedding_size=embeddings.embedding_length * 2 if pooling_operation == "first_last" \
+                else embeddings.embedding_length,
             **classifierargs,
         )
 
@@ -59,6 +59,8 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first_last"')
 
         self.aggregated_embedding = cases[pooling_operation]
+
+        self.candidates = candidates
 
         self.to(flair.device)
 
@@ -133,3 +135,18 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     @property
     def label_type(self):
         return self._label_type
+
+    def _mask_scores(self, scores: torch.Tensor, data_points: List[Span]):
+
+        if not self.candidates:
+            return scores
+
+        masked_scores = -torch.inf * torch.ones(scores.size(), requires_grad=True, device=flair.device)
+
+        for idx, span in enumerate(data_points):
+            candidate_set = self.candidates[span.text] if span.text in self.candidates else []
+            print(span, candidate_set)
+            indices_of_candidates = [self.label_dictionary.get_idx_for_item(candidate) for candidate in candidate_set]
+            masked_scores[idx, indices_of_candidates] = scores[idx, indices_of_candidates]
+
+        return masked_scores
