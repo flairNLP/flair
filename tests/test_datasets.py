@@ -886,7 +886,7 @@ def test_ontonotes_extraction(tasks_base_path):
         label_dictionary = corpus.make_label_dictionary("ner")
 
         assert len(label_dictionary) == 15
-        assert label_dictionary.span_labels == True
+        assert label_dictionary.span_labels
 
         domain_specific_corpus = ONTONOTES(base_path=tmp_dir, domain=["bc"])
 
