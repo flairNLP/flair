@@ -788,6 +788,26 @@ def test_masakhane_corpus(tasks_base_path):
             check_number_sentences(len(corpus.test), gold_stats["test"], "test", language, version)
 
 
+def test_nermud_corpus(tasks_base_path):
+    """
+    This test covers the NERMuD dataset. Official stats can be found here:
+    https://github.com/dhfbk/KIND/tree/main/evalita-2023
+    """
+    gold_stats = {
+        "WN": {"train": 10912, "dev": 2594},
+        "FIC": {"train": 11423, "dev": 1051},
+        "ADG": {"train": 5147, "dev": 1122},
+    }
+
+    def check_number_sentences(reference: int, actual: int, split_name: str):
+        assert actual == reference, f"Mismatch in number of sentences for {split_name} split"
+
+    for domain, stats in gold_stats.items():
+        corpus = flair.datasets.NER_NERMUD(domains=domain)
+        check_number_sentences(len(corpus.train), stats["train"], "train")
+        check_number_sentences(len(corpus.dev), stats["dev"], "dev")
+
+
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
     corpus = MultiFileJsonlCorpus(
         train_files=[tasks_base_path / "jsonl/train.jsonl"],

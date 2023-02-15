@@ -28,7 +28,6 @@ class LanguageModel(nn.Module):
         recurrent_type="LSTM",
         has_decoder=True,
     ):
-
         super(LanguageModel, self).__init__()
 
         self.dictionary = dictionary
@@ -118,7 +117,6 @@ class LanguageModel(nn.Module):
         end_marker: str,
         chars_per_chunk: int = 512,
     ):
-
         len_longest_str: int = len(max(strings, key=len))
 
         # pad strings with whitespaces to longest sentence
@@ -192,7 +190,6 @@ class LanguageModel(nn.Module):
 
     @classmethod
     def load_language_model(cls, model_file: Union[Path, str], has_decoder=True):
-
         state = torch.load(str(model_file), map_location=flair.device)
 
         document_delimiter = state.get("document_delimiter", "\n")
@@ -301,7 +298,6 @@ class LanguageModel(nn.Module):
         temperature: float = 1.0,
         break_on_suffix=None,
     ) -> Tuple[str, float]:
-
         if prefix == "":
             prefix = "\n"
 
@@ -314,7 +310,6 @@ class LanguageModel(nn.Module):
             hidden = self.init_hidden(1)
 
             if len(prefix) > 1:
-
                 char_tensors = []
                 for character in prefix[:-1]:
                     char_tensors.append(
@@ -330,7 +325,6 @@ class LanguageModel(nn.Module):
             log_prob = torch.zeros(1, device=flair.device)
 
             for i in range(number_of_characters):
-
                 input = input.to(flair.device)
 
                 # get predicted weights
@@ -378,7 +372,6 @@ class LanguageModel(nn.Module):
             return text, -log_prob_float
 
     def calculate_perplexity(self, text: str) -> float:
-
         if not self.is_forward_lm:
             text = text[::-1]
 
@@ -425,10 +418,8 @@ class LanguageModel(nn.Module):
         return model_state
 
     def __setstate__(self, d):
-
         # special handling for deserializing language models
         if "state_dict" in d:
-
             # re-initialize language model with constructor arguments
             language_model = LanguageModel(
                 dictionary=d["dictionary"],
@@ -461,7 +452,6 @@ class LanguageModel(nn.Module):
             super().__setstate__(d)
 
     def _apply(self, fn):
-
         # models that were serialized using torch versions older than 1.4.0 lack the _flat_weights_names attribute
         # check if this is the case and if so, set it
         for child_module in self.children():

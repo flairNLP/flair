@@ -8,11 +8,76 @@ import requests
 
 import flair
 from flair.data import Corpus, MultiCorpus, Sentence
-from flair.datasets.sequence_labeling import ColumnCorpus
+from flair.datasets.sequence_labeling import ColumnCorpus, MultiFileColumnCorpus
 from flair.file_utils import cached_path, unpack_file
 from flair.splitter import SegtokSentenceSplitter, SentenceSplitter
 
 log = logging.getLogger("flair")
+
+
+class ZELDA(MultiFileColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = False,
+        column_format={0: "text", 2: "nel"},
+        **corpusargs,
+    ):
+        """
+        Initialize ZELDA Entity Linking corpus introduced in "ZELDA: A Comprehensive Benchmark for Supervised
+        Entity Disambiguation" (Milich and Akbik, 2023).
+        When calling the constructor for the first time, the dataset gets automatically downloaded.
+
+        Parameters
+        ----------
+        base_path : Union[str, Path], optional
+            Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+            to point to a different folder but typically this should not be necessary.
+        in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        data_folder = base_path / dataset_name
+
+        # download and parse data if necessary
+        parsed_dataset = data_folder / "train_data" / "zelda_train.conll"
+        if not parsed_dataset.exists():
+            zelda_zip_path = "https://nlp.informatik.hu-berlin.de/resources/datasets/zelda/zelda.zip"
+            aquaint_el_zip = cached_path(f"{zelda_zip_path}", base_path)
+            unpack_file(aquaint_el_zip, base_path, "zip", False)
+
+        # paths to train and test splits
+        train_file = data_folder / "train_data" / "zelda_train.conll"
+        test_path = data_folder / "test_data" / "conll"
+        test_files = [
+            test_path / "test_aida-b.conll",
+            test_path / "test_cweb.conll",
+            test_path / "test_tweeki.conll",
+            test_path / "test_reddit-comments.conll",
+            test_path / "test_reddit-posts.conll",
+            test_path / "test_shadowlinks-top.conll",
+            test_path / "test_shadowlinks-shadow.conll",
+            test_path / "test_shadowlinks-tail.conll",
+            test_path / "test_wned-wiki.conll",
+        ]
+
+        # init corpus
+        super(ZELDA, self).__init__(
+            train_files=[train_file],
+            test_files=test_files,
+            column_format=column_format,
+            in_memory=in_memory,
+            document_separator_token="-DOCSTART-",
+            comment_symbol="# ",
+            **corpusargs,
+        )
 
 
 class NEL_ENGLISH_AQUAINT(ColumnCorpus):
@@ -66,10 +131,8 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
 
             try:
                 with open(parsed_dataset, "w", encoding="utf-8") as txt_out:
-
                     # iterate over all html files
                     for file in os.listdir(data_folder):
-
                         if not file.endswith(".htm"):
                             continue
 
@@ -89,7 +152,6 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
                         txt_out.write("-DOCSTART-\n\n")
 
                         for string in strings:
-
                             # skip empty strings
                             if not string:
                                 continue
@@ -142,7 +204,6 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
 
                             # iterate through all annotations and add to corresponding tokens
                             for mention_start, mention_length, wikiname in zip(indices, lengths, wikinames):
-
                                 # find sentence to which annotation belongs
                                 sentence_index = 0
                                 for i in range(1, len(sentences)):
@@ -171,9 +232,7 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
 
                             # write to out-file in column format
                             for sentence in sentences:
-
                                 for token in sentence.tokens:
-
                                     labels = token.get_labels("nel")
 
                                     if len(labels) == 0:  # no entity
@@ -241,7 +300,6 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
 
         # download and parse data if necessary
         if not parsed_dataset.exists():
-
             # from qwikidata.linked_data_interface import get_entity_dict_from_api
 
             original_train_path = cached_path(f"{train_raw_url}", Path("datasets") / dataset_name)
@@ -269,7 +327,6 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
                 with open(doc_path, "r", encoding="utf-8") as read, open(
                     data_folder / file_name, "w", encoding="utf-8"
                 ) as write:
-
                     # ignore first line
                     read.readline()
                     line = read.readline()
@@ -279,7 +336,6 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
                         # commented and empty lines
                         if line[0] == "#" or line == "\n":
                             if line[2:13] == "document_id":  # beginning of new document
-
                                 if last_eos:
                                     write.write("-DOCSTART-\n\n")
                                     last_eos = False
@@ -292,7 +348,6 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
                                 "_",
                                 "NIL",
                             ]:  # line has wikidata link
-
                                 wikiname = qid_wikiname_dict[line_list[7]]
 
                                 if wikiname != "O":
@@ -301,7 +356,6 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
                                     annotation = "O"
 
                             else:
-
                                 annotation = "O"
 
                             write.write(line_list[0] + "\t" + annotation + "\n")
@@ -325,7 +379,6 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
         )
 
     def _get_qid_wikiname_dict(self, path):
-
         qid_set = set()
         with open(path, mode="r", encoding="utf-8") as read:
             # read all Q-IDs
@@ -335,11 +388,9 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
             line = read.readline()
 
             while line:
-
                 if not (line[0] == "#" or line == "\n"):  # commented or empty lines
                     line_list = line.split("\t")
                     if not line_list[7] in ["_", "NIL"]:  # line has wikidata link
-
                         qid_set.add(line_list[7])
 
                 line = read.readline()
@@ -358,13 +409,11 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
             if (
                 i + 1
             ) % 50 == 0 or i == length - 1:  # there is a limit to the number of ids in one request in the wikidata api
-
                 ids += qid_list[i]
                 # request
                 response_json = requests.get(base_url + ids).json()
 
                 for qid in response_json["entities"]:
-
                     try:
                         wikiname = response_json["entities"][qid]["sitelinks"][self.wiki_language]["title"].replace(
                             " ", "_"
@@ -421,7 +470,6 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
         parsed_dataset = data_folder / corpus_file_name
 
         if not parsed_dataset.exists():
-
             testa_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_testa", Path("datasets") / dataset_name)
             testb_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_testb", Path("datasets") / dataset_name)
             train_unprocessed_path = cached_path(f"{conll_yago_path}aida_conll_train", Path("datasets") / dataset_name)
@@ -445,9 +493,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
                 with open(data_folder / name, "w", encoding="utf-8") as write, open(
                     path, "r", encoding="utf-8"
                 ) as read:
-
                     for line in read:
-
                         line_list = line.split("\t")
                         if len(line_list) <= 4:
                             if line_list[0][:10] == "-DOCSTART-":  # Docstart
@@ -490,7 +536,6 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
         )
 
     def _get_wikiid_wikiname_dict(self, base_folder):
-
         # collect all wikiids
         wikiid_set = set()
         for data_file in ["aida_conll_testa", "aida_conll_testb", "aida_conll_train"]:
@@ -512,7 +557,6 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
             if (
                 i + 1
             ) % 50 == 0 or i == length - 1:  # there is a limit to the number of ids in one request in the wikimedia api
-
                 ids += wikiid_list[i]
                 # request
                 resp = requests.get(
@@ -577,7 +621,6 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
         parsed_dataset = data_folder / corpus_file_name
 
         if not parsed_dataset.exists():
-
             docs_zip_path = cached_path(f"{iitb_el_docs_path}", Path("datasets") / dataset_name)
             annotations_xml_path = cached_path(f"{iitb_el_annotations_path}", Path("datasets") / dataset_name)
 
@@ -607,9 +650,7 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
 
                         # iterate through all annotations and add to corresponding tokens
                         for elem in root:
-
                             if elem[0].text == doc_name and elem[2].text:  # annotation belongs to current document
-
                                 wikiname = elem[2].text.replace(" ", "_")
                                 assert elem[3].text is not None
                                 assert elem[4].text is not None
@@ -653,9 +694,7 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
                         write.write("-DOCSTART-\n\n")  # each file is one document
 
                         for sentence in sentences:
-
                             for token in sentence.tokens:
-
                                 labels = token.labels
 
                                 if len(labels) == 0:  # no entity
@@ -665,12 +704,10 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
                                     write.write(token.text + "\t" + labels[0].value + "\n")
 
                                 else:  # annotations from two annotators
-
                                     if labels[0].value == labels[1].value:  # annotators agree
                                         write.write(token.text + "\t" + labels[0].value + "\n")
 
                                     else:  # annotators disagree: ignore or arbitrarily take first annotation
-
                                         if ignore_disagreements:
                                             write.write(token.text + "\tO\n")
 
@@ -723,7 +760,6 @@ class NEL_ENGLISH_TWEEKI(ColumnCorpus):
 
         # download and parse data if necessary
         if not parsed_dataset.exists():
-
             original_file_path = cached_path(f"{tweeki_gold_el_path}", Path("datasets") / dataset_name)
 
             with open(original_file_path, "r", encoding="utf-8") as read, open(
@@ -791,18 +827,15 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
             unpack_file(reddit_el_zip, data_folder, "zip", False)
 
             with open(data_folder / corpus_file_name, "w", encoding="utf-8") as txtout:
-
                 # First parse the post titles
                 with open(data_folder / "posts.tsv", "r", encoding="utf-8") as tsvin1, open(
                     data_folder / "gold_post_annotations.tsv", "r", encoding="utf-8"
                 ) as tsvin2:
-
                     posts = csv.reader(tsvin1, delimiter="\t")
                     self.post_annotations = csv.reader(tsvin2, delimiter="\t")
                     self.curr_annot = next(self.post_annotations)
 
                     for row in posts:  # Go through all the post titles
-
                         txtout.writelines("-DOCSTART-\n\n")  # Start each post with a -DOCSTART- token
 
                         # Keep track of how many and which entity mentions does a given post title have
@@ -810,7 +843,6 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
 
                         # Check if the current post title has an entity link and parse accordingly
                         if row[0] == self.curr_annot[0]:
-
                             link_annots.append(
                                 (
                                     int(self.curr_annot[4]),
@@ -837,7 +869,6 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
                 with open(data_folder / "comments.tsv", "r", encoding="utf-8") as tsvin3, open(
                     data_folder / "gold_comment_annotations.tsv", "r", encoding="utf-8"
                 ) as tsvin4:
-
                     self.comments = csv.reader(tsvin3, delimiter="\t")
                     self.comment_annotations = csv.reader(tsvin4, delimiter="\t")
                     self.curr_annot = next(self.comment_annotations)
@@ -846,7 +877,6 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
 
                     # Iterate over the comments.tsv file, until the end is reached
                     while not self.stop_iter:
-
                         txtout.writelines("-DOCSTART-\n")  # Start each comment thread with a -DOCSTART- token
 
                         # Keep track of the current comment thread and its corresponding key, on which the annotations are matched.
@@ -1118,11 +1148,8 @@ def from_ufsac_to_tsv(
             txt_out.write("-DOCSTART-\n\n")
 
         for paragraph in document:
-
             for sentence in paragraph:
-
                 for word in sentence:
-
                     dictionary = word.attrib
                     fields_of_word = [word.attrib[field] if (field in dictionary) else "O" for field in fields]
 
@@ -1160,11 +1187,9 @@ def determine_tsv_file(filename: str, data_folder: Path, cut_multisense: bool = 
         "trainomatic",
         "wngt",
     ]:  # these three datasets do not have multiple senses
-
         conll_file_name = filename + "_cut.tsv"
 
     else:
-
         conll_file_name = filename + ".tsv"
 
     path_to_conll_file = data_folder / conll_file_name

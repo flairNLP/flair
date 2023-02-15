@@ -230,7 +230,6 @@ def bioc_to_internal(bioc_file: Path):
             document_text += " " + text
 
             for annotation in passage.xpath(".//annotation"):
-
                 entity_types = [
                     i.text.replace(" ", "_")
                     for i in annotation.xpath("./infon")
@@ -2642,7 +2641,6 @@ class OSIRIS(ColumnCorpus):
             file for file in os.listdir(str(corpus_folder)) if file.endswith(".txt") and not file.startswith("README")
         ]
         for text_file in input_files:
-
             with open(os.path.join(str(corpus_folder), text_file), encoding="utf8") as text_reader:
                 document_text = text_reader.read()
                 if not document_text:

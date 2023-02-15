@@ -31,7 +31,7 @@ def results_base_path(resources_path):
             path.rmdir()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(autouse=True)
 def set_cpu(force_cpu):
     if force_cpu:
         flair.device = torch.device("cpu")
@@ -63,4 +63,4 @@ def pytest_collection_modifyitems(config, items):
 def pytest_generate_tests(metafunc):
     option_value = metafunc.config.getoption("--force-cpu")
     if "force_cpu" in metafunc.fixturenames and option_value is not None:
-        metafunc.parametrize("force_gpu", [option_value])
+        metafunc.parametrize("force_cpu", [option_value])

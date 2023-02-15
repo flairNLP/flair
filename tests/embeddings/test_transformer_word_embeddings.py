@@ -21,6 +21,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         dict(layers="-1,-2,-3,-4", layer_mean=False),
         dict(layers="all", layer_mean=True),
         dict(layers="all", layer_mean=False),
+        dict(layers="all", layer_mean=True, subtoken_pooling="mean"),
     ]
 
     name_field = "embeddings"
@@ -109,7 +110,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         # test expansion for sentence without context
         sentence = Sentence("This is great!")
         expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
-        assert " ".join([token.text for token in expanded]) == "[SATZ] This is great ! [SATZ]"
+        assert " ".join([token.text for token in expanded]) == "[FLERT] This is great ! [FLERT]"
 
         # test expansion for with previous and next as context
         sentence = Sentence("This is great.")
@@ -118,7 +119,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
         assert (
             " ".join([token.text for token in expanded])
-            == "How is it ? [SATZ] This is great . [SATZ] Then again , maybe not ..."
+            == "How is it ? [FLERT] This is great . [FLERT] Then again , maybe not ..."
         )
 
         # test expansion if first sentence is document boundary
@@ -128,7 +129,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         sentence._next_sentence = sentence_next
         expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
         assert (
-            " ".join([token.text for token in expanded]) == "[SATZ] This is great ? [SATZ] Then again , maybe not ..."
+            " ".join([token.text for token in expanded]) == "[FLERT] This is great ? [FLERT] Then again , maybe not ..."
         )
 
         # test expansion if we don't use context
@@ -243,7 +244,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             0.5584433674812317,
         ]
 
-        for (token_de, token_en, exp_sim) in zip(sent_de, sent_en, expected_similarities):
+        for token_de, token_en, exp_sim in zip(sent_de, sent_en, expected_similarities):
             sim = cos(token_de.embedding, token_en.embedding).item()
             assert abs(exp_sim - sim) < 1e-5
 

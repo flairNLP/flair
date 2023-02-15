@@ -55,7 +55,6 @@ class Plotter(object):
 
             # then get all relevant values from the tsv
             for row in tsvin:
-
                 if TRAIN_SCORE is not None:
                     if row[TRAIN_SCORE] != "_":
                         training_curves["train"]["score"].append(float(row[TRAIN_SCORE]))
@@ -162,7 +161,6 @@ class Plotter(object):
         fig = plt.figure(figsize=(15, 10))
 
         for plot_no, plot_value in enumerate(plot_values):
-
             training_curves = self._extract_evaluation_data(file_name, plot_value)
 
             plt.subplot(len(plot_values), 1, plot_no + 1)

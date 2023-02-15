@@ -29,7 +29,6 @@ class PrototypicalDecoder(torch.nn.Module):
         learning_mode: Optional[str] = "joint",
         normal_distributed_initial_prototypes: bool = False,
     ):
-
         super().__init__()
 
         if not prototype_size:

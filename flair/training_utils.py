@@ -13,7 +13,7 @@ from torch.optim import Optimizer
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import DT, DataPoint, Dictionary, Sentence, _iter_dataset
+from flair.data import DT, Dictionary, Sentence, _iter_dataset
 
 log = logging.getLogger("flair")
 
@@ -113,7 +113,6 @@ class WeightExtractor(object):
 
     def extract_weights(self, state_dict, iteration):
         for key in state_dict.keys():
-
             vec = state_dict[key]
             # print(vec)
             try:
@@ -213,7 +212,6 @@ class AnnealOnPlateau(object):
         min_lr=0,
         eps=1e-8,
     ):
-
         if factor >= 1.0:
             raise ValueError("Factor should be < 1.0.")
         self.factor = factor
@@ -372,7 +370,6 @@ def add_file_handler(log, output_file):
 def store_embeddings(
     data_points: Union[List[DT], Dataset], storage_mode: str, dynamic_embeddings: Optional[List[str]] = None
 ):
-
     if isinstance(data_points, Dataset):
         data_points = list(_iter_dataset(data_points))
 
@@ -381,8 +378,8 @@ def store_embeddings(
         dynamic_embeddings = None
 
     # if dynamic embedding keys not passed, identify them automatically
-    elif not dynamic_embeddings:
-        dynamic_embeddings = identify_dynamic_embeddings(data_points[0])
+    elif dynamic_embeddings is None:
+        dynamic_embeddings = identify_dynamic_embeddings(data_points)
 
     # always delete dynamic embeddings
     for data_point in data_points:
@@ -395,15 +392,23 @@ def store_embeddings(
             data_point.to("cpu", pin_memory=pin_memory)
 
 
-def identify_dynamic_embeddings(data_point: DataPoint):
+def identify_dynamic_embeddings(data_points: List[DT]):
     dynamic_embeddings = []
-    if isinstance(data_point, Sentence):
-        first_token = data_point[0]
-        for name, vector in first_token._embeddings.items():
+    all_embeddings = []
+    for data_point in data_points:
+        if isinstance(data_point, Sentence):
+            first_token = data_point[0]
+            for name, vector in first_token._embeddings.items():
+                if vector.requires_grad:
+                    dynamic_embeddings.append(name)
+                all_embeddings.append(name)
+
+        for name, vector in data_point._embeddings.items():
             if vector.requires_grad:
                 dynamic_embeddings.append(name)
-
-    for name, vector in data_point._embeddings.items():
-        if vector.requires_grad:
-            dynamic_embeddings.append(name)
-    return dynamic_embeddings
+            all_embeddings.append(name)
+        if dynamic_embeddings:
+            return dynamic_embeddings
+    if not all_embeddings:
+        return None
+    return list(set(dynamic_embeddings))

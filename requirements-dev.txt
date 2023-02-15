@@ -11,3 +11,4 @@ types-tabulate
 types-requests
 pytest-github-actions-annotate-failures
 konoha<5.0.0,>=4.0.0
+pre-commit

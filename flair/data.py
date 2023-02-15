@@ -60,7 +60,6 @@ class Dictionary:
             self.add_item("<unk>")
 
     def remove_item(self, item: str):
-
         bytes_item = item.encode("utf-8")
         if bytes_item in self.item2idx:
             self.idx2item.remove(bytes_item)
@@ -342,7 +341,6 @@ class DataPoint:
         return key in self._metadata
 
     def add_label(self, typename: str, value: str, score: float = 1.0):
-
         if typename not in self.annotation_layers:
             self.annotation_layers[typename] = [Label(self, value, score)]
         else:
@@ -382,7 +380,6 @@ class DataPoint:
         raise NotImplementedError
 
     def _printout_labels(self, main_label=None, add_score: bool = True):
-
         all_labels = []
         keys = [main_label] if main_label is not None else self.annotation_layers.keys()
         if add_score:
@@ -779,7 +776,6 @@ class Sentence(DataPoint):
         return None
 
     def _add_token(self, token: Union[Token, str]):
-
         if isinstance(token, Token):
             assert token.sentence is None
 
@@ -813,7 +809,6 @@ class Sentence(DataPoint):
         return self.get_embedding()
 
     def to(self, device: str, pin_memory: bool = False):
-
         # move sentence embeddings to device
         super().to(device=device, pin_memory=pin_memory)
 
@@ -822,7 +817,6 @@ class Sentence(DataPoint):
             token.to(device, pin_memory)
 
     def clear_embeddings(self, embedding_names: List[str] = None):
-
         super().clear_embeddings(embedding_names)
 
         # clear token embeddings
@@ -862,7 +856,6 @@ class Sentence(DataPoint):
         return self.to_tagged_string()
 
     def to_tagged_string(self, main_label=None) -> str:
-
         already_printed = [self]
 
         output = super().__str__()
@@ -886,7 +879,6 @@ class Sentence(DataPoint):
         return self.to_original_text()
 
     def to_tokenized_string(self) -> str:
-
         if self.tokenized is None:
             self.tokenized = " ".join([t.text for t in self.tokens])
 
@@ -919,7 +911,6 @@ class Sentence(DataPoint):
                     last_token.whitespace_after = 0
 
             if last_token is not None:
-
                 if token.text in [".", ":", ",", ";", ")", "n't", "!", "?"]:
                     last_token.whitespace_after = 0
 
@@ -1091,7 +1082,6 @@ class Sentence(DataPoint):
             previous_sentence = sentence
 
     def get_labels(self, label_type: str = None):
-
         # if no label if specified, return all labels
         if label_type is None:
             return sorted(self.labels)
@@ -1104,7 +1094,6 @@ class Sentence(DataPoint):
         return []
 
     def remove_labels(self, typename: str):
-
         # labels also need to be deleted at all tokens
         for token in self:
             token.remove_labels(typename)
@@ -1248,7 +1237,6 @@ class Corpus(typing.Generic[T_co]):
         downsample_dev=True,
         downsample_test=True,
     ):
-
         if downsample_train and self._train is not None:
             self._train = self._downsample_to_proportion(self._train, percentage)
 
@@ -1282,7 +1270,6 @@ class Corpus(typing.Generic[T_co]):
 
     @staticmethod
     def _filter_long_sentences(dataset, max_charlength: int) -> Dataset:
-
         # find out empty sentence indices
         empty_sentence_indices = []
         non_empty_sentence_indices = []
@@ -1300,7 +1287,6 @@ class Corpus(typing.Generic[T_co]):
 
     @staticmethod
     def _filter_empty_sentences(dataset) -> Dataset:
-
         # find out empty sentence indices
         empty_sentence_indices = []
         non_empty_sentence_indices = []
@@ -1353,7 +1339,6 @@ class Corpus(typing.Generic[T_co]):
 
     @staticmethod
     def _downsample_to_proportion(dataset: Dataset, proportion: float):
-
         sampled_size: int = round(_len_dataset(dataset) * proportion)
         splits = randomly_split_into_two_datasets(dataset, sampled_size)
         return splits[0]
@@ -1455,7 +1440,6 @@ class Corpus(typing.Generic[T_co]):
         label_value_counter: typing.Counter[str] = Counter()
         all_sentence_labels: List[str] = []
         for sentence in Tqdm.tqdm(_iter_dataset(data)):
-
             # count all label types per sentence
             sentence_label_type_counter.update(sentence.annotation_layers.keys())
 
@@ -1522,7 +1506,6 @@ class Corpus(typing.Generic[T_co]):
 
     @deprecated(version="0.8", reason="Use 'make_label_dictionary' instead.")
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
-
         # Make the tag dictionary
         tag_dictionary: Dictionary = Dictionary(add_unk=False)
         tag_dictionary.add_item("O")
@@ -1542,7 +1525,6 @@ class MultiCorpus(Corpus):
         name: str = "multicorpus",
         **corpusargs,
     ):
-
         self.corpora: List[Corpus] = corpora
 
         ids = task_ids if task_ids else [f"Task_{i}" for i in range(len(corpora))]
@@ -1706,7 +1688,6 @@ def get_spans_from_bio(bioes_tags: List[str], bioes_scores=None) -> List[typing.
     current_span: List[int] = []
     current_span_scores: List[float] = []
     for idx, bioes_tag in enumerate(bioes_tags):
-
         # non-set tags are OUT tags
         if bioes_tag == "" or bioes_tag == "O" or bioes_tag == "_":
             bioes_tag = "O-"

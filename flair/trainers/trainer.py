@@ -173,6 +173,7 @@ class ModelTrainer(Pluggable):
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
         scheduler_state_dict: Optional[Dict[str, Any]] = None,
         save_optimizer_state: bool = False,
+        shuffle_first_epoch: bool = False,
         **kwargs,
     ) -> dict:
         """
@@ -293,10 +294,15 @@ class ModelTrainer(Pluggable):
             for epoch in range(epoch + 1, max_epochs + 1):
                 self.dispatch("before_training_epoch", epoch=epoch)
 
+                # if shuffle_first_epoch==False, the first epoch is not shuffled
+                shuffle_data_this_epoch = shuffle
+                if not shuffle_first_epoch and epoch == 1:
+                    shuffle_data_this_epoch = False
+
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=self.mini_batch_size,
-                    shuffle=shuffle if epoch > 1 else False,  # never shuffle the first epoch
+                    shuffle=shuffle_data_this_epoch,
                     num_workers=0 if num_workers is None else num_workers,
                     sampler=sampler,
                 )
@@ -343,8 +349,9 @@ class ModelTrainer(Pluggable):
                         )
 
                         # identify dynamic embeddings (always deleted) on first sentence
-                        if not dynamic_embeddings:
-                            dynamic_embeddings = identify_dynamic_embeddings(batch[0])
+
+                        if dynamic_embeddings is None:
+                            dynamic_embeddings = identify_dynamic_embeddings(batch)
 
                         # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                         store_embeddings(batch, embeddings_storage_mode, dynamic_embeddings)
@@ -393,7 +400,6 @@ class ModelTrainer(Pluggable):
         additional_epochs: Optional[int] = None,
         **trainer_args,
     ):
-
         assert model.model_card is not None
         self.model = model
         # recover all arguments that were used to train this model
@@ -433,7 +439,6 @@ class ModelTrainer(Pluggable):
         decoder_lr_factor: float = 1.0,
         **trainer_args,
     ):
-
         # If set, add a factor to the learning rate of all parameters with 'embeddings' not in name
         if decoder_lr_factor != 1.0:
             optimizer = optimizer(

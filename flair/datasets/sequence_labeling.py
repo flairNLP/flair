@@ -486,7 +486,6 @@ class ColumnDataset(FlairDataset):
 
         # now load all sentences
         with open(str(self.path_to_column_file), encoding=self.encoding) as file:
-
             # skip first line if to selected
             if skip_first_line:
                 file.readline()
@@ -538,7 +537,6 @@ class ColumnDataset(FlairDataset):
                 self.sentences_raw: List[List[str]] = []
 
                 while True:
-
                     # read lines for next sentence, but don't parse
                     sentence_raw = self._read_next_sentence(file)
 
@@ -557,7 +555,6 @@ class ColumnDataset(FlairDataset):
         self.word_level_tag_columns = {self.text_column: "text"}
         # read first sentence to determine which columns are span-labels
         with open(str(self.path_to_column_file), encoding=self.encoding) as file:
-
             # skip first line if to selected
             if skip_first_line:
                 file.readline()
@@ -579,7 +576,6 @@ class ColumnDataset(FlairDataset):
             # - problem cases are columns for which we see only O - in this case we default to Span
             for sentence in probe:
                 for column in column_name_map:
-
                     # skip assigned columns
                     if (
                         column in self.word_level_tag_columns
@@ -638,7 +634,6 @@ class ColumnDataset(FlairDataset):
     def _convert_lines_to_sentence(
         self, lines, word_level_tag_columns: Dict[int, str], span_level_tag_columns: Optional[Dict[int, str]] = None
     ):
-
         token: Optional[Token] = None
         tokens: List[Token] = []
         filtered_lines = []
@@ -709,7 +704,6 @@ class ColumnDataset(FlairDataset):
             return sentence
 
     def _parse_token(self, line: str, column_name_map: Dict[int, str], last_token: Optional[Token] = None) -> Token:
-
         # get fields from line
         fields: List[str] = re.split(self.column_delimiter, line.rstrip())
 
@@ -727,11 +721,9 @@ class ColumnDataset(FlairDataset):
                     and column != self.head_id_column
                     and column_name_map[column] != self.SPACE_AFTER_KEY
                 ):
-
                     # 'feats' and 'misc' column should be split into different fields
                     if column_name_map[column] in self.FEATS:
                         for feature in fields[column].split("|"):
-
                             # special handling for whitespace after
                             if feature == "SpaceAfter=No":
                                 token.whitespace_after = 0
@@ -782,7 +774,6 @@ class ColumnDataset(FlairDataset):
         return self.total_sentence_count
 
     def __getitem__(self, index: int = 0) -> Sentence:
-
         # if in memory, retrieve parsed sentence
         if self.in_memory:
             sentence = self.sentences[index]
@@ -1099,6 +1090,79 @@ class WNUT_17(ColumnCorpus):
             in_memory=in_memory,
             **corpusargs,
         )
+
+
+class FEWNERD(ColumnCorpus):
+    def __init__(
+        self,
+        setting: str = "supervised",
+        **corpusargs,
+    ):
+        assert setting in ["supervised", "inter", "intra"]
+
+        base_path = flair.cache_root / "datasets"
+        self.dataset_name = self.__class__.__name__.lower()
+        self.data_folder = base_path / self.dataset_name / setting
+        self.bio_format_data = base_path / self.dataset_name / setting / "bio_format"
+
+        if not self.data_folder.exists():
+            self._download(setting=setting)
+
+        if not self.bio_format_data.exists():
+            self._generate_splits(setting)
+
+        super(FEWNERD, self).__init__(
+            self.bio_format_data,
+            column_format={0: "text", 1: "ner"},
+            **corpusargs,
+        )
+
+    def _download(self, setting):
+        _URLs = {
+            "supervised": "https://cloud.tsinghua.edu.cn/f/09265750ae6340429827/?dl=1",
+            "intra": "https://cloud.tsinghua.edu.cn/f/a0d3efdebddd4412b07c/?dl=1",
+            "inter": "https://cloud.tsinghua.edu.cn/f/165693d5e68b43558f9b/?dl=1",
+        }
+
+        log.info(f"FewNERD ({setting}) dataset not found, downloading.")
+        dl_path = _URLs[setting]
+        dl_dir = cached_path(dl_path, Path("datasets") / self.dataset_name / setting)
+
+        if setting not in os.listdir(self.data_folder):
+            import zipfile
+
+            from tqdm import tqdm
+
+            log.info("FewNERD dataset has not been extracted yet, extracting it now. This might take a while.")
+            with zipfile.ZipFile(dl_dir, "r") as zip_ref:
+                for f in tqdm(zip_ref.namelist()):
+                    if f.endswith("/"):
+                        os.makedirs(self.data_folder / f)
+                    else:
+                        zip_ref.extract(f, path=self.data_folder)
+
+    def _generate_splits(self, setting):
+        log.info(
+            f"FewNERD splits for {setting} have not been parsed into BIO format, parsing it now. This might take a while."
+        )
+        os.mkdir(self.bio_format_data)
+        for split in os.listdir(self.data_folder / setting):
+            with open(self.data_folder / setting / split, "r") as source:
+                with open(self.bio_format_data / split, "w") as target:
+                    previous_tag = None
+                    for line in source:
+                        if line == "" or line == "\n":
+                            target.write("\n")
+                        else:
+                            token, tag = line.split("\t")
+                            tag = tag.replace("\n", "")
+                            if tag == "O":
+                                target.write(token + "\t" + tag + "\n")
+                            elif previous_tag != tag and tag != "O":
+                                target.write(token + "\t" + "B-" + tag + "\n")
+                            elif previous_tag == tag and tag != "O":
+                                target.write(token + "\t" + "I-" + tag + "\n")
+                            previous_tag = tag
 
 
 class BIOSCOPE(ColumnCorpus):
@@ -1511,7 +1575,6 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1883,10 +1946,8 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
         github_url = "https://github.com/jeniyat/WNUT_2020_NER/archive/master.zip"
 
         for sample in ["train", "test", "dev"]:
-
             sample_file = data_folder / (sample + ".txt")
             if not sample_file.is_file():
-
                 zip_path = cached_path(f"{github_url}", Path("datasets") / dataset_name)
 
                 # unzip the downloaded repo and merge the train, dev and test datasets
@@ -2657,7 +2718,6 @@ class NER_MASAKHANE(MultiCorpus):
 
         corpora: List[Corpus] = []
         for language in languages:
-
             if language in language_to_code.keys():
                 language = language_to_code[language]
 
@@ -2894,7 +2954,6 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         # download data if necessary
         first = True
         for language in languages:
-
             language_folder = data_folder / language
             file_name = "wikiann-" + language + ".bio"
 
@@ -3363,12 +3422,10 @@ class NER_MULTI_XTREME(MultiCorpus):
 
         # download data if necessary
         for language in languages:
-
             language_folder = data_folder / language
 
             # if language not downloaded yet, download it
             if not language_folder.exists():
-
                 file_name = language + ".tar.gz"
                 # create folder
                 os.makedirs(language_folder)
@@ -3476,7 +3533,6 @@ class NER_MULTI_WIKINER(MultiCorpus):
 
         data_file = flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.train"
         if not data_file.is_file():
-
             cached_path(
                 f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2",
                 Path("datasets") / dataset_name,
@@ -3696,7 +3752,6 @@ class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -3730,7 +3785,6 @@ class KEYPHRASE_INSPEC(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -3767,7 +3821,6 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -4405,4 +4458,81 @@ class NER_ICDAR_EUROPEANA(ColumnCorpus):
             comment_symbol="# ",
             column_delimiter="\t",
             **corpusargs,
+        )
+
+
+class NER_NERMUD(MultiCorpus):
+    def __init__(
+        self,
+        domains: Union[str, List[str]] = "all",
+        base_path: Union[str, Path] = None,
+        in_memory: bool = False,
+        **corpusargs,
+    ):
+        """
+        Initilize the NERMuD 2023 dataset. NERMuD is a task presented at EVALITA 2023 consisting in the extraction and classification
+        of named-entities in a document, such as persons, organizations, and locations. NERMuD 2023 will include two different sub-tasks:
+
+        - Domain-agnostic classification (DAC). Participants will be asked to select and classify entities among three categories
+          (person, organization, location) in different types of texts (news, fiction, political speeches) using one single general model.
+
+        - Domain-specific classification (DSC). Participants will be asked to deploy a different model for each of the above types,
+          trying to increase the accuracy for each considered type.
+
+        :param domains: Domains to be used. Supported are "WN" (Wikinews), "FIC" (fiction), "ADG" (De Gasperi subset) and "all".
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
+        """
+        supported_domains = ["WN", "FIC", "ADG"]
+
+        if type(domains) == str and domains == "all":
+            domains = supported_domains
+
+        if type(domains) == str:
+            domains = [domains]
+
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        corpora: List[Corpus] = []
+
+        github_path = "https://raw.githubusercontent.com/dhfbk/KIND/main/evalita-2023"
+
+        for domain in domains:
+            if domain not in supported_domains:
+                log.error(f"Domain '{domain}' is not in list of supported domains!")
+                log.error(f"Supported are '{supported_domains}'!")
+                raise Exception()
+
+            domain_folder = data_folder / domain.lower()
+
+            for split in ["train", "dev"]:
+                cached_path(f"{github_path}/{domain}_{split}.tsv", domain_folder)
+
+            corpus = ColumnCorpus(
+                data_folder=domain_folder,
+                train_file=f"{domain}_train.tsv",
+                dev_file=f"{domain}_dev.tsv",
+                test_file=None,
+                column_format=columns,
+                in_memory=in_memory,
+                sample_missing_splits=False,  # No test data is available, so do not shrink dev data for shared task preparation!
+                **corpusargs,
+            )
+            corpora.append(corpus)
+        super(NER_NERMUD, self).__init__(
+            corpora,
+            sample_missing_splits=False,
+            name="nermud",
         )

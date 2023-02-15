@@ -37,7 +37,7 @@ from flair.embeddings.base import (
     register_embeddings,
 )
 
-SENTENCE_BOUNDARY_TAG: str = "[SATZ]"
+SENTENCE_BOUNDARY_TAG: str = "[FLERT]"
 
 
 @torch.jit.script_if_tracing
@@ -141,10 +141,13 @@ def insert_missing_embeddings(
 
 @torch.jit.script_if_tracing
 def fill_mean_token_embeddings(
-    all_token_embeddings: torch.Tensor, sentence_hidden_states: torch.Tensor, word_ids: torch.Tensor
+    all_token_embeddings: torch.Tensor,
+    sentence_hidden_states: torch.Tensor,
+    word_ids: torch.Tensor,
+    token_lengths: torch.Tensor,
 ):
     for i in torch.arange(all_token_embeddings.shape[0]):
-        for _id in torch.arange(int(word_ids[i].max()) + 1):
+        for _id in torch.arange(token_lengths[i]):  # type: ignore
             all_token_embeddings[i, _id, :] = torch.nan_to_num(
                 sentence_hidden_states[i][word_ids[i] == _id].mean(dim=0)
             )
@@ -233,7 +236,6 @@ def _reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens
 
     # iterate over subtokens and reconstruct tokens
     for subtoken_id, subtoken in enumerate(subtokens):
-
         # remove special markup
         subtoken = remove_special_markup(subtoken)
 
@@ -1162,6 +1164,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
     @classmethod
     def from_params(cls, params):
+        params["use_context"] = params.pop("context_length", 0)
         return cls.create_from_state(**params)
 
     def to_params(self):

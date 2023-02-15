@@ -19,7 +19,7 @@ repos:
               tests/resources/.*\.(tsv|txt|testa|testb|train|conllu|json)
           )$
   - repo: https://github.com/pycqa/isort
-    rev: 5.10.1
+    rev: 5.11.5
     hooks:
       - id: isort
         name: isort (python)

@@ -99,7 +99,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     def _print_predictions(self, batch, gold_label_type):
         lines = []
         for datapoint in batch:
-
             eval_line = f"\n{datapoint.to_original_text()}\n"
 
             for span in datapoint.get_spans(gold_label_type):
@@ -114,7 +113,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-
         # remap state dict for models serialized with Flair <= 0.11.3
         import re
 
