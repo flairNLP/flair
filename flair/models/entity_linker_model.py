@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union, Set
 
 import torch
 
@@ -150,3 +150,31 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             masked_scores[idx, indices_of_candidates] = scores[idx, indices_of_candidates]
 
         return masked_scores
+
+
+class CandidateGenerator:
+    """Abstract base class for methods that, given a mention,
+    generate a set of candidates, so that the EntityLinker only
+    scores among these candidates and not all entities
+    """
+
+    def __init__(self, candidates: Union[str, Dict], lower_case: bool = True):
+
+        self.candidate_lists = candidates
+        self.lower_case = lower_case
+
+        if self.lower_case:
+            for mention in candidates:
+                if mention.lower() in self.candidate_lists:
+                    known_mentions = self.candidate_lists[mention.lower()]
+                    self.candidate_lists[mention.lower()] = list(set(known_mentions + candidates[mention]))
+                else:
+                    self.candidate_lists[mention.lower()] = candidates[mention]
+
+    def get_candidates(self, mention: str) -> Set[str]:
+        """Given a list of entity mentions this methods returns a constrained set of entity
+        candidates for the mentions"""
+        if self.lower_case:
+            mention = mention.lower()
+
+        return self.candidate_lists[mention]
