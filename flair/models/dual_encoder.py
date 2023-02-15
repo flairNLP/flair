@@ -9,7 +9,8 @@ from tqdm import tqdm
 import flair.nn
 from flair.data import Dictionary, Sentence, Span, get_spans_from_bio
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.embeddings import TokenEmbeddings, DocumentEmbeddings
+from flair.embeddings import DocumentEmbeddings, TokenEmbeddings
+from flair.embeddings.base import load_embeddings
 from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")
@@ -30,6 +31,22 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         # ----- Create the internal tag dictionary -----
         self.tag_type = tag_type
         self.tag_format = tag_format.upper()
+        self._init_verbalizers_and_tag_dictionary(tag_dictionary)
+
+        self.tagset_size = len(self.label_dictionary)
+        log.info(f"DualEncoder predicts: {self.label_dictionary}")
+
+        # ----- Embeddings -----
+        self.token_encoder = token_encoder
+        self.label_encoder = label_encoder
+        self.use_dropout: float = dropout
+
+        if dropout > 0.0:
+            self.dropout = torch.nn.Dropout(dropout)
+
+        self.loss_fct = torch.nn.CrossEntropyLoss(reduction="sum")
+
+    def _init_verbalizers_and_tag_dictionary(self, tag_dictionary):
         if tag_dictionary.span_labels:
             # the big question is whether the label dictionary should contain an UNK or not
             # without UNK, we cannot evaluate on data that contains labels not seen in test
@@ -58,36 +75,32 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         for label, idx in self.label_dictionary.item2idx.items():
             label = label.decode("utf-8")
             if label == "O":
-                self.idx2verbalized_label[idx] = Sentence("other")
+                self.idx2verbalized_label[idx] = Sentence("outside")
             elif label.startswith("B-"):
                 self.idx2verbalized_label[idx] = Sentence("begin " + label.split("-")[1])
             elif label.startswith("I-"):
                 self.idx2verbalized_label[idx] = Sentence("inside " + label.split("-")[1])
-
-        self.tagset_size = len(self.label_dictionary)
-        log.info(f"DualEncoder predicts: {self.label_dictionary}")
-
-        # ----- Embeddings -----
-        self.token_encoder = token_encoder
-        self.label_encoder = label_encoder
-        self.use_dropout: float = dropout
-
-        if dropout > 0.0:
-            self.dropout = torch.nn.Dropout(dropout)
-
-        self.loss_fct = torch.nn.CrossEntropyLoss(reduction="sum")
 
     @property
     def label_type(self):
         return self.tag_type
 
     def forward(self, sentences, inference):
-        labels = pad_sequence([torch.tensor(list(map(self.label_dictionary.get_idx_for_item, _labels)), device=flair.device) for _labels in self._get_gold_labels(sentences)], batch_first=True, padding_value=-100)
+        labels = pad_sequence(
+            [
+                torch.tensor(list(map(self.label_dictionary.get_idx_for_item, _labels)), device=flair.device)
+                for _labels in self._get_gold_labels(sentences)
+            ],
+            batch_first=True,
+            padding_value=-100,
+        )
 
         self.token_encoder.embed(sentences)
         self.label_encoder.embed(list(self.idx2verbalized_label.values()))
 
-        token_embeddings = [torch.stack([emb for token in sentence for emb in token.get_each_embedding()]) for sentence in sentences]
+        token_embeddings = [
+            torch.stack([emb for token in sentence for emb in token.get_each_embedding()]) for sentence in sentences
+        ]
         label_embeddings = [label.get_embedding() for label in list(self.idx2verbalized_label.values())]
         mask = [torch.tensor([True for _ in sentence]).to(flair.device) for sentence in sentences]
 
@@ -100,11 +113,21 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
             scores, preds = torch.max(torch.nn.functional.softmax(logits, dim=-1), dim=-1)
 
             # Format into batch size x sequence length without padding
-            scores = [_scores.detach().cpu().tolist() for _scores in torch.split(scores, pad_mask.sum(dim=-1).detach().tolist())]
-            preds = [_preds.detach().cpu().tolist() for _preds in torch.split(preds, pad_mask.sum(dim=-1).detach().tolist())]
+            scores = [
+                _scores.detach().cpu().tolist()
+                for _scores in torch.split(scores, pad_mask.sum(dim=-1).detach().tolist())
+            ]
+            preds = [
+                _preds.detach().cpu().tolist() for _preds in torch.split(preds, pad_mask.sum(dim=-1).detach().tolist())
+            ]
 
-            decoded_predictions = [[(self.label_dictionary.get_item_for_index(pred), score) for pred, score in zip(sentence_preds, sentence_scores)]
-                           for sentence_preds, sentence_scores in zip(preds, scores)]
+            decoded_predictions = [
+                [
+                    (self.label_dictionary.get_item_for_index(pred), score)
+                    for pred, score in zip(sentence_preds, sentence_scores)
+                ]
+                for sentence_preds, sentence_scores in zip(preds, scores)
+            ]
 
             return self.loss_fct(logits, labels[pad_mask]), decoded_predictions
         else:
@@ -290,7 +313,7 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         model_state = {
             **super()._get_state_dict(),
             "token_encoder": self.token_encoder.save_embeddings(use_state_dict=False),
-            "label_encoder": self.label_encoder.save_embeddings(use_state_dict=False),
+            "label_encoder": self.token_encoder.save_embeddings(use_state_dict=False),
             "tag_dictionary": self.label_dictionary,
             "tag_format": self.tag_format,
             "tag_type": self.tag_type,
@@ -300,14 +323,24 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         return model_state
 
     @classmethod
-    def _init_model_with_state_dict(cls, state, **kwargs):
-        return super()._init_model_with_state_dict(
-            state,
-            token_encoder=state.get("token_encoder"),
-            label_encoder=state.get("label_encoder"),
-            tag_dictionary=state.get("tag_dictionary"),
-            tag_format=state.get("tag_format", "BIOES"),
-            tag_type=state.get("tag_type"),
-            dropout=state.get("use_dropout", 0.0),
-            **kwargs,
-        )
+    def _init_model_with_state_dict(cls, state):
+
+        token_encoder = state.pop("token_encoder")
+        if isinstance(token_encoder, dict):
+            token_encoder = load_embeddings(token_encoder)
+        state["token_encoder"] = token_encoder
+
+        label_encoder = state.pop("label_encoder")
+        if isinstance(label_encoder, dict):
+            label_encoder = load_embeddings(label_encoder)
+        state["label_encoder"] = label_encoder
+        state["dropout"] = state.pop("use_dropout")
+        if "model_card" in state:
+            state.pop("model_card")
+
+        state_dict = state.pop("state_dict")
+        model = cls(**state)
+
+        model.load_state_dict(state_dict)
+
+        return model
