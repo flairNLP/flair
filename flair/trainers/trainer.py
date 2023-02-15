@@ -487,7 +487,7 @@ class ModelTrainer:
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
-                    shuffle=shuffle_first_epoch,
+                    shuffle=shuffle_data_this_epoch,
                     num_workers=0 if num_workers is None else num_workers,
                     sampler=sampler,
                 )
