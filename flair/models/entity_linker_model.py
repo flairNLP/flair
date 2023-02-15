@@ -1,13 +1,73 @@
 import logging
-from typing import Callable, Dict, List, Optional, Union, Set
+from typing import Callable, Dict, List, Optional, Set, Union
 
 import torch
 
 import flair.embeddings
 import flair.nn
 from flair.data import Dictionary, Sentence, Span
+from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
+
+
+class CandidateGenerator:
+    """
+    Given a string, the CandidateGenerator returns possible target classes as candidates.
+    """
+
+    def __init__(self, candidates: Union[str, Dict], lower_case: bool = True):
+
+        # internal candidate lists of generator
+        self.mention_to_candidates_map: Dict = {}
+
+        # load Zelda candidates if so passed
+        if isinstance(candidates, str) and candidates.lower() == "zelda":
+
+            zelda_path: str = "https://flair.informatik.hu-berlin.de/resources/datasets/zelda"
+            zelda_candidates = cached_path(f"{zelda_path}/zelda_mention_entities_counter.pickle", cache_dir="datasets")
+            import pickle
+
+            with open(zelda_candidates, "rb") as handle:
+                mention_entities_counter = pickle.load(handle)
+
+            # create candidate lists
+            candidate_lists = {}
+            for mention in mention_entities_counter:
+                if mention.lower() != "pence":
+                    candidate_lists[mention] = list(mention_entities_counter[mention].keys())
+
+            self.mention_to_candidates_map = candidate_lists
+
+        elif isinstance(candidates, Dict):
+            self.mention_to_candidates_map = candidates
+
+        # if lower casing is enabled, create candidate lists of lower cased versions
+        self.lower_case = lower_case
+        if self.lower_case:
+
+            # create a new dictionary for lower cased mentions
+            lowercased_mention_to_candidates_map: Dict = {}
+
+            # go through each mention and its candidates
+            for mention, candidates in self.mention_to_candidates_map.items():
+
+                # check if lowercased mention already seen. If so, add candidates. Else, create new entry.
+                if mention.lower() in lowercased_mention_to_candidates_map:
+                    current_candidates = lowercased_mention_to_candidates_map[mention.lower()]
+                    lowercased_mention_to_candidates_map[mention.lower()] = set(current_candidates).union(candidates)
+                else:
+                    lowercased_mention_to_candidates_map[mention.lower()] = candidates
+
+            # set lowercased version as map
+            self.mention_to_candidates_map = lowercased_mention_to_candidates_map
+
+    def get_candidates(self, mention: str) -> Set[str]:
+        """Given a mention, this method returns a set of candidate classes"""
+        if self.lower_case:
+            mention = mention.lower()
+
+        return set(self.mention_to_candidates_map[mention]) if mention in self.mention_to_candidates_map else set()
 
 
 class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
@@ -19,13 +79,13 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     """
 
     def __init__(
-            self,
-            embeddings: flair.embeddings.TokenEmbeddings,
-            label_dictionary: Dictionary,
-            pooling_operation: str = "first_last",
-            label_type: str = "nel",
-            candidates: Optional[Union[str, dict]] = None,
-            **classifierargs,
+        self,
+        embeddings: flair.embeddings.TokenEmbeddings,
+        label_dictionary: Dictionary,
+        pooling_operation: str = "first_last",
+        label_type: str = "nel",
+        candidates: Optional[CandidateGenerator] = None,
+        **classifierargs,
     ):
         """
         Initializes an EntityLinker
@@ -40,8 +100,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         super(EntityLinker, self).__init__(
             embeddings=embeddings,
             label_dictionary=label_dictionary,
-            final_embedding_size=embeddings.embedding_length * 2 if pooling_operation == "first_last" \
-                else embeddings.embedding_length,
+            final_embedding_size=embeddings.embedding_length * 2
+            if pooling_operation == "first_last"
+            else embeddings.embedding_length,
             **classifierargs,
         )
 
@@ -95,6 +156,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             "label_dictionary": self.label_dictionary,
             "pooling_operation": self.pooling_operation,
             "loss_weights": self.weight_dict,
+            "candidates": self.candidates,
         }
         return model_state
 
@@ -129,6 +191,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             label_type=state.get("label_type"),
             pooling_operation=state.get("pooling_operation"),
             loss_weights=state.get("loss_weights", {"<unk>": 0.3}),
+            candidates=state.get("candidates", None),
             **kwargs,
         )
 
@@ -144,37 +207,8 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         masked_scores = -torch.inf * torch.ones(scores.size(), requires_grad=True, device=flair.device)
 
         for idx, span in enumerate(data_points):
-            candidate_set = self.candidates[span.text] if span.text in self.candidates else []
-            print(span, candidate_set)
+            candidate_set = self.candidates.get_candidates(span.text)
             indices_of_candidates = [self.label_dictionary.get_idx_for_item(candidate) for candidate in candidate_set]
             masked_scores[idx, indices_of_candidates] = scores[idx, indices_of_candidates]
 
         return masked_scores
-
-
-class CandidateGenerator:
-    """Abstract base class for methods that, given a mention,
-    generate a set of candidates, so that the EntityLinker only
-    scores among these candidates and not all entities
-    """
-
-    def __init__(self, candidates: Union[str, Dict], lower_case: bool = True):
-
-        self.candidate_lists = candidates
-        self.lower_case = lower_case
-
-        if self.lower_case:
-            for mention in candidates:
-                if mention.lower() in self.candidate_lists:
-                    known_mentions = self.candidate_lists[mention.lower()]
-                    self.candidate_lists[mention.lower()] = list(set(known_mentions + candidates[mention]))
-                else:
-                    self.candidate_lists[mention.lower()] = candidates[mention]
-
-    def get_candidates(self, mention: str) -> Set[str]:
-        """Given a list of entity mentions this methods returns a constrained set of entity
-        candidates for the mentions"""
-        if self.lower_case:
-            mention = mention.lower()
-
-        return self.candidate_lists[mention]
