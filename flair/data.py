@@ -1487,6 +1487,61 @@ class Corpus(typing.Generic[T_co]):
 
         return label_dictionary
 
+    def _corrupt_labels(self, noise_share: float, label_type: str, labels: List[str], split: str = "train"):
+        """
+        Generates uniform label noise distribution in the chosen dataset split.
+        :noise_share: the desired share of noise in the train split.
+        :label_type: the type of labels for which the noise should be simulated.
+        :labels: an array with unique labels of said type (retrievable from label dictionary).
+        :split: in which dataset split the noise is to be simulated.
+        """
+        import numpy as np
+
+        if noise_share < 0 or noise_share > 1:
+            raise ValueError("noise_share must be between 0 and 1.")
+
+        if split == "train":
+            assert self.train
+            datasets = [self.train]
+        elif split == "dev":
+            assert self.dev
+            datasets = [self.dev]
+        elif split == "test":
+            assert self.test
+            datasets = [self.test]
+        else:
+            raise ValueError("split must be either train, dev or test.")
+
+        data: ConcatDataset = ConcatDataset(datasets)
+
+        orig_label_p = 1 - noise_share
+        other_label_p = noise_share / (len(labels) - 1)
+
+        corrupted_count = 0
+        total_label_count = 0
+
+        log.info("Generating noisy labels. Progress:")
+
+        for data_point in Tqdm.tqdm(_iter_dataset(data)):
+            for label in data_point.get_labels(label_type):
+                total_label_count += 1
+                orig_label = label.value
+                prob_dist = [other_label_p] * len(labels)
+                prob_dist[labels.index(orig_label)] = orig_label_p
+                # sample randomly from a label distribution according to the probabilities defined by the desired noise share
+                new_label = np.random.choice(a=labels, p=prob_dist)
+                # replace the old label with the new one
+                label.value = new_label
+                # keep track of the old (clean) label using another label type category
+                label.data_point.add_label(label_type + "_clean", orig_label)
+                # keep track of how many labels in total are flipped
+                if new_label != orig_label:
+                    corrupted_count += 1
+
+        log.info(
+            f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count/total_label_count)*100, 2)}%."
+        )
+
     def get_label_distribution(self):
         class_to_count = defaultdict(lambda: 0)
         for sent in self.train:
