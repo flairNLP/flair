@@ -702,7 +702,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         return data_point_tensor
 
     def _mask_scores(self, scores, data_points):
-        print("maskmask")
         return scores
 
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
