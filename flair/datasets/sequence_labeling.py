@@ -946,6 +946,10 @@ class ONTONOTES(MultiFileColumnCorpus):
                         with open(processed_source_path, "w") as f:
                             for conll_file in conll_files:
                                 for sent in cls.sentence_iterator(conll_file):
+                                    if language == "arabic":
+                                        trimmed_sentence = [_sent.split("#")[0] for _sent in sent["sentence"]]
+                                        trimmed_sentence.reverse()
+                                        sent["sentence"] = trimmed_sentence
                                     for row in zip(sent["sentence"], sent["pos_tags"], sent["named_entities"]):
                                         f.write("\t".join(row) + "\n")
                                     f.write("\n")
