@@ -207,7 +207,12 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         masked_scores = -torch.inf * torch.ones(scores.size(), requires_grad=True, device=flair.device)
 
         for idx, span in enumerate(data_points):
+            # get the candidates
             candidate_set = self.candidates.get_candidates(span.text)
+            # during training, add the gold value as candidate
+            if self.training:
+                candidate_set.add(span.get_label(self.label_type).value)
+            #candidate_set.add("<unk>")
             indices_of_candidates = [self.label_dictionary.get_idx_for_item(candidate) for candidate in candidate_set]
             masked_scores[idx, indices_of_candidates] = scores[idx, indices_of_candidates]
 
