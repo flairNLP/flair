@@ -17,13 +17,11 @@ class CandidateGenerator:
     """
 
     def __init__(self, candidates: Union[str, Dict], lower_case: bool = True):
-
         # internal candidate lists of generator
         self.mention_to_candidates_map: Dict = {}
 
         # load Zelda candidates if so passed
         if isinstance(candidates, str) and candidates.lower() == "zelda":
-
             zelda_path: str = "https://flair.informatik.hu-berlin.de/resources/datasets/zelda"
             zelda_candidates = cached_path(f"{zelda_path}/zelda_mention_entities_counter.pickle", cache_dir="datasets")
             import pickle
@@ -45,13 +43,11 @@ class CandidateGenerator:
         # if lower casing is enabled, create candidate lists of lower cased versions
         self.lower_case = lower_case
         if self.lower_case:
-
             # create a new dictionary for lower cased mentions
             lowercased_mention_to_candidates_map: Dict = {}
 
             # go through each mention and its candidates
             for mention, candidates in self.mention_to_candidates_map.items():
-
                 # check if lowercased mention already seen. If so, add candidates. Else, create new entry.
                 if mention.lower() in lowercased_mention_to_candidates_map:
                     current_candidates = lowercased_mention_to_candidates_map[mention.lower()]
@@ -200,7 +196,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         return self._label_type
 
     def _mask_scores(self, scores: torch.Tensor, data_points: List[Span]):
-
         if not self.candidates:
             return scores
 
