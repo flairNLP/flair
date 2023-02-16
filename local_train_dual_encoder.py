@@ -1,7 +1,7 @@
 import argparse
 
 import flair
-from flair.datasets import CONLL_03, ONTONOTES, WNUT_17
+from flair.datasets import CONLL_03, FEWNERD, ONTONOTES, WNUT_17
 from flair.embeddings import TransformerDocumentEmbeddings, TransformerWordEmbeddings
 from flair.models import DualEncoder
 from flair.trainers import ModelTrainer
@@ -51,6 +51,76 @@ def main(args):
                 "WORK_OF_ART": "work of art",
             }
         )
+    elif args.corpus == "fewnerd":
+        corpus = FEWNERD(
+            label_name_map={
+                "location-GPE": "location geographical social political entity",
+                "person-other": "person other",
+                "organization-other": "organization other",
+                "organization-company": "organization company",
+                "person-artist/author": "person author artist",
+                "person-athlete": "person athlete",
+                "person-politician": "person politician",
+                "building-other": "building other",
+                "organization-sportsteam": "organization sportsteam",
+                "organization-education": "organization eduction",
+                "location-other": "location other",
+                "other-biologything": "other biology",
+                "location-road/railway/highway/transit": "location road railway highway transit",
+                "person-actor": "person actor",
+                "prodcut-other": "product other",
+                "event-sportsevent": "event sportsevent",
+                "organization-government/governmentagency": "organization government agency",
+                "location-bodiesofwater": "location bodies of water",
+                "organization-media/newspaper": "organization media newspaper",
+                "art-music": "art music",
+                "other-chemicalthing": "other chemical",
+                "event-attack/battle/war/militaryconflict": "event attack war battle military conflict",
+                "art-writtenart": "art written art",
+                "other-award": "other award",
+                "other-livingthing": "other living",
+                "event-other": "event other",
+                "art-film": "art film",
+                "product-software": "product software",
+                "organization-sportsleague": "organization sportsleague",
+                "other-language": "other language",
+                "other-disease": "other disease",
+                "organization-showorganization": "organization show organization",
+                "product-airplane": "product airplane",
+                "other-astronomything": "other astronomy",
+                "organization-religion": "organization religion",
+                "product-car": "product car",
+                "person-scholar": "person scholar",
+                "other-currency": "other currency",
+                "person-soldier": "person soldier",
+                "location-mountain": "location mountain",
+                "art-broadcastprogramm": "art broadcastprogramm",
+                "location-island": "location island",
+                "art-other": "art other",
+                "person-director": "person director",
+                "product-weapon": "product weapon",
+                "other-god": "other god",
+                "building-theater": "building theater",
+                "other-law": "other law",
+                "product-food": "product food",
+                "other-medical": "other medical",
+                "product-game": "product game",
+                "location-park": "location park",
+                "product-ship": "product ship",
+                "building-sportsfacility": "building sportsfacility",
+                "other-educationaldegree": "other educational degree",
+                "building-airport": "building airport",
+                "building-hospital": "building hospital",
+                "product-train": "product train",
+                "building-library": "building library",
+                "building-hotel": "building hotel",
+                "building-restaurant": "building restaurant",
+                "event-disaster": "event disaster",
+                "event-election": "event election",
+                "event-protest": "event protest",
+                "art-painting": "art painting",
+            }
+        )
     else:
         raise Exception("no valid corpus.")
 
@@ -83,11 +153,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--cache_path", type=str, default="/glusterfs/dfs-gfs-dist/goldejon/flair-models/pretrained-dual-encoder"
     )
-    parser.add_argument("--corpus", type=str, default="conll_03")
+    parser.add_argument("--corpus", type=str, default="fewnerd")
     parser.add_argument("--transformer", type=str, default="bert-base-cased")
     parser.add_argument("--lr", type=float, default=1e-5)
     parser.add_argument("--bs", type=int, default=4)
     parser.add_argument("--mbs", type=int, default=4)
-    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--epochs", type=int, default=3)
     args = parser.parse_args()
     main(args)

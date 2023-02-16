@@ -75,7 +75,7 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         for label, idx in self.label_dictionary.item2idx.items():
             label = label.decode("utf-8")
             if label == "O":
-                self.idx2verbalized_label[idx] = Sentence("outside")
+                self.idx2verbalized_label[idx] = Sentence("other")
             elif label.startswith("B-"):
                 self.idx2verbalized_label[idx] = Sentence("begin " + label.split("-")[1])
             elif label.startswith("I-"):
@@ -313,7 +313,7 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         model_state = {
             **super()._get_state_dict(),
             "token_encoder": self.token_encoder.save_embeddings(use_state_dict=False),
-            "label_encoder": self.token_encoder.save_embeddings(use_state_dict=False),
+            "label_encoder": self.label_encoder.save_embeddings(use_state_dict=False),
             "tag_dictionary": self.label_dictionary,
             "tag_format": self.tag_format,
             "tag_type": self.tag_type,
@@ -323,8 +323,7 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         return model_state
 
     @classmethod
-    def _init_model_with_state_dict(cls, state):
-
+    def _init_model_with_state_dict(cls, state, **kwargs):
         token_encoder = state.pop("token_encoder")
         if isinstance(token_encoder, dict):
             token_encoder = load_embeddings(token_encoder)
