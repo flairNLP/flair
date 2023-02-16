@@ -518,7 +518,6 @@ class ModelTrainer:
                         # forward pass
                         loss, datapoint_count = self.model.forward_loss(batch_step)
                         average_over += datapoint_count
-
                         # Backward
                         if use_amp:
                             with amp.scale_loss(loss, optimizer) as scaled_loss:
@@ -528,8 +527,9 @@ class ModelTrainer:
                         train_loss += loss.item()
 
                         # identify dynamic embeddings (always deleted) on first sentence
-                        if not dynamic_embeddings:
-                            dynamic_embeddings = identify_dynamic_embeddings(batch[0])
+
+                        if dynamic_embeddings is None:
+                            dynamic_embeddings = identify_dynamic_embeddings(batch)
 
                         # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                         store_embeddings(batch, embeddings_storage_mode, dynamic_embeddings)
