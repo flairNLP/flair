@@ -334,13 +334,13 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         if isinstance(label_encoder, dict):
             label_encoder = load_embeddings(label_encoder)
         state["label_encoder"] = label_encoder
-        state["dropout"] = state.pop("use_dropout")
-        if "model_card" in state:
-            state.pop("model_card")
 
-        state_dict = state.pop("state_dict")
-        model = cls(**state)
-
-        model.load_state_dict(state_dict)
-
-        return model
+        return super()._init_model_with_state_dict(
+            state,
+            token_encoder=state.get("token_encoder"),
+            label_encoder=state.get("label_encoder"),
+            tag_dictionary=state.get("tag_dictionary"),
+            tag_format=state.get("tag_format", "BIO"),
+            tag_type=state.get("tag_type"),
+            dropout=state.get("use_dropout", 0.0),
+        )
