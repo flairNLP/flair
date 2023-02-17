@@ -1,0 +1,43 @@
+BASKETBALLSOCCER	O
+-	O
+TROFEJ	B-MISC
+BEOGRAD	I-MISC
+TOURNAMENT	I-MISC
+RESULTS	O
+.	O
+
+Atlanta	B-ORG
+6	O
+CHICAGO	B-ORG
+5	O
+(	O
+2nd	O
+game	O
+)	O
+
+Eric	B-PER
+Anthony	I-PER
+hit	O
+a	O
+pair	O
+of	O
+solo	O
+homers	O
+for	O
+the	O
+Rockies	B-ORG
+.	O
+
+2	O
+-	O
+Monica	B-PER
+Seles	I-PER
+(	O
+U.S.	B-LOC
+)	O
+beat	O
+Dally	B-PER
+Randriantefy	I-PER
+(	O
+Madagascar	B-LOC
+)	O

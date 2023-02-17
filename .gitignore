@@ -110,5 +110,3 @@ Pipfile.lock
 
 resources/taggers/
 regression_train/
-
-data/

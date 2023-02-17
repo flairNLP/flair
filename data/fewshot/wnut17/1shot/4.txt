@@ -1,0 +1,57 @@
+Nothing	B-corporation
+But	I-corporation
+Crap	I-corporation
+news	I-corporation
+strikes	O
+again	O
+
+Marcelo	B-person
+is	O
+the	O
+star	O
+of	O
+real	B-group
+madrid	I-group
+not	O
+ronaldo	B-person
+.	O
+Marcelo	B-person
+defend	O
+attack	O
+create	O
+beautiful	O
+chances	O
+
+When	O
+you	O
+order	O
+deconstructed	O
+car	O
+at	O
+the	O
+MCM	B-location
+restaurant	I-location
+
+Play	O
+Monopoly	B-product
+
+Do	O
+something	O
+STAR	B-creative-work
+WARS	I-creative-work
+for	O
+May	O
+4	O
+.	O
+Oh	O
+,	O
+and	O
+Pat	B-person
+.	O
+May	O
+the	O
+forth	O
+be	O
+with	O
+you	O
+!	O
