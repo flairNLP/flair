@@ -211,27 +211,16 @@ class Label:
         super().__init__()
 
     def set_value(self, value: str, score: float = 1.0):
-        self.value = value
-        self.score = score
+        self._value = value
+        self._score = score
 
     @property
     def value(self) -> str:
         return self._value
 
-    @value.setter
-    def value(self, value):
-        if not value and value != "":
-            raise ValueError("Incorrect label value provided. Label value needs to be set.")
-        else:
-            self._value = value
-
     @property
     def score(self) -> float:
         return self._score
-
-    @score.setter
-    def score(self, score):
-        self._score = score
 
     def to_dict(self):
         return {"value": self.value, "confidence": self.score}
@@ -1487,6 +1476,61 @@ class Corpus(typing.Generic[T_co]):
 
         return label_dictionary
 
+    def _corrupt_labels(self, noise_share: float, label_type: str, labels: List[str], split: str = "train"):
+        """
+        Generates uniform label noise distribution in the chosen dataset split.
+        :noise_share: the desired share of noise in the train split.
+        :label_type: the type of labels for which the noise should be simulated.
+        :labels: an array with unique labels of said type (retrievable from label dictionary).
+        :split: in which dataset split the noise is to be simulated.
+        """
+        import numpy as np
+
+        if noise_share < 0 or noise_share > 1:
+            raise ValueError("noise_share must be between 0 and 1.")
+
+        if split == "train":
+            assert self.train
+            datasets = [self.train]
+        elif split == "dev":
+            assert self.dev
+            datasets = [self.dev]
+        elif split == "test":
+            assert self.test
+            datasets = [self.test]
+        else:
+            raise ValueError("split must be either train, dev or test.")
+
+        data: ConcatDataset = ConcatDataset(datasets)
+
+        orig_label_p = 1 - noise_share
+        other_label_p = noise_share / (len(labels) - 1)
+
+        corrupted_count = 0
+        total_label_count = 0
+
+        log.info("Generating noisy labels. Progress:")
+
+        for data_point in Tqdm.tqdm(_iter_dataset(data)):
+            for label in data_point.get_labels(label_type):
+                total_label_count += 1
+                orig_label = label.value
+                prob_dist = [other_label_p] * len(labels)
+                prob_dist[labels.index(orig_label)] = orig_label_p
+                # sample randomly from a label distribution according to the probabilities defined by the desired noise share
+                new_label = np.random.choice(a=labels, p=prob_dist)
+                # replace the old label with the new one
+                label.data_point.set_label(label_type, new_label)
+                # keep track of the old (clean) label using another label type category
+                label.data_point.add_label(label_type + "_clean", orig_label)
+                # keep track of how many labels in total are flipped
+                if new_label != orig_label:
+                    corrupted_count += 1
+
+        log.info(
+            f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count/total_label_count)*100, 2)}%."
+        )
+
     def get_label_distribution(self):
         class_to_count = defaultdict(lambda: 0)
         for sent in self.train:
@@ -1637,30 +1681,6 @@ def iob2(tags):
         else:  # conversion IOB1 to IOB2
             tags[i].value = "B" + tag.value[1:]
     return True
-
-
-def iob_iobes(tags):
-    """
-    IOB -> IOBES
-    """
-    for i, tag in enumerate(tags):
-        if tag.value == "O" or tag.value == "":
-            tag.value = "O"
-            continue
-        t, label = tag.value.split("-", 1)
-        if len(tags) == i + 1 or tags[i + 1].value == "O":
-            next_same = False
-        else:
-            nt, next_label = tags[i + 1].value.split("-", 1)
-            next_same = nt == "I" and next_label == label
-        if t == "B":
-            if not next_same:
-                tag.value = tag.value.replace("B-", "S-")
-        elif t == "I":
-            if not next_same:
-                tag.value = tag.value.replace("I-", "E-")
-        else:
-            raise Exception("Invalid IOB format!")
 
 
 def randomly_split_into_two_datasets(dataset, length_of_first):

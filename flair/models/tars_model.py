@@ -530,7 +530,7 @@ class TARSTagger(FewshotClassifier):
                         overall_count += loss_and_count[1]
 
                         for predicted in tars_sentence.get_labels(label_name):
-                            predicted.value = label
+                            predicted.set_value(label, predicted.score)
                             all_detected[predicted] = predicted.score
 
                     if most_probable_first:

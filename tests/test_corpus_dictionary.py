@@ -132,7 +132,7 @@ def test_label_set_confidence():
     assert 3.2 == label.score
     assert "class_1" == label.value
 
-    label.score = 0.2
+    label._score = 0.2
 
     assert 0.2 == label.score
 
