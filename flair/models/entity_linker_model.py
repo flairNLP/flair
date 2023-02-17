@@ -1,4 +1,6 @@
 import logging
+import string
+from functools import lru_cache
 from typing import Callable, Dict, List, Optional, Set, Union
 
 import torch
@@ -16,7 +18,7 @@ class CandidateGenerator:
     Given a string, the CandidateGenerator returns possible target classes as candidates.
     """
 
-    def __init__(self, candidates: Union[str, Dict], lower_case: bool = True):
+    def __init__(self, candidates: Union[str, Dict], backoff: bool = True):
         # internal candidate lists of generator
         self.mention_to_candidates_map: Dict = {}
 
@@ -32,8 +34,7 @@ class CandidateGenerator:
             # create candidate lists
             candidate_lists = {}
             for mention in mention_entities_counter:
-                if mention.lower() != "pence":
-                    candidate_lists[mention] = list(mention_entities_counter[mention].keys())
+                candidate_lists[mention] = list(mention_entities_counter[mention].keys())
 
             self.mention_to_candidates_map = candidate_lists
 
@@ -41,27 +42,38 @@ class CandidateGenerator:
             self.mention_to_candidates_map = candidates
 
         # if lower casing is enabled, create candidate lists of lower cased versions
-        self.lower_case = lower_case
-        if self.lower_case:
+        self.backoff = backoff
+        if self.backoff:
             # create a new dictionary for lower cased mentions
             lowercased_mention_to_candidates_map: Dict = {}
 
             # go through each mention and its candidates
             for mention, candidates in self.mention_to_candidates_map.items():
-                # check if lowercased mention already seen. If so, add candidates. Else, create new entry.
-                if mention.lower() in lowercased_mention_to_candidates_map:
-                    current_candidates = lowercased_mention_to_candidates_map[mention.lower()]
-                    lowercased_mention_to_candidates_map[mention.lower()] = set(current_candidates).union(candidates)
+                backoff_mention = self._make_backoff_string(mention)
+                # check if backoff mention already seen. If so, add candidates. Else, create new entry.
+                if backoff_mention in lowercased_mention_to_candidates_map:
+                    current_candidates = lowercased_mention_to_candidates_map[backoff_mention]
+                    lowercased_mention_to_candidates_map[backoff_mention] = set(current_candidates).union(candidates)
                 else:
-                    lowercased_mention_to_candidates_map[mention.lower()] = candidates
+                    lowercased_mention_to_candidates_map[backoff_mention] = candidates
 
             # set lowercased version as map
             self.mention_to_candidates_map = lowercased_mention_to_candidates_map
 
+    @lru_cache(maxsize=50000)
+    def _make_backoff_string(self, mention: str) -> str:
+        from unicodedata import category
+
+        backoff_mention = mention.lower()
+        backoff_mention = "".join(ch for ch in backoff_mention if category(ch)[0] not in "P")
+        return backoff_mention
+
     def get_candidates(self, mention: str) -> Set[str]:
         """Given a mention, this method returns a set of candidate classes"""
-        if self.lower_case:
-            mention = mention.lower()
+        if self.backoff:
+            mention = self._make_backoff_string(mention)
+
+        print(mention)
 
         return set(self.mention_to_candidates_map[mention]) if mention in self.mention_to_candidates_map else set()
 
