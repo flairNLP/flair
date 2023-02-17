@@ -1,7 +1,8 @@
 import logging
-import string
+import re
 from functools import lru_cache
 from typing import Callable, Dict, List, Optional, Set, Union
+from unicodedata import category
 
 import torch
 
@@ -62,10 +63,9 @@ class CandidateGenerator:
 
     @lru_cache(maxsize=50000)
     def _make_backoff_string(self, mention: str) -> str:
-        from unicodedata import category
-
         backoff_mention = mention.lower()
         backoff_mention = "".join(ch for ch in backoff_mention if category(ch)[0] not in "P")
+        backoff_mention = re.sub(" +", " ", backoff_mention)
         return backoff_mention
 
     def get_candidates(self, mention: str) -> Set[str]:
