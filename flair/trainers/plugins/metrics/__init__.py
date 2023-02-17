@@ -1,4 +1,4 @@
 from .base import MetricBasePlugin, MetricName, MetricRecord
-from .basic import BasicPerformancePlugin
+from .basic import BasicEvaluationPlugin, TrainingBehaviorPlugin
 
-__all__ = ["MetricBasePlugin", "MetricRecord", "MetricName", "BasicPerformancePlugin"]
+__all__ = ["MetricBasePlugin", "MetricRecord", "MetricName", "BasicEvaluationPlugin", "TrainingBehaviorPlugin"]

@@ -12,12 +12,13 @@ from flair.trainers.plugins.loggers import (
     MetricHistoryPlugin,
     TensorboardLogger,
 )
-from flair.trainers.plugins.metrics import BasicPerformancePlugin
+from flair.trainers.plugins.metrics import BasicEvaluationPlugin, TrainingBehaviorPlugin
 
 from .base import BasePlugin, Pluggable, TrainerPlugin, TrainingInterrupt
 
 default_plugins = [
-    BasicPerformancePlugin,
+    BasicEvaluationPlugin,
+    TrainingBehaviorPlugin,
     AmpPlugin,
     CheckpointPlugin,
     ModelCardPlugin,
@@ -41,7 +42,8 @@ __all__ = [
     "LossFilePlugin",
     "MetricHistoryPlugin",
     "TensorboardLogger",
-    "BasicPerformancePlugin",
+    "BasicEvaluationPlugin",
+    "TrainingBehaviorPlugin",
     "BasePlugin",
     "Pluggable",
     "TrainerPlugin",

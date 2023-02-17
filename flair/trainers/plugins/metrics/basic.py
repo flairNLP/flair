@@ -15,12 +15,46 @@ from flair.training_utils import store_embeddings
 log = logging.getLogger("flair")
 
 
-class BasicPerformancePlugin(MetricBasePlugin):
+class TrainingBehaviorPlugin(MetricBasePlugin):
     def __init__(self):
         super().__init__()
+
         self.total_train_loss: float = 0.0
         self.total_train_samples: int = 0
 
+    @MetricBasePlugin.hook
+    def before_training_epoch(self, epoch, **kw):
+        self.total_train_loss = 0.0
+        self.total_train_samples = 0
+
+        # record current learning rate and momentum
+        optimizer = self.trainer.optimizer
+
+        current_learning_rate = [group["lr"] for group in optimizer.param_groups]
+        momentum = [group["momentum"] if "momentum" in group else 0 for group in optimizer.param_groups]
+
+        if len(current_learning_rate) == 1:
+            yield MetricRecord.scalar("learning_rate", current_learning_rate[0], epoch)
+            yield MetricRecord.scalar("momentum", momentum[0], epoch)
+        else:
+            yield MetricRecord.scalar_list("learning_rate", current_learning_rate, epoch)
+            yield MetricRecord.scalar_list("momentum", momentum, epoch)
+
+    @TrainerPlugin.hook
+    def before_training_batch_backward(self, loss, datapoint_count, **kw):
+        self.total_train_samples += datapoint_count
+        self.total_train_loss += loss.item()
+
+    @MetricBasePlugin.hook
+    def after_training_epoch(self, epoch, **kw):
+        if self.total_train_samples != 0:
+            train_loss = self.total_train_loss / self.total_train_samples
+            yield MetricRecord.scalar(("train", "loss"), train_loss, epoch)
+
+
+class BasicEvaluationPlugin(MetricBasePlugin):
+    def __init__(self):
+        super().__init__()
         self.train_part_size = None
         self.train_part = None
 
@@ -80,40 +114,13 @@ class BasicPerformancePlugin(MetricBasePlugin):
             "gold_label_type": self.trainer.model.label_type,
         }
 
-    @MetricBasePlugin.hook
+    @TrainerPlugin.hook
     def before_training_epoch(self, epoch, **kw):
         if self.eval_on_train_shuffle:
             train_part_indices = list(range(_len_dataset(self.trainer.corpus.train)))
             random.shuffle(train_part_indices)
             train_part_indices = train_part_indices[: self.train_part_size]
             self.train_part = torch.utils.data.dataset.Subset(self.trainer.corpus.train, train_part_indices)
-
-        self.total_train_loss = 0.0
-        self.total_train_samples = 0
-
-        # record current learning rate and momentum
-        optimizer = self.trainer.optimizer
-
-        current_learning_rate = [group["lr"] for group in optimizer.param_groups]
-        momentum = [group["momentum"] if "momentum" in group else 0 for group in optimizer.param_groups]
-
-        if len(current_learning_rate) == 1:
-            yield MetricRecord.scalar("learning_rate", current_learning_rate[0], epoch)
-            yield MetricRecord.scalar("momentum", momentum[0], epoch)
-        else:
-            yield MetricRecord.scalar_list("learning_rate", current_learning_rate, epoch)
-            yield MetricRecord.scalar_list("momentum", momentum, epoch)
-
-    @TrainerPlugin.hook
-    def before_training_batch_backward(self, loss, datapoint_count, **kw):
-        self.total_train_samples += datapoint_count
-        self.total_train_loss += loss.item()
-
-    @MetricBasePlugin.hook
-    def after_training_epoch(self, epoch, **kw):
-        if self.total_train_samples != 0:
-            train_loss = self.total_train_loss / self.total_train_samples
-            yield MetricRecord.scalar(("train", "loss"), train_loss, epoch)
 
     def flat_dict_items(self, d, composite_key=()):
         for key, value in d.items():
