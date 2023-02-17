@@ -214,7 +214,6 @@ class BasicEvaluationPlugin(MetricBasePlugin):
         def collecting_train_return_values(self, **kw):
             # test best model if test data is present
             if self.corpus.test and not self.train_with_test:
-
                 final_score = self.final_test(
                     base_path=self.base_path,
                     eval_mini_batch_size=self.eval_kw["mini_batch_size"],

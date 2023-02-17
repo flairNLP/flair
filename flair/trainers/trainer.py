@@ -103,7 +103,6 @@ class ModelTrainer(Pluggable):
         train_data = self.corpus.train
 
         if train_with_dev or train_with_test:
-
             parts = [self.corpus.train]
             if train_with_dev and self.corpus.dev:
                 parts.append(self.corpus.dev)

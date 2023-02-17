@@ -487,7 +487,6 @@ class Classifier(Model[DT], typing.Generic[DT], ABC):
                     value = classification_report_dict["accuracy"]
 
                 else:
-
                     value = classification_report_dict[avg_type][metric_type]
 
                 scores[(avg_type, metric_type)] = value
