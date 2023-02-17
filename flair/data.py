@@ -212,7 +212,7 @@ class Label:
 
     def set_value(self, value: str, score: float = 1.0):
         self._value = value
-        self.score = score
+        self._score = score
 
     @property
     def value(self) -> str:
@@ -221,10 +221,6 @@ class Label:
     @property
     def score(self) -> float:
         return self._score
-
-    @score.setter
-    def score(self, score):
-        self._score = score
 
     def to_dict(self):
         return {"value": self.value, "confidence": self.score}
