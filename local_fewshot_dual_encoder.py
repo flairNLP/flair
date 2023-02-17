@@ -56,6 +56,8 @@ def main(args):
 
         tag_type = "ner"
         label_dictionary = few_shot_corpus.make_label_dictionary(tag_type, add_unk=False)
+        # force spans == true, there is one split containing only B-*'s
+        label_dictionary.span_labels = True
 
         model = DualEncoder.load(args.pretrained_model)
         model._init_verbalizers_and_tag_dictionary(tag_dictionary=label_dictionary)
