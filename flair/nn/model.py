@@ -701,6 +701,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
         return data_point_tensor
 
+    def _mask_scores(self, scores, data_points):
+        return scores
+
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
         # make a forward pass to produce embedded data points and labels
         sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
@@ -720,6 +723,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
         # decode
         scores = self.decoder(data_point_tensor)
+
+        # an optional masking step (no masking in most cases)
+        scores = self._mask_scores(scores, data_points)
 
         # calculate the loss
         return self._calculate_loss(scores, label_tensor)
@@ -812,6 +818,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 # pass data points through network and decode
                 data_point_tensor = self._encode_data_points(batch, data_points)
                 scores = self.decoder(data_point_tensor)
+                scores = self._mask_scores(scores, data_points)
 
                 # if anything could possibly be predicted
                 if len(data_points) > 0:
