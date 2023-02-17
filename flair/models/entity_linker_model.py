@@ -73,8 +73,6 @@ class CandidateGenerator:
         if self.backoff:
             mention = self._make_backoff_string(mention)
 
-        print(mention)
-
         return set(self.mention_to_candidates_map[mention]) if mention in self.mention_to_candidates_map else set()
 
 
