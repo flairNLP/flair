@@ -18,13 +18,13 @@ log = logging.getLogger("flair")
 
 class DualEncoder(flair.nn.Classifier[Sentence]):
     def __init__(
-            self,
-            token_encoder: TokenEmbeddings,
-            label_encoder: DocumentEmbeddings,
-            tag_dictionary: Dictionary,
-            tag_type: str,
-            tag_format: str = "BIO",
-            dropout: float = 0.0,
+        self,
+        token_encoder: TokenEmbeddings,
+        label_encoder: DocumentEmbeddings,
+        tag_dictionary: Dictionary,
+        tag_type: str,
+        tag_format: str = "BIO",
+        dropout: float = 0.0,
     ):
         super(DualEncoder, self).__init__()
 
@@ -86,7 +86,6 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         return self.tag_type
 
     def forward(self, sentences, inference):
-
         # embed sentences
         self.token_encoder.embed(sentences)
 
@@ -105,9 +104,14 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         logits = torch.mm(token_embedding_tensor, torch.stack(label_tensor).T)
 
         # for loss computation, get the gold labels
-        gold_label_tensor = torch.tensor([self.label_dictionary.get_idx_for_item(label)
-                                          for sentence in self._get_gold_labels(sentences) for label in sentence],
-                                         device=flair.device)
+        gold_label_tensor = torch.tensor(
+            [
+                self.label_dictionary.get_idx_for_item(label)
+                for sentence in self._get_gold_labels(sentences)
+                for label in sentence
+            ],
+            device=flair.device,
+        )
 
         # compute loss
         loss = self.loss_fct(logits, gold_label_tensor)
@@ -153,15 +157,15 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         return loss, sum([len(s) for s in sentences])
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size: int = 32,
-            return_probabilities_for_all_classes: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
-            force_token_predictions: bool = False,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size: int = 32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
+        force_token_predictions: bool = False,
     ):  # type: ignore
         """
         Predicts labels for current batch with CRF or Softmax.
@@ -223,7 +227,7 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
                         sentence_scores = [label[1] for label in sentence_predictions]
                         predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
                         for predicted_span in predicted_spans:
-                            span: Span = sentence[predicted_span[0][0]: predicted_span[0][-1] + 1]
+                            span: Span = sentence[predicted_span[0][0] : predicted_span[0][-1] + 1]
                             span.add_label(label_name, value=predicted_span[2], score=predicted_span[1])
 
                     # token-labels can be added directly ("O" and legacy "_" predictions are skipped)

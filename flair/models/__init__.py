@@ -1,4 +1,5 @@
 from .clustering import ClusteringModel
+from .dual_encoder import DualEncoder
 from .entity_linker_model import EntityLinker
 from .language_model import LanguageModel
 from .lemmatizer_model import Lemmatizer
@@ -12,7 +13,6 @@ from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier
 from .text_regression_model import TextRegressor
 from .word_tagger_model import WordTagger
-from .dual_encoder import DualEncoder
 
 __all__ = [
     "EntityLinker",
@@ -32,5 +32,5 @@ __all__ = [
     "TextRegressor",
     "ClusteringModel",
     "MultitaskModel",
-    "DualEncoder"
+    "DualEncoder",
 ]

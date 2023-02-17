@@ -937,7 +937,9 @@ class ONTONOTES(MultiFileColumnCorpus):
                     for raw_source_path in raw_domain_path.iterdir():
                         conll_files = sorted(raw_source_path.rglob("*gold_conll"))
 
-                        processed_source_path = processed_split_path / split / raw_domain_path.name / raw_source_path.name
+                        processed_source_path = (
+                            processed_split_path / split / raw_domain_path.name / raw_source_path.name
+                        )
                         processed_source_path.parent.mkdir(parents=True, exist_ok=True)
 
                         with open(processed_source_path, "w") as f:
