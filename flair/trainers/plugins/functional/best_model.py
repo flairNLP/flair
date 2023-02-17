@@ -45,8 +45,6 @@ class BestModelPlugin(TrainerPlugin):
     @TrainerPlugin.hook
     def metric_recorded(self, record):
         # record relevant values for scheduling
-        print("Metric recorded:", record.name, self.primary_metric)
-
         if record.name == self.primary_metric:
             self.primary_value = record.value
 
