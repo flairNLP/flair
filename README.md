@@ -45,13 +45,13 @@ on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?library=fl
 
 ### Requirements and Installation
 
-The project is based on PyTorch 1.5+ and Python 3.6+, because method signatures and type hints are beautiful.
-If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](https://vsupalov.com/developing-with-python3-6-on-ubuntu-16-04/).
-Then, in your favorite virtual environment, simply do:
+In your favorite virtual environment, simply do:
 
 ```
 pip install flair
 ```
+
+Flair requires Python 3.7+. 
 
 ### Example Usage
 
