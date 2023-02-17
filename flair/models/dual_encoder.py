@@ -33,9 +33,6 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         self.tag_format = tag_format.upper()
         self._init_verbalizers_and_tag_dictionary(tag_dictionary)
 
-        self.tagset_size = len(self.label_dictionary)
-        log.info(f"DualEncoder predicts: {self.label_dictionary}")
-
         # ----- Embeddings -----
         self.token_encoder = token_encoder
         self.label_encoder = label_encoder
@@ -75,11 +72,14 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         for label, idx in self.label_dictionary.item2idx.items():
             label = label.decode("utf-8")
             if label == "O":
-                self.idx2verbalized_label[idx] = Sentence("other")
+                self.idx2verbalized_label[idx] = "other"
             elif label.startswith("B-"):
-                self.idx2verbalized_label[idx] = Sentence("begin " + label.split("-")[1])
+                self.idx2verbalized_label[idx] = "begin " + label.split("-")[1]
             elif label.startswith("I-"):
-                self.idx2verbalized_label[idx] = Sentence("inside " + label.split("-")[1])
+                self.idx2verbalized_label[idx] = "inside " + label.split("-")[1]
+
+        self.tagset_size = len(self.label_dictionary)
+        log.info(f"DualEncoder predicts: {self.label_dictionary}")
 
     @property
     def label_type(self):
@@ -96,12 +96,13 @@ class DualEncoder(flair.nn.Classifier[Sentence]):
         )
 
         self.token_encoder.embed(sentences)
-        self.label_encoder.embed(list(self.idx2verbalized_label.values()))
+        verbalized_labels = list(map(Sentence, self.idx2verbalized_label.values()))
+        self.label_encoder.embed(verbalized_labels)
 
         token_embeddings = [
             torch.stack([emb for token in sentence for emb in token.get_each_embedding()]) for sentence in sentences
         ]
-        label_embeddings = [label.get_embedding() for label in list(self.idx2verbalized_label.values())]
+        label_embeddings = [label.get_embedding() for label in verbalized_labels]
         mask = [torch.tensor([True for _ in sentence]).to(flair.device) for sentence in sentences]
 
         padded_token_embeddings = pad_sequence(token_embeddings, batch_first=True, padding_value=-100)
