@@ -211,19 +211,12 @@ class Label:
         super().__init__()
 
     def set_value(self, value: str, score: float = 1.0):
-        self.value = value
+        self._value = value
         self.score = score
 
     @property
     def value(self) -> str:
         return self._value
-
-    @value.setter
-    def value(self, value):
-        if not value and value != "":
-            raise ValueError("Incorrect label value provided. Label value needs to be set.")
-        else:
-            self._value = value
 
     @property
     def score(self) -> float:
@@ -1531,7 +1524,7 @@ class Corpus(typing.Generic[T_co]):
                 # sample randomly from a label distribution according to the probabilities defined by the desired noise share
                 new_label = np.random.choice(a=labels, p=prob_dist)
                 # replace the old label with the new one
-                label.value = new_label
+                label.data_point.set_label(label_type, new_label)
                 # keep track of the old (clean) label using another label type category
                 label.data_point.add_label(label_type + "_clean", orig_label)
                 # keep track of how many labels in total are flipped
@@ -1692,30 +1685,6 @@ def iob2(tags):
         else:  # conversion IOB1 to IOB2
             tags[i].value = "B" + tag.value[1:]
     return True
-
-
-def iob_iobes(tags):
-    """
-    IOB -> IOBES
-    """
-    for i, tag in enumerate(tags):
-        if tag.value == "O" or tag.value == "":
-            tag.value = "O"
-            continue
-        t, label = tag.value.split("-", 1)
-        if len(tags) == i + 1 or tags[i + 1].value == "O":
-            next_same = False
-        else:
-            nt, next_label = tags[i + 1].value.split("-", 1)
-            next_same = nt == "I" and next_label == label
-        if t == "B":
-            if not next_same:
-                tag.value = tag.value.replace("B-", "S-")
-        elif t == "I":
-            if not next_same:
-                tag.value = tag.value.replace("I-", "E-")
-        else:
-            raise Exception("Invalid IOB format!")
 
 
 def randomly_split_into_two_datasets(dataset, length_of_first):
