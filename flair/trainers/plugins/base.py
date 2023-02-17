@@ -235,7 +235,6 @@ class BasePlugin:
     def hook(
         cls,
         first_arg: Union[Callable, EventIdenifier] = None,
-        /,
         *other_args: EventIdenifier,
     ) -> Callable:
         """Convience function for `BasePlugin.mark_func_as_hook`).
