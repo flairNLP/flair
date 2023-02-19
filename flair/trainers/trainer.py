@@ -247,11 +247,13 @@ class ModelTrainer:
         if mini_batch_chunk_size is None:
             mini_batch_chunk_size = mini_batch_size
 
+        # if optimizer class is passed, instantiate:
         if inspect.isclass(optimizer):
-            # if optimizer is class, trainer will create a single parameter group
-            initial_learning_rate = [learning_rate]
-        else:
-            initial_learning_rate = [group["lr"] for group in optimizer.param_groups]
+            kwargs["lr"] = learning_rate
+            optimizer = optimizer(self.model.parameters(), **kwargs)
+        assert isinstance(optimizer, torch.optim.Optimizer)
+
+        initial_learning_rate = [group["lr"] for group in optimizer.param_groups]
 
         if not isinstance(min_learning_rate, list):
             min_learning_rate = [min_learning_rate] * len(initial_learning_rate)
@@ -301,13 +303,10 @@ class ModelTrainer:
                     tokens = list(self.model.get_used_tokens(self.corpus))
                     for emb in transformer_embeddings:
                         context_stack.enter_context(
-                            reduce_train_vocab(model=emb.model, tokenizer=emb.tokenizer, texts=tokens)
+                            reduce_train_vocab(
+                                model=emb.model, tokenizer=emb.tokenizer, texts=tokens, optimizer=optimizer
+                            )
                         )
-
-            # if optimizer class is passed, instantiate:
-            if inspect.isclass(optimizer):
-                kwargs["lr"] = learning_rate
-                optimizer = optimizer(self.model.parameters(), **kwargs)
 
             if use_swa:
                 import torchcontrib
