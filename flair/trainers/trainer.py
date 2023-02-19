@@ -250,10 +250,11 @@ class ModelTrainer:
         # if optimizer class is passed, instantiate:
         if inspect.isclass(optimizer):
             kwargs["lr"] = learning_rate
-            optimizer = optimizer(self.model.parameters(), **kwargs)
-        assert isinstance(optimizer, torch.optim.Optimizer)
+            optimizer_instance = optimizer(self.model.parameters(), **kwargs)
+        else:
+            optimizer_instance = optimizer
 
-        initial_learning_rate = [group["lr"] for group in optimizer.param_groups]
+        initial_learning_rate = [group["lr"] for group in optimizer_instance.param_groups]
 
         if not isinstance(min_learning_rate, list):
             min_learning_rate = [min_learning_rate] * len(initial_learning_rate)
@@ -304,26 +305,28 @@ class ModelTrainer:
                     for emb in transformer_embeddings:
                         context_stack.enter_context(
                             reduce_train_vocab(
-                                model=emb.model, tokenizer=emb.tokenizer, texts=tokens, optimizer=optimizer
+                                model=emb.model, tokenizer=emb.tokenizer, texts=tokens, optimizer=optimizer_instance
                             )
                         )
 
             if use_swa:
                 import torchcontrib
 
-                optimizer = torchcontrib.optim.SWA(optimizer, swa_start=10, swa_freq=5, swa_lr=learning_rate)
+                optimizer_instance = torchcontrib.optim.SWA(
+                    optimizer_instance, swa_start=10, swa_freq=5, swa_lr=learning_rate
+                )
 
             # from here on, use list of learning rates
-            current_learning_rate: List = [group["lr"] for group in optimizer.param_groups]
+            current_learning_rate: List = [group["lr"] for group in optimizer_instance.param_groups]
 
             if use_amp:
-                self.model, optimizer = amp.initialize(self.model, optimizer, opt_level=amp_opt_level)
+                self.model, optimizer_instance = amp.initialize(self.model, optimizer_instance, opt_level=amp_opt_level)
 
-            optimizer = cast(torch.optim.Optimizer, optimizer)
+            optimizer_instance = cast(torch.optim.Optimizer, optimizer_instance)
 
             # load existing optimizer state dictionary if it exists
             if optimizer_state_dict:
-                optimizer.load_state_dict(optimizer_state_dict)
+                optimizer_instance.load_state_dict(optimizer_state_dict)
 
             # minimize training loss if training with dev data, else maximize dev score
             anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
@@ -337,7 +340,7 @@ class ModelTrainer:
             if inspect.isclass(scheduler):
                 if scheduler == OneCycleLR:
                     scheduler = OneCycleLR(
-                        optimizer,
+                        optimizer_instance,
                         max_lr=current_learning_rate,
                         steps_per_epoch=dataset_size // mini_batch_size + 1,
                         epochs=max_epochs - epoch,
@@ -351,13 +354,13 @@ class ModelTrainer:
                     num_warmup_steps = int(num_train_steps * warmup_fraction)
 
                     scheduler = LinearSchedulerWithWarmup(
-                        optimizer,
+                        optimizer_instance,
                         num_train_steps=num_train_steps,
                         num_warmup_steps=num_warmup_steps,
                     )
                 else:
                     scheduler = scheduler(
-                        optimizer,
+                        optimizer_instance,
                         factor=anneal_factor,
                         patience=patience,
                         initial_extra_patience=initial_extra_patience,
@@ -373,7 +376,7 @@ class ModelTrainer:
                 scheduler.load_state_dict(scheduler_state_dict)
 
             # update optimizer and scheduler in model card
-            model_card["training_parameters"]["optimizer"] = optimizer
+            model_card["training_parameters"]["optimizer"] = optimizer_instance
             model_card["training_parameters"]["scheduler"] = scheduler
 
             if isinstance(scheduler, OneCycleLR) and batch_growth_annealing:
@@ -441,7 +444,7 @@ class ModelTrainer:
 
             previous_learning_rate = current_learning_rate
 
-            momentum = [group["momentum"] if "momentum" in group else 0 for group in optimizer.param_groups]
+            momentum = [group["momentum"] if "momentum" in group else 0 for group in optimizer_instance.param_groups]
 
             for epoch in range(epoch + 1, max_epochs + 1):
                 log_line(log)
@@ -459,7 +462,7 @@ class ModelTrainer:
                     train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
                 # get new learning rate
-                current_learning_rate = [group["lr"] for group in optimizer.param_groups]
+                current_learning_rate = [group["lr"] for group in optimizer_instance.param_groups]
 
                 lr_changed = any([lr != prev_lr for lr, prev_lr in zip(current_learning_rate, previous_learning_rate)])
 
@@ -525,7 +528,7 @@ class ModelTrainer:
                 for batch_no, batch in enumerate(batch_loader):
                     # zero the gradients on the model and optimizer
                     self.model.zero_grad()
-                    optimizer.zero_grad()
+                    optimizer_instance.zero_grad()
 
                     # if necessary, make batch_steps
                     batch_steps = [batch]
@@ -539,7 +542,7 @@ class ModelTrainer:
                         average_over += datapoint_count
                         # Backward
                         if use_amp:
-                            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                            with amp.scale_loss(loss, optimizer_instance) as scaled_loss:
                                 scaled_loss.backward()
                         else:
                             loss.backward()
@@ -555,17 +558,17 @@ class ModelTrainer:
 
                     # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
-                    optimizer.step()
+                    optimizer_instance.step()
 
                     # do the scheduler step if one-cycle or linear decay
                     if isinstance(scheduler, (OneCycleLR, LinearSchedulerWithWarmup)):
                         scheduler.step()
                         # get new learning rate
-                        current_learning_rate = [group["lr"] for group in optimizer.param_groups]
+                        current_learning_rate = [group["lr"] for group in optimizer_instance.param_groups]
 
                         momentum = [
                             group["betas"][0] if "betas" in group else group.get("momentum", 0)
-                            for group in optimizer.param_groups
+                            for group in optimizer_instance.param_groups
                         ]
 
                     seen_batches += 1
@@ -774,7 +777,7 @@ class ModelTrainer:
                 except AttributeError:
                     bad_epochs = 0
 
-                new_learning_rate = [group["lr"] for group in optimizer.param_groups]
+                new_learning_rate = [group["lr"] for group in optimizer_instance.param_groups]
 
                 if any([new_lr != prev_lr for new_lr, prev_lr in zip(new_learning_rate, previous_learning_rate)]):
                     bad_epochs = patience + 1
@@ -848,7 +851,7 @@ class ModelTrainer:
             if use_swa:
                 import torchcontrib
 
-                cast(torchcontrib.optim.SWA, optimizer).swap_swa_sgd()
+                cast(torchcontrib.optim.SWA, optimizer_instance).swap_swa_sgd()
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
@@ -870,8 +873,8 @@ class ModelTrainer:
         finally:
             if use_tensorboard:
                 writer.close()
-        optimizer.zero_grad(set_to_none=True)
-        del optimizer
+        optimizer_instance.zero_grad(set_to_none=True)
+        del optimizer_instance
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
