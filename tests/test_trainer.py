@@ -90,11 +90,7 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fewshot_conll",
-                                         train_file=f"1shot.txt",
-                                         sample_missing_splits=False,
-                                         column_format={0: "text", 1: "ner"},
-                                         )
+    corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
     tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)
 
     tagger: SequenceTagger = SequenceTagger(
@@ -183,10 +179,16 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
 
     del trainer, tagger, tag_dictionary, corpus
 
-@pytest.mark.integration
+
 def test_missing_validation_split(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
-    tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fewshot_conll",
+        train_file="1shot.txt",
+        sample_missing_splits=False,
+        column_format={0: "text", 1: "ner"},
+    )
+
+    tag_dictionary = corpus.make_label_dictionary("ner", add_unk=True)
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
@@ -209,3 +211,13 @@ def test_missing_validation_split(results_base_path, tasks_base_path):
     )
 
     del trainer, tagger, tag_dictionary, corpus
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
+
+    sentence = Sentence("I love Berlin")
+    sentence_empty = Sentence("       ")
+
+    loaded_model.predict(sentence)
+    loaded_model.predict([sentence, sentence_empty])
+    loaded_model.predict([sentence_empty])
+
+    del loaded_model
