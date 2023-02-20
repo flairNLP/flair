@@ -180,7 +180,9 @@ class BasicEvaluationPlugin(MetricBasePlugin):
 
         if self.log_dev:
             assert self.corpus.dev
-            dev_eval_result = self.model.evaluate(self.corpus.dev, out_path=self.trainer.base_path / "dev.tsv", **self.eval_kw)
+            dev_eval_result = self.model.evaluate(
+                self.corpus.dev, out_path=self.trainer.base_path / "dev.tsv", **self.eval_kw
+            )
 
             log.info(
                 f"DEV : loss {dev_eval_result.loss}"

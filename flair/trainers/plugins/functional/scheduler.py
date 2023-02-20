@@ -9,10 +9,8 @@ from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
 from flair.optim import LinearSchedulerWithWarmup
 from flair.trainers.plugins.base import TrainerPlugin, TrainingInterrupt
 from flair.trainers.plugins.functional.best_model import BestModelPlugin
-from flair.training_utils import AnnealOnPlateau
-
 from flair.trainers.plugins.metrics.base import MetricRecord
-
+from flair.training_utils import AnnealOnPlateau
 
 log = logging.getLogger("flair")
 
@@ -196,8 +194,9 @@ class SchedulerPlugin(TrainerPlugin):
             try:
                 bad_epochs = self.scheduler.num_bad_epochs
 
-                self.trainer.dispatch("metric_recorded", MetricRecord.scalar(
-                    name="bad_epochs", value=bad_epochs, global_step=epoch))
+                self.trainer.dispatch(
+                    "metric_recorded", MetricRecord.scalar(name="bad_epochs", value=bad_epochs, global_step=epoch)
+                )
             except AttributeError:
                 # dont record anything
                 pass

@@ -2,8 +2,8 @@ import logging
 import time
 
 import flair
-from flair.training_utils import log_line
 from flair.trainers.plugins.base import TrainerPlugin
+from flair.training_utils import log_line
 
 log = logging.getLogger("flair")
 

@@ -51,7 +51,7 @@ class ModelTrainer(Pluggable):
         "_training_finally",
         "_training_exception",
         "collecting_train_return_values",
-        "after_teardown"
+        "after_teardown",
     }
 
     def __init__(self, model: flair.nn.Model, corpus: Corpus, plugins=default_plugins, **kw):
