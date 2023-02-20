@@ -94,9 +94,6 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             "document_embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
-            "multi_label": self.multi_label,
-            "multi_label_threshold": self.multi_label_threshold,
-            "weight_dict": self.weight_dict,
             "embed_separately": self.embed_separately,
         }
         return model_state
@@ -108,8 +105,6 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             embeddings=state.get("document_embeddings"),
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type"),
-            multi_label=state.get("multi_label_threshold", 0.5),
-            loss_weights=state.get("weight_dict"),
             embed_separately=state.get("embed_separately"),
             **kwargs,
         )
