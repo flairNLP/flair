@@ -81,6 +81,7 @@ class BasicEvaluationPlugin(MetricBasePlugin):
         param_selection_mode,
         monitor_test,
         train_with_dev,
+        train_with_test,
         eval_on_train_fraction,
         eval_on_train_shuffle,
         embeddings_storage_mode,
@@ -100,6 +101,8 @@ class BasicEvaluationPlugin(MetricBasePlugin):
             True if (eval_on_train_fraction == "dev" or float(eval_on_train_fraction) > 0.0) else False
         )
 
+        self.train_with_test = train_with_test
+
         self.eval_on_train_shuffle = eval_on_train_shuffle
 
         self.embeddings_storage_mode = embeddings_storage_mode
@@ -112,6 +115,7 @@ class BasicEvaluationPlugin(MetricBasePlugin):
             "gold_label_dictionary": gold_label_dictionary_for_eval,
             "embedding_storage_mode": embeddings_storage_mode,
             "gold_label_type": self.trainer.model.label_type,
+            "gold_label_dictionary_for_eval": gold_label_dictionary_for_eval,
         }
 
     @TrainerPlugin.hook
@@ -210,22 +214,22 @@ class BasicEvaluationPlugin(MetricBasePlugin):
 
             yield from self.transform_eval_result(test_eval_result, "test", global_step=epoch)
 
-        @TrainerPlugin.hook
-        def collecting_train_return_values(self, **kw):
-            # test best model if test data is present
-            if self.corpus.test and not self.train_with_test:
-                final_score = self.final_test(
-                    base_path=self.base_path,
-                    eval_mini_batch_size=self.eval_kw["mini_batch_size"],
-                    num_workers=self.eval_kw["num_workers"],
-                    main_evaluation_metric=self.eval_kw["main_evaluation_metric"],
-                    gold_label_dictionary_for_eval=self.eval_kw["gold_label_dictionary_for_eval"],
-                    exclude_labels=self.eval_kw["exclude_labels"],
-                )
-            else:
-                final_score = 0
-                log.info("Test data not provided setting final score to 0")
+    @TrainerPlugin.hook
+    def collecting_train_return_values(self, **kw):
+        # test best model if test data is present
+        if self.corpus.test and not self.train_with_test:
+            final_score = self.trainer.final_test(
+                base_path=self.base_path,
+                eval_mini_batch_size=self.eval_kw["mini_batch_size"],
+                num_workers=self.eval_kw["num_workers"],
+                main_evaluation_metric=self.eval_kw["main_evaluation_metric"],
+                gold_label_dictionary_for_eval=self.eval_kw["gold_label_dictionary_for_eval"],
+                exclude_labels=self.eval_kw["exclude_labels"],
+            )
+        else:
+            final_score = 0
+            log.info("Test data not provided setting final score to 0")
 
-            # dicts returned by after_training callbacks get collected, joined
-            # together and are returned by the train function
-            return {"final_score": final_score}
+        # dicts returned by collecting_train_return_values callbacks get collected, joined
+        # together and are returned by the train function
+        return {"test_score": final_score}

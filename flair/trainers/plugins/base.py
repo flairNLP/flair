@@ -157,7 +157,7 @@ class HookHandle:
 
     def __call__(self, *args, **kw):
         """Call the hook this `HookHandle` is associated with."""
-        self._func(*args, **kw)
+        return self._func(*args, **kw)
 
 
 class BasePlugin:

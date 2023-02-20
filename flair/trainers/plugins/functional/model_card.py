@@ -47,7 +47,7 @@ class ModelCardPlugin(TrainerPlugin):
         self.model_card["training_parameters"]["epoch"] = epoch
 
     @TrainerPlugin.hook
-    def after_optimizer_setup(self, **kw):
+    def after_training_setup(self, **kw):
         # update optimizer and scheduler in model card
         self.model_card["training_parameters"]["optimizer"] = self.trainer.optimizer
 

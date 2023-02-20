@@ -389,9 +389,11 @@ class ModelTrainer(Pluggable):
 
         self.dispatch("after_training_loop")
 
+        return_values = self.dispatch("collecting_train_return_values")
+
         self.reset_training_attributes()
 
-        return self.dispatch("collecting_train_return_values")
+        return return_values
 
     def resume(
         self,

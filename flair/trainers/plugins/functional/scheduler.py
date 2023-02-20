@@ -36,6 +36,7 @@ class SchedulerPlugin(TrainerPlugin):
         self.anneal_with_restarts = None
 
         self.last_epoch_model_state_dict = None
+        self.batch_growth_annealing = None
 
     def store_learning_rate(self):
         optimizer = self.trainer.optimizer
@@ -85,6 +86,7 @@ class SchedulerPlugin(TrainerPlugin):
                 min_learning_rate[i] = lr / 10
 
         self.min_learning_rate = min_learning_rate
+        self.batch_growth_annealing = batch_growth_annealing
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
