@@ -39,7 +39,7 @@ class BestModelPlugin(TrainerPlugin):
         elif anneal_against_dev_loss:
             self.primary_metric = "dev/loss"
         else:
-            self.primary_metric = ("dev",) + main_evaluation_metric
+            self.primary_metric = "dev/score"
             self.auxiliary_metric = "dev/loss"
 
     @TrainerPlugin.hook

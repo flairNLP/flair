@@ -278,3 +278,7 @@ class TrainerPlugin(BasePlugin):
     @property
     def corpus(self):
         return self.trainer.corpus
+
+    @property
+    def base_path(self):
+        return self.trainer.base_path

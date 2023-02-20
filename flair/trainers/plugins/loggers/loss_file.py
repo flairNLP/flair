@@ -18,19 +18,21 @@ class LossFilePlugin(TrainerPlugin):
         self.metrics_to_collect = metrics_to_collect
 
     @TrainerPlugin.hook
-    def before_training_setup(self, create_loss_file, base_path, **kw):
+    def before_training_setup(self, create_loss_file, base_path, epoch, **kw):
         # prepare loss logging file and set up header
         if create_loss_file:
             self.loss_txt = init_output_file(base_path, "loss.tsv")
         else:
             self.loss_txt = None
 
+        self.first_epoch = epoch + 1
+
         self.headers = {
             # name: HEADER
-            "epoch": "EPOCH",
-            "timestamp": "TIMESTAMP",
-            "bad_epochs": "BAD_EPOCHS",
-            "learning_rate": "LEARNING_RATE",
+            MetricName("epoch"): "EPOCH",
+            MetricName("timestamp"): "TIMESTAMP",
+            MetricName("bad_epochs"): "BAD_EPOCHS",
+            MetricName("learning_rate"): "LEARNING_RATE",
         }
 
         if self.metrics_to_collect is not None:
@@ -63,7 +65,7 @@ class LossFilePlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_epoch(self, epoch, **kw):
-        self.current_row = {"epoch": str(epoch)}
+        self.current_row = {MetricName("epoch"): epoch}
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):
@@ -81,23 +83,26 @@ class LossFilePlugin(TrainerPlugin):
     @TrainerPlugin.hook
     def after_evaluation(self, epoch, **kw):
         if self.loss_txt is not None:
-            self.current_row["timestamp"] = f"{datetime.now():%H:%M:%S}"
+            self.current_row[MetricName("timestamp")] = f"{datetime.now():%H:%M:%S}"
 
             # output log file
             with open(self.loss_txt, "a") as f:
-                # make headers on first epoch
-                if epoch == 1:
-                    # delete all headers were no value was recorded
+                # remove columns where no value was found on the first epoch (could be != 1 if training was resumed)
+                if epoch == self.first_epoch:
                     for k in list(self.headers.keys()):
                         if k not in self.current_row:
                             del self.headers[k]
 
+                # make headers on epoch 1
+                if epoch == 1:
                     # write header
                     f.write("\t".join(self.headers.values()))
 
                 for col in self.headers.keys():
-                    assert isinstance(self.current_row[col], str)
+                    assert col in self.current_row, str(col) + "   " + str(self.current_row.keys())
 
-                    f.write("\t".join([self.current_row[col]]))
+                assert all(col in self.current_row for col in self.headers.keys())
+
+                f.write("\t".join([str(self.current_row[col]) for col in self.headers.keys()]))
 
             self.current_row = {}

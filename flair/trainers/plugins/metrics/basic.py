@@ -151,6 +151,7 @@ class BasicEvaluationPlugin(MetricBasePlugin):
                     value = str(value)
                     yield MetricRecord.string(name=key, value=value, **kw)
 
+        yield MetricRecord.string(name=MetricName(prefix) + "score", value=result.main_score, **kw)
         yield MetricRecord.string(name=MetricName(prefix) + "detailed_result", value=result.detailed_results, **kw)
 
     # yielded metric values are automatically published via the trainer
@@ -179,7 +180,7 @@ class BasicEvaluationPlugin(MetricBasePlugin):
 
         if self.log_dev:
             assert self.corpus.dev
-            dev_eval_result = self.model.evaluate(self.corpus.dev, out_path=self.base_path / "dev.tsv", **self.eval_kw)
+            dev_eval_result = self.model.evaluate(self.corpus.dev, out_path=self.trainer.base_path / "dev.tsv", **self.eval_kw)
 
             log.info(
                 f"DEV : loss {dev_eval_result.loss}"
@@ -198,7 +199,7 @@ class BasicEvaluationPlugin(MetricBasePlugin):
             test_eval_result = self.model.evaluate(
                 self.corpus.test,
                 gold_label_type=self.model.label_type,
-                out_path=self.base_path / "test.tsv",
+                out_path=self.trainer.base_path / "test.tsv",
                 **self.eval_kw,
             )
 
@@ -219,7 +220,7 @@ class BasicEvaluationPlugin(MetricBasePlugin):
         # test best model if test data is present
         if self.corpus.test and not self.train_with_test:
             final_score = self.trainer.final_test(
-                base_path=self.base_path,
+                base_path=self.trainer.base_path,
                 eval_mini_batch_size=self.eval_kw["mini_batch_size"],
                 num_workers=self.eval_kw["num_workers"],
                 main_evaluation_metric=self.eval_kw["main_evaluation_metric"],

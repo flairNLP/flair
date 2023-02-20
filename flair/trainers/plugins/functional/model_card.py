@@ -36,7 +36,7 @@ class ModelCardPlugin(TrainerPlugin):
         }
 
         # remember all activated plugins
-        self.model_card["training_parameters"]["plugins"] = [plugin.__class__ for plugin in self.trainer.plugins]
+        self.model_card["plugins"] = [plugin.__class__ for plugin in self.trainer.plugins]
 
         # add model card to model
         self.trainer.model.model_card = self.model_card

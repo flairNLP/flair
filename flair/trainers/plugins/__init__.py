@@ -2,6 +2,7 @@ from flair.trainers.plugins.functional import (
     AmpPlugin,
     CheckpointPlugin,
     ModelCardPlugin,
+    RegularLoggingPlugin,
     SchedulerPlugin,
     SWAPlugin,
     WeightExtractorPlugin,
@@ -19,6 +20,7 @@ from .base import BasePlugin, Pluggable, TrainerPlugin, TrainingInterrupt
 default_plugins = [
     BasicEvaluationPlugin,
     TrainingBehaviorPlugin,
+    RegularLoggingPlugin,
     AmpPlugin,
     CheckpointPlugin,
     ModelCardPlugin,
@@ -35,6 +37,7 @@ __all__ = [
     "AmpPlugin",
     "CheckpointPlugin",
     "ModelCardPlugin",
+    "RegularLoggingPlugin",
     "SchedulerPlugin",
     "SWAPlugin",
     "WeightExtractorPlugin",

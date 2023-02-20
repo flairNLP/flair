@@ -51,6 +51,7 @@ class ModelTrainer(Pluggable):
         "_training_finally",
         "_training_exception",
         "collecting_train_return_values",
+        "after_teardown"
     }
 
     def __init__(self, model: flair.nn.Model, corpus: Corpus, plugins=default_plugins, **kw):
@@ -387,11 +388,11 @@ class ModelTrainer(Pluggable):
         finally:
             self.dispatch("_training_finally")
 
-        self.dispatch("after_training_loop")
-
         return_values = self.dispatch("collecting_train_return_values")
 
         self.reset_training_attributes()
+
+        self.dispatch("after_teardown")
 
         return return_values
 

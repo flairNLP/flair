@@ -1,14 +1,14 @@
 import logging
-from time import time
+import time
 
 import flair
-from flair.train_util import log_line
+from flair.training_utils import log_line
 from flair.trainers.plugins.base import TrainerPlugin
 
 log = logging.getLogger("flair")
 
 
-class LoggingPlugin(TrainerPlugin):
+class RegularLoggingPlugin(TrainerPlugin):
     def __init__(self, log_modulo=None):
         super().__init__()
 
@@ -72,12 +72,12 @@ class LoggingPlugin(TrainerPlugin):
         self.start_time = time.time()
 
     @TrainerPlugin.hook
-    def after_training_batch_step(self, loss, datapoint_count):
+    def after_training_batch_step(self, loss, datapoint_count, **kw):
         self.total_loss += loss
         self.average_over += datapoint_count
 
     @TrainerPlugin.hook
-    def metric_recorded(self, record):
+    def metric_recorded(self, record, **kw):
         if record.name == "learning_rate":
             if record.is_scalar:
                 self.lr_info = f" - lr: {record.value:.4f}"

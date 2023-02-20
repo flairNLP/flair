@@ -8,18 +8,17 @@ log = logging.getLogger("flair")
 
 class LogFilePlugin(TrainerPlugin):
     @TrainerPlugin.hook
-    def before_training_setup(self, create_file_logs, base_path, **kw):
+    def before_training_setup(self, create_file_logs, **kw):
         self.create_file_logs = create_file_logs
-        self.base_path = base_path
 
     @TrainerPlugin.hook
-    def before_training_loop(self, **kw):
+    def after_training_setup(self, **kw):
         if self.create_file_logs:
-            self.log_handler = add_file_handler(log, self.base_path / "training.log")
+            self.log_handler = add_file_handler(log, self.trainer.base_path / "training.log")
         else:
             self.log_handler = None
 
-    @TrainerPlugin.hook("_training_finally")
+    @TrainerPlugin.hook("_training_exception", "after_teardown")
     def close_file_handler(self, **kw):
         if self.create_file_logs:
             self.log_handler.close()
