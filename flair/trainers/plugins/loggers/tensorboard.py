@@ -36,7 +36,7 @@ class TensorboardLogger(TrainerPlugin):
 
             except ImportError:
                 log_line(log)
-                log.warning("ATTENTION! PyTorch >= 1.1.0 and pillow are required" "for TensorBoard support!")
+                log.warning("ATTENTION! PyTorch >= 1.1.0 and pillow are required for TensorBoard support!")
                 log_line(log)
 
     @TrainerPlugin.hook

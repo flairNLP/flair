@@ -19,13 +19,16 @@ class TrainingBehaviorPlugin(MetricBasePlugin):
     def __init__(self):
         super().__init__()
 
-        self.total_train_loss: float = 0.0
-        self.total_train_samples: int = 0
+        self.epoch_train_loss: float = 0.0
+        self.epoch_train_samples: int = 0
+
+        self.batch_train_loss: float = 0.0
+        self.batch_train_samples: int = 0
 
     @MetricBasePlugin.hook
     def before_training_epoch(self, epoch, **kw):
-        self.total_train_loss = 0.0
-        self.total_train_samples = 0
+        self.epoch_train_loss = 0.0
+        self.epoch_train_samples = 0
 
         # record current learning rate and momentum
         optimizer = self.trainer.optimizer
@@ -41,15 +44,29 @@ class TrainingBehaviorPlugin(MetricBasePlugin):
             yield MetricRecord.scalar_list("momentum", momentum, epoch)
 
     @TrainerPlugin.hook
+    def before_training_batch(self):
+        self.batch_train_loss = 0.0
+        self.batch_train_samples = 0
+
+    @TrainerPlugin.hook
     def before_training_batch_backward(self, loss, datapoint_count, **kw):
-        self.total_train_samples += datapoint_count
-        self.total_train_loss += loss.item()
+        self.epoch_train_samples += datapoint_count
+        self.epoch_train_loss += loss.item()
+        self.batch_train_samples += datapoint_count
+        self.batch_train_loss += loss.item()
 
     @MetricBasePlugin.hook
     def after_training_epoch(self, epoch, **kw):
-        if self.total_train_samples != 0:
-            train_loss = self.total_train_loss / self.total_train_samples
+        if self.epoch_train_samples != 0:
+            train_loss = self.epoch_train_loss / self.epoch_train_samples
             yield MetricRecord.scalar(("train", "loss"), train_loss, epoch)
+
+    @MetricBasePlugin.hook
+    def after_training_batch(self, epoch, batch_no, total_number_of_batches):
+        if self.batch_train_samples != 0:
+            train_loss = self.batch_train_loss / self.batch_train_samples
+            global_step = batch_no + epoch * total_number_of_batches
+            yield MetricRecord.scalar(("train", "batch_loss"), train_loss, global_step)
 
 
 class BasicEvaluationPlugin(MetricBasePlugin):
