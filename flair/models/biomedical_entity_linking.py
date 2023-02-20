@@ -232,7 +232,9 @@ class DictionaryDataset:
     https://github.com/dmis-lab/BioSyn/blob/master/src/biosyn/data_loader.py#L89
     """
 
-    def __init__(self, dictionary_path: Union[Path, str], load_into_memory: True) -> None:
+    def __init__(
+        self, dictionary_path: Union[Path, str], load_into_memory: True
+    ) -> None:
         """
         :param dictionary_path str: The path of the dictionary
         """
@@ -256,7 +258,7 @@ class DictionaryDataset:
 
         data = np.array(data)
         return data
-    
+
     # generator version
     def get_data(self, dictionary_path):
         data = []
@@ -365,7 +367,7 @@ class BiEncoderEntityLiker:
                 cache_dir=flair.cache_root / "models" / model_name_or_path,
             )
 
-        self.sparse_weight = torch.load(sparse_weight_path)
+        self.sparse_weight = torch.load(sparse_weight_path, map_location="cpu")
 
         return self.sparse_weight
 
@@ -580,10 +582,7 @@ class BiEncoderEntityLiker:
             ]
 
     def embed_dictionary(
-        self,
-        model_name_or_path: str,
-        dictionary_name_or_path: str,
-        batch_size: int
+        self, model_name_or_path: str, dictionary_name_or_path: str, batch_size: int
     ):
         # check for embedded dictionary in cache
         dictionary_name = os.path.splitext(os.path.basename(dictionary_name_or_path))[0]
@@ -607,7 +606,7 @@ class BiEncoderEntityLiker:
             dictionary_names = []
             for row in self.dictionary:
                 name = punctuation_regex.split(row[0])
-                name = " ".join().strip().lowercase()
+                name = " ".join(name).strip().lower()
                 dictionary_names.append(name)
 
             # create dense and sparse embeddings
@@ -615,9 +614,7 @@ class BiEncoderEntityLiker:
                 self.dict_dense_embeds = self.embed_dense(
                     names=dictionary_names, show_progress=True
                 )
-                self.dict_sparse_embeds = self.embed_sparse(
-                    names=dictionary_names, show_progress=True, batch_size=batch_size
-                )
+                self.dict_sparse_embeds = self.embed_sparse(names=dictionary_names)
 
             # create only dense embeddings
             else:
@@ -650,7 +647,6 @@ class BiEncoderEntityLiker:
                 self.cache_dictionary(
                     self.dense_dictionary_index, cache_folder, cached_dictionary_path
                 )
-
 
     def load_cached_dictionary(self, cached_dictionary_path: str):
         with open(cached_dictionary_path, "rb") as cached_file:
@@ -831,7 +827,7 @@ class MultiBiEncoderEntityLinker:
                     model_name_or_path=model_path,
                     dictionary_name_or_path=dictionary_path,
                     batch_size=batch_size,
-                    use_cosine=use_cosine
+                    use_cosine=use_cosine,
                 )
 
             models.append(model)
