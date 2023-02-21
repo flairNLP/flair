@@ -44,7 +44,7 @@ class TrainingBehaviorPlugin(MetricBasePlugin):
             yield MetricRecord.scalar_list("momentum", momentum, epoch)
 
     @TrainerPlugin.hook
-    def before_training_batch(self):
+    def before_training_batch(self, **kw):
         self.batch_train_loss = 0.0
         self.batch_train_samples = 0
 
