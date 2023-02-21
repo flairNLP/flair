@@ -178,3 +178,46 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
     trainer.find_learning_rate(results_base_path, optimizer=SGD, iterations=5)
 
     del trainer, tagger, tag_dictionary, corpus
+
+
+def test_missing_validation_split(results_base_path, tasks_base_path):
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fewshot_conll",
+        train_file="1shot.txt",
+        sample_missing_splits=False,
+        column_format={0: "text", 1: "ner"},
+    )
+
+    tag_dictionary = corpus.make_label_dictionary("ner", add_unk=True)
+
+    tagger: SequenceTagger = SequenceTagger(
+        hidden_size=64,
+        embeddings=turian_embeddings,
+        tag_dictionary=tag_dictionary,
+        tag_type="ner",
+        use_crf=False,
+    )
+
+    # initialize trainer
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+
+    trainer.train(
+        results_base_path,
+        learning_rate=0.1,
+        mini_batch_size=2,
+        max_epochs=2,
+        shuffle=False,
+        optimizer=Adam,
+    )
+
+    del trainer, tagger, tag_dictionary, corpus
+    loaded_model: SequenceTagger = SequenceTagger.load(results_base_path / "final-model.pt")
+
+    sentence = Sentence("I love Berlin")
+    sentence_empty = Sentence("       ")
+
+    loaded_model.predict(sentence)
+    loaded_model.predict([sentence, sentence_empty])
+    loaded_model.predict([sentence_empty])
+
+    del loaded_model

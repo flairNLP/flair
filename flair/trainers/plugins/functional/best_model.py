@@ -34,7 +34,7 @@ class BestModelPlugin(TrainerPlugin):
         self.minimize_objective = train_with_dev or anneal_against_dev_loss
         self.best_value = None
 
-        if train_with_dev:
+        if train_with_dev or self.corpus.dev is None:
             self.primary_metric = "train/loss"
         elif anneal_against_dev_loss:
             self.primary_metric = "dev/loss"

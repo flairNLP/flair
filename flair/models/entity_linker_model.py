@@ -1,13 +1,79 @@
 import logging
-from typing import Callable, Dict, List
+import re
+from functools import lru_cache
+from typing import Callable, Dict, List, Optional, Set, Union
+from unicodedata import category
 
 import torch
 
 import flair.embeddings
 import flair.nn
 from flair.data import Dictionary, Sentence, Span
+from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
+
+
+class CandidateGenerator:
+    """
+    Given a string, the CandidateGenerator returns possible target classes as candidates.
+    """
+
+    def __init__(self, candidates: Union[str, Dict], backoff: bool = True):
+        # internal candidate lists of generator
+        self.mention_to_candidates_map: Dict = {}
+
+        # load Zelda candidates if so passed
+        if isinstance(candidates, str) and candidates.lower() == "zelda":
+            zelda_path: str = "https://flair.informatik.hu-berlin.de/resources/datasets/zelda"
+            zelda_candidates = cached_path(f"{zelda_path}/zelda_mention_entities_counter.pickle", cache_dir="datasets")
+            import pickle
+
+            with open(zelda_candidates, "rb") as handle:
+                mention_entities_counter = pickle.load(handle)
+
+            # create candidate lists
+            candidate_lists = {}
+            for mention in mention_entities_counter:
+                candidate_lists[mention] = list(mention_entities_counter[mention].keys())
+
+            self.mention_to_candidates_map = candidate_lists
+
+        elif isinstance(candidates, Dict):
+            self.mention_to_candidates_map = candidates
+
+        # if lower casing is enabled, create candidate lists of lower cased versions
+        self.backoff = backoff
+        if self.backoff:
+            # create a new dictionary for lower cased mentions
+            lowercased_mention_to_candidates_map: Dict = {}
+
+            # go through each mention and its candidates
+            for mention, candidates in self.mention_to_candidates_map.items():
+                backoff_mention = self._make_backoff_string(mention)
+                # check if backoff mention already seen. If so, add candidates. Else, create new entry.
+                if backoff_mention in lowercased_mention_to_candidates_map:
+                    current_candidates = lowercased_mention_to_candidates_map[backoff_mention]
+                    lowercased_mention_to_candidates_map[backoff_mention] = set(current_candidates).union(candidates)
+                else:
+                    lowercased_mention_to_candidates_map[backoff_mention] = candidates
+
+            # set lowercased version as map
+            self.mention_to_candidates_map = lowercased_mention_to_candidates_map
+
+    @lru_cache(maxsize=50000)
+    def _make_backoff_string(self, mention: str) -> str:
+        backoff_mention = mention.lower()
+        backoff_mention = "".join(ch for ch in backoff_mention if category(ch)[0] not in "P")
+        backoff_mention = re.sub(" +", " ", backoff_mention)
+        return backoff_mention
+
+    def get_candidates(self, mention: str) -> Set[str]:
+        """Given a mention, this method returns a set of candidate classes"""
+        if self.backoff:
+            mention = self._make_backoff_string(mention)
+
+        return set(self.mention_to_candidates_map[mention]) if mention in self.mention_to_candidates_map else set()
 
 
 class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
@@ -24,6 +90,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         label_dictionary: Dictionary,
         pooling_operation: str = "first_last",
         label_type: str = "nel",
+        candidates: Optional[CandidateGenerator] = None,
         **classifierargs,
     ):
         """
@@ -60,6 +127,8 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
 
         self.aggregated_embedding = cases[pooling_operation]
 
+        self.candidates = candidates
+
         self.to(flair.device)
 
     def emb_first(self, span: Span, embedding_names):
@@ -93,6 +162,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             "label_dictionary": self.label_dictionary,
             "pooling_operation": self.pooling_operation,
             "loss_weights": self.weight_dict,
+            "candidates": self.candidates,
         }
         return model_state
 
@@ -127,9 +197,28 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             label_type=state.get("label_type"),
             pooling_operation=state.get("pooling_operation"),
             loss_weights=state.get("loss_weights", {"<unk>": 0.3}),
+            candidates=state.get("candidates", None),
             **kwargs,
         )
 
     @property
     def label_type(self):
         return self._label_type
+
+    def _mask_scores(self, scores: torch.Tensor, data_points: List[Span]):
+        if not self.candidates:
+            return scores
+
+        masked_scores = -torch.inf * torch.ones(scores.size(), requires_grad=True, device=flair.device)
+
+        for idx, span in enumerate(data_points):
+            # get the candidates
+            candidate_set = self.candidates.get_candidates(span.text)
+            # during training, add the gold value as candidate
+            if self.training:
+                candidate_set.add(span.get_label(self.label_type).value)
+            candidate_set.add("<unk>")
+            indices_of_candidates = [self.label_dictionary.get_idx_for_item(candidate) for candidate in candidate_set]
+            masked_scores[idx, indices_of_candidates] = scores[idx, indices_of_candidates]
+
+        return masked_scores

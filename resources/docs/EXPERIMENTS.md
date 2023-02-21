@@ -262,31 +262,28 @@ trainer.train('resources/taggers/example-ner',
 #### Data
 
 The [Ontonotes corpus](https://catalog.ldc.upenn.edu/docs/LDC2013T19/OntoNotes-Release-5.0.pdf) is one of the best resources
-for different types of NLP and contains rich NER annotation. Get the corpus and split it into train, test and dev
-splits using the scripts provided by the [CoNLL-12 shared task](http://conll.cemantix.org/2012/data.html).
+for different types of NLP and contains rich NER annotation.
 
-Place train, test and dev data in CoNLL-03 format in  `resources/tasks/onto-ner/` as follows:
-
+You can easily use the corpus within flair:
 ```
-resources/tasks/onto-ner/eng.testa
-resources/tasks/onto-ner/eng.testb
-resources/tasks/onto-ner/eng.train
+from flair.datasets import ONTONOTES
+
+corpus = ONTONOTES()
 ```
 
 #### Best Known Configuration
 
-Once you have the data, reproduce our experiments exactly like for CoNLL-03, just with a different dataset and with
-FastText embeddings (they work better on this dataset). You also need to provide a `column_format` for the `ColumnCorpus` object indicating which column in the training file is the 'ner' information. The full code then is as follows:
+To reproduce our experiments exactly like for CoNLL-03, just with a different dataset and with
+FastText embeddings (they work better on this dataset):
 
 ```python
 from flair.data import Corpus
-from flair.datasets import ColumnCorpus
+from flair.datasets import ONTONOTES
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, FlairEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: Corpus = flair.datasets.ColumnCorpus('resources/tasks/onto-ner',
-                                             column_format={0: 'text', 1: 'pos', 2: 'upos', 3: 'ner'})
+corpus: Corpus = ONTONOTES()
 
 # 2. what tag do we want to predict?
 tag_type = 'ner'
