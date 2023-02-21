@@ -140,7 +140,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
                 self.model_card["training_parameters"]["scheduler"] = scheduler
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]):
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Model":
         """
         Loads the model from the given file.
         :param model_path: the model file or the already loaded state dict
@@ -541,6 +541,12 @@ class Classifier(Model[DT], typing.Generic[DT], ABC):
             )
             lines.append(eval_line)
         return lines
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Classifier":
+        from typing import cast
+
+        return cast("Classifier", super().load(model_path=model_path))
 
 
 class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
