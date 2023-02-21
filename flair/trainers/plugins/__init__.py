@@ -13,7 +13,13 @@ from flair.trainers.plugins.loggers import (
     MetricHistoryPlugin,
     TensorboardLogger,
 )
-from flair.trainers.plugins.metrics import BasicEvaluationPlugin, TrainingBehaviorPlugin
+from flair.trainers.plugins.metrics import (
+    BasicEvaluationPlugin,
+    MetricBasePlugin,
+    MetricName,
+    MetricRecord,
+    TrainingBehaviorPlugin,
+)
 
 from .base import BasePlugin, Pluggable, TrainerPlugin, TrainingInterrupt
 
@@ -51,4 +57,7 @@ __all__ = [
     "Pluggable",
     "TrainerPlugin",
     "TrainingInterrupt",
+    "MetricBasePlugin",
+    "MetricName",
+    "MetricRecord",
 ]
