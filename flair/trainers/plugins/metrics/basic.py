@@ -62,7 +62,7 @@ class TrainingBehaviorPlugin(MetricBasePlugin):
             yield MetricRecord.scalar(("train", "loss"), train_loss, epoch)
 
     @MetricBasePlugin.hook
-    def after_training_batch(self, epoch, batch_no, total_number_of_batches):
+    def after_training_batch(self, epoch, batch_no, total_number_of_batches, **kw):
         if self.batch_train_samples != 0:
             train_loss = self.batch_train_loss / self.batch_train_samples
             global_step = batch_no + (epoch - 1) * total_number_of_batches

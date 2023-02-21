@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from inspect import isclass
+from inspect import isclass, signature
 from itertools import count
 from queue import Queue
 from typing import (
@@ -157,7 +157,18 @@ class HookHandle:
 
     def __call__(self, *args, **kw):
         """Call the hook this `HookHandle` is associated with."""
-        return self._func(*args, **kw)
+        try:
+            return self._func(*args, **kw)
+        except TypeError as err:
+            sig = signature(self._func)
+
+            for name in kw.keys():
+                if name not in sig.parameters:
+                    raise TypeError(
+                        f"Hook callback {self._func.__qualname__}() does not accept keyword argument '{name}'"
+                    ) from err
+
+            raise err
 
 
 class BasePlugin:
