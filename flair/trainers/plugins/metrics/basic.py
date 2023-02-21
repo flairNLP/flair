@@ -16,6 +16,9 @@ log = logging.getLogger("flair")
 
 
 class TrainingBehaviorPlugin(MetricBasePlugin):
+    lr_key = ("optimizer", "learning_rate")
+    momentum_key = ("optimizer", "momentum")
+
     def __init__(self):
         super().__init__()
 
@@ -37,11 +40,11 @@ class TrainingBehaviorPlugin(MetricBasePlugin):
         momentum = [group["momentum"] if "momentum" in group else 0 for group in optimizer.param_groups]
 
         if len(current_learning_rate) == 1:
-            yield MetricRecord.scalar("learning_rate", current_learning_rate[0], epoch)
-            yield MetricRecord.scalar("momentum", momentum[0], epoch)
+            yield MetricRecord.scalar(self.lr_key, current_learning_rate[0], epoch)
+            yield MetricRecord.scalar(self.momentum_key, momentum[0], epoch)
         else:
-            yield MetricRecord.scalar_list("learning_rate", current_learning_rate, epoch)
-            yield MetricRecord.scalar_list("momentum", momentum, epoch)
+            yield MetricRecord.scalar_list(self.lr_key, current_learning_rate, epoch)
+            yield MetricRecord.scalar_list(self.momentum_key, momentum, epoch)
 
     @TrainerPlugin.hook
     def before_training_batch(self, **kw):
@@ -57,13 +60,13 @@ class TrainingBehaviorPlugin(MetricBasePlugin):
 
     @MetricBasePlugin.hook
     def after_training_epoch(self, epoch, **kw):
-        if self.epoch_train_samples != 0:
+        if self.epoch_train_samples > 0:
             train_loss = self.epoch_train_loss / self.epoch_train_samples
             yield MetricRecord.scalar(("train", "loss"), train_loss, epoch)
 
     @MetricBasePlugin.hook
     def after_training_batch(self, epoch, batch_no, total_number_of_batches, **kw):
-        if self.batch_train_samples != 0:
+        if self.batch_train_samples > 0:
             train_loss = self.batch_train_loss / self.batch_train_samples
             global_step = batch_no + (epoch - 1) * total_number_of_batches
             yield MetricRecord.scalar(("train", "batch_loss"), train_loss, global_step)
