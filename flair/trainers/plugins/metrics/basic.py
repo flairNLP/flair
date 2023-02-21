@@ -65,7 +65,7 @@ class TrainingBehaviorPlugin(MetricBasePlugin):
     def after_training_batch(self, epoch, batch_no, total_number_of_batches):
         if self.batch_train_samples != 0:
             train_loss = self.batch_train_loss / self.batch_train_samples
-            global_step = batch_no + epoch * total_number_of_batches
+            global_step = batch_no + (epoch - 1) * total_number_of_batches
             yield MetricRecord.scalar(("train", "batch_loss"), train_loss, global_step)
 
 
