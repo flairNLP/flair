@@ -2,7 +2,7 @@ import logging
 import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from urllib.error import HTTPError
 
 import torch
@@ -1027,3 +1027,9 @@ for entity in sentence.get_spans('ner'):
                     lines.append(eval_line)
                 lines.append("\n")
         return lines
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "SequenceTagger":
+        from typing import cast
+
+        return cast("SequenceTagger", super().load(model_path=model_path))

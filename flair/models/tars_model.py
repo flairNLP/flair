@@ -2,7 +2,7 @@ import logging
 from abc import ABC
 from collections import OrderedDict
 from pathlib import Path
-from typing import List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import torch
@@ -308,6 +308,12 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
 
         return
 
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "FewshotClassifier":
+        from typing import cast
+
+        return cast("FewshotClassifier", super().load(model_path=model_path))
+
 
 class TARSTagger(FewshotClassifier):
     """
@@ -612,6 +618,12 @@ class TARSTagger(FewshotClassifier):
                 lines.append("\n")
         return lines
 
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TARSTagger":
+        from typing import cast
+
+        return cast("TARSTagger", super().load(model_path=model_path))
+
 
 class TARSClassifier(FewshotClassifier):
     """
@@ -900,3 +912,9 @@ class TARSClassifier(FewshotClassifier):
 
         if return_loss:
             return overall_loss, overall_count
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TARSClassifier":
+        from typing import cast
+
+        return cast("TARSClassifier", super().load(model_path=model_path))

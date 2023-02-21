@@ -263,3 +263,9 @@ class MultitaskModel(flair.nn.Classifier):
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
 
         return model_name
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "MultitaskModel":
+        from typing import cast
+
+        return cast("MultitaskModel", super().load(model_path=model_path))

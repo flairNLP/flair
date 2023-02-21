@@ -924,6 +924,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
         return state
 
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "DefaultClassifier":
+        from typing import cast
+
+        return cast("DefaultClassifier", super().load(model_path=model_path))
+
 
 def get_non_abstract_subclasses(cls):
     all_subclasses = []
