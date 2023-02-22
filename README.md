@@ -60,13 +60,13 @@ a pre-trained model and use it to predict tags for the sentence:
 
 ```python
 from flair.data import Sentence
-from flair.models import SequenceTagger
+from flair.nn import Classifier
 
 # make a sentence
 sentence = Sentence('I love Berlin .')
 
 # load the NER tagger
-tagger = SequenceTagger.load('ner')
+tagger = Classifier.load('ner')
 
 # run NER over sentence
 tagger.predict(sentence)
