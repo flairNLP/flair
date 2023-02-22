@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -228,3 +228,9 @@ class TextRegressor(flair.nn.Model[Sentence]):
         if len(sentences) != len(filtered_sentences):
             log.warning("Ignore {} sentence(s) with no tokens.".format(len(sentences) - len(filtered_sentences)))
         return filtered_sentences
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TextRegressor":
+        from typing import cast
+
+        return cast("TextRegressor", super().load(model_path=model_path))

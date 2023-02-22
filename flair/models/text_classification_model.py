@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List, Union
 
 import torch
 
@@ -129,3 +129,9 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
     @property
     def label_type(self):
         return self._label_type
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TextClassifier":
+        from typing import cast
+
+        return cast("TextClassifier", super().load(model_path=model_path))

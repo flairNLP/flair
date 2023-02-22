@@ -2,6 +2,7 @@ import itertools
 import logging
 import typing
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import (
     Any,
     Dict,
@@ -722,3 +723,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             for span in sentence.get_spans(self.label_type):
                 yield self.encoding_strategy.encode_head(span, span.get_label(self.label_type)).split(" ")
                 yield self.encoding_strategy.encode_tail(span, span.get_label(self.label_type)).split(" ")
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "RelationClassifier":
+        from typing import cast
+
+        return cast("RelationClassifier", super().load(model_path=model_path))
