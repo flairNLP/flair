@@ -7,6 +7,7 @@ import torch
 
 import flair.nn
 from flair.data import DT, Dictionary, Sentence
+from flair.file_utils import cached_path
 from flair.nn import Classifier
 from flair.training_utils import Result
 
@@ -246,3 +247,25 @@ class MultitaskModel(flair.nn.Classifier):
     @property
     def label_type(self):
         return self._label_type
+
+    @staticmethod
+    def _fetch_model(model_name) -> str:
+        model_map = {}
+        hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
+
+        # biomedical models
+        model_map["bioner"] = "/".join([hu_path, "bioner", "hunflair.pt"])
+        model_map["hunflair"] = "/".join([hu_path, "bioner", "hunflair.pt"])
+        model_map["hunflair-paper"] = "/".join([hu_path, "bioner", "hunflair-paper.pt"])
+
+        cache_dir = Path("models")
+        if model_name in model_map:
+            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
+
+        return model_name
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "MultitaskModel":
+        from typing import cast
+
+        return cast("MultitaskModel", super().load(model_path=model_path))

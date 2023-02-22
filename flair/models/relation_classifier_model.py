@@ -1,6 +1,7 @@
 import itertools
 import logging
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import (
     Any,
     Dict,
@@ -705,3 +706,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     @property
     def allow_unk_tag(self) -> bool:
         return self._allow_unk_tag
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "RelationClassifier":
+        from typing import cast
+
+        return cast("RelationClassifier", super().load(model_path=model_path))
