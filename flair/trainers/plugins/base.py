@@ -109,7 +109,13 @@ class Pluggable:
                     returned = hook(*args, **kwargs)
 
                     if returned is not None:
-                        combined_return_values.update(returned)
+                        try:
+                            combined_return_values.update(returned)
+                        except TypeError as err:
+                            raise TypeError(
+                                "Hook callback must return a mapping (or an iterable of key-value pairs). "
+                                f"{self._func.__qualname__}() returned object of type {type(returned)}."
+                            ) from err
 
             self._processing_events = False
 
