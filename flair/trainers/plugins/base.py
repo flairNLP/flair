@@ -36,7 +36,7 @@ class Pluggable:
 
     valid_events: Optional[Set[EventIdenifier]] = None
 
-    def __init__(self, *, plugins: Sequence[PluginArgument] = None):
+    def __init__(self, *, plugins: Sequence[PluginArgument] = []):
         """Initialize a `Pluggable`.
 
         :param plugins: Plugins which should be attached to this `Pluggable`.
@@ -50,14 +50,13 @@ class Pluggable:
         self._event_queue: Queue = Queue()
         self._processing_events = False
 
-        if plugins is not None:
-            for plugin in plugins:
-                if isclass(plugin):
-                    # instantiate plugin
-                    plugin = plugin()
+        for plugin in plugins:
+            if isclass(plugin):
+                # instantiate plugin
+                plugin = plugin()
 
-                plugin = cast("BasePlugin", plugin)
-                plugin.attach_to(self)
+            plugin = cast("BasePlugin", plugin)
+            plugin.attach_to(self)
 
     @property
     def plugins(self):
@@ -72,7 +71,8 @@ class Pluggable:
 
             if self.valid_events is not None:
                 if event not in self.valid_events:
-                    raise RuntimeError(f"Event '{event}' not recognized (available {self.valid_events})")
+                    raise RuntimeError(
+                        f"Event '{event}' not recognized (available {', '.join(self.valid_events)})")
             return event
 
     def register_hook(self, func: Callable, *events: EventIdenifier):
