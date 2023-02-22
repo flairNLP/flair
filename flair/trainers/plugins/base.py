@@ -114,7 +114,7 @@ class Pluggable:
                         except TypeError as err:
                             raise TypeError(
                                 "Hook callback must return a mapping (or an iterable of key-value pairs). "
-                                f"{self._func.__qualname__}() returned object of type {type(returned)}."
+                                f"{hook.func_name}() returned object of type {type(returned)}."
                             ) from err
 
             self._processing_events = False
@@ -153,6 +153,10 @@ class HookHandle:
         return self._id
 
     @property
+    def func_name(self):
+        return self._func.__qualname__
+
+    @property
     def events(self) -> Iterator[EventIdenifier]:
         """Return iterator of events whis `HookHandle` is registered for."""
         yield from self._events
@@ -171,7 +175,7 @@ class HookHandle:
             for name in kw.keys():
                 if name not in sig.parameters:
                     raise TypeError(
-                        f"Hook callback {self._func.__qualname__}() does not accept keyword argument '{name}'"
+                        f"Hook callback {self.func_name}() does not accept keyword argument '{name}'"
                     ) from err
 
             raise err
