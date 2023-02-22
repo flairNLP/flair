@@ -99,8 +99,27 @@ Span[2:3]: "Berlin" → LOC (0.999)
 
 We provide a set of **quick tutorials** to get you started with the library:
 
-* [Tutorial 1: Basics](/resources/docs/TUTORIAL_1_BASICS.md)
-* [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
+#### Tutorial 1 Basics
+
+Our basic tutorial 
+
+1. [Tutorial 1: Basics](/resources/docs/TUTORIAL_1_BASICS.md) 
+2. [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
+   * How to tag entities in your text
+   * How to use sentiment analysis
+   * How to use entity linking
+   * How to use part-of-speech tagging 
+   * How to use relation extraction
+3. [Tutorial 3: Using Embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
+   * Word Embeddings
+   * Document Embeddings
+4. [Tutorial 4: Training a Model](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
+   * How to load a dataset
+   * How to train a sequence labeling model (NER/PoS)
+   * How to train a text classifier (sentiment analysis, etc.)
+   * How to train an entity linker
+   * How to train a relation extraction model
+
 * [Tutorial 3: Embedding Words](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
 * [Tutorial 4: List of All Word Embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
 * [Tutorial 5: Embedding Documents](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
