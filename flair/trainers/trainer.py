@@ -388,7 +388,7 @@ class ModelTrainer(Pluggable):
         finally:
             self.dispatch("_training_finally")
 
-        return_values = self.dispatch("collecting_train_return_values")
+        return_values = self.dispatch("collecting_train_return_values", epoch=epoch)
 
         self.reset_training_attributes()
 
