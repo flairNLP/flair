@@ -144,7 +144,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         )
 
     def emb_mean(self, span, embedding_names):
-        return torch.mean(torch.cat([token.get_embedding(embedding_names) for token in span], 0), 0)
+        return torch.mean(torch.stack([token.get_embedding(embedding_names) for token in span], 0), 0)
 
     def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Span]:
         return sentence.get_spans(self.label_type)
