@@ -1,0 +1,258 @@
+# Tutorial 2.1: Tagging Entities in your Text
+
+This is the entity tagging tutorial. It assumes that you're familiar with the
+[base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library. 
+
+This tutorial contains the following parts:
+* tagging entities 
+  * ... with our standard model
+  * ... with our best model
+  * ... in non-English text
+  * ... with 18 entity classes
+  * ... in biomedical data
+* tagging a whole text corpus
+* understanding and accessing annotations (important!)
+
+Let's get started!
+
+## Tagging Entities with Our Standard Model
+
+Our standard model uses Flair embeddings and was trained over the English CoNLL-03 task and can recognize 4 different entity
+types. It offers a good tradeoff between accuracy and speed.
+
+Let's use a sentence with two named entities:
+
+```python
+from flair.nn import Classifier
+from flair.data import Sentence
+
+# load the model
+tagger = Classifier.load('ner')
+
+# make a sentence
+sentence = Sentence('George Washington went to Washington.')
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence with predicted tags
+print(sentence)
+```
+
+This should print:
+```console
+Sentence: "George Washington went to Washington ." → ["George Washington"/PER, "Washington"/LOC]
+```
+
+Showing us that two entities are labeled in this sentence: "George Washington" as PER (person) and "Washington"
+as LOC (location.)
+
+## Tagging Entities with Our Best Model
+
+Our best 4-class model is trained using a very large transformer. Use it if accuracy is the most important to you, and 
+speed/memory not so much. 
+
+```python
+from flair.data import Sentence
+from flair.nn import Classifier
+
+# make a sentence
+sentence = Sentence('George Washington went to Washington.')
+
+# load the NER tagger
+tagger = Classifier.load('ner-large')
+
+# run NER over sentence
+tagger.predict(sentence)
+
+# print the sentence with all annotations
+print(sentence)
+```
+
+As you can see, it's the same code, just with 'ner-large' as model instead of 'ner'. 
+This model also works with most languages. 
+
+Hint: If you want the fastest model we ship, you can also try 'ner-fast'.
+
+## Tagging Entities in Non-English Text
+
+We also have NER models for text in other languages. 
+
+### Tagging a German sentence
+
+To tag a German sentence, just load the appropriate model:
+
+```python
+
+# load model
+tagger = Classifier.load('de-ner')
+
+# make German sentence
+sentence = Sentence('George Washington ging nach Washington.')
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence with predicted tags
+print(sentence)
+```
+
+This should print:
+```console
+Sentence: "George Washington ging nach Washington ." → ["George Washington"/PER, "Washington"/LOC]
+```
+
+### Tagging an Arabic sentence
+
+Flair also works for languages that write from right to left. To tag an Arabic sentence, just load the appropriate model:
+
+```python
+
+# load model
+tagger = Classifier.load('ar-ner')
+
+# make Arabic sentence
+sentence = Sentence("احب برلين")
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence with predicted tags
+for entity in sentence.get_labels('ner'):
+    print(entity)
+```
+
+This should print:
+```console
+Span[1:2]: "برلين" → LOC (0.9803)
+```
+
+## Tagging Entities with 18 Classes
+
+We also ship models that distinguish between more than just 4 classes. For instance, use our ontonotes models 
+to classify 18 different types of entities. 
+
+
+## Biomedical Data
+
+For biomedical data, we offer the hunflair models that detect 5 different types of biomedical entities. 
+
+
+## Tagging a Whole Text Corpus
+
+Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a
+list of `Sentence` objects to the `.predict()` method.
+
+For instance, you can use the sentence splitter of segtok to split your text:
+
+```python
+from flair.models import SequenceTagger
+from flair.splitter import SegtokSentenceSplitter
+
+# example text with many sentences
+text = "This is a sentence. This is another sentence. I love Berlin."
+
+# initialize sentence splitter
+splitter = SegtokSentenceSplitter()
+
+# use splitter to split text into list of sentences
+sentences = splitter.split(text)
+
+# predict tags for sentences
+tagger = SequenceTagger.load('ner')
+tagger.predict(sentences)
+
+# iterate through sentences and print predicted labels
+for sentence in sentences:
+    print(sentence)
+```
+
+Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
+tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
+
+
+## Understanding and Accessing Annotations (important!)
+
+You can access each prediction individually using the `get_labels()` method. Let's use our standard NER example to 
+tag a sentence: 
+
+```python
+from flair.nn import Classifier
+from flair.data import Sentence
+
+# load the model
+tagger = Classifier.load('ner')
+
+# make a sentence
+sentence = Sentence('George Washington went to Washington.')
+
+# predict NER tags
+tagger.predict(sentence)
+```
+
+Use the `get_labels()` method to iterate over all predictions:
+
+```python
+for label in sentence.get_labels('ner'):
+    print(label)
+```
+
+This should print the two NER predictions:
+
+```console
+Span[0:2]: "George Washington" → PER (0.9989)
+Span[4:5]: "Washington" → LOC (0.9942)
+```
+
+For each prediction, you can directly access the label value, it's score and the entity text:  
+
+```python
+# iterate over all 'ner'-labels in the sentence
+for label in sentence.get_labels('ner'):
+    # print label value and score
+    print(f'label.value is: "{label.value}"')
+    print(f'label.score is: "{label.score}"')
+    # access the data point to which label attaches and print its text
+    print(f'the text of label.data_point is: "{label.data_point.text}"\n')
+```
+
+## List of NER Models
+
+You choose which pre-trained model you load by passing the appropriate
+string to the `load()` method of the `Classifier` class.
+
+A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads).
+At least the following pre-trained models are provided (click on an ID link to get more info
+for the model and an online demo):
+
+#### English Models
+
+| ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
+| -------------    | ------------- |------------- |------------- | ------------- | ------------- |
+| '[ner](https://huggingface.co/flair/ner-english)' | NER (4-class) |  English | Conll-03  |  **93.03** (F1) |
+| '[ner-fast](https://huggingface.co/flair/ner-english-fast)' | NER (4-class)  |  English  |  Conll-03  |  **92.75** (F1) | (fast model)
+| '[ner-large](https://huggingface.co/flair/ner-english-large)' | NER (4-class)  |  English  |  Conll-03  |  **94.09** (F1) | (large model)
+| 'ner-pooled' | NER (4-class)  |  English |  Conll-03  |  **93.24** (F1) | (memory inefficient)
+| '[ner-ontonotes](https://huggingface.co/flair/ner-english-ontonotes)' | NER (18-class) |  English | Ontonotes  |  **89.06** (F1) |
+| '[ner-ontonotes-fast](https://huggingface.co/flair/ner-english-ontonotes-fast)' | NER (18-class) |  English | Ontonotes  |  **89.27** (F1) | (fast model)
+| '[ner-ontonotes-large](https://huggingface.co/flair/ner-english-ontonotes-large)' | NER (18-class) |  English | Ontonotes  |  **90.93** (F1) | (large model)
+| '[ner-multi](https://huggingface.co/flair/ner-multi)' | NER (4-class) | Multilingual | Conll-03   |  **89.27**  (average F1) | (4 languages)
+| '[ner-multi-fast](https://huggingface.co/flair/ner-multi-fast)' | NER (4-class)|  Multilingual |  Conll-03   |  **87.91**  (average F1) | (4 languages)
+| '[ar-ner](https://huggingface.co/megantosh/flair-arabic-multi-ner)' | NER (4-class) | Arabic | AQMAR & ANERcorp (curated) |  **86.66** (F1) | |
+| '[de-ner](https://huggingface.co/flair/ner-german)' | NER (4-class) |  German | Conll-03  |  **87.94** (F1) | |
+| '[de-ner-large](https://huggingface.co/flair/ner-german-large)' | NER (4-class) |  German | Conll-03  |  **92,31** (F1) | |
+| 'de-ner-germeval' | NER (4-class) | German | Germeval  |  **84.90** (F1) | |
+| '[de-ner-legal](https://huggingface.co/flair/ner-german-legal)' | NER (legal text) |  German | [LER](https://github.com/elenanereiss/Legal-Entity-Recognition) dataset  |  **96.35** (F1) | |
+| '[fr-ner](https://huggingface.co/flair/ner-french)' | NER (4-class) | French | [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **95.57** (F1) | [mhham](https://github.com/mhham) |
+| '[es-ner-large](https://huggingface.co/flair/ner-spanish-large)' | NER (4-class) | Spanish | CoNLL-03  |  **90,54** (F1) | [mhham](https://github.com/mhham) |
+| '[nl-ner](https://huggingface.co/flair/ner-dutch)' | NER (4-class) | Dutch |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **92.58** (F1) |  |
+| '[nl-ner-large](https://huggingface.co/flair/ner-dutch-large)' | NER (4-class) | Dutch | Conll-03 |  **95,25** (F1) |  |
+| 'nl-ner-rnn' | NER (4-class) | Dutch | [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **90.79** (F1) | |
+| '[da-ner](https://huggingface.co/flair/ner-danish)' | NER (4-class) | Danish |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
+| '[ner-ukrainian](https://huggingface.co/dchaplinsky/flair-uk-ner)' | NER (4-class) | Ukrainian |  [NER-UK dataset](https://github.com/lang-uk/ner-uk)  | **86.05** (F1)  | [dchaplinsky](https://github.com/dchaplinsky) |
+
+
+## Next
+
+Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
+text.

@@ -1,8 +1,16 @@
 # Tutorial 2: Tagging your Text
 
 This is part 2 of the tutorial. It assumes that you're familiar with the
-[base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library. Here, we show how to use our pre-trained models to
-tag your text.
+[base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library. 
+
+This tutorial consists of several chapters, one for each type of model: 
+
+* [Tutorial 2.1: How to use Named Entity Recognition models](/resources/docs/TUTORIAL_TAGGING_NER.md) 
+* How to use Sentiment Analysis models 
+* How to use Part-of-Speech Tagging models 
+* ... 
+
+
 
 ## Tagging with Pre-Trained Sequence Tagging Models
 
