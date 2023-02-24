@@ -240,7 +240,7 @@ list of `Sentence` objects to the `.predict()` method.
 For instance, you can use the sentence splitter of segtok to split your text:
 
 ```python
-from flair.models import SequenceTagger
+from flair.nn import Classifier
 from flair.splitter import SegtokSentenceSplitter
 
 # example text with many sentences
@@ -253,7 +253,7 @@ splitter = SegtokSentenceSplitter()
 sentences = splitter.split(text)
 
 # predict tags for sentences
-tagger = SequenceTagger.load('ner')
+tagger = Classifier.load('ner')
 tagger.predict(sentences)
 
 # iterate through sentences and print predicted labels
