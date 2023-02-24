@@ -10,8 +10,8 @@ This tutorial contains the following parts:
   * ... in non-English text
   * ... with 18 entity classes
   * ... in biomedical data
-* tagging a whole text corpus
 * understanding and accessing annotations (important!)
+* tagging a whole text corpus
 
 Let's get started!
 
