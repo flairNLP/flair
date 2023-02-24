@@ -131,6 +131,29 @@ Sentence[2]: "احب برلين" → ["برلين"/LOC]
 We also ship models that distinguish between more than just 4 classes. For instance, use our ontonotes models 
 to classify 18 different types of entities. 
 
+```python
+from flair.data import Sentence
+from flair.nn import Classifier
+
+# make a sentence
+sentence = Sentence('On September 1st George won 1 dollar while watching Game of Thrones.')
+
+# load the NER tagger
+tagger = Classifier.load('ner-ontonotes-large')
+
+# run NER over sentence
+tagger.predict(sentence)
+
+# print the sentence with all annotations
+print(sentence)
+```
+
+This should print:
+```console
+Sentence[13]: "On September 1st George won 1 dollar while watching Game of Thrones." → ["September 1st"/DATE, "George"/PERSON, "1 dollar"/MONEY, "Game of Thrones"/WORK_OF_ART]
+```
+
+Finding for instance that "Game of Thrones" is a work of art and that "September 1st" is a date.
 
 ## Biomedical Data
 
