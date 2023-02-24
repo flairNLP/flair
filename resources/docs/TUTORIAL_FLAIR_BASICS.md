@@ -87,8 +87,13 @@ In this case, no tokenization is performed and the text is split on whitespaces,
 
 ### Using a different tokenizer
 
-You can also pass custom tokenizers to the initialization method. For instance, if you want to tokenize a Japanese
-sentence you can use the 'janome' tokenizer instead, like this:
+You can also pass custom tokenizers to the initialization method. For instance, you can tokenize Japanese sentences with the konoha tokenizer. For this, you first need to install konoha. 
+
+```
+pip install konoha
+```
+
+And then run this code: 
 
 ```python
 from flair.data import Sentence
@@ -107,12 +112,11 @@ print(japanese_sentence)
 This should print:
 
 ```console
-Sentence: "私 は ベルリン が 好き"
+Sentence[5]: "私はベルリンが好き"
 ```
 
-You can write your own tokenization routine. Check the code of `flair.data.Tokenizer` and its implementations
- (e.g. `flair.tokenization.SegtokTokenizer` or `flair.tokenization.SpacyTokenizer`) to get an idea of how to add
- your own tokenization method.
+Similarly, you can use a tokenizer provided by SpaCy. 
+
 
 ### Using pretokenized sequences
 You can alternatively pass a pretokenized sequence as list of words, e.g.
