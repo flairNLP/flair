@@ -118,13 +118,12 @@ sentence = Sentence("احب برلين")
 tagger.predict(sentence)
 
 # print sentence with predicted tags
-for entity in sentence.get_labels('ner'):
-    print(entity)
+print(sentence)
 ```
 
 This should print:
 ```console
-Span[1:2]: "برلين" → LOC (0.9803)
+Sentence[2]: "احب برلين" → ["برلين"/LOC]
 ```
 
 ## Tagging Entities with 18 Classes
