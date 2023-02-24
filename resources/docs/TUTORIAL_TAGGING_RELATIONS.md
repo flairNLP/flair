@@ -1,6 +1,6 @@
 # Tutorial 2.5: Relation Extraction on Your Text
 
-This is the relation extraction tutorial. It assumes that you're familiar with the
+This is the **relation extraction** tutorial. It assumes that you're familiar with the
 [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library. 
 
 This tutorial contains the following parts:
@@ -60,7 +60,7 @@ Span[4:5]: "Washington" → LOC (0.9847)
 Relation[0:1][4:5]: "George -> Washington" → born_in (1.0)
 ```
 
-Indicating that a born_in relationship holds between "George" and "Washington"!
+Indicating that a **born_in** relationship holds between "George" and "Washington"!
 
 
 ## Understanding and Accessing Annotations (important!)
