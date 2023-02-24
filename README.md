@@ -81,7 +81,7 @@ print(sentence)
 print('The following NER tags are found:')
 
 # iterate over entities and print each
-for entity in sentence.get_spans('ner'):
+for entity in sentence.get_labels('ner'):
     print(entity)
 ```
 
