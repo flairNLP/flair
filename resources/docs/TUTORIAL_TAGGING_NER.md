@@ -69,10 +69,10 @@ tagger.predict(sentence)
 print(sentence)
 ```
 
-As you can see, it's the same code, just with 'ner-large' as model instead of 'ner'. 
+As you can see, it's the same code, just with '**ner-large**' as model instead of '**ner**'. 
 This model also works with most languages. 
 
-Hint: If you want the fastest model we ship, you can also try 'ner-fast'.
+*Hint: If you want the fastest model we ship, you can also try 'ner-fast'.*
 
 ## Tagging Entities in Non-English Text
 
@@ -225,30 +225,26 @@ A full list of our current and community-contributed models can be browsed on th
 At least the following pre-trained models are provided (click on an ID link to get more info
 for the model and an online demo):
 
-#### English Models
-
 | ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
 | -------------    | ------------- |------------- |------------- | ------------- | ------------- |
 | '[ner](https://huggingface.co/flair/ner-english)' | NER (4-class) |  English | Conll-03  |  **93.03** (F1) |
 | '[ner-fast](https://huggingface.co/flair/ner-english-fast)' | NER (4-class)  |  English  |  Conll-03  |  **92.75** (F1) | (fast model)
-| '[ner-large](https://huggingface.co/flair/ner-english-large)' | NER (4-class)  |  English  |  Conll-03  |  **94.09** (F1) | (large model)
+| '[ner-large](https://huggingface.co/flair/ner-english-large)' | NER (4-class)  |  English / Multilingual |  Conll-03  |  **94.09** (F1) | (large model)
 | 'ner-pooled' | NER (4-class)  |  English |  Conll-03  |  **93.24** (F1) | (memory inefficient)
 | '[ner-ontonotes](https://huggingface.co/flair/ner-english-ontonotes)' | NER (18-class) |  English | Ontonotes  |  **89.06** (F1) |
 | '[ner-ontonotes-fast](https://huggingface.co/flair/ner-english-ontonotes-fast)' | NER (18-class) |  English | Ontonotes  |  **89.27** (F1) | (fast model)
-| '[ner-ontonotes-large](https://huggingface.co/flair/ner-english-ontonotes-large)' | NER (18-class) |  English | Ontonotes  |  **90.93** (F1) | (large model)
-| '[ner-multi](https://huggingface.co/flair/ner-multi)' | NER (4-class) | Multilingual | Conll-03   |  **89.27**  (average F1) | (4 languages)
-| '[ner-multi-fast](https://huggingface.co/flair/ner-multi-fast)' | NER (4-class)|  Multilingual |  Conll-03   |  **87.91**  (average F1) | (4 languages)
+| '[ner-ontonotes-large](https://huggingface.co/flair/ner-english-ontonotes-large)' | NER (18-class) |  English / Multilingual | Ontonotes  |  **90.93** (F1) | (large model)
 | '[ar-ner](https://huggingface.co/megantosh/flair-arabic-multi-ner)' | NER (4-class) | Arabic | AQMAR & ANERcorp (curated) |  **86.66** (F1) | |
+| '[da-ner](https://huggingface.co/flair/ner-danish)' | NER (4-class) | Danish |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
 | '[de-ner](https://huggingface.co/flair/ner-german)' | NER (4-class) |  German | Conll-03  |  **87.94** (F1) | |
-| '[de-ner-large](https://huggingface.co/flair/ner-german-large)' | NER (4-class) |  German | Conll-03  |  **92,31** (F1) | |
+| '[de-ner-large](https://huggingface.co/flair/ner-german-large)' | NER (4-class) |  German / Multilingual | Conll-03  |  **92.31** (F1) | |
 | 'de-ner-germeval' | NER (4-class) | German | Germeval  |  **84.90** (F1) | |
 | '[de-ner-legal](https://huggingface.co/flair/ner-german-legal)' | NER (legal text) |  German | [LER](https://github.com/elenanereiss/Legal-Entity-Recognition) dataset  |  **96.35** (F1) | |
 | '[fr-ner](https://huggingface.co/flair/ner-french)' | NER (4-class) | French | [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **95.57** (F1) | [mhham](https://github.com/mhham) |
-| '[es-ner-large](https://huggingface.co/flair/ner-spanish-large)' | NER (4-class) | Spanish | CoNLL-03  |  **90,54** (F1) | [mhham](https://github.com/mhham) |
+| '[es-ner-large](https://huggingface.co/flair/ner-spanish-large)' | NER (4-class) | Spanish | CoNLL-03  |  **90.54** (F1) | [mhham](https://github.com/mhham) |
 | '[nl-ner](https://huggingface.co/flair/ner-dutch)' | NER (4-class) | Dutch |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **92.58** (F1) |  |
-| '[nl-ner-large](https://huggingface.co/flair/ner-dutch-large)' | NER (4-class) | Dutch | Conll-03 |  **95,25** (F1) |  |
+| '[nl-ner-large](https://huggingface.co/flair/ner-dutch-large)' | NER (4-class) | Dutch | Conll-03 |  **95.25** (F1) |  |
 | 'nl-ner-rnn' | NER (4-class) | Dutch | [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **90.79** (F1) | |
-| '[da-ner](https://huggingface.co/flair/ner-danish)' | NER (4-class) | Danish |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
 | '[ner-ukrainian](https://huggingface.co/dchaplinsky/flair-uk-ner)' | NER (4-class) | Ukrainian |  [NER-UK dataset](https://github.com/lang-uk/ner-uk)  | **86.05** (F1)  | [dchaplinsky](https://github.com/dchaplinsky) |
 
 
