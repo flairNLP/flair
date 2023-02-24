@@ -183,38 +183,6 @@ Sentence[13]: "Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X
 
 Thus finding entities of classes "Species", "Disease" and "Gene" in this text.
 
-## Tagging a Whole Text Corpus
-
-Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a
-list of `Sentence` objects to the `.predict()` method.
-
-For instance, you can use the sentence splitter of segtok to split your text:
-
-```python
-from flair.models import SequenceTagger
-from flair.splitter import SegtokSentenceSplitter
-
-# example text with many sentences
-text = "This is a sentence. This is another sentence. I love Berlin."
-
-# initialize sentence splitter
-splitter = SegtokSentenceSplitter()
-
-# use splitter to split text into list of sentences
-sentences = splitter.split(text)
-
-# predict tags for sentences
-tagger = SequenceTagger.load('ner')
-tagger.predict(sentences)
-
-# iterate through sentences and print predicted labels
-for sentence in sentences:
-    print(sentence)
-```
-
-Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
-tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
-
 
 ## Understanding and Accessing Annotations (important!)
 
@@ -262,6 +230,40 @@ for label in sentence.get_labels('ner'):
     # access the data point to which label attaches and print its text
     print(f'the text of label.data_point is: "{label.data_point.text}"\n')
 ```
+
+
+## Tagging a Whole Text Corpus
+
+Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a
+list of `Sentence` objects to the `.predict()` method.
+
+For instance, you can use the sentence splitter of segtok to split your text:
+
+```python
+from flair.models import SequenceTagger
+from flair.splitter import SegtokSentenceSplitter
+
+# example text with many sentences
+text = "This is a sentence. This is another sentence. I love Berlin."
+
+# initialize sentence splitter
+splitter = SegtokSentenceSplitter()
+
+# use splitter to split text into list of sentences
+sentences = splitter.split(text)
+
+# predict tags for sentences
+tagger = SequenceTagger.load('ner')
+tagger.predict(sentences)
+
+# iterate through sentences and print predicted labels
+for sentence in sentences:
+    print(sentence)
+```
+
+Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
+tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
+
 
 ## List of NER Models
 
