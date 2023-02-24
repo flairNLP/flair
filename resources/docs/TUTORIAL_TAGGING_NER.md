@@ -265,12 +265,7 @@ for label in sentence.get_labels('ner'):
 
 ## List of NER Models
 
-You choose which pre-trained model you load by passing the appropriate
-string to the `load()` method of the `Classifier` class.
-
-A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads).
-At least the following pre-trained models are provided (click on an ID link to get more info
-for the model and an online demo):
+We end this section with a list of all models we currently ship with Flair. 
 
 | ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
 | -------------    | ------------- |------------- |------------- | ------------- | ------------- |
@@ -295,7 +290,10 @@ for the model and an online demo):
 | '[ner-ukrainian](https://huggingface.co/dchaplinsky/flair-uk-ner)' | NER (4-class) | Ukrainian |  [NER-UK dataset](https://github.com/lang-uk/ner-uk)  | **86.05** (F1)  | [dchaplinsky](https://github.com/dchaplinsky) |
 
 
+You choose which pre-trained model you load by passing the appropriate string to the `load()` method of the `Classifier` class.
+
+A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads).
+
 ## Next
 
-Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
-text.
+Go back to the [tagging overview tutorial](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md) to check out other model types in Flair. Or learn how to train your own NER model in our training tutorial.
