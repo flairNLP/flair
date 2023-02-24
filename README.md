@@ -12,12 +12,12 @@ A very simple framework for **state-of-the-art NLP**. Developed by [Humboldt Uni
 Flair is:
 
 * **A powerful NLP library.** Flair allows you to apply our state-of-the-art natural language processing (NLP)
-models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS),
+models to your text, such as named entity recognition (NER), sentiment analysis, part-of-speech tagging (PoS),
   special support for [biomedical data](/resources/docs/HUNFLAIR.md),
  sense disambiguation and classification, with support for a rapidly growing number of languages.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and
-document embeddings, including our proposed **[Flair embeddings](https://www.aclweb.org/anthology/C18-1139/)**, BERT embeddings and ELMo embeddings.
+document embeddings, including our proposed [Flair embeddings](https://www.aclweb.org/anthology/C18-1139/) and various transformers.
 
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
@@ -37,7 +37,7 @@ Flair ships with state-of-the-art models for a range of NLP tasks. For instance,
 | Dutch  | Conll-03  (4-class)  |  **95.25**  | *93.7 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Dutch 4-class NER demo](https://huggingface.co/flair/ner-dutch-large)  |
 | Spanish  | Conll-03 (4-class)   |  **90.54** | *90.3 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 4-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
 
-**New:** Most Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are now hosted
+Many Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are also hosted
 on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?library=flair&sort=downloads)! You can browse models, check detailed information on how they were trained, and even try each model out online!
 
 
