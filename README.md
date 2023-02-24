@@ -99,34 +99,24 @@ Span[2:3]: "Berlin" → LOC (0.999)
 
 We provide a set of **quick tutorials** to get you started with the library:
 
-#### Tutorial 1 Basics
-
-Our basic tutorial 
-
-1. [Tutorial 1: Basics](/resources/docs/TUTORIAL_1_BASICS.md) 
-2. [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
-   * How to tag entities in your text
-   * How to use sentiment analysis
-   * How to use entity linking
-   * How to use part-of-speech tagging 
-   * How to use relation extraction
-3. [Tutorial 3: Using Embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
-   * Word Embeddings
-   * Document Embeddings
-4. [Tutorial 4: Training a Model](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
-   * How to load a dataset
-   * How to train a sequence labeling model (NER/PoS)
-   * How to train a text classifier (sentiment analysis, etc.)
-   * How to train an entity linker
-   * How to train a relation extraction model
-
-* [Tutorial 3: Embedding Words](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
-* [Tutorial 4: List of All Word Embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
-* [Tutorial 5: Embedding Documents](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
-* [Tutorial 6: Loading a Dataset](/resources/docs/TUTORIAL_6_CORPUS.md)
-* [Tutorial 7: Training a Model](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
-* [Tutorial 8: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
-* [Tutorial 9: Training a Zero Shot Text Classifier (TARS)](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
+1. [**Tutorial 1: Basics**](/resources/docs/TUTORIAL_1_BASICS.md)
+2. [**Tutorial 2: Tagging your Text**](/resources/docs/TUTORIAL_2_TAGGING.md)
+   * ... how to **tag entities** in your text → [*2.1*](/resources/docs/TUTORIAL_2_TAGGING.md)
+   * ... how to use **sentiment analysis** → [*2.2*](/resources/docs/TUTORIAL_2_TAGGING.md)
+   * ... how to use **entity linking**  → [*2.3*](/resources/docs/TUTORIAL_2_TAGGING.md)
+   * ... how to use **part-of-speech tagging**   → [*2.4*](/resources/docs/TUTORIAL_2_TAGGING.md)
+   * ... how to use **relation extraction** → [*2.5*](/resources/docs/TUTORIAL_2_TAGGING.md)
+   * ... and more → [*full tutorial*](/resources/docs/TUTORIAL_2_TAGGING.md)
+3. [**Tutorial 3: Using Embeddings**](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
+   * ... how to embed words → [*2.1*](/resources/docs/TUTORIAL_2_TAGGING.md)
+   * ... how to embed whole documents  → [*2.1*](/resources/docs/TUTORIAL_2_TAGGING.md)
+4. [**Tutorial 4: Training a Model**](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
+   * ... how to **load a dataset** → [4.1](/resources/docs/TUTORIAL_6_CORPUS.md)
+   * ... how to **train a sequence labeling model** (NER/PoS)
+   * ... how to **train a text classifier** (sentiment analysis, etc.)
+   * ... how to **train an entity linker**
+   * ... how to **train a relation extraction model**
+   * ... and more → [*full tutorial*](/resources/docs/TUTORIAL_2_TAGGING.md)
 
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you can embed your text with different word or document embeddings, and how you can train your own
