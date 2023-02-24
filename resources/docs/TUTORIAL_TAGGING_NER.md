@@ -159,6 +159,29 @@ Finding for instance that "Game of Thrones" is a work of art and that "September
 
 For biomedical data, we offer the hunflair models that detect 5 different types of biomedical entities. 
 
+```python
+from flair.data import Sentence
+from flair.nn import Classifier
+
+# make a sentence
+sentence = Sentence('Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome.')
+
+# load the NER tagger
+tagger = Classifier.load('bioner')
+
+# run NER over sentence
+tagger.predict(sentence)
+
+# print the sentence with all annotations
+print(sentence)
+```
+
+This should print:
+```console
+Sentence[13]: "Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome." → ["Behavioral abnormalities"/Disease, "Fmr1"/Gene, "Mouse"/Species, "Fragile X Syndrome"/Disease]
+```
+
+Thus finding entities of classes "Species", "Disease" and "Gene" in this text.
 
 ## Tagging a Whole Text Corpus
 
