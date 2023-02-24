@@ -5,8 +5,9 @@ This is the **sentiment analysis** tutorial. It assumes that you're familiar wit
 
 This tutorial contains the following parts:
 * tagging sentiment  
-* tagging a whole text corpus
 * understanding and accessing annotations (important!)
+* tagging a whole text corpus
+* list of all models in Flair
 
 Let's get started!
 
