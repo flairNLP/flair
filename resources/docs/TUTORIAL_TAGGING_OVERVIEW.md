@@ -5,12 +5,12 @@ This is part 2 of the tutorial. It assumes that you're familiar with the
 
 This tutorial consists of several chapters, one for each type of model: 
 
-* [Tutorial 2.1: How to use Named Entity Recognition models](/resources/docs/TUTORIAL_TAGGING_NER.md) 
-* [Tutorial 2.2: How to use Sentiment Analysis models](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)  
-* [Tutorial 2.3: How to use Entity Linking models](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)  
-* [Tutorial 2.4: How to use Part-of-Speech Tagging models](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)  
-* [Tutorial 2.5: How to use Relation Extraction models](/resources/docs/TUTORIAL_TAGGING_RELATIONS.md)  
-* [Tutorial 2.6: Other crazy models we ship with Flair](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)  
+* [Tutorial 2.1: How to use **Named Entity Recognition** models](/resources/docs/TUTORIAL_TAGGING_NER.md) 
+* [Tutorial 2.2: How to use **Sentiment Analysis** models](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)  
+* [Tutorial 2.3: How to use **Entity Linking** models](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)  
+* [Tutorial 2.4: How to use **Part-of-Speech Tagging** models](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)  
+* [Tutorial 2.5: How to use **Relation Extraction** models](/resources/docs/TUTORIAL_TAGGING_RELATIONS.md)  
+* [Tutorial 2.6: **Other crazy models** we ship with Flair](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)  
 
 
 
