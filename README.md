@@ -99,7 +99,7 @@ Span[2:3]: "Berlin" → LOC (0.999)
 
 We provide a set of **quick tutorials** to get you started with the library:
 
-1. [**Tutorial 1: Basics**](/resources/docs/TUTORIAL_1_BASICS.md)
+1. [**Tutorial 1: Basics**](/resources/docs/TUTORIAL_FLAIR_BASICS.md)
 2. [**Tutorial 2: Tagging your Text**](/resources/docs/TUTORIAL_2_TAGGING.md)
    * ... how to **tag entities** in your text → [*2.1*](/resources/docs/TUTORIAL_2_TAGGING.md)
    * ... how to use **sentiment analysis** → [*2.2*](/resources/docs/TUTORIAL_2_TAGGING.md)
