@@ -130,7 +130,7 @@ print(sentence)
 This should print:
 
 ```console
-Sentence: "The grass is green ."
+Sentence[5]: "The grass is green ."
 ```
 
 
