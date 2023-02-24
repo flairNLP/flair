@@ -1,6 +1,6 @@
-# Tutorial 2.1: Tagging Entities in your Text
+# Tutorial 2.2: Sentiment Analysis on Your Text
 
-This is the entity tagging tutorial. It assumes that you're familiar with the
+This is the sentiment analysis tutorial. It assumes that you're familiar with the
 [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library. 
 
 This tutorial contains the following parts:
