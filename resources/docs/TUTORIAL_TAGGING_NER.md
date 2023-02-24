@@ -12,6 +12,7 @@ This tutorial contains the following parts:
   * ... in biomedical data
 * understanding and accessing annotations (important!)
 * tagging a whole text corpus
+* list of all models in Flair
 
 Let's get started!
 
