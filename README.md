@@ -81,7 +81,7 @@ This should print:
 Sentence: "I love Berlin ." → ["Berlin"/LOC]
 ```
 
-This means that "Berlin" was tagged as a **location entity** in this sentence. (Check the NER tutorial for more details.)
+This means that "Berlin" was tagged as a **location entity** in this sentence. (Check the [NER tutorial](/resources/docs/TUTORIAL_TAGGING_NER.md) for more details.)
 
 
 ### Example 2: Detect Sentiment 
@@ -119,8 +119,8 @@ This means that the sentence "I love Berlin" was tagged as having POSITIVE senti
 We provide a set of **quick tutorials** to get you started with the library:
 
 1. [**Tutorial 1: Basics**](/resources/docs/TUTORIAL_FLAIR_BASICS.md)
-2. [**Tutorial 2: Tagging your Text**](/resources/docs/TUTORIAL_2_TAGGING.md)
-   * ... how to **tag entities** in your text → [*2.1*](/resources/docs/TUTORIAL_2_TAGGING.md)
+2. [**Tutorial 2: Tagging your Text**](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md)
+   * ... how to **tag entities** in your text → [*2.1*](/resources/docs/TUTORIAL_TAGGING_NER.md)
    * ... how to use **sentiment analysis** → [*2.2*](/resources/docs/TUTORIAL_2_TAGGING.md)
    * ... how to use **entity linking**  → [*2.3*](/resources/docs/TUTORIAL_2_TAGGING.md)
    * ... how to use **part-of-speech tagging**   → [*2.4*](/resources/docs/TUTORIAL_2_TAGGING.md)
