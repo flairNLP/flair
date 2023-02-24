@@ -23,7 +23,7 @@ print(sentence)
 This should print:
 
 ```console
-Sentence: "The grass is green ."
+Sentence[5]: "The grass is green."
 ```
 
 The print-out tells us that the sentence consists of 5 tokens.
