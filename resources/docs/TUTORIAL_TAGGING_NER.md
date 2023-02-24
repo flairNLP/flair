@@ -249,6 +249,8 @@ Span[0:2]: "George Washington" → PER (0.9989)
 Span[4:5]: "Washington" → LOC (0.9942)
 ```
 
+As you can see, each entity is printed, together with the predicted class. The confidence of the prediction is indicated as a score in brackets.
+
 For each prediction, you can directly access the label value, it's score and the entity text:  
 
 ```python
