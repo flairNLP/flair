@@ -53,12 +53,12 @@ for label in sentence.get_labels('relation'):
 
 This should print:
 
-~~~
+```console
 Span[0:1]: "George" → PER (0.9971)
 Span[4:5]: "Washington" → LOC (0.9847)
 
 Relation[0:1][4:5]: "George -> Washington" → born_in (1.0)
-~~~
+```
 
 Indicating that a born_in relationship holds between "George" and "Washington"!
 
