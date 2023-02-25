@@ -12,6 +12,8 @@ This tutorial consists of several chapters, one for each type of model:
 * [Tutorial 2.5: How to use **Relation Extraction** models](/resources/docs/TUTORIAL_TAGGING_RELATIONS.md)  
 * [Tutorial 2.6: **Other crazy models** we ship with Flair](/resources/docs/TUTORIAL_TAGGING_CIRCUS.md)  
 
+Click on any of these above links to look into the respectice tutorial chapters.
+
 ## Important for All Models: How Annotations Work
 
 Let's use our standard NER example to illustrate how annotations work: 
