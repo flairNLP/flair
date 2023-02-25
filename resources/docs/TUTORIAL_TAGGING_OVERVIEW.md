@@ -71,7 +71,15 @@ for label in sentence.get_labels():
 ```
 
 This should print: 
+```
+label.value is: "PER"
+label.score is: "0.998886227607727"
+the text of label.data_point is: "George Washington"
 
+label.value is: "LOC"
+label.score is: "0.9942097663879395"
+the text of label.data_point is: "Washington"
+```
 
 
 
