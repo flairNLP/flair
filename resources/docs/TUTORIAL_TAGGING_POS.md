@@ -13,7 +13,7 @@ This tutorial contains the following parts:
 
 Let's get started!
 
-## Tagging Universal Parts of Speech (UPOS) 
+## Tagging Universal Parts-of-Speech (UPOS) 
 
 Universal parts-of-speech are a set of minimal syntactic units that exist across languages. For instance, most languages
 will have VERBs or NOUNs. 
@@ -44,7 +44,7 @@ Sentence[6]: "Dirk went to the store." → ["Dirk"/PROPN, "went"/VERB, "to"/ADP,
 
 This indicates for instance that "went" is a VERB and that "store" is a NOUN.
 
-## Tagging Universal Parts of Speech (UPOS) in Multilingual Text
+## Tagging Universal Parts-of-Speech (UPOS) in Multilingual Text
 
 We ship models trained over 14 langages to tag upos in **multilingual text**. Use like this: 
 
@@ -76,7 +76,7 @@ Sentence: "George Washington went to Washington . Dort kaufte er einen Hut ."
 
 However note that they were trained for a mix of European languages and therefore will not work for other languages.
 
-## Tagging Language-Specific Parts of Speech in English
+## Tagging Language-Specific Parts-of-Speech (POS) in English
 
 Language-specific parts-of-speech are more fine-grained. For English, we offer several models trained over Ontonotes. 
 
@@ -106,11 +106,11 @@ Sentence[6]: "Dirk went to the store." → ["Dirk"/NNP, "went"/VBD, "to"/IN, "th
 
 Look at the tag specification of the Penn Treebank to better understand what these tags mean. 
 
-## Tagging Language-Specific Parts of Speech in Other Languages
+## Tagging Language-Specific Parts-of-Speech (POS) in Other Languages
 
 We ship with language-specific part-of-speech models for several languages. For instance:
 
-### in German 
+### ... in German 
 
 ```python
 from flair.nn import Classifier
@@ -135,11 +135,44 @@ Sentence[7]: "Dort hatte er einen Hut gekauft." → ["Dort"/ADV, "hatte"/VAFIN, 
 ```
 
 
-### in Ukrainian
+### ... in Ukrainian
+
+```python
+from flair.nn import Classifier
+from flair.data import Sentence
+
+# load the model
+tagger = Classifier.load('pos-ukrainian')
+
+# make a sentence
+sentence = Sentence("Сьогодні в Знам’янці проживають нащадки поета — родина Шкоди.")
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence with predicted tags
+print(sentence)
+```
 
 
-### in Arabic
+### ... in Arabic
 
+```python
+from flair.nn import Classifier
+from flair.data import Sentence
+
+# load the model
+tagger = Classifier.load('ar-pos')
+
+# make a sentence
+sentence = Sentence('عمرو عادلي أستاذ للاقتصاد السياسي المساعد في الجامعة الأمريكية  بالقاهرة .')
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence with predicted tags
+print(sentence)
+```
 
 ## Understanding and Accessing Annotations (important!)
 
@@ -167,11 +200,15 @@ for label in sentence.get_labels():
     print(label)
 ```
 
-This should print the two NER predictions:
+This should print each token in the sentence, together with its part-of-speech tag:
 
 ```console
-Span[0:2]: "George Washington" → PER (0.9989)
-Span[4:5]: "Washington" → LOC (0.9942)
+Token[0]: "George" → PROPN (0.9998)
+Token[1]: "Washington" → PROPN (1.0)
+Token[2]: "went" → VERB (1.0)
+Token[3]: "to" → ADP (1.0)
+Token[4]: "Washington" → PROPN (1.0)
+Token[5]: "." → PUNCT (1.0)
 ```
 
 As you can see, each entity is printed, together with the predicted class. The confidence of the prediction is indicated as a score in brackets.
@@ -179,7 +216,7 @@ As you can see, each entity is printed, together with the predicted class. The c
 For each prediction, you can directly access the label value, it's score and the token text:  
 
 ```python
-# iterate over all 'ner'-labels in the sentence
+# iterate over all labels in the sentence
 for label in sentence.get_labels():
     # print label value and score
     print(f'label.value is: "{label.value}"')
