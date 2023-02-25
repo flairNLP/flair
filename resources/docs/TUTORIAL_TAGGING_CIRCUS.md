@@ -29,8 +29,8 @@ sentence = Sentence('George returned to Berlin to return his hat.')
 tagger.predict(sentence)
 
 # go through tokens and print predicted frame (if one is predicted)
-for label in sentence.get_labels():
-    print(label)
+for token in sentence:
+    print(token)
 ```
 This should print:
 
@@ -46,9 +46,36 @@ Token[7]: "hat"
 Token[8]: "."
 ```
 
-As we can see, the frame detector makes a distinction in the sentence between two different meanings of the word 'return'.
-'return.01' means returning to a location, while 'return.02' means giving something back.
+## Syntactic Chunking
 
+For English, we provide a model for chunking verb and noun phrases, trained using CoNLL 2000. 
+from flair.nn import Classifier
+from flair.data import Sentence
+
+```python
+# load model
+tagger = Classifier.load('chunk')
+
+# make English sentence
+sentence = Sentence('The quick brown fox jumps over the lazy dog.')
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print the chunks
+for chunk in sentence.get_labels():
+  print(chunk)
+```
+
+This should print:
+
+```console
+Span[0:4]: "The quick brown fox" → NP (0.9914)
+Span[4:5]: "jumps" → VP (1.0)
+Span[5:6]: "over" → PP (0.9967)
+Span[6:9]: "the lazy dog" → NP (0.9991)
+```
+This tells us for instance that "the quick brown fox" and "the lazy dog" form syntactic units in this sentence.
 
 ### List of Other Models
 
