@@ -92,7 +92,7 @@ We end this section with a list of all models we currently ship with Flair:
 | 'de-historic-direct' | historical direct speech |  German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 | 'de-historic-reported' | historical reported speech | German |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 | 'de-historic-free-indirect' | historical free-indirect speech | German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
-| 'communicative-functions' | English | detecting function of sentence in research paper (BETA) | scholarly papers |  |
+| 'communicative-functions' |  detecting function of sentence in research paper (BETA) |  English| scholarly papers |  |
 
 
 ## Next
