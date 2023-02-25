@@ -46,6 +46,8 @@ Token[7]: "hat"
 Token[8]: "."
 ```
 
+As we can see, the frame detector makes a distinction in the sentence between two different meanings of the word 'return'. 'return.01' means returning to a location, while 'return.02' means giving something back.
+
 ## Syntactic Chunking
 
 For English, we provide a model for chunking verb and noun phrases, trained using CoNLL 2000. 
