@@ -51,6 +51,68 @@ trainer.train('resources/taggers/example-upos',
 This code (1) loads the English universal dependencies dataset as training corpus, (2) create a label dictionary for
 universal part-of-speech tags from the corpus, (3) initializes embeddings and (4) runs the trainer for 10 epochs. 
 
+Running this script should produce output that looks like this during training: 
+
+```console
+2023-02-27 17:07:38,014 ----------------------------------------------------------------------------------------------------
+2023-02-27 17:07:38,016 Model training base path: "resources/taggers/example-upos"
+2023-02-27 17:07:38,017 ----------------------------------------------------------------------------------------------------
+2023-02-27 17:07:38,020 Device: cuda:0
+2023-02-27 17:07:38,022 ----------------------------------------------------------------------------------------------------
+2023-02-27 17:07:38,023 Embeddings storage mode: cpu
+2023-02-27 17:07:38,025 ----------------------------------------------------------------------------------------------------
+2023-02-27 17:07:39,128 epoch 1 - iter 4/40 - loss 3.28409882 - time (sec): 1.10 - samples/sec: 2611.84 - lr: 0.100000
+2023-02-27 17:07:39,474 epoch 1 - iter 8/40 - loss 3.13510367 - time (sec): 1.45 - samples/sec: 3143.21 - lr: 0.100000
+2023-02-27 17:07:39,910 epoch 1 - iter 12/40 - loss 3.02619775 - time (sec): 1.88 - samples/sec: 3434.39 - lr: 0.100000
+2023-02-27 17:07:40,167 epoch 1 - iter 16/40 - loss 2.95288554 - time (sec): 2.14 - samples/sec: 3783.76 - lr: 0.100000
+2023-02-27 17:07:40,504 epoch 1 - iter 20/40 - loss 2.86820018 - time (sec): 2.48 - samples/sec: 4171.22 - lr: 0.100000
+2023-02-27 17:07:40,843 epoch 1 - iter 24/40 - loss 2.80507526 - time (sec): 2.82 - samples/sec: 4557.72 - lr: 0.100000
+2023-02-27 17:07:41,118 epoch 1 - iter 28/40 - loss 2.74217397 - time (sec): 3.09 - samples/sec: 4878.00 - lr: 0.100000
+2023-02-27 17:07:41,420 epoch 1 - iter 32/40 - loss 2.69161746 - time (sec): 3.39 - samples/sec: 5072.93 - lr: 0.100000
+2023-02-27 17:07:41,705 epoch 1 - iter 36/40 - loss 2.63837577 - time (sec): 3.68 - samples/sec: 5260.02 - lr: 0.100000
+2023-02-27 17:07:41,972 epoch 1 - iter 40/40 - loss 2.58915523 - time (sec): 3.95 - samples/sec: 5394.33 - lr: 0.100000
+2023-02-27 17:07:41,975 ----------------------------------------------------------------------------------------------------
+2023-02-27 17:07:41,977 EPOCH 1 done: loss 2.5892 - lr 0.100000
+2023-02-27 17:07:42,567 DEV : loss 2.009714126586914 - f1-score (micro avg)  0.41
+2023-02-27 17:07:42,579 BAD EPOCHS (no improvement): 0
+```
+
+The output monitors the loss over the epochs. At the end of each epoch, the development score is computed and printed.
+
+And a final evaluatiopn report gets printed in the end: 
+
+```console
+Results:
+- F-score (micro) 0.7732
+- F-score (macro) 0.6329
+- Accuracy 0.7732
+
+By class:
+              precision    recall  f1-score   support
+
+        NOUN     0.7199    0.7199    0.7199       407
+       PUNCT     0.9263    0.9843    0.9544       319
+        VERB     0.7521    0.6938    0.7218       258
+        PRON     0.7782    0.9300    0.8474       200
+         ADP     0.8559    0.9515    0.9011       206
+       PROPN     0.6585    0.6398    0.6490       211
+         ADJ     0.5654    0.6914    0.6221       175
+         DET     0.9572    0.8995    0.9275       199
+         AUX     0.8609    0.8784    0.8696       148
+         ADV     0.5052    0.5000    0.5026        98
+       CCONJ     0.9833    0.9077    0.9440        65
+         NUM     0.5435    0.3289    0.4098        76
+        PART     0.9091    0.7143    0.8000        56
+       SCONJ     0.7083    0.5667    0.6296        30
+         SYM     0.3333    0.2143    0.2609        14
+           X     0.0000    0.0000    0.0000        15
+        INTJ     0.0000    0.0000    0.0000        14
+
+    accuracy                         0.7732      2491
+   macro avg     0.6504    0.6247    0.6329      2491
+weighted avg     0.7635    0.7732    0.7655      2491
+```
+
 Let's look at these steps one-by-one: 
 
 ### Step 1: Loading the Corpus 
