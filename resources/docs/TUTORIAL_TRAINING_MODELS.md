@@ -129,12 +129,12 @@ print(corpus)
 
 which should print:
 ```console
-...
+Corpus: 1254 train + 200 dev + 208 test sentences
 ```
 
-Showing us that our training data has three splits: a training split of X sentences and a test split of X sentences.
+Showing us that our downsampled training data has three splits: a training split of 1254 sentences, a dev split of 200 sentences, and a test split of 208 sentences.
 
-The corpus is a very handy object in Flair. To learn all that it can do, check out this tutorial.
+The corpus is a very handy object in Flair. To learn all that it can do, check out [this tutorial](/resources/docs/TUTORIAL_CORPUS_PREPARED.md).
 
 ### Step 2: Creating a Label Dictionary 
 
