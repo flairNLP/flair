@@ -34,8 +34,21 @@ for token in sentence:
     print(token.embedding)
 ```
 
-This will print each token and a long PyTorch vector: 
+This will print each token as a long PyTorch vector: 
+```console
+Token[0]: "The"
+tensor([-0.0323, -0.3904, -1.1946,  0.1296,  0.5806, ..], device='cuda:0')
+Token[1]: "grass"
+tensor([-0.3973,  0.2652, -0.1337,  0.4473,  1.1641, ..], device='cuda:0')
+Token[2]: "is"
+tensor([ 0.1374, -0.3688, -0.8292, -0.4068,  0.7717, ..], device='cuda:0')
+Token[3]: "green"
+tensor([-0.7722, -0.1152,  0.3661,  0.3570,  0.6573, ..], device='cuda:0')
+Token[4]: "."
+tensor([ 0.1441, -0.1772, -0.5911,  0.2236, -0.0497, ..], device='cuda:0')
+```
 
+(Output truncated for readability, actually the vectors are much longer.)
 
 Transformer word embeddings are the most important concept in Flair. Check out more info in this dedicated chapter.
 
