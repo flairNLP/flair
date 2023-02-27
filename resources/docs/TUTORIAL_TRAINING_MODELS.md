@@ -343,4 +343,4 @@ can have one of three values:
 
 ## Next
 
-Now, learn to [load one of the packaged datasets in Flair](/resources/docs/TUTORIAL_CORPUS_OWN.md) so you can train your own models.
+Now, learn to [load one of the prepared datasets in Flair](/resources/docs/TUTORIAL_CORPUS_PREPARED.md) so you can easily train your own models.
