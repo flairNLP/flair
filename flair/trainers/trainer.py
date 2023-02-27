@@ -19,6 +19,7 @@ from transformer_smaller_training_vocab import reduce_train_vocab
 from flair.embeddings import Embeddings, StackedEmbeddings, TransformerEmbeddings
 from flair.models import FewshotClassifier
 from flair.nn import Model
+from flair.nn.model import ReduceTransformerVocabMixin
 
 try:
     from apex import amp
@@ -292,11 +293,8 @@ class ModelTrainer:
 
         weight_extractor = WeightExtractor(base_path)
 
-        if not self.model.supports_smaller_training_vocab:
-            reduce_transformer_vocab = False
-
         with contextlib.ExitStack() as context_stack:
-            if reduce_transformer_vocab:
+            if isinstance(self.model, ReduceTransformerVocabMixin):
                 transformer_embeddings = get_transformer_embeddings(self)
                 if not transformer_embeddings:
                     reduce_transformer_vocab = False
@@ -308,6 +306,8 @@ class ModelTrainer:
                                 model=emb.model, tokenizer=emb.tokenizer, texts=tokens, optimizer=optimizer_instance
                             )
                         )
+            else:
+                reduce_transformer_vocab = False
 
             if use_swa:
                 import torchcontrib

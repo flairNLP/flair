@@ -233,16 +233,14 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
                 "trained or was trained with Flair version < 0.9.1)"
             )
 
-    @property
-    def supports_smaller_training_vocab(self) -> bool:
-        # the smaller training vocab expects classification tasks, otherwise it won't work.
-        return False
 
+class ReduceTransformerVocabMixin(ABC):
+    @abstractmethod
     def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
         pass
 
 
-class Classifier(Model[DT], typing.Generic[DT], ABC):
+class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC):
     """Abstract base class for all Flair models that do classification,
     both single- and multi-label. It inherits from flair.nn.Model and adds an
     unified evaluate() function so that all classification models use the same
@@ -549,11 +547,6 @@ class Classifier(Model[DT], typing.Generic[DT], ABC):
             )
             lines.append(eval_line)
         return lines
-
-    @property
-    def supports_smaller_training_vocab(self) -> bool:
-        # the smaller training vocab expects classification tasks, otherwise it won't work.
-        return True
 
     def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
         for sentence in _iter_dataset(corpus.get_all_sentences()):
