@@ -151,10 +151,10 @@ print(label_dict)
 
 which should print:
 ```console
-...
+Dictionary with 18 tags: <unk>, NOUN, PUNCT, VERB, PRON, ADP, DET, AUX, ADJ, PROPN, ADV, CCONJ, PART, SCONJ, NUM, X, SYM, INTJ
 ```
 
-Showing us that our label dictionary has ...
+Showing us that our label dictionary has 18 PoS tags, including one generic tag for all unknown labels.
 
 ### Step 3: Initialize the Model
 
