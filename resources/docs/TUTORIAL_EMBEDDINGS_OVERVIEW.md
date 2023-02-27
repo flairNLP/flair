@@ -24,7 +24,7 @@ sentence = Sentence('The grass is green .')
 embedding.embed(sentence)
 ```
 
-This will cause each word in the sentence to be embedded. You can iterate through the words and get 
+This will cause **each word in the sentence** to be embedded. You can iterate through the words and get 
 each embedding like this:
 
 ```python
