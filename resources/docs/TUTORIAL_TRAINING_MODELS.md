@@ -1,4 +1,4 @@
-# Tutorial 4.1: Tagging your own Models
+# Tutorial 4.1: How Model Training works in Flair
 
 In Flair, all models are trained the same way using the ModelTrainer. This tutorial illustrates 
 how the ModelTrainer works and what decisions you have to make to train good models. 
