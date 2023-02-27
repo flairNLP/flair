@@ -273,6 +273,10 @@ def extract_single_zip_file(
         dataset_cache = flair.cache_root / cache_dir
     else:
         dataset_cache = cache_dir
+    if member_path is not None:
+        output_path = dataset_cache / member_path
+        if output_path.exists():
+            return output_path
     with zipfile.ZipFile(cached_archive_path, "r") as archive:
         if member_path is None:
             members_list = archive.namelist()
