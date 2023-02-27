@@ -87,7 +87,7 @@ Transformer document embeddings are the most important concept in Flair. Check o
 
 Stacked embeddings are one of the most important concepts of this library. You can use them to combine different
 embeddings together, for instance if you want to use both traditional embeddings together with contextual string
-embeddings. Stacked embeddings allow you to mix and match. We find that a combination of embeddings often gives best results.
+embeddings. Stacked embeddings allow you to mix and match. We find that a combination of embeddings gives best results, when not fine-tuning.
 
 All you need to do is use the `StackedEmbeddings` class and instantiate it by passing a list of embeddings that you wish
 to combine. For instance, lets combine classic GloVe embeddings with forward and backward Flair embeddings. This is a combination that we generally recommend to most users, especially for sequence labeling.
@@ -157,7 +157,12 @@ bold:
 | [`DocumentRNNEmbeddings`](/resources/docs/embeddings/DOCUMENT_RNN_EMBEDDINGS.md)            | RNN over word embeddings                                                                                                                                |  |
 | [`DocumentPoolEmbeddings`](/resources/docs/embeddings/DOCUMENT_POOL_EMBEDDINGS.md)          | Pooled word embeddings                                                                                                                                  |  |
 
-
+You should at least check out the two transformer embeddings. Our recommended order to learn about these embeddings is:
+1. Classic word embeddings: [**`WordEmbeddings`**](/resources/docs/embeddings/CLASSIC_WORD_EMBEDDINGS.md) 
+2. Flair embeddings: [**`FlairEmbeddings`**](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md)
+3. Transformer word embeddings: [**`TransformerWordEmbeddings`**](/resources/docs/embeddings/TRANSFORMER_EMBEDDINGS.md) 
+4. Transformer document embeddings: [**`TransformerDocumentEmbeddings`**](/resources/docs/embeddings/TRANSFORMER_EMBEDDINGS.md)
+5. Any of the others
 
 
 ## Next
