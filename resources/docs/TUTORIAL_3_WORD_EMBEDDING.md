@@ -1,13 +1,20 @@
 # Tutorial 3: Word Embeddings
 
-We provide a set of classes with which you can embed the words in sentences in various ways. This tutorial explains
+Flair supports many embeddings with which you can embed the words in sentences in various ways. This tutorial explains
 how that works. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
 library.
 
-
 ## Embeddings
 
-All word embedding classes inherit from the `TokenEmbeddings` class and implement the `embed()` method which you need to
+
+
+Flair hides the complexity of different embeddings between a simple interface. Simply instantiate
+the embedding class you require and call `embed()` to embed your text. 
+
+All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
+fine-tuning.
+
+All embeddings inherit from the `Embeddings` class and implement the `embed()` method which you need to
 call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text. All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
 fine-tuning.
@@ -98,58 +105,6 @@ flair_embedding_backward = FlairEmbeddings('de-backward')
 
 Check out the full list of all pre-trained FlairEmbeddings models [here](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md), along with more information on standard usage.
 
-## Stacked Embeddings
-
-Stacked embeddings are one of the most important concepts of this library. You can use them to combine different
-embeddings together, for instance if you want to use both traditional embeddings together with contextual string
-embeddings. Stacked embeddings allow you to mix and match. We find that a combination of embeddings often gives best results.
-
-All you need to do is use the `StackedEmbeddings` class and instantiate it by passing a list of embeddings that you wish
-to combine. For instance, lets combine classic GloVe embeddings with forward and backward Flair embeddings. This is a combination that we generally recommend to most users, especially for sequence labeling.
-
-First, instantiate the two embeddings you wish to combine:
-
-```python
-from flair.embeddings import WordEmbeddings, FlairEmbeddings
-
-# init standard GloVe embedding
-glove_embedding = WordEmbeddings('glove')
-
-# init Flair forward and backwards embeddings
-flair_embedding_forward = FlairEmbeddings('news-forward')
-flair_embedding_backward = FlairEmbeddings('news-backward')
-```
-
-Now instantiate the `StackedEmbeddings` class and pass it a list containing these two embeddings.
-
-```python
-from flair.embeddings import StackedEmbeddings
-
-# create a StackedEmbedding object that combines glove and forward/backward flair embeddings
-stacked_embeddings = StackedEmbeddings([
-                                        glove_embedding,
-                                        flair_embedding_forward,
-                                        flair_embedding_backward,
-                                       ])
-```
-
-
-That's it! Now just use this embedding like all the other embeddings, i.e. call the `embed()` method over your sentences.
-
-```python
-sentence = Sentence('The grass is green .')
-
-# just embed a sentence using the StackedEmbedding as you would with any single embedding.
-stacked_embeddings.embed(sentence)
-
-# now check out the embedded tokens.
-for token in sentence:
-    print(token)
-    print(token.embedding)
-```
-
-Words are now embedded using a concatenation of three different embeddings. This means that the resulting embedding
-vector is still a single PyTorch vector.
 
 ## Next
 
