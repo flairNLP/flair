@@ -128,9 +128,10 @@ We provide a set of **quick tutorials** to get you started with the library:
    * ... and more → [*full tutorial*](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md)
 3. [**Tutorial 3: Using Embeddings**](/resources/docs/TUTORIAL_EMBEDDINGS_OVERVIEW.md)
 4. [**Tutorial 4: Training a Model**](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md)
-   * ... how to **load a prepared dataset** → [4.1](/resources/docs/TUTORIAL_CORPUS_PREPARED.md)
-   * ... how to **load your own dataset** → [4.2](/resources/docs/TUTORIAL_CORPUS_CUSTOM.md)
-   * ... how to **train a sequence labeling model** (NER/PoS) → [4.3](/resources/docs/TUTORIAL_CORPUS_CUSTOM.md)
+   * ... how **model training generally works in Flair** → [4.1](/resources/docs/TUTORIAL_TRAINING_MODELS.md)
+   * ... how to **load a prepared dataset** → [4.2](/resources/docs/TUTORIAL_CORPUS_PREPARED.md)
+   * ... how to **load your own dataset** → [4.3](/resources/docs/TUTORIAL_CORPUS_CUSTOM.md)
+   * ... how to **train a sequence labeling model** (NER/PoS) → [4.4](/resources/docs/TUTORIAL_CORPUS_CUSTOM.md)
    * ... how to **train a text classifier** (sentiment analysis, etc.)
    * ... and more → [*full tutorial*](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md)
 

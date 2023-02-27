@@ -1,4 +1,4 @@
-# Tutorial 4.2: Loading a Custom Corpus
+# Tutorial 4.3: Loading a Custom Corpus
 
 This part of the tutorial shows how you can load a corpus for training a model. 
 We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
