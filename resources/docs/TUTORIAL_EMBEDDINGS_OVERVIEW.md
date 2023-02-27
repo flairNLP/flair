@@ -160,9 +160,8 @@ bold:
 You should at least check out the two transformer embeddings. Our recommended order to learn about these embeddings is:
 1. Classic word embeddings: [**`WordEmbeddings`**](/resources/docs/embeddings/CLASSIC_WORD_EMBEDDINGS.md) 
 2. Flair embeddings: [**`FlairEmbeddings`**](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md)
-3. Transformer word embeddings: [**`TransformerWordEmbeddings`**](/resources/docs/embeddings/TRANSFORMER_EMBEDDINGS.md) 
-4. Transformer document embeddings: [**`TransformerDocumentEmbeddings`**](/resources/docs/embeddings/TRANSFORMER_EMBEDDINGS.md)
-5. Any of the others
+3. Transformer word and document embeddings: [**`TransformerWordEmbeddings`**](/resources/docs/embeddings/TRANSFORMER_EMBEDDINGS.md) 
+4. Any of the others
 
 
 ## Next
