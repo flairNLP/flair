@@ -73,7 +73,7 @@ for label in sentence.get_labels():
 ```
 
 This should print: 
-```
+```console
 label.value is: "PER"
 label.score is: "0.998886227607727"
 the text of label.data_point is: "George Washington"
