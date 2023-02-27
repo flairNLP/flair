@@ -1,7 +1,6 @@
 # TransformerWordEmbeddings
 
-Thanks to the brilliant [`transformers`](https://github.com/huggingface/transformers) library from [HuggingFace](https://github.com/huggingface),
-Flair is able to support various Transformer-based architectures like BERT or XLNet with a single class for transformer-based word embeddings.
+Flair supports various Transformer-based architectures like BERT or XLNet from [HuggingFace](https://github.com/huggingface), with a single class for transformer-based word embeddings.
 
 For instance, to load a standard BERT transformer model, do:
 
