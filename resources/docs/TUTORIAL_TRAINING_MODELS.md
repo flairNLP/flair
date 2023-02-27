@@ -79,7 +79,7 @@ Running this script should produce output that looks like this during training:
 
 The output monitors the loss over the epochs. At the end of each epoch, the development score is computed and printed.
 
-And a final evaluatiopn report gets printed in the end: 
+And a **final evaluation report** gets printed in the end: 
 
 ```console
 Results:
@@ -113,7 +113,9 @@ By class:
 weighted avg     0.7635    0.7732    0.7655      2491
 ```
 
-Let's look at these steps one-by-one: 
+This report ives us a breakdown of the precision, recall and F1 score of all classes, as well as overall.
+
+Now let's look at the steps in the training script one-by-one: 
 
 ### Step 1: Loading the Corpus 
 
