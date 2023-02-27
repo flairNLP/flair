@@ -343,5 +343,4 @@ can have one of three values:
 
 ## Next
 
-Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
-text.
+Now, learn to [load one of the packaged datasets in Flair](/resources/docs/TUTORIAL_CORPUS_OWN.md) so you can train your own models.
