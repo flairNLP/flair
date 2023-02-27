@@ -1,6 +1,9 @@
-# TransformerWordEmbeddings
+# Transformer Embeddings
 
-Flair supports various Transformer-based architectures like BERT or XLNet from [HuggingFace](https://github.com/huggingface), with a single class for transformer-based word embeddings.
+Flair supports various Transformer-based architectures like BERT or XLNet from [HuggingFace](https://github.com/huggingface), 
+with two classes `TransformerWordEmbeddings` (to embed words) and `TransformerDocumentEmbeddings` (to embed documents).
+
+## Embeddings Words with Transformers
 
 For instance, to load a standard BERT transformer model, do:
 
@@ -35,9 +38,28 @@ embedding.embed(sentence)
 [Here](https://huggingface.co/transformers/pretrained_models.html) is a full list of all models (BERT, RoBERTa, XLM, XLNet etc.). You can use any of these models with this class.
 
 
+## Embeddings Documents with Transformers
+
+To embed a whole sentence as one (instead of each word in the sentence), simply use the TransformerDocumentEmbeddings 
+instead:
+
+```python
+from flair.embeddings import TransformerDocumentEmbeddings
+
+# init embedding
+embedding = TransformerDocumentEmbeddings('roberta-base')
+
+# create a sentence
+sentence = Sentence('The grass is green .')
+
+# embed words in sentence
+embedding.embed(sentence)
+```
+
 ## Arguments
 
-There are several options that you can set when you init the TransformerWordEmbeddings class:
+There are several options that you can set when you init the TransformerWordEmbeddings 
+and TransformerDocumentEmbeddings classes:
 
 | Argument             | Default             | Description
 | -------------------- | ------------------- | ------------------------------------------------------------------------------

@@ -1,0 +1,92 @@
+# Tutorial 4: Tagging your own Models
+
+This tutorial shows you how to train your own NLP models with Flair. 
+
+For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this
+library and how [embeddings](/resources/docs/TUTORIAL_EMBEDDINGS_OVERVIEW.md) work. 
+
+This tutorial consists of several chapters, one for each type of model: 
+
+* [Tutorial 4.1: How to load a packaged dataset](/resources/docs/TUTORIAL_TAGGING_NER.md) 
+* [Tutorial 4.2: How to load a your own dataset](/resources/docs/TUTORIAL_TAGGING_NER.md) 
+* [Tutorial 4.3: How to train your own **Named Entity Recognition** model](/resources/docs/TUTORIAL_TAGGING_NER.md) 
+* [Tutorial 4.4: How to train your own **Sentiment Analysis** model](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)  
+* [Tutorial 4.5: How to train your own **Part-of-Speech Tagging** models](/resources/docs/TUTORIAL_TAGGING_POS.md)  
+
+Click on any of these above links to look into the respective tutorial chapters.
+
+## Important for All Taggers: How Annotations Work
+
+Let's use our standard NER example to illustrate how annotations work: 
+
+```python
+from flair.nn import Classifier
+from flair.data import Sentence
+
+# load the model
+tagger = Classifier.load('ner')
+
+# make a sentence
+sentence = Sentence('George Washington went to Washington.')
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print the sentence with the tags
+print(sentence)
+```
+
+This should print:
+```console
+Sentence: "George Washington went to Washington ." → ["George Washington"/PER, "Washington"/LOC]
+```
+
+Showing us that two entities are labeled in this sentence: "George Washington" as PER (person) and "Washington"
+as LOC (location.)
+
+A common question that gets asked is **how to access these predictions directly**. You can do this by using
+the `get_labels()` method to iterate over all predictions:
+
+```python
+for label in sentence.get_labels('ner'):
+    print(label)
+```
+This should print the two NER predictions:
+
+```console
+Span[0:2]: "George Washington" → PER (0.9989)
+Span[4:5]: "Washington" → LOC (0.9942)
+```
+
+As you can see, each entity is printed, together with the predicted class. 
+The confidence of the prediction is indicated as a score in brackets.
+
+For each prediction, you can even **directly access** the label value, it's score and the entity text:  
+
+```python
+# iterate over all labels in the sentence
+for label in sentence.get_labels():
+    # print label value and score
+    print(f'label.value is: "{label.value}"')
+    print(f'label.score is: "{label.score}"')
+    # access the data point to which label attaches and print its text
+    print(f'the text of label.data_point is: "{label.data_point.text}"\n')
+```
+
+This should print: 
+```console
+label.value is: "PER"
+label.score is: "0.998886227607727"
+the text of label.data_point is: "George Washington"
+
+label.value is: "LOC"
+label.score is: "0.9942097663879395"
+the text of label.data_point is: "Washington"
+```
+
+
+
+## Next
+
+Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
+text.
