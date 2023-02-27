@@ -14,7 +14,7 @@ This tutorial consists of several chapters, one for each type of model:
 
 Click on any of these above links to look into the respectice tutorial chapters.
 
-## Important for All Models: How Annotations Work
+## Important for All Taggers: How Annotations Work
 
 Let's use our standard NER example to illustrate how annotations work: 
 
