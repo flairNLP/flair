@@ -139,7 +139,7 @@ vector is still a single PyTorch vector.
 
 ## List of All Embeddings
 
-The following word embeddings are currently supported. The most important embeddings for this library are highlighted
+The following embeddings are currently supported. The most important embeddings for this library are highlighted
 bold:
 
 | Class                                                                                       | Type                                                                                                                                                    | Paper |
