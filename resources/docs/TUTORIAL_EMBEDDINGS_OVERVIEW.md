@@ -48,7 +48,7 @@ Token[4]: "."
 tensor([ 0.1441, -0.1772, -0.5911,  0.2236, -0.0497, ..], device='cuda:0')
 ```
 
-(Output truncated for readability, actually the vectors are much longer.)
+*(Output truncated for readability, actually the vectors are much longer.)*
 
 Transformer word embeddings are the most important concept in Flair. Check out more info in this dedicated chapter.
 
