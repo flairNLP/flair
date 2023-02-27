@@ -177,3 +177,9 @@ tensor([-0.0323, -0.3904, -1.1946,  ...,  0.1305, -0.1365, -0.4323],
 
 Please have a look at the awesome Hugging Face [documentation](https://huggingface.co/transformers/v2.3.0/pretrained_models.html)
 for all supported pretrained models!
+
+
+## Next
+
+You can now either go back to the [embedding overview](/resources/docs/TUTORIAL_EMBEDDINGS_OVERVIEW.md), 
+or check out [how to train models](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md).
