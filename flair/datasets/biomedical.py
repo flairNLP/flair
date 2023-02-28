@@ -2770,7 +2770,7 @@ class S800(ColumnCorpus):
                 start, end = int(fields[2]), int(fields[3])
 
                 if start == end:
-                    continue
+                    continue_S800
 
                 entities_per_document[fname].append(Entity((start, end), "Species"))
 
@@ -5186,7 +5186,11 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         columns = {0: "text", 1: "ner"}
 
         # build dataset name and full huggingface reference name
-        if not dataset_name.startswith("bigbio/"):
+        if dataset_name.startswith("/"):  # Absolute path for local BigBio datasets
+            full_dataset_name = dataset_name
+            dataset_name = dataset_name.split("/")[-1]
+            dataset_name = dataset_name.split(".")[0]
+        elif not dataset_name.startswith("bigbio/"):
             full_dataset_name = "bigbio" + "/" + dataset_name
         else:
             full_dataset_name = dataset_name
@@ -5325,7 +5329,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
 
         else:
             # This should never happen :-D
-            return None
+            return -1, -1
 
 
 class HUNER_GENE_NLM_GENE(BIGBIO_NER_CORPUS):
@@ -5648,11 +5652,80 @@ class HUNER_GENE_SETH_CORPUS(BIGBIO_NER_CORPUS):
         return self.__class__.__name__.lower()
 
 
+class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_TMVAR_V3, self).__init__(
+            *args,
+            dataset_name="/vol/fob-wbib-vol3/wbi_stud/wangxida/Studienprojekt/biomedical/bigbio/hub/hub_repos/tmvar_v3/tmvar_v3.py",
+            # dataset_name="tmvar_v3",
+            **kwargs,
+        )
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Gene": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+    # Some offsets are broken in tmvar_v3, we need to fix them
+    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
+        """
+        Converts a dataset given in hugging datasets format to our internal corpus representation.
+        """
+        # dataset = dataset.map(map_fn, batched=True)
+        return super(HUNER_GENE_TMVAR_V3, self).to_internal_dataset(dataset, split)
+
+
+class HUNER_SPECIES_TMVAR_V3(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_SPECIES_TMVAR_V3, self).__init__(
+            *args,
+            dataset_name="/vol/fob-wbib-vol3/wbi_stud/wangxida/Studienprojekt/biomedical/bigbio/hub/hub_repos/tmvar_v3/tmvar_v3.py",
+            # dataset_name="tmvar_v3",
+            **kwargs,
+        )
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"['Species']": SPECIES_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+    # Some offsets are broken in tmvar_v3, we need to fix them
+    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
+        """
+        Converts a dataset given in hugging datasets format to our internal corpus representation.
+        """
+        # dataset = dataset.map(map_fn, batched=True)
+        return super(HUNER_SPECIES_TMVAR_V3, self).to_internal_dataset(dataset, split)
+
+
+class HUNER_CELL_LINE_TMVAR_V3(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_CELL_LINE_TMVAR_V3, self).__init__(
+            *args,
+            dataset_name="/vol/fob-wbib-vol3/wbi_stud/wangxida/Studienprojekt/biomedical/bigbio/hub/hub_repos/tmvar_v3/tmvar_v3.py",
+            # dataset_name="tmvar_v3",
+            **kwargs,
+        )
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"['CellLine']": CELL_LINE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+# Deprecated, is fixed in BigBio but useful code for debugging future issues
 # FIXME: Annotation missmatch from the source PubTator files
 # EXAMPLE: Annotation error (21904390) - Doc: p686k1684gene  vs. Mention: DKFZ p686k1684
 def map_fn(example):
     example["entities"] = [
-        repair_doc_offsets(passages, entities) for passages, entities in zip(example["passages"], example["entities"])
+        repair_doc_offsets(passages, entities)
+        if passages[0]
+        == "Two novel mutations of the PAX6 gene causing different phenotype in a cohort of Chinese patients."
+        else entities
+        for passages, entities in zip(example["passages"], example["entities"])
     ]
     return example
 
@@ -5719,55 +5792,6 @@ def repair_doc_offsets(passages, entities):
                 next_entity_offset = current_offset + text[current_offset:].find(doc_entities[entity_index]["text"][0])
 
     return doc_entities
-
-
-class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_TMVAR_V3, self).__init__(*args, dataset_name="tmvar_v3", **kwargs)
-
-    def get_entity_type_mapping(self) -> Optional[Dict]:
-        return {"['Gene']": GENE_TAG}
-
-    def build_corpus_directory_name(self, dataset_name: str) -> str:
-        return self.__class__.__name__.lower()
-
-    # Some offsets are broken in tmvar_v3, we need to fix them
-    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
-        """
-        Converts a dataset given in hugging datasets format to our internal corpus representation.
-        """
-        dataset = dataset.map(map_fn, batched=True)
-        return super(HUNER_GENE_TMVAR_V3, self).to_internal_dataset(dataset, split)
-
-
-class HUNER_SPECIES_TMVAR_V3(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_SPECIES_TMVAR_V3, self).__init__(*args, dataset_name="tmvar_v3", **kwargs)
-
-    def get_entity_type_mapping(self) -> Optional[Dict]:
-        return {"['Species']": SPECIES_TAG}
-
-    def build_corpus_directory_name(self, dataset_name: str) -> str:
-        return self.__class__.__name__.lower()
-
-    # Some offsets are broken in tmvar_v3, we need to fix them
-    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
-        """
-        Converts a dataset given in hugging datasets format to our internal corpus representation.
-        """
-        dataset = dataset.map(map_fn, batched=True)
-        return super(HUNER_SPECIES_TMVAR_V3, self).to_internal_dataset(dataset, split)
-
-
-# class HUNER_CELL_LINE_TMVAR_V3(BIGBIO_NER_CORPUS):
-#     def __init__(self, *args, **kwargs):
-#         super(HUNER_CELL_LINE_TMVAR_V3, self).__init__(*args, dataset_name="tmvar_v3", **kwargs)
-
-#     def get_entity_type_mapping(self) -> Optional[Dict]:
-#         return {"['CellLine']": CELL_LINE_TAG}
-
-#     def build_corpus_directory_name(self, dataset_name: str) -> str:
-#         return self.__class__.__name__.lower()
 
 
 # Already implemented earlier
