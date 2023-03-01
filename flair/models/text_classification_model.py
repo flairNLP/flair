@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List, Union
 
 import torch
 
@@ -60,7 +60,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "document_embeddings": self.embeddings,
+            "document_embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "multi_label": self.multi_label,
@@ -71,7 +71,6 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-
         import re
 
         # remap state dict for models serialized with Flair <= 0.11.3
@@ -92,7 +91,6 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
 
     @staticmethod
     def _fetch_model(model_name) -> str:
-
         model_map = {}
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
@@ -131,3 +129,9 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
     @property
     def label_type(self):
         return self._label_type
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TextClassifier":
+        from typing import cast
+
+        return cast("TextClassifier", super().load(model_path=model_path))

@@ -1,5 +1,6 @@
 import logging
-from typing import List
+from pathlib import Path
+from typing import Any, Dict, List, Union
 
 import torch
 
@@ -45,7 +46,7 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.embeddings,
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "tag_dictionary": self.label_dictionary,
             "tag_type": self.tag_type,
         }
@@ -85,3 +86,9 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
                 lines.append(eval_line)
             lines.append("\n")
         return lines
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "WordTagger":
+        from typing import cast
+
+        return cast("WordTagger", super().load(model_path=model_path))

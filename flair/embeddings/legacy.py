@@ -1,4 +1,5 @@
 import logging
+import re
 from abc import abstractmethod
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
@@ -37,6 +38,149 @@ from flair.file_utils import cached_path
 from flair.nn import LockedDropout, WordDropout
 
 log = logging.getLogger("flair")
+
+
+class ELMoEmbeddings(TokenEmbeddings):
+    """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018.
+    ELMo word vectors can be constructed by combining layers in different ways.
+    Default is to concatene the top 3 layers in the LM."""
+
+    def __init__(
+        self,
+        model: str = "original",
+        options_file: str = None,
+        weight_file: str = None,
+        embedding_mode: str = "all",
+    ):
+        super().__init__()
+
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
+
+        try:
+            import allennlp.commands.elmo
+        except ModuleNotFoundError:
+            log.warning("-" * 100)
+            log.warning('ATTENTION! The library "allennlp" is not installed!')
+            log.warning('To use ELMoEmbeddings, please first install with "pip install allennlp==0.9.0"')
+            log.warning("-" * 100)
+            pass
+
+        assert embedding_mode in ["all", "top", "average"]
+
+        self.name = f"elmo-{model}-{embedding_mode}"
+        self.static_embeddings = True
+
+        if not options_file or not weight_file:
+            # the default model for ELMo is the 'original' model, which is very large
+            options_file = allennlp.commands.elmo.DEFAULT_OPTIONS_FILE
+            weight_file = allennlp.commands.elmo.DEFAULT_WEIGHT_FILE
+            # alternatively, a small, medium or portuguese model can be selected by passing the appropriate mode name
+            if model == "small":
+                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_options.json"
+                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_weights.hdf5"
+            if model == "medium":
+                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_options.json"
+                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_weights.hdf5"
+            if model in ["large", "5.5B"]:
+                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json"
+                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5"
+            if model == "pt" or model == "portuguese":
+                options_file = (
+                    "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_options.json"
+                )
+                weight_file = (
+                    "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_weights.hdf5"
+                )
+            if model == "pubmed":
+                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json"
+                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5"
+
+        if embedding_mode == "all":
+            self.embedding_mode_fn = self.use_layers_all
+        elif embedding_mode == "top":
+            self.embedding_mode_fn = self.use_layers_top
+        elif embedding_mode == "average":
+            self.embedding_mode_fn = self.use_layers_average
+
+        # put on Cuda if available
+        from flair import device
+
+        if device.type == "cuda":
+            cuda_device = device.index
+        elif device.type == "cpu":
+            cuda_device = -1
+        else:
+            cuda_device = 0
+
+        self.ee = allennlp.commands.elmo.ElmoEmbedder(
+            options_file=options_file, weight_file=weight_file, cuda_device=cuda_device
+        )
+
+        # embed a dummy sentence to determine embedding_length
+        dummy_sentence: Sentence = Sentence([Token("hello")])
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(embedded_dummy[0][0].get_embedding())
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def use_layers_all(self, x):
+        return torch.cat(x, 0)
+
+    def use_layers_top(self, x):
+        return x[-1]
+
+    def use_layers_average(self, x):
+        return torch.mean(torch.stack(x), 0)
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        # ELMoEmbeddings before Release 0.5 did not set self.embedding_mode_fn
+        if not getattr(self, "embedding_mode_fn", None):
+            self.embedding_mode_fn = self.use_layers_all
+
+        sentence_words: List[List[str]] = []
+        for sentence in sentences:
+            sentence_words.append([token.text for token in sentence])
+
+        embeddings = self.ee.embed_batch(sentence_words)
+
+        for i, sentence in enumerate(sentences):
+            sentence_embeddings = embeddings[i]
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                elmo_embedding_layers = [
+                    torch.FloatTensor(sentence_embeddings[0, token_idx, :]),
+                    torch.FloatTensor(sentence_embeddings[1, token_idx, :]),
+                    torch.FloatTensor(sentence_embeddings[2, token_idx, :]),
+                ]
+                word_embedding = self.embedding_mode_fn(elmo_embedding_layers)
+                token.set_embedding(self.name, word_embedding)
+
+        return sentences
+
+    def extra_repr(self):
+        return "model={}".format(self.name)
+
+    def __str__(self):
+        return self.name
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+
+        if re.fullmatch(r"cuda:[0-9]+", str(flair.device)):
+            cuda_device = int(str(flair.device).split(":")[-1])
+        elif str(flair.device) == "cpu":
+            cuda_device = -1
+        else:
+            cuda_device = 0
+
+        self.ee.cuda_device = cuda_device
+
+        self.ee.elmo_bilm.to(device=flair.device)
+        self.ee.elmo_bilm._elmo_lstm._states = tuple(
+            [state.to(flair.device) for state in self.ee.elmo_bilm._elmo_lstm._states]
+        )
 
 
 class CharLMEmbeddings(TokenEmbeddings):
@@ -250,8 +394,7 @@ class CharLMEmbeddings(TokenEmbeddings):
             self.cache = SqliteDict(str(cache_path), autocommit=True)
 
         # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -275,10 +418,8 @@ class CharLMEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         # if cache is used, try setting embeddings from cache first
         if "cache" in self.__dict__ and self.cache is not None:
-
             # try populating embeddings from cache
             all_embeddings_retrieved_from_cache: bool = True
             for sentence in sentences:
@@ -314,7 +455,6 @@ class CharLMEmbeddings(TokenEmbeddings):
             offset_backward: int = len(sentence_text) + len(start_marker)
 
             for token in sentence.tokens:
-
                 offset_forward += len(token.text)
 
                 if self.is_forward_lm:
@@ -375,8 +515,7 @@ class XLNetEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -441,8 +580,7 @@ class XLMEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -506,8 +644,7 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -569,8 +706,7 @@ class OpenAIGPT2Embeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -628,8 +764,7 @@ class RoBERTaEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -687,8 +822,7 @@ class CamembertEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -698,7 +832,7 @@ class CamembertEmbeddings(TokenEmbeddings):
         return state
 
     def __setstate__(self, d):
-        self.__dict__ = d
+        super().__setstate__(d)
 
         # 1-camembert-base -> camembert-base
         if any(char.isdigit() for char in self.name):
@@ -760,8 +894,7 @@ class XLMRobertaEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
@@ -771,7 +904,7 @@ class XLMRobertaEmbeddings(TokenEmbeddings):
         return state
 
     def __setstate__(self, d):
-        self.__dict__ = d
+        super().__setstate__(d)
 
         # 1-xlm-roberta-large -> xlm-roberta-large
         self.tokenizer = self.tokenizer = XLMRobertaTokenizer.from_pretrained("-".join(self.name.split("-")[1:]))
@@ -1050,12 +1183,10 @@ class BertEmbeddings(TokenEmbeddings):
             self.token_subtoken_count = token_subtoken_count
 
     def _convert_sentences_to_features(self, sentences, max_sequence_length: int) -> [BertInputFeatures]:
-
         max_sequence_length = max_sequence_length + 2
 
         features: List[BertEmbeddings.BertInputFeatures] = []
-        for (sentence_index, sentence) in enumerate(sentences):
-
+        for sentence_index, sentence in enumerate(sentences):
             bert_tokenization: List[str] = []
             token_subtoken_count: Dict[int, int] = {}
 
@@ -1124,9 +1255,7 @@ class BertEmbeddings(TokenEmbeddings):
         all_encoder_layers = self.model(all_input_ids, attention_mask=all_input_masks)[-1]
 
         with torch.no_grad():
-
             for sentence_index, sentence in enumerate(sentences):
-
                 feature = features[sentence_index]
 
                 # get aggregated embeddings for each BERT-subtoken in sentence
@@ -1212,7 +1341,6 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
                 everything_embedded = False
 
         if not everything_embedded:
-
             self.embeddings.embed(sentences)
 
             for sentence in sentences:
@@ -1328,7 +1456,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
         # go through each sentence in batch
         for i, sentence in enumerate(sentences):
-
             lengths.append(len(sentence.tokens))
 
             word_embeddings = []
@@ -1434,8 +1561,7 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
         self.indexer = ELMoTokenCharactersIndexer()
 
         # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence()
-        dummy_sentence.add_token(Token("hello"))
+        dummy_sentence: Sentence = Sentence(["hello"])
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 

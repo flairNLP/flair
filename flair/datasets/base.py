@@ -27,7 +27,6 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         timeout=0,
         worker_init_fn=None,
     ):
-
         # in certain cases, multi-CPU data loading makes no sense and slows
         # everything down. For this reason, we detect if a dataset is in-memory:
         # if so, num_workers is set to 0 for faster processing

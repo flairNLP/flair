@@ -9,6 +9,7 @@ scikit-learn>=0.21.3
 sqlitedict>=1.6.0
 deprecated>=1.2.4
 hyperopt>=0.2.7
+boto3
 transformers[sentencepiece]>=4.0.0
 bpemb>=0.3.2
 regex
@@ -16,7 +17,6 @@ tabulate
 langdetect
 lxml
 ftfy
-konoha<5.0.0,>=4.0.0
 janome
 gdown==4.4.0
 huggingface-hub==0.10.0

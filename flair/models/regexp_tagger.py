@@ -19,8 +19,8 @@ class TokenCollection:
 
     def __post_init__(self):
         for token in self.tokens:
-            self.__tokens_start_pos.append(token.start_pos)
-            self.__tokens_end_pos.append(token.end_pos)
+            self.__tokens_start_pos.append(token.start_position)
+            self.__tokens_end_pos.append(token.end_position)
 
     @property
     def tokens(self) -> List[Token]:

@@ -144,12 +144,10 @@ class ParallelTextDataset(FlairDataset):
         with open(str(path_to_source), encoding="utf-8") as source_file, open(
             str(path_to_target), encoding="utf-8"
         ) as target_file:
-
             source_line = source_file.readline()
             target_line = target_file.readline()
 
             while source_line and target_line:
-
                 source_line = source_file.readline()
                 target_line = target_file.readline()
 
@@ -172,7 +170,6 @@ class ParallelTextDataset(FlairDataset):
                 self.total_sentence_count += 1
 
     def _make_bi_sentence(self, source_line: str, target_line: str):
-
         source_sentence = Sentence(source_line, use_tokenizer=self.use_tokenizer)
         target_sentence = Sentence(target_line, use_tokenizer=self.use_tokenizer)
 
@@ -370,14 +367,12 @@ class DataPairDataset(FlairDataset):
             self.labels: List[Optional[str]] = []
 
         with open(str(path_to_data), encoding=encoding) as source_file:
-
             source_line = source_file.readline()
 
             if skip_first_line:
                 source_line = source_file.readline()
 
             while source_line:
-
                 source_line_list = source_line.strip().split(separator)
 
                 first_element = source_line_list[columns[0]]
@@ -393,7 +388,6 @@ class DataPairDataset(FlairDataset):
                     second_element = second_element[:max_chars_per_doc]
 
                 if self.in_memory:
-
                     data_pair = self._make_data_pair(first_element, second_element, pair_label)
                     self.data_pairs.append(data_pair)
                 else:
@@ -408,7 +402,6 @@ class DataPairDataset(FlairDataset):
 
     # create a DataPair object from strings
     def _make_data_pair(self, first_element: str, second_element: str, label: str = None):
-
         first_sentence = Sentence(first_element, use_tokenizer=self.use_tokenizer)
         second_sentence = Sentence(second_element, use_tokenizer=self.use_tokenizer)
 
@@ -424,7 +417,6 @@ class DataPairDataset(FlairDataset):
         return data_pair
 
     def is_in_memory(self) -> bool:
-
         return self.in_memory
 
     def __len__(self):
@@ -518,7 +510,6 @@ class GLUE_RTE(DataPairCorpus):
     """
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
-
         folder_path = Path(folder_path)
         folder_path = folder_path / "RTE.tsv"
 
@@ -572,7 +563,6 @@ class GLUE_MNLI(DataPairCorpus):
             # reorder dev datasets to have same columns as in train set: 8, 9, and 11
             # dev sets include 5 different annotations but we will only keep the gold label
             for dev_filename in ["dev_matched.tsv", "dev_mismatched.tsv"]:
-
                 temp_file = str("temp_" + dev_filename)
                 os.rename(
                     str(data_folder / "MNLI" / dev_filename),
@@ -639,7 +629,6 @@ class GLUE_MNLI(DataPairCorpus):
     """
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
-
         folder_path = Path(folder_path)
         glue_eval_tsv = "MNLI-m.tsv" if self.evaluate_on_matched else "MNLI-mm.tsv"
         folder_path = folder_path / glue_eval_tsv
@@ -722,7 +711,6 @@ class GLUE_MRPC(DataPairCorpus):
     """
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
-
         folder_path = Path(folder_path)
         folder_path = folder_path / "MRPC.tsv"
 
@@ -810,7 +798,6 @@ class GLUE_QNLI(DataPairCorpus):
     """
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
-
         folder_path = Path(folder_path)
         folder_path = folder_path / "QNLI.tsv"
 
@@ -898,7 +885,6 @@ class GLUE_QQP(DataPairCorpus):
     """
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
-
         folder_path = Path(folder_path)
         folder_path = folder_path / "QQP.tsv"
 
@@ -986,7 +972,6 @@ class GLUE_WNLI(DataPairCorpus):
     """
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
-
         folder_path = Path(folder_path)
         folder_path = folder_path / "WNLI.tsv"
 
@@ -1074,7 +1059,6 @@ class SUPERGLUE_RTE(DataPairCorpus):
     """
 
     def jsonl_from_eval_dataset(self, folder_path: Union[str, Path]):
-
         folder_path = Path(folder_path)
         folder_path = folder_path / "RTE.jsonl"
 

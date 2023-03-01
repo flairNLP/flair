@@ -6,6 +6,8 @@ import torch
 from transformers import set_seed as hf_set_seed
 
 # global variable: cache_root
+from .file_utils import set_proxies
+
 cache_root = Path(os.getenv("FLAIR_CACHE_ROOT", Path(Path.home(), ".flair")))
 
 # global variable: device
@@ -64,4 +66,5 @@ __all__ = [
     "trainers",
     "visual",
     "datasets",
+    "set_proxies",
 ]

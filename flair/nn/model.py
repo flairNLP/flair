@@ -1,8 +1,9 @@
+import inspect
 import itertools
 import logging
 import typing
 import warnings
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -13,17 +14,17 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
-from flair import file_utils
 from flair.data import DT, DT2, Dictionary, Sentence
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
-from flair.file_utils import Tqdm
+from flair.embeddings.base import load_embeddings
+from flair.file_utils import Tqdm, load_torch_state
 from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
 
 
-class Model(torch.nn.Module, typing.Generic[DT]):
+class Model(torch.nn.Module, typing.Generic[DT], ABC):
     """Abstract base class for all downstream task models in Flair,
     such as SequenceTagger and TextClassifier.
     Every new type of model must implement these methods."""
@@ -71,14 +72,24 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         """Returns the state dictionary for this model."""
         state_dict = {"state_dict": self.state_dict()}
 
+        # Always include the name of the Model class for which the state dict holds
+        state_dict["__cls__"] = self.__class__.__name__
+
         return state_dict
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
         """Initialize the model from a state dictionary."""
+        if "embeddings" in kwargs:
+            embeddings = kwargs.pop("embeddings")
+            if isinstance(embeddings, dict):
+                embeddings = load_embeddings(embeddings)
+            kwargs["embeddings"] = embeddings
+
         model = cls(**kwargs)
 
         model.load_state_dict(state["state_dict"])
+
         return model
 
     @staticmethod
@@ -97,7 +108,6 @@ class Model(torch.nn.Module, typing.Generic[DT]):
 
         # write out a "model card" if one is set
         if self.model_card is not None:
-
             # special handling for optimizer:
             # remember optimizer class and state dictionary
             if "training_parameters" in self.model_card:
@@ -130,29 +140,68 @@ class Model(torch.nn.Module, typing.Generic[DT]):
                 self.model_card["training_parameters"]["scheduler"] = scheduler
 
     @classmethod
-    def load(cls, model_path: Union[str, Path]):
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Model":
         """
         Loads the model from the given file.
-        :param model_path: the model file
+        :param model_path: the model file or the already loaded state dict
         :return: the loaded text classifier model
         """
-        model_file = cls._fetch_model(str(model_path))
+        # if this class is abstract, go through all inheriting classes and try to fetch and load the model
+        if inspect.isabstract(cls):
+            # get all non-abstract subclasses
+            subclasses = get_non_abstract_subclasses(cls)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            # load_big_file is a workaround byhttps://github.com/highway11git
-            # to load models on some Mac/Windows setups
-            # see https://github.com/zalandoresearch/flair/issues/351
-            f = file_utils.load_big_file(str(model_file))
-            state = torch.load(f, map_location="cpu")
+            # try to fetch the model for each subclass. if fetching is possible, load model and return it
+            for model_cls in subclasses:
+                try:
+                    new_model_path = model_cls._fetch_model(model_path)
+                    if new_model_path != model_path:
+                        return model_cls.load(new_model_path)
+                except Exception:
+                    # skip any invalid loadings, e.g. not found on huggingface hub
+                    continue
 
-        model = cls._init_model_with_state_dict(state)
+            # if the model cannot be fetched, load as a file
+            state = model_path if isinstance(model_path, dict) else load_torch_state(str(model_path))
 
-        if "model_card" in state:
-            model.model_card = state["model_card"]
+            # try to get model class from state
+            cls_name = state.pop("__cls__", None)
+            if cls_name:
+                for model_cls in subclasses:
+                    if cls_name == model_cls.__name__:
+                        return model_cls.load(state)
 
-        model.eval()
-        model.to(flair.device)
+            # older (flair 11.3 and below) models do not contain cls information. In this case, try all subclasses
+            for model_cls in subclasses:
+                # if str(model_cls) == "<class 'flair.models.pairwise_classification_model.TextPairClassifier'>": continue
+                try:
+                    model = model_cls.load(state)
+                    return model
+                except Exception as e:
+                    print(e)
+                    # skip any invalid loadings, e.g. not found on huggingface hub
+                    continue
+
+            raise ValueError(f"Could not find any model with name '{model_path}'")
+
+        else:
+            # if this class is not abstract, fetch the model and load it
+            if not isinstance(model_path, dict):
+                model_file = cls._fetch_model(str(model_path))
+                state = load_torch_state(model_file)
+            else:
+                state = model_path
+
+            if "__cls__" in state:
+                state.pop("__cls__")
+
+            model = cls._init_model_with_state_dict(state)
+
+            if "model_card" in state:
+                model.model_card = state["model_card"]
+
+            model.eval()
+            model.to(flair.device)
 
         return model
 
@@ -185,7 +234,7 @@ class Model(torch.nn.Module, typing.Generic[DT]):
             )
 
 
-class Classifier(Model[DT], typing.Generic[DT]):
+class Classifier(Model[DT], typing.Generic[DT], ABC):
     """Abstract base class for all Flair models that do classification,
     both single- and multi-label. It inherits from flair.nn.Model and adds an
     unified evaluate() function so that all classification models use the same
@@ -217,7 +266,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
             data_points = FlairDatapointDataset(data_points)
 
         with torch.no_grad():
-
             # loss calculation
             eval_loss = torch.zeros(1, device=flair.device)
             average_over = 0
@@ -234,7 +282,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
             sentence_id = 0
             for batch in Tqdm.tqdm(loader):
-
                 # remove any previously predicted labels
                 for datapoint in batch:
                     datapoint.remove_labels("predicted")
@@ -257,7 +304,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
                 # get the gold labels
                 for datapoint in batch:
-
                     for gold_label in datapoint.get_labels(gold_label_type):
                         representation = str(sentence_id) + ": " + gold_label.unlabeled_identifier
 
@@ -496,8 +542,14 @@ class Classifier(Model[DT], typing.Generic[DT]):
             lines.append(eval_line)
         return lines
 
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Classifier":
+        from typing import cast
 
-class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
+        return cast("Classifier", super().load(model_path=model_path))
+
+
+class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
     """Default base class for all Flair models that do classification, both
     single- and multi-label. It inherits from flair.nn.Classifier and thus from
     flair.nn.Model. All features shared by all classifiers are implemented here,
@@ -521,7 +573,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         inverse_model: bool = False,
         train_on_gold_pairs_only: bool = False,
     ):
-
         super().__init__()
 
         # set the embeddings
@@ -641,7 +692,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             )
 
     def _encode_data_points(self, sentences: List[DT], data_points: List[DT2]):
-
         # embed sentences
         if self.embeddings:
             self.embeddings.embed(sentences)
@@ -659,8 +709,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
         return data_point_tensor
 
-    def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
+    def _mask_scores(self, scores, data_points):
+        return scores
 
+    def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
         # make a forward pass to produce embedded data points and labels
         sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
 
@@ -680,6 +732,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         # decode
         scores = self.decoder(data_point_tensor)
 
+        # an optional masking step (no masking in most cases)
+        scores = self._mask_scores(scores, data_points)
+
         # calculate the loss
         return self._calculate_loss(scores, label_tensor)
 
@@ -687,7 +742,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         return self.loss_function(scores, labels), labels.size(0)
 
     def _sort_data(self, data_points: List[DT]) -> List[DT]:
-
         if len(data_points) == 0:
             return []
 
@@ -733,6 +787,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             if not isinstance(sentences, list):
                 sentences = [sentences]
 
+            if isinstance(sentences[0], Sentence):
+                Sentence.set_context_for_sentences(typing.cast(List[Sentence], sentences))
+
             reordered_sentences = self._sort_data(sentences)
 
             if len(reordered_sentences) == 0:
@@ -754,7 +811,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
             for batch in batches:
-
                 # filter data points in batch
                 batch = [dp for dp in batch if self._filter_data_point(dp)]
 
@@ -770,6 +826,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                 # pass data points through network and decode
                 data_point_tensor = self._encode_data_points(batch, data_points)
                 scores = self.decoder(data_point_tensor)
+                scores = self._mask_scores(scores, data_points)
 
                 # if anything could possibly be predicted
                 if len(data_points) > 0:
@@ -873,3 +930,20 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             state["decoder"] = self.decoder
 
         return state
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "DefaultClassifier":
+        from typing import cast
+
+        return cast("DefaultClassifier", super().load(model_path=model_path))
+
+
+def get_non_abstract_subclasses(cls):
+    all_subclasses = []
+    for subclass in cls.__subclasses__():
+        all_subclasses.extend(get_non_abstract_subclasses(subclass))
+        if inspect.isabstract(subclass):
+            continue
+        all_subclasses.append(subclass)
+
+    return all_subclasses

@@ -197,7 +197,6 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         return tensor
 
     def forward_pass(self, sentences: Union[List[Sentence], Sentence]):
-
         if isinstance(sentences, Sentence):
             sentences = [sentences]
 
@@ -221,7 +220,6 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         return output_vectors, labels
 
     def decode(self, decoder_input_indices, initial_hidden_states, all_encoder_outputs):
-
         # take decoder input and initial hidden and pass through RNN
         input_tensor = self.decoder_character_embedding(decoder_input_indices)
         output, hidden = self.decoder_rnn(input_tensor, initial_hidden_states)
@@ -343,7 +341,6 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         return self.forward(*tensors)
 
     def encode_token(self, token: Token):
-
         # variable to store initial hidden states for decoder
         initial_hidden_for_decoder = []
         all_encoder_outputs = None
@@ -425,6 +422,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         if isinstance(sentences, Sentence):
             sentences = [sentences]
 
+        Sentence.set_context_for_sentences(sentences)
+
         # filter empty sentences
         sentences = [sentence for sentence in sentences if len(sentence) > 0]
         if len(sentences) == 0:
@@ -443,11 +442,9 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         number_tokens_in_total = 0
 
         with torch.no_grad():
-
             dataloader = DataLoader(dataset=FlairDatapointDataset(sentences), batch_size=mini_batch_size)
 
             for batch in dataloader:
-
                 # stop if all sentences are empty
                 if not batch:
                     continue
@@ -473,12 +470,10 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
                 # option 1: greedy decoding
                 if self.beam_size == 1:
-
                     # predictions
                     predicted: List[List[int]] = [[] for _ in range(number_tokens)]
 
                     for decode_step in range(max_length):
-
                         # decode next character
                         output_vectors, hidden = self.decode(input_indices, hidden, all_encoder_outputs)
 
@@ -539,7 +534,6 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                     )
 
                     for j in range(1, max_length):
-
                         output_vectors, hidden_states_beam = self.decode(
                             leading_indices, hidden_states_beam, batched_encoding_output
                         )
@@ -556,7 +550,6 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                         # check if an end symbol <E> has been predicted and, in that case, set hypothesis aside
                         end_symbols = (index_candidates == self.end_index).nonzero(as_tuple=False)
                         for tuple in end_symbols:
-
                             # if the sequence is already ended, do not record as candidate
                             if sequences[tuple[0], -1].item() == self.end_index:
                                 continue
@@ -663,7 +656,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.encoder_embeddings,
+            "embeddings": self.encoder_embeddings.save_embeddings(use_state_dict=False),
             "rnn_input_size": self.rnn_input_size,
             "rnn_hidden_size": self.rnn_hidden_size,
             "rnn_layers": self.rnn_layers,

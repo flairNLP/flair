@@ -4,16 +4,35 @@ import logging
 import os
 import re
 import shutil
+from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    DefaultDict,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 from torch.utils.data import ConcatDataset, Dataset
 
 import flair
-from flair.data import Corpus, FlairDataset, MultiCorpus, Relation, Sentence, Token
+from flair.data import (
+    Corpus,
+    FlairDataset,
+    MultiCorpus,
+    Relation,
+    Sentence,
+    Token,
+    get_spans_from_bio,
+)
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file
-from flair.models.sequence_tagger_utils.bioes import get_spans_from_bio
 
 log = logging.getLogger("flair")
 
@@ -216,10 +235,10 @@ class JsonlDataset(FlairDataset):
         start_idx = -1
         end_idx = -1
         for token in sentence:
-            if token.start_pos <= start <= token.end_pos and start_idx == -1:
+            if token.start_position <= start <= token.end_position and start_idx == -1:
                 start_idx = token.idx - 1
 
-            if token.start_pos <= end <= token.end_pos and end_idx == -1:
+            if token.start_position <= end <= token.end_position and end_idx == -1:
                 end_idx = token.idx - 1
 
         # If end index is not found set to last token
@@ -479,7 +498,6 @@ class ColumnDataset(FlairDataset):
 
         # now load all sentences
         with open(str(self.path_to_column_file), encoding=self.encoding) as file:
-
             # skip first line if to selected
             if skip_first_line:
                 file.readline()
@@ -531,7 +549,6 @@ class ColumnDataset(FlairDataset):
                 self.sentences_raw: List[List[str]] = []
 
                 while True:
-
                     # read lines for next sentence, but don't parse
                     sentence_raw = self._read_next_sentence(file)
 
@@ -550,7 +567,6 @@ class ColumnDataset(FlairDataset):
         self.word_level_tag_columns = {self.text_column: "text"}
         # read first sentence to determine which columns are span-labels
         with open(str(self.path_to_column_file), encoding=self.encoding) as file:
-
             # skip first line if to selected
             if skip_first_line:
                 file.readline()
@@ -572,7 +588,6 @@ class ColumnDataset(FlairDataset):
             # - problem cases are columns for which we see only O - in this case we default to Span
             for sentence in probe:
                 for column in column_name_map:
-
                     # skip assigned columns
                     if (
                         column in self.word_level_tag_columns
@@ -631,9 +646,8 @@ class ColumnDataset(FlairDataset):
     def _convert_lines_to_sentence(
         self, lines, word_level_tag_columns: Dict[int, str], span_level_tag_columns: Optional[Dict[int, str]] = None
     ):
-
-        sentence: Sentence = Sentence(text=[])
         token: Optional[Token] = None
+        tokens: List[Token] = []
         filtered_lines = []
         comments = []
         for line in lines:
@@ -646,7 +660,8 @@ class ColumnDataset(FlairDataset):
 
             # otherwise, this line is a token. parse and add to sentence
             token = self._parse_token(line, word_level_tag_columns, token)
-            sentence.add_token(token)
+            tokens.append(token)
+        sentence: Sentence = Sentence(text=tokens)
 
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token:
@@ -659,6 +674,9 @@ class ColumnDataset(FlairDataset):
                     bioes_tags = [
                         re.split(self.column_delimiter, line.rstrip())[span_column] for line in filtered_lines
                     ]
+
+                    # discard tags from tokens that are not added to the sentence
+                    bioes_tags = [tag for tag, token in zip(bioes_tags, tokens) if token._internal_index is not None]
                     predicted_spans = get_spans_from_bio(bioes_tags)
                     for span_indices, score, label in predicted_spans:
                         span = sentence[span_indices[0] : span_indices[-1] + 1]
@@ -687,11 +705,17 @@ class ColumnDataset(FlairDataset):
                     if remapped != "O":
                         relation.add_label(typename="relation", value=remapped)
 
+            # parse comments such as '# id cd27886d-6895-4d02-a8df-e5fa763fa88f	domain=de-orcas'
+            # to set the metadata "domain" to "de-orcas"
+            for comment_row in comment.split("\t"):
+                if "=" in comment_row:
+                    key, value = comment_row.split("=", 1)
+                    sentence.add_metadata(key, value)
+
         if len(sentence) > 0:
             return sentence
 
     def _parse_token(self, line: str, column_name_map: Dict[int, str], last_token: Optional[Token] = None) -> Token:
-
         # get fields from line
         fields: List[str] = re.split(self.column_delimiter, line.rstrip())
 
@@ -709,11 +733,9 @@ class ColumnDataset(FlairDataset):
                     and column != self.head_id_column
                     and column_name_map[column] != self.SPACE_AFTER_KEY
                 ):
-
                     # 'feats' and 'misc' column should be split into different fields
                     if column_name_map[column] in self.FEATS:
                         for feature in fields[column].split("|"):
-
                             # special handling for whitespace after
                             if feature == "SpaceAfter=No":
                                 token.whitespace_after = 0
@@ -740,12 +762,11 @@ class ColumnDataset(FlairDataset):
         if last_token is None:
             start = 0
         else:
-            assert last_token.end_pos is not None
-            start = last_token.end_pos
+            assert last_token.end_position is not None
+            start = last_token.end_position
             if last_token.whitespace_after > 0:
                 start += last_token.whitespace_after
-        token.start_pos = start
-        token.end_pos = token.start_pos + len(token.text)
+        token.start_position = start
         return token
 
     def _remap_label(self, tag):
@@ -765,7 +786,6 @@ class ColumnDataset(FlairDataset):
         return self.total_sentence_count
 
     def __getitem__(self, index: int = 0) -> Sentence:
-
         # if in memory, retrieve parsed sentence
         if self.in_memory:
             sentence = self.sentences[index]
@@ -779,9 +799,425 @@ class ColumnDataset(FlairDataset):
             )
 
             # set sentence context using partials TODO: pointer to dataset is really inefficient
+            sentence._has_context = True
             sentence._position_in_dataset = (self, index)
 
         return sentence
+
+
+class ONTONOTES(MultiFileColumnCorpus):
+    archive_url = "https://data.mendeley.com/public-files/datasets/zmycy7t9h9/files/b078e1c4-f7a4-4427-be7f-9389967831ef/file_downloaded"
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        version: str = "v4",
+        language: str = "english",
+        domain: Union[None, str, List[str], Dict[str, Union[None, str, List[str]]]] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ):
+        assert version in ["v4", "v12"]
+        if version == "v12":
+            assert language == "english"
+        else:
+            assert language in ["english", "chinese", "arabic"]
+
+        column_format = {0: "text", 1: "pos", 2: "ner"}
+
+        processed_data_path = self._ensure_data_processed(base_path, language, version)
+
+        kw = dict(version=version, language=language, domain=domain, processed_data_path=processed_data_path)
+
+        dev_files = list(self._get_processed_file_paths(split="development", **kw))
+        train_files = list(self._get_processed_file_paths(split="train", **kw))
+        test_files = list(self._get_processed_file_paths(split="test", **kw))
+
+        super(ONTONOTES, self).__init__(
+            dev_files=dev_files,
+            train_files=train_files,
+            test_files=test_files,
+            name="/".join((self.__class__.__name__, language, version)),
+            column_format=column_format,
+            in_memory=in_memory,
+            column_delimiter="\t",
+            **corpusargs,
+        )
+
+    @classmethod
+    def get_available_domains(
+        cls,
+        base_path: Union[str, Path] = None,
+        version: str = "v4",
+        language: str = "english",
+        split: str = "train",
+    ) -> List[str]:
+        processed_data_path = cls._ensure_data_processed(base_path=base_path, language=language, version=version)
+
+        processed_split_path = processed_data_path / "splits" / version / language / split
+
+        return [domain_path.name for domain_path in processed_split_path.iterdir()]
+
+    @classmethod
+    def _get_processed_file_paths(
+        cls,
+        processed_data_path: Path,
+        split: str = "train",
+        version: str = "v4",
+        language: str = "english",
+        domain: Union[str, List[str], Dict[str, Union[None, str, List[str]]]] = None,
+    ) -> Iterable[Path]:
+        processed_split_path = processed_data_path / "splits" / version / language / split
+
+        if domain is None:
+            # use all domains
+            assert processed_split_path.exists(), f"Processed data not found (expected at: {processed_split_path})"
+            yield from sorted(filter(os.path.isfile, processed_split_path.rglob("*")))
+
+        elif isinstance(domain, str):
+            domain_path = processed_split_path / domain
+            assert domain_path.exists(), f"Processed data not found (expected at: {domain_path})"
+            yield from sorted(filter(os.path.isfile, domain_path.rglob("*")))
+
+        elif isinstance(domain, list):
+            for d in domain:
+                domain_path = processed_split_path / d
+                assert domain_path.exists(), f"Processed data not found (expected at: {domain_path})"
+                yield from sorted(filter(os.path.isfile, domain_path.rglob("*")))
+
+        else:
+            assert isinstance(domain, dict)
+
+            for d, sources in domain.items():
+                domain_path = processed_split_path / d
+
+                assert domain_path.exists(), f"Processed data not found (expected at: {domain_path})"
+
+                if sources is None:
+                    yield from sorted(domain_path.rglob("*"))
+
+                elif isinstance(sources, str):
+                    source_path = domain_path / sources
+                    assert source_path.exists(), f"Processed data not found (expected at: {source_path})"
+                    yield source_path
+
+                else:
+                    assert isinstance(sources, list)
+
+                    for s in sources:
+                        source_path = domain_path / s
+                        assert source_path.exists(), f"Processed data not found (expected at: {source_path})"
+                        yield source_path
+
+    @classmethod
+    def _ensure_data_processed(cls, base_path, language: str, version: str):
+        raw_data_path = cls._ensure_data_downloaded(base_path)
+
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        dataset_name = cls.__name__.lower()
+
+        processed_data_path = base_path / dataset_name
+
+        processed_split_path = processed_data_path / "splits" / version / language
+
+        if not processed_split_path.exists():
+            log.info(f"OntoNotes splits for {version}/{language} have not been generated yet, generating it now.")
+
+            for split in ["train", "development", "test"]:
+                log.info(f"Generating {split} split for {version}/{language}")
+
+                raw_split_path = raw_data_path / version / "data" / split / "data" / language / "annotations"
+
+                # iter over all domains / sources and create target files
+
+                for raw_domain_path in raw_split_path.iterdir():
+                    for raw_source_path in raw_domain_path.iterdir():
+                        conll_files = sorted(raw_source_path.rglob("*gold_conll"))
+
+                        processed_source_path = (
+                            processed_split_path / split / raw_domain_path.name / raw_source_path.name
+                        )
+                        processed_source_path.parent.mkdir(parents=True, exist_ok=True)
+
+                        with open(processed_source_path, "w") as f:
+                            for conll_file in conll_files:
+                                for sent in cls.sentence_iterator(conll_file):
+                                    if language == "arabic":
+                                        trimmed_sentence = [_sent.split("#")[0] for _sent in sent["sentence"]]
+                                        sent["sentence"] = trimmed_sentence
+                                    for row in zip(sent["sentence"], sent["pos_tags"], sent["named_entities"]):
+                                        f.write("\t".join(row) + "\n")
+                                    f.write("\n")
+        return processed_data_path
+
+    @classmethod
+    def _ensure_data_downloaded(cls, base_path: Union[str, Path] = None) -> Path:
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        data_folder = base_path / "conll-2012"
+
+        if not data_folder.exists():
+            unpack_file(cached_path(cls.archive_url, data_folder), data_folder.parent, "zip", False)
+
+        return data_folder
+
+    @classmethod
+    def _process_coref_span_annotations_for_word(
+        cls,
+        label: str,
+        word_index: int,
+        clusters: DefaultDict[int, List[Tuple[int, int]]],
+        coref_stacks: DefaultDict[int, List[int]],
+    ) -> None:
+        """
+        For a given coref label, add it to a currently open span(s), complete a span(s) or
+        ignore it, if it is outside of all spans. This method mutates the clusters and coref_stacks
+        dictionaries.
+        # Parameters
+        label : `str`
+            The coref label for this word.
+        word_index : `int`
+            The word index into the sentence.
+        clusters : `DefaultDict[int, List[Tuple[int, int]]]`
+            A dictionary mapping cluster ids to lists of inclusive spans into the
+            sentence.
+        coref_stacks : `DefaultDict[int, List[int]]`
+            Stacks for each cluster id to hold the start indices of active spans (spans
+            which we are inside of when processing a given word). Spans with the same id
+            can be nested, which is why we collect these opening spans on a stack, e.g:
+            [Greg, the baker who referred to [himself]_ID1 as 'the bread man']_ID1
+        """
+        if label != "-":
+            for segment in label.split("|"):
+                # The conll representation of coref spans allows spans to
+                # overlap. If spans end or begin at the same word, they are
+                # separated by a "|".
+                if segment[0] == "(":
+                    # The span begins at this word.
+                    if segment[-1] == ")":
+                        # The span begins and ends at this word (single word span).
+                        cluster_id = int(segment[1:-1])
+                        clusters[cluster_id].append((word_index, word_index))
+                    else:
+                        # The span is starting, so we record the index of the word.
+                        cluster_id = int(segment[1:])
+                        coref_stacks[cluster_id].append(word_index)
+                else:
+                    # The span for this id is ending, but didn't start at this word.
+                    # Retrieve the start index from the document state and
+                    # add the span to the clusters for this id.
+                    cluster_id = int(segment[:-1])
+                    start = coref_stacks[cluster_id].pop()
+                    clusters[cluster_id].append((start, word_index))
+
+    @classmethod
+    def _process_span_annotations_for_word(
+        cls,
+        annotations: List[str],
+        span_labels: List[List[str]],
+        current_span_labels: List[Optional[str]],
+    ) -> None:
+        """
+        Given a sequence of different label types for a single word and the current
+        span label we are inside, compute the BIO tag for each label and append to a list.
+        # Parameters
+        annotations : `List[str]`
+            A list of labels to compute BIO tags for.
+        span_labels : `List[List[str]]`
+            A list of lists, one for each annotation, to incrementally collect
+            the BIO tags for a sequence.
+        current_span_labels : `List[Optional[str]]`
+            The currently open span per annotation type, or `None` if there is no open span.
+        """
+        for annotation_index, annotation in enumerate(annotations):
+            # strip all bracketing information to
+            # get the actual propbank label.
+            label = annotation.strip("()*")
+
+            if "(" in annotation:
+                # Entering into a span for a particular semantic role label.
+                # We append the label and set the current span for this annotation.
+                bio_label = "B-" + label
+                span_labels[annotation_index].append(bio_label)
+                current_span_labels[annotation_index] = label
+            elif current_span_labels[annotation_index] is not None:
+                # If there's no '(' token, but the current_span_label is not None,
+                # then we are inside a span.
+                bio_label = "I-" + cast(str, current_span_labels[annotation_index])
+                span_labels[annotation_index].append(bio_label)
+            else:
+                # We're outside a span.
+                span_labels[annotation_index].append("O")
+            # Exiting a span, so we reset the current span label for this annotation.
+            if ")" in annotation:
+                current_span_labels[annotation_index] = None
+
+    @classmethod
+    def _conll_rows_to_sentence(cls, conll_rows: List[str]) -> Dict:
+        document_id: str
+        sentence_id: int
+        # The words in the sentence.
+        sentence: List[str] = []
+        # The pos tags of the words in the sentence.
+        pos_tags: List[str] = []
+        # the pieces of the parse tree.
+        parse_pieces: List[Optional[str]] = []
+        # The lemmatised form of the words in the sentence which
+        # have SRL or word sense information.
+        predicate_lemmas: List[Optional[str]] = []
+        # The FrameNet ID of the predicate.
+        predicate_framenet_ids: List[Optional[str]] = []
+        # The sense of the word, if available.
+        word_senses: List[Optional[float]] = []
+        # The current speaker, if available.
+        speakers: List[Optional[str]] = []
+
+        verbal_predicates: List[str] = []
+        span_labels: List[List[str]] = []
+        current_span_labels: List[Optional[str]] = []
+
+        # Cluster id -> List of (start_index, end_index) spans.
+        clusters: DefaultDict[int, List[Tuple[int, int]]] = defaultdict(list)
+        # Cluster id -> List of start_indices which are open for this id.
+        coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
+
+        for index, row in enumerate(conll_rows):
+            conll_components = row.split()
+
+            document_id = conll_components[0]
+            sentence_id = int(conll_components[1])
+            word = conll_components[3]
+            pos_tag = conll_components[4]
+
+            parse_piece: Optional[str]
+
+            # Replace brackets in text and pos tags
+            # with a different token for parse trees.
+            if pos_tag != "XX" and word != "XX":
+                if word == "(":
+                    parse_word = "-LRB-"
+                elif word == ")":
+                    parse_word = "-RRB-"
+                else:
+                    parse_word = word
+                if pos_tag == "(":
+                    pos_tag = "-LRB-"
+                if pos_tag == ")":
+                    pos_tag = "-RRB-"
+                (left_brackets, right_hand_side) = conll_components[5].split("*")
+                # only keep ')' if there are nested brackets with nothing in them.
+                right_brackets = right_hand_side.count(")") * ")"
+                parse_piece = f"{left_brackets} ({pos_tag} {parse_word}) {right_brackets}"
+            else:
+                # There are some bad annotations in the CONLL data.
+                # They contain no information, so to make this explicit,
+                # we just set the parse piece to be None which will result
+                # in the overall parse tree being None.
+                parse_piece = None
+
+            lemmatised_word = conll_components[6]
+            framenet_id = conll_components[7]
+            word_sense = conll_components[8]
+            speaker = conll_components[9]
+
+            if not span_labels:
+                # If this is the first word in the sentence, create
+                # empty lists to collect the NER and SRL BIO labels.
+                # We can't do this upfront, because we don't know how many
+                # components we are collecting, as a sentence can have
+                # variable numbers of SRL frames.
+                span_labels = [[] for _ in conll_components[10:-1]]
+                # Create variables representing the current label for each label
+                # sequence we are collecting.
+                current_span_labels = [None for _ in conll_components[10:-1]]
+
+            cls._process_span_annotations_for_word(conll_components[10:-1], span_labels, current_span_labels)
+
+            # If any annotation marks this word as a verb predicate,
+            # we need to record its index. This also has the side effect
+            # of ordering the verbal predicates by their location in the
+            # sentence, automatically aligning them with the annotations.
+            word_is_verbal_predicate = any("(V" in x for x in conll_components[11:-1])
+            if word_is_verbal_predicate:
+                verbal_predicates.append(word)
+
+            cls._process_coref_span_annotations_for_word(conll_components[-1], index, clusters, coref_stacks)
+
+            sentence.append(word)
+            pos_tags.append(pos_tag)
+            parse_pieces.append(parse_piece)
+            predicate_lemmas.append(lemmatised_word if lemmatised_word != "-" else None)
+            predicate_framenet_ids.append(framenet_id if framenet_id != "-" else None)
+            word_senses.append(float(word_sense) if word_sense != "-" else None)
+            speakers.append(speaker if speaker != "-" else None)
+
+        named_entities = span_labels[0]
+        srl_frames = [(predicate, labels) for predicate, labels in zip(verbal_predicates, span_labels[1:])]
+
+        if all(parse_pieces):
+            # this would not be reached if parse_pieces contained None, hence the cast
+            parse_tree = "".join(cast(List[str], parse_pieces))
+        else:
+            parse_tree = None
+        coref_span_tuples = {(cluster_id, span) for cluster_id, span_list in clusters.items() for span in span_list}
+        return {
+            "document_id": document_id,
+            "sentence_id": sentence_id,
+            "sentence": sentence,
+            "pos_tags": pos_tags,
+            "parse_tree": parse_tree,
+            "predicate_lemmas": predicate_lemmas,
+            "predicate_framenet_ids": predicate_framenet_ids,
+            "word_senses": word_senses,
+            "speakers": speakers,
+            "named_entities": named_entities,
+            "srl_frames": srl_frames,
+            "coref_span_tuples": coref_span_tuples,
+        }
+
+    @classmethod
+    def dataset_document_iterator(cls, file_path: Union[Path, str]) -> Iterator[List]:
+        """
+        An iterator over CONLL formatted files which yields documents, regardless
+        of the number of document annotations in a particular file. This is useful
+        for conll data which has been preprocessed, such as the preprocessing which
+        takes place for the 2012 CONLL Coreference Resolution task.
+        """
+        with open(file_path, "r", encoding="utf8") as open_file:
+            conll_rows = []
+            document: List = []
+            for line in open_file:
+                line = line.strip()
+                if line != "" and not line.startswith("#"):
+                    # Non-empty line. Collect the annotation.
+                    conll_rows.append(line)
+                else:
+                    if conll_rows:
+                        document.append(cls._conll_rows_to_sentence(conll_rows))
+                        conll_rows = []
+                if line.startswith("#end document"):
+                    yield document
+                    document = []
+            if document:
+                # Collect any stragglers or files which might not
+                # have the '#end document' format for the end of the file.
+                yield document
+
+    @classmethod
+    def sentence_iterator(cls, file_path: Union[Path, str]) -> Iterator:
+        """
+        An iterator over the sentences in an individual CONLL formatted file.
+        """
+        for document in cls.dataset_document_iterator(file_path):
+            for sentence in document:
+                yield sentence
 
 
 class CONLL_03(ColumnCorpus):
@@ -1081,6 +1517,79 @@ class WNUT_17(ColumnCorpus):
             in_memory=in_memory,
             **corpusargs,
         )
+
+
+class FEWNERD(ColumnCorpus):
+    def __init__(
+        self,
+        setting: str = "supervised",
+        **corpusargs,
+    ):
+        assert setting in ["supervised", "inter", "intra"]
+
+        base_path = flair.cache_root / "datasets"
+        self.dataset_name = self.__class__.__name__.lower()
+        self.data_folder = base_path / self.dataset_name / setting
+        self.bio_format_data = base_path / self.dataset_name / setting / "bio_format"
+
+        if not self.data_folder.exists():
+            self._download(setting=setting)
+
+        if not self.bio_format_data.exists():
+            self._generate_splits(setting)
+
+        super(FEWNERD, self).__init__(
+            self.bio_format_data,
+            column_format={0: "text", 1: "ner"},
+            **corpusargs,
+        )
+
+    def _download(self, setting):
+        _URLs = {
+            "supervised": "https://cloud.tsinghua.edu.cn/f/09265750ae6340429827/?dl=1",
+            "intra": "https://cloud.tsinghua.edu.cn/f/a0d3efdebddd4412b07c/?dl=1",
+            "inter": "https://cloud.tsinghua.edu.cn/f/165693d5e68b43558f9b/?dl=1",
+        }
+
+        log.info(f"FewNERD ({setting}) dataset not found, downloading.")
+        dl_path = _URLs[setting]
+        dl_dir = cached_path(dl_path, Path("datasets") / self.dataset_name / setting)
+
+        if setting not in os.listdir(self.data_folder):
+            import zipfile
+
+            from tqdm import tqdm
+
+            log.info("FewNERD dataset has not been extracted yet, extracting it now. This might take a while.")
+            with zipfile.ZipFile(dl_dir, "r") as zip_ref:
+                for f in tqdm(zip_ref.namelist()):
+                    if f.endswith("/"):
+                        os.makedirs(self.data_folder / f)
+                    else:
+                        zip_ref.extract(f, path=self.data_folder)
+
+    def _generate_splits(self, setting):
+        log.info(
+            f"FewNERD splits for {setting} have not been parsed into BIO format, parsing it now. This might take a while."
+        )
+        os.mkdir(self.bio_format_data)
+        for split in os.listdir(self.data_folder / setting):
+            with open(self.data_folder / setting / split, "r") as source:
+                with open(self.bio_format_data / split, "w") as target:
+                    previous_tag = None
+                    for line in source:
+                        if line == "" or line == "\n":
+                            target.write("\n")
+                        else:
+                            token, tag = line.split("\t")
+                            tag = tag.replace("\n", "")
+                            if tag == "O":
+                                target.write(token + "\t" + tag + "\n")
+                            elif previous_tag != tag and tag != "O":
+                                target.write(token + "\t" + "B-" + tag + "\n")
+                            elif previous_tag == tag and tag != "O":
+                                target.write(token + "\t" + "I-" + tag + "\n")
+                            previous_tag = tag
 
 
 class BIOSCOPE(ColumnCorpus):
@@ -1493,7 +2002,6 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1865,10 +2373,8 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
         github_url = "https://github.com/jeniyat/WNUT_2020_NER/archive/master.zip"
 
         for sample in ["train", "test", "dev"]:
-
             sample_file = data_folder / (sample + ".txt")
             if not sample_file.is_file():
-
                 zip_path = cached_path(f"{github_url}", Path("datasets") / dataset_name)
 
                 # unzip the downloaded repo and merge the train, dev and test datasets
@@ -2551,6 +3057,7 @@ class NER_MASAKHANE(MultiCorpus):
     def __init__(
         self,
         languages: Union[str, List[str]] = "luo",
+        version: str = "v2",
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         **corpusargs,
@@ -2559,6 +3066,7 @@ class NER_MASAKHANE(MultiCorpus):
         Initialize the Masakhane corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data.
         It consists of ten African languages. Pass a language code or a list of language codes to initialize the corpus
         with the languages you require. If you pass "all", all languages will be initialized.
+        :version: Specifies version of the dataset. Currently, only "v1" and "v2" are supported, using "v2" as default.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -2579,19 +3087,56 @@ class NER_MASAKHANE(MultiCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        data_folder = base_path / dataset_name
+        supported_versions = ["v1", "v2"]
 
-        language_to_code = {
-            "amharic": "amh",
-            "hausa": "hau",
-            "igbo": "ibo",
-            "kinyarwanda": "kin",
-            "luganda": "lug",
-            "luo": "luo",
-            "naija": "pcm",
-            "swahili": "swa",
-            "yoruba": "yor",
-            "wolof": "wol",
+        if version not in supported_versions:
+            log.error(f"The specified version '{version}' is not in the list of supported version!")
+            log.error(f"Supported versions are '{supported_versions}'!")
+            raise Exception
+
+        data_folder = base_path / dataset_name / version
+
+        languages_to_code = {
+            "v1": {
+                "amharic": "amh",
+                "hausa": "hau",
+                "igbo": "ibo",
+                "kinyarwanda": "kin",
+                "luganda": "lug",
+                "luo": "luo",
+                "naija": "pcm",
+                "swahili": "swa",
+                "yoruba": "yor",
+                "wolof": "wol",
+            },
+            "v2": {
+                "bambara": "bam",
+                "ghomala": "bbj",
+                "ewe": "ewe",
+                "fon": "fon",
+                "hausa": "hau",
+                "igbo": "ibo",
+                "kinyarwanda": "kin",
+                "luganda": "lug",
+                "mossi": "mos",
+                "naija": "pcm",
+                "chichewa": "nya",
+                "chishona": "sna",
+                "kiswahili": "swa",
+                "setswana": "tsn",
+                "akan_twi": "twi",
+                "wolof": "wol",
+                "isixhosa": "xho",
+                "yoruba": "yor",
+                "isizulu": "zul",
+            },
+        }
+
+        language_to_code = languages_to_code[version]
+
+        data_paths = {
+            "v1": "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data",
+            "v2": "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/MasakhaNER2.0/data",
         }
 
         # use all languages if explicitly set to "all"
@@ -2600,7 +3145,6 @@ class NER_MASAKHANE(MultiCorpus):
 
         corpora: List[Corpus] = []
         for language in languages:
-
             if language in language_to_code.keys():
                 language = language_to_code[language]
 
@@ -2613,13 +3157,13 @@ class NER_MASAKHANE(MultiCorpus):
             language_folder = data_folder / language
 
             # download data if necessary
-            data_path = f"https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/{language}/"
+            data_path = f"{data_paths[version]}/{language}/"
             cached_path(f"{data_path}dev.txt", language_folder)
             cached_path(f"{data_path}test.txt", language_folder)
             cached_path(f"{data_path}train.txt", language_folder)
 
             # initialize comlumncorpus and add it to list
-            log.info(f"Reading data for language {language}")
+            log.info(f"Reading data for language {language}@{version}")
             corp = ColumnCorpus(
                 data_folder=language_folder,
                 column_format=columns,
@@ -2642,20 +3186,14 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
         task: str = "multi",
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        use_dev_as_test: bool = True,
         **corpusargs,
     ):
         """
-        Initialize the MultiCoNer corpus. This is only possible if you've applied and downloaded it to your machine.
-        Apply for the corpus from here https://multiconer.github.io/dataset and unpack the .zip file's content into
-        a folder called 'multiconer'. Then set the base_path parameter in the constructor to the path to the
-        parent directory where the multiconer folder resides. You can also create the multiconer in
-        the {FLAIR_CACHE_ROOT}/datasets folder to leave the path empty.
+        Download and Initialize the MultiCoNer corpus.
+        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
         :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
         POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
-        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -2674,9 +3212,11 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
             "ru": "RU-Russian",
             "tr": "TR-Turkish",
             "zh": "ZH-Chinese",
+            "mix": "MIX_Code_mixed",
+            "multi": "MULTI_Multilingual",
         }
 
-        possible_tasks = ["multi", "code-switch"] + list(folders.keys())
+        possible_tasks = list(folders.keys())
         task = task.lower()
 
         if task not in possible_tasks:
@@ -2688,31 +3228,96 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        data_folder = base_path / dataset_name
+        data_folder = cached_path("s3://multiconer", base_path / dataset_name) / "multiconer2022"
 
-        # check if data there
+        train_files = [data_folder / folders[task] / f"{task}_train.conll"]
+        dev_files = [data_folder / folders[task] / f"{task}_dev.conll"]
+        test_files = [data_folder / folders[task] / f"{task}_test.conll"]
+
+        super().__init__(
+            train_files=train_files,
+            dev_files=dev_files,
+            test_files=test_files,
+            column_format=columns,
+            comment_symbol="# id ",
+            in_memory=in_memory,
+            **corpusargs,
+        )
+
+
+class NER_MULTI_CONER_V2(MultiFileColumnCorpus):
+    def __init__(
+        self,
+        task: str = "multi",
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        use_dev_as_test: bool = True,
+        **corpusargs,
+    ):
+        """
+        Initialize the MultiCoNer V2 corpus for the Semeval2023 workshop. This is only possible if you've applied and downloaded it to your machine.
+        Apply for the corpus from here https://multiconer.github.io/dataset and unpack the .zip file's content into
+        a folder called 'ner_multi_coner_v2'. Then set the base_path parameter in the constructor to the path to the
+        parent directory where the ner_multi_coner_v2 folder resides. You can also create the multiconer in
+        the {FLAIR_CACHE_ROOT}/datasets folder to leave the path empty.
+        :param base_path: Path to the ner_multi_coner_v2 corpus (i.e. 'ner_multi_coner_v2' folder) on your machine
+        POS tags or chunks respectively
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
+        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
+        """
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        folders = {
+            "bn": "BN-Bangla",
+            "de": "DE-German",
+            "en": "EN-English",
+            "es": "ES-Espanish",
+            "fa": "FA-Farsi",
+            "fr": "FR-French",
+            "hi": "HI-Hindi",
+            "it": "IT-Italian",
+            "pt": "PT-Portuguese",
+            "sv": "SV-Swedish",
+            "uk": "UK-Ukrainian",
+            "zh": "ZH-Chinese",
+        }
+
+        possible_tasks = list(folders.keys()) + ["multi"]
+        task = task.lower()
+
+        if task not in possible_tasks:
+            raise ValueError(f"task has to be one of {possible_tasks}, but is '{task}'")
+
+        # column format
+        columns = {0: "text", 3: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name / "train_dev"
+
         if not data_folder.exists():
             log.warning("-" * 100)
-            log.warning(f'WARNING: MultiCoNer dataset not found at "{data_folder}".')
+            log.warning(f'WARNING: MultiCoNerV2 dataset not found at "{data_folder}".')
             log.warning('Instructions for obtaining the data can be found here: https://multiconer.github.io/dataset"')
             log.warning("-" * 100)
 
-        if task in ["multi", "code-switch"]:
-            # code-switch uses the same training data than multi but provides a different test set.
-            # as the test set is not published, those two tasks are the same.
-            train_files = list(data_folder.rglob("*_train.conll"))
-            dev_files = list(data_folder.rglob("*_dev.conll"))
+        if task == "multi":
+            train_files = list(data_folder.glob("*-train.conll"))
+            dev_files = list(data_folder.glob("*-dev.conll"))
         else:
-            train_files = [data_folder / folders[task] / f"{task}_train.conll"]
-            dev_files = [data_folder / folders[task] / f"{task}_dev.conll"]
+            train_files = [data_folder / f"{task}-train.conll"]
+            dev_files = [data_folder / f"{task}-dev.conll"]
+        test_files = []
 
         if use_dev_as_test:
             test_files = dev_files
             dev_files = []
-        else:
-            test_files = []
-
-        super(NER_MULTI_CONER, self).__init__(
+        super().__init__(
             train_files=train_files,
             dev_files=dev_files,
             test_files=test_files,
@@ -2776,7 +3381,6 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         # download data if necessary
         first = True
         for language in languages:
-
             language_folder = data_folder / language
             file_name = "wikiann-" + language + ".bio"
 
@@ -3245,12 +3849,10 @@ class NER_MULTI_XTREME(MultiCorpus):
 
         # download data if necessary
         for language in languages:
-
             language_folder = data_folder / language
 
             # if language not downloaded yet, download it
             if not language_folder.exists():
-
                 file_name = language + ".tar.gz"
                 # create folder
                 os.makedirs(language_folder)
@@ -3358,7 +3960,6 @@ class NER_MULTI_WIKINER(MultiCorpus):
 
         data_file = flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.train"
         if not data_file.is_file():
-
             cached_path(
                 f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2",
                 Path("datasets") / dataset_name,
@@ -3523,6 +4124,54 @@ class NER_TURKU(ColumnCorpus):
         )
 
 
+class NER_UKRAINIAN(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ):
+        """
+        Initialize the Ukrainian NER corpus from lang-uk project. The first time you call this constructor it will
+        automatically download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_path = "https://raw.githubusercontent.com/lang-uk/flair-ner/master/fixed-split"
+        test_file = "test.iob"
+        train_file = "train.iob"
+        cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
+
+        super(NER_UKRAINIAN, self).__init__(
+            data_folder,
+            columns,
+            test_file=test_file,
+            train_file=train_file,
+            column_delimiter=" ",
+            encoding="utf-8",
+            in_memory=in_memory,
+            **corpusargs,
+        )
+
+
 class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
     def __init__(
         self,
@@ -3530,7 +4179,6 @@ class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -3564,7 +4212,6 @@ class KEYPHRASE_INSPEC(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -3601,7 +4248,6 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -4239,4 +4885,81 @@ class NER_ICDAR_EUROPEANA(ColumnCorpus):
             comment_symbol="# ",
             column_delimiter="\t",
             **corpusargs,
+        )
+
+
+class NER_NERMUD(MultiCorpus):
+    def __init__(
+        self,
+        domains: Union[str, List[str]] = "all",
+        base_path: Union[str, Path] = None,
+        in_memory: bool = False,
+        **corpusargs,
+    ):
+        """
+        Initilize the NERMuD 2023 dataset. NERMuD is a task presented at EVALITA 2023 consisting in the extraction and classification
+        of named-entities in a document, such as persons, organizations, and locations. NERMuD 2023 will include two different sub-tasks:
+
+        - Domain-agnostic classification (DAC). Participants will be asked to select and classify entities among three categories
+          (person, organization, location) in different types of texts (news, fiction, political speeches) using one single general model.
+
+        - Domain-specific classification (DSC). Participants will be asked to deploy a different model for each of the above types,
+          trying to increase the accuracy for each considered type.
+
+        :param domains: Domains to be used. Supported are "WN" (Wikinews), "FIC" (fiction), "ADG" (De Gasperi subset) and "all".
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
+        """
+        supported_domains = ["WN", "FIC", "ADG"]
+
+        if type(domains) == str and domains == "all":
+            domains = supported_domains
+
+        if type(domains) == str:
+            domains = [domains]
+
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        corpora: List[Corpus] = []
+
+        github_path = "https://raw.githubusercontent.com/dhfbk/KIND/main/evalita-2023"
+
+        for domain in domains:
+            if domain not in supported_domains:
+                log.error(f"Domain '{domain}' is not in list of supported domains!")
+                log.error(f"Supported are '{supported_domains}'!")
+                raise Exception()
+
+            domain_folder = data_folder / domain.lower()
+
+            for split in ["train", "dev"]:
+                cached_path(f"{github_path}/{domain}_{split}.tsv", domain_folder)
+
+            corpus = ColumnCorpus(
+                data_folder=domain_folder,
+                train_file=f"{domain}_train.tsv",
+                dev_file=f"{domain}_dev.tsv",
+                test_file=None,
+                column_format=columns,
+                in_memory=in_memory,
+                sample_missing_splits=False,  # No test data is available, so do not shrink dev data for shared task preparation!
+                **corpusargs,
+            )
+            corpora.append(corpus)
+        super(NER_NERMUD, self).__init__(
+            corpora,
+            sample_missing_splits=False,
+            name="nermud",
         )
