@@ -113,9 +113,15 @@ By class:
 weighted avg     0.7635    0.7732    0.7655      2491
 ```
 
-This report gives us a breakdown of the precision, recall and F1 score of all classes, as well as overall.
+This report gives us a breakdown of the precision, recall and F1 score of all classes, as well as overall. 
 
-Now let's look at the steps in the training script one-by-one: 
+Congrats, you just trained your first model!
+
+## Step-By-Step Walkthrough
+
+The above code showed you how to train a PoS tagger. 
+
+Now let's look at each of the main steps in the above script:  
 
 ### Step 1: Loading the Corpus 
 
