@@ -131,8 +131,8 @@ We provide a set of **quick tutorials** to get you started with the library:
    * ... how **model training generally works in Flair** → [4.1](/resources/docs/TUTORIAL_TRAINING_MODELS.md)
    * ... how to **load a prepared dataset** → [4.2](/resources/docs/TUTORIAL_CORPUS_PREPARED.md)
    * ... how to **load your own dataset** → [4.3](/resources/docs/TUTORIAL_CORPUS_CUSTOM.md)
-   * ... how to **train a sequence labeling model** (NER/PoS) → [4.4](/resources/docs/TUTORIAL_CORPUS_CUSTOM.md)
-   * ... how to **train a text classifier** (sentiment analysis, etc.)
+   * ... how to **train a sequence labeling model** (NER/PoS) → [4.4](/resources/docs/TUTORIAL_TRAINING_SEQUENCE_LABELER.md)
+   * ... how to **train a text classifier** (sentiment analysis, etc.)  → [4.5](/resources/docs/TUTORIAL_TRAINING_TEXT_CLASSIFIER.md)
    * ... and more → [*full tutorial*](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md)
 
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your

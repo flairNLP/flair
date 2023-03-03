@@ -162,6 +162,6 @@ example we chose `label_type='topic'` to denote that we are loading a corpus wit
 ## Next
 
 Learn how to 
-[train your own **Sequence Labeling** model](/resources/docs/TUTORIAL_TRAINING_NER.md) 
+[train your own **Sequence Labeling** model](/resources/docs/TUTORIAL_TRAINING_SEQUENCE_LABELER.md) 
 or how to [train your own **Text Classification** model](/resources/docs/TUTORIAL_TRAINING_TEXT_CLASSIFIER.md)
 
