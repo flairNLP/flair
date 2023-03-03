@@ -1,9 +1,12 @@
 import logging
+from collections import Counter
 from typing import Optional
 
 import torch
+from tqdm import tqdm
 
 import flair
+from flair.datasets import DataLoader
 from flair.nn.distance import (
     CosineDistance,
     EuclideanDistance,
@@ -17,17 +20,13 @@ logger = logging.getLogger("flair")
 
 class PrototypicalDecoder(torch.nn.Module):
     def __init__(
-        self,
-        num_prototypes: int,
-        embeddings_size: int,
-        prototype_size: Optional[int] = None,
-        distance_function: str = "euclidean",
-        use_radius: Optional[bool] = False,
-        min_radius: Optional[int] = 0,
-        unlabeled_distance: Optional[float] = None,
-        unlabeled_idx: Optional[int] = None,
-        learning_mode: Optional[str] = "joint",
-        normal_distributed_initial_prototypes: bool = False,
+            self,
+            num_prototypes: int,
+            embeddings_size: int,
+            prototype_size: Optional[int] = None,
+            distance_function: str = "euclidean",
+            normal_distributed_initial_prototypes: bool = False,
+            running_prototypes: bool = True,
     ):
         super().__init__()
 
@@ -48,21 +47,6 @@ class PrototypicalDecoder(torch.nn.Module):
         # if set, create initial prototypes from normal distribution
         if normal_distributed_initial_prototypes:
             self.prototype_vectors = torch.nn.Parameter(torch.normal(torch.zeros(num_prototypes, prototype_size)))
-
-        # if set, use a radius
-        self.prototype_radii: Optional[torch.nn.Parameter] = None
-        if use_radius:
-            self.prototype_radii = torch.nn.Parameter(torch.ones(num_prototypes), requires_grad=True)
-
-        self.min_radius = min_radius
-        self.learning_mode = learning_mode
-
-        assert (unlabeled_idx is None) == (
-            unlabeled_distance is None
-        ), "'unlabeled_idx' and 'unlabeled_distance' should either both be set or both not be set."
-
-        self.unlabeled_idx = unlabeled_idx
-        self.unlabeled_distance = unlabeled_distance
 
         self._distance_function = distance_function
 
@@ -87,37 +71,105 @@ class PrototypicalDecoder(torch.nn.Module):
     def num_prototypes(self):
         return self.prototype_vectors.size(0)
 
-    def forward(self, embedded):
-        if self.learning_mode == "learn_only_map_and_prototypes":
-            embedded = embedded.detach()
-
+    def forward(self, embedded, return_prototypes: bool = False):
         # decode embeddings into prototype space
         if self.metric_space_decoder is not None:
             encoded = self.metric_space_decoder(embedded)
         else:
             encoded = embedded
 
-        prot = self.prototype_vectors
-        radii = self.prototype_radii
+        if return_prototypes:
+            return encoded
 
-        if self.learning_mode == "learn_only_prototypes":
-            encoded = encoded.detach()
-
-        if self.learning_mode == "learn_only_embeddings_and_map":
-            prot = prot.detach()
-
-            if radii is not None:
-                radii = radii.detach()
-
-        distance = self.distance(encoded, prot)
-
-        if radii is not None:
-            distance /= self.min_radius + torch.nn.functional.softplus(radii)
-
-        # if unlabeled distance is set, mask out loss to unlabeled class prototype
-        if self.unlabeled_distance:
-            distance[..., self.unlabeled_idx] = self.unlabeled_distance
+        distance = self.distance(encoded, self.prototype_vectors)
 
         scores = -distance
 
         return scores
+
+    def calculate_first_prototypes(self, classifier, sentences):
+        """
+        Function that calclues a prototype for each class based on the first embedding in the whole dataset
+        :param dataset: dataset for which to calculate prototypes
+        :param mini_batch_size: number of sentences to embed at same time
+        :return:
+        """
+        self.prototype_vectors = torch.nn.Parameter(torch.normal(torch.zeros(self.num_prototypes, self.prototype_size)))
+        self.prototype_vectors.requires_grad = False
+
+        from flair.nn import DefaultClassifier
+        classifier: DefaultClassifier = classifier
+
+        label_dictionary = classifier.label_dictionary
+        handled = set()
+
+        for sentence in tqdm(sentences):
+
+            labels = [label.value for label in sentence.get_labels(classifier.label_type)]
+
+            if all(label in handled for label in labels):
+                continue
+
+            # get the data points for which to predict labels
+            data_points = classifier._get_data_points_for_batch([sentence])
+
+            # pass data points through network to get encoded data point tensor
+            data_point_tensor = classifier._encode_data_points([sentence], data_points)
+            data_point_tensor = data_point_tensor.detach().to('cpu')
+
+            for idx, data_point in enumerate(data_points):
+                label_value = data_point.get_label(classifier.label_type).value
+                if label_value not in handled:
+                    self.prototype_vectors[label_dictionary.get_idx_for_item(label_value)] \
+                        = data_point_tensor[idx]
+                    # print(data_point_tensor[0, idx].size())
+                    # print(data_point_tensor[idx].size())
+                    handled.add(label_value)
+
+        self.prototype_vectors.requires_grad = True
+
+
+    def calculate_average_prototypes(self, classifier, sentences):
+        """
+        Function that calclues a prototype for each class based on the first embedding in the whole dataset
+        :param dataset: dataset for which to calculate prototypes
+        :param mini_batch_size: number of sentences to embed at same time
+        :return:
+        """
+        # reset prototypes for all classes
+        self.prototype_vectors = torch.nn.Parameter(torch.normal(torch.zeros(self.num_prototypes, self.prototype_size)))
+        self.prototype_vectors.requires_grad = False
+
+        from flair.nn import DefaultClassifier
+        classifier: DefaultClassifier = classifier
+
+        label_dictionary = classifier.label_dictionary
+
+        counter = Counter()
+        for sentence in sentences:
+            counter.update([token.get_label(classifier.label_type).value for token in sentence])
+
+        dataloader = DataLoader(sentences, batch_size=32)
+
+        for batch in tqdm(dataloader):
+
+            data_points = classifier._get_data_points_for_batch(batch)
+
+            # pass data points through network to get encoded data point tensor
+            data_point_tensor = classifier._encode_data_points(batch, data_points)
+
+            for idx, data_point in enumerate(data_points):
+                label = data_point.get_label(classifier.label_type).value
+
+                # add up prototypes
+                self.prototype_vectors[label_dictionary.get_idx_for_item(label)] \
+                    += data_point_tensor[idx]
+
+        for label, count in counter.most_common():
+            # print(label, count, self.prototype_vectors[label_dictionary.get_idx_for_item(label)][:4])
+            average_prototype = self.prototype_vectors[label_dictionary.get_idx_for_item(label)] / count
+            self.prototype_vectors[label_dictionary.get_idx_for_item(label)] = average_prototype
+            # print(self.prototype_vectors[label_dictionary.get_idx_for_item(label)][:4])
+
+        # ads
+        self.prototype_vectors.requires_grad = True
