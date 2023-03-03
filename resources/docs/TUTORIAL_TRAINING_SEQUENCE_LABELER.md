@@ -70,7 +70,8 @@ in [Schweter and Akbik (2021)](https://arxiv.org/abs/2011.06993).
 ## Training a Named Entity Recognition (NER) Model with Flair Embeddings
 
 Alternatively to fine-tuning a very large transformer, you can use a classic training setup without fine-tuning.
-In this case, the embeddings remain frozen. You learn a classic LSTM-CRF on top of a stack of embeddings: 
+In the classic setup, you learn a LSTM-CRF on top of frozen embeddings. We typically use a 'stack' that combines
+Flair and GloVe embeddings:
 
 ```python
 from flair.datasets import CONLL_03
@@ -102,8 +103,7 @@ embeddings = StackedEmbeddings(embeddings=embedding_types)
 tagger = SequenceTagger(hidden_size=256,
                         embeddings=embeddings,
                         tag_dictionary=label_dict,
-                        tag_type=label_type,
-                        use_crf=True)
+                        tag_type=label_type)
 
 # 6. initialize trainer
 trainer = ModelTrainer(tagger, corpus)
@@ -143,7 +143,6 @@ print(label_dict)
 
 # 4. initialize embeddings
 embedding_types = [
-
     WordEmbeddings('glove'),
     FlairEmbeddings('news-forward'),
     FlairEmbeddings('news-backward'),
