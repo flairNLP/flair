@@ -70,7 +70,7 @@ in [Schweter and Akbik (2021)](https://arxiv.org/abs/2011.06993).
 ## Training a Named Entity Recognition (NER) Model with Flair Embeddings
 
 Alternatively to fine-tuning a very large transformer, you can use a classic training setup without fine-tuning.
-In this case, the embeddings remain frozen. You learn a classic RNN-CRF on top of a stack of embeddings: 
+In this case, the embeddings remain frozen. You learn a classic LSTM-CRF on top of a stack of embeddings: 
 
 ```python
 from flair.datasets import CONLL_03
