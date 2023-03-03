@@ -3,8 +3,7 @@
 Sequence labeling models are used to model problems such as named entity recognition (NER) and
 part-of-speech (PoS) tagging.
 
-This chapter shows a few example scripts to train state-of-the-art NER models and other taggers.
-
+This tutorial section show you how to train state-of-the-art NER models and other taggers in Flair.
 
 ## Training a Named Entity Recognition (NER) Model with Transformers
 
