@@ -419,4 +419,10 @@ This downloads and sets up everything you need to train your model.
 
 ## Next
 
-You can now look into [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).
+Learn [how to load your own dataset](/resources/docs/TUTORIAL_CORPUS_CUSTOM.md) if
+you want to use a dataset that is not prepared in Flair.
+
+Alternatively, jump directly into the sections that show how to 
+train your own **Sequence Labeling** model](/resources/docs/TUTORIAL_TRAINING_NER.md) 
+or how to [train your own **Text Classification** model](/resources/docs/TUTORIAL_TRAINING_TEXT_CLASSIFIER.md)
+
