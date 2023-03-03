@@ -1,10 +1,11 @@
+import typing
 from typing import List
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Sentence, TextPair
+from flair.data import Corpus, Sentence, TextPair, _iter_dataset
 
 
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
@@ -37,6 +38,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             **classifierargs,
             embeddings=embeddings,
             final_embedding_size=2 * embeddings.embedding_length if embed_separately else embeddings.embedding_length,
+            should_embed_sentence=False,
         )
 
         self._label_type = label_type
@@ -47,11 +49,11 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             # set separator to concatenate two sentences
             self.sep = " "
             if isinstance(
-                self.document_embeddings,
+                self.embeddings,
                 flair.embeddings.document.TransformerDocumentEmbeddings,
             ):
-                if self.document_embeddings.tokenizer.sep_token:
-                    self.sep = " " + str(self.document_embeddings.tokenizer.sep_token) + " "
+                if self.embeddings.tokenizer.sep_token:
+                    self.sep = " " + str(self.embeddings.tokenizer.sep_token) + " "
                 else:
                     self.sep = " [SEP] "
 
@@ -92,9 +94,6 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             "document_embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
-            "multi_label": self.multi_label,
-            "multi_label_threshold": self.multi_label_threshold,
-            "weight_dict": self.weight_dict,
             "embed_separately": self.embed_separately,
         }
         return model_state
@@ -106,8 +105,11 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             embeddings=state.get("document_embeddings"),
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type"),
-            multi_label=state.get("multi_label_threshold", 0.5),
-            loss_weights=state.get("weight_dict"),
             embed_separately=state.get("embed_separately"),
             **kwargs,
         )
+
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+        for sentence_pair in _iter_dataset(corpus.get_all_sentences()):
+            yield [t.text for t in sentence_pair.first]
+            yield [t.text for t in sentence_pair.second]

@@ -1,4 +1,5 @@
 import logging
+import typing
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -9,22 +10,22 @@ from tqdm import tqdm
 
 import flair
 import flair.embeddings
-from flair.data import Dictionary, Sentence
+from flair.data import Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings.base import load_embeddings
+from flair.nn.model import ReduceTransformerVocabMixin
 from flair.training_utils import MetricRegression, Result, store_embeddings
 
 log = logging.getLogger("flair")
 
 
-class TextRegressor(flair.nn.Model[Sentence]):
+class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
     def __init__(
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_name: str = "label",
     ):
         super().__init__()
-        log.info("Using REGRESSION - experimental")
 
         self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
         self.label_name = label_name
@@ -234,3 +235,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
         from typing import cast
 
         return cast("TextRegressor", super().load(model_path=model_path))
+
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+        for sentence in _iter_dataset(corpus.get_all_sentences()):
+            yield [t.text for t in sentence]
