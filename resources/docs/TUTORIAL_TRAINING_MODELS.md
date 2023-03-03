@@ -159,7 +159,7 @@ Showing us that our label dictionary has 18 PoS tags, including one generic tag 
 ### Step 3: Initialize the Model
 
 Depending on what you want to do, you need to initialize the appropriate model type. For sequence labeling 
-(NER, part-of-speech tagging) you need the SequenceLabeler. For text classification you need to TextClassifier.
+(NER, part-of-speech tagging) you need the `SequenceLabeler`. For text classification you need the `TextClassifier.`
 For each model type, we are creating dedicated tutorials to better explain what they do.
 
 For this example, we use the SequenceLabeler since we do part-of-speech tagging: 
@@ -167,9 +167,9 @@ For this example, we use the SequenceLabeler since we do part-of-speech tagging:
 ```python
 # 5. initialize sequence tagger
 model = SequenceTagger(hidden_size=256,
-                        embeddings=embeddings,
-                        tag_dictionary=label_dict,
-                        tag_type=label_type)
+                       embeddings=embeddings,
+                       tag_dictionary=label_dict,
+                       tag_type=label_type)
 ```
 
 Printing it will give you the PyTorch model that is initialized. 
