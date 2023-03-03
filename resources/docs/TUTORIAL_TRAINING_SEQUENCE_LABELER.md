@@ -58,8 +58,8 @@ trainer.fine_tune('resources/taggers/sota-ner-flert',
                   )
 ```
 
-As you can see, we use 'xlm-roberta-large' embeddings, enable fine-tuning and set use_context to True. 
-We also deactivate the RNN, CRF and reprojection in the SequenceTagger. This is because the 
+As you can see, we use 'xlm-roberta-large' embeddings, enable fine-tuning and set `use_context` to True. 
+We also deactivate the RNN, CRF and reprojection in the `SequenceTagger`. This is because the 
 transformer is so powerful that it does not need these components. We then fine-tune the model with a very small
 learning rate on the corpus.
 
