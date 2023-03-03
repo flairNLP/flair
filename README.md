@@ -81,7 +81,9 @@ This should print:
 Sentence: "I love Berlin ." → ["Berlin"/LOC]
 ```
 
-This means that "Berlin" was tagged as a **location entity** in this sentence. (Check the [NER tutorial](/resources/docs/TUTORIAL_TAGGING_NER.md) for more details.)
+This means that "Berlin" was tagged as a **location entity** in this sentence. 
+
+   * *to learn more about NER tagging in Flair, check out our [NER tutorial](/resources/docs/TUTORIAL_TAGGING_NER.md)!*
 
 
 ### Example 2: Detect Sentiment 
@@ -112,7 +114,9 @@ This should print:
 Sentence[4]: "I love Berlin ." → POSITIVE (0.9983)
 ```
 
-This means that the sentence "I love Berlin" was tagged as having POSITIVE sentiment. (Check the text classification tutorial for more details.)
+This means that the sentence "I love Berlin" was tagged as having **POSITIVE** sentiment. 
+
+   * *to learn more about sentiment analysis in Flair, check out our [sentiment analysis tutorial](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)!*
 
 ## Tutorials
 
