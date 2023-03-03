@@ -13,4 +13,5 @@ The tutorial consists of the following chapters:
 * [Tutorial 4.4: How to train your own **Sequence Labeling** model](/resources/docs/TUTORIAL_TRAINING_NER.md) 
 * [Tutorial 4.5: How to train your own **Text Classification** model](/resources/docs/TUTORIAL_TRAINING_TEXT_CLASSIFIER.md)
 * [Tutorial 4.6: More features (resuming training / notes on speed)](/resources/docs/TUTORIAL_TRAINING_MORE.md)  
+
 Click on any of these above links to look into the respective tutorial chapters. 
