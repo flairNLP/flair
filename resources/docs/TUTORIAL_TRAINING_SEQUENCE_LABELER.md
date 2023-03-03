@@ -64,7 +64,7 @@ transformer is so powerful that it does not need these components. We then fine-
 learning rate on the corpus.
 
 This will give you state-of-the-art numbers similar to the ones reported
-in [Schweter and Akbik (2021)](https://arxiv.org/abs/2011.06993).
+in [Schweter and Akbik (2021)](https://arxiv.org/abs/2011.06993). 
 
 
 ## Training a Named Entity Recognition (NER) Model with Flair Embeddings
