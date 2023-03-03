@@ -137,4 +137,4 @@ tagger. Depending on your resources, you might want to play around with this par
 
 ## Next
 
-Go back to the [tagging overview tutorial](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md) to check out other model types in Flair. Or learn how to train your own NER model in our training tutorial.
+Go back to the [tagging overview tutorial](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md) to check out other model types in Flair. Or learn how to train your own sentiment analysis model in our [text classifier training tutorial]/resources/docs/TUTORIAL_TRAINING_TEXT_CLASSIFIER.md).
