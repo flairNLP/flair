@@ -58,7 +58,7 @@ from flair.nn import Classifier
 from flair.data import Sentence
 
 # load the model
-tagger = Classifier.load('linking')
+tagger = Classifier.load('linker')
 
 # make a sentence
 sentence = Sentence('Bayern played against Barcelona. The match took place in Barcelona.')
