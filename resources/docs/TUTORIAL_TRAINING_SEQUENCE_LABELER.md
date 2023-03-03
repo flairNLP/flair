@@ -3,8 +3,7 @@
 Sequence labeling models are used to model problems such as named entity recognition (NER) and
 part-of-speech (PoS) tagging.
 
-This chapter shows a few example scripts to train state-of-the-art NER models and other taggers.
-
+This tutorial section show you how to train state-of-the-art NER models and other taggers in Flair.
 
 ## Training a Named Entity Recognition (NER) Model with Transformers
 
@@ -59,19 +58,20 @@ trainer.fine_tune('resources/taggers/sota-ner-flert',
                   )
 ```
 
-As you can see, we use 'xlm-roberta-large' embeddings, enable fine-tuning and set use_context to True. 
-We also deactivate the RNN, CRF and reprojection in the SequenceTagger. This is because the 
+As you can see, we use 'xlm-roberta-large' embeddings, enable fine-tuning and set `use_context` to True. 
+We also deactivate the RNN, CRF and reprojection in the `SequenceTagger`. This is because the 
 transformer is so powerful that it does not need these components. We then fine-tune the model with a very small
 learning rate on the corpus.
 
 This will give you state-of-the-art numbers similar to the ones reported
-in [Schweter and Akbik (2021)](https://arxiv.org/abs/2011.06993).
+in [Schweter and Akbik (2021)](https://arxiv.org/abs/2011.06993). 
 
 
 ## Training a Named Entity Recognition (NER) Model with Flair Embeddings
 
 Alternatively to fine-tuning a very large transformer, you can use a classic training setup without fine-tuning.
-In this case, the embeddings remain frozen. You learn a classic RNN-CRF on top of a stack of embeddings: 
+In the classic setup, you learn a LSTM-CRF on top of frozen embeddings. We typically use a 'stack' that combines
+Flair and GloVe embeddings:
 
 ```python
 from flair.datasets import CONLL_03
@@ -103,8 +103,7 @@ embeddings = StackedEmbeddings(embeddings=embedding_types)
 tagger = SequenceTagger(hidden_size=256,
                         embeddings=embeddings,
                         tag_dictionary=label_dict,
-                        tag_type=label_type,
-                        use_crf=True)
+                        tag_type=label_type)
 
 # 6. initialize trainer
 trainer = ModelTrainer(tagger, corpus)
@@ -144,7 +143,6 @@ print(label_dict)
 
 # 4. initialize embeddings
 embedding_types = [
-
     WordEmbeddings('glove'),
     FlairEmbeddings('news-forward'),
     FlairEmbeddings('news-backward'),
@@ -223,6 +221,7 @@ trainer.train('resources/taggers/example-universal-pos',
 ```
 
 This gives you a multilingual model. Try experimenting with more languages!
+
 
 ## Next
 
