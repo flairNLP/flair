@@ -128,9 +128,8 @@ for sentence in sentences:
 This should print: 
 
 ```console
-Sentence[7]: "I first thought it was great." → POSITIVE (0.6549)
-Sentence[7]: "Then I realized it's terrible." → NEGATIVE (1.0)
-Sentence[11]: "But I came to the conclusion that it's great." → POSITIVE (0.9846)
+Sentence[5]: "Bayern played against Barcelona." → ["Bayern"/FC_Bayern_Munich, "Barcelona"/FC_Barcelona]
+Sentence[7]: "The match took place in Barcelona." → ["Barcelona"/Barcelona]
 ```
 
 Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
