@@ -44,8 +44,6 @@ trainer.fine_tune('resources/taggers/question-classification-with-transformer',
                   )
 ```
 
-*(If you don't have a big GPU to fine-tune transformers, try `DocumentPoolEmbeddings` or `DocumentRNNEmbeddings` instead; sometimes they work just as well!)*
-
 Once the model is trained you can load it to predict the class of new sentences. Just call the `predict` method of the
 model.
 
