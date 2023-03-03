@@ -13,7 +13,7 @@ Let's get started!
 
 ## Tagging and Linking Entities
 
-As of Flair 0.12 we ship an experimental entity linker trained on the Zelda dataset. The linker does not only
+As of Flair 0.12 we ship an **experimental entity linker** trained on the Zelda dataset. The linker does not only
 tag entities, but also attempts to link each entity to the corresponding Wikipedia URL if one exists. 
 
 To illustrate, let's use a short example text with two mentions of "Barcelona". The first refers to the football club
