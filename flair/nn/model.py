@@ -14,7 +14,7 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
-from flair.data import DT, DT2, Dictionary, Sentence
+from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
@@ -234,7 +234,13 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             )
 
 
-class Classifier(Model[DT], typing.Generic[DT], ABC):
+class ReduceTransformerVocabMixin(ABC):
+    @abstractmethod
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+        pass
+
+
+class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC):
     """Abstract base class for all Flair models that do classification,
     both single- and multi-label. It inherits from flair.nn.Model and adds an
     unified evaluate() function so that all classification models use the same
@@ -535,12 +541,16 @@ class Classifier(Model[DT], typing.Generic[DT], ABC):
             correct_string = " -> MISMATCH!\n" if g != p else ""
             # print info
             eval_line = (
-                f"{datapoint.to_original_text()}\n"
+                f"{datapoint.text}\n"
                 f" - Gold: {', '.join(label.value if label.data_point == datapoint else label.labeled_identifier for label in datapoint.get_labels(gold_label_type))}\n"
                 f" - Pred: {', '.join(label.value if label.data_point == datapoint else label.labeled_identifier for label in datapoint.get_labels('predicted'))}\n{correct_string}\n"
             )
             lines.append(eval_line)
         return lines
+
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+        for sentence in _iter_dataset(corpus.get_all_sentences()):
+            yield [t.text for t in sentence]
 
     @classmethod
     def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Classifier":
@@ -572,6 +582,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         decoder: Optional[torch.nn.Module] = None,
         inverse_model: bool = False,
         train_on_gold_pairs_only: bool = False,
+        should_embed_sentence: bool = True,
     ):
         super().__init__()
 
@@ -600,6 +611,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
         self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
         self.word_dropout = flair.nn.WordDropout(word_dropout)
+        self.should_embed_sentence = should_embed_sentence
 
         # loss weights and loss function
         self.weight_dict = loss_weights
@@ -693,7 +705,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
     def _encode_data_points(self, sentences: List[DT], data_points: List[DT2]):
         # embed sentences
-        self.embeddings.embed(sentences)
+        if self.should_embed_sentence:
+            self.embeddings.embed(sentences)
 
         # get a tensor of data points
         data_point_tensor = torch.stack([self._get_embedding_for_data_point(data_point) for data_point in data_points])
