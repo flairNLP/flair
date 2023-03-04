@@ -87,5 +87,4 @@ the text of label.data_point is: "Washington"
 
 ## Next
 
-Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
-text.
+You can check out all tutorial chapters listed above. We recommend starting with [Tutorial 2.1: How to use **Named Entity Recognition** models](/resources/docs/TUTORIAL_TAGGING_NER.md).
