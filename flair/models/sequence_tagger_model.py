@@ -340,7 +340,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         longest_token_sequence_in_batch: int = max(lengths)
         pre_allocated_zero_tensor = torch.zeros(
             self.embeddings.embedding_length * longest_token_sequence_in_batch,
-            dtype=torch.float,
+            dtype=self.linear.weight.dtype,
             device=flair.device,
         )
         all_embs = []

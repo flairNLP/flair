@@ -51,7 +51,7 @@ def pad_sequence_embeddings(all_hidden_states: List[torch.Tensor]) -> torch.Tens
             longest_token_sequence_in_batch = hidden_states.shape[0]
     pre_allocated_zero_tensor = torch.zeros(
         embedding_length * longest_token_sequence_in_batch,
-        dtype=torch.float,
+        dtype=all_hidden_states[0].dtype,
         device=flair.device,
     )
     all_embs = []
