@@ -63,7 +63,7 @@ Token[4]: "."
 ## Tokenization
 
 When you create a `Sentence` as above, the text is automatically tokenized (segmented into words)
-using the lightweight [segtok library](https://pypi.org/project/segtok/). 
+using [segtok](https://pypi.org/project/segtok/). 
    * If you want to use a different tokenizer, check out [this tutorial](/resources/docs/TUTORIAL_BASICS_TOKENIZATION.md). 
 
 ## Adding Labels
