@@ -47,7 +47,7 @@ A common question that gets asked is **how to access these predictions directly*
 the `get_labels()` method to iterate over all predictions:
 
 ```python
-for label in sentence.get_labels('ner'):
+for label in sentence.get_labels():
     print(label)
 ```
 This should print the two NER predictions:
