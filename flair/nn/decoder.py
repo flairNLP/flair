@@ -118,6 +118,7 @@ class PrototypicalDecoder(torch.nn.Module):
                 break
         print(f"Found {len(representative_sentences)} (of {len(sentences)}) sentences for {len(handled)} tags")
 
+        handled = set()
         dataloader = DataLoader(sentences, batch_size=mini_batch_size)
 
         for batch in tqdm(dataloader):
