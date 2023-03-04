@@ -222,17 +222,9 @@ The following datasets are supported:
 | 'NER_MULTI_XTREME'          | 176 languages            | [Xtreme](https://github.com/google-research/xtreme) corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages                                            |
 | 'WNUT_17'                   | English                  | [WNUT-17](https://noisy-text.github.io/2017/files/) emerging entity detection                                                                                                                     |
 
-<details>
-  <summary>Biomedical Named Entity Recognition (BioNER) datasets</summary>
-
 #### Biomedical Named Entity Recognition
 
 We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
-
-</details>
-
-<details>
-  <summary>Entity Linking (NEL) datasets</summary>
 
 #### Entity Linking
 | Object | Languages | Description |
@@ -244,12 +236,6 @@ We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 | 'NEL_ENGLISH_TWEEKI' | English  | ITTB Entity Linking corpus introduced in [Harandizadeh and Singh (2020)](https://aclanthology.org/2020.wnut-1.29.pdf) |
 | 'NEL_GERMAN_HIPE' | German  | [HIPE](https://impresso.github.io/CLEF-HIPE-2020/) Entity Linking corpus for historical German as a [sentence-segmented version](https://github.com/stefan-it/clef-hipe) |
 
-</details>
-
-
-<details>
-  <summary>Relation Extraction (RE) datasets</summary>
-
 #### Relation Extraction
 | Object | Languages | Description |
 | -------------    | ------------- |------------- |
@@ -258,10 +244,6 @@ We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 | 'RE_ENGLISH_TACRED' | English  |  [TAC Relation Extraction Dataset](https://nlp.stanford.edu/projects/tacred/) with 41 relations (download required) |
 | 'RE_ENGLISH_DRUGPROT' | English  |  [DrugProt corpus: Biocreative VII Track 1](https://zenodo.org/record/5119892#.YSdSaVuxU5k/) - drug and chemical-protein interactions |
 
-</details>
-
-<details>
-  <summary>GLUE Benchmark datasets</summary>
 
 #### GLUE Benchmark
 | Object | Languages | Description |
@@ -274,11 +256,6 @@ We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 | 'GLUE_MRPC' | English | The MRPC task from GLUE benchmark |
 | 'GLUE_QQP' | English | The Quora Question Pairs dataset where the task is to determine whether a pair of questions are semantically equivalent |
 | 'SUPERGLUE_RTE' | English | The RTE task from the SuperGLUE benchmark |
-
-</details>
-
-<details>
-  <summary>Universal Proposition Banks (UP) datasets</summary>
 
 #### Universal Proposition Banks
 
@@ -295,11 +272,6 @@ for the purpose of training multilingual frame detection systems.
 | 'UP_ITALIAN', | Italian  |  Universal Propositions for [Italian](https://github.com/System-T/UniversalPropositions/tree/master/UP_Italian) |
 | 'UP_SPANISH' | Spanish  |  Universal Propositions for [Spanish](https://github.com/System-T/UniversalPropositions/tree/master/UP_Spanish) |
 | 'UP_SPANISH_ANCORA' | Spanish (Ancora Corpus)  |  Universal Propositions for [Spanish](https://github.com/System-T/UniversalPropositions/tree/master/UP_Spanish-AnCora) |
-
-</details>
-
-<details>
-  <summary>Universal Dependency Treebanks (UD) datasets</summary>
 
 #### Universal Dependency Treebanks
 
@@ -340,11 +312,6 @@ for the purpose of training multilingual frame detection systems.
 | 'UD_TURKISH'       | Turkish           | Universal Dependency Treebank for [Tturkish](https://github.com/UniversalDependencies/UD_Turkish-IMST)                              |
 | 'UD_UKRAINIAN'     | Ukrainian         | Universal Dependency Treebank for [Ukrainian](https://github.com/UniversalDependencies/UD_Ukrainian-IU)                             |
 
-</details>
-
-<details>
-  <summary>Text Classification datasets</summary>
-
 #### Text Classification
 | Object | Languages | Description |
 | -------------    | ------------- |------------- |
@@ -364,11 +331,6 @@ for the purpose of training multilingual frame detection systems.
 | 'SENTEVAL_SST_GRANULAR' | English | Stanford sentiment treebank dataset of of [SentEval](https://github.com/facebookresearch/SentEval) with fine-grained sentiment annotation |
 | 'TREC_6', 'TREC_50' | English | The [TREC](http://cogcomp.org/Data/QA/QC/) question classification dataset |
 
-</details>
-
-<details>
-  <summary>Text Regression datasets</summary>
-
 #### Text Regression
 | Object | Languages | Description |
 | -------------    | ------------- |------------- |
@@ -376,11 +338,6 @@ for the purpose of training multilingual frame detection systems.
 | 'WASSA_FEAR' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (fear) |
 | 'WASSA_JOY' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (joy) |
 | 'WASSA_SADNESS' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (sadness) |
-
-</details>
-
-<details>
-  <summary>Other Sequence Labeling datasets</summary>
 
 #### Other Sequence Labeling
 
@@ -392,27 +349,11 @@ for the purpose of training multilingual frame detection systems.
 | 'KEYPHRASE_SEMEVAL2017' | English | Keyphrase dectection with [SEMEVAL2017](https://arxiv.org/abs/1704.02853) dataset (500 docs) from ScienceDirect, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
 | 'KEYPHRASE_SEMEVAL2010' | English | Keyphrase dectection with [SEMEVAL2010](https://www.aclweb.org/anthology/S10-1004/) dataset (~250 docs) from ACM Digital Library, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
 
-</details>
-
-<details>
-  <summary>Similarity Learning datasets</summary>
-
 #### Experimental: Similarity Learning
 | Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'FeideggerCorpus' | German |  [Feidegger](https://github.com/zalandoresearch/feidegger/) dataset fashion images and German-language descriptions  |
 | 'OpusParallelCorpus' | Any language pair | Parallel corpora of the [OPUS](http://opus.nlpl.eu/) project, currently supports only Tatoeba corpus |
-
-</details>
-
-So to load the IMDB corpus for sentiment text classification, simply do:
-
-```python
-import flair.datasets
-corpus = flair.datasets.IMDB()
-```
-
-This downloads and sets up everything you need to train your model.
 
 ## Next
 
