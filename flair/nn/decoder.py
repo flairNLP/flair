@@ -94,7 +94,9 @@ class PrototypicalDecoder(torch.nn.Module):
         :param mini_batch_size: number of sentences to embed at same time
         :return:
         """
-        self.prototype_vectors = torch.nn.Parameter(torch.normal(torch.zeros(self.num_prototypes, self.prototype_size)))
+        self.prototype_vectors = torch.nn.Parameter(torch.zeros(self.num_prototypes,
+                                                                self.prototype_size,
+                                                                device=flair.device))
         self.prototype_vectors.requires_grad = False
 
         from flair.nn import DefaultClassifier
