@@ -525,7 +525,7 @@ class CharacterEmbeddings(TokenEmbeddings):
             outputs = outputs.transpose(0, 1)
             chars_embeds_temp = torch.zeros(
                 (outputs.size(0), outputs.size(2)),
-                dtype=torch.float,
+                dtype=outputs.dtype,
                 device=flair.device,
             )
             for i, index in enumerate(output_lengths):
