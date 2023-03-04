@@ -87,7 +87,7 @@ class PrototypicalDecoder(torch.nn.Module):
 
         return scores
 
-    def calculate_first_prototypes(self, classifier, sentences):
+    def calculate_first_prototypes(self, classifier, sentences, mini_batch_size=16):
         """
         Function that calclues a prototype for each class based on the first embedding in the whole dataset
         :param dataset: dataset for which to calculate prototypes
@@ -103,31 +103,40 @@ class PrototypicalDecoder(torch.nn.Module):
         label_dictionary = classifier.label_dictionary
         handled = set()
 
+        representative_sentences = []
         for sentence in tqdm(sentences):
-
             labels = [label.value for label in sentence.get_labels(classifier.label_type)]
 
             if all(label in handled for label in labels):
                 continue
+            else:
+                representative_sentences.append(sentence)
+                for label in labels:
+                    handled.add(label)
+
+            if len(handled) == len(label_dictionary):
+                break
+        print(f"Found {len(representative_sentences)} (of {len(sentences)}) sentences for {len(handled)} tags")
+
+        dataloader = DataLoader(sentences, batch_size=mini_batch_size)
+
+        for batch in tqdm(dataloader):
 
             # get the data points for which to predict labels
-            data_points = classifier._get_data_points_for_batch([sentence])
+            data_points = classifier._get_data_points_for_batch(batch)
 
             # pass data points through network to get encoded data point tensor
-            data_point_tensor = classifier._encode_data_points([sentence], data_points)
-            data_point_tensor = data_point_tensor.detach().to('cpu')
+            data_point_tensor = classifier._encode_data_points(batch, data_points)
+            data_point_tensor = data_point_tensor.detach()
 
             for idx, data_point in enumerate(data_points):
                 label_value = data_point.get_label(classifier.label_type).value
                 if label_value not in handled:
                     self.prototype_vectors[label_dictionary.get_idx_for_item(label_value)] \
                         = data_point_tensor[idx]
-                    # print(data_point_tensor[0, idx].size())
-                    # print(data_point_tensor[idx].size())
                     handled.add(label_value)
 
         self.prototype_vectors.requires_grad = True
-
 
     def calculate_average_prototypes(self, classifier, sentences):
         """
