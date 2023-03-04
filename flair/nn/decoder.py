@@ -139,6 +139,10 @@ class PrototypicalDecoder(torch.nn.Module):
                         = data_point_tensor[idx]
                     handled.add(label_value)
 
+            # remove embeddings
+            for sentence in batch:
+                sentence.clear_embeddings()
+
         self.prototype_vectors.requires_grad = True
 
     def calculate_average_prototypes(self, classifier, sentences):
