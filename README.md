@@ -12,17 +12,17 @@ A very simple framework for **state-of-the-art NLP**. Developed by [Humboldt Uni
 Flair is:
 
 * **A powerful NLP library.** Flair allows you to apply our state-of-the-art natural language processing (NLP)
-models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS),
+models to your text, such as named entity recognition (NER), sentiment analysis, part-of-speech tagging (PoS),
   special support for [biomedical data](/resources/docs/HUNFLAIR.md),
  sense disambiguation and classification, with support for a rapidly growing number of languages.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and
-document embeddings, including our proposed **[Flair embeddings](https://www.aclweb.org/anthology/C18-1139/)**, BERT embeddings and ELMo embeddings.
+document embeddings, including our proposed [Flair embeddings](https://www.aclweb.org/anthology/C18-1139/) and various transformers.
 
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.11](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.12](https://github.com/flairNLP/flair/releases)!
 
 
 ## State-of-the-Art Models
@@ -37,7 +37,7 @@ Flair ships with state-of-the-art models for a range of NLP tasks. For instance,
 | Dutch  | Conll-03  (4-class)  |  **95.25**  | *93.7 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Dutch 4-class NER demo](https://huggingface.co/flair/ner-dutch-large)  |
 | Spanish  | Conll-03 (4-class)   |  **90.54** | *90.3 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 4-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
 
-**New:** Most Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are now hosted
+Many Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are also hosted
 on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?library=flair&sort=downloads)! You can browse models, check detailed information on how they were trained, and even try each model out online!
 
 
@@ -53,61 +53,91 @@ pip install flair
 
 Flair requires Python 3.7+. 
 
-### Example Usage
+### Example 1: Tag Entities in Text
 
-Let's run named entity recognition (NER) over an example sentence. All you need to do is make a `Sentence`, load
+Let's run **named entity recognition** (NER) over an example sentence. All you need to do is make a `Sentence`, load
 a pre-trained model and use it to predict tags for the sentence:
 
 ```python
 from flair.data import Sentence
-from flair.models import SequenceTagger
+from flair.nn import Classifier
 
 # make a sentence
 sentence = Sentence('I love Berlin .')
 
 # load the NER tagger
-tagger = SequenceTagger.load('ner')
+tagger = Classifier.load('ner')
 
 # run NER over sentence
 tagger.predict(sentence)
-```
 
-Done! The `Sentence` now has entity annotations. Print the sentence to see what the tagger found.
-
-```python
 # print the sentence with all annotations
 print(sentence)
-
-print('The following NER tags are found:')
-
-# iterate over entities and print each
-for entity in sentence.get_spans('ner'):
-    print(entity)
 ```
 
 This should print:
 
 ```console
 Sentence: "I love Berlin ." → ["Berlin"/LOC]
-
-The following NER tags are found:
-
-Span[2:3]: "Berlin" → LOC (0.999)
 ```
+
+This means that "Berlin" was tagged as a **location entity** in this sentence. 
+
+   * *to learn more about NER tagging in Flair, check out our [NER tutorial](/resources/docs/TUTORIAL_TAGGING_NER.md)!*
+
+
+### Example 2: Detect Sentiment 
+
+Let's run **sentiment analysis** over an example sentence to determine whether it is POSITIVE or NEGATIVE.
+Same code as above, just a different model: 
+
+```python
+from flair.data import Sentence
+from flair.nn import Classifier
+
+# make a sentence
+sentence = Sentence('I love Berlin .')
+
+# load the NER tagger
+tagger = Classifier.load('sentiment')
+
+# run NER over sentence
+tagger.predict(sentence)
+
+# print the sentence with all annotations
+print(sentence)
+```
+
+This should print:
+
+```console
+Sentence[4]: "I love Berlin ." → POSITIVE (0.9983)
+```
+
+This means that the sentence "I love Berlin" was tagged as having **POSITIVE** sentiment. 
+
+   * *to learn more about sentiment analysis in Flair, check out our [sentiment analysis tutorial](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)!*
 
 ## Tutorials
 
 We provide a set of **quick tutorials** to get you started with the library:
 
-* [Tutorial 1: Basics](/resources/docs/TUTORIAL_1_BASICS.md)
-* [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
-* [Tutorial 3: Embedding Words](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
-* [Tutorial 4: List of All Word Embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
-* [Tutorial 5: Embedding Documents](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
-* [Tutorial 6: Loading a Dataset](/resources/docs/TUTORIAL_6_CORPUS.md)
-* [Tutorial 7: Training a Model](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
-* [Tutorial 8: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
-* [Tutorial 9: Training a Zero Shot Text Classifier (TARS)](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
+1. [**Tutorial 1: Basics**](/resources/docs/TUTORIAL_FLAIR_BASICS.md)
+2. [**Tutorial 2: Tagging your Text**](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md)
+   * ... how to **tag entities** in your text → [*2.1*](/resources/docs/TUTORIAL_TAGGING_NER.md)
+   * ... how to use **sentiment analysis** → [*2.2*](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)
+   * ... how to use **entity linking**  → [*2.3*](/resources/docs/TUTORIAL_TAGGING_LINKING.md)
+   * ... how to use **part-of-speech tagging**   → [*2.4*](/resources/docs/TUTORIAL_TAGGING_POS.md)
+   * ... how to use **relation extraction** → [*2.5*](/resources/docs/TUTORIAL_TAGGING_RELATIONS.md)
+   * ... and more → [*full tutorial*](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md)
+3. [**Tutorial 3: Using Embeddings**](/resources/docs/TUTORIAL_EMBEDDINGS_OVERVIEW.md)
+4. [**Tutorial 4: Training a Model**](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md)
+   * ... how **model training generally works in Flair** → [4.1](/resources/docs/TUTORIAL_TRAINING_MODELS.md)
+   * ... how to **load a prepared dataset** → [4.2](/resources/docs/TUTORIAL_CORPUS_PREPARED.md)
+   * ... how to **load your own dataset** → [4.3](/resources/docs/TUTORIAL_CORPUS_CUSTOM.md)
+   * ... how to **train a sequence labeling model** (NER/PoS) → [4.4](/resources/docs/TUTORIAL_TRAINING_SEQUENCE_LABELER.md)
+   * ... how to **train a text classifier** (sentiment analysis, etc.)  → [4.5](/resources/docs/TUTORIAL_TRAINING_TEXT_CLASSIFIER.md)
+   * ... and more → [*full tutorial*](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md)
 
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you can embed your text with different word or document embeddings, and how you can train your own

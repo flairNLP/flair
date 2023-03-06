@@ -17,7 +17,7 @@ else:
     device = torch.device("cpu")
 
 # global variable: version
-__version__ = "0.11.3"
+__version__ = "0.12"
 
 # global variable: arrow symbol
 _arrow = " → "
