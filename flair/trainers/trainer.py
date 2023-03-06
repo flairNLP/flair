@@ -294,7 +294,7 @@ class ModelTrainer:
         weight_extractor = WeightExtractor(base_path)
 
         with contextlib.ExitStack() as context_stack:
-            if isinstance(self.model, ReduceTransformerVocabMixin):
+            if reduce_transformer_vocab and isinstance(self.model, ReduceTransformerVocabMixin):
                 transformer_embeddings = get_transformer_embeddings(self)
                 if not transformer_embeddings:
                     reduce_transformer_vocab = False
