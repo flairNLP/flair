@@ -20,7 +20,7 @@ class TestRelationExtractor(BaseModelTest):
         },
     )
     training_args = dict(
-        max_epochs=3,
+        max_epochs=4,
         mini_batch_size=2,
         learning_rate=0.1,
     )
