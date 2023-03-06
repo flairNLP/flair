@@ -86,7 +86,7 @@ To tag a German sentence, just load the appropriate model:
 ```python
 
 # load model
-tagger = Classifier.load('de-ner')
+tagger = Classifier.load('de-ner-large')
 
 # make German sentence
 sentence = Sentence('George Washington ging nach Washington.')
