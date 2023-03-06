@@ -118,3 +118,10 @@ can have one of three values:
    CUDA memory is often limited so large datasets will not fit into CUDA memory. However, if the dataset fits into CUDA
    memory, this option is the fastest one.
 
+### Reducing the memory food-print when using Transformers
+
+Especially when you use multilingual transformer embeddings such as [xlm-roberta-large](https://huggingface.co/xlm-roberta-large) or [xlm-v-base](facebook/xlm-v-base),
+you will notice, that those models contain plenty of tokens that are not contained in your training dataset.
+[transformer-smaller-training-vocab](https://github.com/helpmefindaname/transformer-smaller-training-vocab) is a library that temporarily reduces the vocabulary during training,
+and inserts the removed vocabulary again afterwards for consistent inference. Having the reduced vocabulary leads to less requirements in GPU-memory and it can lead to a faster training.
+The `ModelTrainer` integrates this library, all you need to do is to set the `reduce_transformer_vocab` parameter of the `train()` method to `True`
