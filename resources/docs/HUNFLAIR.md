@@ -35,7 +35,7 @@ Let's run named entity recognition (NER) over an example sentence. All you need 
 make a Sentence, load a pre-trained model and use it to predict tags for the sentence:
 ```python
 from flair.data import Sentence
-from flair.models import MultiTagger
+from flair.nn import Classifier
 from flair.tokenization import SciSpacyTokenizer
 
 # make a sentence and tokenize with SciSpaCy
@@ -43,16 +43,15 @@ sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fra
                     use_tokenizer=SciSpacyTokenizer())
 
 # load biomedical tagger
-tagger = MultiTagger.load("hunflair")
+tagger = Classifier.load("hunflair")
 
 # tag sentence
 tagger.predict(sentence)
 ```
 Done! The Sentence now has entity annotations. Let's print the entities found by the tagger:
 ```python
-for annotation_layer in sentence.annotation_layers.keys():
-    for entity in sentence.get_spans(annotation_layer):
-        print(entity)
+for entity in sentence.get_labels():
+    print(entity)
 ```
 This should print:
 ~~~
