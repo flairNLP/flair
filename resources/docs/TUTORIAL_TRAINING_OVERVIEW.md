@@ -1,4 +1,4 @@
-# Tutorial 4: Tagging your own Models
+# Tutorial 4: Training your own Models
 
 This tutorial shows you how to train your own NLP models with Flair. 
 
