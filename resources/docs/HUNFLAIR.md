@@ -36,11 +36,9 @@ make a Sentence, load a pre-trained model and use it to predict tags for the sen
 ```python
 from flair.data import Sentence
 from flair.nn import Classifier
-from flair.tokenization import SciSpacyTokenizer
 
 # make a sentence and tokenize with SciSpaCy
-sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome",
-                    use_tokenizer=SciSpacyTokenizer())
+sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome")
 
 # load biomedical tagger
 tagger = Classifier.load("hunflair")
