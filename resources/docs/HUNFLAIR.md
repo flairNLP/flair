@@ -23,21 +23,15 @@ Then, in your favorite virtual environment, simply do:
 ```
 pip install flair
 ```
-Furthermore, we recommend to install [SciSpaCy](https://allenai.github.io/scispacy/) for improved pre-processing
-and tokenization of scientific / biomedical texts:
- ```
-pip install scispacy==0.2.5
-pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz
-```
 
-#### Example Usage
+#### Example 1: Biomedical NER 
 Let's run named entity recognition (NER) over an example sentence. All you need to do is
 make a Sentence, load a pre-trained model and use it to predict tags for the sentence:
 ```python
 from flair.data import Sentence
 from flair.nn import Classifier
 
-# make a sentence and tokenize with SciSpaCy
+# make a sentence 
 sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome")
 
 # load biomedical tagger
@@ -52,12 +46,40 @@ for entity in sentence.get_labels():
     print(entity)
 ```
 This should print:
-~~~
+```console
 Span[0:2]: "Behavioral abnormalities" → Disease (0.6736)
 Span[9:12]: "Fragile X Syndrome" → Disease (0.99)
 Span[4:5]: "Fmr1" → Gene (0.838)
 Span[6:7]: "Mouse" → Species (0.9979)
-~~~
+```
+
+
+#### Example 2: Biomedical NER with Better Tokenization
+
+Scientific texts are difficult to tokenize. For this reason, we recommend to install [SciSpaCy](https://allenai.github.io/scispacy/) for improved pre-processing and tokenization of scientific / biomedical texts:
+ ```
+pip install scispacy==0.2.5
+pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz
+```
+
+Use this code to apply scientific tokenization: 
+
+```python
+from flair.data import Sentence
+from flair.nn import Classifier
+from flair.tokenization import SciSpacyTokenizer
+
+# make a sentence and tokenize with SciSpaCy
+sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome",
+                    use_tokenizer=SciSpacyTokenizer())
+
+# load biomedical tagger
+tagger = Classifier.load("hunflair")
+
+# tag sentence
+tagger.predict(sentence)
+```
+
 
 ## Comparison to other biomedical NER tools
 Tools for biomedical NER are typically trained and evaluated on rather small gold standard data sets.
