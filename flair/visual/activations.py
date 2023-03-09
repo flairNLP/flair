@@ -41,7 +41,6 @@ class Highlighter(object):
         colors = []
 
         for i, act in enumerate(activation):
-
             try:
                 colors.append(self.color_map[numpy.where(act > lookup)[0][-1]])
             except IndexError:
@@ -58,13 +57,11 @@ class Highlighter(object):
         return str_
 
     def highlight_selection(self, activations, text, file_="resources/data/highlight.html", n=10):
-
         ix = numpy.random.choice(activations.shape[1], size=n)
 
         rendered = ""
 
         for i in ix:
-
             rendered += self.highlight(activations[:, i], text)
 
         with open(file_, "w") as f:

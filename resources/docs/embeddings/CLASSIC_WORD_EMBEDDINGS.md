@@ -112,3 +112,8 @@ word_vectors.save('/path/to/converted')
 ```
 
 However, FastText embeddings have the functionality of returning vectors for out of vocabulary words using the sub-word information. If you want to use this then try `FastTextEmbeddings` class.
+
+## Next
+
+Now that you are familiar with classic word embeddings, check 
+out the [**`FlairEmbeddings`**](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) next!

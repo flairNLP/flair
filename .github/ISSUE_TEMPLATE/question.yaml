@@ -1,0 +1,14 @@
+name: Question
+description: Any question related to the usage of flair
+title: "[Question]: "
+labels: ["question"]
+assignees: []
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: Ask you question here
+      placeholder: A clear and concise description of what you want to know.
+    validations:
+      required: true

@@ -1,13 +1,12 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import torch
 
 import flair.embeddings
 import flair.nn
 from flair.data import Relation, Sentence
-from flair.embeddings import Embeddings
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -39,7 +38,11 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         relation_representation_length = 2 * embeddings.embedding_length
         if self.pooling_operation == "first_last":
             relation_representation_length *= 2
-        super(RelationExtractor, self).__init__(**classifierargs, final_embedding_size=relation_representation_length)
+        super(RelationExtractor, self).__init__(
+            embeddings=embeddings,
+            final_embedding_size=relation_representation_length,
+            **classifierargs,
+        )
 
         # set embeddings
         self.embeddings: flair.embeddings.TokenEmbeddings = embeddings
@@ -57,7 +60,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
         self.to(flair.device)
 
-    def _get_valid_relations(self, sentence: Sentence) -> List[Relation]:
+    def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Relation]:
         entity_pairs = []
         entity_spans = sentence.get_spans(self.entity_label_type)
 
@@ -83,18 +86,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
                 entity_pairs.append(relation)
         return entity_pairs
 
-    @property
-    def _inner_embeddings(self) -> Embeddings[Sentence]:
-        return self.embeddings
-
-    def _get_prediction_data_points(self, sentences: List[Sentence]) -> List[Relation]:
-        entity_pairs: List[Relation] = []
-
-        for sentence in sentences:
-            entity_pairs.extend(self._get_valid_relations(sentence))
-        return entity_pairs
-
-    def _embed_prediction_data_point(self, prediction_data_point: Relation) -> torch.Tensor:
+    def _get_embedding_for_data_point(self, prediction_data_point: Relation) -> torch.Tensor:
         span_1 = prediction_data_point.first
         span_2 = prediction_data_point.second
         embedding_names = self.embeddings.get_names()
@@ -116,7 +108,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
     def _print_predictions(self, batch, gold_label_type):
         lines = []
         for datapoint in batch:
-
             eval_line = f"\n{datapoint.to_original_text()}\n"
 
             for relation in datapoint.get_relations(gold_label_type):
@@ -134,7 +125,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.embeddings,
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "entity_label_type": self.entity_label_type,
@@ -147,7 +138,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-
         return super()._init_model_with_state_dict(
             state,
             embeddings=state.get("embeddings"),
@@ -167,7 +157,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
     @staticmethod
     def _fetch_model(model_name) -> str:
-
         model_map = {}
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
@@ -179,3 +168,9 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
 
         return model_name
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "RelationExtractor":
+        from typing import cast
+
+        return cast("RelationExtractor", super().load(model_path=model_path))

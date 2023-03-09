@@ -1,8 +1,9 @@
+import inspect
 import itertools
 import logging
 import typing
 import warnings
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -13,17 +14,17 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
-from flair import file_utils
-from flair.data import DT, DT2, Dictionary, Sentence
+from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
-from flair.file_utils import Tqdm
+from flair.embeddings.base import load_embeddings
+from flair.file_utils import Tqdm, load_torch_state
 from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
 
 
-class Model(torch.nn.Module, typing.Generic[DT]):
+class Model(torch.nn.Module, typing.Generic[DT], ABC):
     """Abstract base class for all downstream task models in Flair,
     such as SequenceTagger and TextClassifier.
     Every new type of model must implement these methods."""
@@ -35,16 +36,6 @@ class Model(torch.nn.Module, typing.Generic[DT]):
     def label_type(self):
         """Each model predicts labels of a certain type.
         TODO: can we find a better name for this?"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def forward(self, *args: torch.Tensor) -> torch.Tensor:
-        """Performs a forward pass on input tensors for backpropagation or prediction."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
-        """Creates the input tensors that will be passed trough the forward call."""
         raise NotImplementedError
 
     @abstractmethod
@@ -81,14 +72,24 @@ class Model(torch.nn.Module, typing.Generic[DT]):
         """Returns the state dictionary for this model."""
         state_dict = {"state_dict": self.state_dict()}
 
+        # Always include the name of the Model class for which the state dict holds
+        state_dict["__cls__"] = self.__class__.__name__
+
         return state_dict
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
         """Initialize the model from a state dictionary."""
+        if "embeddings" in kwargs:
+            embeddings = kwargs.pop("embeddings")
+            if isinstance(embeddings, dict):
+                embeddings = load_embeddings(embeddings)
+            kwargs["embeddings"] = embeddings
+
         model = cls(**kwargs)
 
         model.load_state_dict(state["state_dict"])
+
         return model
 
     @staticmethod
@@ -107,7 +108,6 @@ class Model(torch.nn.Module, typing.Generic[DT]):
 
         # write out a "model card" if one is set
         if self.model_card is not None:
-
             # special handling for optimizer:
             # remember optimizer class and state dictionary
             if "training_parameters" in self.model_card:
@@ -140,29 +140,68 @@ class Model(torch.nn.Module, typing.Generic[DT]):
                 self.model_card["training_parameters"]["scheduler"] = scheduler
 
     @classmethod
-    def load(cls, model_path: Union[str, Path]):
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Model":
         """
         Loads the model from the given file.
-        :param model_path: the model file
+        :param model_path: the model file or the already loaded state dict
         :return: the loaded text classifier model
         """
-        model_file = cls._fetch_model(str(model_path))
+        # if this class is abstract, go through all inheriting classes and try to fetch and load the model
+        if inspect.isabstract(cls):
+            # get all non-abstract subclasses
+            subclasses = get_non_abstract_subclasses(cls)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            # load_big_file is a workaround byhttps://github.com/highway11git
-            # to load models on some Mac/Windows setups
-            # see https://github.com/zalandoresearch/flair/issues/351
-            f = file_utils.load_big_file(str(model_file))
-            state = torch.load(f, map_location="cpu")
+            # try to fetch the model for each subclass. if fetching is possible, load model and return it
+            for model_cls in subclasses:
+                try:
+                    new_model_path = model_cls._fetch_model(model_path)
+                    if new_model_path != model_path:
+                        return model_cls.load(new_model_path)
+                except Exception:
+                    # skip any invalid loadings, e.g. not found on huggingface hub
+                    continue
 
-        model = cls._init_model_with_state_dict(state)
+            # if the model cannot be fetched, load as a file
+            state = model_path if isinstance(model_path, dict) else load_torch_state(str(model_path))
 
-        if "model_card" in state:
-            model.model_card = state["model_card"]
+            # try to get model class from state
+            cls_name = state.pop("__cls__", None)
+            if cls_name:
+                for model_cls in subclasses:
+                    if cls_name == model_cls.__name__:
+                        return model_cls.load(state)
 
-        model.eval()
-        model.to(flair.device)
+            # older (flair 11.3 and below) models do not contain cls information. In this case, try all subclasses
+            for model_cls in subclasses:
+                # if str(model_cls) == "<class 'flair.models.pairwise_classification_model.TextPairClassifier'>": continue
+                try:
+                    model = model_cls.load(state)
+                    return model
+                except Exception as e:
+                    print(e)
+                    # skip any invalid loadings, e.g. not found on huggingface hub
+                    continue
+
+            raise ValueError(f"Could not find any model with name '{model_path}'")
+
+        else:
+            # if this class is not abstract, fetch the model and load it
+            if not isinstance(model_path, dict):
+                model_file = cls._fetch_model(str(model_path))
+                state = load_torch_state(model_file)
+            else:
+                state = model_path
+
+            if "__cls__" in state:
+                state.pop("__cls__")
+
+            model = cls._init_model_with_state_dict(state)
+
+            if "model_card" in state:
+                model.model_card = state["model_card"]
+
+            model.eval()
+            model.to(flair.device)
 
         return model
 
@@ -195,7 +234,13 @@ class Model(torch.nn.Module, typing.Generic[DT]):
             )
 
 
-class Classifier(Model[DT], typing.Generic[DT]):
+class ReduceTransformerVocabMixin(ABC):
+    @abstractmethod
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+        pass
+
+
+class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC):
     """Abstract base class for all Flair models that do classification,
     both single- and multi-label. It inherits from flair.nn.Model and adds an
     unified evaluate() function so that all classification models use the same
@@ -227,7 +272,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
             data_points = FlairDatapointDataset(data_points)
 
         with torch.no_grad():
-
             # loss calculation
             eval_loss = torch.zeros(1, device=flair.device)
             average_over = 0
@@ -244,10 +288,10 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
             sentence_id = 0
             for batch in Tqdm.tqdm(loader):
-
                 # remove any previously predicted labels
                 for datapoint in batch:
                     datapoint.remove_labels("predicted")
+
                 # predict for batch
                 loss_and_count = self.predict(
                     batch,
@@ -266,7 +310,6 @@ class Classifier(Model[DT], typing.Generic[DT]):
 
                 # get the gold labels
                 for datapoint in batch:
-
                     for gold_label in datapoint.get_labels(gold_label_type):
                         representation = str(sentence_id) + ": " + gold_label.unlabeled_identifier
 
@@ -498,15 +541,25 @@ class Classifier(Model[DT], typing.Generic[DT]):
             correct_string = " -> MISMATCH!\n" if g != p else ""
             # print info
             eval_line = (
-                f"{datapoint.to_original_text()}\n"
+                f"{datapoint.text}\n"
                 f" - Gold: {', '.join(label.value if label.data_point == datapoint else label.labeled_identifier for label in datapoint.get_labels(gold_label_type))}\n"
                 f" - Pred: {', '.join(label.value if label.data_point == datapoint else label.labeled_identifier for label in datapoint.get_labels('predicted'))}\n{correct_string}\n"
             )
             lines.append(eval_line)
         return lines
 
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+        for sentence in _iter_dataset(corpus.get_all_sentences()):
+            yield [t.text for t in sentence]
 
-class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Classifier":
+        from typing import cast
+
+        return cast("Classifier", super().load(model_path=model_path))
+
+
+class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
     """Default base class for all Flair models that do classification, both
     single- and multi-label. It inherits from flair.nn.Classifier and thus from
     flair.nn.Model. All features shared by all classifiers are implemented here,
@@ -517,6 +570,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
 
     def __init__(
         self,
+        embeddings: Embeddings,
         label_dictionary: Dictionary,
         final_embedding_size: int,
         dropout: float = 0.0,
@@ -528,9 +582,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         decoder: Optional[torch.nn.Module] = None,
         inverse_model: bool = False,
         train_on_gold_pairs_only: bool = False,
+        should_embed_sentence: bool = True,
     ):
-
         super().__init__()
+
+        # set the embeddings
+        self.embeddings = embeddings
 
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
@@ -554,6 +611,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         self.dropout: torch.nn.Dropout = torch.nn.Dropout(dropout)
         self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
         self.word_dropout = flair.nn.WordDropout(word_dropout)
+        self.should_embed_sentence = should_embed_sentence
 
         # loss weights and loss function
         self.weight_dict = loss_weights
@@ -584,59 +642,20 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         """Specify if a data point should be kept. That way you can remove for example empty texts.
         Return true if the data point should be kept and false if it should be removed.
         """
-        return True
+        return True if len(data_point) > 0 else False
 
     @abstractmethod
-    def _embed_prediction_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
+    def _get_embedding_for_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
         raise NotImplementedError()
 
-    @property
-    def _inner_embeddings(self) -> Optional[Embeddings[DT]]:
-        return None
-
-    def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
-        filtered_data_points = [dt for dt in data_points if self._filter_data_point(dt)]
-        if not filtered_data_points:
-            return (torch.zeros(0, self.final_embedding_size, device=flair.device),)
-        if self._inner_embeddings is not None:
-            self._inner_embeddings.embed(filtered_data_points)
-        embedding_list = []
-        for prediction_data_point in self._get_prediction_data_points(filtered_data_points):
-            embedding_list.append(self._embed_prediction_data_point(prediction_data_point).unsqueeze(0))
-
-        embedded_data_pairs = torch.cat(embedding_list, 0)
-
-        return (embedded_data_pairs,)
-
-    def _transform_embeddings(
-        self,
-        *args: torch.Tensor,
-    ) -> torch.Tensor:
-        """This method does applies a transformation through the model given a list of tensors as input.
-        Returns the embeddings that will ran trough a linear decoder layer to calculate logits.
-
-        If it is not overwritten, it will act as identity function for of the first tensor.
-        """
-        return args[0]
-
-    def forward(self, *args: torch.Tensor) -> torch.Tensor:
-        emb = self._transform_embeddings(*args)
-        emb = emb.unsqueeze(1)
-        emb = self.dropout(emb)
-        emb = self.locked_dropout(emb)
-        emb = self.word_dropout(emb)
-        emb = emb.squeeze(1)
-
-        if self.inverse_model:
-            emb = self.gradient_reversal(emb)
-
-        scores = self.decoder(emb)
-        return scores
-
     @abstractmethod
-    def _get_prediction_data_points(self, sentences: List[DT]) -> List[DT2]:
+    def _get_data_points_from_sentence(self, sentence: DT) -> List[DT2]:
         """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
         raise NotImplementedError
+
+    def _get_data_points_for_batch(self, sentences: List[DT]) -> List[DT2]:
+        """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
+        return [data_point for sentence in sentences for data_point in self._get_data_points_from_sentence(sentence)]
 
     def _get_label_of_datapoint(self, data_point: DT2) -> List[str]:
         """Extracts the labels from the data points.
@@ -661,14 +680,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
         else:
             self._multi_label_threshold = {"default": x}
 
-    def get_scores_and_labels(self, batch: List[DT]) -> Tuple[torch.Tensor, List[List[str]]]:
-        batch = [dp for dp in batch if self._filter_data_point(dp)]
-        predict_data_points = self._get_prediction_data_points(batch)
-        labels = [self._get_label_of_datapoint(pdp) for pdp in predict_data_points]
-        embedded_tensor = self._prepare_tensors(batch)
-        logits = self._transform_embeddings(*embedded_tensor)
-        return logits, labels
-
     def _prepare_label_tensor(self, prediction_data_points: List[DT2]) -> torch.Tensor:
         labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points]
         if self.multi_label:
@@ -692,28 +703,56 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
                 device=flair.device,
             )
 
-    def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
+    def _encode_data_points(self, sentences: List[DT], data_points: List[DT2]):
+        # embed sentences
+        if self.should_embed_sentence:
+            self.embeddings.embed(sentences)
 
+        # get a tensor of data points
+        data_point_tensor = torch.stack([self._get_embedding_for_data_point(data_point) for data_point in data_points])
+
+        # do dropout
+        data_point_tensor = data_point_tensor.unsqueeze(1)
+        data_point_tensor = self.dropout(data_point_tensor)
+        data_point_tensor = self.locked_dropout(data_point_tensor)
+        data_point_tensor = self.word_dropout(data_point_tensor)
+        data_point_tensor = data_point_tensor.squeeze(1)
+
+        return data_point_tensor
+
+    def _mask_scores(self, scores, data_points):
+        return scores
+
+    def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
         # make a forward pass to produce embedded data points and labels
         sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
-        predict_data_points = self._get_prediction_data_points(sentences)
-        labels = self._prepare_label_tensor(predict_data_points)
 
-        # no loss can be calculated if there are no labels
-        if labels.size(0) == 0:
+        # get the data points for which to predict labels
+        data_points = self._get_data_points_for_batch(sentences)
+        if len(data_points) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
-        embedded_tensor = self._prepare_tensors(sentences)
-        scores = self.forward(*embedded_tensor)
+        # get their gold labels as a tensor
+        label_tensor = self._prepare_label_tensor(data_points)
+        if label_tensor.size(0) == 0:
+            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+
+        # pass data points through network to get encoded data point tensor
+        data_point_tensor = self._encode_data_points(sentences, data_points)
+
+        # decode
+        scores = self.decoder(data_point_tensor)
+
+        # an optional masking step (no masking in most cases)
+        scores = self._mask_scores(scores, data_points)
 
         # calculate the loss
-        return self._calculate_loss(scores, labels)
+        return self._calculate_loss(scores, label_tensor)
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
         return self.loss_function(scores, labels), labels.size(0)
 
     def _sort_data(self, data_points: List[DT]) -> List[DT]:
-
         if len(data_points) == 0:
             return []
 
@@ -759,6 +798,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             if not isinstance(sentences, list):
                 sentences = [sentences]
 
+            if isinstance(sentences[0], Sentence):
+                Sentence.set_context_for_sentences(typing.cast(List[Sentence], sentences))
+
             reordered_sentences = self._sort_data(sentences)
 
             if len(reordered_sentences) == 0:
@@ -780,21 +822,22 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
             for batch in batches:
-
+                # filter data points in batch
                 batch = [dp for dp in batch if self._filter_data_point(dp)]
 
                 # stop if all sentences are empty
                 if not batch:
                     continue
 
-                data_points = self._get_prediction_data_points(batch)
+                data_points = self._get_data_points_for_batch(batch)
 
                 if not data_points:
                     continue
 
-                tensors = self._prepare_tensors(batch)
-
-                scores = self.forward(*tensors)
+                # pass data points through network and decode
+                data_point_tensor = self._encode_data_points(batch, data_points)
+                scores = self.decoder(data_point_tensor)
+                scores = self._mask_scores(scores, data_points)
 
                 # if anything could possibly be predicted
                 if len(data_points) > 0:
@@ -893,3 +936,20 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2]):
             state["decoder"] = self.decoder
 
         return state
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "DefaultClassifier":
+        from typing import cast
+
+        return cast("DefaultClassifier", super().load(model_path=model_path))
+
+
+def get_non_abstract_subclasses(cls):
+    all_subclasses = []
+    for subclass in cls.__subclasses__():
+        all_subclasses.extend(get_non_abstract_subclasses(subclass))
+        if inspect.isabstract(subclass):
+            continue
+        all_subclasses.append(subclass)
+
+    return all_subclasses

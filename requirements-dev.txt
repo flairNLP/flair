@@ -1,4 +1,5 @@
 pytest>=7.0.0,!=7.2.0
+mypy==0.982
 pytest-mypy
 pytest-isort
 pytest-flake8
@@ -9,3 +10,5 @@ types-dataclasses
 types-tabulate
 types-requests
 pytest-github-actions-annotate-failures
+konoha<5.0.0,>=4.0.0
+pre-commit

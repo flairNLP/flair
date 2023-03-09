@@ -1,0 +1,33 @@
+name: Feature/Enhancement request
+description: Suggest an idea for this project
+title: "[Feature]: "
+labels: ["feature"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to to provide an idea to improve flair!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: Is your feature/enhancement request related to a problem? Please describe.
+      placeholder: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+    validations:
+      required: false
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solution
+      description: Describe the solution you'd like
+      placeholder: How should your problem ideally be solved?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add anything worthy to add that wasn't mentioned yet.
+    validations:
+      required: false

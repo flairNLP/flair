@@ -6,8 +6,8 @@ def test_sentence_context():
     sentence = Sentence("George Washington ging nach Washington.")
     sentence._next_sentence = Sentence("Das ist eine schöne Stadt.")
 
-    assert sentence.right_context(1) == ["Das"]
-    assert sentence.right_context(10) == ["Das", "ist", "eine", "schöne", "Stadt", "."]
+    assert sentence.right_context(1) == [sentence._next_sentence[0]]
+    assert sentence.right_context(10) == sentence._next_sentence.tokens[:10]
 
 
 def test_equality():
@@ -46,3 +46,30 @@ def test_token_labeling():
     sentence[0].add_label("pos", "erstes")
     assert [label.value for label in sentence.get_labels("pos")] == ["first", "primero", "erstes"]
     assert sentence[0].get_label("pos").value == "first"
+
+
+def test_start_end_position_untokenized() -> None:
+    sentence: Sentence = Sentence("This is a sentence.", start_position=10)
+    assert sentence.start_position == 10
+    assert sentence.end_position == 29
+    assert [(token.start_position, token.end_position) for token in sentence] == [
+        (0, 4),
+        (5, 7),
+        (8, 9),
+        (10, 18),
+        (18, 19),
+    ]
+
+
+def test_start_end_position_pretokenized() -> None:
+    # Initializing a Sentence this way assumes that there is a space after each token
+    sentence: Sentence = Sentence(["This", "is", "a", "sentence", "."], start_position=10)
+    assert sentence.start_position == 10
+    assert sentence.end_position == 30
+    assert [(token.start_position, token.end_position) for token in sentence] == [
+        (0, 4),
+        (5, 7),
+        (8, 9),
+        (10, 18),
+        (19, 20),
+    ]
