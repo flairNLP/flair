@@ -259,8 +259,8 @@ class MultitaskModel(flair.nn.Classifier):
         model_map["hunflair-paper"] = "/".join([hu_path, "bioner", "hunflair-paper.pt"])
 
         # entity linker
-        model_map["linker"] = "/".join([hu_path, "zelda", "v1", "zelda-v1.pt"])
-        model_map["zelda"] = "/".join([hu_path, "zelda", "v1", "zelda-v1.pt"])
+        model_map["linker"] = "/".join([hu_path, "zelda", "v2", "zelda-v2.pt"])
+        model_map["zelda"] = "/".join([hu_path, "zelda", "v2", "zelda-v2.pt"])
 
         cache_dir = Path("models")
         if model_name in model_map:
