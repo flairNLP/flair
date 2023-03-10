@@ -455,13 +455,9 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
 
             if "micro avg" in classification_report_dict:
                 # micro average is only computed if zero-label exists (for instance "O")
-                precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
-                recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
                 micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
             else:
                 # if no zero-label exists (such as in POS tagging) micro average is equal to accuracy
-                precision_score = round(classification_report_dict["accuracy"], 4)
-                recall_score = round(classification_report_dict["accuracy"], 4)
                 micro_f_score = round(classification_report_dict["accuracy"], 4)
 
             # same for the main score
@@ -477,7 +473,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 "Could be an error in your corpus or how you "
                 "initialize the trainer!"
             )
-            accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.0
+            accuracy_score = micro_f_score = macro_f_score = main_score = 0.0
             classification_report = ""
             classification_report_dict = {}
 
@@ -489,20 +485,29 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             "\n\nBy class:\n" + classification_report
         )
 
-        # line for log file
-        log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
+        scores: Dict[Union[Tuple[str, ...], str], Any] = {}
+
+        for avg_type in ("micro avg", "macro avg"):
+            for metric_type in ("f1-score", "precision", "recall"):
+                if avg_type == "micro avg" and avg_type not in classification_report_dict:
+                    value = classification_report_dict["accuracy"]
+
+                else:
+                    value = classification_report_dict[avg_type][metric_type]
+
+                scores[(avg_type, metric_type)] = value
+
+        scores["accuracy"] = accuracy_score
+        scores["loss"] = eval_loss.item()
 
         if average_over > 0:
             eval_loss /= average_over
 
         result = Result(
             main_score=main_score,
-            log_line=log_line,
-            log_header=log_header,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            loss=eval_loss.item(),
+            scores=scores,
         )
 
         return result

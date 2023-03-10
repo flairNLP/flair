@@ -22,18 +22,20 @@ class Result(object):
     def __init__(
         self,
         main_score: float,
-        log_header: str,
-        log_line: str,
         detailed_results: str,
-        loss: float,
         classification_report: dict = {},
+        scores: dict = {},
     ):
+        assert "loss" in scores, "No loss provided."
+
         self.main_score: float = main_score
-        self.log_header: str = log_header
-        self.log_line: str = log_line
+        self.scores = scores
         self.detailed_results: str = detailed_results
         self.classification_report = classification_report
-        self.loss: float = loss
+
+    @property
+    def loss(self):
+        return self.scores["loss"]
 
     def __str__(self):
         return f"{str(self.detailed_results)}\nLoss: {self.loss}'"

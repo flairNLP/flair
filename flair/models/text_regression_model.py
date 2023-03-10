@@ -186,8 +186,6 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
-            log_line = f"{metric.mean_squared_error()}\t{metric.spearmanr()}" f"\t{metric.pearsonr()}"
-            log_header = "MSE\tSPEARMAN\tPEARSON"
 
             detailed_result = (
                 f"AVG: mse: {metric.mean_squared_error():.4f} - "
@@ -198,10 +196,14 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
 
             result: Result = Result(
                 main_score=metric.pearsonr(),
-                loss=eval_loss.item(),
-                log_header=log_header,
-                log_line=log_line,
                 detailed_results=detailed_result,
+                scores={
+                    "loss": eval_loss.item(),
+                    "mse": metric.mean_squared_error(),
+                    "mae": metric.mean_absolute_error(),
+                    "pearson": metric.pearsonr(),
+                    "spearman": metric.spearmanr(),
+                },
             )
 
             return result
