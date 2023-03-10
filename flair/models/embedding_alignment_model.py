@@ -1,15 +1,12 @@
 import logging
 import itertools
-from pathlib import Path
 from typing import List, Tuple, Union
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Corpus, Sentence, Dictionary
-from flair.embeddings import Embeddings
-from flair.file_utils import cached_path
+from flair.data import Corpus, Sentence
 from flair.datasets import DataLoader
 
 from collections import Counter
@@ -37,9 +34,12 @@ class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
         :param corpus: The dataset used to train the model. The model uses the training set for the KNN algorithm.
         :param label_type: Name of the gold labels to use.
 
-        # TODO: overwrite evaluate method
-        # 1) Training set has to be re-embedded after each epoch (main reason to overwrite evaluate)
-        # 2) KNN does not have a loss value (as expected in other classifier models)
+        # TODO:
+        # 1) Intuition behind sampling of 2 document pairs is wrong.
+        # Now it's creating all possible 2 pair combinations.
+        # But it should be: each document in a batch has exactly two pairs, one of the same class and one of the different class
+        # Each epoch needs to have 2n training samples (regarding the paper)
+        # 2) Possible improvement: calculating cos similarity for a full batch in paralell (_calculate_loss method)
         """
 
         super(EmbeddingAlignmentlassifier, self).__init__(**classifierargs)
@@ -65,6 +65,9 @@ class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
     def _create_sentence_pair_label_map(self, sentences: List[Sentence]) -> List[Tuple[Tuple[int, int], int]]:
 
         sentence_idx = range(len(sentences))
+
+        # TODO: wrong intuition behind document pair creation
+        # create all possible pairs of 2 sentences in a batch
         sentence_pair_idx = list(itertools.combinations(sentence_idx, 2))
 
         # "zero" labels (similarity of 0) if two documents don't belong to the same class
@@ -148,6 +151,7 @@ class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
         sentences: Union[List[Sentence], Sentence],
         mini_batch_size: int = 32,
         label_name: str = "predicted",
+        return_loss: bool = False,
         **kwargs,
     ):
 
@@ -160,9 +164,6 @@ class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
             return sentences
 
         # Step 1: embed full training set if needed
-        # TODO issue: training set has to be re-embedded after each epoch (fine-tunable transformer model)
-        # TODO: this has to be done by overwriting an existing evaluate method and not in predict method
-
         embedding_names = self.document_embeddings.get_names()
         is_train_set_already_embedded = len(self._corpus.train[0].get_embedding(embedding_names)) != 0
         if not is_train_set_already_embedded:
@@ -176,3 +177,17 @@ class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
         # Step 3: perform KNN based on cosine similarity to assign each sentence a class
         for sentence in sentences:
             self._k_nearest_neighbor(sentence, label_name=label_name)
+
+        # KNN predictions do not have loss value
+        if return_loss:
+            return 0
+
+    def evaluate(self, data_points, mini_batch_size: int, **kwargs):
+        result = super().evaluate(data_points, mini_batch_size=mini_batch_size, **kwargs)
+
+        # clear embeddings in the training set
+        embedding_names = self.document_embeddings.get_names()
+        for sentence in self._corpus.train:
+            sentence.clear_embeddings(embedding_names)
+
+        return result
