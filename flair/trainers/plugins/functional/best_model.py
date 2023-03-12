@@ -30,6 +30,14 @@ class BestModelPlugin(TrainerPlugin):
         main_evaluation_metric,
         **kw,
     ):
+        """
+        determines against which metric to optimize
+        :param train_with_dev:
+        :param anneal_against_dev_loss:
+        :param main_evaluation_metric:
+        :param kw:
+        :return:
+        """
         # minimize training loss if training with dev data, else maximize dev score
         self.minimize_objective = train_with_dev or anneal_against_dev_loss
         self.best_value = None

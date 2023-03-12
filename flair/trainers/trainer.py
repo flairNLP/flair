@@ -245,6 +245,7 @@ class ModelTrainer(Pluggable):
         #-- WeightExtractorPlugin -> initializes the WeightExtactor
         #-- LossFilePlugin -> prepare loss file, and header for all metrics to collect
         #-- LogFilePlugin -> stores whether to use training.log
+        #-- BestModelPlugin -> determines against which metric to optimize
         self.dispatch("before_training_setup", **training_parameters)
 
         assert self.corpus.train
@@ -403,8 +404,9 @@ class ModelTrainer(Pluggable):
                 self.model.eval()
                 # - BasicEvaluationPlugin -> performs evaluation on all splits and logs results
                 self.dispatch("evaluation", epoch=epoch) # TODO: dispatch with only 1 customer
-                # - CheckpointPlugin -> executes checkpointing
                 # - LossFilePlugin -> somehow prints all relevant metrics (TODO: I don't really understand how)
+                # - BestModelPlugin -> dispatches a "best_model" event if best model achieved (causing a save)
+                # - CheckpointPlugin -> executes checkpointing
                 self.dispatch("after_evaluation", epoch=epoch)
 
             # - CheckpointPlugin -> saves final model

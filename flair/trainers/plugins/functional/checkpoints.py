@@ -99,7 +99,7 @@ class CheckpointPlugin(TrainerPlugin):
     @TrainerPlugin.hook
     def best_model(self, **kw):
         """
-        Saves best model
+        Saves best model # TODO: I don't understand how this works
         :param kw:
         :return:
         """
