@@ -27,6 +27,12 @@ class TrainingBehaviorPlugin(MetricBasePlugin):
 
     @MetricBasePlugin.hook
     def before_training_epoch(self, epoch, **kw):
+        """
+        Records current learning rate(s) and momentum (s)
+        :param epoch:
+        :param kw:
+        :return:
+        """
         self.epoch_train_loss = 0.0
         self.epoch_train_samples = 0
 
@@ -45,11 +51,23 @@ class TrainingBehaviorPlugin(MetricBasePlugin):
 
     @TrainerPlugin.hook
     def before_training_batch(self, **kw):
+        """
+        Sets batch loss and number of samples to 0
+        :param kw:
+        :return:
+        """
         self.batch_train_loss = 0.0
         self.batch_train_samples = 0
 
     @TrainerPlugin.hook
     def before_training_batch_backward(self, loss, datapoint_count, **kw):
+        """
+        Aggregates loss and counts for the batch and the whole epoch
+        :param loss:
+        :param datapoint_count:
+        :param kw:
+        :return:
+        """
         self.epoch_train_samples += datapoint_count
         self.epoch_train_loss += loss.item()
         self.batch_train_samples += datapoint_count
@@ -57,12 +75,26 @@ class TrainingBehaviorPlugin(MetricBasePlugin):
 
     @MetricBasePlugin.hook
     def after_training_epoch(self, epoch, **kw):
+        """
+        Returns training loss at end of epoch
+        :param epoch:
+        :param kw:
+        :return:
+        """
         if self.epoch_train_samples != 0:
             train_loss = self.epoch_train_loss / self.epoch_train_samples
             yield MetricRecord.scalar(("train", "loss"), train_loss, epoch)
 
     @MetricBasePlugin.hook
     def after_training_batch(self, epoch, batch_no, total_number_of_batches, **kw):
+        """
+        Returns training loss at end of batch
+        :param epoch:
+        :param batch_no:
+        :param total_number_of_batches:
+        :param kw:
+        :return:
+        """
         if self.batch_train_samples != 0:
             train_loss = self.batch_train_loss / self.batch_train_samples
             global_step = batch_no + (epoch - 1) * total_number_of_batches
@@ -70,6 +102,9 @@ class TrainingBehaviorPlugin(MetricBasePlugin):
 
 
 class BasicEvaluationPlugin(MetricBasePlugin):
+    """
+    This plugin determines which splits to log, performs evaluation on these splits and logs results
+    """
     def __init__(self):
         super().__init__()
         self.train_part_size = None
@@ -110,6 +145,26 @@ class BasicEvaluationPlugin(MetricBasePlugin):
         gold_label_dictionary_for_eval,
         **kw,
     ):
+        """
+        Determines what splits (train, dev, test) to evaluate and log, and record evaluation parameters
+
+        :param monitor_train:
+        :param param_selection_mode:
+        :param monitor_test:
+        :param train_with_dev:
+        :param train_with_test:
+        :param eval_on_train_fraction:
+        :param eval_on_train_shuffle:
+        :param embeddings_storage_mode:
+        :param eval_batch_size:
+        :param mini_batch_size:
+        :param num_workers:
+        :param exclude_labels:
+        :param main_evaluation_metric:
+        :param gold_label_dictionary_for_eval:
+        :param kw:
+        :return:
+        """
         # determine what splits (train, dev, test) to evaluate and log
         self.log_train = True if monitor_train else False
         self.log_test = True if (not param_selection_mode and self.trainer.corpus.test and monitor_test) else False
@@ -137,6 +192,12 @@ class BasicEvaluationPlugin(MetricBasePlugin):
 
     @TrainerPlugin.hook
     def before_training_epoch(self, epoch, **kw):
+        """
+        Creates train_part split if needed
+        :param epoch:
+        :param kw:
+        :return:
+        """
         if self.eval_on_train_shuffle:
             train_part_indices = list(range(_len_dataset(self.trainer.corpus.train)))
             random.shuffle(train_part_indices)
@@ -174,6 +235,12 @@ class BasicEvaluationPlugin(MetricBasePlugin):
     # yielded metric values are automatically published via the trainer
     @MetricBasePlugin.hook
     def evaluation(self, epoch, **kw):
+        """
+        Performs evaluation on all relevant splits and logs results
+        :param epoch:
+        :param kw:
+        :return:
+        """
         # evaluate on train / dev / test split depending on training settings
         if self.log_train:
             train_eval_result = self.model.evaluate(self.corpus.train, **self.eval_kw)

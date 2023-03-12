@@ -9,15 +9,19 @@ except ImportError:
 
 
 class AmpPlugin(TrainerPlugin):
+    """
+    Simple plugin for AMP
+    """
+
     def __init__(self):
         super().__init__()
-        self.use = None
-        self.opt_level = None
+        self.use = None  # TODO: can be removed
+        self.opt_level = None # TODO: I think this also since only used in 1 place
         self.wrapped_backward = None
 
     @TrainerPlugin.hook
     def before_training_setup(self, use_amp, amp_opt_level, **kw):
-        self.use = use_amp
+        self.use = use_amp # TODO: can be removed
         self.opt_level = amp_opt_level
 
         if self.use:
@@ -31,6 +35,7 @@ class AmpPlugin(TrainerPlugin):
                 )
 
     def detach(self, *args, **kwargs):
+        # TODO: what does this do?
         super().detach(*args, **kwargs)
 
         self.trainer.backward = self.wrapped_backward
@@ -39,15 +44,20 @@ class AmpPlugin(TrainerPlugin):
     def backward(self, loss):
         optimizer = self.trainer.optimizer
 
-        if self.use:
+        if self.use:  # TODO: can be removed
             with amp.scale_loss(loss, optimizer) as scaled_loss:
                 scaled_loss.backward()
 
     @TrainerPlugin.hook
     def after_optimizer_setup(self, **kw):
+        """
+        Wraps with AMP
+        :param kw:
+        :return:
+        """
         optimizer = self.trainer.optimizer
 
-        if self.use:
+        if self.use:  # TODO: can be removed
             self.trainer.model, self.trainer.optimizer = amp.initialize(self.model, optimizer, opt_level=self.opt_level)
 
             # replace trainers backward function

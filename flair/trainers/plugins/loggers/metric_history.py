@@ -22,6 +22,12 @@ class MetricHistoryPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_training_setup(self, main_evaluation_metric, **kw):
+        """
+        initializes history lists for all metrics to collect
+        :param main_evaluation_metric:
+        :param kw:
+        :return:
+        """
         self.metric_history = {}
 
         for target in self.metrics_to_collect.values():
@@ -41,4 +47,9 @@ class MetricHistoryPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def collecting_train_return_values(self, **kw):
+        """
+        Returns metric history
+        :param kw:
+        :return:
+        """
         return self.metric_history

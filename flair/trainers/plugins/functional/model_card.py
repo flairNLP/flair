@@ -9,6 +9,10 @@ from flair.trainers.plugins.functional.scheduler import SchedulerPlugin
 
 
 class ModelCardPlugin(TrainerPlugin):
+    """
+    Simple plugin that takes care of the model card
+    """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -16,6 +20,11 @@ class ModelCardPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_setup(self, **training_parameters):
+        """
+        initializes model card with library versions and parameters
+        :param training_parameters:
+        :return:
+        """
         # create a model card for this model with Flair and PyTorch version
         self.model_card = {
             "flair_version": flair.__version__,
@@ -43,12 +52,19 @@ class ModelCardPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_epoch(self, epoch, **kw):
-        # update epoch in model card
+        """
+        update epoch in model card
+        """
         self.model_card["training_parameters"]["epoch"] = epoch
 
     @TrainerPlugin.hook
     def after_training_setup(self, **kw):
-        # update optimizer and scheduler in model card
+        """
+        update optimizer and scheduler in model card
+
+        :param kw:
+        :return:
+        """
         self.model_card["training_parameters"]["optimizer"] = self.trainer.optimizer
 
         for plugin in self.trainer.plugins:
