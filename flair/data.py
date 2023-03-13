@@ -865,7 +865,7 @@ class Sentence(DataPoint):
 
     @property
     def text(self):
-        return self.to_original_text()
+        return self.to_plain_string()
 
     def to_tokenized_string(self) -> str:
         if self.tokenized is None:
