@@ -461,9 +461,10 @@ class EntityLinkingLabel(Label):
 
     def __str__(self):
         if self.additional_ids is None:
-            return f"{self.database}:{self._value}  {self.concept_name} ({round(self._score, 2)})"
+            return f"{self.data_point.unlabeled_identifier}{flair._arrow} " \
+                   f"{self.concept_name} - {self.database}:{self._value} ({round(self._score, 4)})"
         else:
-            return f"{self.database}:{self._value} ({', '.join(self.additional_ids)})  {self.concept_name} ({round(self._score, 2)})"
+            return f" ({', '.join(self.additional_ids)})  {self.concept_name} ({round(self._score, 2)})"
 
     def __repr__(self):
         if self.additional_ids is None:
