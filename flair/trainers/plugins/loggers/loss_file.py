@@ -11,6 +11,7 @@ class LossFilePlugin(TrainerPlugin):
     """
     Plugin that manages the loss.tsv file output
     """
+
     def __init__(self, metrics_to_collect: Dict[Tuple, str] = None, **kwargs):
         super().__init__(**kwargs)
 

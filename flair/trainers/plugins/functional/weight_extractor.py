@@ -6,6 +6,7 @@ class WeightExtractorPlugin(TrainerPlugin):
     """
     Simple Plugin for weight extraction
     """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

@@ -110,6 +110,7 @@ class BasicEvaluationPlugin(MetricBasePlugin):
     """
     This plugin determines which splits to log, performs evaluation on these splits and logs results
     """
+
     def __init__(self):
         super().__init__()
         self.train_part_size = None
