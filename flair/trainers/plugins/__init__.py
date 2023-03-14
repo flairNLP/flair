@@ -27,15 +27,12 @@ default_plugins = [
     BasicEvaluationPlugin,
     TrainingBehaviorPlugin,
     RegularLoggingPlugin,
-    AmpPlugin,
     CheckpointPlugin,
     ModelCardPlugin,
     SchedulerPlugin,
-    SWAPlugin,
     WeightExtractorPlugin,
     LossFilePlugin,
     MetricHistoryPlugin,
-    TensorboardLogger,
     LogFilePlugin,
 ]
 

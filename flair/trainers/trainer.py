@@ -154,22 +154,16 @@ class ModelTrainer(Pluggable):
         write_weights: bool = False,
         num_workers: Optional[int] = None,
         sampler=None,
-        use_amp: bool = False,
         amp_opt_level: str = "O1",
         eval_on_train_fraction: Union[float, str] = 0.0,
         eval_on_train_shuffle: bool = False,
         save_model_each_k_epochs: int = 0,
-        tensorboard_comment: str = "",
-        use_swa: bool = False,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
         exclude_labels: List[str] = [],
         create_file_logs: bool = True,
         create_loss_file: bool = True,
         epoch: int = 0,
-        use_tensorboard: bool = False,
-        tensorboard_log_dir=None,
-        metrics_for_tensorboard=[],
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
         scheduler_state_dict: Optional[Dict[str, Any]] = None,
         save_optimizer_state: bool = False,
@@ -219,9 +213,6 @@ class ModelTrainer(Pluggable):
         :param save_model_each_k_epochs: Each k epochs, a model state will be written out. If set to '5', a model will  # noqa: E501
         be saved each 5 epochs. Default is 0 which means no model saving.
         :param main_evaluation_metric: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used), currently only applicable for text_classification_model  # noqa: E501
-        :param tensorboard_comment: Comment to use for tensorboard logging
-        :param create_file_logs: If True, the logs will also be stored in a file 'training.log' in the model folder  # noqa: E501
-        :param create_loss_file: If True, the loss will be writen to a file 'loss.tsv' in the model folder  # noqa: E501
         :param optimizer: The optimizer to use (typically SGD or Adam)
         :param epoch: The starting epoch (normally 0 but could be higher if you continue training model)  # noqa: E501
         :param kwargs: Other arguments for the Optimizer
@@ -236,16 +227,16 @@ class ModelTrainer(Pluggable):
         training_parameters.update(kwargs)
 
         # call first hook
-        #-- BasicEvaluationPlugin -> determines which splits to log
-        #-- AmpPlugin -> set opt level
-        #-- CheckpointPlugin -> Determines how and what is saved
-        #-- ModelCardPlugin -> initializes model card with library versions and parameters
-        #-- SchedulerPlugin -> check for impossible parameter combination
-        #-- SWAPlugin -> initializes SWA and stores learning rate
-        #-- WeightExtractorPlugin -> initializes the WeightExtactor
-        #-- LossFilePlugin -> prepare loss file, and header for all metrics to collect
-        #-- LogFilePlugin -> stores whether to use training.log
-        #-- BestModelPlugin -> determines against which metric to optimize
+        # -- BasicEvaluationPlugin -> determines which splits to log
+        # -- AmpPlugin -> set opt level
+        # -- CheckpointPlugin -> Determines how and what is saved
+        # -- ModelCardPlugin -> initializes model card with library versions and parameters
+        # -- SchedulerPlugin -> check for impossible parameter combination
+        # -- SWAPlugin -> initializes SWA and stores learning rate
+        # -- WeightExtractorPlugin -> initializes the WeightExtactor
+        # -- LossFilePlugin -> prepare loss file, and header for all metrics to collect
+        # -- LogFilePlugin -> stores whether to use training.log
+        # -- BestModelPlugin -> determines against which metric to optimize
         self.dispatch("before_training_setup", **training_parameters)
 
         assert self.corpus.train
@@ -268,7 +259,7 @@ class ModelTrainer(Pluggable):
 
         parameters = {"dataset_size": dataset_size, **training_parameters}
 
-        #-- TensorboardLogger -> Initializes a TensorBoard summary writer TODO: dispatch with only one "customer"
+        # -- TensorboardLogger -> Initializes a TensorBoard summary writer TODO: dispatch with only one "customer"
         self.dispatch("after_data_setup", **parameters)
 
         # if optimizer class is passed, instantiate:
@@ -278,9 +269,9 @@ class ModelTrainer(Pluggable):
         else:
             self.optimizer = optimizer
 
-        #-- AmpPlugin -> wraps with AMP
-        #-- SchedulerPlugin -> initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers
-        #-- SWAPlugin -> wraps the optimizer with SWA
+        # -- AmpPlugin -> wraps with AMP
+        # -- SchedulerPlugin -> initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers
+        # -- SWAPlugin -> wraps the optimizer with SWA
         self.dispatch("after_optimizer_setup", **parameters)
 
         # load existing optimizer state dictionary if it exists
@@ -299,9 +290,9 @@ class ModelTrainer(Pluggable):
         # this field stores the names of all dynamic embeddings in the model (determined after first forward pass)
         dynamic_embeddings = None
 
-        #-- ModelCardPlugin -> update optimizer and scheduler in model card
-        #-- MetricHistoryPlugin -> initializes history lists for all metrics to collect
-        #-- LogFilePlugin -> adds a file handler
+        # -- ModelCardPlugin -> update optimizer and scheduler in model card
+        # -- MetricHistoryPlugin -> initializes history lists for all metrics to collect
+        # -- LogFilePlugin -> adds a file handler
         self.dispatch("after_training_setup", **parameters)
 
         # At any point you can hit Ctrl + C to break out of training early.
@@ -357,7 +348,7 @@ class ModelTrainer(Pluggable):
                     for batch_step in batch_steps:
                         batch_step_kw = {"batch_step": batch_step, **batch_kw}
 
-                        self.dispatch("before_training_batch_step", **batch_step_kw) # TODO: dispatch with 0 customers
+                        self.dispatch("before_training_batch_step", **batch_step_kw)  # TODO: dispatch with 0 customers
 
                         # forward pass
                         loss, datapoint_count = self.model.forward_loss(batch_step)
@@ -368,14 +359,14 @@ class ModelTrainer(Pluggable):
                             loss=loss,
                             datapoint_count=datapoint_count,
                             **batch_step_kw,
-                        ) # TODO: only 1 customer ofr this dispatch
+                        )  # TODO: only 1 customer ofr this dispatch
 
                         self.backward(loss)
 
                         # - RegularLoggingPlugin adds loss and datapoint count for logging purposes
                         self.dispatch(
                             "after_training_batch_step", loss=loss, datapoint_count=datapoint_count, **batch_step_kw
-                        ) # TODO: only 1 customer for this dispatch
+                        )  # TODO: only 1 customer for this dispatch
 
                         # identify dynamic embeddings (always deleted) on first sentence
 
@@ -403,7 +394,7 @@ class ModelTrainer(Pluggable):
 
                 self.model.eval()
                 # - BasicEvaluationPlugin -> performs evaluation on all splits and logs results
-                self.dispatch("evaluation", epoch=epoch) # TODO: dispatch with only 1 customer
+                self.dispatch("evaluation", epoch=epoch)  # TODO: dispatch with only 1 customer
                 # - LossFilePlugin -> somehow prints all relevant metrics (TODO: I don't really understand how)
                 # - BestModelPlugin -> dispatches a "best_model" event if best model achieved (causing a save)
                 # - CheckpointPlugin -> executes checkpointing
@@ -427,17 +418,19 @@ class ModelTrainer(Pluggable):
             self.dispatch("training_interrupt")
 
         except Exception:
-            self.dispatch("_training_exception") # TODO: no customer but that's ok
+            self.dispatch("_training_exception")  # TODO: no customer but that's ok
             raise
         finally:
             # TensorboardLogger -> closes writer
             self.dispatch("_training_finally")
 
-        return_values = self.dispatch("collecting_train_return_values", epoch=epoch) # TODO: only one plugin, hard logic
+        return_values = self.dispatch(
+            "collecting_train_return_values", epoch=epoch
+        )  # TODO: only one plugin, hard logic
 
         self.reset_training_attributes()
 
-        self.dispatch("after_teardown") # TODO: no plugins call this
+        self.dispatch("after_teardown")  # TODO: no plugins call this
 
         return return_values
 
