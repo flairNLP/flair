@@ -1,37 +1,302 @@
-import os
-import stat
-import re
-import pickle
+import flair
+import faiss
 import logging
 import numpy as np
+import os
+import pickle
+import re
+import subprocess
+import stat
+import string
+import tempfile
 import torch
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from tqdm import tqdm
-from transformers import (
-    PreTrainedTokenizer,
-    PreTrainedModel,
-)
-from huggingface_hub import hf_hub_url, cached_download
-from string import punctuation
-import flair
-from flair.data import Sentence, EntityLinkingLabel
+
+from collections import defaultdict
+from flair.data import Sentence, EntityLinkingLabel, DataPoint, Label
 from flair.datasets import (
     NEL_CTD_CHEMICAL_DICT,
     NEL_CTD_DISEASE_DICT,
     NEL_NCBI_HUMAN_GENE_DICT,
     NEL_NCBI_TAXONOMY_DICT,
 )
-from flair.file_utils import cached_path
-from typing import List, Tuple, Union
-from pathlib import Path
-import subprocess
-import tempfile
-import faiss
 from flair.embeddings import TransformerDocumentEmbeddings
-from string import punctuation
+from flair.file_utils import cached_path
+from huggingface_hub import hf_hub_url, cached_download
+from pathlib import Path
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from tqdm import tqdm
+from transformers import (
+    PreTrainedTokenizer,
+    PreTrainedModel
+)
+from typing import List, Tuple, Union, Optional, Dict
 
 log = logging.getLogger("flair")
+
+
+class MentionPreprocessor:
+    """
+        A mention preprocessor is used to transform / clean an entity mention (recognized by
+        an entity recognition model in the original text). This can include removing certain characters
+        (e.g. punctuation) or converting characters (e.g. HTML-encoded characters) as well as
+        (more sophisticated) domain-specific procedures.
+
+        This class provides the basic interface for such transformations and should be extended by
+        subclasses that implement the concrete transformations.
+    """
+    def process(self, entity_mention: Union[DataPoint, str], sentence: Sentence) -> str:
+        """
+            Process the given entity mention and applies the transformation procedure to it.
+
+            :param entity_mention: entity mention either given as DataPoint or str
+            :param sentence: sentence in which the entity mentioned occurred
+        """
+        raise NotImplementedError()
+
+    def initialize(self, sentences: List[Sentence]) -> None:
+        """
+            Initializes the pre-processor for a batch of sentences, which is may be necessary for
+            more sophisticated transformations.
+        """
+        # Do nothing by default
+        pass
+
+
+class BasicMentionPreprocessor(MentionPreprocessor):
+    """
+        Basic implementation of MentionPreprocessor, which supports lowercasing, typo correction
+        and removing of punctuation characters.
+
+        Implementation is adapted from:
+            Slightly modifed from Sung et al. 2020
+            Biomedical Entity Representations with Synonym Marginalization
+            https://github.com/dmis-lab/BioSyn/blob/master/src/biosyn/preprocesser.py#L5
+    """
+
+    def __init__(
+        self,
+        lowercase: bool = True,
+        remove_punctuation: bool = True,
+        punctuation_symbols: str = string.punctuation
+    ) -> None:
+        """
+            :param lowercase: Indicates whether to perform lowercasing or not (True by default)
+            :param remove_punctuation: Indicates whether to perform removal punctuations symbols (True by default)
+            :param punctuation_symbols: String containing all punctuation symbols that should be removed
+                (default is given by string.punctuation)
+        """
+        self.lowercase = lowercase
+        self.remove_punctuation = remove_punctuation
+        self.rmv_puncts_regex = re.compile(
+            r"[\s{}]+".format(re.escape(punctuation_symbols))
+        )
+
+    def process(self, entity_mention: Union[DataPoint, str], sentence: Sentence) -> str:
+        mention_text = entity_mention if isinstance(entity_mention, str) else entity_mention.text
+
+        if self.lowercase:
+            mention_text = mention_text.lower()
+
+        if self.remove_punctuation:
+            mention_text = self.rmv_puncts_regex.split(mention_text)
+            mention_text = " ".join(mention_text).strip()
+
+        mention_text = mention_text.strip()
+
+        return mention_text
+
+
+class Ab3PMentionPreprocessor(MentionPreprocessor):
+    """
+        Implementation of MentionPreprocessor which utilizes Ab3P, an (biomedical)abbreviation definition detector,
+        given in:
+            https://github.com/ncbi-nlp/Ab3P
+
+        Ab3P applies a set of rules reflecting simple patterns such as Alpha Beta (AB) as well as more involved cases.
+        The algorithm is described in detail in the following paper:
+
+            Abbreviation definition identification based on automatic precision estimates.
+            Sohn S, Comeau DC, Kim W, Wilbur WJ. BMC Bioinformatics. 2008 Sep 25;9:402.
+            PubMed ID: 18817555
+    """
+
+    def __init__(
+            self,
+            ab3p_path: Path,
+            word_data_dir: Path,
+            mention_preprocessor: Optional[MentionPreprocessor] = None
+    ) -> None:
+        """
+            :param ab3p_path: Path to the folder containing the Ab3P implementation
+            :param word_data_dir: Path to the word data directory
+            :param mention_preprocessor: Mention text preprocessor that is used before trying to link
+                the mention text to an abbreviation.
+
+        """
+        self.ab3p_path = ab3p_path
+        self.word_data_dir = word_data_dir
+        self.mention_preprocessor = mention_preprocessor
+
+    def initialize(self, sentences: List[Sentence]) -> None:
+        self.abbreviation_dict = self._build_abbreviation_dict(sentences)
+
+    def process(self, entity_mention: Union[Label, str], sentence: Sentence) -> str:
+        sentence_text = sentence.to_tokenized_string().strip()
+
+        tokens = (
+            [token.text for token in entity_mention.data_point.tokens]
+            if isinstance(entity_mention, Label)
+            else [entity_mention] # FIXME: Maybe split mention on whitespaces here??
+        )
+
+        parsed_tokens = []
+        for token in tokens:
+            if self.mention_preprocessor is not None:
+                token = self.mention_preprocessor.process(token, sentence)
+
+            if sentence_text in self.abbreviation_dict:
+                if token.lower() in self.abbreviation_dict[sentence_text]:
+                    parsed_tokens.append(self.abbreviation_dict[sentence_text][token.lower()])
+                    continue
+
+            if len(token) != 0:
+                parsed_tokens.append(token)
+
+        return " ".join(parsed_tokens)
+
+    @classmethod
+    def load(
+            cls,
+            ab3p_path: Path = None,
+            mention_preprocessor: Optional[MentionPreprocessor] = None
+    ):
+        data_dir = flair.cache_root / "ab3p"
+        if not data_dir.exists():
+            data_dir.mkdir(parents=True)
+
+        word_data_dir = data_dir / "word_data"
+        if not word_data_dir.exists():
+            word_data_dir.mkdir()
+
+        if ab3p_path is None:
+            ab3p_path = cls.download_ab3p(data_dir, word_data_dir)
+
+        return cls(ab3p_path, word_data_dir, mention_preprocessor)
+
+    @classmethod
+    def download_ab3p(cls, data_dir: Path, word_data_dir: Path) -> Path:
+        """
+            Downloads the Ab3P tool and all necessary data files.
+        """
+
+        # Download word data for Ab3P if not already downloaded
+        ab3p_url = "https://raw.githubusercontent.com/dmis-lab/BioSyn/master/Ab3P/WordData/"
+
+        ab3p_files = [
+            "Ab3P_prec.dat",
+            "Lf1chSf",
+            "SingTermFreq.dat",
+            "cshset_wrdset3.ad",
+            "cshset_wrdset3.ct",
+            "cshset_wrdset3.ha",
+            "cshset_wrdset3.nm",
+            "cshset_wrdset3.str",
+            "hshset_Lf1chSf.ad",
+            "hshset_Lf1chSf.ha",
+            "hshset_Lf1chSf.nm",
+            "hshset_Lf1chSf.str",
+            "hshset_stop.ad",
+            "hshset_stop.ha",
+            "hshset_stop.nm",
+            "hshset_stop.str",
+            "stop",
+        ]
+        for file in ab3p_files:
+            cached_path(ab3p_url + file, word_data_dir)
+
+        # Download Ab3P executable
+        ab3p_path = cached_path(
+            "https://github.com/dmis-lab/BioSyn/raw/master/Ab3P/identify_abbr", data_dir
+        )
+
+        ab3p_path.chmod(ab3p_path.stat().st_mode | stat.S_IXUSR)
+        return ab3p_path
+
+    def _build_abbreviation_dict(self, sentences: List[flair.data.Sentence]) -> Dict[str, Dict[str, str]]:
+        """
+            Processes the given sentences with the Ab3P tool. The function returns a dictionary
+            containing the abbreviations found for each sentence, e.g.:
+
+            {
+                "Respiratory syncytial viruses ( RSV ) are a subgroup of the paramyxoviruses.":
+                    {"RSV": "Respiratory syncytial viruses"},
+                "Rous sarcoma virus ( RSV ) is a retrovirus.":
+                    {"RSV": "Rous sarcoma virus"}
+            }
+
+        """
+        abbreviation_dict = defaultdict(dict)
+
+        # Create a temp file which holds the sentences we want to process with ab3p
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as temp_file:
+            for sentence in sentences:
+                temp_file.write(sentence.to_tokenized_string() + "\n")
+            temp_file.flush()
+
+            # Temporarily create path file in the current working directory for Ab3P
+            with open(os.path.join(os.getcwd(), "path_Ab3P"), "w") as path_file:
+                path_file.write(str(self.word_data_dir) + "/\n")
+
+            # Run ab3p with the temp file containing the dataset
+            try:
+                result = subprocess.run(
+                    [self.ab3p_path, temp_file.name],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+            except:
+                log.error(
+                    """The abbreviation resolver Ab3P could not be run on your system. To ensure maximum accuracy, please
+                install Ab3P yourself. See https://github.com/ncbi-nlp/Ab3P"""
+                )
+            else:
+                line = result.stdout.decode("utf-8")
+                if "Path file for type cshset does not exist!" in line:
+                    log.error(
+                        "Error when using Ab3P for abbreviation resolution. A file named path_Ab3p needs to exist in your current directory containing the path to the WordData directory for Ab3P to work!"
+                    )
+                elif "Cannot open" in line:
+                    log.error(
+                        "Error when using Ab3P for abbreviation resolution. Could not open the WordData directory for Ab3P!"
+                    )
+                elif "failed to open" in line:
+                    log.error(
+                        "Error when using Ab3P for abbreviation resolution. Could not open the WordData directory for Ab3P!"
+                    )
+
+                lines = line.split("\n")
+                cur_sentence = None
+                for line in lines:
+                    if len(line.split("|")) == 3:
+                        if cur_sentence is None:
+                            continue
+
+                        sf, lf, _ = line.split("|")
+                        sf = sf.strip().lower()
+                        lf = lf.strip().lower()
+                        abbreviation_dict[cur_sentence][sf] = lf
+
+                    elif len(line.strip()) > 0:
+                        cur_sentence = line
+                    else:
+                        cur_sentence = None
+
+            finally:
+                # remove the path file
+                os.remove(os.path.join(os.getcwd(), "path_Ab3P"))
+
+        return abbreviation_dict
 
 
 class BigramTfIDFVectorizer:
@@ -67,156 +332,6 @@ class BigramTfIDFVectorizer:
             log.info("Sparse encoder loaded from {}".format(path))
 
         return newVectorizer
-
-
-class TextPreprocess:
-    """
-    Text Preprocess module
-    Support lowercase, removing punctuation, typo correction
-
-    Slightly modifed from Sung et al. 2020
-    Biomedical Entity Representations with Synonym Marginalization
-    https://github.com/dmis-lab/BioSyn/blob/master/src/biosyn/preprocesser.py#L5
-    """
-
-    def __init__(
-        self,
-        lowercase: bool = True,
-        remove_punctuation: bool = True,
-    ) -> None:
-        """
-        :param typo_path str: path of known typo dictionary
-        """
-        self.lowercase = lowercase
-        self.rmv_puncts = remove_punctuation
-        self.punctuation = punctuation
-        self.rmv_puncts_regex = re.compile(
-            r"[\s{}]+".format(re.escape(self.punctuation))
-        )
-
-    def remove_punctuation(self, phrase: str) -> str:
-        phrase = self.rmv_puncts_regex.split(phrase)
-        phrase = " ".join(phrase).strip()
-
-        return phrase
-
-    def run(self, text: str) -> str:
-        if self.lowercase:
-            text = text.lower()
-
-        if self.rmv_puncts:
-            text = self.remove_punctuation(text)
-
-        text = text.strip()
-
-        return text
-
-
-class Ab3P:
-    """
-    Module for the Abbreviation Resolver Ab3P
-    https://github.com/ncbi-nlp/Ab3P
-    """
-
-    def __init__(self, ab3p_path: Path, word_data_dir: Path) -> None:
-        self.ab3p_path = ab3p_path
-        self.word_data_dir = word_data_dir
-
-    @classmethod
-    def load(cls, ab3p_path: Path = None):
-        data_dir = os.path.join(flair.cache_root, "ab3p")
-        if not os.path.exists(data_dir):
-            os.mkdir(os.path.join(data_dir))
-        word_data_dir = os.path.join(data_dir, "word_data/")
-        if not os.path.exists(word_data_dir):
-            os.mkdir(word_data_dir)
-        if ab3p_path is None:
-            ab3p_path = cls.download_ab3p(data_dir, word_data_dir)
-        return cls(ab3p_path, word_data_dir)
-
-    @classmethod
-    def download_ab3p(cls, data_dir: Path, word_data_dir: Path) -> Path:
-        # download word data for Ab3P if not already downloaded
-        ab3p_url = (
-            "https://raw.githubusercontent.com/dmis-lab/BioSyn/master/Ab3P/WordData/"
-        )
-        ab3p_files = [
-            "Ab3P_prec.dat",
-            "Lf1chSf",
-            "SingTermFreq.dat",
-            "cshset_wrdset3.ad",
-            "cshset_wrdset3.ct",
-            "cshset_wrdset3.ha",
-            "cshset_wrdset3.nm",
-            "cshset_wrdset3.str",
-            "hshset_Lf1chSf.ad",
-            "hshset_Lf1chSf.ha",
-            "hshset_Lf1chSf.nm",
-            "hshset_Lf1chSf.str",
-            "hshset_stop.ad",
-            "hshset_stop.ha",
-            "hshset_stop.nm",
-            "hshset_stop.str",
-            "stop",
-        ]
-        for file in ab3p_files:
-            data_path = cached_path(ab3p_url + file, word_data_dir)
-        # download ab3p executable
-        ab3p_path = cached_path(
-            "https://github.com/dmis-lab/BioSyn/raw/master/Ab3P/identify_abbr", data_dir
-        )
-        os.chmod(ab3p_path, stat.S_IEXEC)
-        return ab3p_path
-
-    def build_abbreviation_dict(self, sentences: List[flair.data.Sentence]) -> dict:
-        abbreviation_dict = {}
-        # tempfile to store the data to pass to the ab3p executable
-        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as temp_file:
-            for sentence in sentences:
-                temp_file.write(sentence.to_tokenized_string() + "\n")
-            temp_file.flush()
-            # temporarily create path file in the current working directory for Ab3P
-            with open(os.path.join(os.getcwd(), "path_Ab3P"), "w") as path_file:
-                path_file.write(self.word_data_dir + "\n")
-            # run ab3p with the temp file containing the dataset
-            try:
-                result = subprocess.run(
-                    [self.ab3p_path, temp_file.name],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-            except:
-                log.error(
-                    """The abbreviation resolver Ab3P could not be run on your system. To ensure maximum accuracy, please
-                install Ab3P yourself. See https://github.com/ncbi-nlp/Ab3P"""
-                )
-            else:
-                line = result.stdout.decode("utf-8")
-                if "Path file for type cshset does not exist!" in line:
-                    log.error(
-                        "Error when using Ab3P for abbreviation resolution. A file named path_Ab3p needs to exist in your current directory containing the path to the WordData directory for Ab3P to work!"
-                    )
-                elif "Cannot open" in line:
-                    log.error(
-                        "Error when using Ab3P for abbreviation resolution. Could not open the WordData directory for Ab3P!"
-                    )
-                elif "failed to open" in line:
-                    log.error(
-                        "Error when using Ab3P for abbreviation resolution. Could not open the WordData directory for Ab3P!"
-                    )
-
-                lines = line.split("\n")
-                for line in lines:
-                    if len(line.split("|")) == 3:
-                        sf, lf, _ = line.split("|")
-                        sf = sf.strip().lower()
-                        lf = lf.strip().lower()
-                        abbreviation_dict[sf] = lf
-            finally:
-                # remove the path file
-                os.remove(os.path.join(os.getcwd(), "path_Ab3P"))
-
-        return abbreviation_dict
 
 
 class DictionaryDataset:
@@ -273,15 +388,15 @@ class DictionaryDataset:
                 yield (name, cui)
 
 
-class BiEncoderEntityLiker:
-    """
-    A class to load a model and use it to encode a dictionary and entities
-    """
+class BiEncoderEntityLinker:
 
     def __init__(
-        self, use_sparse_embeds: bool, max_length: int, index_use_cuda: bool
+        self,
+        use_sparse_embeddings: bool,
+        max_length: int,
+        index_use_cuda: bool
     ) -> None:
-        self.use_sparse_embeds = use_sparse_embeds
+        self.use_sparse_embeds = use_sparse_embeddings
         self.max_length = max_length
 
         self.tokenizer = None
@@ -311,7 +426,7 @@ class BiEncoderEntityLiker:
         :param batch_size: The batch size for embedding the dictionary
         """
         self.load_dense_encoder(model_name_or_path)
-        self.use_cosine = True
+        self.use_cosine = use_cosine
 
         if self.use_sparse_embeds:
             self.load_sparse_encoder(model_name_or_path)
@@ -602,7 +717,7 @@ class BiEncoderEntityLiker:
         else:
 
             # get names from dictionary and remove punctuation
-            punctuation_regex = re.compile(r"[\s{}]+".format(re.escape(punctuation)))
+            punctuation_regex = re.compile(r"[\s{}]+".format(re.escape(string.punctuation)))
             dictionary_names = []
             for row in self.dictionary:
                 name = punctuation_regex.split(row[0])
@@ -737,8 +852,8 @@ class MultiBiEncoderEntityLinker:
 
     def __init__(
         self,
-        models: List[BiEncoderEntityLiker],
-        ab3p=None,
+        models: List[BiEncoderEntityLinker],
+        preprocessor: Optional[MentionPreprocessor] = None,
     ) -> None:
         """
         Initalize class, called by classmethod load
@@ -746,8 +861,7 @@ class MultiBiEncoderEntityLinker:
         :param ab3p_path: path to ab3p model
         """
         self.models = models
-        self.text_preprocessor = TextPreprocess()
-        self.ab3p = ab3p
+        self.preprocessor = preprocessor
 
     @classmethod
     def load(
@@ -820,8 +934,8 @@ class MultiBiEncoderEntityLinker:
                 model.load_model(dictionary_path)
 
             else:
-                model = BiEncoderEntityLiker(
-                    use_sparse_embeds=use_sparse_and_dense_embeds,
+                model = BiEncoderEntityLinker(
+                    use_sparse_embeddings=use_sparse_and_dense_embeds,
                     max_length=max_length,
                     index_use_cuda=index_use_cuda,
                 )
@@ -836,14 +950,16 @@ class MultiBiEncoderEntityLinker:
             models.append(model)
 
         # load ab3p model
-        ab3p = Ab3P.load(ab3p_path) if use_ab3p else None
+        preprocessor = Ab3PMentionPreprocessor.load(
+            mention_preprocessor=BasicMentionPreprocessor()
+        ) #Ab3P.load(ab3p_path) if use_ab3p else None
 
-        return cls(models, ab3p)
+        return cls(models, preprocessor)
 
     @staticmethod
     def __get_model_path(
         model_name: str, use_sparse_and_dense_embeds
-    ) -> BiEncoderEntityLiker:
+    ) -> BiEncoderEntityLinker:
         model_name = model_name.lower()
         model_path = model_name
 
@@ -944,29 +1060,20 @@ class MultiBiEncoderEntityLinker:
         if not isinstance(sentences, list):
             sentences = [sentences]
 
-        # use Ab3P to build abbreviation dictionary
-        if self.ab3p is not None:
-            abbreviation_dict = self.ab3p.build_abbreviation_dict(sentences)
+        if self.preprocessor is not None:
+            self.preprocessor.initialize(sentences)
 
         for model in self.models:
-
             for sentence in sentences:
                 for entity in sentence.get_labels(input_entity_annotation_layer):
-                    # preprocess mention
-                    if abbreviation_dict is not None:
-                        parsed_tokens = []
-                        for token in entity.data_point.tokens:
-                            token = self.text_preprocessor.run(token.text)
-                            if token in abbreviation_dict:
-                                parsed_tokens.append(abbreviation_dict[token.lower()])
-                            elif len(token) != 0:
-                                parsed_tokens.append(token)
-                        mention = " ".join(parsed_tokens)
-                    else:
-                        mention = self.text_preprocessor.run(entity.span.text)
+                    mention_text = (
+                        self.preprocessor.process(entity, sentence)
+                        if self.preprocessor is not None
+                        else entity.data_point.text
+                    )
 
                     # get predictions from dictionary
-                    predictions = model.get_predictions(mention, topk)
+                    predictions = model.get_predictions(mention_text, topk)
 
                     # add predictions to entity
                     label_name = (
