@@ -1,46 +1,71 @@
 import logging
 
 from flair.trainers.plugins.base import TrainerPlugin
-from flair.training_utils import log_line
 
 log = logging.getLogger("flair")
 
 
-class WandbLogger(TrainerPlugin):
-    def __init__(self, *args, use=True, project_name=None, **kwargs):
+class WandbLoggingHandler(logging.Handler):
+    def __init__(self, wandb, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.use = use
-        self.wandb = None
-        self.project_name = project_name
+        self.wandb = wandb
+
+    def emit(self, record):
+        try:
+            # adjust alert level
+            if record.level >= logging.ERROR:
+                level = self.wandb.AlertLevel.ERROR
+            elif record.level >= logging.WARNING:
+                level = self.wandb.AlertLevel.WARN
+            else:
+                level = self.wandb.AlertLevel.INFO
+
+            self.wandb.alert(
+                title=f"Alert from {record.module}:{record.lineno}",
+                text=self.format(record),
+                level=level,
+            )
+
+        except Exception:
+            self.handleError(record)
+
+
+class WandbLogger(TrainerPlugin):
+    def __init__(self, wandb, emit_alerts=True, alert_level=logging.WARNING, **kwargs):
+        super().__init__(**kwargs)
+
+        self.wandb = wandb
+        self.emit_alerts = emit_alerts
+        self.alert_level = alert_level
+        self._emitted_record_type_warning = False
 
     @TrainerPlugin.hook
-    def before_training_setup(self, **kw):
-        if not self.use:
-            return
+    def after_training_setup(self, **kw):
+        if self.emit_alerts:
+            self.log_handler = WandbLoggingHandler(self.wandb)
+            self.log_handler.setLevel(self.alert_level)
 
-        try:
-            import wandb
+            formatter = logging.Formatter("%(asctime)-15s %(message)s")
+            self.log_handler.setFormatter(formatter)
+            log.addHandler(self.log_handler)
+        else:
+            self.log_handler = None
 
-            self.wandb = wandb
-
-            self.wandb.init(project=kw.get("wandb_project", self.project_name))
-
-        except ImportError:
-            log_line(log)
-            log.warning("ATTENTION! wandb is required for Weight and Biases support!")
-            log_line(log)
-            self.use = False
+    @TrainerPlugin.hook("_training_exception", "after_teardown")
+    def close_file_handler(self, **kw):
+        if self.emit_alerts:
+            self.log_handler.close()
+            log.removeHandler(self.log_handler)
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):
-        if not self.use:
-            return
-
         if record.is_scalar:
             self.wandb.log({record.name: record.value})
         else:
-            raise NotImplementedError
+            if not self._emitted_record_type_warning:
+                log.warning("Logging anything other than scalars to W&B is currently not supported.")
+                self._emitted_record_type_warning = True
 
     @TrainerPlugin.hook
     def _training_finally(self, **kw):

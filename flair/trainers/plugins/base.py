@@ -71,8 +71,7 @@ class Pluggable:
 
             if self.valid_events is not None:
                 if event not in self.valid_events:
-                    raise RuntimeError(
-                        f"Event '{event}' not recognized. Available: {', '.join(self.valid_events)}")
+                    raise RuntimeError(f"Event '{event}' not recognized. Available: {', '.join(self.valid_events)}")
             return event
 
     def register_hook(self, func: Callable, *events: EventIdenifier):
