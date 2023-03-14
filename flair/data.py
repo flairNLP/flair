@@ -261,7 +261,6 @@ class Label:
     def unlabeled_identifier(self):
         return f"{self.data_point.unlabeled_identifier}"
 
-
 class DataPoint:
     """This is the parent class of all data points in Flair.
 
@@ -336,11 +335,13 @@ class DataPoint:
     def has_metadata(self, key: str) -> bool:
         return key in self._metadata
 
-    def add_label(self, typename: str, value: str, score: float = 1.0):
+    def add_label(self, typename: str, value_or_label: Union[str, Label], score: float = 1.0):
+        label = value_or_label if isinstance(value_or_label, Label) else Label(self, value_or_label, score)
+
         if typename not in self.annotation_layers:
-            self.annotation_layers[typename] = [Label(self, value, score)]
+            self.annotation_layers[typename] = [label]
         else:
-            self.annotation_layers[typename].append(Label(self, value, score))
+            self.annotation_layers[typename].append(label)
 
         return self
 
@@ -429,6 +430,62 @@ class DataPoint:
 
     def __len__(self) -> int:
         raise NotImplementedError
+
+
+class EntityLinkingLabel(Label):
+    def __init__(
+        self,
+        data_point: DataPoint,
+        id: str,
+        concept_name: str,
+        score: float = 1.0,
+        additional_ids: Optional[Union[List[str], str]] = None,
+        database: Optional[str] = None,
+    ):
+        super().__init__(data_point, id, score)
+        self.concept_name = concept_name
+        if isinstance(additional_ids, str):
+            additional_ids = [additional_ids]
+        self.additional_ids = additional_ids
+        self.database = database
+
+    def spawn(self, value: str, score: float = 1.0):
+        return EntityLinkingLabel(
+            data_point=self.data_point,
+            id=value,
+            score=score,
+            concept_name=self.concept_name,
+            additional_ids=self.additional_ids,
+            database=self.database
+        )
+
+    def __str__(self):
+        if self.additional_ids is None:
+            return f"{self.database}:{self._value}  {self.concept_name} ({round(self._score, 2)})"
+        else:
+            return f"{self.database}:{self._value} ({', '.join(self.additional_ids)})  {self.concept_name} ({round(self._score, 2)})"
+
+    def __repr__(self):
+        if self.additional_ids is None:
+            return f"{self.database}:{self._value} {self.concept_name} [{self.data_point.text}] ({round(self._score, 2)})"
+        else:
+            return f"{self.database}:{self._value} ({', '.join(self.additional_ids)}) {self.concept_name} [{self.data_point.text}] ({round(self._score, 2)})"
+
+    def __len__(self):
+        return len(self.data_point)
+
+    def __eq__(self, other):
+        return (
+            self.value == other.value
+            and self.data_point == other.data_point
+            and self.concept_name == other.concept_name
+            and self.database == other.database
+            and self.score == other.score
+        )
+
+    @property
+    def identifier(self):
+        return f"{self.value}"
 
 
 DT = typing.TypeVar("DT", bound=DataPoint)
