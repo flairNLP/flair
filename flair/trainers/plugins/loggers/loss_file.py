@@ -8,6 +8,9 @@ from flair.training_utils import init_output_file
 
 
 class LossFilePlugin(TrainerPlugin):
+    """
+    Plugin that manages the loss.tsv file output
+    """
     def __init__(self, metrics_to_collect: Dict[Tuple, str] = None, **kwargs):
         super().__init__(**kwargs)
 
@@ -19,6 +22,15 @@ class LossFilePlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_setup(self, create_loss_file, base_path, epoch, **kw):
+        """
+        Prepare loss file, and header for all metrics to collect
+        :param create_loss_file:
+        :param base_path:
+        :param epoch:
+        :param kw:
+        :return:
+        """
+
         # prepare loss logging file and set up header
         if create_loss_file:
             self.loss_txt = init_output_file(base_path, "loss.tsv")
@@ -65,10 +77,21 @@ class LossFilePlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_epoch(self, epoch, **kw):
+        """
+        Get the current epoch for loss file logging
+        :param epoch:
+        :param kw:
+        :return:
+        """
         self.current_row = {MetricName("epoch"): epoch}
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):
+        """
+        TODO: I don't really understand this
+        :param record:
+        :return:
+        """
         if record.name in self.headers and self.current_row is not None:
             if record.name == "learning_rate" and not record.is_scalar:
                 # record is a list of scalars
@@ -82,6 +105,12 @@ class LossFilePlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_evaluation(self, epoch, **kw):
+        """
+        This somehow prints all relevant metrics (TODO: I don't really understand how)
+        :param epoch:
+        :param kw:
+        :return:
+        """
         if self.loss_txt is not None:
             self.current_row[MetricName("timestamp")] = f"{datetime.now():%H:%M:%S}"
 

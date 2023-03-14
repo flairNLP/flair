@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import torch
 
@@ -168,3 +168,9 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
 
         return model_name
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "RelationExtractor":
+        from typing import cast
+
+        return cast("RelationExtractor", super().load(model_path=model_path))

@@ -8,6 +8,9 @@ log = logging.getLogger("flair")
 
 
 class TensorboardLogger(TrainerPlugin):
+    """
+    Plugin that takes care of tensorboard logging
+    """
     def __init__(self, log_dir=None, comment="", tracked_metrics=()):
         """
         :param log_dir: Directory into which tensorboard log files will be written  # noqa: E501
@@ -23,7 +26,13 @@ class TensorboardLogger(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_data_setup(self, use_tensorboard, **kw):
-        if use_tensorboard:
+        """
+        Initializes a TensorBoard summary writer
+        :param use_tensorboard:
+        :param kw:
+        :return:
+        """
+        if use_tensorboard: ## TODO: remove this type of if
             try:
                 from torch.utils.tensorboard import SummaryWriter
 
@@ -41,7 +50,7 @@ class TensorboardLogger(TrainerPlugin):
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):
-        if self.writer is not None:
+        if self.writer is not None: ## TODO: remove this type of check
             # TODO: check if metric is in tracked metrics
             if record.is_scalar:
                 self.writer.add_scalar(str(record.name), record.value, record.global_step, walltime=record.walltime)
@@ -52,5 +61,10 @@ class TensorboardLogger(TrainerPlugin):
 
     @TrainerPlugin.hook
     def _training_finally(self, **kw):
-        if self.writer is not None:
+        """
+        Closes the writer
+        :param kw:
+        :return:
+        """
+        if self.writer is not None: ## TODO: remove this type of check
             self.writer.close()

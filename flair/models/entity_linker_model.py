@@ -1,7 +1,8 @@
 import logging
 import re
 from functools import lru_cache
-from typing import Callable, Dict, List, Optional, Set, Union
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Set, Union
 from unicodedata import category
 
 import torch
@@ -143,7 +144,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         )
 
     def emb_mean(self, span, embedding_names):
-        return torch.mean(torch.cat([token.get_embedding(embedding_names) for token in span], 0), 0)
+        return torch.mean(torch.stack([token.get_embedding(embedding_names) for token in span], 0), 0)
 
     def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Span]:
         return sentence.get_spans(self.label_type)
@@ -222,3 +223,9 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
             masked_scores[idx, indices_of_candidates] = scores[idx, indices_of_candidates]
 
         return masked_scores
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "EntityLinker":
+        from typing import cast
+
+        return cast("EntityLinker", super().load(model_path=model_path))

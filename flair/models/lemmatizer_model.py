@@ -204,7 +204,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         initial_hidden_states, all_encoder_outputs = self.encode(sentences)
 
         # get labels (we assume each token has a lemma label)
-        labels = [token.get_tag(label_type=self._label_type).value for sentence in sentences for token in sentence]
+        labels = [token.get_label(self._label_type).value for sentence in sentences for token in sentence]
 
         # get char indices for labels of sentence
         # (batch_size, max_sequence_length) batch_size = #words in sentence,
@@ -700,8 +700,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         for sentence in batch:
             eval_line = (
                 f" - Text:       {' '.join([token.text for token in sentence])}\n"
-                f" - Gold-Lemma: {' '.join([token.get_tag(gold_label_type).value for token in sentence])}\n"
-                f" - Predicted:  {' '.join([token.get_tag('predicted').value for token in sentence])}\n\n"
+                f" - Gold-Lemma: {' '.join([token.get_label(gold_label_type).value for token in sentence])}\n"
+                f" - Predicted:  {' '.join([token.get_label('predicted').value for token in sentence])}\n\n"
             )
             lines.append(eval_line)
         return lines

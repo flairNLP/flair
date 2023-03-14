@@ -1,8 +1,7 @@
 import logging
-import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from urllib.error import HTTPError
 
 import torch
@@ -14,7 +13,7 @@ from tqdm import tqdm
 import flair.nn
 from flair.data import Dictionary, Label, Sentence, Span, get_spans_from_bio
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.embeddings import StackedEmbeddings, TokenEmbeddings
+from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.models.sequence_tagger_utils.crf import CRF
 from flair.models.sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
@@ -685,6 +684,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         }
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
+        hunflair_paper_path = hu_path + "/hunflair_smallish_models"
+        hunflair_main_path = hu_path + "/hunflair_allcorpus_models"
 
         hu_model_map = {
             # English NER models
@@ -743,79 +744,16 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "keyphrase": "/".join([hu_path, "keyphrase", "keyphrase-en-scibert.pt"]),
             "negation-speculation": "/".join([hu_path, "negation-speculation", "negation-speculation-model.pt"]),
             # Biomedical models
-            "hunflair-paper-cellline": "/".join(
-                [
-                    hu_path,
-                    "hunflair_smallish_models",
-                    "cellline",
-                    "hunflair-celline-v1.0.pt",
-                ]
-            ),
-            "hunflair-paper-chemical": "/".join(
-                [
-                    hu_path,
-                    "hunflair_smallish_models",
-                    "chemical",
-                    "hunflair-chemical-v1.0.pt",
-                ]
-            ),
-            "hunflair-paper-disease": "/".join(
-                [
-                    hu_path,
-                    "hunflair_smallish_models",
-                    "disease",
-                    "hunflair-disease-v1.0.pt",
-                ]
-            ),
-            "hunflair-paper-gene": "/".join([hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]),
-            "hunflair-paper-species": "/".join(
-                [
-                    hu_path,
-                    "hunflair_smallish_models",
-                    "species",
-                    "hunflair-species-v1.0.pt",
-                ]
-            ),
-            "hunflair-cellline": "/".join(
-                [
-                    hu_path,
-                    "hunflair_smallish_models",
-                    "cellline",
-                    "hunflair-celline-v1.0.pt",
-                ]
-            ),
-            "hunflair-chemical": "/".join(
-                [
-                    hu_path,
-                    "hunflair_allcorpus_models",
-                    "huner-chemical",
-                    "hunflair-chemical-full-v1.0.pt",
-                ]
-            ),
-            "hunflair-disease": "/".join(
-                [
-                    hu_path,
-                    "hunflair_allcorpus_models",
-                    "huner-disease",
-                    "hunflair-disease-full-v1.0.pt",
-                ]
-            ),
-            "hunflair-gene": "/".join(
-                [
-                    hu_path,
-                    "hunflair_allcorpus_models",
-                    "huner-gene",
-                    "hunflair-gene-full-v1.0.pt",
-                ]
-            ),
-            "hunflair-species": "/".join(
-                [
-                    hu_path,
-                    "hunflair_allcorpus_models",
-                    "huner-species",
-                    "hunflair-species-full-v1.1.pt",
-                ]
-            ),
+            "hunflair-paper-cellline": "/".join([hunflair_paper_path, "cellline", "hunflair-celline-v1.0.pt"]),
+            "hunflair-paper-chemical": "/".join([hunflair_paper_path, "chemical", "hunflair-chemical-v1.0.pt"]),
+            "hunflair-paper-disease": "/".join([hunflair_paper_path, "disease", "hunflair-disease-v1.0.pt"]),
+            "hunflair-paper-gene": "/".join([hunflair_paper_path, "gene", "hunflair-gene-v1.0.pt"]),
+            "hunflair-paper-species": "/".join([hunflair_paper_path, "species", "hunflair-species-v1.0.pt"]),
+            "hunflair-cellline": "/".join([hunflair_main_path, "cellline", "hunflair-celline-v1.0.pt"]),
+            "hunflair-chemical": "/".join([hunflair_main_path, "huner-chemical", "hunflair-chemical-full-v1.0.pt"]),
+            "hunflair-disease": "/".join([hunflair_main_path, "huner-disease", "hunflair-disease-full-v1.0.pt"]),
+            "hunflair-gene": "/".join([hunflair_main_path, "huner-gene", "hunflair-gene-full-v1.0.pt"]),
+            "hunflair-species": "/".join([hunflair_main_path, "huner-species", "hunflair-species-full-v1.1.pt"]),
         }
 
         cache_dir = Path("models")
@@ -1089,127 +1027,8 @@ for entity in sentence.get_spans('ner'):
                 lines.append("\n")
         return lines
 
-
-class MultiTagger:
-    def __init__(self, name_to_tagger: Dict[str, SequenceTagger]):
-        super().__init__()
-        self.name_to_tagger = name_to_tagger
-
-    def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        return_loss: bool = False,
-        mini_batch_size: int = 32,
-    ):
-        """
-        Predict sequence tags for Named Entity Recognition task
-        :param sentences: a Sentence or a List of Sentence
-        :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
-        up to a point when it has no more effect.
-        :param all_tag_prob: True to compute the score for each tag on each token,
-        otherwise only the score of the best tag is returned
-        :param verbose: set to True to display a progress bar
-        :param return_loss: set to True to return loss
-        """
-        if any(["hunflair" in name for name in self.name_to_tagger.keys()]):
-            if "spacy" not in sys.modules:
-                logging.warning(
-                    "We recommend to use SciSpaCy for tokenization and sentence splitting "
-                    "if HunFlair is applied to biomedical text, e.g.\n\n"
-                    "from flair.tokenization import SciSpacySentenceSplitter\n"
-                    "sentence = Sentence('Your biomed text', use_tokenizer=SciSpacySentenceSplitter())\n"
-                )
-
-        if isinstance(sentences, Sentence):
-            sentences = [sentences]
-        for name, tagger in self.name_to_tagger.items():
-            tagger.predict(
-                sentences=sentences,
-                label_name=name,
-                return_loss=return_loss,
-                embedding_storage_mode="cpu",
-                mini_batch_size=mini_batch_size,
-            )
-
-        # clear embeddings after predicting
-        for sentence in sentences:
-            sentence.clear_embeddings()
-
     @classmethod
-    def load(cls, model_names: Union[List[str], str]):
-        if model_names == "hunflair-paper":
-            model_names = [
-                "hunflair-paper-cellline",
-                "hunflair-paper-chemical",
-                "hunflair-paper-disease",
-                "hunflair-paper-gene",
-                "hunflair-paper-species",
-            ]
-        elif model_names == "hunflair" or model_names == "bioner":
-            model_names = [
-                "hunflair-cellline",
-                "hunflair-chemical",
-                "hunflair-disease",
-                "hunflair-gene",
-                "hunflair-species",
-            ]
-        elif isinstance(model_names, str):
-            model_names = [model_names]
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "SequenceTagger":
+        from typing import cast
 
-        taggers = {}
-        models: List[SequenceTagger] = []
-
-        # load each model
-        for model_name in model_names:
-            model = SequenceTagger.load(model_name)
-
-            # check if the same embeddings were already loaded previously
-            # if the model uses StackedEmbedding, make a new stack with previous objects
-            if type(model.embeddings) == StackedEmbeddings:
-                # sort embeddings by key alphabetically
-                new_stack = []
-                d = model.embeddings.get_named_embeddings_dict()
-                import collections
-
-                od = collections.OrderedDict(sorted(d.items()))
-
-                for k, embedding in od.items():
-                    # check previous embeddings and add if found
-                    embedding_found = False
-                    for previous_model in models:
-                        # only re-use static embeddings
-                        if not embedding.static_embeddings:
-                            continue
-
-                        if embedding.name in previous_model.embeddings.get_named_embeddings_dict():
-                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[embedding.name]
-                            previous_embedding.name = previous_embedding.name[2:]
-                            new_stack.append(previous_embedding)
-                            embedding_found = True
-                            break
-
-                    # if not found, use existing embedding
-                    if not embedding_found:
-                        embedding.name = embedding.name[2:]
-                        new_stack.append(embedding)
-
-                # initialize new stack
-                model.embeddings = None
-                model.embeddings = StackedEmbeddings(new_stack)
-
-            else:
-                # of the model uses regular embedding, re-load if previous version found
-                if not model.embeddings.static_embeddings:
-                    for previous_model in models:
-                        if model.embeddings.name in previous_model.embeddings.get_named_embeddings_dict():
-                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[
-                                model.embeddings.name
-                            ]
-                            if not previous_embedding.static_embeddings:
-                                model.embeddings = previous_embedding
-                                break
-
-            taggers[model_name] = model
-            models.append(model)
-
-        return cls(taggers)
+        return cast("SequenceTagger", super().load(model_path=model_path))

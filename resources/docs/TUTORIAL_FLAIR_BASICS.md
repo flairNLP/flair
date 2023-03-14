@@ -23,7 +23,7 @@ print(sentence)
 This should print:
 
 ```console
-Sentence: "The grass is green ."
+Sentence[5]: "The grass is green."
 ```
 
 The print-out tells us that the sentence consists of 5 tokens.
@@ -62,73 +62,9 @@ Token[4]: "."
 
 ## Tokenization
 
-When you create a `Sentence` as above, the text is **automatically tokenized** using the
-lightweight [segtok library](https://pypi.org/project/segtok/).
-
-### Using no tokenizer
-
-If you *do not* want to use this tokenizer, simply set the `use_tokenizer` flag to `False`
-when instantiating your `Sentence` with an untokenized string:
-
-```python
-from flair.data import Sentence
-
-# Make a sentence object by passing an untokenized string and the 'use_tokenizer' flag
-untokenized_sentence = Sentence('The grass is green.', use_tokenizer=False)
-
-# Print the sentence
-print(untokenized_sentence)
-
-# Print the number of tokens in sentence (only 4 because no tokenizer is used)
-print(len(untokenized_sentence))
-```
-
-In this case, no tokenization is performed and the text is split on whitespaces, thus resulting in only 4 tokens here.
-
-### Using a different tokenizer
-
-You can also pass custom tokenizers to the initialization method. For instance, if you want to tokenize a Japanese
-sentence you can use the 'janome' tokenizer instead, like this:
-
-```python
-from flair.data import Sentence
-from flair.tokenization import JapaneseTokenizer
-
-# init japanese tokenizer
-tokenizer = JapaneseTokenizer("janome")
-
-# make sentence (and tokenize)
-japanese_sentence = Sentence("私はベルリンが好き", use_tokenizer=tokenizer)
-
-# output tokenized sentence
-print(japanese_sentence)
-```
-
-This should print:
-
-```console
-Sentence: "私 は ベルリン が 好き"
-```
-
-You can write your own tokenization routine. Check the code of `flair.data.Tokenizer` and its implementations
- (e.g. `flair.tokenization.SegtokTokenizer` or `flair.tokenization.SpacyTokenizer`) to get an idea of how to add
- your own tokenization method.
-
-### Using pretokenized sequences
-You can alternatively pass a pretokenized sequence as list of words, e.g.
-
-```python
-from flair.data import Sentence
-sentence = Sentence(['The', 'grass', 'is', 'green', '.'])
-print(sentence)
-```
-
-This should print:
-
-```console
-Sentence: "The grass is green ."
-```
-
+When you create a `Sentence` as above, the text is automatically tokenized (segmented into words)
+using [segtok](https://pypi.org/project/segtok/). 
+   * If you want to use a different tokenizer, check out [this tutorial](/resources/docs/TUTORIAL_BASICS_TOKENIZATION.md). 
 
 ## Adding Labels
 
@@ -310,4 +246,4 @@ Giving you only the "topic" labels.
 
 So far, we've seen how to create sentences and label them manually.
 
-Now, let us look at how to use [pre-trained models](/resources/docs/TUTORIAL_2_TAGGING.md) to tag your text.
+Now, let us look at how to use [pre-trained models](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md) to tag your text.

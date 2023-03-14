@@ -34,6 +34,19 @@ class RegularLoggingPlugin(TrainerPlugin):
         cycle_momentum,
         **kw,
     ):
+        """
+        Logs overview parameters
+        :param patience:
+        :param anneal_factor:
+        :param max_epochs:
+        :param shuffle:
+        :param train_with_dev:
+        :param batch_growth_annealing:
+        :param embeddings_storage_mode:
+        :param cycle_momentum:
+        :param kw:
+        :return:
+        """
         optimizer = self.trainer.optimizer
         lr_info = ",".join([f"{group['lr']:.6f}" for group in optimizer.param_groups])
 
@@ -64,6 +77,11 @@ class RegularLoggingPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_epoch(self, **kw):
+        """
+        Resets some logging parameters
+        :param kw:
+        :return:
+        """
         log_line(log)
 
         self.average_over = 0
@@ -73,11 +91,24 @@ class RegularLoggingPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_training_batch_step(self, loss, datapoint_count, **kw):
+        """
+        Adds loss and datapoint count for logging purposes
+        :param loss:
+        :param datapoint_count:
+        :param kw:
+        :return:
+        """
         self.total_loss += loss
         self.average_over += datapoint_count
 
     @TrainerPlugin.hook
     def metric_recorded(self, record, **kw):
+        """
+        Logs learning rate or momentum
+        :param record:
+        :param kw:
+        :return:
+        """
         if record.name == "learning_rate":
             if record.is_scalar:
                 self.lr_info = f" - lr: {record.value:.4f}"
@@ -92,6 +123,14 @@ class RegularLoggingPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_training_batch(self, batch_no, epoch, total_number_of_batches, **kw):
+        """
+        Logging after training batch, including printing more info at 10% increments
+        :param batch_no:
+        :param epoch:
+        :param total_number_of_batches:
+        :param kw:
+        :return:
+        """
         modulo = self.log_modulo
 
         if modulo is None:
@@ -115,5 +154,11 @@ class RegularLoggingPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_training_epoch(self, epoch, **kw):
+        """
+        Logging that epoch is done
+        :param epoch:
+        :param kw:
+        :return:
+        """
         log_line(log)
         log.info(f"EPOCH {epoch} done: loss {self.total_loss:.4f}{self.lr_info}")

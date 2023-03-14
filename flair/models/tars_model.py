@@ -1,8 +1,9 @@
 import logging
+import typing
 from abc import ABC
 from collections import OrderedDict
 from pathlib import Path
-from typing import List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import torch
@@ -11,7 +12,7 @@ from sklearn.preprocessing import minmax_scale
 from tqdm import tqdm
 
 import flair
-from flair.data import Dictionary, Sentence, Span
+from flair.data import Corpus, Dictionary, Sentence, Span
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import (
     TokenEmbeddings,
@@ -32,6 +33,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         self._task_specific_attributes = {}
         self.label_nearest_map = None
         self.tars_model: flair.nn.Classifier[Sentence]
+        self.separator: str
 
         super(FewshotClassifier, self).__init__()
 
@@ -307,6 +309,18 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
             self._drop_task("ZeroShot")
 
         return
+
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+        yield from super().get_used_tokens(corpus)
+        for label in self.get_current_label_dictionary().idx2item:
+            yield [label.decode("utf-8")]
+        yield [self.separator]
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "FewshotClassifier":
+        from typing import cast
+
+        return cast("FewshotClassifier", super().load(model_path=model_path))
 
 
 class TARSTagger(FewshotClassifier):
@@ -612,6 +626,12 @@ class TARSTagger(FewshotClassifier):
                 lines.append("\n")
         return lines
 
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TARSTagger":
+        from typing import cast
+
+        return cast("TARSTagger", super().load(model_path=model_path))
+
 
 class TARSClassifier(FewshotClassifier):
     """
@@ -900,3 +920,9 @@ class TARSClassifier(FewshotClassifier):
 
         if return_loss:
             return overall_loss, overall_count
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TARSClassifier":
+        from typing import cast
+
+        return cast("TARSClassifier", super().load(model_path=model_path))

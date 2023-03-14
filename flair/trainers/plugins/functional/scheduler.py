@@ -16,6 +16,11 @@ log = logging.getLogger("flair")
 
 
 class SchedulerPlugin(TrainerPlugin):
+    """
+    Plugin for all schedulers. Idea: separate plugins
+    for AnnealOnPlateau and OneCycle
+    """
+
     dependencies = (BestModelPlugin,)
 
     def __init__(self, **kwargs):
@@ -50,6 +55,13 @@ class SchedulerPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_setup(self, scheduler, batch_growth_annealing, **kw):
+        """
+        Checks for impossible parameter combination
+        :param scheduler:
+        :param batch_growth_annealing:
+        :param kw:
+        :return:
+        """
         if isinstance(scheduler, OneCycleLR) and batch_growth_annealing:
             raise ValueError("Batch growth with OneCycle policy is not implemented.")
 
@@ -75,6 +87,28 @@ class SchedulerPlugin(TrainerPlugin):
         anneal_with_restarts,
         **kw,
     ):
+        """
+        initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers
+        :param dataset_size:
+        :param min_learning_rate:
+        :param train_with_dev:
+        :param anneal_against_dev_loss:
+        :param scheduler:
+        :param cycle_momentum:
+        :param warmup_fraction:
+        :param anneal_factor:
+        :param patience:
+        :param initial_extra_patience:
+        :param scheduler_state_dict:
+        :param batch_growth_annealing:
+        :param mini_batch_size:
+        :param max_epochs:
+        :param epoch:
+        :param anneal_with_prestarts:
+        :param anneal_with_restarts:
+        :param kw:
+        :return:
+        """
         optimizer = self.trainer.optimizer
 
         self.initial_learning_rate = [group["lr"] for group in optimizer.param_groups]
@@ -141,11 +175,21 @@ class SchedulerPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_loop(self, **kw):
+        """
+        Store learning rate and set previous_learning_rate
+        :param kw:
+        :return:
+        """
         self.store_learning_rate()
         self.previous_learning_rate = self.current_learning_rate
 
     @TrainerPlugin.hook
     def before_training_epoch(self, **kw):
+        """
+        load state for anneal_with_restarts / prestarts, batch_growth_annealing, logic for early stopping
+        :param kw:
+        :return:
+        """
         self.store_learning_rate()
 
         base_path = self.trainer.base_path
@@ -183,13 +227,24 @@ class SchedulerPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_training_batch(self, **kw):
-        # do the scheduler step if one-cycle or linear decay
+        """
+        do the scheduler step if one-cycle or linear decay
+
+        :param kw:
+        :return:
+        """
         if isinstance(self.scheduler, (OneCycleLR, LinearSchedulerWithWarmup)):
             self.scheduler.step()
             self.store_learning_rate()
 
     @TrainerPlugin.hook
     def after_training_epoch(self, epoch, **kw):
+        """
+        Logging for bad_epochs
+        :param epoch:
+        :param kw:
+        :return:
+        """
         if self.log_bad_epochs:
             try:
                 bad_epochs = self.scheduler.num_bad_epochs
@@ -203,5 +258,12 @@ class SchedulerPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def best_model(self, primary_value, auxiliary_value, **kw):
+        """
+        Scheduler step if AnnealOnPlateau
+        :param primary_value:
+        :param auxiliary_value:
+        :param kw:
+        :return:
+        """
         if isinstance(self.scheduler, AnnealOnPlateau):
             self.scheduler.step(primary_value, auxiliary_value)
