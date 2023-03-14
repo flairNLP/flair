@@ -26,10 +26,9 @@ class TensorboardLogger(TrainerPlugin):
         self._warned = False
 
     @TrainerPlugin.hook
-    def after_data_setup(self, use_tensorboard, **kw):
+    def after_data_setup(self, **kw):
         """
         Initializes a TensorBoard summary writer
-        :param use_tensorboard:
         :param kw:
         :return:
         """

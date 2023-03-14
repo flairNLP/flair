@@ -17,7 +17,6 @@ class SWAPlugin(TrainerPlugin):
     def before_training_setup(self, learning_rate, **kw):
         """
         initializes SWA and stores learning rate TODO: I think this can be moved
-        :param use_swa:
         :param learning_rate:
         :param kw:
         :return:
