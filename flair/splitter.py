@@ -107,7 +107,7 @@ class SpacySentenceSplitter(SentenceSplitter):
             from spacy.language import Language
         except ImportError:
             raise ImportError(
-                "Please install spacy v2.3.2 or higher before using the SpacySentenceSplitter, "
+                "Please install spacy v3.4.4 or higher before using the SpacySentenceSplitter, "
                 "otherwise you can use SegtokSentenceSplitter as alternative implementation."
             )
 

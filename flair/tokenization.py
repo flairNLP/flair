@@ -42,7 +42,7 @@ class SpacyTokenizer(Tokenizer):
             from spacy.language import Language
         except ImportError:
             raise ImportError(
-                "Please install Spacy v2.0 or better before using the Spacy tokenizer, "
+                "Please install Spacy v3.4.4 or better before using the Spacy tokenizer, "
                 "otherwise you can use SegtokTokenizer as advanced tokenizer."
             )
 
@@ -219,12 +219,12 @@ class SciSpacyTokenizer(Tokenizer):
             from spacy.lang import char_classes
         except ImportError:
             raise ImportError(
-                "  Please install scispacy version 0.2.5 (recommended) or higher before using the SciSpacy tokenizer, "
+                "  Please install scispacy version 0.5.1 (recommended) or higher before using the SciSpacy tokenizer, "
                 "otherwise you can use SegtokTokenizer as alternative implementation.\n"
-                "  You can install scispacy (version 0.2.5) by running:\n\n"
-                "     pip install scispacy==0.2.5\n\n"
+                "  You can install scispacy (version 0.5.1) by running:\n\n"
+                "     pip install scispacy==0.5.1\n\n"
                 "  By default HunFlair uses the `en_core_sci_sm` model. You can install the model by running:\n\n"
-                "     pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz\n\n"
+                "     pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_sm-0.5.1.tar.gz\n\n"
                 "  Note that the scispacy version and the version of the model must match to work properly!"
             )
 
