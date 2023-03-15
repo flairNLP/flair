@@ -5295,11 +5295,11 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
                 id_to_entities[passage_id].append(Entity(char_span=entity_offset, entity_type=entity["type"]))
 
                 # FIXME: This is just for debugging purposes
-                passage_text = id_to_text[passage_id]
-                doc_text = passage_text[entity_offset[0] : entity_offset[1]]
-                mention_text = entity["text"][0]
-                if doc_text != mention_text:
-                    print(f"Annotation error ({document['document_id']}) - Doc: {doc_text} vs. Mention: {mention_text}")
+                # passage_text = id_to_text[passage_id]
+                # doc_text = passage_text[entity_offset[0] : entity_offset[1]]
+                # mention_text = entity["text"][0]
+                # if doc_text != mention_text:
+                #     print(f"Annotation error ({document['document_id']}) - Doc: {doc_text} vs. Mention: {mention_text}")
 
         return InternalBioNerDataset(documents=id_to_text, entities_per_document=id_to_entities)
 
@@ -5656,8 +5656,7 @@ class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
         super(HUNER_GENE_TMVAR_V3, self).__init__(
             *args,
-            dataset_name="/vol/fob-wbib-vol3/wbi_stud/wangxida/Studienprojekt/biomedical/bigbio/hub/hub_repos/tmvar_v3/tmvar_v3.py",
-            # dataset_name="tmvar_v3",
+            dataset_name="tmvar_v3",
             **kwargs,
         )
 
@@ -5680,8 +5679,7 @@ class HUNER_SPECIES_TMVAR_V3(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
         super(HUNER_SPECIES_TMVAR_V3, self).__init__(
             *args,
-            dataset_name="/vol/fob-wbib-vol3/wbi_stud/wangxida/Studienprojekt/biomedical/bigbio/hub/hub_repos/tmvar_v3/tmvar_v3.py",
-            # dataset_name="tmvar_v3",
+            dataset_name="tmvar_v3",
             **kwargs,
         )
 
@@ -5704,8 +5702,7 @@ class HUNER_CELL_LINE_TMVAR_V3(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
         super(HUNER_CELL_LINE_TMVAR_V3, self).__init__(
             *args,
-            dataset_name="/vol/fob-wbib-vol3/wbi_stud/wangxida/Studienprojekt/biomedical/bigbio/hub/hub_repos/tmvar_v3/tmvar_v3.py",
-            # dataset_name="tmvar_v3",
+            dataset_name="tmvar_v3",
             **kwargs,
         )
 
@@ -5714,93 +5711,3 @@ class HUNER_CELL_LINE_TMVAR_V3(BIGBIO_NER_CORPUS):
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
         return self.__class__.__name__.lower()
-
-
-# Deprecated, is fixed in BigBio but useful code for debugging future issues
-# FIXME: Annotation missmatch from the source PubTator files
-# EXAMPLE: Annotation error (21904390) - Doc: p686k1684gene  vs. Mention: DKFZ p686k1684
-def map_fn(example):
-    example["entities"] = [
-        repair_doc_offsets(passages, entities)
-        if passages[0]
-        == "Two novel mutations of the PAX6 gene causing different phenotype in a cohort of Chinese patients."
-        else entities
-        for passages, entities in zip(example["passages"], example["entities"])
-    ]
-    return example
-
-
-def repair_doc_offsets(passages, entities):
-    """
-    Some offsets are broken in tmvar_v3, we need to fix them. Replace doc in-place.
-    """
-
-    text = " ".join([passage["text"][0] for passage in passages])
-
-    sentences = text.split(". ")
-
-    sentence_indexes = [m.start() + 2 for m in re.finditer("\. ", text)]  # because the suffix is ". "
-    sentence_indexes = [0] + sentence_indexes
-
-    doc_entities = entities
-
-    if len(doc_entities) == 0:
-        return
-
-    # doc_entities = dataset[split].filter(lambda x: x["document_id"] == "21904390")[:]["entities"][0]
-
-    # print(sentence_indexes)
-    # print(len(sentences))
-    # print(text)
-    # print(doc_entities)
-
-    sentence_index = 0
-    entity_index = 0
-    current_offset = 0
-    next_sentence_offset = 0
-    next_entity_offset = text[current_offset:].find(doc_entities[entity_index]["text"][0])
-    while True:
-        if sentence_index >= len(sentence_indexes) and entity_index >= len(doc_entities):
-            break
-        if next_sentence_offset <= next_entity_offset:
-            sentence_end = sentence_indexes[sentence_index] + len(sentences[sentence_index]) + 2
-            # print(f"Sentence {sentence_index} @ offsets {sentence_indexes[sentence_index]} to {sentence_end}")
-            # print(sentences[sentence_index] + ". ")
-            sentence_index += 1
-            if sentence_index >= len(sentence_indexes):
-                next_sentence_offset = len(text)
-            else:
-                next_sentence_offset = sentence_indexes[sentence_index]
-            # print(f"DEBUG next_sentence_offset: {next_sentence_offset}")
-        else:  # next_entity_offset < next_sentence_offset
-            entity = doc_entities[entity_index]
-            entity_name = entity["text"][0]
-            given_offset_start = entity["offsets"][0][0]
-            given_offset_end = entity["offsets"][0][1]
-            # print(f"  {entity_name} @ offsets (real) {next_entity_offset} to {next_entity_offset + len(entity_name)}")
-            # print(f"  {text[given_offset_start:given_offset_end]} @ offset (given) {given_offset_start} to {given_offset_end}")
-            if given_offset_start != next_entity_offset:  # Mismatched entities
-                # print(doc_entities)
-                entity["offsets"][0][0] = next_entity_offset
-                entity["offsets"][0][1] = next_entity_offset + len(entity_name)
-                # print(doc_entities)
-            current_offset = next_entity_offset + len(entity_name)
-            entity_index += 1
-            if entity_index >= len(doc_entities):
-                next_entity_offset = len(text)
-            else:
-                next_entity_offset = current_offset + text[current_offset:].find(doc_entities[entity_index]["text"][0])
-
-    return doc_entities
-
-
-# Already implemented earlier
-# class HUNER_GENE_BIONLP_ST2013_CG(BIGBIO_NER_CORPUS):
-#     def __init__(self, *args, **kwargs):
-#         super(HUNER_GENE_BIONLP_ST2013_CG, self).__init__(*args, dataset_name="bionlp_st_2013_cg", **kwargs)
-
-#     def get_entity_type_mapping(self) -> Optional[Dict]:
-#         return {"Gene_or_gene_product": GENE_TAG}
-
-#     def build_corpus_directory_name(self, dataset_name: str) -> str:
-#         return self.__class__.__name__.lower()
