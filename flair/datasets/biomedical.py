@@ -2770,7 +2770,7 @@ class S800(ColumnCorpus):
                 start, end = int(fields[2]), int(fields[3])
 
                 if start == end:
-                    continue_S800
+                    continue # Illegal annotation
 
                 entities_per_document[fname].append(Entity((start, end), "Species"))
 
