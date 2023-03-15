@@ -15,10 +15,7 @@ if torch.cuda.is_available():
     device_id = os.environ.get("FLAIR_DEVICE")
 
     # No need for correctness checks, torch is doing it
-    if device_id:
-        device = torch.device(f"cuda:{device_id}")
-    else:
-        device = torch.device("cuda:0")
+    device = torch.device(f"cuda:{device_id}") if device_id else torch.device("cuda:0")
 else:
     device = torch.device("cpu")
 
