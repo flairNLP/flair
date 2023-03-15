@@ -917,7 +917,9 @@ class Sentence(DataPoint):
         if len(self) == 0:
             return ""
         # otherwise, return concatenation of tokens with the correct offsets
-        return self[0].start_position * " " + "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
+        return (self[0].start_position - self.start_position) * " " + "".join(
+            [t.text + t.whitespace_after * " " for t in self.tokens]
+        ).strip()
 
     def to_dict(self, tag_type: str = None):
         labels = []
