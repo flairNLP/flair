@@ -74,6 +74,7 @@ class ModelTrainer(Pluggable):
         self.optimizer = None
         self.base_path = None
         self.mini_batch_size = None
+        self.return_values = {}
 
     @staticmethod
     def check_for_and_delete_previous_best_models(base_path):
@@ -424,15 +425,14 @@ class ModelTrainer(Pluggable):
             # TensorboardLogger -> closes writer
             self.dispatch("_training_finally")
 
-        return_values = self.dispatch(
-            "collecting_train_return_values", epoch=epoch
-        )  # TODO: only one plugin, hard logic
 
         self.reset_training_attributes()
 
-        self.dispatch("after_teardown")  # TODO: no plugins call this
+        # MetricHistoryPlugin -> stores the loss history in return_values
+        self.dispatch("after_teardown")
 
-        return return_values
+        return self.return_values
+
 
     def resume(
         self,

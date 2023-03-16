@@ -46,10 +46,10 @@ class MetricHistoryPlugin(TrainerPlugin):
             pass
 
     @TrainerPlugin.hook
-    def collecting_train_return_values(self, **kw):
+    def after_teardown(self, **kw):
         """
         Returns metric history
         :param kw:
         :return:
         """
-        return self.metric_history
+        self.trainer.return_values.update(elf.metric_history)

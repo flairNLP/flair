@@ -91,36 +91,22 @@ class Pluggable:
             self._hook_handles[event][handle.id] = handle
         return handle
 
-    def dispatch(self, event: EventIdenifier, *args, **kwargs) -> dict:
+    def dispatch(self, event: EventIdenifier, *args, **kwargs) -> None:
         """Call all functions hooked to a certain event."""
         self.validate_event(event)
 
-        events_return_value: dict = {}
-        self._event_queue.put((event, args, kwargs, events_return_value))
+        self._event_queue.put((event, args, kwargs))
 
         if not self._processing_events:
             self._processing_events = True
 
             while not self._event_queue.empty():
-                event, args, kwargs, combined_return_values = self._event_queue.get()
+                event, args, kwargs = self._event_queue.get()
 
                 for hook in self._hook_handles[event].values():
-                    returned = hook(*args, **kwargs)
-
-                    if returned is not None:
-                        try:
-                            combined_return_values.update(returned)
-                        except TypeError as err:
-                            raise TypeError(
-                                "Hook callback must return a mapping (or an iterable of key-value pairs). "
-                                f"{hook.func_name}() returned object of type {type(returned)}."
-                            ) from err
+                    hook(*args, **kwargs)
 
             self._processing_events = False
-
-        # this dict may be empty and will be complete once all events have been
-        # processed
-        return events_return_value
 
     def remove_hook(self, handle: "HookHandle"):
         """Remove a hook handle from this instance."""
