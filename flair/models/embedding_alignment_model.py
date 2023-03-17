@@ -1,6 +1,7 @@
 import logging
-import itertools
 from typing import List, Tuple, Union
+import random
+from collections import Counter
 
 import torch
 
@@ -9,17 +10,16 @@ import flair.nn
 from flair.data import Corpus, Sentence
 from flair.datasets import DataLoader
 
-from collections import Counter
-
 log = logging.getLogger("flair")
 
 
-class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
+class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
     def __init__(
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_type: str,
         corpus: Corpus,
+        knn: int = 5,
         **classifierargs,
     ):
         """
@@ -28,78 +28,96 @@ class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
         textual documents if they share the same class label, and minimize it if they do not.
         This model does not have any learnable parameters, thus it supports only Transformer Embeddings
         because they can be fine-tuned. The model embeds text documents, creates text pairs, and aligns
-        two documents closer to each other (by optimizing cosine similarity to be equal to 1).
+        two documents closer to each other (by optimizing cosine similarity to be equal to 1) if they belong
+        to the same class and moves two documents apart (similarity to be equal to 0) if they don't.
         Prediction phase uses learned embeddings and K-Nearest Neighbors to classify documents.
-        :param document_embeddings: Embedding used to encode sentence (transformer document embeddings for now)
-        :param corpus: The dataset used to train the model. The model uses the training set for the KNN algorithm.
-        :param label_type: Name of the gold labels to use.
 
-        # TODO:
-        # 1) Intuition behind sampling of 2 document pairs is wrong.
-        # Now it's creating all possible 2 pair combinations.
-        # But it should be: each document in a batch has exactly two pairs, one of the same class and one of the different class
-        # Each epoch needs to have 2n training samples (regarding the paper)
-        # 2) Possible improvement: calculating cos similarity for a full batch in paralell (_calculate_loss method)
+        :param document_embeddings: Embedding used to encode sentence (transformer document embeddings for now)
+        :param label_type: Name of the gold labels to use.
+        :param corpus: The dataset used to train the model. The model uses the training set for the KNN algorithm.
+        :param knn: number of neighbours for KNN predictions
+
+        # Update: this model works and was tested on TREC_6 & TREC_50
+        # TODO: Storing + loading is not implemented yet (don't store the corpus), + minor todo with replacing 'random
         """
 
-        super(EmbeddingAlignmentlassifier, self).__init__(**classifierargs)
+        super(EmbeddingAlignmentClassifier, self).__init__(**classifierargs)
 
         # only document embeddings so far
-        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
+        self.embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
 
         # corpus is required to make KNN predictions
-        self._corpus = corpus
+        self._corpus: Corpus = corpus
 
-        self._label_type = label_type
+        self._label_type: str = label_type
 
-        self._cos_similarity = torch.nn.CosineSimilarity(dim=0)
+        # number of neighbours for K-NN predictions
+        self.knn = knn
 
+        # loss function: MSE between cosine similarities and 0s (pairs of different class) and 1s (pairs of same class)
         self.loss_function = torch.nn.MSELoss(reduction="sum")
 
         # auto-spawn on GPU if available
         self.to(flair.device)
 
+    @property
     def label_type(self):
         return self._label_type
 
+    @property
+    def corpus(self):
+        return self._corpus
+
     def _create_sentence_pair_label_map(self, sentences: List[Sentence]) -> List[Tuple[Tuple[int, int], int]]:
 
-        sentence_idx = range(len(sentences))
+        sentence_pair_label_map = []
 
-        # TODO: wrong intuition behind document pair creation
-        # create all possible pairs of 2 sentences in a batch
-        sentence_pair_idx = list(itertools.combinations(sentence_idx, 2))
+        for sentence_id, _ in enumerate(sentences):
+            sentences_of_same_class = []
+            sentences_of_different_class = []
 
-        # "zero" labels (similarity of 0) if two documents don't belong to the same class
-        labels = [0] * len(sentence_pair_idx)
+            for sentence_pair_id, _ in enumerate(sentences):
+                sentence_label = sentences[sentence_id].get_label(self._label_type).value
+                sentence_pair_label = sentences[sentence_pair_id].get_label(self._label_type).value
 
-        # "one" labels (similarity of 1) if two documents share the same class label
-        for pair_id, sentence_pair in enumerate(sentence_pair_idx):
-            if sentences[sentence_pair[0]].get_label(self._label_type).value ==\
-                    sentences[sentence_pair[1]].get_label(self._label_type).value:
-                labels[pair_id] = 1
+                if sentence_id != sentence_pair_id:
+                    if sentence_label == sentence_pair_label:
+                        sentences_of_same_class.append(sentence_pair_id)
+                    else:
+                        sentences_of_different_class.append(sentence_pair_id)
 
-        sentence_pair_label_map = list(zip(sentence_pair_idx, labels))
+            # positive samples: add document pair ids and label 1 for two documents of same class
+            # TODO: don't use random
+            if sentences_of_same_class:
+                positive_sentence_pair = (sentence_id, random.choice(sentences_of_same_class))
+                sentence_pair_label_map.append((positive_sentence_pair, 1))
+
+            # negative samples: add document pair ids and label 0 for two documents of same class
+            if sentences_of_different_class:
+                negative_sentence_pair = (sentence_id, random.choice(sentences_of_different_class))
+                sentence_pair_label_map.append((negative_sentence_pair, 0))
+
         return sentence_pair_label_map
 
     def _calculate_loss(self, sentences: List[Sentence], sentence_pair_label_map) -> Tuple[torch.Tensor, int]:
         """loss is calculated only during model training and not during prediction"""
 
-        similarities = []
-        embedding_names = self.document_embeddings.get_names()
+        embedding_names = self.embeddings.get_names()
 
-        # TODO: calculating cos similarity for a full batch should be faster than for each pair individually
-        for sentence_pair, label in sentence_pair_label_map:
-            first_embedding = sentences[sentence_pair[0]].get_embedding(embedding_names)
-            second_embedding = sentences[sentence_pair[1]].get_embedding(embedding_names)
+        # gather embeddings for each sentence and its pair
+        first_sentences = [sentences[sentence_pair[0]].get_embedding(embedding_names)
+                           for sentence_pair, _ in sentence_pair_label_map]
+        second_sentences = [sentences[sentence_pair[1]].get_embedding(embedding_names)
+                            for sentence_pair, _ in sentence_pair_label_map]
 
-            # calculate similarity between two embeddings
-            similarities.append(self._cos_similarity(first_embedding, second_embedding))
+        # put to gpu
+        first_sentences = torch.stack(first_sentences).to(flair.device)
+        second_sentences = torch.stack(second_sentences).to(flair.device)
 
-        similarities = torch.stack(similarities)
-        labels = torch.FloatTensor([sentence_pair[1] for sentence_pair in sentence_pair_label_map])
+        # calculate cosine similarities for a full batch
+        similarities = torch.nn.functional.cosine_similarity(first_sentences, second_sentences, dim=1)
+        labels = torch.FloatTensor([label for _, label in sentence_pair_label_map]).to(flair.device)
 
-        # loss is the mean squared error between pairwise cosine similarity and 0 and 1 values
         loss = self.loss_function(similarities, labels)
 
         return loss, len(sentence_pair_label_map)
@@ -107,44 +125,43 @@ class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
 
         # embed all sentences
-        self.document_embeddings.embed(sentences)
+        self.embeddings.embed(sentences)
 
         # create sentence pairs and 0 or 1 labels
         sentence_pair_label_map = self._create_sentence_pair_label_map(sentences)
 
+        # calculate MSE loss between sentence pair similarities and 0s and 1s
         return self._calculate_loss(sentences, sentence_pair_label_map)
 
     def _embed_training_set(self, mini_batch_size: int = 32):
         loader = DataLoader(self._corpus.train, batch_size=mini_batch_size, num_workers=0)
         for batch in loader:
-            self.document_embeddings.embed(batch)
+            self.embeddings.embed(batch)
 
-    def _k_nearest_neighbor(self,
-                            sentence: Sentence,
-                            n_neighbors: int = 5,
-                            label_name: str = "predicted"):
-        """Perform KNN classification for a single sentence"""
+    def _k_nearest_neighbor(self, sentence: Sentence) -> str:
+        """KNN classification for a single sentence"""
 
-        embedding_names = self.document_embeddings.get_names()
+        # get embedding for a given sentence
+        embedding_names = self.embeddings.get_names()
         sentence_embedding = sentence.get_embedding(embedding_names)
 
-        similarity_label_pairs = []
+        # gather embeddings for all training instances
+        train_set_embeddings = [training_sample.get_embedding(embedding_names)
+                                for training_sample in self._corpus.train]
+        train_set_embeddings = torch.stack(train_set_embeddings)
 
-        for training_sample in self._corpus.train:
-            embedding_from_train_set = training_sample.get_embedding(embedding_names)
-            similarity = self._cos_similarity(embedding_from_train_set, sentence_embedding).squeeze()
-            label = training_sample.get_label(self._label_type).value
-            similarity_label_pairs.append((similarity, label))
+        # calculate cos similarity between given sentence and all training instances
+        similarities = torch.nn.functional.cosine_similarity(sentence_embedding, train_set_embeddings, dim=1)
 
-        # sort and take n most similar documents
-        similarity_label_pairs = sorted(similarity_label_pairs, key=lambda tup: tup[0], reverse=True)[:n_neighbors]
-        n_closest_labels = [text_pair[1] for text_pair in similarity_label_pairs]
+        # sort by top k (nearest neighbours) and get their labels
+        _, top_k_idx = similarities.topk(k=self.knn)
+        closest_labels = [self._corpus.train[sentence_id].get_label(self._label_type).value
+                          for sentence_id in top_k_idx]
 
         # majority vote
-        predicted_label = Counter(n_closest_labels).most_common(1)[0][0]
+        predicted_label = Counter(closest_labels).most_common(1)[0][0]
 
-        # add predicted label to the sentence
-        sentence.add_label(typename=label_name, value=predicted_label)
+        return predicted_label
 
     def predict(
         self,
@@ -154,6 +171,7 @@ class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
         return_loss: bool = False,
         **kwargs,
     ):
+        """Prediction phase uses K-Nearest Neighbor thus needs embeddings of the training set"""
 
         if isinstance(sentences, Sentence):
             sentences = [sentences]
@@ -164,7 +182,7 @@ class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
             return sentences
 
         # Step 1: embed full training set if needed
-        embedding_names = self.document_embeddings.get_names()
+        embedding_names = self.embeddings.get_names()
         is_train_set_already_embedded = len(self._corpus.train[0].get_embedding(embedding_names)) != 0
         if not is_train_set_already_embedded:
             self._embed_training_set(mini_batch_size=mini_batch_size)
@@ -172,11 +190,12 @@ class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
         # Step 2: embed sentences to be predicted
         loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=0)
         for batch in loader:
-            self.document_embeddings.embed(batch)
+            self.embeddings.embed(batch)
 
-        # Step 3: perform KNN based on cosine similarity to assign each sentence a class
+        # Step 3: perform KNN to assign each new sentence a class
         for sentence in sentences:
-            self._k_nearest_neighbor(sentence, label_name=label_name)
+            predicted_label = self._k_nearest_neighbor(sentence)
+            sentence.add_label(typename=label_name, value=predicted_label)
 
         # KNN predictions do not have loss value
         if return_loss:
@@ -185,8 +204,8 @@ class EmbeddingAlignmentlassifier(flair.nn.Classifier[Sentence]):
     def evaluate(self, data_points, mini_batch_size: int, **kwargs):
         result = super().evaluate(data_points, mini_batch_size=mini_batch_size, **kwargs)
 
-        # clear embeddings in the training set
-        embedding_names = self.document_embeddings.get_names()
+        # clear embeddings of the training set after each epoch
+        embedding_names = self.embeddings.get_names()
         for sentence in self._corpus.train:
             sentence.clear_embeddings(embedding_names)
 

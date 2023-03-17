@@ -12,7 +12,7 @@ from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier
 from .text_regression_model import TextRegressor
 from .word_tagger_model import WordTagger
-from .embedding_alignment_model import EmbeddingAlignmentlassifier
+from .embedding_alignment_model import EmbeddingAlignmentClassifier
 
 __all__ = [
     "EntityLinker",
