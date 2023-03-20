@@ -444,7 +444,9 @@ class ModelTrainer:
 
                 previous_learning_rate = current_learning_rate
 
-                momentum = [group["momentum"] if "momentum" in group else 0 for group in optimizer_instance.param_groups]
+                momentum = [
+                    group["momentum"] if "momentum" in group else 0 for group in optimizer_instance.param_groups
+                ]
 
                 for epoch in range(epoch + 1, max_epochs + 1):
                     log_line(log)
@@ -464,7 +466,9 @@ class ModelTrainer:
                     # get new learning rate
                     current_learning_rate = [group["lr"] for group in optimizer_instance.param_groups]
 
-                    lr_changed = any([lr != prev_lr for lr, prev_lr in zip(current_learning_rate, previous_learning_rate)])
+                    lr_changed = any(
+                        [lr != prev_lr for lr, prev_lr in zip(current_learning_rate, previous_learning_rate)]
+                    )
 
                     if lr_changed and batch_growth_annealing:
                         mini_batch_size *= 2
@@ -490,7 +494,9 @@ class ModelTrainer:
                             for i, lr in enumerate(current_learning_rate):
                                 writer.add_scalar(f"learning_rate_{i}", lr, epoch)
 
-                    all_lrs_too_small = all([lr < min_lr for lr, min_lr in zip(current_learning_rate, min_learning_rate)])
+                    all_lrs_too_small = all(
+                        [lr < min_lr for lr, min_lr in zip(current_learning_rate, min_learning_rate)]
+                    )
 
                     # stop training if learning rate becomes too small
                     if not isinstance(scheduler, (OneCycleLR, LinearSchedulerWithWarmup)) and all_lrs_too_small:
@@ -533,7 +539,9 @@ class ModelTrainer:
                         # if necessary, make batch_steps
                         batch_steps = [batch]
                         if len(batch) > micro_batch_size:
-                            batch_steps = [batch[x : x + micro_batch_size] for x in range(0, len(batch), micro_batch_size)]
+                            batch_steps = [
+                                batch[x : x + micro_batch_size] for x in range(0, len(batch), micro_batch_size)
+                            ]
 
                         # forward and backward for batch
                         for batch_step in batch_steps:
@@ -580,7 +588,9 @@ class ModelTrainer:
 
                             lr_info = ",".join([f"{lr:.6f}" for lr in current_learning_rate])
 
-                            intermittent_loss = train_loss / average_over if average_over > 0 else train_loss / seen_batches
+                            intermittent_loss = (
+                                train_loss / average_over if average_over > 0 else train_loss / seen_batches
+                            )
                             end_time = time.time()
                             log.info(
                                 f"epoch {epoch}"
@@ -816,7 +826,9 @@ class ModelTrainer:
                                     f.write("\tDEV_LOSS\tDEV_" + "\tDEV_".join(dev_eval_result.log_header.split("\t")))
 
                                 if log_test:
-                                    f.write("\tTEST_LOSS\tTEST_" + "\tTEST_".join(test_eval_result.log_header.split("\t")))
+                                    f.write(
+                                        "\tTEST_LOSS\tTEST_" + "\tTEST_".join(test_eval_result.log_header.split("\t"))
+                                    )
 
                             lr_info = ",".join([f"{lr:.4f}" for lr in current_learning_rate])
 
