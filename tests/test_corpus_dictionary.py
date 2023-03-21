@@ -1,8 +1,10 @@
 import os
 
+import pytest
+
 import flair
 from flair.data import Corpus, Dictionary, Label, Sentence
-from flair.datasets import FlairDatapointDataset
+from flair.datasets import ColumnCorpus, FlairDatapointDataset, SentenceDataset
 
 
 def test_dictionary_get_items_with_unk():
@@ -79,6 +81,11 @@ def test_dictionary_save_and_load():
     os.remove(file_path)
 
 
+def test_deprecated_sentence_dataset():
+    with pytest.warns(DeprecationWarning):  # test to make sure the warning comes, but class works
+        SentenceDataset([Sentence("Short sentences are short")])
+
+
 def test_tagged_corpus_get_all_sentences():
     train_sentence = Sentence("I'm used in training.")
     dev_sentence = Sentence("I'm a dev sentence.")
@@ -125,7 +132,7 @@ def test_label_set_confidence():
     assert 3.2 == label.score
     assert "class_1" == label.value
 
-    label.score = 0.2
+    label._score = 0.2
 
     assert 0.2 == label.score
 
@@ -149,6 +156,44 @@ def test_tagged_corpus_make_label_dictionary():
     assert "<unk>" in label_dict.get_items()
     assert "class_1" in label_dict.get_items()
     assert "class_2" in label_dict.get_items()
+
+    with pytest.warns(DeprecationWarning):  # test to make sure the warning comes, but function works
+        corpus.make_tag_dictionary("label")
+
+
+def test_obtain_statistics():
+    sentence_1 = Sentence("The snake hissed to the mountain goat")
+    sentence_1_labels = "  O   B-Ani O      O  O   B-Ani    E-Ani".split()
+    sentence_2 = Sentence("Saber    tooth tigers are extinct")
+    sentence_2_labels = "  B-Ani    I-Ani E-Ani  O   O".split()
+
+    for sentence, labels in [(sentence_1, sentence_1_labels), (sentence_2, sentence_2_labels)]:
+        assert len(sentence) == len(labels)
+        for token, label in zip(sentence, labels):
+            token.add_label("ner", label)
+    corpus = Corpus(
+        FlairDatapointDataset([sentence_1, sentence_2]),
+        FlairDatapointDataset([]),
+        FlairDatapointDataset([sentence_2]),
+    )
+    statistics = corpus.obtain_statistics("ner", pretty_print=False)
+    assert statistics == {
+        "TRAIN": {
+            "dataset": "TRAIN",
+            "total_number_of_documents": 2,
+            "number_of_documents_per_class": {"O": 6, "B-Ani": 3, "E-Ani": 2, "I-Ani": 1},
+            "number_of_tokens_per_tag": {"O": 6, "B-Ani": 3, "E-Ani": 2, "I-Ani": 1},
+            "number_of_tokens": {"total": 12, "min": 5, "max": 7, "avg": 6.0},
+        },
+        "TEST": {
+            "dataset": "TEST",
+            "total_number_of_documents": 1,
+            "number_of_documents_per_class": {"B-Ani": 1, "I-Ani": 1, "E-Ani": 1, "O": 2},
+            "number_of_tokens_per_tag": {"B-Ani": 1, "I-Ani": 1, "E-Ani": 1, "O": 2},
+            "number_of_tokens": {"total": 5, "min": 5, "max": 5, "avg": 5.0},
+        },
+        "DEV": {},
+    }
 
 
 def test_tagged_corpus_statistics():
@@ -243,3 +288,29 @@ def test_classification_corpus_multi_labels_with_negative_examples(tasks_base_pa
     assert len(corpus.train) == 8
     assert len(corpus.dev) == 5
     assert len(corpus.test) == 6
+
+
+def test_misalignment_spans(tasks_base_path):
+    example_txt = """George B-NAME
+Washington I-NAME
+went O
+\t O
+Washington B-CITY
+and O
+enjoyed O
+some O
+coffee B-BEVERAGE
+"""
+    train_path = tasks_base_path / "tmp" / "train.txt"
+    try:
+        train_path.parent.mkdir(exist_ok=True, parents=True)
+        train_path.write_text(example_txt, encoding="utf-8")
+        corpus = ColumnCorpus(
+            data_folder=train_path.parent, column_format={0: "text", 1: "ner"}, train_file=train_path.name
+        )
+        sentence = corpus.train[0]
+        span_texts = [span.text for span in sentence.get_spans("ner")]
+        assert span_texts == ["George Washington", "Washington", "coffee"]
+    finally:
+        train_path.unlink()
+        train_path.parent.rmdir()

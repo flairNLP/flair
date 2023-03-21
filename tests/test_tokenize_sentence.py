@@ -4,18 +4,20 @@ import pytest
 
 import flair
 from flair.data import Sentence, Token
-from flair.tokenization import (
-    JapaneseTokenizer,
+from flair.splitter import (
     NewlineSentenceSplitter,
     NoSentenceSplitter,
     SciSpacySentenceSplitter,
-    SciSpacyTokenizer,
     SegtokSentenceSplitter,
+    SpacySentenceSplitter,
+    TagSentenceSplitter,
+)
+from flair.tokenization import (
+    JapaneseTokenizer,
+    SciSpacyTokenizer,
     SegtokTokenizer,
     SpaceTokenizer,
-    SpacySentenceSplitter,
     SpacyTokenizer,
-    TagSentenceSplitter,
     TokenizerWrapper,
 )
 
@@ -32,7 +34,7 @@ def test_create_sentence_with_newline():
 
     sentence: Sentence = Sentence("I \t ich \n you \t du \n", use_tokenizer=False)
     assert 8 == len(sentence.tokens)
-    assert 0 == sentence.tokens[0].start_pos
+    assert 0 == sentence.tokens[0].start_position
     assert "\n" == sentence.tokens[3].text
 
 
@@ -75,16 +77,7 @@ def test_create_sentence_word_by_word():
     token4: Token = Token("are")
     token5: Token = Token("nice")
 
-    sentence: Sentence = Sentence([])
-
-    sentence.add_token(token1)
-    sentence.add_token(token2)
-    sentence.add_token(token3)
-    sentence.add_token(token4)
-    sentence.add_token(token5)
-
-    sentence.add_token("cities")
-    sentence.add_token(Token("."))
+    sentence: Sentence = Sentence([token1, token2, token3, token4, token5, Token("cities"), Token(".")])
 
     assert "Munich and Berlin are nice cities ." == sentence.to_tokenized_string()
 
@@ -100,11 +93,11 @@ def test_create_sentence_without_tokenizer():
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=False)
 
     assert 3 == len(sentence.tokens)
-    assert 0 == sentence.tokens[0].start_pos
+    assert 0 == sentence.tokens[0].start_position
     assert "I" == sentence.tokens[0].text
-    assert 2 == sentence.tokens[1].start_pos
+    assert 2 == sentence.tokens[1].start_position
     assert "love" == sentence.tokens[1].text
-    assert 7 == sentence.tokens[2].start_pos
+    assert 7 == sentence.tokens[2].start_position
     assert "Berlin." == sentence.tokens[2].text
 
 
@@ -112,13 +105,13 @@ def test_create_sentence_with_default_tokenizer():
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=True)
 
     assert 4 == len(sentence.tokens)
-    assert 0 == sentence.tokens[0].start_pos
+    assert 0 == sentence.tokens[0].start_position
     assert "I" == sentence.tokens[0].text
-    assert 2 == sentence.tokens[1].start_pos
+    assert 2 == sentence.tokens[1].start_position
     assert "love" == sentence.tokens[1].text
-    assert 7 == sentence.tokens[2].start_pos
+    assert 7 == sentence.tokens[2].start_position
     assert "Berlin" == sentence.tokens[2].text
-    assert 13 == sentence.tokens[3].start_pos
+    assert 13 == sentence.tokens[3].start_position
     assert "." == sentence.tokens[3].text
 
 
@@ -135,7 +128,7 @@ def test_create_sentence_with_segtok():
 def test_create_sentence_with_custom_tokenizer():
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=TokenizerWrapper(no_op_tokenizer))
     assert 1 == len(sentence.tokens)
-    assert 0 == sentence.tokens[0].start_pos
+    assert 0 == sentence.tokens[0].start_position
     assert "I love Berlin." == sentence.tokens[0].text
 
 
@@ -144,13 +137,13 @@ def test_create_sentence_with_spacy_tokenizer():
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=SpacyTokenizer("en_core_sci_sm"))
 
     assert 4 == len(sentence.tokens)
-    assert 0 == sentence.tokens[0].start_pos
+    assert 0 == sentence.tokens[0].start_position
     assert "I" == sentence.tokens[0].text
-    assert 2 == sentence.tokens[1].start_pos
+    assert 2 == sentence.tokens[1].start_position
     assert "love" == sentence.tokens[1].text
-    assert 7 == sentence.tokens[2].start_pos
+    assert 7 == sentence.tokens[2].start_position
     assert "Berlin" == sentence.tokens[2].text
-    assert 13 == sentence.tokens[3].start_pos
+    assert 13 == sentence.tokens[3].start_position
     assert "." == sentence.tokens[3].text
 
 
@@ -187,19 +180,19 @@ def test_create_sentence_using_scispacy_tokenizer():
     assert "motor" == sentence.tokens[11].text
     assert "neuron" == sentence.tokens[12].text
 
-    assert 0 == sentence.tokens[0].start_pos
-    assert 7 == sentence.tokens[1].start_pos
-    assert 11 == sentence.tokens[2].start_pos
-    assert 18 == sentence.tokens[3].start_pos
-    assert 27 == sentence.tokens[4].start_pos
-    assert 35 == sentence.tokens[5].start_pos
-    assert 36 == sentence.tokens[6].start_pos
-    assert 40 == sentence.tokens[7].start_pos
-    assert 42 == sentence.tokens[8].start_pos
-    assert 45 == sentence.tokens[9].start_pos
-    assert 48 == sentence.tokens[10].start_pos
-    assert 58 == sentence.tokens[11].start_pos
-    assert 64 == sentence.tokens[12].start_pos
+    assert 0 == sentence.tokens[0].start_position
+    assert 7 == sentence.tokens[1].start_position
+    assert 11 == sentence.tokens[2].start_position
+    assert 18 == sentence.tokens[3].start_position
+    assert 27 == sentence.tokens[4].start_position
+    assert 35 == sentence.tokens[5].start_position
+    assert 36 == sentence.tokens[6].start_position
+    assert 40 == sentence.tokens[7].start_position
+    assert 42 == sentence.tokens[8].start_position
+    assert 45 == sentence.tokens[9].start_position
+    assert 48 == sentence.tokens[10].start_position
+    assert 58 == sentence.tokens[11].start_position
+    assert 64 == sentence.tokens[12].start_position
 
     assert sentence.tokens[4].whitespace_after == 1
     assert sentence.tokens[5].whitespace_after != 1
@@ -211,17 +204,17 @@ def test_split_text_segtok():
     segtok_splitter = SegtokSentenceSplitter()
     sentences = segtok_splitter.split("I love Berlin. " "Berlin is a great city.")
     assert len(sentences) == 2
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 4
-    assert sentences[1].start_pos == 15
+    assert sentences[1].start_position == 15
     assert len(sentences[1].tokens) == 6
 
     segtok_splitter = SegtokSentenceSplitter(tokenizer=TokenizerWrapper(no_op_tokenizer))
     sentences = segtok_splitter.split("I love Berlin. " "Berlin is a great city.")
     assert len(sentences) == 2
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 1
-    assert sentences[1].start_pos == 15
+    assert sentences[1].start_position == 15
     assert len(sentences[1].tokens) == 1
 
 
@@ -229,13 +222,13 @@ def test_split_text_nosplit():
     no_splitter = NoSentenceSplitter()
     sentences = no_splitter.split("I love Berlin")
     assert len(sentences) == 1
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 3
 
     no_splitter = NoSentenceSplitter(TokenizerWrapper(no_op_tokenizer))
     sentences = no_splitter.split("I love Berlin")
     assert len(sentences) == 1
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 1
 
 
@@ -244,17 +237,17 @@ def test_split_text_on_tag():
 
     sentences = tag_splitter.split("I love Berlin#!Me too")
     assert len(sentences) == 2
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 3
-    assert sentences[1].start_pos == 15
+    assert sentences[1].start_position == 15
     assert len(sentences[1].tokens) == 2
 
     tag_splitter = TagSentenceSplitter(tag="#!", tokenizer=TokenizerWrapper(no_op_tokenizer))
     sentences = tag_splitter.split("I love Berlin#!Me too")
     assert len(sentences) == 2
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 1
-    assert sentences[1].start_pos == 15
+    assert sentences[1].start_position == 15
     assert len(sentences[1].tokens) == 1
 
     sentences = tag_splitter.split("I love Berlin Me too")
@@ -272,16 +265,16 @@ def test_split_text_on_newline():
 
     sentences = newline_splitter.split("I love Berlin\nMe too")
     assert len(sentences) == 2
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 3
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[1].tokens) == 2
 
     newline_splitter = NewlineSentenceSplitter(tokenizer=TokenizerWrapper(no_op_tokenizer))
     sentences = newline_splitter.split("I love Berlin\nMe too")
     assert len(sentences) == 2
     assert len(sentences[0].tokens) == 1
-    assert sentences[1].start_pos == 14
+    assert sentences[1].start_position == 14
     assert len(sentences[1].tokens) == 1
 
     sentences = newline_splitter.split("I love Berlin Me too")
@@ -300,24 +293,24 @@ def test_split_text_spacy():
 
     sentences = spacy_splitter.split("This a sentence. " "And here is another one.")
     assert len(sentences) == 2
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 4
-    assert sentences[1].start_pos == 17
+    assert sentences[1].start_position == 17
     assert len(sentences[1].tokens) == 6
 
     sentences = spacy_splitter.split("VF inhibits something. ACE-dependent (GH+) issuses too.")
     assert len(sentences) == 2
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 4
-    assert sentences[1].start_pos == 23
+    assert sentences[1].start_position == 23
     assert len(sentences[1].tokens) == 7
 
     spacy_splitter = SpacySentenceSplitter("en_core_sci_sm", tokenizer=TokenizerWrapper(no_op_tokenizer))
     sentences = spacy_splitter.split("This a sentence. " "And here is another one.")
     assert len(sentences) == 2
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 1
-    assert sentences[1].start_pos == 17
+    assert sentences[1].start_position == 17
     assert len(sentences[1].tokens) == 1
 
 
@@ -326,9 +319,9 @@ def test_split_text_scispacy():
     scispacy_splitter = SciSpacySentenceSplitter()
     sentences = scispacy_splitter.split("VF inhibits something. ACE-dependent (GH+) issuses too.")
     assert len(sentences) == 2
-    assert sentences[0].start_pos == 0
+    assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 4
-    assert sentences[1].start_pos == 23
+    assert sentences[1].start_position == 23
     assert len(sentences[1].tokens) == 9
 
 
@@ -400,11 +393,7 @@ def test_print_sentence_plain(tasks_base_path):
 
 
 def test_infer_space_after():
-    sentence: Sentence = Sentence([])
-    sentence.add_token(Token("xyz"))
-    sentence.add_token(Token('"'))
-    sentence.add_token(Token("abc"))
-    sentence.add_token(Token('"'))
+    sentence: Sentence = Sentence([Token("xyz"), Token('"'), Token("abc"), Token('"')])
     sentence.infer_space_after()
 
     assert 'xyz " abc "' == sentence.to_tokenized_string()
@@ -447,11 +436,14 @@ def test_token_positions_when_creating_with_tokenizer():
 
 
 def test_token_positions_when_creating_word_by_word():
-    sentence: Sentence = Sentence([])
-    sentence.add_token(Token("I"))
-    sentence.add_token("love")
-    sentence.add_token("Berlin")
-    sentence.add_token(".")
+    sentence: Sentence = Sentence(
+        [
+            Token("I"),
+            Token("love"),
+            Token("Berlin"),
+            Token("."),
+        ]
+    )
 
     assert 0 == sentence.tokens[0].start_position
     assert 1 == sentence.tokens[0].end_position

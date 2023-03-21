@@ -1,5 +1,11 @@
 # Expose base classses
-from .base import DataLoader, FlairDatapointDataset, MongoDataset, StringDataset
+from .base import (
+    DataLoader,
+    FlairDatapointDataset,
+    MongoDataset,
+    SentenceDataset,
+    StringDataset,
+)
 
 # Expose all biomedical data sets used for the evaluation of BioBERT
 # -
@@ -138,9 +144,11 @@ from .entity_linking import (
     WSD_TRAINOMATIC,
     WSD_UFSAC,
     WSD_WORDNET_GLOSS_TAGGED,
+    ZELDA,
 )
 
 # Expose all relation extraction datasets
+from .ocr import SROIE, OcrJsonDataset
 from .relation_extraction import (
     RE_ENGLISH_CONLL04,
     RE_ENGLISH_DRUGPROT,
@@ -160,6 +168,7 @@ from .sequence_labeling import (
     CONLL_03_GERMAN,
     CONLL_03_SPANISH,
     CONLL_2000,
+    FEWNERD,
     KEYPHRASE_INSPEC,
     KEYPHRASE_SEMEVAL2010,
     KEYPHRASE_SEMEVAL2017,
@@ -186,15 +195,20 @@ from .sequence_labeling import (
     NER_GERMAN_POLITICS,
     NER_HIPE_2022,
     NER_HUNGARIAN,
+    NER_ICDAR_EUROPEANA,
     NER_ICELANDIC,
     NER_JAPANESE,
     NER_MASAKHANE,
     NER_MULTI_CONER,
+    NER_MULTI_CONER_V2,
     NER_MULTI_WIKIANN,
     NER_MULTI_WIKINER,
     NER_MULTI_XTREME,
+    NER_NERMUD,
     NER_SWEDISH,
     NER_TURKU,
+    NER_UKRAINIAN,
+    ONTONOTES,
     UP_CHINESE,
     UP_ENGLISH,
     UP_FINNISH,
@@ -282,6 +296,7 @@ from .treebanks import (
     UD_SPANISH,
     UD_SWEDISH,
     UD_TURKISH,
+    UD_UKRAINIAN,
     UD_WOLOF,
     UniversalDependenciesCorpus,
     UniversalDependenciesDataset,
@@ -289,7 +304,10 @@ from .treebanks import (
 
 __all__ = [
     "DataLoader",
+    "OcrJsonDataset",
+    "SROIE",
     "FlairDatapointDataset",
+    "SentenceDataset",
     "MongoDataset",
     "StringDataset",
     "ANAT_EM",
@@ -367,6 +385,7 @@ __all__ = [
     "LOCTEXT",
     "MIRNA",
     "NCBI_DISEASE",
+    "ONTONOTES",
     "OSIRIS",
     "PDR",
     "S800",
@@ -412,7 +431,6 @@ __all__ = [
     "WSD_TRAINOMATIC",
     "WSD_UFSAC",
     "WSD_WORDNET_GLOSS_TAGGED",
-    "EntityLinkingCorpus",
     "RE_ENGLISH_CONLL04",
     "RE_ENGLISH_DRUGPROT",
     "RE_ENGLISH_SEMEVAL2010",
@@ -423,6 +441,7 @@ __all__ = [
     "CONLL_03_GERMAN",
     "CONLL_03_SPANISH",
     "CONLL_2000",
+    "FEWNERD",
     "KEYPHRASE_INSPEC",
     "KEYPHRASE_SEMEVAL2010",
     "KEYPHRASE_SEMEVAL2017",
@@ -449,14 +468,17 @@ __all__ = [
     "NER_GERMAN_POLITICS",
     "NER_HIPE_2022",
     "NER_HUNGARIAN",
+    "NER_ICDAR_EUROPEANA",
     "NER_ICELANDIC",
     "NER_JAPANESE",
+    "NER_NERMUD",
     "NER_MASAKHANE",
     "NER_MULTI_WIKIANN",
     "NER_MULTI_WIKINER",
     "NER_MULTI_XTREME",
     "NER_SWEDISH",
     "NER_TURKU",
+    "NER_UKRAINIAN",
     "UP_CHINESE",
     "UP_ENGLISH",
     "UP_FINNISH",
@@ -469,6 +491,7 @@ __all__ = [
     "ColumnCorpus",
     "ColumnDataset",
     "NER_MULTI_CONER",
+    "NER_MULTI_CONER_V2",
     "FeideggerCorpus",
     "FeideggerDataset",
     "GLUE_MNLI",
@@ -536,7 +559,9 @@ __all__ = [
     "UD_SPANISH",
     "UD_SWEDISH",
     "UD_TURKISH",
+    "UD_UKRAINIAN",
     "UD_WOLOF",
     "UniversalDependenciesCorpus",
     "UniversalDependenciesDataset",
+    "ZELDA",
 ]

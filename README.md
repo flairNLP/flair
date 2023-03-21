@@ -1,4 +1,5 @@
-![alt text](resources/docs/flair_logo_2020.png)
+![alt text](resources/docs/flair_logo_2020_FINAL_day_dpi72.png#gh-light-mode-only)
+![alt text](resources/docs/flair_logo_2020_FINAL_night_dpi72.png#gh-dark-mode-only)
 
 [![PyPI version](https://badge.fury.io/py/flair.svg)](https://badge.fury.io/py/flair)
 [![GitHub Issues](https://img.shields.io/github/issues/flairNLP/flair.svg)](https://github.com/flairNLP/flair/issues)
@@ -12,22 +13,22 @@ A very simple framework for **state-of-the-art NLP**. Developed by [Humboldt Uni
 Flair is:
 
 * **A powerful NLP library.** Flair allows you to apply our state-of-the-art natural language processing (NLP)
-models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS), 
+models to your text, such as named entity recognition (NER), sentiment analysis, part-of-speech tagging (PoS),
   special support for [biomedical data](/resources/docs/HUNFLAIR.md),
  sense disambiguation and classification, with support for a rapidly growing number of languages.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and
-document embeddings, including our proposed **[Flair embeddings](https://www.aclweb.org/anthology/C18-1139/)**, BERT embeddings and ELMo embeddings.
+document embeddings, including our proposed [Flair embeddings](https://www.aclweb.org/anthology/C18-1139/) and various transformers.
 
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.11](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.12.1](https://github.com/flairNLP/flair/releases)!
 
 
 ## State-of-the-Art Models
 
-Flair ships with state-of-the-art models for a range of NLP tasks. For instance, check out our latest NER models: 
+Flair ships with state-of-the-art models for a range of NLP tasks. For instance, check out our latest NER models:
 
 | Language | Dataset | Flair | Best published | Model card & demo
 |  ---  | ----------- | ---------------- | ------------- | ------------- |
@@ -37,7 +38,7 @@ Flair ships with state-of-the-art models for a range of NLP tasks. For instance,
 | Dutch  | Conll-03  (4-class)  |  **95.25**  | *93.7 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Dutch 4-class NER demo](https://huggingface.co/flair/ner-dutch-large)  |
 | Spanish  | Conll-03 (4-class)   |  **90.54** | *90.3 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 4-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
 
-**New:** Most Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are now hosted 
+Many Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are also hosted
 on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?library=flair&sort=downloads)! You can browse models, check detailed information on how they were trained, and even try each model out online!
 
 
@@ -45,69 +46,99 @@ on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?library=fl
 
 ### Requirements and Installation
 
-The project is based on PyTorch 1.5+ and Python 3.6+, because method signatures and type hints are beautiful.
-If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](https://vsupalov.com/developing-with-python3-6-on-ubuntu-16-04/).
-Then, in your favorite virtual environment, simply do:
+In your favorite virtual environment, simply do:
 
 ```
 pip install flair
 ```
 
-### Example Usage
+Flair requires Python 3.7+. 
 
-Let's run named entity recognition (NER) over an example sentence. All you need to do is make a `Sentence`, load
+### Example 1: Tag Entities in Text
+
+Let's run **named entity recognition** (NER) over an example sentence. All you need to do is make a `Sentence`, load
 a pre-trained model and use it to predict tags for the sentence:
 
 ```python
 from flair.data import Sentence
-from flair.models import SequenceTagger
+from flair.nn import Classifier
 
 # make a sentence
 sentence = Sentence('I love Berlin .')
 
 # load the NER tagger
-tagger = SequenceTagger.load('ner')
+tagger = Classifier.load('ner')
 
 # run NER over sentence
 tagger.predict(sentence)
-```
 
-Done! The `Sentence` now has entity annotations. Print the sentence to see what the tagger found.
-
-```python
 # print the sentence with all annotations
 print(sentence)
-
-print('The following NER tags are found:')
-
-# iterate over entities and print each
-for entity in sentence.get_spans('ner'):
-    print(entity)
 ```
 
 This should print:
 
 ```console
 Sentence: "I love Berlin ." → ["Berlin"/LOC]
-
-The following NER tags are found:
-
-Span[2:3]: "Berlin" → LOC (0.999)
 ```
+
+This means that "Berlin" was tagged as a **location entity** in this sentence. 
+
+   * *to learn more about NER tagging in Flair, check out our [NER tutorial](/resources/docs/TUTORIAL_TAGGING_NER.md)!*
+
+
+### Example 2: Detect Sentiment 
+
+Let's run **sentiment analysis** over an example sentence to determine whether it is POSITIVE or NEGATIVE.
+Same code as above, just a different model: 
+
+```python
+from flair.data import Sentence
+from flair.nn import Classifier
+
+# make a sentence
+sentence = Sentence('I love Berlin .')
+
+# load the NER tagger
+tagger = Classifier.load('sentiment')
+
+# run NER over sentence
+tagger.predict(sentence)
+
+# print the sentence with all annotations
+print(sentence)
+```
+
+This should print:
+
+```console
+Sentence[4]: "I love Berlin ." → POSITIVE (0.9983)
+```
+
+This means that the sentence "I love Berlin" was tagged as having **POSITIVE** sentiment. 
+
+   * *to learn more about sentiment analysis in Flair, check out our [sentiment analysis tutorial](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)!*
 
 ## Tutorials
 
-We provide a set of quick tutorials to get you started with the library:
+We provide a set of **quick tutorials** to get you started with the library:
 
-* [Tutorial 1: Basics](/resources/docs/TUTORIAL_1_BASICS.md)
-* [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
-* [Tutorial 3: Embedding Words](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
-* [Tutorial 4: List of All Word Embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
-* [Tutorial 5: Embedding Documents](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
-* [Tutorial 6: Loading a Dataset](/resources/docs/TUTORIAL_6_CORPUS.md)
-* [Tutorial 7: Training a Model](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
-* [Tutorial 8: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
-* [Tutorial 9: Training a Zero Shot Text Classifier (TARS)](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
+1. [**Tutorial 1: Basics**](/resources/docs/TUTORIAL_FLAIR_BASICS.md)
+2. [**Tutorial 2: Tagging your Text**](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md)
+   * ... how to **tag entities** in your text → [*2.1*](/resources/docs/TUTORIAL_TAGGING_NER.md)
+   * ... how to use **sentiment analysis** → [*2.2*](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)
+   * ... how to use **entity linking**  → [*2.3*](/resources/docs/TUTORIAL_TAGGING_LINKING.md)
+   * ... how to use **part-of-speech tagging**   → [*2.4*](/resources/docs/TUTORIAL_TAGGING_POS.md)
+   * ... how to use **relation extraction** → [*2.5*](/resources/docs/TUTORIAL_TAGGING_RELATIONS.md)
+   * ... and more → [*full tutorial*](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md)
+3. [**Tutorial 3: Using Embeddings**](/resources/docs/TUTORIAL_EMBEDDINGS_OVERVIEW.md)
+4. [**Tutorial 4: Training a Model**](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md)
+   * ... how **model training generally works in Flair** → [4.1](/resources/docs/TUTORIAL_TRAINING_MODELS.md)
+   * ... how to **load a prepared dataset** → [4.2](/resources/docs/TUTORIAL_CORPUS_PREPARED.md)
+   * ... how to **load your own dataset** → [4.3](/resources/docs/TUTORIAL_CORPUS_CUSTOM.md)
+   * ... how to **train a sequence labeling model** (NER/PoS) → [4.4](/resources/docs/TUTORIAL_TRAINING_SEQUENCE_LABELER.md)
+   * ... how to **train a text classifier** (sentiment analysis, etc.)  → [4.5](/resources/docs/TUTORIAL_TRAINING_TEXT_CLASSIFIER.md)
+   * ... and more → [*full tutorial*](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md)
 
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you can embed your text with different word or document embeddings, and how you can train your own
@@ -116,14 +147,23 @@ language models, sequence labeling models, and text classification models. Let u
 There is also a dedicated landing page for our **[biomedical NER and datasets](/resources/docs/HUNFLAIR.md)** with
 installation instructions and tutorials.
 
+
+## More Documentation
+
+Another great place to start is the recent book [Natural Language Processing with Flair](https://www.amazon.com/Natural-Language-Processing-Flair-understanding/dp/1801072310)
+and its accompanying [code repository](https://github.com/PacktPublishing/Natural-Language-Processing-with-Flair).
+
 There are also good third-party articles and posts that illustrate how to use Flair:
-* [How to build a text classifier with Flair](https://towardsdatascience.com/text-classification-with-state-of-the-art-nlp-library-flair-b541d7add21f)
+* [Training an NER model with Flair](https://medium.com/thecyphy/training-custom-ner-model-using-flair-df1f9ea9c762)
+* [Training a text classifier with Flair](https://towardsdatascience.com/text-classification-with-state-of-the-art-nlp-library-flair-b541d7add21f)
+* [Zero and few-shot learning](https://towardsdatascience.com/zero-and-few-shot-learning-c08e145dc4ed) 
+* [Visualisation tool for highlighting the extracted entities](https://github.com/lunayach/visNER)
+* [Flair functionality and how to use in Colab](https://www.analyticsvidhya.com/blog/2019/02/flair-nlp-library-python/)
+* [Benchmarking NER algorithms](https://towardsdatascience.com/benchmark-ner-algorithm-d4ab01b2d4c3)
+* [Clinical NLP](https://towardsdatascience.com/clinical-natural-language-processing-5c7b3d17e137)
 * [How to build a microservice with Flair and Flask](https://shekhargulati.com/2019/01/04/building-a-sentiment-analysis-python-microservice-with-flair-and-flask/)
 * [A docker image for Flair](https://towardsdatascience.com/docker-image-for-nlp-5402c9a9069e)
-* [Great overview of Flair functionality and how to use in Colab](https://www.analyticsvidhya.com/blog/2019/02/flair-nlp-library-python/)
-* [Visualisation tool for highlighting the extracted entities](https://github.com/lunayach/visNER)
 * [Practical approach of State-of-the-Art Flair in Named Entity Recognition](https://medium.com/analytics-vidhya/practical-approach-of-state-of-the-art-flair-in-named-entity-recognition-46a837e25e6b)
-* [Benchmarking NER algorithms](https://towardsdatascience.com/benchmark-ner-algorithm-d4ab01b2d4c3)
 * [Training a Flair text classifier on Google Cloud Platform (GCP) and serving predictions on GCP](https://github.com/robinvanschaik/flair-on-gcp)
 * [Model Interpretability for transformer-based Flair models](https://github.com/robinvanschaik/interpret-flair)
 
@@ -145,7 +185,7 @@ If you use the Flair framework for your experiments, please cite [this paper](ht
 
 ```
 @inproceedings{akbik2019flair,
-  title={FLAIR: An easy-to-use framework for state-of-the-art NLP},
+  title={{FLAIR}: An easy-to-use framework for state-of-the-art {NLP}},
   author={Akbik, Alan and Bergmann, Tanja and Blythe, Duncan and Rasul, Kashif and Schweter, Stefan and Vollgraf, Roland},
   booktitle={{NAACL} 2019, 2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics (Demonstrations)},
   pages={54--59},
@@ -157,12 +197,13 @@ If you use our new "FLERT" models or approach, please cite [this paper](https://
 
 ```
 @misc{schweter2020flert,
-    title={FLERT: Document-Level Features for Named Entity Recognition},
+    title={{FLERT}: Document-Level Features for Named Entity Recognition},
     author={Stefan Schweter and Alan Akbik},
     year={2020},
     eprint={2011.06993},
     archivePrefix={arXiv},
     primaryClass={cs.CL}
+}
 ```
 
 If you use our TARS approach for few-shot and zero-shot learning, please cite [this paper](https://kishaloyhalder.github.io/pdfs/tars_coling2020.pdf/):

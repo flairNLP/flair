@@ -1,4 +1,12 @@
 # Expose base classses
+from flair.embeddings.transformer import (
+    TransformerEmbeddings,
+    TransformerJitDocumentEmbeddings,
+    TransformerJitWordEmbeddings,
+    TransformerOnnxDocumentEmbeddings,
+    TransformerOnnxWordEmbeddings,
+)
+
 from .base import Embeddings, ScalarMix
 
 # Expose document embedding classes
@@ -29,11 +37,11 @@ from .legacy import (
     CharLMEmbeddings,
     DocumentLSTMEmbeddings,
     DocumentMeanEmbeddings,
+    ELMoEmbeddings,
     ELMoTransformerEmbeddings,
     OpenAIGPT2Embeddings,
     OpenAIGPTEmbeddings,
     RoBERTaEmbeddings,
-    TransformerXLEmbeddings,
     XLMEmbeddings,
     XLMRobertaEmbeddings,
     XLNetEmbeddings,
@@ -44,7 +52,6 @@ from .token import (
     BPEmbSerializable,
     BytePairEmbeddings,
     CharacterEmbeddings,
-    ELMoEmbeddings,
     FastTextEmbeddings,
     FlairEmbeddings,
     HashEmbeddings,
@@ -83,7 +90,6 @@ __all__ = [
     "OpenAIGPT2Embeddings",
     "OpenAIGPTEmbeddings",
     "RoBERTaEmbeddings",
-    "TransformerXLEmbeddings",
     "XLMEmbeddings",
     "XLMRobertaEmbeddings",
     "XLNetEmbeddings",
@@ -102,4 +108,9 @@ __all__ = [
     "TokenEmbeddings",
     "TransformerWordEmbeddings",
     "WordEmbeddings",
+    "TransformerEmbeddings",
+    "TransformerOnnxWordEmbeddings",
+    "TransformerOnnxDocumentEmbeddings",
+    "TransformerJitWordEmbeddings",
+    "TransformerJitDocumentEmbeddings",
 ]

@@ -2,7 +2,7 @@
 
 Data is taken from [here](http://ai.stanford.edu/~amaas/data/sentiment/).
 
-The dataset contains data for a binary sentiment classification. 
+The dataset contains data for a binary sentiment classification.
 We took a small random sample and converted it to the expected format of our data fetcher:
 ```
 __label__<class_name> <text>

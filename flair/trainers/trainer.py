@@ -1,3 +1,4 @@
+import contextlib
 import copy
 import datetime
 import inspect
@@ -13,8 +14,12 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 import torch
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
+from transformer_smaller_training_vocab import reduce_train_vocab
 
+from flair.embeddings import Embeddings, StackedEmbeddings, TransformerEmbeddings
+from flair.models import FewshotClassifier
 from flair.nn import Model
+from flair.nn.model import ReduceTransformerVocabMixin
 
 try:
     from apex import amp
@@ -27,7 +32,7 @@ from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
 
 import flair
 import flair.nn
-from flair.data import Corpus, Dictionary, MultiCorpus, _len_dataset
+from flair.data import Corpus, Dictionary, _len_dataset
 from flair.datasets import DataLoader
 from flair.optim import ExpAnnealLR, LinearSchedulerWithWarmup
 from flair.training_utils import (
@@ -106,7 +111,7 @@ class ModelTrainer:
         sampler=None,
         use_amp: bool = False,
         amp_opt_level: str = "O1",
-        eval_on_train_fraction: float = 0.0,
+        eval_on_train_fraction: Union[float, str] = 0.0,
         eval_on_train_shuffle: bool = False,
         save_model_each_k_epochs: int = 0,
         tensorboard_comment: str = "",
@@ -123,13 +128,16 @@ class ModelTrainer:
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
         scheduler_state_dict: Optional[Dict[str, Any]] = None,
         save_optimizer_state: bool = False,
+        reduce_transformer_vocab: bool = False,
+        shuffle_first_epoch: bool = False,
         **kwargs,
     ) -> dict:
         """
         Trains any class that implements the flair.nn.Model interface.
         :param base_path: Main path to which all output during training is logged and models are saved  # noqa: E501
         :param learning_rate: Initial learning rate (or max, if scheduler is OneCycleLR)  # noqa: E501
-        :param mini_batch_size: Size of mini-batches during training
+        :param mini_batch_size: Size of mini-batches during training  # noqa: E501
+        :param eval_batch_size: Size of mini-batches during evaluation. Defaults to mini_batch_size.  # noqa: E501
         :param mini_batch_chunk_size: If mini-batches are larger than this number, they get broken down into chunks of this size for processing purposes  # noqa: E501
         :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.  # noqa: E501
         :param scheduler: The learning rate scheduler to use
@@ -139,6 +147,7 @@ class ModelTrainer:
         :param patience: Patience is the number of epochs with no improvement the Trainer waits  # noqa: E501
          until annealing the learning rate
         :param min_learning_rate: If the (in multi lr case: all) learning rate falls below this threshold, training terminates  # noqa: E501
+        :param initial_extra_patience: Extra patience on top of the base patience value before the first learning rate annealment  # noqa: E501
         :param warmup_fraction: Fraction of warmup steps if the scheduler is LinearSchedulerWithWarmup  # noqa: E501
         :param train_with_dev:  If True, the data from dev split is added to the training data  # noqa: E501
         :param train_with_test: If True, the data from test split is added to the training data  # noqa: E501
@@ -148,9 +157,14 @@ class ModelTrainer:
         'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
         :param save_final_model: If True, final model is saved
         :param anneal_with_restarts: If True, the last best model is restored when annealing the learning rate  # noqa: E501
+        :param anneal_with_prestarts: If True, the model preceding the last best model is restored when annealing the learning rate  # noqa: E501
+        :param anneal_against_dev_loss: If True, the annealment is triggered when dev loss plateaus.  # noqa: E501
+         If False (default), it is triggered when dev score plateaus.
+        :param batch_growth_annealing: If True, mini_batch_size doubles every time learning_rate is annealed.  # noqa: E501
         :param shuffle: If True, data is shuffled during training
         :param param_selection_mode: If True, testing is performed against dev data. Use this mode when doing  # noqa: E501
         parameter selection.
+        :param write_weights: If True, write weights to weights.txt on each batch logging event.
         :param num_workers: Number of workers in your data loader.
         :param sampler: You can pass a data sampler here for special sampling of data.  # noqa: E501
         :param eval_on_train_fraction: the fraction of train data to do the evaluation on,  # noqa: E501
@@ -191,8 +205,14 @@ class ModelTrainer:
         local_variables = locals()
         training_parameters = {}
         for parameter in signature(self.train).parameters:
-            training_parameters[parameter] = local_variables[parameter]
+            if isinstance(local_variables[parameter], Path):
+                training_parameters[parameter] = str(local_variables[parameter])
+            else:
+                training_parameters[parameter] = local_variables[parameter]
         model_card["training_parameters"] = training_parameters
+
+        if epoch >= max_epochs:
+            log.warning(f"Starting at epoch {epoch + 1}/{max_epochs}. No training will be done.")
 
         # add model card to model
         self.model.model_card = model_card
@@ -228,11 +248,14 @@ class ModelTrainer:
         if mini_batch_chunk_size is None:
             mini_batch_chunk_size = mini_batch_size
 
+        # if optimizer class is passed, instantiate:
         if inspect.isclass(optimizer):
-            # if optimizer is class, trainer will create a single parameter group
-            initial_learning_rate = [learning_rate]
+            kwargs["lr"] = learning_rate
+            optimizer_instance = optimizer(self.model.parameters(), **kwargs)
         else:
-            initial_learning_rate = [group["lr"] for group in optimizer.param_groups]
+            optimizer_instance = optimizer
+
+        initial_learning_rate = [group["lr"] for group in optimizer_instance.param_groups]
 
         if not isinstance(min_learning_rate, list):
             min_learning_rate = [min_learning_rate] * len(initial_learning_rate)
@@ -244,13 +267,14 @@ class ModelTrainer:
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
 
-        self.check_for_and_delete_previous_best_models(base_path)
+        if epoch == 0:
+            self.check_for_and_delete_previous_best_models(base_path)
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
         log_test = True if (not param_selection_mode and self.corpus.test and monitor_test) else False
         log_dev = False if train_with_dev or not self.corpus.dev else True
-        log_train_part = True if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0) else False
+        log_train_part = True if (eval_on_train_fraction == "dev" or float(eval_on_train_fraction) > 0.0) else False
 
         if log_train_part:
             train_part_size = (
@@ -269,84 +293,99 @@ class ModelTrainer:
 
         weight_extractor = WeightExtractor(base_path)
 
-        # if optimizer class is passed, instantiate:
-        if inspect.isclass(optimizer):
-            kwargs["lr"] = learning_rate
-            optimizer = optimizer(self.model.parameters(), **kwargs)
-
-        if use_swa:
-            import torchcontrib
-
-            optimizer = torchcontrib.optim.SWA(optimizer, swa_start=10, swa_freq=5, swa_lr=learning_rate)
-
-        # from here on, use list of learning rates
-        current_learning_rate: List = [group["lr"] for group in optimizer.param_groups]
-
-        if use_amp:
-            self.model, optimizer = amp.initialize(self.model, optimizer, opt_level=amp_opt_level)
-
-        optimizer = cast(torch.optim.Optimizer, optimizer)
-
-        # load existing optimizer state dictionary if it exists
-        if optimizer_state_dict:
-            optimizer.load_state_dict(optimizer_state_dict)
-
-        # minimize training loss if training with dev data, else maximize dev score
-        anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
-        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.0
-
-        dataset_size = _len_dataset(self.corpus.train)
-        if train_with_dev:
-            dataset_size += _len_dataset(self.corpus.dev)
-
-        # if scheduler is passed as a class, instantiate
-        if inspect.isclass(scheduler):
-            if scheduler == OneCycleLR:
-                scheduler = OneCycleLR(
-                    optimizer,
-                    max_lr=current_learning_rate,
-                    steps_per_epoch=dataset_size // mini_batch_size + 1,
-                    epochs=max_epochs - epoch,
-                    # if we load a checkpoint, we have already trained for epoch
-                    pct_start=0.0,
-                    cycle_momentum=cycle_momentum,
-                )
-            elif scheduler == LinearSchedulerWithWarmup:
-                steps_per_epoch = (dataset_size + mini_batch_size - 1) / mini_batch_size
-                num_train_steps = int(steps_per_epoch * max_epochs)
-                num_warmup_steps = int(num_train_steps * warmup_fraction)
-
-                scheduler = LinearSchedulerWithWarmup(
-                    optimizer,
-                    num_train_steps=num_train_steps,
-                    num_warmup_steps=num_warmup_steps,
-                )
+        with contextlib.ExitStack() as context_stack:
+            if reduce_transformer_vocab and isinstance(self.model, ReduceTransformerVocabMixin):
+                transformer_embeddings = get_transformer_embeddings(self)
+                if not transformer_embeddings:
+                    reduce_transformer_vocab = False
+                else:
+                    tokens = list(self.model.get_used_tokens(self.corpus))
+                    for emb in transformer_embeddings:
+                        context_stack.enter_context(
+                            reduce_train_vocab(
+                                model=emb.model, tokenizer=emb.tokenizer, texts=tokens, optimizer=optimizer_instance
+                            )
+                        )
             else:
-                scheduler = scheduler(
-                    optimizer,
-                    factor=anneal_factor,
-                    patience=patience,
-                    initial_extra_patience=initial_extra_patience,
-                    mode=anneal_mode,
-                    verbose=True,
+                reduce_transformer_vocab = False
+
+            if use_swa:
+                import torchcontrib
+
+                optimizer_instance = torchcontrib.optim.SWA(
+                    optimizer_instance, swa_start=10, swa_freq=5, swa_lr=learning_rate
                 )
 
-        # load existing scheduler state dictionary if it exists
-        if scheduler_state_dict:
-            scheduler.load_state_dict(scheduler_state_dict)
+            # from here on, use list of learning rates
+            current_learning_rate: List = [group["lr"] for group in optimizer_instance.param_groups]
 
-        # update optimizer and scheduler in model card
-        model_card["training_parameters"]["optimizer"] = optimizer
-        model_card["training_parameters"]["scheduler"] = scheduler
+            if use_amp:
+                self.model, optimizer_instance = amp.initialize(self.model, optimizer_instance, opt_level=amp_opt_level)
 
-        if isinstance(scheduler, OneCycleLR) and batch_growth_annealing:
-            raise ValueError("Batch growth with OneCycle policy is not implemented.")
+            optimizer_instance = cast(torch.optim.Optimizer, optimizer_instance)
 
-        train_data = self.corpus.train
+            # load existing optimizer state dictionary if it exists
+            if optimizer_state_dict:
+                optimizer_instance.load_state_dict(optimizer_state_dict)
+
+            # minimize training loss if training with dev data, else maximize dev score
+            anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
+            best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else -1.0
+
+            dataset_size = _len_dataset(self.corpus.train)
+            if train_with_dev:
+                dataset_size += _len_dataset(self.corpus.dev)
+
+            # if scheduler is passed as a class, instantiate
+            if inspect.isclass(scheduler):
+                if scheduler == OneCycleLR:
+                    scheduler = OneCycleLR(
+                        optimizer_instance,
+                        max_lr=current_learning_rate,
+                        steps_per_epoch=dataset_size // mini_batch_size + 1,
+                        epochs=max_epochs - epoch,
+                        # if we load a checkpoint, we have already trained for epoch
+                        pct_start=0.0,
+                        cycle_momentum=cycle_momentum,
+                    )
+                elif scheduler == LinearSchedulerWithWarmup:
+                    steps_per_epoch = (dataset_size + mini_batch_size - 1) / mini_batch_size
+                    num_train_steps = int(steps_per_epoch * max_epochs)
+                    num_warmup_steps = int(num_train_steps * warmup_fraction)
+
+                    scheduler = LinearSchedulerWithWarmup(
+                        optimizer_instance,
+                        num_train_steps=num_train_steps,
+                        num_warmup_steps=num_warmup_steps,
+                    )
+                else:
+                    scheduler = scheduler(
+                        optimizer_instance,
+                        factor=anneal_factor,
+                        patience=patience,
+                        initial_extra_patience=initial_extra_patience,
+                        mode=anneal_mode,
+                        verbose=True,
+                    )
+
+            # Determine whether to log "bad epochs" information
+            log_bad_epochs = True if scheduler.__class__ == AnnealOnPlateau else False
+
+            # load existing scheduler state dictionary if it exists
+            if scheduler_state_dict:
+                scheduler.load_state_dict(scheduler_state_dict)
+
+            # update optimizer and scheduler in model card
+            model_card["training_parameters"]["optimizer"] = optimizer_instance
+            model_card["training_parameters"]["scheduler"] = scheduler
+
+            if isinstance(scheduler, OneCycleLR) and batch_growth_annealing:
+                raise ValueError("Batch growth with OneCycle policy is not implemented.")
+
+            train_data = self.corpus.train
 
         # if training also uses dev/train data, include in training set
         if train_with_dev or train_with_test:
-
             parts = [self.corpus.train]
             if train_with_dev and self.corpus.dev:
                 parts.append(self.corpus.dev)
@@ -405,7 +444,7 @@ class ModelTrainer:
 
             previous_learning_rate = current_learning_rate
 
-            momentum = [group["momentum"] if "momentum" in group else 0 for group in optimizer.param_groups]
+            momentum = [group["momentum"] if "momentum" in group else 0 for group in optimizer_instance.param_groups]
 
             for epoch in range(epoch + 1, max_epochs + 1):
                 log_line(log)
@@ -423,7 +462,7 @@ class ModelTrainer:
                     train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
                 # get new learning rate
-                current_learning_rate = [group["lr"] for group in optimizer.param_groups]
+                current_learning_rate = [group["lr"] for group in optimizer_instance.param_groups]
 
                 lr_changed = any([lr != prev_lr for lr, prev_lr in zip(current_learning_rate, previous_learning_rate)])
 
@@ -460,10 +499,17 @@ class ModelTrainer:
                     log_line(log)
                     break
 
+                start_time = time.time()
+
+                # if shuffle_first_epoch==False, the first epoch is not shuffled
+                shuffle_data_this_epoch = shuffle
+                if not shuffle_first_epoch and epoch == 1:
+                    shuffle_data_this_epoch = False
+
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
-                    shuffle=shuffle if epoch > 1 else False,  # never shuffle the first epoch
+                    shuffle=shuffle_data_this_epoch,
                     num_workers=0 if num_workers is None else num_workers,
                     sampler=sampler,
                 )
@@ -478,15 +524,11 @@ class ModelTrainer:
                 modulo = max(1, int(total_number_of_batches / 10))
 
                 # process mini-batches
-                batch_time = 0.0
                 average_over = 0
                 for batch_no, batch in enumerate(batch_loader):
-
-                    start_time = time.time()
-
                     # zero the gradients on the model and optimizer
                     self.model.zero_grad()
-                    optimizer.zero_grad()
+                    optimizer_instance.zero_grad()
 
                     # if necessary, make batch_steps
                     batch_steps = [batch]
@@ -495,47 +537,42 @@ class ModelTrainer:
 
                     # forward and backward for batch
                     for batch_step in batch_steps:
-
                         # forward pass
-                        loss = self.model.forward_loss(batch_step)
-
-                        if isinstance(loss, tuple):
-                            average_over += loss[1]
-                            loss = loss[0]
-
+                        loss, datapoint_count = self.model.forward_loss(batch_step)
+                        average_over += datapoint_count
                         # Backward
                         if use_amp:
-                            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                            with amp.scale_loss(loss, optimizer_instance) as scaled_loss:
                                 scaled_loss.backward()
                         else:
                             loss.backward()
                         train_loss += loss.item()
 
                         # identify dynamic embeddings (always deleted) on first sentence
-                        if not dynamic_embeddings:
-                            dynamic_embeddings = identify_dynamic_embeddings(batch[0])
+
+                        if dynamic_embeddings is None:
+                            dynamic_embeddings = identify_dynamic_embeddings(batch)
 
                         # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                         store_embeddings(batch, embeddings_storage_mode, dynamic_embeddings)
 
                     # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
-                    optimizer.step()
+                    optimizer_instance.step()
 
                     # do the scheduler step if one-cycle or linear decay
                     if isinstance(scheduler, (OneCycleLR, LinearSchedulerWithWarmup)):
                         scheduler.step()
                         # get new learning rate
-                        current_learning_rate = [group["lr"] for group in optimizer.param_groups]
+                        current_learning_rate = [group["lr"] for group in optimizer_instance.param_groups]
 
                         momentum = [
                             group["betas"][0] if "betas" in group else group.get("momentum", 0)
-                            for group in optimizer.param_groups
+                            for group in optimizer_instance.param_groups
                         ]
 
                     seen_batches += 1
 
-                    batch_time += time.time() - start_time
                     if seen_batches % modulo == 0:
                         momentum_info = ""
                         if cycle_momentum:
@@ -544,15 +581,15 @@ class ModelTrainer:
                         lr_info = ",".join([f"{lr:.6f}" for lr in current_learning_rate])
 
                         intermittent_loss = train_loss / average_over if average_over > 0 else train_loss / seen_batches
-
+                        end_time = time.time()
                         log.info(
-                            f"epoch {epoch} - iter {seen_batches}/"
-                            f"{total_number_of_batches} - loss "
-                            f"{intermittent_loss:.8f} - samples/sec:"
-                            f" {mini_batch_size * modulo / batch_time:.2f}"
+                            f"epoch {epoch}"
+                            f" - iter {seen_batches}/{total_number_of_batches}"
+                            f" - loss {intermittent_loss:.8f}"
+                            f" - time (sec): {end_time - start_time:.2f}"
+                            f" - samples/sec: {average_over / (end_time - start_time):.2f}"
                             f" - lr: {lr_info}{momentum_info}"
                         )
-                        batch_time = 0.0
                         iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode and write_weights:
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
@@ -587,8 +624,13 @@ class ModelTrainer:
                         gold_label_dictionary=gold_label_dictionary_for_eval,
                         exclude_labels=exclude_labels,
                     )
-                    result_line += f"\t{train_eval_result.log_line}"
-
+                    result_line += f"\t{train_eval_result.loss}\t{train_eval_result.log_line}"
+                    log.info(
+                        f"TRAIN : loss {train_eval_result.loss} -"
+                        f" {main_evaluation_metric[1]}"
+                        f" ({main_evaluation_metric[0]}) "
+                        f" {round(train_eval_result.main_score, 4)}"
+                    )
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.train, embeddings_storage_mode, dynamic_embeddings)
 
@@ -604,20 +646,19 @@ class ModelTrainer:
                         exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{train_part_eval_result.loss}" f"\t{train_part_eval_result.log_line}"
-
                     log.info(
                         f"TRAIN_SPLIT : loss {train_part_eval_result.loss}"
                         f" - {main_evaluation_metric[1]}"
                         f" ({main_evaluation_metric[0]})"
                         f" {round(train_part_eval_result.main_score, 4)}"
                     )
-                if use_tensorboard:
-                    for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
-                        writer.add_scalar(
-                            f"train_{metric_class_avg_type}_{metric_type}",
-                            train_part_eval_result.classification_report[metric_class_avg_type][metric_type],
-                            epoch,
-                        )
+                    if use_tensorboard:
+                        for metric_class_avg_type, metric_type in metrics_for_tensorboard:
+                            writer.add_scalar(
+                                f"train_{metric_class_avg_type}_{metric_type}",
+                                train_part_eval_result.classification_report[metric_class_avg_type][metric_type],
+                                epoch,
+                            )
 
                 if log_dev:
                     assert self.corpus.dev
@@ -702,7 +743,7 @@ class ModelTrainer:
                 # determine if this is the best model or if we need to anneal
                 current_epoch_has_best_model_so_far = False
                 # default mode: anneal against dev score
-                if not train_with_dev and not anneal_against_dev_loss:
+                if not train_with_dev and not anneal_against_dev_loss and self.corpus.dev is not None:
                     if dev_score > best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_score
@@ -711,7 +752,7 @@ class ModelTrainer:
                         scheduler.step(dev_score, dev_eval_result.loss)
 
                 # alternative: anneal against dev loss
-                if not train_with_dev and anneal_against_dev_loss:
+                if not train_with_dev and anneal_against_dev_loss and self.corpus.dev is not None:
                     if dev_eval_result.loss < best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_eval_result.loss
@@ -736,7 +777,7 @@ class ModelTrainer:
                 except AttributeError:
                     bad_epochs = 0
 
-                new_learning_rate = [group["lr"] for group in optimizer.param_groups]
+                new_learning_rate = [group["lr"] for group in optimizer_instance.param_groups]
 
                 if any([new_lr != prev_lr for new_lr, prev_lr in zip(new_learning_rate, previous_learning_rate)]):
                     bad_epochs = patience + 1
@@ -751,15 +792,16 @@ class ModelTrainer:
                         bad_epochs += initial_extra_patience
 
                 # log bad epochs
-                log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
+                if log_bad_epochs:
+                    log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
 
                 if loss_txt is not None:
                     # output log file
                     with open(loss_txt, "a") as f:
-
                         # make headers on first epoch
                         if epoch == 1:
-                            f.write("EPOCH\tTIMESTAMP\tBAD_EPOCHS" "\tLEARNING_RATE\tTRAIN_LOSS")
+                            bad_epoch_header = "BAD_EPOCHS\t" if log_bad_epochs else ""
+                            f.write(f"EPOCH\tTIMESTAMP\t{bad_epoch_header}LEARNING_RATE\tTRAIN_LOSS")
 
                             if log_train:
                                 f.write("\tTRAIN_" + "\tTRAIN_".join(train_eval_result.log_header.split("\t")))
@@ -778,9 +820,10 @@ class ModelTrainer:
 
                         lr_info = ",".join([f"{lr:.4f}" for lr in current_learning_rate])
 
+                        bad_epoch_info = "\t" + str(bad_epochs) if log_bad_epochs else ""
                         f.write(
                             f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}"
-                            f"\t{bad_epochs}"
+                            f"{bad_epoch_info}"
                             f"\t{lr_info}\t{train_loss}"
                         )
                         f.write(result_line)
@@ -808,7 +851,7 @@ class ModelTrainer:
             if use_swa:
                 import torchcontrib
 
-                cast(torchcontrib.optim.SWA, optimizer).swap_swa_sgd()
+                cast(torchcontrib.optim.SWA, optimizer_instance).swap_swa_sgd()
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
@@ -830,6 +873,8 @@ class ModelTrainer:
         finally:
             if use_tensorboard:
                 writer.close()
+        optimizer_instance.zero_grad(set_to_none=True)
+        del optimizer_instance
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
@@ -844,6 +889,9 @@ class ModelTrainer:
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
+        if reduce_transformer_vocab:
+            if save_final_model and not param_selection_mode:
+                self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
 
         if create_file_logs:
             log_handler.close()
@@ -859,9 +907,9 @@ class ModelTrainer:
     def resume(
         self,
         model: Model,
+        additional_epochs: Optional[int] = None,
         **trainer_args,
     ):
-
         assert model.model_card is not None
         self.model = model
         # recover all arguments that were used to train this model
@@ -879,6 +927,11 @@ class ModelTrainer:
         kwargs = args_used_to_train_model["kwargs"]
         del args_used_to_train_model["kwargs"]
 
+        if additional_epochs is not None:
+            args_used_to_train_model["max_epochs"] = (
+                args_used_to_train_model.get("epoch", kwargs.get("epoch", 0)) + additional_epochs
+            )
+
         # resume training with these parameters
         self.train(**args_used_to_train_model, **kwargs)
 
@@ -893,8 +946,27 @@ class ModelTrainer:
         mini_batch_size: int = 4,
         embeddings_storage_mode: str = "none",
         use_final_model_for_eval: bool = True,
+        decoder_lr_factor: float = 1.0,
         **trainer_args,
     ):
+        # If set, add a factor to the learning rate of all parameters with 'embeddings' not in name
+        if decoder_lr_factor != 1.0:
+            optimizer = optimizer(
+                [
+                    {
+                        "params": [param for name, param in self.model.named_parameters() if "embeddings" not in name],
+                        "lr": learning_rate * decoder_lr_factor,
+                    },
+                    {
+                        "params": [param for name, param in self.model.named_parameters() if "embeddings" in name],
+                        "lr": learning_rate,
+                    },
+                ]
+            )
+            log.info(
+                f"Modifying learning rate to {learning_rate * decoder_lr_factor} for the following "
+                f"parameters: {[name for name, param in self.model.named_parameters() if 'embeddings' not in name]}"
+            )
 
         return self.train(
             base_path=base_path,
@@ -941,30 +1013,12 @@ class ModelTrainer:
             main_evaluation_metric=main_evaluation_metric,
             gold_label_dictionary=gold_label_dictionary_for_eval,
             exclude_labels=exclude_labels,
+            return_loss=False,
         )
 
         log.info(test_results.log_line)
         log.info(test_results.detailed_results)
         log_line(log)
-
-        # if we are training over multiple datasets, do evaluation for each
-        if isinstance(self.corpus, MultiCorpus):
-            for subcorpus in self.corpus.corpora:
-                log_line(log)
-                if subcorpus.test:
-                    subcorpus_results = self.model.evaluate(
-                        subcorpus.test,
-                        gold_label_type=self.model.label_type,
-                        mini_batch_size=eval_mini_batch_size,
-                        num_workers=num_workers,
-                        out_path=base_path / f"{subcorpus.name}-test.tsv",
-                        embedding_storage_mode="none",
-                        main_evaluation_metric=main_evaluation_metric,
-                        gold_label_dictionary=gold_label_dictionary_for_eval,
-                        exclude_labels=exclude_labels,
-                    )
-                    log.info(subcorpus.name)
-                    log.info(subcorpus_results.log_line)
 
         # get and return the final test score of best model
         final_score = test_results.main_score
@@ -1011,9 +1065,7 @@ class ModelTrainer:
                 step += 1
 
                 # forward pass
-                loss = self.model.forward_loss(batch)
-                if isinstance(loss, tuple):
-                    loss = loss[0]
+                loss, datapoint_count = self.model.forward_loss(batch)
 
                 # update optimizer and scheduler
                 optimizer.zero_grad()
@@ -1054,3 +1106,27 @@ class ModelTrainer:
         log_line(log)
 
         return Path(learning_rate_tsv)
+
+
+def get_transformer_embeddings(trainer: ModelTrainer) -> List[TransformerEmbeddings]:
+    if isinstance(trainer.model, FewshotClassifier):
+        embeddings = trainer.model.tars_embeddings
+    else:
+        embeddings = getattr(trainer.model, "embeddings", None)
+
+    if embeddings is None:
+        log.warning(f"Could not extract embeddings of Model of type {type(trainer.model)}")
+        return []
+
+    transformer_embeddings = set()
+
+    def scan_embeddings(emb: Embeddings):
+        if isinstance(emb, StackedEmbeddings):
+            for sub_emb in emb.embeddings:
+                scan_embeddings(sub_emb)
+        if isinstance(emb, TransformerEmbeddings):
+            transformer_embeddings.add(emb)
+
+    scan_embeddings(embeddings)
+
+    return list(transformer_embeddings)

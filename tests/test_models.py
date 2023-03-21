@@ -28,7 +28,7 @@ def test_sequence_tagger_no_crf(results_base_path, tasks_base_path):
         data_folder=tasks_base_path / "trivial" / "trivial_bioes",
         column_format={0: "text", 1: "ner"},
     )
-    tag_dictionary = corpus.make_label_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)
 
     # tagger without CRF
     tagger: SequenceTagger = SequenceTagger(
@@ -78,7 +78,7 @@ def test_sequence_tagger_with_crf(results_base_path, tasks_base_path):
         data_folder=tasks_base_path / "trivial" / "trivial_bioes",
         column_format={0: "text", 1: "ner"},
     )
-    tag_dictionary = corpus.make_label_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)
 
     # tagger without CRF
     tagger: SequenceTagger = SequenceTagger(
@@ -128,7 +128,7 @@ def test_sequence_tagger_stacked(results_base_path, tasks_base_path):
         data_folder=tasks_base_path / "trivial" / "trivial_bioes",
         column_format={0: "text", 1: "ner"},
     )
-    tag_dictionary = corpus.make_label_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)
 
     # tagger without CRF
     tagger: SequenceTagger = SequenceTagger(
@@ -178,7 +178,7 @@ def test_sequence_tagger_transformer_finetune(results_base_path, tasks_base_path
         data_folder=tasks_base_path / "trivial" / "trivial_bioes",
         column_format={0: "text", 1: "ner"},
     )
-    tag_dictionary = corpus.make_label_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)
 
     # tagger without CRF
     tagger: SequenceTagger = SequenceTagger(
@@ -232,7 +232,7 @@ def test_text_classifier(results_base_path, tasks_base_path):
     label_dict = corpus.make_label_dictionary(label_type="city")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=DocumentPoolEmbeddings([turian_embeddings]),
+        embeddings=DocumentPoolEmbeddings([turian_embeddings]),
         label_dictionary=label_dict,
         label_type="city",
         multi_label=False,
@@ -285,7 +285,7 @@ def test_text_classifier_transformer_finetune(results_base_path, tasks_base_path
     label_dict = corpus.make_label_dictionary(label_type="city")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=TransformerDocumentEmbeddings("distilbert-base-uncased"),
+        embeddings=TransformerDocumentEmbeddings("distilbert-base-uncased"),
         label_dictionary=label_dict,
         label_type="city",
         multi_label=False,
@@ -345,7 +345,7 @@ def test_text_classifier_multi(results_base_path, tasks_base_path):
     label_dict = corpus.make_label_dictionary(label_type="city")
 
     model: TextClassifier = TextClassifier(
-        document_embeddings=DocumentPoolEmbeddings([turian_embeddings], fine_tune_mode="linear"),
+        embeddings=DocumentPoolEmbeddings([turian_embeddings], fine_tune_mode="linear"),
         label_dictionary=label_dict,
         label_type="city",
         multi_label=True,

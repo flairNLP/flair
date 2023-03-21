@@ -16,7 +16,7 @@ import flair
 from flair.data import Sentence
 from flair.datasets.sequence_labeling import ColumnCorpus
 from flair.file_utils import cached_path
-from flair.tokenization import SegtokSentenceSplitter, SentenceSplitter
+from flair.splitter import SegtokSentenceSplitter, SentenceSplitter
 
 log = logging.getLogger("flair")
 
@@ -98,10 +98,8 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
         target_filenames = [train_filename, "semeval2010-task8-test.conllu"]
 
         with zipfile.ZipFile(data_file) as zip_file:
-
             for source_file_path, target_filename in zip(source_file_paths, target_filenames):
                 with zip_file.open(source_file_path, mode="r") as source_file:
-
                     target_file_path = Path(data_folder) / target_filename
                     with open(target_file_path, mode="w", encoding="utf-8") as target_file:
                         # write CoNLL-U Plus header
@@ -280,10 +278,8 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
         ]
 
         with zipfile.ZipFile(data_file) as zip_file:
-
             for source_file_path, target_filename in zip(source_file_paths, target_filenames):
                 with zip_file.open(source_file_path, mode="r") as source_file:
-
                     target_file_path = Path(data_folder) / target_filename
                     with open(target_file_path, mode="w", encoding="utf-8") as target_file:
                         # write CoNLL-U Plus header
@@ -372,7 +368,7 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
         )
         data_file = data_folder / "conll04-train.conllu"
 
-        if True or not data_file.is_file():
+        if not data_file.is_file():
             source_data_folder = data_folder / "original"
             cached_path(f"{conll04_url}train.txt", source_data_folder)
             cached_path(f"{conll04_url}dev.txt", source_data_folder)
@@ -437,7 +433,6 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
 
         for source_filename, target_filename in zip(source_filenames, target_filenames):
             with open(source_data_folder / source_filename, mode="r") as source_file:
-
                 with open(data_folder / target_filename, mode="w", encoding="utf-8") as target_file:
                     # write CoNLL-U Plus header
                     target_file.write("# global.columns = id form ner\n")
@@ -687,10 +682,10 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
             (abstract_offset, abstract_sentences),
         ]:
             for sent in sents:
-                assert sent.start_pos is not None
-                assert sent.end_pos is not None
-                sent_char_start = sent.start_pos + offset
-                sent_char_end = sent.end_pos + offset
+                assert sent.start_position is not None
+                assert sent.end_position is not None
+                sent_char_start = sent.start_position + offset
+                sent_char_end = sent.end_position + offset
 
                 entities_in_sent = set()
                 for entity_id, (_, char_start, char_end, _) in entities.items():
@@ -701,8 +696,8 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
 
                 token_offsets = [
                     (
-                        sent.start_pos + (token.start_pos or 0) + offset,
-                        sent.start_pos + (token.end_pos or 0) + offset,
+                        sent.start_position + (token.start_position or 0) + offset,
+                        sent.start_position + (token.end_position or 0) + offset,
                     )
                     for token in sent.tokens
                 ]
@@ -719,7 +714,6 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
                 )
 
                 for entity_id, entity_span in ordered_entities:
-
                     entity_id_to_token_idx[entity_id] = entity_span
 
                     # check if first tag row is already occupied

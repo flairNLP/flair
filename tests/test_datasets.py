@@ -8,6 +8,7 @@ import flair.datasets
 from flair.data import MultiCorpus, Sentence
 from flair.datasets import ColumnCorpus
 from flair.datasets.sequence_labeling import (
+    ONTONOTES,
     JsonlCorpus,
     JsonlDataset,
     MultiFileJsonlCorpus,
@@ -88,8 +89,8 @@ def test_load_sequence_labeling_whitespace_after(tasks_base_path):
     assert corpus.train[0].to_tokenized_string() == "It is a German - owned firm ."
     assert corpus.train[0].to_plain_string() == "It is a German-owned firm."
     for token in corpus.train[0]:
-        assert token.start_pos is not None
-        assert token.end_pos is not None
+        assert token.start_position is not None
+        assert token.end_position is not None
 
 
 def test_load_column_corpus_options(tasks_base_path):
@@ -220,7 +221,7 @@ def test_download_load_data(tasks_base_path):
     # get training, test and dev data for full English UD corpus from web
     corpus = flair.datasets.UD_ENGLISH()
 
-    assert len(corpus.train) == 12543
+    assert len(corpus.train) == 12544
     assert len(corpus.dev) == 2001
     assert len(corpus.test) == 2077
 
@@ -253,7 +254,7 @@ def _assert_conllu_dataset(dataset):
         1,
         1,
         0,
-        1,
+        0,
     ]
 
     ner_spans1 = sent1.get_labels("ner")
@@ -360,7 +361,7 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         1,
         1,
         0,
-        1,
+        0,
     ]
 
     assert len(sent1.get_labels("Number")) == 4
@@ -422,8 +423,9 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
 
 def test_hipe_2022_corpus(tasks_base_path):
     """
-    This test covers the complete v1.0 version of the HIPE 2022,
-    including the version with document separator.
+    This test covers the complete HIPE 2022 dataset.
+    https://github.com/hipe-eval/HIPE-2022-data
+    Includes variant with document separator, and all versions of the dataset.
     """
 
     # We have manually checked, that these numbers are correct:
@@ -495,7 +497,7 @@ def test_hipe_2022_corpus(tasks_base_path):
         }
     }
 
-    hipe_stats["v2.0"] = hipe_stats["v1.0"].copy()
+    hipe_stats["v2.0"] = copy.deepcopy(hipe_stats["v1.0"])
     hipe_stats["v2.0"]["ajmc"] = {
         "de": {
             "train": {
@@ -530,10 +532,8 @@ def test_hipe_2022_corpus(tasks_base_path):
             },
         },
     }
-    hipe_stats["v2.0"]["newseye"] = {
-        "de": {
-            "train": {"sents": 20839 + 1, "docs": 7, "labels": ["HumanProd", "LOC", "ORG", "PER"]}  # missing EOD marker
-        }
+    hipe_stats["v2.0"]["newseye"]["de"] = {
+        "train": {"sents": 20839 + 1, "docs": 7, "labels": ["HumanProd", "LOC", "ORG", "PER"]}  # missing EOD marker
     }
     hipe_stats["v2.0"]["sonar"] = {
         "de": {
@@ -549,6 +549,69 @@ def test_hipe_2022_corpus(tasks_base_path):
         "sents": 5743,
         "docs": 158,
         "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+
+    # Test data for v2.1 release
+    hipe_stats["v2.1"]["ajmc"]["de"]["test"] = {
+        "sents": 224,
+        "docs": 16,
+        "labels": ["loc", "object", "pers", "scope", "work"],
+    }
+    hipe_stats["v2.1"]["ajmc"]["en"]["test"] = {
+        "sents": 238,
+        "docs": 13,
+        "labels": ["date", "loc", "pers", "scope", "work"],
+    }
+    hipe_stats["v2.1"]["ajmc"]["fr"]["test"] = {
+        "sents": 188 + 1,  # 1 sentence with missing EOS marker
+        "docs": 15,
+        "labels": ["date", "loc", "pers", "scope", "work"],
+    }
+    hipe_stats["v2.1"]["hipe2020"]["de"]["test"] = {
+        "sents": 1215 + 2,  # 2 sentences with missing EOS marker
+        "docs": 49,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+    hipe_stats["v2.1"]["hipe2020"]["en"]["test"] = {
+        "sents": 553,
+        "docs": 46,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+    hipe_stats["v2.1"]["hipe2020"]["fr"]["test"] = {
+        "sents": 1462,
+        "docs": 43,
+        "labels": ["loc", "org", "pers", "prod", "time"],
+    }
+    hipe_stats["v2.1"]["letemps"]["fr"]["test"] = {"sents": 2381, "docs": 51, "labels": ["loc", "org", "pers"]}
+    hipe_stats["v2.1"]["newseye"]["de"]["test"] = {
+        "sents": 3336 + 1,  # 1 missing EOD marker
+        "docs": 13,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["newseye"]["fi"]["test"] = {
+        "sents": 390 + 1,  # 1 missing EOD marker
+        "docs": 24,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["newseye"]["fr"]["test"] = {
+        "sents": 2534 + 1,  # 1 missing EOD marker
+        "docs": 35,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["newseye"]["sv"]["test"] = {
+        "sents": 342 + 1,  # 1 missing EOD marker
+        "docs": 21,
+        "labels": ["HumanProd", "LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["sonar"]["de"]["test"] = {
+        "sents": 807 + 8 + 1,  # 8 missing EOS marker + missing EOD
+        "docs": 10,
+        "labels": ["LOC", "ORG", "PER"],
+    }
+    hipe_stats["v2.1"]["topres19th"]["en"]["test"] = {
+        "sents": 2001,
+        "docs": 112,
+        "labels": ["BUILDING", "LOC", "STREET"],
     }
 
     def test_hipe_2022(dataset_version="v2.1", add_document_separator=True):
@@ -623,6 +686,129 @@ def test_hipe_2022_corpus(tasks_base_path):
     test_hipe_2022(dataset_version="v2.1", add_document_separator=False)
 
 
+def test_icdar_europeana_corpus(tasks_base_path):
+    """
+    This test covers the complete ICDAR Europeana corpus:
+    https://github.com/stefan-it/historic-domain-adaptation-icdar
+    """
+    gold_stats = {"fr": {"train": 7936, "dev": 992, "test": 992}, "nl": {"train": 5777, "dev": 722, "test": 723}}
+
+    def check_number_sentences(reference: int, actual: int, split_name: str):
+        assert actual == reference, f"Mismatch in number of sentences for {split_name} split"
+
+    for language in ["fr", "nl"]:
+        corpus = flair.datasets.NER_ICDAR_EUROPEANA(language=language)
+
+        check_number_sentences(len(corpus.train), gold_stats[language]["train"], "train")
+        check_number_sentences(len(corpus.dev), gold_stats[language]["dev"], "dev")
+        check_number_sentences(len(corpus.test), gold_stats[language]["test"], "test")
+
+
+def test_masakhane_corpus(tasks_base_path):
+    """
+    This test covers the complete MasakhaNER dataset, including support for v1 and v2.
+    """
+    supported_versions = ["v1", "v2"]
+
+    supported_languages = {
+        "v1": ["amh", "hau", "ibo", "kin", "lug", "luo", "pcm", "swa", "wol", "yor"],
+        "v2": [
+            "bam",
+            "bbj",
+            "ewe",
+            "fon",
+            "hau",
+            "ibo",
+            "kin",
+            "lug",
+            "mos",
+            "pcm",
+            "nya",
+            "sna",
+            "swa",
+            "tsn",
+            "twi",
+            "wol",
+            "xho",
+            "yor",
+            "zul",
+        ],
+    }
+
+    masakhane_stats = {
+        "v1": {
+            "amh": {"train": 1750, "dev": 250, "test": 500},
+            "hau": {"train": 1912, "dev": 276, "test": 552},
+            "ibo": {"train": 2235, "dev": 320, "test": 638},
+            "kin": {
+                "train": 2116,
+                "dev": 302,
+                "test": 605,
+            },
+            "lug": {"train": 1428, "dev": 200, "test": 407},
+            "luo": {"train": 644, "dev": 92, "test": 186},
+            "pcm": {"train": 2124, "dev": 306, "test": 600},
+            "swa": {"train": 2109, "dev": 300, "test": 604},
+            "wol": {"train": 1871, "dev": 267, "test": 539},
+            "yor": {"train": 2171, "dev": 305, "test": 645},
+        },
+        "v2": {
+            "bam": {"train": 4462, "dev": 638, "test": 1274},
+            "bbj": {"train": 3384, "dev": 483, "test": 966},
+            "ewe": {"train": 3505, "dev": 501, "test": 1001},
+            "fon": {"train": 4343, "dev": 621, "test": 1240},
+            "hau": {"train": 5716, "dev": 816, "test": 1633},
+            "ibo": {"train": 7634, "dev": 1090, "test": 2181},
+            "kin": {"train": 7825, "dev": 1118, "test": 2235},
+            "lug": {"train": 4942, "dev": 706, "test": 1412},
+            "mos": {"train": 4532, "dev": 648, "test": 1294},
+            "pcm": {"train": 5646, "dev": 806, "test": 1613},
+            "nya": {"train": 6250, "dev": 893, "test": 1785},
+            "sna": {"train": 6207, "dev": 887, "test": 1773},
+            "swa": {"train": 6593, "dev": 942, "test": 1883},
+            "tsn": {"train": 3489, "dev": 499, "test": 996},
+            "twi": {"train": 4240, "dev": 605, "test": 1211},
+            "wol": {"train": 4593, "dev": 656, "test": 1312},
+            "xho": {"train": 5718, "dev": 817, "test": 1633},
+            "yor": {"train": 6876, "dev": 983, "test": 1964},
+            "zul": {"train": 5848, "dev": 836, "test": 1670},
+        },
+    }
+
+    def check_number_sentences(reference: int, actual: int, split_name: str, language: str, version: str):
+        assert actual == reference, f"Mismatch in number of sentences for {language}@{version}/{split_name}"
+
+    for version in supported_versions:
+        for language in supported_languages[version]:
+            corpus = flair.datasets.NER_MASAKHANE(languages=language, version=version)
+
+            gold_stats = masakhane_stats[version][language]
+
+            check_number_sentences(len(corpus.train), gold_stats["train"], "train", language, version)
+            check_number_sentences(len(corpus.dev), gold_stats["dev"], "dev", language, version)
+            check_number_sentences(len(corpus.test), gold_stats["test"], "test", language, version)
+
+
+def test_nermud_corpus(tasks_base_path):
+    """
+    This test covers the NERMuD dataset. Official stats can be found here:
+    https://github.com/dhfbk/KIND/tree/main/evalita-2023
+    """
+    gold_stats = {
+        "WN": {"train": 10912, "dev": 2594},
+        "FIC": {"train": 11423, "dev": 1051},
+        "ADG": {"train": 5147, "dev": 1122},
+    }
+
+    def check_number_sentences(reference: int, actual: int, split_name: str):
+        assert actual == reference, f"Mismatch in number of sentences for {split_name} split"
+
+    for domain, stats in gold_stats.items():
+        corpus = flair.datasets.NER_NERMUD(domains=domain)
+        check_number_sentences(len(corpus.train), stats["train"], "train")
+        check_number_sentences(len(corpus.dev), stats["dev"], "dev")
+
+
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
     corpus = MultiFileJsonlCorpus(
         train_files=[tasks_base_path / "jsonl/train.jsonl"],
@@ -648,7 +834,7 @@ def test_jsonl_dataset_should_use_label_type(tasks_base_path):
     """
     Tests whether the dataset respects the label_type parameter
     """
-    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl", label_type="pos")  # use other type
+    dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl", label_type="pos")  # use other type
 
     for sentence in dataset.sentences:
         assert sentence.has_label("pos")
@@ -659,16 +845,52 @@ def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
     """
     Tests reading a JsonlDataset containing multiple tagged entries
     """
-    dataset = JsonlDataset(tasks_base_path / "jsonl/train.jsonl")
+    dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl")
 
     assert len(dataset.sentences) == 5
-    assert dataset.sentences[0].get_token(3).get_label("ner").value == "B-LOC"
-    assert dataset.sentences[0].get_token(4).get_label("ner").value == "I-LOC"
+    assert len(dataset.sentences[0].get_labels("ner")) == 1
+    assert dataset.sentences[0][2:4].get_label("ner").value == "LOC"
 
 
 def test_simple_folder_jsonl_corpus_should_load(tasks_base_path):
     corpus = JsonlCorpus(tasks_base_path / "jsonl")
     assert len(corpus.get_all_sentences()) == 11
+
+
+def test_jsonl_corpus_loads_spans(tasks_base_path):
+    corpus = JsonlCorpus(tasks_base_path / "jsonl")
+    assert corpus.train is not None
+    example = corpus.train[0]
+    assert len(example.get_spans("ner")) > 0
+
+
+def test_ontonotes_download():
+    from urllib.parse import urlparse
+
+    res = urlparse(ONTONOTES.archive_url)
+    assert all([res.scheme, res.netloc])
+
+
+def test_ontonotes_extraction(tasks_base_path):
+    import os
+    import tempfile
+
+    from flair.file_utils import unpack_file
+
+    ontonotes_path = tasks_base_path / "ontonotes"
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        unpack_file(ontonotes_path / "tiny-conll-2012.zip", tmp_dir, "zip", True)
+        assert "conll-2012" in os.listdir(tmp_dir)
+
+        corpus = ONTONOTES(base_path=tmp_dir)
+        label_dictionary = corpus.make_label_dictionary("ner")
+
+        assert len(label_dictionary) == 15
+        assert label_dictionary.span_labels
+
+        domain_specific_corpus = ONTONOTES(base_path=tmp_dir, domain=["bc"])
+
+        assert len(corpus.train) > len(domain_specific_corpus.train)
 
 
 TRAIN_FILE = "tests/resources/tasks/jsonl/train.jsonl"

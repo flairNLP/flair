@@ -3,13 +3,13 @@
 TARS(Task-aware representation of sentence)는 [Halder et al. (2020)](https://kishaloyhalder.github.io/pdfs/tars_coling2020.pdf)이 **텍스트 분류를 위한 퓨샷 및 제로샷 학습**을 위한 간단하고 효과적인 방법으로 도입했습니다.
 이것은 훈련 예제 없이도 텍스트를 분류할 수 있음을 의미합니다.
 이 모델은 Flair에서 'TASClassifier' 클래스로 구현됩니다.
- 
+
 이번 튜토리얼에서는 TARS를 사용하는 다양한 방법을 보여줄 것입니다:
 
-    
+
 ## 사용 사례 #1: 훈련 데이터 없이 텍스트 분류(Zero-Shot)
 
-때로 우리는 해결하려는 텍스트 분류 작업에 대한 훈련 데이터가 없을 때가 있습니다. 이 경우 기본 TARS 모델을 로드하고 제로샷 예측을 수행할 수 있습니다.   
+때로 우리는 해결하려는 텍스트 분류 작업에 대한 훈련 데이터가 없을 때가 있습니다. 이 경우 기본 TARS 모델을 로드하고 제로샷 예측을 수행할 수 있습니다.
 즉, TARS의 `predict_zero_shot` 방법을 사용하고 레이블 이름 목록을 제공하는 것입니다. 그런 다음 TARS는 이러한 레이블 중 하나를 텍스트와 일치시키려고 시도할 것입니다.
 
 예를 들어 텍스트가 "행복"인지 "슬픔"인지 예측하고 싶지만 이에 대한 교육 데이터가 없다고 가정해 보겠습니다.
@@ -30,7 +30,7 @@ tars.predict_zero_shot(sentence, classes)
 print(sentence)
 ```
 
-출력은 다음과 같습니다:   
+출력은 다음과 같습니다:
 
 ```console
 Sentence: "I am so glad you liked it !"   [− Tokens: 8  − Sentence-Labels: {'label': [happy (0.9312)]}]
@@ -82,7 +82,7 @@ Game <B-TV Show> of <I-TV Show> Thrones <E-TV Show> is my favorite series
 "soccer team" (_Bayern Munich_ and _Real Madrid_) 및 "river" (_Spree_) 와 같은 엔터티 클래스를 찾고 있습니다.
 이는 진행중인 연구이며 예제는 약간 cherry-picked 된 것입니다. 제로샷 모델은 다음 릴리스까지 상당히 개선될 것으로 기대합니다.
 
-## 사용 사례 #3: TARS 모델 학습 
+## 사용 사례 #3: TARS 모델 학습
 
 또한 처음부터 또는 제공된 TARS 모델을 시작점으로 사용하여 고유한 TARS 모델을 훈련할 수 있습니다. 후자를 선택한 경우 새 작업을 훈련하는 데 필요한 훈련 데이터가 거의 없을 수 있습니다.
 
@@ -176,7 +176,7 @@ trainer.train(base_path='resources/taggers/go_emotions', # path to store the mod
 
 ## 작업 간 전환
 
-TARS는 레이블 이름과 기본 언어 모델의 텍스트 간의 관계를 캡슐화할 수 있습니다. 위와 같이 여러 말뭉치에 대해 단일 모델을 학습할 수 있습니다. 
+TARS는 레이블 이름과 기본 언어 모델의 텍스트 간의 관계를 캡슐화할 수 있습니다. 위와 같이 여러 말뭉치에 대해 단일 모델을 학습할 수 있습니다.
 이것은 편의를 위해 내부적으로 레이블 집합을 다른 작업으로 그룹화합니다. 사용자는 TARS 모델이 훈련된 기존 작업을 조회한 다음 필요에 따라 그 중 하나로 전환할 수 있습니다.
 
 ```python
@@ -192,7 +192,7 @@ sentence = Sentence("I absolutely love this!")
 tars.predict(sentence)
 print(sentence)
 ```
-출력은 다음과 같습니다: 
+출력은 다음과 같습니다:
 ```
 Existing tasks are: {'AGNews', 'DBPedia', 'IMDB', 'SST', 'TREC_6', 'NEWS_CATEGORY', 'Amazon', 'Yelp', 'GO_EMOTIONS'}
 Sentence: "I absolutely love this !"   [− Tokens: 5  − Sentence-Labels: {'label': [LOVE (0.9708)]}]
