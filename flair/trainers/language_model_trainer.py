@@ -17,11 +17,6 @@ from torch.utils.data import DataLoader, Dataset
 from lightning.fabric import Fabric
 from flair.optim import SGDW, ReduceLRWDOnPlateau
 
-try:
-    from apex import amp
-except ImportError:
-    amp = None
-
 import flair
 from flair.data import Dictionary
 from flair.models import LanguageModel
@@ -176,6 +171,8 @@ class LanguageModelTrainer:
         precision: Union[str, int] = "32-true",
 
     ):
+        self.model = model
+        self.optimizer = optimizer
         self.corpus: TextCorpus = corpus
         self.test_mode: bool = test_mode
 
@@ -188,7 +185,7 @@ class LanguageModelTrainer:
 
         # setup Fabric
         self.fabric = Fabric(accelerator=accelerator, devices=devices, precision=precision, num_nodes=num_nodes, strategy=strategy)
-        self.model, self.optimizer = self.fabric.setup(model, optimizer)
+        
 
     def train(
         self,
@@ -238,6 +235,8 @@ class LanguageModelTrainer:
             if self.optimizer_state is not None:
                 optimizer.load_state_dict(self.optimizer_state)
 
+            self.model, optimizer = self.fabric.setup(self.model, optimizer)
+
             if isinstance(optimizer, (AdamW, SGDW)):
                 scheduler: ReduceLROnPlateau = ReduceLRWDOnPlateau(
                     optimizer, verbose=True, factor=anneal_factor, patience=patience
@@ -255,12 +254,14 @@ class LanguageModelTrainer:
                 if epoch > 0:
                     training_generator = DataLoader(self.corpus.train, shuffle=True, num_workers=num_workers)
                     training_generator = self.fabric.setup_dataloaders(training_generator)
+
                     self.model.save_checkpoint(
                         base_path / f"epoch_{epoch}.pt",
                         optimizer,
                         epoch,
                         0,
                         best_val_loss,
+                        rank=self.fabric.global_rank
                     )
 
                 # iterate through training data, starting at
@@ -344,7 +345,7 @@ class LanguageModelTrainer:
                     # Save the model if the validation loss is the best we've
                     # seen so far.
                     if val_loss < best_val_loss:
-                        self.model.save(savefile)
+                        self.model.save(savefile, rank=self.fabric.global_rank)
                         best_val_loss = val_loss
                         log.info("best split so far")
 
@@ -361,6 +362,7 @@ class LanguageModelTrainer:
                             epoch,
                             curr_split,
                             best_val_loss,
+                            rank=self.fabric.global_rank
                         )
 
                     ##########################################################
