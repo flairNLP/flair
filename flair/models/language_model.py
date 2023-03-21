@@ -59,9 +59,6 @@ class LanguageModel(nn.Module):
 
         self.init_weights()
 
-        # auto-spawn on GPU if available
-        self.to(flair.device)
-
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.detach().uniform_(-initrange, initrange)

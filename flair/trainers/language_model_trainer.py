@@ -1,4 +1,5 @@
 import datetime
+from typing import List, Union
 import logging
 import math
 import random
@@ -13,7 +14,7 @@ from torch.optim import AdamW, Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 from torch.utils.data import DataLoader, Dataset
-
+from lightning.fabric import Fabric
 from flair.optim import SGDW, ReduceLRWDOnPlateau
 
 try:
@@ -168,9 +169,13 @@ class LanguageModelTrainer:
         split: int = 0,
         loss: float = 10000,
         optimizer_state: dict = None,
+        accelerator:str="auto",
+        strategy:str = "auto",
+        devices: Union[List[int], str, int] = "auto",
+        num_nodes: int = 1,
+        precision: Union[str, int] = "32-true",
+
     ):
-        self.model: LanguageModel = model
-        self.optimizer: Type[Optimizer] = optimizer
         self.corpus: TextCorpus = corpus
         self.test_mode: bool = test_mode
 
@@ -180,6 +185,10 @@ class LanguageModelTrainer:
         self.split = split
         self.loss = loss
         self.optimizer_state = optimizer_state
+
+        # setup Fabric
+        self.fabric = Fabric(accelerator=accelerator, devices=devices, precision=precision, num_nodes=num_nodes, strategy=strategy)
+        self.model, self.optimizer = self.fabric.setup(model, optimizer)
 
     def train(
         self,
@@ -198,16 +207,8 @@ class LanguageModelTrainer:
         amp_opt_level: str = "O1",
         **kwargs,
     ):
-
-        if use_amp:
-            if sys.version_info < (3, 0):
-                raise RuntimeError("Apex currently only supports Python 3. Aborting.")
-            if amp is None:
-                raise RuntimeError(
-                    "Failed to import apex. Please install apex from "
-                    "https://www.github.com/nvidia/apex "
-                    "to enable mixed-precision training."
-                )
+        self.fabric.launch()
+        flair.device = self.fabric.device
 
         # cast string to Path
         base_path = Path(base_path)
@@ -244,10 +245,8 @@ class LanguageModelTrainer:
             else:
                 scheduler = ReduceLROnPlateau(optimizer, verbose=True, factor=anneal_factor, patience=patience)
 
-            if use_amp:
-                self.model, optimizer = amp.initialize(self.model, optimizer, opt_level=amp_opt_level)
-
             training_generator = DataLoader(self.corpus.train, shuffle=False, num_workers=num_workers)
+            training_generator = self.fabric.setup_dataloaders(training_generator)
 
             for epoch in range(self.epoch, max_epochs):
                 epoch_start_time = time.time()
@@ -255,6 +254,7 @@ class LanguageModelTrainer:
                 # through corpus one
                 if epoch > 0:
                     training_generator = DataLoader(self.corpus.train, shuffle=True, num_workers=num_workers)
+                    training_generator = self.fabric.setup_dataloaders(training_generator)
                     self.model.save_checkpoint(
                         base_path / f"epoch_{epoch}.pt",
                         optimizer,
@@ -290,7 +290,7 @@ class LanguageModelTrainer:
                     # not really sure what this does
                     ntokens = len(self.corpus.dictionary)
 
-                    total_loss = torch.zeros(1, device=flair.device)
+                    total_loss = torch.zeros(1, device=self.fabric.device)
                     start_time = time.time()
 
                     for batch, i in enumerate(range(0, train_data.size(0) - 1, sequence_length)):
@@ -308,13 +308,8 @@ class LanguageModelTrainer:
 
                         # try to predict the targets
                         loss = self.loss_function(output.view(-1, ntokens), targets)
-                        # Backward
-                        if use_amp:
-                            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                                scaled_loss.backward()
-                        else:
-                            loss.backward()
-
+                        # Backward with Fabric
+                        self.fabric.backward(loss)
                         # `clip_grad_norm` helps prevent the exploding gradient
                         # problem in RNNs / LSTMs.
                         torch.nn.utils.clip_grad_norm_(self.model.parameters(), clip)
@@ -339,7 +334,7 @@ class LanguageModelTrainer:
                                 f"| split {curr_split:3d}/{number_of_splits:3d} | {batch:5d}/{len(train_data) // sequence_length:5d} batches "
                                 f"| ms/batch {elapsed * 1000 / self.log_interval:5.2f} | loss {cur_loss:5.4f} | ppl {math.exp(cur_loss):5.4f}"
                             )
-                            total_loss = torch.zeros(1, device=flair.device)
+                            total_loss = torch.zeros(1, device=self.fabric.device)
                             start_time = time.time()
 
                     ##########################################################
@@ -444,9 +439,6 @@ class LanguageModelTrainer:
 
         data = source[i : i + seq_len]
         target = source[i + 1 : i + 1 + seq_len].view(-1)
-
-        data = data.to(flair.device)
-        target = target.to(flair.device)
 
         return data, target
 
