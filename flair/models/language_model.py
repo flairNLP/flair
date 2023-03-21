@@ -250,7 +250,7 @@ class LanguageModel(nn.Module):
         epoch: int,
         split: int,
         loss: float,
-        rank:Optional[int]=None
+        rank: Optional[int] = None,
     ):
         model_state = {
             "state_dict": self.state_dict(),
@@ -269,10 +269,10 @@ class LanguageModel(nn.Module):
             "recurrent_type": self.recurrent_type,
             "has_decoder": self.decoder is not None,
         }
-        if rank==0:
+        if rank == 0:
             torch.save(model_state, str(file), pickle_protocol=4)
 
-    def save(self, file: Union[Path, str], rank:Optional[int]=None):
+    def save(self, file: Union[Path, str], rank: Optional[int] = None):
         model_state = {
             "state_dict": self.state_dict(),
             "dictionary": self.dictionary,
@@ -286,7 +286,7 @@ class LanguageModel(nn.Module):
             "recurrent_type": self.recurrent_type,
             "has_decoder": self.decoder is not None,
         }
-        if rank==0:
+        if rank == 0:
             torch.save(model_state, str(file), pickle_protocol=4)
 
     def generate_text(

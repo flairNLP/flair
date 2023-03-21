@@ -1,25 +1,23 @@
 import datetime
-from typing import List, Union
 import logging
 import math
 import random
-import sys
 import time
 from pathlib import Path
-from typing import Iterable, Type, Union
+from typing import Iterable, List, Type, Union
 
 import torch
+from lightning.fabric import Fabric
 from torch import cuda
 from torch.optim import AdamW, Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 from torch.utils.data import DataLoader, Dataset
-from lightning.fabric import Fabric
-from flair.optim import SGDW, ReduceLRWDOnPlateau
 
 import flair
 from flair.data import Dictionary
 from flair.models import LanguageModel
+from flair.optim import SGDW, ReduceLRWDOnPlateau
 from flair.training_utils import add_file_handler
 
 log = logging.getLogger("flair")
@@ -164,12 +162,11 @@ class LanguageModelTrainer:
         split: int = 0,
         loss: float = 10000,
         optimizer_state: dict = None,
-        accelerator:str="auto",
-        strategy:str = "auto",
+        accelerator: str = "auto",
+        strategy: str = "auto",
         devices: Union[List[int], str, int] = "auto",
         num_nodes: int = 1,
         precision: Union[str, int] = "32-true",
-
     ):
         self.model = model
         self.optimizer = optimizer
@@ -184,8 +181,9 @@ class LanguageModelTrainer:
         self.optimizer_state = optimizer_state
 
         # setup Fabric
-        self.fabric = Fabric(accelerator=accelerator, devices=devices, precision=precision, num_nodes=num_nodes, strategy=strategy)
-        
+        self.fabric = Fabric(
+            accelerator=accelerator, devices=devices, precision=precision, num_nodes=num_nodes, strategy=strategy
+        )
 
     def train(
         self,
@@ -261,7 +259,7 @@ class LanguageModelTrainer:
                         epoch,
                         0,
                         best_val_loss,
-                        rank=self.fabric.global_rank
+                        rank=self.fabric.global_rank,
                     )
 
                 # iterate through training data, starting at
@@ -362,7 +360,7 @@ class LanguageModelTrainer:
                             epoch,
                             curr_split,
                             best_val_loss,
-                            rank=self.fabric.global_rank
+                            rank=self.fabric.global_rank,
                         )
 
                     ##########################################################
