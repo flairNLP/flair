@@ -1,14 +1,11 @@
 import logging
 
 from flair.trainers.plugins.base import TrainerPlugin
-from flair.trainers.plugins.functional.best_model import BestModelPlugin
 
 log = logging.getLogger("flair")
 
 
 class CheckpointPlugin(TrainerPlugin):
-    dependencies = (BestModelPlugin,)
-
     @TrainerPlugin.hook
     def before_training_setup(
         self,
@@ -63,17 +60,6 @@ class CheckpointPlugin(TrainerPlugin):
             self.model.save(self.trainer.base_path / model_name, checkpoint=self.save_optimizer_state)
 
     @TrainerPlugin.hook
-    def after_evaluation(self, **kw):
-        """
-        Executes checkpointing
-        :param kw:
-        :return:
-        """
-        # if checkpoint is enabled, save model at each epoch
-        if self.checkpoint and not self.param_selection_mode:
-            self.model.save(self.trainer.base_path / "checkpoint.pt", checkpoint=True)
-
-    @TrainerPlugin.hook
     def training_interrupt(self, **kw):
         """
         Saves model on interrupt
@@ -97,12 +83,16 @@ class CheckpointPlugin(TrainerPlugin):
             self.model.save(self.trainer.base_path / "final-model.pt", checkpoint=self.save_optimizer_state)
 
     @TrainerPlugin.hook
-    def best_model(self, **kw):
+    def after_evaluation(self, current_model_is_best, **kw):
         """
-        Saves best model # TODO: I don't understand how this works
+        Executes checkpointing, saves best model
         :param kw:
         :return:
         """
-        if self.save_best_model:
+        if self.save_best_model and current_model_is_best:
             log.info("saving best model")
             self.model.save(self.trainer.base_path / "best-model.pt", checkpoint=self.save_optimizer_state)
+
+        # if checkpoint is enabled, save model at each epoch
+        if self.checkpoint and not self.param_selection_mode:
+            self.model.save(self.trainer.base_path / "checkpoint.pt", checkpoint=True)

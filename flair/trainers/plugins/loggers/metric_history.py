@@ -52,4 +52,4 @@ class MetricHistoryPlugin(TrainerPlugin):
         :param kw:
         :return:
         """
-        self.trainer.return_values.update(elf.metric_history)
+        self.trainer.return_values.update(self.metric_history)

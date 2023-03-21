@@ -3,7 +3,7 @@ from typing import Dict, Optional, Tuple
 
 from flair.nn import Classifier
 from flair.trainers.plugins.base import TrainerPlugin
-from flair.trainers.plugins.metrics import MetricName
+from flair.trainers.plugins.metric_records import MetricName
 from flair.training_utils import init_output_file
 
 

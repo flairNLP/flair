@@ -2,7 +2,6 @@ from flair.trainers.plugins.functional import (
     AmpPlugin,
     CheckpointPlugin,
     ModelCardPlugin,
-    RegularLoggingPlugin,
     SchedulerPlugin,
     SWAPlugin,
     WeightExtractorPlugin,
@@ -13,20 +12,11 @@ from flair.trainers.plugins.loggers import (
     MetricHistoryPlugin,
     TensorboardLogger,
 )
-from flair.trainers.plugins.metrics import (
-    BasicEvaluationPlugin,
-    MetricBasePlugin,
-    MetricName,
-    MetricRecord,
-    TrainingBehaviorPlugin,
-)
 
 from .base import BasePlugin, Pluggable, TrainerPlugin, TrainingInterrupt
+from .metric_records import MetricName, MetricRecord
 
 default_plugins = [
-    BasicEvaluationPlugin,
-    TrainingBehaviorPlugin,
-    RegularLoggingPlugin,
     CheckpointPlugin,
     ModelCardPlugin,
     SchedulerPlugin,
@@ -40,7 +30,6 @@ __all__ = [
     "AmpPlugin",
     "CheckpointPlugin",
     "ModelCardPlugin",
-    "RegularLoggingPlugin",
     "SchedulerPlugin",
     "SWAPlugin",
     "WeightExtractorPlugin",
@@ -48,13 +37,10 @@ __all__ = [
     "LossFilePlugin",
     "MetricHistoryPlugin",
     "TensorboardLogger",
-    "BasicEvaluationPlugin",
-    "TrainingBehaviorPlugin",
     "BasePlugin",
     "Pluggable",
     "TrainerPlugin",
     "TrainingInterrupt",
-    "MetricBasePlugin",
     "MetricName",
     "MetricRecord",
 ]

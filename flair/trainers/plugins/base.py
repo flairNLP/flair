@@ -6,7 +6,6 @@ from queue import Queue
 from typing import (
     Callable,
     Dict,
-    Iterable,
     Iterator,
     List,
     NewType,
@@ -169,10 +168,6 @@ class HookHandle:
 class BasePlugin:
     """Base class for all plugins."""
 
-    provided_events: Optional[Set[EventIdenifier]] = None
-
-    dependencies: Iterable[Type["BasePlugin"]] = ()
-
     def __init__(self):
         """Initialize the base plugin."""
         self._hook_handles: List[HookHandle] = []
@@ -184,23 +179,6 @@ class BasePlugin:
         assert len(self._hook_handles) == 0
 
         self._pluggable = pluggable
-
-        for dep in self.dependencies:
-            dep_satisfied = False
-
-            for plugin in pluggable.plugins:
-                if isinstance(plugin, dep):
-                    # there is already a plugin which satisfies this dependency
-                    dep_satisfied = True
-                    break
-
-            if not dep_satisfied:
-                # create a plugin of this type and attach it to the trainer
-                dep_plugin = dep()
-                dep_plugin.attach_to(pluggable)
-
-        if self.provided_events is not None and pluggable.valid_events is not None:
-            pluggable.valid_events = pluggable.valid_events | self.provided_events
 
         pluggable.append_plugin(self)
 

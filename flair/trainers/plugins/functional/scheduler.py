@@ -8,8 +8,7 @@ from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
 
 from flair.optim import LinearSchedulerWithWarmup
 from flair.trainers.plugins.base import TrainerPlugin, TrainingInterrupt
-from flair.trainers.plugins.functional.best_model import BestModelPlugin
-from flair.trainers.plugins.metrics.base import MetricRecord
+from flair.trainers.plugins.metric_records import MetricRecord
 from flair.training_utils import AnnealOnPlateau
 
 log = logging.getLogger("flair")
@@ -20,8 +19,6 @@ class SchedulerPlugin(TrainerPlugin):
     Plugin for all schedulers. Idea: separate plugins
     for AnnealOnPlateau and OneCycle
     """
-
-    dependencies = (BestModelPlugin,)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -257,13 +254,13 @@ class SchedulerPlugin(TrainerPlugin):
                 pass
 
     @TrainerPlugin.hook
-    def best_model(self, primary_value, auxiliary_value, **kw):
+    def after_evaluation(self, current_model_is_best, validation_scores, **kw):
         """
         Scheduler step if AnnealOnPlateau
-        :param primary_value:
-        :param auxiliary_value:
+        :param current_model_is_best:
+        :param validation_scores:
         :param kw:
         :return:
         """
-        if isinstance(self.scheduler, AnnealOnPlateau):
-            self.scheduler.step(primary_value, auxiliary_value)
+        if current_model_is_best and isinstance(self.scheduler, AnnealOnPlateau):
+            self.scheduler.step(*validation_scores)

@@ -127,27 +127,3 @@ class MetricRecord:
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.joined_name} at step {self.global_step}, {self.walltime:.4f})"
-
-
-class MetricBasePlugin(TrainerPlugin):
-    """Base class for metric producing plugins.
-
-    Triggers the `metric_recorded` hook when yielding metrics from an
-    existing hook callback (if the callback has been decorated with
-    `@MetricBasePlugin.hook`).
-    To not trigger the `metric_recorded` hook, but still mark a function as a
-    callback, use `@BasePlugin.hook`
-    """
-
-    provided_events = {"metric_recorded"}
-
-    @classmethod
-    def mark_func_as_hook(cls, func: Callable, *events: str):
-        """Decorate a function as a metric producing hook callback."""
-
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            for record in func(self, *args, **kwargs):
-                self.pluggable.dispatch("metric_recorded", record)
-
-        return super().mark_func_as_hook(wrapper, *events)
