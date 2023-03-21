@@ -166,7 +166,7 @@ class LanguageModelTrainer:
         strategy: str = "auto",
         devices: Union[List[int], str, int] = "auto",
         num_nodes: int = 1,
-        precision: Union[str, int] = "32-true",
+        precision: Union[str, int] = 32,
     ):
         self.model = model
         self.optimizer = optimizer
