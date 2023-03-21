@@ -1,10 +1,7 @@
 import time
 from dataclasses import dataclass
 from enum import Enum
-from functools import wraps
-from typing import Any, Callable, Iterable, Iterator, Tuple, Union
-
-from flair.trainers.plugins.base import TrainerPlugin
+from typing import Any, Iterable, Iterator, Tuple, Union
 
 RecordType = Enum("RecordType", ["scalar", "image", "histogram", "string", "scalar_list"])
 

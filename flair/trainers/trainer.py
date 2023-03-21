@@ -58,7 +58,7 @@ class ModelTrainer(Pluggable):
         "_training_finally",
         "_training_exception",
         "collecting_train_return_values",
-        "after_teardown",
+        "after_training",
         "metric_recorded",
     }
 
@@ -670,12 +670,15 @@ class ModelTrainer(Pluggable):
             self.return_values["test_score"] = 0
             log.info("Test data not provided setting final score to 0")
 
+        # MetricHistoryPlugin -> stores the loss history in return_values
+        self.dispatch("after_training")
+
+        # Store return values, as they will be erased by reset_training_attributes
+        return_values = self.return_values
+
         self.reset_training_attributes()
 
-        # MetricHistoryPlugin -> stores the loss history in return_values
-        self.dispatch("after_teardown")
-
-        return self.return_values
+        return return_values
 
     def flat_dict_items(self, d, composite_key=()):
         for key, value in d.items():

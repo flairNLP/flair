@@ -46,7 +46,7 @@ class MetricHistoryPlugin(TrainerPlugin):
             pass
 
     @TrainerPlugin.hook
-    def after_teardown(self, **kw):
+    def after_training(self, **kw):
         """
         Returns metric history
         :param kw:
