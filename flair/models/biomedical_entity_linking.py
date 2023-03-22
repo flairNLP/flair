@@ -11,6 +11,7 @@ import string
 import tempfile
 import torch
 
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from flair.data import Sentence, EntityLinkingLabel, DataPoint, Label
 from flair.datasets import (
@@ -26,7 +27,7 @@ from pathlib import Path
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
-from typing import List, Tuple, Union, Optional, Dict
+from typing import List, Tuple, Union, Optional, Dict, Iterable
 
 log = logging.getLogger("flair")
 
@@ -341,7 +342,7 @@ class DictionaryDataset:
     Every line in the file must be formatted as follows:
     concept_unique_id||concept_name
     with one line per concept name. Multiple synonyms for the same concept should
-    be in seperate lines with the same concept_unique_id.
+    be in separate lines with the same concept_unique_id.
 
     Slightly modifed from Sung et al. 2020
     Biomedical Entity Representations with Synonym Marginalization
@@ -354,18 +355,20 @@ class DictionaryDataset:
             load_into_memory: bool = True
     ) -> None:
         """
-        :param dictionary_path str: The path of the dictionary
+        :param dictionary_path str: Path to the dictionary file
+        :param load_into_memory bool: Indicates whether the dictionary entries should be loaded in
+            memory or not (Default True)
         """
-        log.info("Loading Dictionary from {}".format(dictionary_path))
+        log.info("Loading dictionary from {}".format(dictionary_path))
         if load_into_memory:
             self.data = self.load_data(dictionary_path)
         else:
             self.data = self.get_data(dictionary_path)
 
-    def load_data(self, dictionary_path: str) -> np.ndarray:
+    def load_data(self, dictionary_path: Union[Path, str]) -> np.ndarray:
         data = []
-        with open(dictionary_path, mode="r", encoding="utf-8") as f:
-            lines = f.readlines()
+        with open(dictionary_path, mode="r", encoding="utf-8") as file:
+            lines = file.readlines()
             for line in tqdm(lines, desc="Loading dictionary"):
                 line = line.strip()
                 if line == "":
@@ -378,7 +381,7 @@ class DictionaryDataset:
         return data
 
     # generator version
-    def get_data(self, dictionary_path):
+    def get_data(self, dictionary_path: Union[Path, str]) -> Iterable[Tuple]:
         data = []
         with open(dictionary_path, mode="r", encoding="utf-8") as f:
             lines = f.readlines()
@@ -391,27 +394,29 @@ class DictionaryDataset:
                 yield (name, cui)
 
     @classmethod
-    def load(cls, dictionary_name_or_path: str):
-        # use provided dictionary
-        if dictionary_name_or_path == "ctd-disease":
-            return NEL_CTD_DISEASE_DICT()
-        elif dictionary_name_or_path == "ctd-chemical":
-            return NEL_CTD_CHEMICAL_DICT()
-        elif dictionary_name_or_path == "ncbi-gene":
-            return NEL_NCBI_HUMAN_GENE_DICT()
-        elif dictionary_name_or_path == "ncbi-taxonomy":
-            return NEL_NCBI_TAXONOMY_DICT()
-        # use custom dictionary file
+    def load(cls, dictionary_name_or_path: Union[Path, str]):
+        if isinstance(dictionary_name_or_path, str):
+            # use provided dictionary
+            if dictionary_name_or_path == "ctd-disease":
+                return NEL_CTD_DISEASE_DICT()
+            elif dictionary_name_or_path == "ctd-chemical":
+                return NEL_CTD_CHEMICAL_DICT()
+            elif dictionary_name_or_path == "ncbi-gene":
+                return NEL_NCBI_HUMAN_GENE_DICT()
+            elif dictionary_name_or_path == "ncbi-taxonomy":
+                return NEL_NCBI_TAXONOMY_DICT()
         else:
+            # use custom dictionary file
             return DictionaryDataset(dictionary_path=dictionary_name_or_path)
 
 
-class EntityRetrieverModel:
+class EntityRetrieverModel(ABC):
     """
     An entity retriever model is used to find the top-k entities / concepts of a knowledge base /
     dictionary for a given entity mention in text.
     """
 
+    @abstractmethod
     def get_top_k(
             self,
             entity_mention: str,
@@ -880,7 +885,8 @@ class BiomedicalEntityLinker:
 
         :param sentences: One or more sentences to run the prediction on
         :param input_entity_annotation_layer: Entity type to run the prediction on
-        :param top_k: Number of best-matching entity / concept identifiers per entity mention
+        :param top_k: Number of best-matching entity / concept identifiers which should be predicted
+            per entity mention
         """
         # make sure sentences is a list of sentences
         if not isinstance(sentences, list):
@@ -912,8 +918,8 @@ class BiomedicalEntityLinker:
 
                 # Add a label annotation for each candidate
                 for prediction in predictions:
-                    # if concept unique id is made up of mulitple ids, seperated by '|'
-                    # seperate it into cui and additional_labels
+                    # if concept identifier is made up of multiple ids, separated by '|'
+                    # separate it into cui and additional_labels
                     cui = prediction[1]
                     if "|" in cui:
                         labels = cui.split("|")
@@ -921,6 +927,7 @@ class BiomedicalEntityLinker:
                         additional_labels = labels[1:]
                     else:
                         additional_labels = None
+
                     # determine database:
                     if ":" in cui:
                         cui_parts = cui.split(":")
@@ -928,17 +935,19 @@ class BiomedicalEntityLinker:
                         cui = cui_parts[-1]
                     else:
                         database = None
+
                     sentence.add_label(
                         typename=label_name,
                         value_or_label=EntityLinkingLabel(
                             data_point=entity.data_point,
-                            id=cui,
+                            concept_id=cui,
                             concept_name=prediction[0],
                             additional_ids=additional_labels,
                             database=database,
                             score=prediction[2],
                         ),
                     )
+
     @classmethod
     def load(
         cls,
@@ -968,8 +977,8 @@ class BiomedicalEntityLinker:
         :param batch_size: Batch size for the dense encoder
         :param index_use_cuda: If True, uses GPU for the dense encoding
         :param use_cosine: If True, uses cosine similarity for the dense encoder. If False, inner product is used.
-        :param use_ab3p: If True, uses ab3p to resolve abbreviations
-        :param ab3p_path: Optional: oath to ab3p on your machine
+        :param preprocessor: Implementation of MentionPreprocessor to use for pre-processing the entity
+            mention text and dictionary entries
         """
         dictionary_path = dictionary_name_or_path
         if dictionary_name_or_path is None or isinstance(dictionary_name_or_path, str):
