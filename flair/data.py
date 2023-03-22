@@ -420,14 +420,6 @@ class DataPoint:
     def __lt__(self, other):
         return self.start_position < other.start_position
 
-    def __eq__(self, other):
-        # TODO: does it make sense to exclude labels? Two data points of identical text (but different labels)
-        #  would be equal now.
-        return self.unlabeled_identifier == other.unlabeled_identifier
-
-    def __hash__(self):
-        return hash(self.unlabeled_identifier)
-
     def __len__(self):
         raise NotImplementedError
 
