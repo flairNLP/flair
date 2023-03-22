@@ -156,11 +156,14 @@ class HookHandle:
         except TypeError as err:
             sig = signature(self._func)
 
-            for name in kw.keys():
-                if name not in sig.parameters:
-                    raise TypeError(
-                        f"Hook callback {self.func_name}() does not accept keyword argument '{name}'"
-                    ) from err
+            if not any((p.kind == p.VAR_KEYWORD for p in sig.parameters.values())):
+                # If there is no **kw argument in the callback, check if any of the passed kw args is not accepted by
+                # the callback
+                for name in kw.keys():
+                    if name not in sig.parameters:
+                        raise TypeError(
+                            f"Hook callback {self.func_name}() does not accept keyword argument '{name}'"
+                        ) from err
 
             raise err
 
