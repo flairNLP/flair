@@ -498,7 +498,7 @@ class Token(_PartOfSentence):
 
     @property
     def idx(self) -> int:
-        if isinstance(self._internal_index, int):
+        if self._internal_index is not None:
             return self._internal_index
         else:
             return -1
@@ -779,7 +779,7 @@ class Sentence(DataPoint):
         # set token idx and sentence
         token.sentence = self
         token._internal_index = len(self.tokens) + 1
-        if token.start_position == 0 and len(self) > 0:
+        if token.start_position == 0 and token._internal_index > 1:
             token.start_position = len(self.to_original_text()) + self[-1].whitespace_after
 
         # append token to sentence
@@ -1434,25 +1434,25 @@ class Corpus(typing.Generic[T_co]):
 
             # go through all labels of label_type and count values
             labels = sentence.get_labels(label_type)
-            for label in labels:
-                if label.value not in all_sentence_labels:
-                    label_value_counter[label.value] += 1
-
-                # check if there are any span labels
-                if type(label.data_point) == Span and len(label.data_point) > 1:
-                    label_dictionary.span_labels = True
+            label_value_counter.update(label.value for label in labels if label.value not in all_sentence_labels)
+            if not label_dictionary.span_labels:
+                for label in labels:
+                    # check if there are any span labels
+                    if type(label.data_point) == Span and len(label.data_point) > 1:
+                        label_dictionary.span_labels = True
+                        break
 
             if not label_dictionary.multi_label:
                 if len(labels) > 1:
                     label_dictionary.multi_label = True
 
         # if an unk threshold is set, UNK all label values below this threshold
-        erfasst_count = 0
+        total_count = 0
         unked_count = 0
         for label, count in label_value_counter.most_common():
             if count >= min_count:
                 label_dictionary.add_item(label)
-                erfasst_count += count
+                total_count += count
             else:
                 unked_count += count
 
@@ -1472,7 +1472,7 @@ class Corpus(typing.Generic[T_co]):
         )
 
         if unked_count > 0:
-            log.info(f" - at UNK threshold {min_count}, {unked_count} instances are UNK'ed and {erfasst_count} remain")
+            log.info(f" - at UNK threshold {min_count}, {unked_count} instances are UNK'ed and {total_count} remain")
 
         return label_dictionary
 

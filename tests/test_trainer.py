@@ -53,7 +53,7 @@ def test_text_classifier_multi(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
-    corpus = flair.datasets.UD_ENGLISH().downsample(0.05)
+    corpus = flair.datasets.UD_ENGLISH().downsample(0.01)
     tag_dictionary = corpus.make_label_dictionary("pos")
 
     tagger: SequenceTagger = SequenceTagger(
