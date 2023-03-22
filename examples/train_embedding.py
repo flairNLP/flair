@@ -11,14 +11,15 @@ is_forward_lm = True
 dictionary: Dictionary = Dictionary.load("chars")
 
 # get your corpus, process forward and at the character level
-corpus = TextCorpus("/Users/aniket/data/penn_lm", dictionary, is_forward_lm, character_level=True)
+# data-> https://github.com/flairNLP/flair/files/9899426/penn_lm.zip
+corpus = TextCorpus("resources/data/penn_lm", dictionary, is_forward_lm, character_level=True)
 
 if __name__== "__main__":
     # instantiate your language model, set hidden size and number of layers
     language_model = LanguageModel(dictionary, is_forward_lm, hidden_size=128, nlayers=1)
 
     # train your language model
-    trainer = LanguageModelTrainer(model=language_model, corpus=corpus, accelerator="cpu", devices=2)
+    trainer = LanguageModelTrainer(model=language_model, corpus=corpus, accelerator="auto", devices="auto")
 
     trainer.train(
         "resources/taggers/language_model",
