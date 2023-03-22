@@ -359,7 +359,6 @@ class ModelTrainer(Pluggable):
             total_train_samples = 0
 
             for epoch in range(epoch + 1, max_epochs + 1):
-
                 # - BasicEvaluationPlugin creates test_part split -> could be done elsewhere?
                 # - TrainingBehaviorPlugin gets current learning rate and momentum
                 # - RegularLoggingPlugin resets some logging parameters
