@@ -573,7 +573,7 @@ class Span(_PartOfSentence):
         if not self.initialized:
             super().__init__(tokens[0].sentence)
             self.tokens = tokens
-            self.initialized = True
+            self.initialized: bool = True
 
     @property
     def start_position(self) -> int:
@@ -633,7 +633,7 @@ class Relation(_PartOfSentence):
             super().__init__(sentence=first.sentence)
             self.first: Span = first
             self.second: Span = second
-            self.initialized = True
+            self.initialized: bool = True
 
     def __repr__(self):
         return str(self)
