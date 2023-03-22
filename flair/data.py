@@ -4,7 +4,6 @@ import re
 import typing
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict, namedtuple
-from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Union, cast
@@ -838,7 +837,6 @@ class Sentence(DataPoint):
         for token in self:
             token.clear_embeddings(embedding_names)
 
-    @lru_cache(maxsize=200000)  # cache last context, as training repeats calls
     def left_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
         left_context: List[Token] = []
@@ -853,7 +851,6 @@ class Sentence(DataPoint):
             left_context = sentence.tokens + left_context
         return left_context[-context_length:]
 
-    @lru_cache(maxsize=200000)  # cache last context, as training repeats calls
     def right_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
         right_context: List[Token] = []
