@@ -433,26 +433,44 @@ class DataPoint:
 
 
 class EntityLinkingLabel(Label):
+    """
+    Label class models entity linking annotations. Each entity linking label has a data point it refers
+    to as well as the identifier and name of the concept / entity from a knowledge base or ontology.
+
+    Optionally, additional concepts identifier and the database name can be provided.
+    """
+
     def __init__(
         self,
         data_point: DataPoint,
-        id: str,
+        concept_id: str,
         concept_name: str,
         score: float = 1.0,
         additional_ids: Optional[Union[List[str], str]] = None,
         database: Optional[str] = None,
     ):
-        super().__init__(data_point, id, score)
+        """
+        Initializes the label instance.
+
+        :param data_point: Data point / span the label refers to
+        :param concept_id: Identifier of the entity / concept from the knowledge base / ontology
+        :param concept_name: (Canonical) name of the entity / concept from the knowledge base / ontology
+        :param score: Matching score of the entity / concept according to the entity mention
+        :param additional_ids: List of additional identifiers for the concept / entity in the KB / ontology
+        :param database: Name of the knowlege base / ontology
+        """
+        super().__init__(data_point, concept_id, score)
         self.concept_name = concept_name
+        self.database = database
+
         if isinstance(additional_ids, str):
             additional_ids = [additional_ids]
         self.additional_ids = additional_ids
-        self.database = database
 
     def spawn(self, value: str, score: float = 1.0):
         return EntityLinkingLabel(
             data_point=self.data_point,
-            id=value,
+            concept_id=value,
             score=score,
             concept_name=self.concept_name,
             additional_ids=self.additional_ids,
@@ -460,17 +478,12 @@ class EntityLinkingLabel(Label):
         )
 
     def __str__(self):
-        if self.additional_ids is None:
-            return f"{self.data_point.unlabeled_identifier}{flair._arrow} " \
+        return f"{self.data_point.unlabeled_identifier}{flair._arrow} " \
                    f"{self.concept_name} - {self.database}:{self._value} ({round(self._score, 4)})"
-        else:
-            return f" ({', '.join(self.additional_ids)})  {self.concept_name} ({round(self._score, 2)})"
 
     def __repr__(self):
-        if self.additional_ids is None:
-            return f"{self.database}:{self._value} {self.concept_name} [{self.data_point.text}] ({round(self._score, 2)})"
-        else:
-            return f"{self.database}:{self._value} ({', '.join(self.additional_ids)}) {self.concept_name} [{self.data_point.text}] ({round(self._score, 2)})"
+        return f"{self.data_point.unlabeled_identifier}{flair._arrow} " \
+                   f"{self.concept_name} - {self.database}:{self._value} ({round(self._score, 4)})"
 
     def __len__(self):
         return len(self.data_point)
@@ -480,6 +493,7 @@ class EntityLinkingLabel(Label):
             self.value == other.value
             and self.data_point == other.data_point
             and self.concept_name == other.concept_name
+            and self.identifier == other.identifier
             and self.database == other.database
             and self.score == other.score
         )
