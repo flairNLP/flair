@@ -463,12 +463,12 @@ class Token(_PartOfSentence):
     """
 
     def __init__(
-            self,
-            text: str,
-            head_id: int = None,
-            whitespace_after: int = 1,
-            start_position: int = 0,
-            sentence=None,
+        self,
+        text: str,
+        head_id: int = None,
+        whitespace_after: int = 1,
+        start_position: int = 0,
+        sentence=None,
     ):
         super().__init__(sentence=sentence)
 
@@ -557,7 +557,6 @@ class Span(_PartOfSentence):
     """
 
     def __new__(self, tokens: List[Token]):
-
         # check if the span already exists. If so, return it
         unlabeled_identifier = self._make_unlabeled_identifier(tokens)
         if unlabeled_identifier in tokens[0].sentence._known_spans:
@@ -616,11 +615,26 @@ class Span(_PartOfSentence):
 
 
 class Relation(_PartOfSentence):
+    def __new__(self, first: Span, second: Span):
+        # check if the relation already exists. If so, return it
+        unlabeled_identifier = self._make_unlabeled_identifier(first, second)
+        if unlabeled_identifier in first.sentence._known_spans:
+            span = first.sentence._known_spans[unlabeled_identifier]
+            return span
+
+        # else make a new relation
+        else:
+            span = super(Relation, self).__new__(self)
+            span.initialized = False
+            first.sentence._known_spans[unlabeled_identifier] = span
+            return span
+
     def __init__(self, first: Span, second: Span):
-        super().__init__(sentence=first.sentence)
-        self.first: Span = first
-        self.second: Span = second
-        super()._init_labels()
+        if not self.initialized:
+            super().__init__(sentence=first.sentence)
+            self.first: Span = first
+            self.second: Span = second
+            self.initialized = True
 
     def __repr__(self):
         return str(self)
@@ -633,14 +647,19 @@ class Relation(_PartOfSentence):
     def text(self):
         return f"{self.first.text} -> {self.second.text}"
 
-    @property
-    def unlabeled_identifier(self) -> str:
+    @staticmethod
+    def _make_unlabeled_identifier(first, second):
+        text = f"{first.text} -> {second.text}"
         return (
             f"Relation"
-            f"[{self.first.tokens[0].idx - 1}:{self.first.tokens[-1].idx}]"
-            f"[{self.second.tokens[0].idx - 1}:{self.second.tokens[-1].idx}]"
-            f': "{self.text}"'
+            f"[{first.tokens[0].idx - 1}:{first.tokens[-1].idx}]"
+            f"[{second.tokens[0].idx - 1}:{second.tokens[-1].idx}]"
+            f': "{text}"'
         )
+
+    @property
+    def unlabeled_identifier(self) -> str:
+        return self._make_unlabeled_identifier(self.first, self.second)
 
     @property
     def start_position(self) -> int:
@@ -661,11 +680,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-            self,
-            text: Union[str, List[str], List[Token]],
-            use_tokenizer: Union[bool, Tokenizer] = True,
-            language_code: str = None,
-            start_position: int = 0,
+        self,
+        text: Union[str, List[str], List[Token]],
+        use_tokenizer: Union[bool, Tokenizer] = True,
+        language_code: str = None,
+        start_position: int = 0,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -1053,10 +1072,10 @@ class Sentence(DataPoint):
         :return: True if context is set, else False
         """
         return (
-                self._has_context
-                or self._previous_sentence is not None
-                or self._next_sentence is not None
-                or self._position_in_dataset is not None
+            self._has_context
+            or self._previous_sentence is not None
+            or self._next_sentence is not None
+            or self._position_in_dataset is not None
         )
 
     def copy_context_from_sentence(self, sentence: "Sentence") -> None:
@@ -1183,12 +1202,12 @@ class Image(DataPoint):
 
 class Corpus(typing.Generic[T_co]):
     def __init__(
-            self,
-            train: Optional[Dataset[T_co]] = None,
-            dev: Optional[Dataset[T_co]] = None,
-            test: Optional[Dataset[T_co]] = None,
-            name: str = "corpus",
-            sample_missing_splits: Union[bool, str] = True,
+        self,
+        train: Optional[Dataset[T_co]] = None,
+        dev: Optional[Dataset[T_co]] = None,
+        test: Optional[Dataset[T_co]] = None,
+        name: str = "corpus",
+        sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1227,11 +1246,11 @@ class Corpus(typing.Generic[T_co]):
         return self._test
 
     def downsample(
-            self,
-            percentage: float = 0.1,
-            downsample_train=True,
-            downsample_dev=True,
-            downsample_test=True,
+        self,
+        percentage: float = 0.1,
+        downsample_train=True,
+        downsample_dev=True,
+        downsample_test=True,
     ):
         if downsample_train and self._train is not None:
             self._train = self._downsample_to_proportion(self._train, percentage)
@@ -1464,7 +1483,7 @@ class Corpus(typing.Generic[T_co]):
                 unked_count += count
 
         if len(label_dictionary.idx2item) == 0 or (
-                len(label_dictionary.idx2item) == 1 and "<unk>" in label_dictionary.get_items()
+            len(label_dictionary.idx2item) == 1 and "<unk>" in label_dictionary.get_items()
         ):
             log.error(f"ERROR: You specified label_type='{label_type}' which is not in this dataset!")
             contained_labels = ", ".join(
@@ -1570,11 +1589,11 @@ class Corpus(typing.Generic[T_co]):
 
 class MultiCorpus(Corpus):
     def __init__(
-            self,
-            corpora: List[Corpus],
-            task_ids: Optional[List[str]] = None,
-            name: str = "multicorpus",
-            **corpusargs,
+        self,
+        corpora: List[Corpus],
+        task_ids: Optional[List[str]] = None,
+        name: str = "multicorpus",
+        **corpusargs,
     ):
         self.corpora: List[Corpus] = corpora
 
