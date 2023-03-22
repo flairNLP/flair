@@ -4,7 +4,6 @@ import re
 import typing
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict, namedtuple
-from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Union, cast
@@ -420,14 +419,6 @@ class DataPoint:
     def __lt__(self, other):
         return self.start_position < other.start_position
 
-    def __eq__(self, other):
-        # TODO: does it make sense to exclude labels? Two data points of identical text (but different labels)
-        #  would be equal now.
-        return self.unlabeled_identifier == other.unlabeled_identifier
-
-    def __hash__(self):
-        return hash(self.unlabeled_identifier)
-
     def __len__(self):
         raise NotImplementedError
 
@@ -440,12 +431,6 @@ class _PartOfSentence(DataPoint, ABC):
     def __init__(self, sentence):
         super().__init__()
         self.sentence: Sentence = sentence
-
-    def _init_labels(self):
-        if self.unlabeled_identifier in self.sentence._known_spans:
-            self.annotation_layers = self.sentence._known_spans[self.unlabeled_identifier].annotation_layers
-            del self.sentence._known_spans[self.unlabeled_identifier]
-        self.sentence._known_spans[self.unlabeled_identifier] = self
 
     def add_label(self, typename: str, value: str, score: float = 1.0):
         super().add_label(typename, value, score)
@@ -570,10 +555,25 @@ class Span(_PartOfSentence):
     This class represents one textual span consisting of Tokens.
     """
 
+    def __new__(self, tokens: List[Token]):
+        # check if the span already exists. If so, return it
+        unlabeled_identifier = self._make_unlabeled_identifier(tokens)
+        if unlabeled_identifier in tokens[0].sentence._known_spans:
+            span = tokens[0].sentence._known_spans[unlabeled_identifier]
+            return span
+
+        # else make a new span
+        else:
+            span = super(Span, self).__new__(self)
+            span.initialized = False
+            tokens[0].sentence._known_spans[unlabeled_identifier] = span
+            return span
+
     def __init__(self, tokens: List[Token]):
-        super().__init__(tokens[0].sentence)
-        self.tokens = tokens
-        super()._init_labels()
+        if not self.initialized:
+            super().__init__(tokens[0].sentence)
+            self.tokens = tokens
+            self.initialized: bool = True
 
     @property
     def start_position(self) -> int:
@@ -587,9 +587,14 @@ class Span(_PartOfSentence):
     def text(self) -> str:
         return "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
 
+    @staticmethod
+    def _make_unlabeled_identifier(tokens: List[Token]):
+        text = "".join([t.text + t.whitespace_after * " " for t in tokens]).strip()
+        return f'Span[{tokens[0].idx - 1}:{tokens[-1].idx}]: "{text}"'
+
     @property
     def unlabeled_identifier(self) -> str:
-        return f'Span[{self.tokens[0].idx - 1}:{self.tokens[-1].idx}]: "{self.text}"'
+        return self._make_unlabeled_identifier(self.tokens)
 
     def __repr__(self):
         return self.__str__()
@@ -609,11 +614,26 @@ class Span(_PartOfSentence):
 
 
 class Relation(_PartOfSentence):
+    def __new__(self, first: Span, second: Span):
+        # check if the relation already exists. If so, return it
+        unlabeled_identifier = self._make_unlabeled_identifier(first, second)
+        if unlabeled_identifier in first.sentence._known_spans:
+            span = first.sentence._known_spans[unlabeled_identifier]
+            return span
+
+        # else make a new relation
+        else:
+            span = super(Relation, self).__new__(self)
+            span.initialized = False
+            first.sentence._known_spans[unlabeled_identifier] = span
+            return span
+
     def __init__(self, first: Span, second: Span):
-        super().__init__(sentence=first.sentence)
-        self.first: Span = first
-        self.second: Span = second
-        super()._init_labels()
+        if not self.initialized:
+            super().__init__(sentence=first.sentence)
+            self.first: Span = first
+            self.second: Span = second
+            self.initialized: bool = True
 
     def __repr__(self):
         return str(self)
@@ -626,14 +646,19 @@ class Relation(_PartOfSentence):
     def text(self):
         return f"{self.first.text} -> {self.second.text}"
 
-    @property
-    def unlabeled_identifier(self) -> str:
+    @staticmethod
+    def _make_unlabeled_identifier(first, second):
+        text = f"{first.text} -> {second.text}"
         return (
             f"Relation"
-            f"[{self.first.tokens[0].idx - 1}:{self.first.tokens[-1].idx}]"
-            f"[{self.second.tokens[0].idx - 1}:{self.second.tokens[-1].idx}]"
-            f': "{self.text}"'
+            f"[{first.tokens[0].idx - 1}:{first.tokens[-1].idx}]"
+            f"[{second.tokens[0].idx - 1}:{second.tokens[-1].idx}]"
+            f': "{text}"'
         )
+
+    @property
+    def unlabeled_identifier(self) -> str:
+        return self._make_unlabeled_identifier(self.first, self.second)
 
     @property
     def start_position(self) -> int:
@@ -812,7 +837,6 @@ class Sentence(DataPoint):
         for token in self:
             token.clear_embeddings(embedding_names)
 
-    @lru_cache(maxsize=1)  # cache last context, as training repeats calls
     def left_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
         left_context: List[Token] = []
@@ -827,7 +851,6 @@ class Sentence(DataPoint):
             left_context = sentence.tokens + left_context
         return left_context[-context_length:]
 
-    @lru_cache(maxsize=1)  # cache last context, as training repeats calls
     def right_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
         right_context: List[Token] = []
@@ -1530,7 +1553,7 @@ class Corpus(typing.Generic[T_co]):
                     corrupted_count += 1
 
         log.info(
-            f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count/total_label_count)*100, 2)}%."
+            f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count / total_label_count) * 100, 2)}%."
         )
 
     def get_label_distribution(self):
@@ -1578,7 +1601,6 @@ class MultiCorpus(Corpus):
         train_parts = []
         dev_parts = []
         test_parts = []
-        print(self.corpora)
         for corpus in self.corpora:
             if corpus.train:
                 train_parts.append(corpus.train)
