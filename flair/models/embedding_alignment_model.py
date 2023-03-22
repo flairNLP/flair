@@ -1,13 +1,13 @@
 import logging
 from typing import List, Tuple, Union
-import random
 from collections import Counter
+import random
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Corpus, Sentence
+from flair.data import Corpus, Sentence, Dictionary
 from flair.datasets import DataLoader
 
 log = logging.getLogger("flair")
@@ -18,6 +18,7 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_type: str,
+        label_dictionary: Dictionary,
         corpus: Corpus,
         knn: int = 5,
         **classifierargs,
@@ -51,6 +52,8 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
 
         self._label_type: str = label_type
 
+        self.label_dictionary: Dictionary = label_dictionary
+
         # number of neighbours for K-NN predictions
         self.knn = knn
 
@@ -70,32 +73,30 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
 
     def _create_sentence_pair_label_map(self, sentences: List[Sentence]) -> List[Tuple[Tuple[int, int], int]]:
 
-        sentence_pair_label_map = []
+        sentence_pair_label_map = []  # maps a pair of two sentence ids to 0 or 1 label
 
-        for sentence_id, _ in enumerate(sentences):
-            sentences_of_same_class = []
-            sentences_of_different_class = []
+        # group sentences by their labels and add sentence ids for each label
+        sentence_label_map = {label: [] for label in self.label_dictionary.get_items()}
+        sentence_label_map.pop("<unk>", None)  # disregard unk label
+        for sentence_id, sentence in enumerate(sentences):
+            sentence_label_map[sentence.get_label(self._label_type).value].append(sentence_id)
 
-            for sentence_pair_id, _ in enumerate(sentences):
-                sentence_label = sentences[sentence_id].get_label(self._label_type).value
-                sentence_pair_label = sentences[sentence_pair_id].get_label(self._label_type).value
+        # for each sentence sample one pair from the same class (positives) and one from another (negatives)
+        for sentence_id, sentence in enumerate(sentences):
+            label = sentence.get_label(self._label_type).value
+            positive_sentences = [sent_id for sent_id in sentence_label_map[label] if sent_id != sentence_id]
+            negative_sentences = [sent_id for sent_id in list(range(len(sentences)))
+                                  if sent_id not in positive_sentences and sent_id != sentence_id]
 
-                if sentence_id != sentence_pair_id:
-                    if sentence_label == sentence_pair_label:
-                        sentences_of_same_class.append(sentence_pair_id)
-                    else:
-                        sentences_of_different_class.append(sentence_pair_id)
+            # add sentence ids as pairs: positive pair ids and label 1
+            if positive_sentences:
+                positive_sentence_pair = random.choice(positive_sentences)
+                sentence_pair_label_map.append(((sentence_id, positive_sentence_pair), 1))
 
-            # positive samples: add document pair ids and label 1 for two documents of same class
-            # TODO: don't use random
-            if sentences_of_same_class:
-                positive_sentence_pair = (sentence_id, random.choice(sentences_of_same_class))
-                sentence_pair_label_map.append((positive_sentence_pair, 1))
-
-            # negative samples: add document pair ids and label 0 for two documents of same class
-            if sentences_of_different_class:
-                negative_sentence_pair = (sentence_id, random.choice(sentences_of_different_class))
-                sentence_pair_label_map.append((negative_sentence_pair, 0))
+            # add sentence ids as pairs: negative pair ids and label 0
+            if negative_sentences:
+                negative_sentence_pair = random.choice(negative_sentences)
+                sentence_pair_label_map.append(((sentence_id, negative_sentence_pair), 0))
 
         return sentence_pair_label_map
 
