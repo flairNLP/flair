@@ -13,7 +13,7 @@ import torch
 
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from flair.data import Sentence, EntityLinkingLabel, DataPoint, Label
+from flair.data import Sentence, EntityLinkingLabel, Label
 from flair.datasets import (
     NEL_CTD_CHEMICAL_DICT,
     NEL_CTD_DISEASE_DICT,
@@ -32,22 +32,32 @@ from typing import List, Tuple, Union, Optional, Dict, Iterable
 log = logging.getLogger("flair")
 
 
-class MentionPreprocessor:
+class EntityPreprocessor:
     """
-    A mention preprocessor is used to transform / clean an entity mention (recognized by
-    an entity recognition model in the original text). This can include removing certain characters
+    A entity pre-processor is used to transform / clean an entity mention (recognized by
+    an entity recognition model in the original text). This may include removing certain characters
     (e.g. punctuation) or converting characters (e.g. HTML-encoded characters) as well as
     (more sophisticated) domain-specific procedures.
 
     This class provides the basic interface for such transformations and should be extended by
-    subclasses that implement the concrete transformations.
+    subclasses that implement concrete transformations.
     """
-    def process(self, entity_mention: Union[DataPoint, str], sentence: Sentence) -> str:
+    def process_mention(self, entity_mention: Label, sentence: Sentence) -> str:
         """
         Processes the given entity mention and applies the transformation procedure to it.
 
-        :param entity_mention: entity mention either given as DataPoint or str
+        :param entity_mention: entity mention under investigation
         :param sentence: sentence in which the entity mentioned occurred
+        :result: Cleaned / transformed string representation of the given entity mention
+        """
+        raise NotImplementedError()
+
+    def process_entry(self, entity_name: str) -> str:
+        """
+        Processes the given entity name (originating from a knowledge base / ontology) and
+        applies the transformation procedure to it.
+
+        :param entity_name: entity mention given as DataPoint
         :result: Cleaned / transformed string representation of the given entity mention
         """
         raise NotImplementedError()
@@ -63,7 +73,7 @@ class MentionPreprocessor:
         pass
 
 
-class BasicMentionPreprocessor(MentionPreprocessor):
+class BasicEntityPreprocessor(EntityPreprocessor):
     """
     Basic implementation of MentionPreprocessor, which supports lowercasing, typo correction
      and removing of punctuation characters.
@@ -93,22 +103,21 @@ class BasicMentionPreprocessor(MentionPreprocessor):
             r"[\s{}]+".format(re.escape(punctuation_symbols))
         )
 
-    def process(self, entity_mention: Union[DataPoint, str], sentence: Sentence) -> str:
-        mention_text = entity_mention if isinstance(entity_mention, str) else entity_mention.text
-
+    def process_entry(self, entity_name: str) -> str:
         if self.lowercase:
-            mention_text = mention_text.lower()
+            entity_name = entity_name.lower()
 
         if self.remove_punctuation:
-            mention_text = self.rmv_puncts_regex.split(mention_text)
-            mention_text = " ".join(mention_text).strip()
+            entity_name = self.rmv_puncts_regex.split(entity_name)
+            entity_name = " ".join(entity_name).strip()
 
-        mention_text = mention_text.strip()
+        return entity_name.strip()
 
-        return mention_text
+    def process_mention(self, entity_mention: Label, sentence: Sentence) -> str:
+        return self.process_entry(entity_mention.data_point.text)
 
 
-class Ab3PMentionPreprocessor(MentionPreprocessor):
+class Ab3PEntityPreprocessor(EntityPreprocessor):
     """
     Implementation of MentionPreprocessor which utilizes Ab3P, an (biomedical)abbreviation definition detector,
     given in:
@@ -126,37 +135,31 @@ class Ab3PMentionPreprocessor(MentionPreprocessor):
             self,
             ab3p_path: Path,
             word_data_dir: Path,
-            mention_preprocessor: Optional[MentionPreprocessor] = None
+            preprocessor: Optional[EntityPreprocessor] = None
     ) -> None:
         """
         Creates the mention pre-processor
 
         :param ab3p_path: Path to the folder containing the Ab3P implementation
         :param word_data_dir: Path to the word data directory
-        :param mention_preprocessor: Mention text preprocessor that is used before trying to link
+        :param preprocessor: Entity mention text preprocessor that is used before trying to link
             the mention text to an abbreviation.
-
         """
         self.ab3p_path = ab3p_path
         self.word_data_dir = word_data_dir
-        self.mention_preprocessor = mention_preprocessor
+        self.preprocessor = preprocessor
 
     def initialize(self, sentences: List[Sentence]) -> None:
         self.abbreviation_dict = self._build_abbreviation_dict(sentences)
 
-    def process(self, entity_mention: Union[Label, str], sentence: Sentence) -> str:
+    def process_mention(self, entity_mention: Label, sentence: Sentence) -> str:
         sentence_text = sentence.to_tokenized_string().strip()
-
-        tokens = (
-            [token.text for token in entity_mention.data_point.tokens]
-            if isinstance(entity_mention, Label)
-            else [entity_mention] # FIXME: Maybe split mention on whitespaces here??
-        )
+        tokens = [token.text for token in entity_mention.data_point.tokens]
 
         parsed_tokens = []
         for token in tokens:
-            if self.mention_preprocessor is not None:
-                token = self.mention_preprocessor.process(token, sentence)
+            if self.preprocessor is not None:
+                token = self.preprocessor.process_entry(token)
 
             if sentence_text in self.abbreviation_dict:
                 if token.lower() in self.abbreviation_dict[sentence_text]:
@@ -168,11 +171,19 @@ class Ab3PMentionPreprocessor(MentionPreprocessor):
 
         return " ".join(parsed_tokens)
 
+    def process_entry(self, entity_name: str) -> str:
+        # Ab3P works on sentence-level and not on a single entity mention / name
+        # - so we just apply the wrapped text pre-processing here (if configured)
+        if self.preprocessor is not None:
+            return self.preprocessor.process_entry(entity_name)
+
+        return entity_name
+
     @classmethod
     def load(
             cls,
             ab3p_path: Path = None,
-            preprocessor: Optional[MentionPreprocessor] = None
+            preprocessor: Optional[EntityPreprocessor] = None
     ):
         data_dir = flair.cache_root / "ab3p"
         if not data_dir.exists():
@@ -457,7 +468,7 @@ class ExactStringMatchingRetrieverModel(EntityRetrieverModel):
     ) -> List[Tuple[str, str, float]]:
         """
         Returns the top-k entity / concept identifiers for the given entity mention. Note that
-        the model either return the entity with an identical name in the knowledge base / dictionary
+        the model either returns the entity with an identical name in the knowledge base / dictionary
         or none.
 
         :param entity_mention: Entity mention under investigation
@@ -491,7 +502,8 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
         batch_size: int,
         index_use_cuda: bool,
         top_k_extra_dense: int = 10,
-        top_k_extra_sparse: int = 10
+        top_k_extra_sparse: int = 10,
+        preprocessor: Optional[EntityPreprocessor] = BasicEntityPreprocessor()
     ) -> None:
         """
             Initializes the BiEncoderEntityRetrieverModel.
@@ -507,6 +519,8 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
                 retrieved while combining sparse and dense scores
             :param top_k_extra_dense: Number of extra entities (resp. their dense embeddings) which should be
                 retrieved while combining sparse and dense scores
+            :param preprocessor: Preprocessing strategy to clean and transform entity / concept names from
+                the knowledge base
         """
         self.use_sparse_embeds = use_sparse_embeddings
         self.use_cosine = use_cosine
@@ -515,6 +529,7 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
         self.top_k_extra_dense = top_k_extra_dense
         self.top_k_extra_sparse = top_k_extra_sparse
         self.index_use_cuda = index_use_cuda and flair.device.type == "cuda"
+        self.preprocessor = preprocessor
 
         # Load dense encoder
         self.dense_encoder = TransformerDocumentEmbeddings(
@@ -660,20 +675,19 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
             self._load_cached_dense_emb_dictionary(emb_dictionary_cache_file)
 
         else:
-            # get names from dictionary and remove punctuation
-            # FIXME: Why doing this here????
-            punctuation_regex = re.compile(r"[\s{}]+".format(re.escape(string.punctuation)))
-
-            dictionary_names = []
+            # get all concept names from the dictionary
+            concept_names = []
             for row in self.dictionary:
-                name = punctuation_regex.split(row[0])
-                name = " ".join(name).strip().lower()
-                dictionary_names.append(name)
-            dictionary_names = np.array(dictionary_names)
+                concept_name = row[0]
+                if self.preprocessor is not None:
+                    concept_name = self.preprocessor.process_entry(concept_name)
+                concept_names.append(concept_name)
+
+            concept_names = np.array(concept_names)
 
             # Compute dense embeddings (if necessary)
             self.dict_dense_embeddings = self._embed_dense(
-                names=dictionary_names,
+                names=concept_names,
                 batch_size=batch_size,
                 show_progress=True
             )
@@ -684,7 +698,7 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
 
             # Compute sparse embeddings (if necessary)
             if self.use_sparse_embeds:
-                self.dict_sparse_embeddings = self._embed_sparse(entity_names=dictionary_names)
+                self.dict_sparse_embeddings = self._embed_sparse(entity_names=concept_names)
             else:
                 self.dict_sparse_embeddings = None
 
@@ -868,7 +882,7 @@ class BiomedicalEntityLinker:
     def __init__(
             self,
             retriever_model: EntityRetrieverModel,
-            mention_preprocessor: MentionPreprocessor
+            mention_preprocessor: EntityPreprocessor
     ):
         self.preprocessor = mention_preprocessor
         self.retriever_model = retriever_model
@@ -908,7 +922,7 @@ class BiomedicalEntityLinker:
             for entity in sentence.get_labels(input_entity_annotation_layer):
                 # Pre-process entity mention (if necessary)
                 mention_text = (
-                    self.preprocessor.process(entity, sentence)
+                    self.preprocessor.process_mention(entity, sentence)
                     if self.preprocessor is not None
                     else entity.data_point.text
                 )
@@ -958,7 +972,7 @@ class BiomedicalEntityLinker:
         batch_size: int = 1024,
         index_use_cuda: bool = False,
         use_cosine: bool = True,
-        preprocessor: MentionPreprocessor = Ab3PMentionPreprocessor.load(preprocessor=BasicMentionPreprocessor())
+        preprocessor: EntityPreprocessor = Ab3PEntityPreprocessor.load(preprocessor=BasicEntityPreprocessor())
     ):
         """
         Loads a model for biomedical named entity normalization.
