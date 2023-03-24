@@ -12,7 +12,10 @@ cache_root = Path(os.getenv("FLAIR_CACHE_ROOT", Path(Path.home(), ".flair")))
 
 # global variable: device
 if torch.cuda.is_available():
-    device = torch.device("cuda:0")
+    device_id = os.environ.get("FLAIR_DEVICE")
+
+    # No need for correctness checks, torch is doing it
+    device = torch.device(f"cuda:{device_id}") if device_id else torch.device("cuda:0")
 else:
     device = torch.device("cpu")
 
