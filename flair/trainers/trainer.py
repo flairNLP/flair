@@ -546,7 +546,9 @@ class ModelTrainer(Pluggable):
                 if log_dev:
                     assert self.corpus.dev
                     dev_eval_result = self.model.evaluate(
-                        self.corpus.dev, out_path=self.base_path / "dev.tsv", **eval_kw
+                        self.corpus.dev,
+                        out_path=self.base_path / "dev.tsv",
+                        **eval_kw
                     )
 
                     log.info(
@@ -565,7 +567,6 @@ class ModelTrainer(Pluggable):
                     assert self.corpus.test
                     test_eval_result = self.model.evaluate(
                         self.corpus.test,
-                        gold_label_type=self.model.label_type,
                         out_path=self.base_path / "test.tsv",
                         **eval_kw,
                     )
