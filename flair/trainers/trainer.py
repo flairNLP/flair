@@ -236,7 +236,6 @@ class ModelTrainer(Pluggable):
         training_parameters.update(kwargs)
 
         # call first hook
-        # -- BasicEvaluationPlugin -> determines which splits to log
         # -- AmpPlugin -> set opt level
         # -- CheckpointPlugin -> Determines how and what is saved
         # -- ModelCardPlugin -> initializes model card with library versions and parameters
@@ -245,7 +244,6 @@ class ModelTrainer(Pluggable):
         # -- WeightExtractorPlugin -> initializes the WeightExtactor
         # -- LossFilePlugin -> prepare loss file, and header for all metrics to collect
         # -- LogFilePlugin -> stores whether to use training.log
-        # -- BestModelPlugin -> determines against which metric to optimize
         self.dispatch("before_training_setup", **training_parameters)
 
         assert self.corpus.train
@@ -359,9 +357,6 @@ class ModelTrainer(Pluggable):
             total_train_samples = 0
 
             for epoch in range(epoch + 1, max_epochs + 1):
-                # - BasicEvaluationPlugin creates test_part split -> could be done elsewhere?
-                # - TrainingBehaviorPlugin gets current learning rate and momentum
-                # - RegularLoggingPlugin resets some logging parameters
                 # - ModelCardPlugin -> updates epoch in model card
                 # - SchedulerPlugin -> load state for anneal_with_restarts / prestarts, batch_growth_annealing, logic for early stopping
                 # - LossFilePlugin -> get the current epoch for loss file logging
@@ -415,7 +410,6 @@ class ModelTrainer(Pluggable):
                         "epoch": epoch,
                     }
 
-                    # - TrainingBehaviorPlugin sets batch loss and number of samples to 0 (TODO: dispatch with only 1 customer)
                     self.dispatch("before_training_batch", **batch_kw)
 
                     # zero the gradients on the model and optimizer
@@ -436,7 +430,6 @@ class ModelTrainer(Pluggable):
                         # forward pass
                         loss, datapoint_count = self.model.forward_loss(batch_step)
 
-                        # - TrainingBehaviorPlugin aggregates loss and counts for batch and epoch
                         self.dispatch(
                             "before_training_batch_backward",
                             loss=loss,
@@ -449,7 +442,6 @@ class ModelTrainer(Pluggable):
 
                         self.backward(loss)
 
-                        # - RegularLoggingPlugin adds loss and datapoint count for logging purposes
                         self.dispatch(
                             "after_training_batch_step", loss=loss, datapoint_count=datapoint_count, **batch_step_kw
                         )  # TODO: only 1 customer for this dispatch
@@ -494,8 +486,6 @@ class ModelTrainer(Pluggable):
                             f" - {lr_info}{momentum_info}"
                         )
 
-                    # - TrainingBehaviorPlugin returns training loss at end of batch
-                    # - RegularLoggingPlugin logs after training batch, including printing more info at 10% increments
                     # - SchedulerPlugin -> do the scheduler step if one-cycle or linear decay
                     # - WeightExtractorPlugin -> extracts weights
                     self.dispatch("after_training_batch", **batch_kw)
@@ -509,8 +499,6 @@ class ModelTrainer(Pluggable):
                 log_line(log)
                 log.info(f"EPOCH {epoch} done: loss {epoch_train_loss:.4f}{lr_info}")
 
-                # - TrainingBehaviorPlugin returns training loss at end of epoch
-                # - RegularLoggingPlugin logs that epoch is done
                 # - CheckpointPlugin -> executes save_model_each_k_epochs
                 # - SchedulerPlugin -> log bad epochs
                 self.dispatch("after_training_epoch", epoch=epoch)
@@ -622,7 +610,6 @@ class ModelTrainer(Pluggable):
                         best_validation_score = train_loss
 
                 # - LossFilePlugin -> somehow prints all relevant metrics (TODO: I don't really understand how)
-                # - BestModelPlugin -> dispatches a "best_model" event if best model achieved (causing a save)
                 # - CheckpointPlugin -> executes checkpointing
                 self.dispatch(
                     "after_evaluation",
