@@ -27,6 +27,7 @@ from flair.trainers.plugins import (
     default_plugins, CheckpointPlugin,
 )
 from flair.trainers.plugins.functional.anneal_on_plateau import AnnealingPlugin
+from flair.trainers.plugins.functional.onecycle import OneCyclePlugin
 from flair.training_utils import (
     AnnealOnPlateau,
     identify_dynamic_embeddings,
@@ -142,7 +143,7 @@ class ModelTrainer(Pluggable):
               anneal_against_dev_loss: bool = False,
               **kwargs):
 
-        # annealing logic
+        # activate annealing plugin
         AnnealingPlugin(anneal_factor=anneal_factor,
                         patience=patience,
                         min_learning_rate=min_learning_rate,
@@ -169,8 +170,6 @@ class ModelTrainer(Pluggable):
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             scheduler=AnnealOnPlateau,
             optimizer: Union[torch.optim.Optimizer, Type[torch.optim.Optimizer]] = SGD,
-            cycle_momentum: bool = False,
-            warmup_fraction: float = 0.1,
             embeddings_storage_mode: str = "cpu",
             checkpoint: bool = False,
             save_final_model: bool = True,
@@ -205,13 +204,7 @@ class ModelTrainer(Pluggable):
         :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.  # noqa: E501
         :param scheduler: The learning rate scheduler to use
         :param checkpoint: If True, a full checkpoint is saved at end of each epoch  # noqa: E501
-        :param cycle_momentum: If scheduler is OneCycleLR, whether the scheduler should cycle also the momentum  # noqa: E501
-        :param anneal_factor: The factor by which the learning rate is annealed
-        :param patience: Patience is the number of epochs with no improvement the Trainer waits  # noqa: E501
-         until annealing the learning rate
         :param min_learning_rate: If the (in multi lr case: all) learning rate falls below this threshold, training terminates  # noqa: E501
-        :param initial_extra_patience: Extra patience on top of the base patience value before the first learning rate annealment  # noqa: E501
-        :param warmup_fraction: Fraction of warmup steps if the scheduler is LinearSchedulerWithWarmup  # noqa: E501
         :param train_with_dev:  If True, the data from dev split is added to the training data  # noqa: E501
         :param train_with_test: If True, the data from test split is added to the training data  # noqa: E501
         :param monitor_train: If True, training data is evaluated at end of each epoch
@@ -219,10 +212,6 @@ class ModelTrainer(Pluggable):
         :param embeddings_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),  # noqa: E501
         'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
         :param save_final_model: If True, final model is saved
-        :param anneal_with_restarts: If True, the last best model is restored when annealing the learning rate  # noqa: E501
-        :param anneal_against_dev_loss: If True, the annealment is triggered when dev loss plateaus.  # noqa: E501
-         If False (default), it is triggered when dev score plateaus.
-        :param batch_growth_annealing: If True, mini_batch_size doubles every time learning_rate is annealed.  # noqa: E501
         :param shuffle: If True, data is shuffled during training
         :param param_selection_mode: If True, testing is performed against dev data. Use this mode when doing  # noqa: E501
         parameter selection.
@@ -252,7 +241,8 @@ class ModelTrainer(Pluggable):
         # derive parameters the function was called with (or defaults)
         local_variables = locals()
 
-        training_parameters = {parameter: local_variables[parameter] for parameter in signature(self.train_custom).parameters}
+        training_parameters = {parameter: local_variables[parameter] for parameter in
+                               signature(self.train_custom).parameters}
 
         training_parameters.update(kwargs)
 
@@ -355,9 +345,6 @@ class ModelTrainer(Pluggable):
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
-            # -- SchedulerPlugin -> Store learning rate and set previous_learning_rate
-            self.dispatch("before_training_loop", **parameters)
-
             lr_info = ",".join([f"{group['lr']:.6f}" for group in self.optimizer.param_groups])
 
             log_line(log)
@@ -368,12 +355,9 @@ class ModelTrainer(Pluggable):
             log.info("Parameters:")
             log.info(f' - learning_rate: "{lr_info}"')
             log.info(f' - mini_batch_size: "{self.mini_batch_size}"')
-            log.info(f' - patience: "{patience}"')
-            log.info(f' - anneal_factor: "{anneal_factor}"')
             log.info(f' - max_epochs: "{max_epochs}"')
             log.info(f' - shuffle: "{shuffle}"')
             log.info(f' - train_with_dev: "{train_with_dev}"')
-            log.info(f' - batch_growth_annealing: "{batch_growth_annealing}"')
             log_line(log)
             log.info(f'Model training base path: "{self.base_path}"')
             log_line(log)
@@ -452,34 +436,20 @@ class ModelTrainer(Pluggable):
                     for batch_step in batch_steps:
                         batch_step_kw = {"batch_step": batch_step, **batch_kw}
 
-                        self.dispatch("before_training_batch_step", **batch_step_kw)  # TODO: dispatch with 0 customers
-
                         # forward pass
                         loss, datapoint_count = self.model.forward_loss(batch_step)
-
-                        self.dispatch(
-                            "before_training_batch_backward",
-                            loss=loss,
-                            datapoint_count=datapoint_count,
-                            **batch_step_kw,
-                        )  # TODO: only 1 customer ofr this dispatch
 
                         batch_train_samples += datapoint_count
                         batch_train_loss += loss.item()
 
                         self.backward(loss)
 
-                        self.dispatch(
-                            "after_training_batch_step", loss=loss, datapoint_count=datapoint_count, **batch_step_kw
-                        )  # TODO: only 1 customer for this dispatch
-
                         # identify dynamic embeddings (always deleted) on first sentence
-
                         if dynamic_embeddings is None:
                             dynamic_embeddings = identify_dynamic_embeddings(batch)
 
                         # depending on memory mode, embeddings are moved to CPU, GPU or deleted
-                        store_embeddings(batch, embeddings_storage_mode, dynamic_embeddings)
+                        store_embeddings(batch_step, embeddings_storage_mode, dynamic_embeddings)
 
                     # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
@@ -532,12 +502,6 @@ class ModelTrainer(Pluggable):
 
                 self.model.eval()
 
-                if eval_on_train_shuffle:
-                    train_part_indices = list(range(_len_dataset(self.corpus.train)))
-                    random.shuffle(train_part_indices)
-                    train_part_indices = train_part_indices[:train_part_size]
-                    train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
-
                 eval_kw = {
                     "mini_batch_size": eval_batch_size,
                     "num_workers": num_workers,
@@ -559,6 +523,13 @@ class ModelTrainer(Pluggable):
                     self.publish_eval_result(train_eval_result, "train_eval", global_step=epoch)
 
                 if log_train_part:
+                    # get a random sample of training sentences
+                    train_part_indices = list(range(_len_dataset(self.corpus.train)))
+                    random.shuffle(train_part_indices)
+                    train_part_indices = train_part_indices[:train_part_size]
+                    train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
+
+                    # evaluate on those
                     train_part_eval_result = self.model.evaluate(train_part, **eval_kw)
 
                     log.info(
@@ -571,6 +542,7 @@ class ModelTrainer(Pluggable):
                     self.publish_eval_result(train_part_eval_result, "train_part", global_step=epoch)
 
                 if log_dev:
+                    # evaluate on dev data
                     assert self.corpus.dev
                     dev_eval_result = self.model.evaluate(
                         self.corpus.dev,
@@ -578,6 +550,7 @@ class ModelTrainer(Pluggable):
                         **eval_kw
                     )
 
+                    # log results
                     log.info(
                         f"DEV : loss {dev_eval_result.loss}"
                         f' - {eval_kw["main_evaluation_metric"][1]}'
@@ -615,19 +588,11 @@ class ModelTrainer(Pluggable):
                 validation_scores: tuple
 
                 if log_dev:
-                    if not anneal_against_dev_loss:
-                        validation_scores = dev_eval_result.main_score, dev_eval_result.loss
+                    validation_scores = dev_eval_result.main_score, dev_eval_result.loss
 
-                        if best_model_value is None or dev_eval_result.main_score > best_model_value:
-                            current_epoch_has_best_model_so_far = True
-                            best_validation_score = dev_eval_result.main_score
-                    else:
-                        validation_scores = (dev_eval_result.loss,)
-
-                        if best_model_value is None or dev_eval_result.loss < best_model_value:
-                            current_epoch_has_best_model_so_far = True
-                            best_validation_score = dev_eval_result.loss
-                            primary_value = dev_eval_result.loss
+                    if best_model_value is None or dev_eval_result.main_score > best_model_value:
+                        current_epoch_has_best_model_so_far = True
+                        best_validation_score = dev_eval_result.main_score
 
                 else:
                     # there is no corpus.dev or it is used as part of the training data
@@ -638,6 +603,7 @@ class ModelTrainer(Pluggable):
                         best_validation_score = train_loss
 
                 # - LossFilePlugin -> somehow prints all relevant metrics (TODO: I don't really understand how)
+                # - AnnealPlugin -> scheduler step
                 self.dispatch(
                     "after_evaluation",
                     epoch=epoch,
@@ -648,10 +614,6 @@ class ModelTrainer(Pluggable):
                 if save_best_model and current_epoch_has_best_model_so_far:
                     log.info("saving best model")
                     self.model.save(self.base_path / "best-model.pt", checkpoint=save_optimizer_state)
-
-                # if checkpoint is enabled, save model at each epoch
-                if checkpoint and not param_selection_mode:
-                    self.model.save(self.base_path / "checkpoint.pt", checkpoint=True)
 
             # - SWAPlugin -> restores SGD weights from SWA
             self.dispatch("after_training_loop")
@@ -791,6 +753,10 @@ class ModelTrainer(Pluggable):
             decoder_lr_factor: float = 1.0,
             **trainer_args,
     ):
+
+        # annealing logic
+        OneCyclePlugin(warmup_fraction=warmup_fraction).attach_to(self)
+
         # If set, add a factor to the learning rate of all parameters with 'embeddings' not in name
         if decoder_lr_factor != 1.0:
             optimizer = optimizer(
@@ -815,7 +781,6 @@ class ModelTrainer(Pluggable):
             learning_rate=learning_rate,
             max_epochs=max_epochs,
             optimizer=optimizer,
-            scheduler=scheduler,
             warmup_fraction=warmup_fraction,
             mini_batch_size=mini_batch_size,
             embeddings_storage_mode=embeddings_storage_mode,

@@ -51,7 +51,6 @@ class AnnealingPlugin(TrainerPlugin):
     @TrainerPlugin.hook
     def after_optimizer_setup(
             self,
-            dataset_size,
             train_with_dev,
             optimizer,
             **kw,
@@ -79,16 +78,6 @@ class AnnealingPlugin(TrainerPlugin):
         self.store_learning_rate()
 
     @TrainerPlugin.hook
-    def before_training_loop(self, **kw):
-        """
-        Store learning rate and set previous_learning_rate
-        :param kw:
-        :return:
-        """
-        self.store_learning_rate()
-        self.previous_learning_rate = self.current_learning_rate
-
-    @TrainerPlugin.hook
     def before_training_epoch(self, **kw):
         """
         load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
@@ -96,6 +85,7 @@ class AnnealingPlugin(TrainerPlugin):
         :return:
         """
         self.store_learning_rate()
+        self.previous_learning_rate = self.current_learning_rate
 
         base_path = self.trainer.base_path
 
@@ -115,11 +105,10 @@ class AnnealingPlugin(TrainerPlugin):
 
         self.previous_learning_rate = self.current_learning_rate
 
-        all_lrs_too_small = all([lr < min_lr for lr, min_lr in zip(self.current_learning_rate, self.min_learning_rate)])
-
         # stop training if learning rate becomes too small
-        if all_lrs_too_small:
-            raise TrainingInterrupt("learning rate too small - quitting training!")
+        for lr in self.current_learning_rate:
+            if lr < self.min_learning_rate:
+                raise TrainingInterrupt("learning rate too small - quitting training!")
 
     @TrainerPlugin.hook
     def after_training_epoch(self, epoch, **kw):
