@@ -2,6 +2,8 @@ import datetime
 import inspect
 import logging
 import os
+import random
+import time
 import warnings
 from inspect import signature
 from pathlib import Path
@@ -17,6 +19,13 @@ from flair.data import Corpus, Dictionary, _len_dataset
 from flair.datasets import DataLoader
 from flair.nn import Model
 from flair.optim import ExpAnnealLR, LinearSchedulerWithWarmup
+from flair.trainers.plugins import (
+    MetricName,
+    MetricRecord,
+    Pluggable,
+    TrainingInterrupt,
+    default_plugins,
+)
 from flair.training_utils import (
     AnnealOnPlateau,
     identify_dynamic_embeddings,
@@ -24,8 +33,6 @@ from flair.training_utils import (
     log_line,
     store_embeddings,
 )
-
-from .plugins import Pluggable, TrainingInterrupt, default_plugins
 
 log = logging.getLogger("flair")
 
@@ -51,7 +58,8 @@ class ModelTrainer(Pluggable):
         "_training_finally",
         "_training_exception",
         "collecting_train_return_values",
-        "after_teardown",
+        "after_training",
+        "metric_recorded",
     }
 
     def __init__(self, model: flair.nn.Model, corpus: Corpus, plugins=default_plugins, **kw):
@@ -74,6 +82,7 @@ class ModelTrainer(Pluggable):
         self.optimizer = None
         self.base_path = None
         self.mini_batch_size = None
+        self.return_values: dict = {}
 
     @staticmethod
     def check_for_and_delete_previous_best_models(base_path):
@@ -154,22 +163,16 @@ class ModelTrainer(Pluggable):
         write_weights: bool = False,
         num_workers: Optional[int] = None,
         sampler=None,
-        use_amp: bool = False,
         amp_opt_level: str = "O1",
         eval_on_train_fraction: Union[float, str] = 0.0,
         eval_on_train_shuffle: bool = False,
         save_model_each_k_epochs: int = 0,
-        tensorboard_comment: str = "",
-        use_swa: bool = False,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
         exclude_labels: List[str] = [],
         create_file_logs: bool = True,
         create_loss_file: bool = True,
         epoch: int = 0,
-        use_tensorboard: bool = False,
-        tensorboard_log_dir=None,
-        metrics_for_tensorboard=[],
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
         scheduler_state_dict: Optional[Dict[str, Any]] = None,
         save_optimizer_state: bool = False,
@@ -219,9 +222,6 @@ class ModelTrainer(Pluggable):
         :param save_model_each_k_epochs: Each k epochs, a model state will be written out. If set to '5', a model will  # noqa: E501
         be saved each 5 epochs. Default is 0 which means no model saving.
         :param main_evaluation_metric: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used), currently only applicable for text_classification_model  # noqa: E501
-        :param tensorboard_comment: Comment to use for tensorboard logging
-        :param create_file_logs: If True, the logs will also be stored in a file 'training.log' in the model folder  # noqa: E501
-        :param create_loss_file: If True, the loss will be writen to a file 'loss.tsv' in the model folder  # noqa: E501
         :param optimizer: The optimizer to use (typically SGD or Adam)
         :param epoch: The starting epoch (normally 0 but could be higher if you continue training model)  # noqa: E501
         :param kwargs: Other arguments for the Optimizer
@@ -236,21 +236,24 @@ class ModelTrainer(Pluggable):
         training_parameters.update(kwargs)
 
         # call first hook
-        #-- BasicEvaluationPlugin -> determines which splits to log
-        #-- AmpPlugin -> set opt level
-        #-- CheckpointPlugin -> Determines how and what is saved
-        #-- ModelCardPlugin -> initializes model card with library versions and parameters
-        #-- SchedulerPlugin -> check for impossible parameter combination
-        #-- SWAPlugin -> initializes SWA and stores learning rate
-        #-- WeightExtractorPlugin -> initializes the WeightExtactor
-        #-- LossFilePlugin -> prepare loss file, and header for all metrics to collect
-        #-- LogFilePlugin -> stores whether to use training.log
-        #-- BestModelPlugin -> determines against which metric to optimize
+        # -- BasicEvaluationPlugin -> determines which splits to log
+        # -- AmpPlugin -> set opt level
+        # -- CheckpointPlugin -> Determines how and what is saved
+        # -- ModelCardPlugin -> initializes model card with library versions and parameters
+        # -- SchedulerPlugin -> check for impossible parameter combination
+        # -- SWAPlugin -> initializes SWA and stores learning rate
+        # -- WeightExtractorPlugin -> initializes the WeightExtactor
+        # -- LossFilePlugin -> prepare loss file, and header for all metrics to collect
+        # -- LogFilePlugin -> stores whether to use training.log
+        # -- BestModelPlugin -> determines against which metric to optimize
         self.dispatch("before_training_setup", **training_parameters)
 
         assert self.corpus.train
 
         self.mini_batch_size = mini_batch_size
+
+        if not eval_batch_size:
+            eval_batch_size = mini_batch_size
 
         if epoch >= max_epochs:
             log.warning(f"Starting at epoch {epoch + 1}/{max_epochs}. No training will be done.")
@@ -268,19 +271,40 @@ class ModelTrainer(Pluggable):
 
         parameters = {"dataset_size": dataset_size, **training_parameters}
 
-        #-- TensorboardLogger -> Initializes a TensorBoard summary writer TODO: dispatch with only one "customer"
+        # determine what splits (train, dev, test) to evaluate and log
+        log_train = True if monitor_train else False
+        log_test = True if (not param_selection_mode and self.corpus.test and monitor_test) else False
+        log_dev = False if train_with_dev or not self.corpus.dev else True
+        log_train_part = True if (eval_on_train_fraction == "dev" or float(eval_on_train_fraction) > 0.0) else False
+
+        if log_train_part:
+            train_part_size = (
+                _len_dataset(self.corpus.dev)
+                if eval_on_train_fraction == "dev"
+                else int(_len_dataset(self.corpus.train) * eval_on_train_fraction)
+            )
+
+            assert train_part_size > 0
+            if not eval_on_train_shuffle:
+                train_part_indices = list(range(train_part_size))
+                train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
+
+        # minimize training loss if training with dev data, else maximize dev score
+        best_model_value = None
+
+        # -- TensorboardLogger -> Initializes a TensorBoard summary writer TODO: dispatch with only one "customer"
         self.dispatch("after_data_setup", **parameters)
 
         # if optimizer class is passed, instantiate:
         if inspect.isclass(optimizer):
             kwargs["lr"] = learning_rate
-            self.optimizer = optimizer(self.model.parameters(), **kwargs)
+            self.optimizer = optimizer = optimizer(self.model.parameters(), **kwargs)
         else:
             self.optimizer = optimizer
 
-        #-- AmpPlugin -> wraps with AMP
-        #-- SchedulerPlugin -> initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers
-        #-- SWAPlugin -> wraps the optimizer with SWA
+        # -- AmpPlugin -> wraps with AMP
+        # -- SchedulerPlugin -> initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers
+        # -- SWAPlugin -> wraps the optimizer with SWA
         self.dispatch("after_optimizer_setup", **parameters)
 
         # load existing optimizer state dictionary if it exists
@@ -299,19 +323,42 @@ class ModelTrainer(Pluggable):
         # this field stores the names of all dynamic embeddings in the model (determined after first forward pass)
         dynamic_embeddings = None
 
-        #-- ModelCardPlugin -> update optimizer and scheduler in model card
-        #-- MetricHistoryPlugin -> initializes history lists for all metrics to collect
-        #-- LogFilePlugin -> adds a file handler
+        # -- ModelCardPlugin -> update optimizer and scheduler in model card
+        # -- MetricHistoryPlugin -> initializes history lists for all metrics to collect
+        # -- LogFilePlugin -> adds a file handler
         self.dispatch("after_training_setup", **parameters)
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
-            # -- RegularLoggingPlugin -> logs overview of parameters
             # -- SchedulerPlugin -> Store learning rate and set previous_learning_rate
             self.dispatch("before_training_loop", **parameters)
 
-            for epoch in range(epoch + 1, max_epochs + 1):
+            lr_info = ",".join([f"{group['lr']:.6f}" for group in self.optimizer.param_groups])
 
+            log_line(log)
+            log.info(f'Model: "{self.model}"')
+            log_line(log)
+            log.info(f'Corpus: "{self.corpus}"')
+            log_line(log)
+            log.info("Parameters:")
+            log.info(f' - learning_rate: "{lr_info}"')
+            log.info(f' - mini_batch_size: "{self.mini_batch_size}"')
+            log.info(f' - patience: "{patience}"')
+            log.info(f' - anneal_factor: "{anneal_factor}"')
+            log.info(f' - max_epochs: "{max_epochs}"')
+            log.info(f' - shuffle: "{shuffle}"')
+            log.info(f' - train_with_dev: "{train_with_dev}"')
+            log.info(f' - batch_growth_annealing: "{batch_growth_annealing}"')
+            log_line(log)
+            log.info(f'Model training base path: "{self.base_path}"')
+            log_line(log)
+            log.info(f"Device: {flair.device}")
+            log_line(log)
+            log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
+
+            total_train_samples = 0
+
+            for epoch in range(epoch + 1, max_epochs + 1):
                 # - BasicEvaluationPlugin creates test_part split -> could be done elsewhere?
                 # - TrainingBehaviorPlugin gets current learning rate and momentum
                 # - RegularLoggingPlugin resets some logging parameters
@@ -319,6 +366,22 @@ class ModelTrainer(Pluggable):
                 # - SchedulerPlugin -> load state for anneal_with_restarts / prestarts, batch_growth_annealing, logic for early stopping
                 # - LossFilePlugin -> get the current epoch for loss file logging
                 self.dispatch("before_training_epoch", epoch=epoch)
+
+                current_learning_rate = [group["lr"] for group in optimizer.param_groups]
+                momentum = [group["momentum"] if "momentum" in group else 0 for group in optimizer.param_groups]
+
+                lr_key = ("optimizer", "learning_rate")
+                momentum_key = ("optimizer", "momentum")
+
+                lr_info = " - lr: " + ",".join([f"{m:.4f}" for m in current_learning_rate])
+                momentum_info = " - momentum: " + ",".join([f"{m:.4f}" for m in momentum])
+
+                if len(current_learning_rate) == 1:
+                    self.dispatch("metric_recorded", MetricRecord.scalar(lr_key, current_learning_rate[0], epoch))
+                    self.dispatch("metric_recorded", MetricRecord.scalar(momentum_key, momentum[0], epoch))
+                else:
+                    self.dispatch("metric_recorded", MetricRecord.scalar_list(lr_key, current_learning_rate, epoch))
+                    self.dispatch("metric_recorded", MetricRecord.scalar_list(momentum_key, momentum, epoch))
 
                 # if shuffle_first_epoch==False, the first epoch is not shuffled
                 shuffle_data_this_epoch = shuffle
@@ -334,6 +397,14 @@ class ModelTrainer(Pluggable):
                 )
 
                 self.model.train()
+
+                epoch_train_loss: float = 0.0
+                epoch_train_samples: int = 0
+
+                epoch_start_time = time.time()
+
+                # log infos on training progress every `log_modulo` batches
+                log_modulo = max(1, int(len(batch_loader) / 10))
 
                 # process mini-batches
                 for batch_no, batch in enumerate(batch_loader):
@@ -351,13 +422,16 @@ class ModelTrainer(Pluggable):
                     self.model.zero_grad()
                     self.optimizer.zero_grad()
 
+                    batch_train_loss = 0.0
+                    batch_train_samples = 0
+
                     batch_steps = self.get_batch_steps(batch, mini_batch_chunk_size=mini_batch_chunk_size)
 
                     # forward and backward for batch
                     for batch_step in batch_steps:
                         batch_step_kw = {"batch_step": batch_step, **batch_kw}
 
-                        self.dispatch("before_training_batch_step", **batch_step_kw) # TODO: dispatch with 0 customers
+                        self.dispatch("before_training_batch_step", **batch_step_kw)  # TODO: dispatch with 0 customers
 
                         # forward pass
                         loss, datapoint_count = self.model.forward_loss(batch_step)
@@ -368,14 +442,17 @@ class ModelTrainer(Pluggable):
                             loss=loss,
                             datapoint_count=datapoint_count,
                             **batch_step_kw,
-                        ) # TODO: only 1 customer ofr this dispatch
+                        )  # TODO: only 1 customer ofr this dispatch
+
+                        batch_train_samples += datapoint_count
+                        batch_train_loss += loss.item()
 
                         self.backward(loss)
 
                         # - RegularLoggingPlugin adds loss and datapoint count for logging purposes
                         self.dispatch(
                             "after_training_batch_step", loss=loss, datapoint_count=datapoint_count, **batch_step_kw
-                        ) # TODO: only 1 customer for this dispatch
+                        )  # TODO: only 1 customer for this dispatch
 
                         # identify dynamic embeddings (always deleted) on first sentence
 
@@ -389,11 +466,48 @@ class ModelTrainer(Pluggable):
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     self.optimizer.step()
 
+                    if batch_train_samples > 0:
+                        train_loss = batch_train_loss / batch_train_samples
+                        self.dispatch(
+                            "metric_recorded",
+                            MetricRecord.scalar(("train", "batch_loss"), train_loss, total_train_samples),
+                        )
+
+                        epoch_train_loss += batch_train_loss
+                        epoch_train_samples += batch_train_samples
+
+                    if (batch_no + 1) % log_modulo == 0:
+                        intermittent_loss = (
+                            epoch_train_loss / epoch_train_samples
+                            if epoch_train_samples > 0
+                            else epoch_train_samples / (batch_no + 1)
+                        )
+
+                        current_time = time.time()
+
+                        log.info(
+                            f"epoch {epoch}"
+                            f" - iter {batch_no + 1}/{len(batch_loader)}"
+                            f" - loss {intermittent_loss:.8f}"
+                            f" - time (sec): {(current_time - epoch_start_time):.2f}"
+                            f" - samples/sec: {epoch_train_samples / (current_time - epoch_start_time):.2f}"
+                            f" - {lr_info}{momentum_info}"
+                        )
+
                     # - TrainingBehaviorPlugin returns training loss at end of batch
                     # - RegularLoggingPlugin logs after training batch, including printing more info at 10% increments
                     # - SchedulerPlugin -> do the scheduler step if one-cycle or linear decay
                     # - WeightExtractorPlugin -> extracts weights
                     self.dispatch("after_training_batch", **batch_kw)
+
+                if epoch_train_samples > 0:
+                    train_loss = epoch_train_loss / epoch_train_samples
+                    self.dispatch("metric_recorded", MetricRecord.scalar(("train", "loss"), train_loss, epoch))
+
+                    total_train_samples += epoch_train_samples
+
+                log_line(log)
+                log.info(f"EPOCH {epoch} done: loss {epoch_train_loss:.4f}{lr_info}")
 
                 # - TrainingBehaviorPlugin returns training loss at end of epoch
                 # - RegularLoggingPlugin logs that epoch is done
@@ -402,12 +516,120 @@ class ModelTrainer(Pluggable):
                 self.dispatch("after_training_epoch", epoch=epoch)
 
                 self.model.eval()
-                # - BasicEvaluationPlugin -> performs evaluation on all splits and logs results
-                self.dispatch("evaluation", epoch=epoch) # TODO: dispatch with only 1 customer
+
+                if eval_on_train_shuffle:
+                    train_part_indices = list(range(_len_dataset(self.corpus.train)))
+                    random.shuffle(train_part_indices)
+                    train_part_indices = train_part_indices[:train_part_size]
+                    train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
+
+                eval_kw = {
+                    "mini_batch_size": eval_batch_size,
+                    "num_workers": num_workers,
+                    "exclude_labels": exclude_labels,
+                    "main_evaluation_metric": main_evaluation_metric,
+                    "gold_label_dictionary": gold_label_dictionary_for_eval,
+                    "embedding_storage_mode": embeddings_storage_mode,
+                    "gold_label_type": self.model.label_type,
+                    "gold_label_dictionary_for_eval": gold_label_dictionary_for_eval,
+                }
+
+                # evaluate on train / dev / test split depending on training settings
+                if log_train:
+                    train_eval_result = self.model.evaluate(self.corpus.train, **eval_kw)
+
+                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                    store_embeddings(self.corpus.train, embeddings_storage_mode)
+
+                    self.publish_eval_result(train_eval_result, "train_eval", global_step=epoch)
+
+                if log_train_part:
+                    train_part_eval_result = self.model.evaluate(train_part, **eval_kw)
+
+                    log.info(
+                        f"TRAIN_SPLIT : loss {train_part_eval_result.loss}"
+                        f' - {eval_kw["main_evaluation_metric"][1]}'
+                        f' ({eval_kw["main_evaluation_metric"][0]})'
+                        f" {round(train_part_eval_result.main_score, 4)}"
+                    )
+
+                    self.publish_eval_result(train_part_eval_result, "train_part", global_step=epoch)
+
+                if log_dev:
+                    assert self.corpus.dev
+                    dev_eval_result = self.model.evaluate(
+                        self.corpus.dev, out_path=self.base_path / "dev.tsv", **eval_kw
+                    )
+
+                    log.info(
+                        f"DEV : loss {dev_eval_result.loss}"
+                        f' - {eval_kw["main_evaluation_metric"][1]}'
+                        f' ({eval_kw["main_evaluation_metric"][0]})'
+                        f"  {round(dev_eval_result.main_score, 4)}"
+                    )
+
+                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                    store_embeddings(self.corpus.dev, embeddings_storage_mode)
+
+                    self.publish_eval_result(dev_eval_result, "dev", global_step=epoch)
+
+                if log_test:
+                    assert self.corpus.test
+                    test_eval_result = self.model.evaluate(
+                        self.corpus.test,
+                        gold_label_type=self.model.label_type,
+                        out_path=self.base_path / "test.tsv",
+                        **eval_kw,
+                    )
+
+                    log.info(
+                        f"TEST : loss {test_eval_result.loss} -"
+                        f' {eval_kw["main_evaluation_metric"][1]}'
+                        f' ({eval_kw["main_evaluation_metric"][0]}) '
+                        f" {round(test_eval_result.main_score, 4)}"
+                    )
+
+                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                    store_embeddings(self.corpus.test, embeddings_storage_mode)
+
+                    self.publish_eval_result(test_eval_result, "test", global_step=epoch)
+
+                # Determine if this is the best model or if we need to anneal
+                current_epoch_has_best_model_so_far = False
+                validation_scores: tuple
+
+                if log_dev:
+                    if not anneal_against_dev_loss:
+                        validation_scores = dev_eval_result.main_score, dev_eval_result.loss
+
+                        if best_model_value is None or dev_eval_result.main_score > best_model_value:
+                            current_epoch_has_best_model_so_far = True
+                            best_validation_score = dev_eval_result.main_score
+                    else:
+                        validation_scores = (dev_eval_result.loss,)
+
+                        if best_model_value is None or dev_eval_result.loss < best_model_value:
+                            current_epoch_has_best_model_so_far = True
+                            best_validation_score = dev_eval_result.loss
+                            primary_value = dev_eval_result.loss
+
+                else:
+                    # there is no corpus.dev or it is used as part of the training data
+                    validation_scores = (train_loss,)
+
+                    if best_model_value is None or epoch_train_loss < best_model_value:
+                        current_epoch_has_best_model_so_far = True
+                        best_validation_score = train_loss
+
                 # - LossFilePlugin -> somehow prints all relevant metrics (TODO: I don't really understand how)
                 # - BestModelPlugin -> dispatches a "best_model" event if best model achieved (causing a save)
                 # - CheckpointPlugin -> executes checkpointing
-                self.dispatch("after_evaluation", epoch=epoch)
+                self.dispatch(
+                    "after_evaluation",
+                    epoch=epoch,
+                    current_model_is_best=current_epoch_has_best_model_so_far,
+                    validation_scores=validation_scores,
+                )
 
             # - CheckpointPlugin -> saves final model
             # - SWAPlugin -> restores SGD weights from SWA
@@ -427,20 +649,68 @@ class ModelTrainer(Pluggable):
             self.dispatch("training_interrupt")
 
         except Exception:
-            self.dispatch("_training_exception") # TODO: no customer but that's ok
+            self.dispatch("_training_exception")  # TODO: no customer but that's ok
             raise
         finally:
             # TensorboardLogger -> closes writer
             self.dispatch("_training_finally")
 
-        # MetricHistoryPlugin -> returns metric history
-        return_values = self.dispatch("collecting_train_return_values") # TODO: only one plugin, hard logic
+        # test best model if test data is present
+        if self.corpus.test and not train_with_test:
+            self.return_values["test_score"] = self.final_test(
+                base_path=self.base_path,
+                eval_mini_batch_size=eval_batch_size,
+                num_workers=num_workers,
+                main_evaluation_metric=main_evaluation_metric,
+                gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
+                exclude_labels=exclude_labels,
+            )
+        else:
+            self.return_values["test_score"] = 0
+            log.info("Test data not provided setting final score to 0")
+
+        # MetricHistoryPlugin -> stores the loss history in return_values
+        self.dispatch("after_training")
+
+        # Store return values, as they will be erased by reset_training_attributes
+        return_values = self.return_values
 
         self.reset_training_attributes()
 
-        self.dispatch("after_teardown") # TODO: no plugins call this
-
         return return_values
+
+    def flat_dict_items(self, d, composite_key=()):
+        for key, value in d.items():
+            if isinstance(key, str):
+                key = composite_key + (key,)
+            else:
+                key = composite_key + tuple(key)
+
+            if isinstance(value, dict):
+                yield from self.flat_dict_items(value, composite_key=key)
+            else:
+                yield key, value
+
+    def publish_eval_result(self, result, prefix=(), **kw):
+        for key, value in self.flat_dict_items(result.scores, composite_key=MetricName(prefix)):
+            try:
+                self.dispatch("metric_recorded", MetricRecord.scalar(name=key, value=float(value), **kw))
+            except TypeError:
+                if isinstance(value, list):
+                    self.dispatch("metric_recorded", MetricRecord.scalar_list(name=key, value=value, **kw))
+                elif isinstance(value, torch.Tensor):
+                    self.dispatch("metric_recorded", MetricRecord.histogram(name=key, value=value, **kw))
+                else:
+                    value = str(value)
+                    self.dispatch("metric_recorded", MetricRecord.string(name=key, value=value, **kw))
+
+        self.dispatch(
+            "metric_recorded", MetricRecord.string(name=MetricName(prefix) + "score", value=result.main_score, **kw)
+        )
+        self.dispatch(
+            "metric_recorded",
+            MetricRecord.string(name=MetricName(prefix) + "detailed_result", value=result.detailed_results, **kw),
+        )
 
     def resume(
         self,

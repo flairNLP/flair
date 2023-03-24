@@ -6,7 +6,6 @@ from queue import Queue
 from typing import (
     Callable,
     Dict,
-    Iterable,
     Iterator,
     List,
     NewType,
@@ -36,7 +35,7 @@ class Pluggable:
 
     valid_events: Optional[Set[EventIdenifier]] = None
 
-    def __init__(self, *, plugins: Sequence[PluginArgument] = None):
+    def __init__(self, *, plugins: Sequence[PluginArgument] = []):
         """Initialize a `Pluggable`.
 
         :param plugins: Plugins which should be attached to this `Pluggable`.
@@ -50,14 +49,13 @@ class Pluggable:
         self._event_queue: Queue = Queue()
         self._processing_events = False
 
-        if plugins is not None:
-            for plugin in plugins:
-                if isclass(plugin):
-                    # instantiate plugin
-                    plugin = plugin()
+        for plugin in plugins:
+            if isclass(plugin):
+                # instantiate plugin
+                plugin = plugin()
 
-                plugin = cast("BasePlugin", plugin)
-                plugin.attach_to(self)
+            plugin = cast("BasePlugin", plugin)
+            plugin.attach_to(self)
 
     @property
     def plugins(self):
@@ -72,7 +70,7 @@ class Pluggable:
 
             if self.valid_events is not None:
                 if event not in self.valid_events:
-                    raise RuntimeError(f"Event '{event}' not recognized (available {self.valid_events})")
+                    raise RuntimeError(f"Event '{event}' not recognized. Available: {', '.join(self.valid_events)}")
             return event
 
     def register_hook(self, func: Callable, *events: EventIdenifier):
@@ -92,30 +90,22 @@ class Pluggable:
             self._hook_handles[event][handle.id] = handle
         return handle
 
-    def dispatch(self, event: EventIdenifier, *args, **kwargs) -> dict:
+    def dispatch(self, event: EventIdenifier, *args, **kwargs) -> None:
         """Call all functions hooked to a certain event."""
         self.validate_event(event)
 
-        events_return_value: dict = {}
-        self._event_queue.put((event, args, kwargs, events_return_value))
+        self._event_queue.put((event, args, kwargs))
 
         if not self._processing_events:
             self._processing_events = True
 
             while not self._event_queue.empty():
-                event, args, kwargs, combined_return_values = self._event_queue.get()
+                event, args, kwargs = self._event_queue.get()
 
                 for hook in self._hook_handles[event].values():
-                    returned = hook(*args, **kwargs)
-
-                    if returned is not None:
-                        combined_return_values.update(returned)
+                    hook(*args, **kwargs)
 
             self._processing_events = False
-
-        # this dict may be empty and will be complete once all events have been
-        # processed
-        return events_return_value
 
     def remove_hook(self, handle: "HookHandle"):
         """Remove a hook handle from this instance."""
@@ -147,6 +137,10 @@ class HookHandle:
         return self._id
 
     @property
+    def func_name(self):
+        return self._func.__qualname__
+
+    @property
     def events(self) -> Iterator[EventIdenifier]:
         """Return iterator of events whis `HookHandle` is registered for."""
         yield from self._events
@@ -165,7 +159,7 @@ class HookHandle:
             for name in kw.keys():
                 if name not in sig.parameters:
                     raise TypeError(
-                        f"Hook callback {self._func.__qualname__}() does not accept keyword argument '{name}'"
+                        f"Hook callback {self.func_name}() does not accept keyword argument '{name}'"
                     ) from err
 
             raise err
@@ -173,10 +167,6 @@ class HookHandle:
 
 class BasePlugin:
     """Base class for all plugins."""
-
-    provided_events: Optional[Set[EventIdenifier]] = None
-
-    dependencies: Iterable[Type["BasePlugin"]] = ()
 
     def __init__(self):
         """Initialize the base plugin."""
@@ -189,23 +179,6 @@ class BasePlugin:
         assert len(self._hook_handles) == 0
 
         self._pluggable = pluggable
-
-        for dep in self.dependencies:
-            dep_satisfied = False
-
-            for plugin in pluggable.plugins:
-                if isinstance(plugin, dep):
-                    # there is already a plugin which satisfies this dependency
-                    dep_satisfied = True
-                    break
-
-            if not dep_satisfied:
-                # create a plugin of this type and attach it to the trainer
-                dep_plugin = dep()
-                dep_plugin.attach_to(pluggable)
-
-        if self.provided_events is not None and pluggable.valid_events is not None:
-            pluggable.valid_events = pluggable.valid_events | self.provided_events
 
         pluggable.append_plugin(self)
 

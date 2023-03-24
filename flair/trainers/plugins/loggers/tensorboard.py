@@ -11,6 +11,7 @@ class TensorboardLogger(TrainerPlugin):
     """
     Plugin that takes care of tensorboard logging
     """
+
     def __init__(self, log_dir=None, comment="", tracked_metrics=()):
         """
         :param log_dir: Directory into which tensorboard log files will be written  # noqa: E501
@@ -25,39 +26,38 @@ class TensorboardLogger(TrainerPlugin):
         self._warned = False
 
     @TrainerPlugin.hook
-    def after_data_setup(self, use_tensorboard, **kw):
+    def after_data_setup(self, **kw):
         """
         Initializes a TensorBoard summary writer
-        :param use_tensorboard:
         :param kw:
         :return:
         """
-        if use_tensorboard: ## TODO: remove this type of if
-            try:
-                from torch.utils.tensorboard import SummaryWriter
 
-                if self.log_dir is not None and not os.path.exists(self.log_dir):
-                    os.mkdir(self.log_dir)
+        try:
+            from torch.utils.tensorboard import SummaryWriter
 
-                self.writer = SummaryWriter(log_dir=self.log_dir, comment=self.comment)
+            if self.log_dir is not None and not os.path.exists(self.log_dir):
+                os.mkdir(self.log_dir)
 
-                log.info(f"tensorboard logging path is {self.log_dir}")
+            self.writer = SummaryWriter(log_dir=self.log_dir, comment=self.comment)
 
-            except ImportError:
-                log_line(log)
-                log.warning("ATTENTION! PyTorch >= 1.1.0 and pillow are required for TensorBoard support!")
-                log_line(log)
+            log.info(f"tensorboard logging path is {self.log_dir}")
+
+        except ImportError:
+            log_line(log)
+            log.warning("ATTENTION! PyTorch >= 1.1.0 and pillow are required for TensorBoard support!")
+            log_line(log)
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):
-        if self.writer is not None: ## TODO: remove this type of check
-            # TODO: check if metric is in tracked metrics
-            if record.is_scalar:
-                self.writer.add_scalar(str(record.name), record.value, record.global_step, walltime=record.walltime)
-            else:
-                if not self._warned:
-                    log.warning("Logging anything other than scalars to TensorBoard is currently not supported.")
-                    self._warned = True
+        assert self.writer is not None
+        # TODO: check if metric is in tracked metrics
+        if record.is_scalar:
+            self.writer.add_scalar(str(record.name), record.value, record.global_step, walltime=record.walltime)
+        else:
+            if not self._warned:
+                log.warning("Logging anything other than scalars to TensorBoard is currently not supported.")
+                self._warned = True
 
     @TrainerPlugin.hook
     def _training_finally(self, **kw):
@@ -66,5 +66,5 @@ class TensorboardLogger(TrainerPlugin):
         :param kw:
         :return:
         """
-        if self.writer is not None: ## TODO: remove this type of check
-            self.writer.close()
+        assert self.writer is not None
+        self.writer.close()

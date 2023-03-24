@@ -1,6 +1,5 @@
 from .amp import AmpPlugin
 from .checkpoints import CheckpointPlugin
-from .logging import RegularLoggingPlugin
 from .model_card import ModelCardPlugin
 from .scheduler import SchedulerPlugin
 from .swa import SWAPlugin
@@ -13,5 +12,4 @@ __all__ = [
     "SchedulerPlugin",
     "SWAPlugin",
     "WeightExtractorPlugin",
-    "RegularLoggingPlugin",
 ]
