@@ -73,7 +73,7 @@ class AnnealingPlugin(TrainerPlugin):
                                          initial_extra_patience=self.initial_extra_patience,
                                          mode=anneal_mode,
                                          verbose=True,
-                                         optimizer=optimizer,
+                                         optimizer=self.trainer.optimizer,
                                          )
 
         self.store_learning_rate()
