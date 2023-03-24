@@ -6,45 +6,14 @@ log = logging.getLogger("flair")
 
 
 class CheckpointPlugin(TrainerPlugin):
-    @TrainerPlugin.hook
-    def before_training_setup(
-        self,
-        save_model_each_k_epochs,
-        checkpoint,
-        param_selection_mode,
-        save_final_model,
-        save_optimizer_state,
-        train_with_dev,
-        anneal_with_restarts,
-        anneal_with_prestarts,
-        use_final_model_for_eval,
-        **kw,
-    ):
-        """
-        Determines how and what is saved
-        :param save_model_each_k_epochs:
-        :param checkpoint:
-        :param param_selection_mode:
-        :param save_final_model:
-        :param save_optimizer_state:
-        :param train_with_dev:
-        :param anneal_with_restarts:
-        :param anneal_with_prestarts:
-        :param use_final_model_for_eval:
-        :param kw:
-        :return:
-        """
-        self.save_model_each_k_epochs = save_model_each_k_epochs
-        self.save_optimizer_state = save_optimizer_state
-        self.checkpoint = checkpoint
-        self.param_selection_mode = param_selection_mode
-        self.save_final_model = save_final_model
 
-        self.save_best_model = (
-            (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
-            and not param_selection_mode
-            and not use_final_model_for_eval
-        )
+    def __init__(self,
+                 save_model_each_k_epochs,
+                 save_optimizer_state,
+                 ):
+        super().__init__()
+        self.save_optimizer_state = save_optimizer_state
+        self.save_model_each_k_epochs = save_model_each_k_epochs
 
     @TrainerPlugin.hook
     def after_training_epoch(self, epoch, **kw):
@@ -55,44 +24,7 @@ class CheckpointPlugin(TrainerPlugin):
         :return:
         """
         if self.save_model_each_k_epochs > 0 and epoch % self.save_model_each_k_epochs == 0:
-            log.info("saving model of current epoch")
+            log.info(f"Saving model at current epoch since 'save_model_each_k_epochs={self.save_model_each_k_epochs}' "
+                     f"was set")
             model_name = "model_epoch_" + str(epoch) + ".pt"
             self.model.save(self.trainer.base_path / model_name, checkpoint=self.save_optimizer_state)
-
-    @TrainerPlugin.hook
-    def training_interrupt(self, **kw):
-        """
-        Saves model on interrupt
-        :param kw:
-        :return:
-        """
-        if not self.param_selection_mode:
-            log.info("Saving model ...")
-            self.model.save(self.trainer.base_path / "final-model.pt", checkpoint=self.save_optimizer_state)
-            log.info("Done.")
-
-    @TrainerPlugin.hook
-    def after_training_loop(self, **kw):
-        """
-        Saves final model
-        :param kw:
-        :return:
-        """
-        # if we do not use dev data for model selection, save final model
-        if self.save_final_model and not self.param_selection_mode:
-            self.model.save(self.trainer.base_path / "final-model.pt", checkpoint=self.save_optimizer_state)
-
-    @TrainerPlugin.hook
-    def after_evaluation(self, current_model_is_best, **kw):
-        """
-        Executes checkpointing, saves best model
-        :param kw:
-        :return:
-        """
-        if self.save_best_model and current_model_is_best:
-            log.info("saving best model")
-            self.model.save(self.trainer.base_path / "best-model.pt", checkpoint=self.save_optimizer_state)
-
-        # if checkpoint is enabled, save model at each epoch
-        if self.checkpoint and not self.param_selection_mode:
-            self.model.save(self.trainer.base_path / "checkpoint.pt", checkpoint=True)

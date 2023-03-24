@@ -17,9 +17,7 @@ from .base import BasePlugin, Pluggable, TrainerPlugin, TrainingInterrupt
 from .metric_records import MetricName, MetricRecord
 
 default_plugins = [
-    CheckpointPlugin,
     ModelCardPlugin,
-    SchedulerPlugin,
     WeightExtractorPlugin,
     LossFilePlugin,
     MetricHistoryPlugin,

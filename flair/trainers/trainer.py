@@ -24,8 +24,9 @@ from flair.trainers.plugins import (
     MetricRecord,
     Pluggable,
     TrainingInterrupt,
-    default_plugins,
+    default_plugins, CheckpointPlugin,
 )
+from flair.trainers.plugins.functional.anneal_on_plateau import AnnealingPlugin
 from flair.training_utils import (
     AnnealOnPlateau,
     identify_dynamic_embeddings,
@@ -104,7 +105,7 @@ class ModelTrainer(Pluggable):
         if mini_batch_chunk_size is not None and len(batch) > mini_batch_chunk_size:
             # break up the batch into slices of size
             # mini_batch_chunk_size
-            return [batch[i : i + mini_batch_chunk_size] for i in range(0, len(batch), mini_batch_chunk_size)]
+            return [batch[i: i + mini_batch_chunk_size] for i in range(0, len(batch), mini_batch_chunk_size)]
         else:
             return [batch]
 
@@ -130,53 +131,69 @@ class ModelTrainer(Pluggable):
         """
         loss.backward()
 
-    def train(
-        self,
-        base_path: Union[Path, str],
-        learning_rate: float = 0.1,
-        mini_batch_size: int = 32,
-        eval_batch_size: int = None,
-        mini_batch_chunk_size: Optional[int] = None,
-        max_epochs: int = 100,
-        train_with_dev: bool = False,
-        train_with_test: bool = False,
-        monitor_train: bool = False,
-        monitor_test: bool = False,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        scheduler=AnnealOnPlateau,
-        anneal_factor: float = 0.5,
-        patience: int = 3,
-        min_learning_rate: Union[float, List[float]] = 0.0001,
-        initial_extra_patience: int = 0,
-        optimizer: Union[torch.optim.Optimizer, Type[torch.optim.Optimizer]] = SGD,
-        cycle_momentum: bool = False,
-        warmup_fraction: float = 0.1,
-        embeddings_storage_mode: str = "cpu",
-        checkpoint: bool = False,
-        save_final_model: bool = True,
-        anneal_with_restarts: bool = False,
-        anneal_against_dev_loss: bool = False,
-        batch_growth_annealing: bool = False,
-        shuffle: bool = True,
-        param_selection_mode: bool = False,
-        write_weights: bool = False,
-        num_workers: Optional[int] = None,
-        sampler=None,
-        amp_opt_level: str = "O1",
-        eval_on_train_fraction: Union[float, str] = 0.0,
-        eval_on_train_shuffle: bool = False,
-        save_model_each_k_epochs: int = 0,
-        use_final_model_for_eval: bool = False,
-        gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: List[str] = [],
-        create_file_logs: bool = True,
-        create_loss_file: bool = True,
-        epoch: int = 0,
-        optimizer_state_dict: Optional[Dict[str, Any]] = None,
-        scheduler_state_dict: Optional[Dict[str, Any]] = None,
-        save_optimizer_state: bool = False,
-        shuffle_first_epoch: bool = False,
-        **kwargs,
+    def train(self,
+              base_path,
+              scheduler=AnnealOnPlateau,
+              anneal_factor: float = 0.5,
+              patience: int = 3,
+              min_learning_rate: Union[float, List[float]] = 0.0001,
+              initial_extra_patience: int = 0,
+              anneal_with_restarts: bool = False,
+              anneal_against_dev_loss: bool = False,
+              **kwargs):
+
+        # annealing logic
+        AnnealingPlugin(anneal_factor=anneal_factor,
+                        patience=patience,
+                        min_learning_rate=min_learning_rate,
+                        initial_extra_patience=initial_extra_patience,
+                        anneal_with_restarts=anneal_with_restarts,
+                        anneal_against_dev_loss=anneal_against_dev_loss,
+                        ).attach_to(self)
+
+        return self.train_custom(base_path,
+                                 **kwargs)
+
+    def train_custom(
+            self,
+            base_path: Union[Path, str],
+            learning_rate: float = 0.1,
+            mini_batch_size: int = 32,
+            eval_batch_size: int = None,
+            mini_batch_chunk_size: Optional[int] = None,
+            max_epochs: int = 100,
+            train_with_dev: bool = False,
+            train_with_test: bool = False,
+            monitor_train: bool = False,
+            monitor_test: bool = False,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            scheduler=AnnealOnPlateau,
+            optimizer: Union[torch.optim.Optimizer, Type[torch.optim.Optimizer]] = SGD,
+            cycle_momentum: bool = False,
+            warmup_fraction: float = 0.1,
+            embeddings_storage_mode: str = "cpu",
+            checkpoint: bool = False,
+            save_final_model: bool = True,
+            shuffle: bool = True,
+            param_selection_mode: bool = False,
+            write_weights: bool = False,
+            num_workers: Optional[int] = None,
+            sampler=None,
+            amp_opt_level: str = "O1",
+            eval_on_train_fraction: Union[float, str] = 0.0,
+            eval_on_train_shuffle: bool = False,
+            save_model_each_k_epochs: int = 0,
+            use_final_model_for_eval: bool = False,
+            gold_label_dictionary_for_eval: Optional[Dictionary] = None,
+            exclude_labels: List[str] = [],
+            create_file_logs: bool = True,
+            create_loss_file: bool = True,
+            epoch: int = 0,
+            optimizer_state_dict: Optional[Dict[str, Any]] = None,
+            scheduler_state_dict: Optional[Dict[str, Any]] = None,
+            save_optimizer_state: bool = False,
+            shuffle_first_epoch: bool = False,
+            **kwargs,
     ) -> dict:
         """
         Trains any class that implements the flair.nn.Model interface.
@@ -226,16 +243,27 @@ class ModelTrainer(Pluggable):
         :return:
         """
 
+        # activate the checkpointing plugin if so set
+        if save_model_each_k_epochs > 0:
+            CheckpointPlugin(save_model_each_k_epochs=save_model_each_k_epochs,
+                             save_optimizer_state=save_optimizer_state,
+                             ).attach_to(self)
+
         # derive parameters the function was called with (or defaults)
         local_variables = locals()
 
-        training_parameters = {parameter: local_variables[parameter] for parameter in signature(self.train).parameters}
+        training_parameters = {parameter: local_variables[parameter] for parameter in signature(self.train_custom).parameters}
 
         training_parameters.update(kwargs)
 
+        # determine whether to save best model
+        save_best_model = (
+                not train_with_dev
+                and not param_selection_mode
+                and not use_final_model_for_eval
+        )
         # call first hook
         # -- AmpPlugin -> set opt level
-        # -- CheckpointPlugin -> Determines how and what is saved
         # -- ModelCardPlugin -> initializes model card with library versions and parameters
         # -- SchedulerPlugin -> check for impossible parameter combination
         # -- SWAPlugin -> initializes SWA and stores learning rate
@@ -301,6 +329,7 @@ class ModelTrainer(Pluggable):
         # -- AmpPlugin -> wraps with AMP
         # -- SchedulerPlugin -> initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers
         # -- SWAPlugin -> wraps the optimizer with SWA
+        print(parameters)
         self.dispatch("after_optimizer_setup", **parameters)
 
         # load existing optimizer state dictionary if it exists
@@ -356,7 +385,7 @@ class ModelTrainer(Pluggable):
 
             for epoch in range(epoch + 1, max_epochs + 1):
                 # - ModelCardPlugin -> updates epoch in model card
-                # - SchedulerPlugin -> load state for anneal_with_restarts / prestarts, batch_growth_annealing, logic for early stopping
+                # - SchedulerPlugin -> load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
                 # - LossFilePlugin -> get the current epoch for loss file logging
                 self.dispatch("before_training_epoch", epoch=epoch)
 
@@ -609,7 +638,6 @@ class ModelTrainer(Pluggable):
                         best_validation_score = train_loss
 
                 # - LossFilePlugin -> somehow prints all relevant metrics (TODO: I don't really understand how)
-                # - CheckpointPlugin -> executes checkpointing
                 self.dispatch(
                     "after_evaluation",
                     epoch=epoch,
@@ -617,25 +645,45 @@ class ModelTrainer(Pluggable):
                     validation_scores=validation_scores,
                 )
 
-            # - CheckpointPlugin -> saves final model
+                if save_best_model and current_epoch_has_best_model_so_far:
+                    log.info("saving best model")
+                    self.model.save(self.base_path / "best-model.pt", checkpoint=save_optimizer_state)
+
+                # if checkpoint is enabled, save model at each epoch
+                if checkpoint and not param_selection_mode:
+                    self.model.save(self.base_path / "checkpoint.pt", checkpoint=True)
+
             # - SWAPlugin -> restores SGD weights from SWA
             self.dispatch("after_training_loop")
+
+            # if we do not use dev data for model selection, save final model
+            if save_final_model and not param_selection_mode:
+                self.model.save(self.base_path / "final-model.pt", checkpoint=save_optimizer_state)
 
         except KeyboardInterrupt:
             log_line(log)
             log.info("Exiting from training early.")
 
-            # CheckpointPlugin -> saves model on interrupt
-            self.dispatch("training_interrupt")
+            self.dispatch("training_interrupt")  # TODO: no plugin calls this event
+
+            if not param_selection_mode:
+                log.info("Saving model ...")
+                self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                log.info("Done.")
+
         except TrainingInterrupt as exc:
             log_line(log)
             log.info(str(exc))
             log_line(log)
-            # CheckpointPlugin -> saves model on interrupt
-            self.dispatch("training_interrupt")
+            self.dispatch("training_interrupt")  # TODO: no plugin calls this event
+
+            if not param_selection_mode:
+                log.info("Saving model ...")
+                self.model.save(self.base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                log.info("Done.")
 
         except Exception:
-            self.dispatch("_training_exception")  # TODO: no customer but that's ok
+            self.dispatch("_training_exception")  # TODO: no plugin calls this event
             raise
         finally:
             # TensorboardLogger -> closes writer
@@ -699,10 +747,10 @@ class ModelTrainer(Pluggable):
         )
 
     def resume(
-        self,
-        model: Model,
-        additional_epochs: Optional[int] = None,
-        **trainer_args,
+            self,
+            model: Model,
+            additional_epochs: Optional[int] = None,
+            **trainer_args,
     ):
         assert model.model_card is not None
         self.model = model
@@ -723,25 +771,25 @@ class ModelTrainer(Pluggable):
 
         if additional_epochs is not None:
             args_used_to_train_model["max_epochs"] = (
-                args_used_to_train_model.get("epoch", kwargs.get("epoch", 0)) + additional_epochs
+                    args_used_to_train_model.get("epoch", kwargs.get("epoch", 0)) + additional_epochs
             )
 
         # resume training with these parameters
         self.train(**args_used_to_train_model, **kwargs)
 
     def fine_tune(
-        self,
-        base_path: Union[Path, str],
-        learning_rate: float = 5e-5,
-        max_epochs: int = 10,
-        optimizer=torch.optim.AdamW,
-        scheduler=LinearSchedulerWithWarmup,
-        warmup_fraction: float = 0.1,
-        mini_batch_size: int = 4,
-        embeddings_storage_mode: str = "none",
-        use_final_model_for_eval: bool = True,
-        decoder_lr_factor: float = 1.0,
-        **trainer_args,
+            self,
+            base_path: Union[Path, str],
+            learning_rate: float = 5e-5,
+            max_epochs: int = 10,
+            optimizer=torch.optim.AdamW,
+            scheduler=LinearSchedulerWithWarmup,
+            warmup_fraction: float = 0.1,
+            mini_batch_size: int = 4,
+            embeddings_storage_mode: str = "none",
+            use_final_model_for_eval: bool = True,
+            decoder_lr_factor: float = 1.0,
+            **trainer_args,
     ):
         # If set, add a factor to the learning rate of all parameters with 'embeddings' not in name
         if decoder_lr_factor != 1.0:
@@ -762,7 +810,7 @@ class ModelTrainer(Pluggable):
                 f"parameters: {[name for name, param in self.model.named_parameters() if 'embeddings' not in name]}"
             )
 
-        return self.train(
+        return self.train_custom(
             base_path=base_path,
             learning_rate=learning_rate,
             max_epochs=max_epochs,
@@ -776,13 +824,13 @@ class ModelTrainer(Pluggable):
         )
 
     def final_test(
-        self,
-        base_path: Union[Path, str],
-        eval_mini_batch_size: int,
-        main_evaluation_metric: Tuple[str, str],
-        num_workers: Optional[int] = 8,
-        gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: List[str] = [],
+            self,
+            base_path: Union[Path, str],
+            eval_mini_batch_size: int,
+            main_evaluation_metric: Tuple[str, str],
+            num_workers: Optional[int] = 8,
+            gold_label_dictionary_for_eval: Optional[Dictionary] = None,
+            exclude_labels: List[str] = [],
     ):
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
@@ -819,17 +867,17 @@ class ModelTrainer(Pluggable):
         return final_score
 
     def find_learning_rate(
-        self,
-        base_path: Union[Path, str],
-        optimizer,
-        file_name: str = "learning_rate.tsv",
-        start_learning_rate: float = 1e-7,
-        end_learning_rate: float = 10,
-        iterations: int = 100,
-        mini_batch_size: int = 32,
-        stop_early: bool = True,
-        smoothing_factor: float = 0.98,
-        **kwargs,
+            self,
+            base_path: Union[Path, str],
+            optimizer,
+            file_name: str = "learning_rate.tsv",
+            start_learning_rate: float = 1e-7,
+            end_learning_rate: float = 10,
+            iterations: int = 100,
+            mini_batch_size: int = 32,
+            stop_early: bool = True,
+            smoothing_factor: float = 0.98,
+            **kwargs,
     ) -> Path:
         best_loss = None
         moving_avg_loss = 0.0
