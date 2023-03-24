@@ -155,7 +155,6 @@ class ModelTrainer(Pluggable):
         checkpoint: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
-        anneal_with_prestarts: bool = False,
         anneal_against_dev_loss: bool = False,
         batch_growth_annealing: bool = False,
         shuffle: bool = True,
@@ -204,7 +203,6 @@ class ModelTrainer(Pluggable):
         'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
         :param save_final_model: If True, final model is saved
         :param anneal_with_restarts: If True, the last best model is restored when annealing the learning rate  # noqa: E501
-        :param anneal_with_prestarts: If True, the model preceding the last best model is restored when annealing the learning rate  # noqa: E501
         :param anneal_against_dev_loss: If True, the annealment is triggered when dev loss plateaus.  # noqa: E501
          If False (default), it is triggered when dev score plateaus.
         :param batch_growth_annealing: If True, mini_batch_size doubles every time learning_rate is annealed.  # noqa: E501

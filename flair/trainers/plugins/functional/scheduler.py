@@ -35,7 +35,6 @@ class SchedulerPlugin(TrainerPlugin):
 
         self.scheduler = None
 
-        self.anneal_with_prestarts = None
         self.anneal_with_restarts = None
 
         self.last_epoch_model_state_dict = None
@@ -80,7 +79,6 @@ class SchedulerPlugin(TrainerPlugin):
         mini_batch_size,
         max_epochs,
         epoch,
-        anneal_with_prestarts,
         anneal_with_restarts,
         **kw,
     ):
@@ -101,7 +99,6 @@ class SchedulerPlugin(TrainerPlugin):
         :param mini_batch_size:
         :param max_epochs:
         :param epoch:
-        :param anneal_with_prestarts:
         :param anneal_with_restarts:
         :param kw:
         :return:
@@ -167,7 +164,6 @@ class SchedulerPlugin(TrainerPlugin):
 
         self.log_bad_epochs = isinstance(scheduler, AnnealOnPlateau)
 
-        self.anneal_with_prestarts = anneal_with_prestarts
         self.anneal_with_restarts = anneal_with_restarts
 
     @TrainerPlugin.hook
@@ -183,16 +179,13 @@ class SchedulerPlugin(TrainerPlugin):
     @TrainerPlugin.hook
     def before_training_epoch(self, **kw):
         """
-        load state for anneal_with_restarts / prestarts, batch_growth_annealing, logic for early stopping
+        load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
         :param kw:
         :return:
         """
         self.store_learning_rate()
 
         base_path = self.trainer.base_path
-
-        if self.anneal_with_prestarts:
-            self.last_epoch_model_state_dict = copy.deepcopy(self.model.state_dict())
 
         lr_changed = any(
             [lr != prev_lr for lr, prev_lr in zip(self.current_learning_rate, self.previous_learning_rate)]
@@ -203,16 +196,13 @@ class SchedulerPlugin(TrainerPlugin):
 
         # reload last best model if annealing with restarts is enabled
         if (
-            (self.anneal_with_restarts or self.anneal_with_prestarts)
+            self.anneal_with_restarts
             and lr_changed
             and os.path.exists(base_path / "best-model.pt")
         ):
             if self.anneal_with_restarts:
                 log.info("resetting to best model")
                 self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
-            if self.anneal_with_prestarts:
-                log.info("resetting to pre-best model")
-                self.model.load_state_dict(self.model.load(base_path / "pre-best-model.pt").state_dict())
 
         self.previous_learning_rate = self.current_learning_rate
 
