@@ -204,6 +204,7 @@ class LanguageModelTrainer:
     ):
         self.fabric.launch()
         flair.device = self.fabric.device
+        print_once = self.fabric.print
 
         # cast string to Path
         base_path = Path(base_path)
@@ -306,6 +307,7 @@ class LanguageModelTrainer:
 
                         # try to predict the targets
                         loss = self.loss_function(output.view(-1, ntokens), targets)
+                        self.fabric.log("train_loss", loss)
                         # Backward with Fabric
                         self.fabric.backward(loss)
                         # `clip_grad_norm` helps prevent the exploding gradient
@@ -338,20 +340,21 @@ class LanguageModelTrainer:
                     ##########################################################
                     self.model.eval()
 
-                    val_loss = self.evaluate(val_data, mini_batch_size, sequence_length)
+                    if self.rank_zero():
+                        val_loss = self.evaluate(val_data, mini_batch_size, sequence_length)
+                        self.fabric.log("val_loss", val_loss)
 
-                    # Save the model if the validation loss is the best we've
-                    # seen so far.
-                    if val_loss < best_val_loss:
-                        self.model.save(savefile, rank=self.fabric.global_rank)
-                        best_val_loss = val_loss
-                        log.info("best split so far")
+                        # Save the model if the validation loss is the best we've
+                        # seen so far.
+                        if val_loss < best_val_loss:
+                            self.model.save(savefile, rank=self.fabric.global_rank)
+                            best_val_loss = val_loss
+                            log.info("best split so far")
 
-                    scheduler.step(val_loss)
-
-                    log.info(f"best loss so far {best_val_loss:5.8f}")
-
-                    log.info(self.model.generate_text())
+                        scheduler.step(val_loss)
+                        
+                        log.info(f"best loss so far {best_val_loss:5.8f}")
+                        log.info(self.model.generate_text())
 
                     if checkpoint:
                         self.model.save_checkpoint(
@@ -363,23 +366,24 @@ class LanguageModelTrainer:
                             rank=self.fabric.global_rank,
                         )
 
-                    ##########################################################
-                    # print info
-                    ##########################################################
-                    log.info("-" * 89)
+                    if self.rank_zero():
+                        ##########################################################
+                        # print info
+                        ##########################################################
+                        log.info("-" * 89)
 
-                    summary = (
-                        f"| end of split {curr_split:3d} /{number_of_splits:3d} | epoch {epoch + 1:3d} | time: "
-                        f"{(time.time() - split_start_time):5.2f}s | valid loss {val_loss:5.4f} | valid ppl "
-                        f"{math.exp(val_loss):5.4f} | learning rate {learning_rate:3.4f}"
-                    )
+                        summary = (
+                            f"| end of split {curr_split:3d} /{number_of_splits:3d} | epoch {epoch + 1:3d} | time: "
+                            f"{(time.time() - split_start_time):5.2f}s | valid loss {val_loss:5.4f} | valid ppl "
+                            f"{math.exp(val_loss):5.4f} | learning rate {learning_rate:3.4f}"
+                        )
 
-                    with open(loss_txt, "a") as myfile:
-                        myfile.write("%s\n" % summary)
+                        with open(loss_txt, "a") as myfile:
+                            myfile.write("%s\n" % summary)
 
-                    log.info(summary)
-                    log.info("-" * 89)
-                    log.info("%d seconds for train split %d" % (time.time() - split_start_time, curr_split))
+                        log.info(summary)
+                        log.info("-" * 89)
+                        log.info("%d seconds for train split %d" % (time.time() - split_start_time, curr_split))
 
                 log.info("Epoch time: %.2f" % (time.time() - epoch_start_time))
 
@@ -394,15 +398,16 @@ class LanguageModelTrainer:
         ###############################################################################
         # final testing
         ###############################################################################
-        test_data = self._batchify(self.corpus.test, mini_batch_size)
-        test_loss = self.evaluate(test_data, mini_batch_size, sequence_length)
+        if self.rank_zero():
+            test_data = self._batchify(self.corpus.test, mini_batch_size)
+            test_loss = self.evaluate(test_data, mini_batch_size, sequence_length)
 
-        summary = f"TEST: valid loss {test_loss:5.4f} | valid ppl {math.exp(test_loss):8.4f}"
-        with open(loss_txt, "a") as myfile:
-            myfile.write("%s\n" % summary)
+            summary = f"TEST: valid loss {test_loss:5.4f} | valid ppl {math.exp(test_loss):8.4f}"
+            with open(loss_txt, "a") as myfile:
+                myfile.write("%s\n" % summary)
 
-        log.info(summary)
-        log.info("-" * 89)
+            print_once(summary)
+            print_once("-" * 89)
 
     def evaluate(self, data_source, eval_batch_size, sequence_length):
         # Turn on evaluation mode which disables dropout.
@@ -466,3 +471,6 @@ class LanguageModelTrainer:
             loss=checkpoint["loss"],
             optimizer_state=checkpoint["optimizer_state_dict"],
         )
+
+    def rank_zero(self):
+        return self.fabric.global_rank == 0
