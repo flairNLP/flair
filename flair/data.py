@@ -1446,6 +1446,12 @@ class Corpus(typing.Generic[T_co]):
         assert self.train
         datasets = [self.train]
 
+        if self.dev is not None:
+            datasets.append(self.dev)
+
+        if self.test is not None:
+            datasets.append(self.test)
+
         data: ConcatDataset = ConcatDataset(datasets)
 
         log.info("Computing label dictionary. Progress:")
