@@ -9,8 +9,8 @@ from flair.data import Corpus, Sentence, TextPair, _iter_dataset
 
 
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
-    """
-    Text Pair Classification Model for tasks such as Recognizing Textual Entailment, build upon TextClassifier.
+    """Text Pair Classification Model for tasks such as Recognizing Textual Entailment, build upon TextClassifier.
+
     The model takes document embeddings and puts resulting text representation(s) into a linear layer to get the
     actual class label. We provide two ways to embed the DataPairs: Either by embedding both DataPoints
     and concatenating the resulting vectors ("embed_separately=True") or by concatenating the DataPoints and embedding
@@ -24,8 +24,8 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
         embed_separately: bool = False,
         **classifierargs,
     ):
-        """
-        Initializes a TextClassifier
+        """Initializes a TextPairClassifier.
+
         :param embeddings: embeddings used to embed each data point
         :param label_dictionary: dictionary of labels you want to predict
         :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction

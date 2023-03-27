@@ -16,9 +16,7 @@ log = logging.getLogger("flair")
 
 
 class CandidateGenerator:
-    """
-    Given a string, the CandidateGenerator returns possible target classes as candidates.
-    """
+    """Given a string, the CandidateGenerator returns possible target classes as candidates."""
 
     def __init__(self, candidates: Union[str, Dict], backoff: bool = True):
         # internal candidate lists of generator
@@ -70,7 +68,7 @@ class CandidateGenerator:
         return backoff_mention
 
     def get_candidates(self, mention: str) -> Set[str]:
-        """Given a mention, this method returns a set of candidate classes"""
+        """Given a mention, this method returns a set of candidate classes."""
         if self.backoff:
             mention = self._make_backoff_string(mention)
 
@@ -78,8 +76,8 @@ class CandidateGenerator:
 
 
 class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
-    """
-    Entity Linking Model
+    """Entity Linking Model.
+
     The model expects text/sentences with annotated entity mentions and predicts entities to these mentions.
     To this end a word embedding is used to embed the sentences and the embedding of the entity mention goes through a linear layer to get the actual class label.
     The model is able to predict '<unk>' for entity mentions that the model can not confidently match to any of the known labels.
@@ -94,8 +92,8 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         candidates: Optional[CandidateGenerator] = None,
         **classifierargs,
     ):
-        """
-        Initializes an EntityLinker
+        """Initializes an EntityLinker.
+
         :param embeddings: embeddings used to embed the words/sentences
         :param label_dictionary: dictionary that gives ids to all classes. Should contain <unk>
         :param pooling_operation: either 'average', 'first', 'last' or 'first&last'. Specifies the way of how text representations of entity mentions (with more than one word) are handled.
@@ -103,7 +101,6 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         the embedding of the first and the embedding of the last word.
         :param label_type: name of the label you use.
         """
-
         super(EntityLinker, self).__init__(
             embeddings=embeddings,
             label_dictionary=label_dictionary,
