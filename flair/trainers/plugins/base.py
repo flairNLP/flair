@@ -256,7 +256,7 @@ class BasePlugin:
 class TrainerPlugin(BasePlugin):
     @property
     def trainer(self):
-        return self.pluggable
+        return self.trainer
 
     @property
     def model(self):
