@@ -23,8 +23,7 @@ class ParallelTextCorpus(Corpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Instantiates a Corpus for text classification from CSV column formatted data
+        """Instantiates a Corpus for text classification from CSV column formatted data.
 
         :param data_folder: base folder with the task data
         :param train_file: the name of the train file
@@ -61,8 +60,9 @@ class OpusParallelCorpus(ParallelTextCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Instantiates a Parallel Corpus from OPUS (http://opus.nlpl.eu/)
+        """Instantiates a Parallel Corpus from OPUS.
+
+        see http://opus.nlpl.eu/
         :param dataset: Name of the dataset (one of "tatoeba")
         :param l1: Language code of first language in pair ("en", "de", etc.)
         :param l2: Language code of second language in pair ("en", "de", etc.)
@@ -71,7 +71,6 @@ class OpusParallelCorpus(ParallelTextCorpus):
         :param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
         :param in_memory: If True, keeps dataset fully in memory
         """
-
         if l1 > l2:
             l1, l2 = l2, l1
 
@@ -211,8 +210,9 @@ class DataPairCorpus(Corpus):
         separator: str = "\t",
         encoding: str = "utf-8",
     ):
-        """
-        Corpus for tasks involving pairs of sentences or paragraphs. The data files are expected to be in column format where each line has a colmun
+        r"""Corpus for tasks involving pairs of sentences or paragraphs.
+
+        The data files are expected to be in column format where each line has a column
         for the first sentence/paragraph, the second sentence/paragraph and the labels, respectively. The columns must be separated by a given separator (default: '\t').
 
         :param data_folder: base folder with the task data
@@ -234,7 +234,6 @@ class DataPairCorpus(Corpus):
 
         :return: a Corpus with annotated train, dev and test data
         """
-
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(
             data_folder,
@@ -321,8 +320,9 @@ class DataPairDataset(FlairDataset):
         encoding: str = "utf-8",
         label: bool = True,
     ):
-        """
-        Creates a Dataset for pairs of sentences/paragraphs. The file needs to be in a column format,
+        r"""Creates a Dataset for pairs of sentences/paragraphs.
+
+        The file needs to be in a column format,
         where each line has a column for the first sentence/paragraph, the second sentence/paragraph and the label
         seperated by e.g. '\t' (just like in the glue RTE-dataset https://gluebenchmark.com/tasks) .
         For each data pair we create a flair.data.DataPair object.
@@ -340,7 +340,6 @@ class DataPairDataset(FlairDataset):
         :param encoding: Encoding of the data file
         :param label: If False, the dataset expects unlabeled data
         """
-
         path_to_data = Path(path_to_data)
 
         # stop if file does not exist
@@ -447,12 +446,12 @@ class GLUE_RTE(DataPairCorpus):
         in_memory: bool = True,
         sample_missing_splits: bool = True,
     ):
-        """
-        Creates a DataPairCorpus for the Glue Recognizing Textual Entailment (RTE) data (https://gluebenchmark.com/tasks).
-        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data.
+        """Creates a DataPairCorpus for the Glue Recognizing Textual Entailment (RTE) data.
+
+        See https://gluebenchmark.com/tasks
+        Additionally to the Corpus we have a eval_dataset containing the test file of the Glue data.
         This file contains unlabeled test data to evaluate models on the Glue RTE task.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -532,13 +531,13 @@ class GLUE_MNLI(DataPairCorpus):
         in_memory: bool = True,
         sample_missing_splits: bool = True,
     ):
-        """
-        Creates a DataPairCorpus for the Multi-Genre Natural Language Inference Corpus (MNLI)
-        from GLUE benchmark (https://gluebenchmark.com/tasks). Entailment annotations are:
-        entailment, contradiction, neutral. This corpus includes two dev sets mathced/mismatched
-        and two unlabeled test sets: eval_dataset_matched, eval_dataset_mismatched.
-        """
+        """Creates a DataPairCorpus for the Multi-Genre Natural Language Inference Corpus (MNLI) from GLUE benchmark.
 
+        see https://gluebenchmark.com/tasks
+        Entailment annotations are: entailment, contradiction, neutral.
+        This corpus includes two dev sets mathced/mismatched and two unlabeled test sets: eval_dataset_matched,
+        eval_dataset_mismatched.
+        """
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -652,12 +651,11 @@ class GLUE_MRPC(DataPairCorpus):
         in_memory: bool = True,
         sample_missing_splits: bool = True,
     ):
-        """
-        Creates a DataPairCorpus for the Microsoft Research Paraphrase Corpus (MRPC)
-        from Glue benchmark (https://gluebenchmark.com/tasks). MRPC includes annotated
-        train and test sets. Dev set is sampled each time when creating this corpus.
-        """
+        """Creates a DataPairCorpus for the Microsoft Research Paraphrase Corpus (MRPC) from Glue benchmark.
 
+        See https://gluebenchmark.com/tasks
+        MRPC includes annotated train and test sets. Dev set is sampled each time when creating this corpus.
+        """
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -733,13 +731,12 @@ class GLUE_QNLI(DataPairCorpus):
         in_memory: bool = True,
         sample_missing_splits: bool = True,
     ):
-        """
-        Creates a DataPairCorpus for the Question-answering Natural Language Inference dataset
-        (QNLI) from GLUE benchmark (https://gluebenchmark.com/tasks).
-        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data.
+        """Creates a DataPairCorpus for the Question-answering Natural Language Inference dataset (QNLI) from GLUE.
+
+        see https://gluebenchmark.com/tasks
+        Additionally, to the Corpus we have an eval_dataset containing the test file of the Glue data.
         This file contains unlabeled test data to evaluate models on the Glue QNLI task.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -820,13 +817,13 @@ class GLUE_QQP(DataPairCorpus):
         in_memory: bool = True,
         sample_missing_splits: bool = True,
     ):
-        """
-        Creates a Quora Question Pairs (QQP) Corpus from the Glue benchmark (https://gluebenchmark.com/tasks).
+        """Creates a Quora Question Pairs (QQP) Corpus from the Glue benchmark.
+
+        See https://gluebenchmark.com/tasks
         The task is to determine whether a pair of questions are semantically equivalent.
         Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data.
         This file contains unlabeled test data to evaluate models on the Glue QQP task.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -907,13 +904,12 @@ class GLUE_WNLI(DataPairCorpus):
         in_memory: bool = True,
         sample_missing_splits: bool = True,
     ):
-        """
-        Creates a Winograd Schema Challenge Corpus formated as Natural Language Inference task (WNLI).
+        """Creates a Winograd Schema Challenge Corpus formated as Natural Language Inference task (WNLI).
+
         The task is to predict if the sentence with the pronoun substituted is entailed by the original sentence.
         Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data.
         This file contains unlabeled test data to evaluate models on the Glue WNLI task.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -992,12 +988,12 @@ class SUPERGLUE_RTE(DataPairCorpus):
         in_memory: bool = True,
         sample_missing_splits: bool = True,
     ):
-        """
-        Creates a DataPairCorpus for the SuperGlue Recognizing Textual Entailment (RTE) data (https://super.gluebenchmark.com/tasks).
+        """Creates a DataPairCorpus for the SuperGlue Recognizing Textual Entailment (RTE) data.
+
+        See https://super.gluebenchmark.com/tasks
         Additionaly to the Corpus we have a eval_dataset containing the test file of the SuperGlue data.
         This file contains unlabeled test data to evaluate models on the SuperGlue RTE task.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
