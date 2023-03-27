@@ -14,7 +14,7 @@ exclude = '''
 '''
 [tool.pytest.ini_options]
 flake8-max-line-length = 210
-flake8-ignore = ["E203", "W503"]  # See https://github.com/PyCQA/pycodestyle/issues/373
+flake8-ignore = ["E203", "W503", "D100", "D101", "D102", "D103", "D104", "D105", "D107"]  # See https://github.com/PyCQA/pycodestyle/issues/373
 addopts = "--flake8 --mypy --isort"
 filterwarnings = [
     "error",  # Convert all warnings to errors
