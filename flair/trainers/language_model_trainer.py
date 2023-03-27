@@ -204,7 +204,6 @@ class LanguageModelTrainer:
     ):
         self.fabric.launch()
         flair.device = self.fabric.device
-        print_once = self.fabric.print
 
         # cast string to Path
         base_path = Path(base_path)
@@ -307,7 +306,6 @@ class LanguageModelTrainer:
 
                         # try to predict the targets
                         loss = self.loss_function(output.view(-1, ntokens), targets)
-                        self.fabric.log("train_loss", loss)
                         # Backward with Fabric
                         self.fabric.backward(loss)
                         # `clip_grad_norm` helps prevent the exploding gradient
@@ -327,9 +325,9 @@ class LanguageModelTrainer:
                         # explicitly remove loss to clear up memory
                         del loss, output, rnn_output
 
-                        if batch % self.log_interval == 0 and batch > 0 and self.global_rank_zero():
-                            total_loss = self.fabric.all_reduce(total_loss, reduce_op="mean")
+                        if batch % self.log_interval == 0 and batch > 0:
                             cur_loss = total_loss.item() / self.log_interval
+                            self.fabric.log("train_loss", cur_loss)
                             elapsed = time.time() - start_time
                             log.info(
                                 f"| split {curr_split:3d}/{number_of_splits:3d} | {batch:5d}/{len(train_data) // sequence_length:5d} batches "
@@ -385,7 +383,7 @@ class LanguageModelTrainer:
                         log.info(summary)
                         log.info("-" * 89)
                         log.info("%d seconds for train split %d" % (time.time() - split_start_time, curr_split))
-
+                log.info(f"rank={self.fabric.local_rank} completed")
                 log.info("Epoch time: %.2f" % (time.time() - epoch_start_time))
 
         except KeyboardInterrupt:
@@ -407,8 +405,8 @@ class LanguageModelTrainer:
             with open(loss_txt, "a") as myfile:
                 myfile.write("%s\n" % summary)
 
-            print_once(summary)
-            print_once("-" * 89)
+            log.info(summary)
+            log.info("-" * 89)
 
     def evaluate(self, data_source, eval_batch_size, sequence_length):
         # Turn on evaluation mode which disables dropout.
@@ -474,4 +472,4 @@ class LanguageModelTrainer:
         )
 
     def global_rank_zero(self):
-        return self.fabric.global_rank == 0
+        return self.fabric.is_global_zero
