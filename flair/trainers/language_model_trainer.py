@@ -327,7 +327,8 @@ class LanguageModelTrainer:
                         # explicitly remove loss to clear up memory
                         del loss, output, rnn_output
 
-                        if batch % self.log_interval == 0 and batch > 0:
+                        if batch % self.log_interval == 0 and batch > 0 and self.global_rank_zero():
+                            total_loss = self.fabric.all_reduce(total_loss, reduce_op="mean")
                             cur_loss = total_loss.item() / self.log_interval
                             elapsed = time.time() - start_time
                             log.info(
@@ -340,7 +341,7 @@ class LanguageModelTrainer:
                     ##########################################################
                     self.model.eval()
 
-                    if self.rank_zero():
+                    if self.global_rank_zero():
                         val_loss = self.evaluate(val_data, mini_batch_size, sequence_length)
                         self.fabric.log("val_loss", val_loss)
 
@@ -352,7 +353,7 @@ class LanguageModelTrainer:
                             log.info("best split so far")
 
                         scheduler.step(val_loss)
-                        
+
                         log.info(f"best loss so far {best_val_loss:5.8f}")
                         log.info(self.model.generate_text())
 
@@ -366,7 +367,7 @@ class LanguageModelTrainer:
                             rank=self.fabric.global_rank,
                         )
 
-                    if self.rank_zero():
+                    if self.global_rank_zero():
                         ##########################################################
                         # print info
                         ##########################################################
@@ -398,7 +399,7 @@ class LanguageModelTrainer:
         ###############################################################################
         # final testing
         ###############################################################################
-        if self.rank_zero():
+        if self.global_rank_zero():
             test_data = self._batchify(self.corpus.test, mini_batch_size)
             test_loss = self.evaluate(test_data, mini_batch_size, sequence_length)
 
@@ -472,5 +473,5 @@ class LanguageModelTrainer:
             optimizer_state=checkpoint["optimizer_state_dict"],
         )
 
-    def rank_zero(self):
+    def global_rank_zero(self):
         return self.fabric.global_rank == 0
