@@ -52,8 +52,8 @@ class ModelTrainer(Pluggable):
     }
 
     def __init__(self, model: flair.nn.Model, corpus: Corpus):
-        """
-        Initialize a model trainer
+        """Initialize a model trainer.
+
         :param model: The model that you want to train. The model should inherit from flair.nn.Model  # noqa: E501
         :param corpus: The dataset used to train the model, should be of type Corpus
         """
