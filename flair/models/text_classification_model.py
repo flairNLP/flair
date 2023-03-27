@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Tuple
 
 import torch
 
@@ -135,3 +135,44 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         from typing import cast
 
         return cast("TextClassifier", super().load(model_path=model_path))
+
+
+
+class TextClassifierLossModifications(TextClassifier):
+    def __init__(
+        self,
+        embeddings: flair.embeddings.DocumentEmbeddings,
+        label_type: str,
+
+        **classifierargs,
+    ):
+        super(TextClassifierLossModifications, self).__init__(
+                embeddings=embeddings,
+                label_type=label_type,
+                **classifierargs,
+            )
+        self.pe_norm = True # cce * pe
+        self.batch_avg = False 
+        self.epoch_after_3 = False #set this to true from trainer
+        self.entropy_loss = False # cce + pe
+
+    def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
+        # get softmax values
+        softmax = torch.nn.functional.softmax(scores)
+        # calc entropy for each data point
+        entropy = -torch.sum(torch.mul(softmax, torch.log(softmax)), dim = -1)
+        # calc cross entropy for each data point
+        cross_entropy = torch.nn.functional.nll_loss(torch.log(softmax), labels, reduction='none')
+        if self.entropy_loss:
+            loss = cross_entropy + entropy
+        elif self.pe_norm:
+            pe_norm = (entropy.clone().detach()) / (1.5)
+            loss = torch.mul(cross_entropy, pe_norm)
+        else:
+            loss = cross_entropy
+        if self.batch_avg:
+            # set loss weight for each data point
+            batch_weights = torch.where((cross_entropy > 2 * torch.mean(cross_entropy)) & (entropy < torch.mean(entropy)), 0, 1)
+            # multiply by loss weight and sum
+            loss = torch.mul(loss, batch_weights)
+        return torch.sum(loss), labels.size(0)
