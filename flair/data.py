@@ -1432,7 +1432,9 @@ class Corpus(typing.Generic[T_co]):
             _len_dataset(self.test) if self.test else 0,
         )
 
-    def make_label_dictionary(self, label_type: str, min_count: int = -1, add_unk: bool = True) -> Dictionary:
+    def make_label_dictionary(
+        self, label_type: str, min_count: int = -1, add_unk: bool = True, add_dev_test: bool = False
+    ) -> Dictionary:
         """
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
@@ -1445,6 +1447,12 @@ class Corpus(typing.Generic[T_co]):
 
         assert self.train
         datasets = [self.train]
+
+        if add_dev_test and self.dev is not None:
+            datasets.append(self.dev)
+
+        if add_dev_test and self.test is not None:
+            datasets.append(self.test)
 
         data: ConcatDataset = ConcatDataset(datasets)
 
