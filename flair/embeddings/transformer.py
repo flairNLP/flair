@@ -620,7 +620,6 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         return sentence_tokens, offsets, lengths
 
     def _expand_sentence_with_context(self, sentence) -> Tuple[List[Token], int]:
-
         # fields to store left and right context
         left_context = []
         right_context = []
