@@ -143,7 +143,8 @@ class TextClassifierLossModifications(TextClassifier):
         self,
         embeddings: flair.embeddings.DocumentEmbeddings,
         label_type: str,
-
+        loss: str,
+        batch_avg: bool,
         **classifierargs,
     ):
         super(TextClassifierLossModifications, self).__init__(
@@ -151,10 +152,14 @@ class TextClassifierLossModifications(TextClassifier):
                 label_type=label_type,
                 **classifierargs,
             )
-        self.pe_norm = True # cce * pe
-        self.batch_avg = False 
-        self.epoch_after_3 = False #set this to true from trainer
+        self.pe_norm = False # cce * pe
+        self.batch_avg = batch_avg 
         self.entropy_loss = False # cce + pe
+
+        if loss == 'pe_norm':
+            self.pe_norm = True # cce * pe
+        elif loss == 'entropy_loss':
+            self.entropy_loss = True
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
         # get softmax values
@@ -163,14 +168,19 @@ class TextClassifierLossModifications(TextClassifier):
         entropy = -torch.sum(torch.mul(softmax, torch.log(softmax)), dim = -1)
         # calc cross entropy for each data point
         cross_entropy = torch.nn.functional.nll_loss(torch.log(softmax), labels, reduction='none')
+        #log.info(self.pe_norm)
+        #log.info(self.model_card["training_parameters"]["epoch"])
         if self.entropy_loss:
             loss = cross_entropy + entropy
-        elif self.pe_norm:
+        elif self.pe_norm and self.model_card["training_parameters"]["epoch"]>2:
             pe_norm = (entropy.clone().detach()) / (1.5)
-            loss = torch.mul(cross_entropy, pe_norm)
+            pred=torch.argmax(softmax, dim=1)
+            incorrect_pred_indicator = (pred != labels)
+            selective_factor = torch.sub(torch.zeros_like(pe_norm).fill_(1), (torch.sub(torch.zeros_like(pe_norm).fill_(1),pe_norm)) * incorrect_pred_indicator)
+            loss = torch.mul(cross_entropy, selective_factor)
         else:
             loss = cross_entropy
-        if self.batch_avg:
+        if self.batch_avg and self.model_card["training_parameters"]["epoch"]>3:
             # set loss weight for each data point
             batch_weights = torch.where((cross_entropy > 2 * torch.mean(cross_entropy)) & (entropy < torch.mean(entropy)), 0, 1)
             # multiply by loss weight and sum
