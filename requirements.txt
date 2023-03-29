@@ -19,11 +19,11 @@ lxml
 ftfy
 janome
 gdown==4.4.0
-huggingface-hub==0.10.0
+huggingface-hub>=0.10.0
 conllu>=4.0
 more-itertools
 wikipedia-api
 pptree
 pytorch_revgrad
-transformer-smaller-training-vocab>=0.2.0
 lightning
+transformer-smaller-training-vocab>=0.2.1

@@ -22,7 +22,6 @@ class BaseEmbeddingsTest:
         "typical proportionalities of ∼ 1nmV − 1 [ 3,4 ] .",
         "🤟 🤟  🤟 hüllo",
         "🤟hallo 🤟 🤟 🤟 🤟",
-        "🤟hallo 🤟 🤟 🤟 🤟",
         "🤟",
     ]
 
