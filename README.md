@@ -121,7 +121,7 @@ This means that the sentence "I love Berlin" was tagged as having **POSITIVE** s
 
 ## Tutorials
 
-On our new :fire: [**Flair documentation page**](https://flairnlp.github.io/) you will find many tutorials to get you started!
+On our new :fire: [**Flair documentation page**](https://flairnlp.github.io/docs/intro/) you will find many tutorials to get you started!
 
 In particular: 
 - [Tutorial 1: Basic tagging](https://flairnlp.github.io/docs/category/tutorial-1-basic-tagging) → how to tag your text 
