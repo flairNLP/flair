@@ -124,11 +124,11 @@ This means that the sentence "I love Berlin" was tagged as having **POSITIVE** s
 On our new [**Flair documentation page**](https://flairnlp.github.io/) you will find many tutorials to get you started!
 
 In particular: 
-- [**Tutorial 1: Basic tagging**](https://flairnlp.github.io/docs/category/tutorial-1-basic-tagging) shows you how to tag your text, and showcases various models we ship with Flair
-- [**Tutorial 2: Training models**](https://flairnlp.github.io/docs/category/tutorial-2-training-models) shows you how you can train your own state-of-the-art NLP models with Flair
-- [**Tutorial 3: Embeddings**](https://flairnlp.github.io/docs/category/tutorial-3-embeddings) how to use Flair to produce embeddings for words and documents
+- [Tutorial 1: Basic tagging](https://flairnlp.github.io/docs/category/tutorial-1-basic-tagging) → how to tag your text + overview of tagging models
+- [Tutorial 2: Training models](https://flairnlp.github.io/docs/category/tutorial-2-training-models) → how to train your own state-of-the-art NLP models 
+- [Tutorial 3: Embeddings](https://flairnlp.github.io/docs/category/tutorial-3-embeddings) → how to produce embeddings for words and documents
 
-There is also a dedicated landing page for our **[biomedical NER and datasets](/resources/docs/HUNFLAIR.md)** with
+There is also a dedicated landing page for our [biomedical NER and datasets](/resources/docs/HUNFLAIR.md) with
 installation instructions and tutorials.
 
 
