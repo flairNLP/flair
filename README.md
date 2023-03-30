@@ -121,10 +121,10 @@ This means that the sentence "I love Berlin" was tagged as having **POSITIVE** s
 
 ## Tutorials
 
-On our new [**Flair documentation page**](https://flairnlp.github.io/) you will find many tutorials to get you started!
+On our new :fire: [**Flair documentation page**](https://flairnlp.github.io/) you will find many tutorials to get you started!
 
 In particular: 
-- [Tutorial 1: Basic tagging](https://flairnlp.github.io/docs/category/tutorial-1-basic-tagging) → how to tag your text + overview of tagging models
+- [Tutorial 1: Basic tagging](https://flairnlp.github.io/docs/category/tutorial-1-basic-tagging) → how to tag your text 
 - [Tutorial 2: Training models](https://flairnlp.github.io/docs/category/tutorial-2-training-models) → how to train your own state-of-the-art NLP models 
 - [Tutorial 3: Embeddings](https://flairnlp.github.io/docs/category/tutorial-3-embeddings) → how to produce embeddings for words and documents
 
