@@ -1509,18 +1509,24 @@ class Corpus(typing.Generic[T_co]):
 
         return label_dictionary
 
-    def _corrupt_labels(self, noise_share: float, label_type: str, labels: List[str], split: str = "train"):
+    def add_label_noise( 
+        self,
+        label_type: str,
+        labels: List[str],
+        noise_share: float = 0.2,
+        split: str = "train",
+        noise_transition_matrix: Optional[Dict[str, List[float]]] = None,
+    ):
         """
         Generates uniform label noise distribution in the chosen dataset split.
-        :noise_share: the desired share of noise in the train split.
         :label_type: the type of labels for which the noise should be simulated.
         :labels: an array with unique labels of said type (retrievable from label dictionary).
+        :noise_share: the desired share of noise in the train split.
         :split: in which dataset split the noise is to be simulated.
+        :noise_transition_matrix: provides pre-defined probabilities for label flipping based on the
+        initial label value (relevant for class-dependent label noise simulation).
         """
         import numpy as np
-
-        if noise_share < 0 or noise_share > 1:
-            raise ValueError("noise_share must be between 0 and 1.")
 
         if split == "train":
             assert self.train
@@ -1536,29 +1542,57 @@ class Corpus(typing.Generic[T_co]):
 
         data: ConcatDataset = ConcatDataset(datasets)
 
-        orig_label_p = 1 - noise_share
-        other_label_p = noise_share / (len(labels) - 1)
-
         corrupted_count = 0
         total_label_count = 0
 
-        log.info("Generating noisy labels. Progress:")
+        if noise_transition_matrix:
+            ntm_labels = noise_transition_matrix.keys()
 
-        for data_point in Tqdm.tqdm(_iter_dataset(data)):
-            for label in data_point.get_labels(label_type):
-                total_label_count += 1
-                orig_label = label.value
-                prob_dist = [other_label_p] * len(labels)
-                prob_dist[labels.index(orig_label)] = orig_label_p
-                # sample randomly from a label distribution according to the probabilities defined by the desired noise share
-                new_label = np.random.choice(a=labels, p=prob_dist)
-                # replace the old label with the new one
-                label.data_point.set_label(label_type, new_label)
-                # keep track of the old (clean) label using another label type category
-                label.data_point.add_label(label_type + "_clean", orig_label)
-                # keep track of how many labels in total are flipped
-                if new_label != orig_label:
-                    corrupted_count += 1
+            if set(ntm_labels) != set(labels):
+                raise AssertionError(
+                    "Label values in the noise transition matrix have to coincide with label values in the dataset"
+                )
+
+            log.info("Generating noisy labels. Progress:")
+
+            for data_point in Tqdm.tqdm(_iter_dataset(data)):
+                for label in data_point.get_labels(label_type):
+                    total_label_count += 1
+                    orig_label = label.value
+                    # sample randomly from a label distribution according to the probabilities defined by the noise transition matrix
+                    new_label = np.random.choice(a=list(ntm_labels), p=noise_transition_matrix[orig_label])
+                    # replace the old label with the new one
+                    label.data_point.set_label(label_type, new_label)
+                    # keep track of the old (clean) label using another label type category
+                    label.data_point.add_label(label_type + "_clean", orig_label)
+                    # keep track of how many labels in total are flipped
+                    if new_label != orig_label:
+                        corrupted_count += 1
+
+        else:
+            if noise_share < 0 or noise_share > 1:
+                raise ValueError("noise_share must be between 0 and 1.")
+
+            orig_label_p = 1 - noise_share
+            other_label_p = noise_share / (len(labels) - 1)
+
+            log.info("Generating noisy labels. Progress:")
+
+            for data_point in Tqdm.tqdm(_iter_dataset(data)):
+                for label in data_point.get_labels(label_type):
+                    total_label_count += 1
+                    orig_label = label.value
+                    prob_dist = [other_label_p] * len(labels)
+                    prob_dist[labels.index(orig_label)] = orig_label_p
+                    # sample randomly from a label distribution according to the probabilities defined by the desired noise share
+                    new_label = np.random.choice(a=labels, p=prob_dist)
+                    # replace the old label with the new one
+                    label.data_point.set_label(label_type, new_label)
+                    # keep track of the old (clean) label using another label type category
+                    label.data_point.add_label(label_type + "_clean", orig_label)
+                    # keep track of how many labels in total are flipped
+                    if new_label != orig_label:
+                        corrupted_count += 1
 
         log.info(
             f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count / total_label_count) * 100, 2)}%."
