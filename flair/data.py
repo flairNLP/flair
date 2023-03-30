@@ -1476,7 +1476,7 @@ class Corpus(typing.Generic[T_co]):
 
         return label_dictionary
 
-    def _corrupt_labels(
+    def add_label_noise( 
         self,
         label_type: str,
         labels: List[str],
