@@ -1509,7 +1509,7 @@ class Corpus(typing.Generic[T_co]):
 
         return label_dictionary
 
-    def add_label_noise( 
+    def add_label_noise(
         self,
         label_type: str,
         labels: List[str],

@@ -23,7 +23,7 @@ document embeddings, including our proposed [Flair embeddings](https://www.aclwe
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.12.1](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.12.2](https://github.com/flairNLP/flair/releases)!
 
 
 ## State-of-the-Art Models
@@ -84,7 +84,7 @@ Sentence: "I love Berlin ." → ["Berlin"/LOC]
 
 This means that "Berlin" was tagged as a **location entity** in this sentence. 
 
-   * *to learn more about NER tagging in Flair, check out our [NER tutorial](/resources/docs/TUTORIAL_TAGGING_NER.md)!*
+   * *to learn more about NER tagging in Flair, check out our [NER tutorial](https://flairnlp.github.io/docs/tutorial-basics/tagging-entities)!*
 
 
 ### Example 2: Detect Sentiment 
@@ -117,41 +117,26 @@ Sentence[4]: "I love Berlin ." → POSITIVE (0.9983)
 
 This means that the sentence "I love Berlin" was tagged as having **POSITIVE** sentiment. 
 
-   * *to learn more about sentiment analysis in Flair, check out our [sentiment analysis tutorial](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)!*
+   * *to learn more about sentiment analysis in Flair, check out our [sentiment analysis tutorial](https://flairnlp.github.io/docs/tutorial-basics/tagging-sentiment)!*
 
 ## Tutorials
 
-We provide a set of **quick tutorials** to get you started with the library:
+On our new :fire: [**Flair documentation page**](https://flairnlp.github.io/docs/intro) you will find many tutorials to get you started!
 
-1. [**Tutorial 1: Basics**](/resources/docs/TUTORIAL_FLAIR_BASICS.md)
-2. [**Tutorial 2: Tagging your Text**](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md)
-   * ... how to **tag entities** in your text → [*2.1*](/resources/docs/TUTORIAL_TAGGING_NER.md)
-   * ... how to use **sentiment analysis** → [*2.2*](/resources/docs/TUTORIAL_TAGGING_SENTIMENT.md)
-   * ... how to use **entity linking**  → [*2.3*](/resources/docs/TUTORIAL_TAGGING_LINKING.md)
-   * ... how to use **part-of-speech tagging**   → [*2.4*](/resources/docs/TUTORIAL_TAGGING_POS.md)
-   * ... how to use **relation extraction** → [*2.5*](/resources/docs/TUTORIAL_TAGGING_RELATIONS.md)
-   * ... and more → [*full tutorial*](/resources/docs/TUTORIAL_TAGGING_OVERVIEW.md)
-3. [**Tutorial 3: Using Embeddings**](/resources/docs/TUTORIAL_EMBEDDINGS_OVERVIEW.md)
-4. [**Tutorial 4: Training a Model**](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md)
-   * ... how **model training generally works in Flair** → [4.1](/resources/docs/TUTORIAL_TRAINING_MODELS.md)
-   * ... how to **load a prepared dataset** → [4.2](/resources/docs/TUTORIAL_CORPUS_PREPARED.md)
-   * ... how to **load your own dataset** → [4.3](/resources/docs/TUTORIAL_CORPUS_CUSTOM.md)
-   * ... how to **train a sequence labeling model** (NER/PoS) → [4.4](/resources/docs/TUTORIAL_TRAINING_SEQUENCE_LABELER.md)
-   * ... how to **train a text classifier** (sentiment analysis, etc.)  → [4.5](/resources/docs/TUTORIAL_TRAINING_TEXT_CLASSIFIER.md)
-   * ... and more → [*full tutorial*](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md)
+In particular: 
+- [Tutorial 1: Basic tagging](https://flairnlp.github.io/docs/category/tutorial-1-basic-tagging) → how to tag your text 
+- [Tutorial 2: Training models](https://flairnlp.github.io/docs/category/tutorial-2-training-models) → how to train your own state-of-the-art NLP models 
+- [Tutorial 3: Embeddings](https://flairnlp.github.io/docs/category/tutorial-3-embeddings) → how to produce embeddings for words and documents
 
-The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
-text, how you can embed your text with different word or document embeddings, and how you can train your own
-language models, sequence labeling models, and text classification models. Let us know if anything is unclear.
-
-There is also a dedicated landing page for our **[biomedical NER and datasets](/resources/docs/HUNFLAIR.md)** with
+There is also a dedicated landing page for our [biomedical NER and datasets](/resources/docs/HUNFLAIR.md) with
 installation instructions and tutorials.
 
 
 ## More Documentation
 
-Another great place to start is the recent book [Natural Language Processing with Flair](https://www.amazon.com/Natural-Language-Processing-Flair-understanding/dp/1801072310)
-and its accompanying [code repository](https://github.com/PacktPublishing/Natural-Language-Processing-with-Flair).
+Another great place to start is the book [Natural Language Processing with Flair](https://www.amazon.com/Natural-Language-Processing-Flair-understanding/dp/1801072310)
+and its accompanying [code repository](https://github.com/PacktPublishing/Natural-Language-Processing-with-Flair), though it was
+written for an older version of Flair and some examples may no longer work.
 
 There are also good third-party articles and posts that illustrate how to use Flair:
 * [Training an NER model with Flair](https://medium.com/thecyphy/training-custom-ner-model-using-flair-df1f9ea9c762)
