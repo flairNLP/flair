@@ -1171,11 +1171,24 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     @classmethod
     def from_params(cls, params):
         params["use_context"] = params.pop("context_length", 0)
-        return cls.create_from_state(**params)
+        config_state_dict = params.pop("config_state_dict", None)
+        config = None
+
+        if config_state_dict:
+            model_type = config_state_dict.get("model_type", "bert")
+            config_class = CONFIG_MAPPING[model_type]
+            config = config_class.from_dict(config_state_dict)
+        return cls.create_from_state(saved_config=config, **params)
 
     def to_params(self):
         config_dict = self.model.config.to_dict()
         super_params = super().to_params()
+
+        # those parameters are only from the super class and will be recreated in the constructor.
+        del super_params["truncate"]
+        del super_params["stride"]
+        del super_params["embedding_length"]
+        del super_params["use_lang_emb"]
 
         model_state = {
             **super_params,
