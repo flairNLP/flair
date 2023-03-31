@@ -87,10 +87,12 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
         label = sentence.get_label(self._label_type).value
         embedding_names = self.embeddings.get_names()
 
+        # positive sentence
         positive_pairs = [sentence_pair for sentence_pair in mini_batch
                           if sentence_pair.get_label(self._label_type).value == label
                           and sentence_pair != sentence]
 
+        # negative sentences
         negative_pairs = [sentence_pair for sentence_pair in mini_batch
                           if sentence_pair not in positive_pairs
                           and sentence_pair != sentence]
@@ -180,6 +182,7 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
         # put to gpu
         first_sentences = torch.stack([embedding_pair[0] for embedding_pair in embedding_pairs]).to(flair.device)
         second_sentences = torch.stack([embedding_pair[1] for embedding_pair in embedding_pairs]).to(flair.device)
+        labels = labels.to(flair.device)
 
         # calculate cosine similarities for a full batch
         similarities = torch.nn.functional.cosine_similarity(first_sentences, second_sentences, dim=1)
