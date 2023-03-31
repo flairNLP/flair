@@ -18,7 +18,7 @@ langdetect
 lxml
 ftfy
 janome
-gdown==4.4.0
+gdown>=4.4.0
 huggingface-hub>=0.10.0
 conllu>=4.0
 more-itertools
