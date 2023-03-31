@@ -20,6 +20,7 @@ class AnnealingPlugin(TrainerPlugin):
     """
 
     def __init__(self,
+                 base_path,
                  min_learning_rate,
                  anneal_factor,
                  patience,
@@ -27,6 +28,9 @@ class AnnealingPlugin(TrainerPlugin):
                  anneal_with_restarts,
                  anneal_against_dev_loss):
         super().__init__()
+
+        # path to store the model
+        self.base_path = base_path
 
         # special annealing modes
         self.anneal_with_restarts = anneal_with_restarts
@@ -87,7 +91,7 @@ class AnnealingPlugin(TrainerPlugin):
         self.store_learning_rate()
         self.previous_learning_rate = self.current_learning_rate
 
-        base_path = self.trainer.base_path
+        # base_path = self.trainer.base_path
 
         lr_changed = any(
             [lr != prev_lr for lr, prev_lr in zip(self.current_learning_rate, self.previous_learning_rate)]
@@ -97,11 +101,11 @@ class AnnealingPlugin(TrainerPlugin):
         if (
                 self.anneal_with_restarts
                 and lr_changed
-                and os.path.exists(base_path / "best-model.pt")
+                and os.path.exists(self.base_path / "best-model.pt")
         ):
             if self.anneal_with_restarts:
                 log.info("resetting to best model")
-                self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
+                self.model.load_state_dict(self.model.load(self.base_path / "best-model.pt").state_dict())
 
         self.previous_learning_rate = self.current_learning_rate
 

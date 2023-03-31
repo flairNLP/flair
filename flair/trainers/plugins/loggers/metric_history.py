@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping
 
 from flair.trainers.plugins.base import TrainerPlugin
 
@@ -14,36 +14,19 @@ default_metrics_to_collect = {
 
 
 class MetricHistoryPlugin(TrainerPlugin):
-    def __init__(self, metrics_to_collect: Mapping = default_metrics_to_collect, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, metrics_to_collect: Mapping = default_metrics_to_collect):
+        super().__init__()
 
-        self.metric_history: Optional[Dict[str, list]] = None
+        self.metric_history: Dict[str, list] = {}
         self.metrics_to_collect: Mapping = metrics_to_collect
-
-    @TrainerPlugin.hook
-    def after_training_setup(self, main_evaluation_metric, **kw):
-        """
-        initializes history lists for all metrics to collect
-        :param main_evaluation_metric:
-        :param kw:
-        :return:
-        """
-        self.metric_history = {}
-
         for target in self.metrics_to_collect.values():
             self.metric_history[target] = list()
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):
-        assert self.metric_history is not None
-
-        try:
+        if tuple(record.name) in self.metrics_to_collect:
             target = self.metrics_to_collect[tuple(record.name)]
             self.metric_history[target].append(record.value)
-
-        except KeyError:
-            # metric is not collected
-            pass
 
     @TrainerPlugin.hook
     def after_training(self, **kw):

@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Dict, Optional, Tuple
 
-from flair.nn import Classifier
 from flair.trainers.plugins.base import TrainerPlugin
 from flair.trainers.plugins.metric_records import MetricName
 from flair.training_utils import init_output_file
@@ -12,34 +11,27 @@ class LossFilePlugin(TrainerPlugin):
     Plugin that manages the loss.tsv file output
     """
 
-    def __init__(self, metrics_to_collect: Dict[Tuple, str] = None, **kwargs):
-        super().__init__(**kwargs)
-
-        self.loss_txt = None
-
-        self.current_row: Optional[Dict[MetricName, str]] = None
-        self.headers = None
-        self.metrics_to_collect = metrics_to_collect
-
-    @TrainerPlugin.hook
-    def before_training_setup(self, create_loss_file, base_path, epoch, **kw):
-        """
-        Prepare loss file, and header for all metrics to collect
-        :param create_loss_file:
-        :param base_path:
-        :param epoch:
-        :param kw:
-        :return:
-        """
-
-        # prepare loss logging file and set up header
-        if create_loss_file:
-            self.loss_txt = init_output_file(base_path, "loss.tsv")
-        else:
-            self.loss_txt = None
+    def __init__(self, base_path, epoch: int, metrics_to_collect: Dict[Tuple, str] = None):
+        super().__init__()
 
         self.first_epoch = epoch + 1
 
+        # prepare loss logging file and set up header
+        self.loss_txt = init_output_file(base_path, "loss.tsv")
+
+        # set up all metrics to collect
+        self.metrics_to_collect = metrics_to_collect
+        if self.metrics_to_collect is not None:
+            metrics_to_collect = self.metrics_to_collect
+        else:
+            metrics_to_collect = {
+                "loss": "LOSS",
+                ("micro avg", "precision"): "PRECISION",
+                ("micro avg", "recall"): "RECALL",
+                ("micro avg", "f1-score"): "ACCURACY",
+            }
+
+        # set up headers
         self.headers = {
             # name: HEADER
             MetricName("epoch"): "EPOCH",
@@ -47,20 +39,6 @@ class LossFilePlugin(TrainerPlugin):
             MetricName("bad_epochs"): "BAD_EPOCHS",
             MetricName("learning_rate"): "LEARNING_RATE",
         }
-
-        if self.metrics_to_collect is not None:
-            metrics_to_collect = self.metrics_to_collect
-        elif isinstance(self.trainer.model, Classifier):
-            metrics_to_collect = {
-                "loss": "LOSS",
-                ("micro avg", "precision"): "PRECISION",
-                ("micro avg", "recall"): "RECALL",
-                ("micro avg", "f1-score"): "ACCURACY",
-            }
-        else:
-            metrics_to_collect = {
-                "loss": "LOSS",
-            }
 
         # Add all potentially relevant metrics. If a metric is not published
         # after the first epoch (when the header is written), the column is
@@ -75,6 +53,9 @@ class LossFilePlugin(TrainerPlugin):
                     name = prefix + name
 
                 self.headers[name] = f"{prefix.upper()}_{header}"
+
+        # initialize the first log line
+        self.current_row: Optional[Dict[MetricName, str]] = None
 
     @TrainerPlugin.hook
     def before_training_epoch(self, epoch, **kw):
@@ -126,13 +107,13 @@ class LossFilePlugin(TrainerPlugin):
                 # make headers on epoch 1
                 if epoch == 1:
                     # write header
-                    f.write("\t".join(self.headers.values()))
+                    f.write("\t".join(self.headers.values()) + "\n")
 
                 for col in self.headers.keys():
                     assert col in self.current_row, str(col) + "   " + str(self.current_row.keys())
 
                 assert all(col in self.current_row for col in self.headers.keys())
 
-                f.write("\t".join([str(self.current_row[col]) for col in self.headers.keys()]))
+                f.write("\t".join([str(self.current_row[col]) for col in self.headers.keys()]) + "\n")
 
             self.current_row = {}

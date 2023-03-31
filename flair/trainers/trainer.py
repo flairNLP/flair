@@ -24,7 +24,7 @@ from flair.trainers.plugins import (
     MetricRecord,
     Pluggable,
     TrainingInterrupt,
-    default_plugins, CheckpointPlugin,
+    CheckpointPlugin, LogFilePlugin, LossFilePlugin, WeightExtractorPlugin,
 )
 from flair.trainers.plugins.functional.anneal_on_plateau import AnnealingPlugin
 from flair.trainers.plugins.functional.onecycle import OneCyclePlugin
@@ -64,17 +64,18 @@ class ModelTrainer(Pluggable):
         "metric_recorded",
     }
 
-    def __init__(self, model: flair.nn.Model, corpus: Corpus, plugins=default_plugins, **kw):
+    def __init__(self, model: flair.nn.Model, corpus: Corpus):
         """
         Initialize a model trainer
         :param model: The model that you want to train. The model should inherit from flair.nn.Model  # noqa: E501
         :param corpus: The dataset used to train the model, should be of type Corpus
         """
-        super().__init__(plugins=plugins, **kw)
+        super().__init__()
         self.model: flair.nn.Model = model
         self.corpus: Corpus = corpus
 
         self.reset_training_attributes()
+        self.return_values: dict = {}
 
     def reset_training_attributes(self):
         if hasattr(self, "optimizer") and self.optimizer is not None:
@@ -82,7 +83,6 @@ class ModelTrainer(Pluggable):
             del self.optimizer
 
         self.optimizer = None
-        self.base_path = None
         self.mini_batch_size = None
         self.return_values: dict = {}
 
@@ -144,7 +144,8 @@ class ModelTrainer(Pluggable):
               **kwargs):
 
         # activate annealing plugin
-        AnnealingPlugin(anneal_factor=anneal_factor,
+        AnnealingPlugin(base_path=base_path,
+                        anneal_factor=anneal_factor,
                         patience=patience,
                         min_learning_rate=min_learning_rate,
                         initial_extra_patience=initial_extra_patience,
@@ -160,38 +161,34 @@ class ModelTrainer(Pluggable):
             base_path: Union[Path, str],
             learning_rate: float = 0.1,
             mini_batch_size: int = 32,
-            eval_batch_size: int = None,
+            eval_batch_size: int = 32,
             mini_batch_chunk_size: Optional[int] = None,
             max_epochs: int = 100,
             train_with_dev: bool = False,
             train_with_test: bool = False,
-            monitor_train: bool = False,
             monitor_test: bool = False,
+            monitor_train_sample: float = 0.0,
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             scheduler=AnnealOnPlateau,
             optimizer: Union[torch.optim.Optimizer, Type[torch.optim.Optimizer]] = SGD,
             embeddings_storage_mode: str = "cpu",
             checkpoint: bool = False,
             save_final_model: bool = True,
+            use_final_model_for_eval: bool = False,
             shuffle: bool = True,
             param_selection_mode: bool = False,
             write_weights: bool = False,
             num_workers: Optional[int] = None,
             sampler=None,
             amp_opt_level: str = "O1",
-            eval_on_train_fraction: Union[float, str] = 0.0,
-            eval_on_train_shuffle: bool = False,
             save_model_each_k_epochs: int = 0,
-            use_final_model_for_eval: bool = False,
             gold_label_dictionary_for_eval: Optional[Dictionary] = None,
             exclude_labels: List[str] = [],
             create_file_logs: bool = True,
             create_loss_file: bool = True,
             epoch: int = 0,
-            optimizer_state_dict: Optional[Dict[str, Any]] = None,
-            scheduler_state_dict: Optional[Dict[str, Any]] = None,
             save_optimizer_state: bool = False,
-            shuffle_first_epoch: bool = False,
+            shuffle_first_epoch: bool = True,
             **kwargs,
     ) -> dict:
         """
@@ -204,7 +201,6 @@ class ModelTrainer(Pluggable):
         :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.  # noqa: E501
         :param scheduler: The learning rate scheduler to use
         :param checkpoint: If True, a full checkpoint is saved at end of each epoch  # noqa: E501
-        :param min_learning_rate: If the (in multi lr case: all) learning rate falls below this threshold, training terminates  # noqa: E501
         :param train_with_dev:  If True, the data from dev split is added to the training data  # noqa: E501
         :param train_with_test: If True, the data from test split is added to the training data  # noqa: E501
         :param monitor_train: If True, training data is evaluated at end of each epoch
@@ -221,8 +217,6 @@ class ModelTrainer(Pluggable):
         :param eval_on_train_fraction: the fraction of train data to do the evaluation on,  # noqa: E501
         if 0. the evaluation is not performed on fraction of training data,
         if 'dev' the size is determined from dev set size
-        :param eval_on_train_shuffle: if True the train data fraction is determined on the start of training  # noqa: E501
-        and kept fixed during training, otherwise it's sampled at beginning of each epoch  # noqa: E501
         :param save_model_each_k_epochs: Each k epochs, a model state will be written out. If set to '5', a model will  # noqa: E501
         be saved each 5 epochs. Default is 0 which means no model saving.
         :param main_evaluation_metric: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used), currently only applicable for text_classification_model  # noqa: E501
@@ -232,82 +226,72 @@ class ModelTrainer(Pluggable):
         :return:
         """
 
-        # activate the checkpointing plugin if so set
+        # Create output folder
+        base_path = Path(base_path)
+        base_path.mkdir(exist_ok=True, parents=True)
+
+        # === START BLOCK: ACTIVATE PLUGINS === #
+        # We first activate all optional plugins. These take care of optional functionality such as various
+        # logging techniques and checkpointing
+
+        # log file plugin
+        if create_file_logs:
+            LogFilePlugin(base_path=base_path).attach_to(self)
+
+        # loss file plugin
+        if create_loss_file:
+            LossFilePlugin(base_path=base_path, epoch=epoch).attach_to(self)
+
+        # plugin for writing weights
+        if write_weights:
+            WeightExtractorPlugin(base_path=base_path).attach_to(self)
+
+        # plugin for checkpointing
         if save_model_each_k_epochs > 0:
             CheckpointPlugin(save_model_each_k_epochs=save_model_each_k_epochs,
                              save_optimizer_state=save_optimizer_state,
+                             base_path=base_path,
                              ).attach_to(self)
+        # === END BLOCK: ACTIVATE PLUGINS === #
 
         # derive parameters the function was called with (or defaults)
         local_variables = locals()
-
         training_parameters = {parameter: local_variables[parameter] for parameter in
                                signature(self.train_custom).parameters}
-
         training_parameters.update(kwargs)
 
-        # determine whether to save best model
-        save_best_model = (
-                not train_with_dev
-                and not param_selection_mode
-                and not use_final_model_for_eval
-        )
+        # initialize model card with these parameters
+        self.model.model_card = self._initialize_model_card(**training_parameters)
+
         # call first hook
         # -- AmpPlugin -> set opt level
-        # -- ModelCardPlugin -> initializes model card with library versions and parameters
-        # -- SchedulerPlugin -> check for impossible parameter combination
         # -- SWAPlugin -> initializes SWA and stores learning rate
-        # -- WeightExtractorPlugin -> initializes the WeightExtactor
-        # -- LossFilePlugin -> prepare loss file, and header for all metrics to collect
-        # -- LogFilePlugin -> stores whether to use training.log
         self.dispatch("before_training_setup", **training_parameters)
 
-        assert self.corpus.train
-
-        self.mini_batch_size = mini_batch_size
-
-        if not eval_batch_size:
-            eval_batch_size = mini_batch_size
-
-        if epoch >= max_epochs:
-            log.warning(f"Starting at epoch {epoch + 1}/{max_epochs}. No training will be done.")
-
-        self.base_path = Path(base_path)
-        self.base_path.mkdir(exist_ok=True, parents=True)
-
-        if epoch == 0:
-            self.check_for_and_delete_previous_best_models(base_path)
-
-        # Prepare training data
+        # Prepare training data and get dataset size
         train_data = self.get_train_data(train_with_dev=train_with_dev, train_with_test=train_with_test)
-
         dataset_size = _len_dataset(train_data)
-
         parameters = {"dataset_size": dataset_size, **training_parameters}
 
         # determine what splits (train, dev, test) to evaluate and log
-        log_train = True if monitor_train else False
-        log_test = True if (not param_selection_mode and self.corpus.test and monitor_test) else False
-        log_dev = False if train_with_dev or not self.corpus.dev else True
-        log_train_part = True if (eval_on_train_fraction == "dev" or float(eval_on_train_fraction) > 0.0) else False
+        evaluate_dev_split = False if train_with_dev or not self.corpus.dev else True
+        evaluate_test_split = True if (not param_selection_mode and self.corpus.test and monitor_test) else False
+        evaluate_train_sample = True if monitor_train_sample > 0.0 else False
 
-        if log_train_part:
-            train_part_size = (
-                _len_dataset(self.corpus.dev)
-                if eval_on_train_fraction == "dev"
-                else int(_len_dataset(self.corpus.train) * eval_on_train_fraction)
-            )
+        if evaluate_train_sample:
+            train_part_size = 0
+            if evaluate_train_sample is float:
+                train_part_size = int(_len_dataset(self.corpus.train) * evaluate_train_sample)
+            if evaluate_train_sample is int:
+                train_part_size = evaluate_train_sample
 
             assert train_part_size > 0
-            if not eval_on_train_shuffle:
-                train_part_indices = list(range(train_part_size))
-                train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
-        # minimize training loss if training with dev data, else maximize dev score
-        best_model_value = None
-
-        # -- TensorboardLogger -> Initializes a TensorBoard summary writer TODO: dispatch with only one "customer"
-        self.dispatch("after_data_setup", **parameters)
+            # get a random sample of training sentences
+            train_part_indices = list(range(_len_dataset(self.corpus.train)))
+            random.shuffle(train_part_indices)
+            train_part_indices = train_part_indices[:train_part_size]
+            train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
         # if optimizer class is passed, instantiate:
         if inspect.isclass(optimizer):
@@ -317,14 +301,9 @@ class ModelTrainer(Pluggable):
             self.optimizer = optimizer
 
         # -- AmpPlugin -> wraps with AMP
-        # -- SchedulerPlugin -> initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers
+        # -- AnnealingPlugin -> initialize schedulers (requires instantiated optimizer)
         # -- SWAPlugin -> wraps the optimizer with SWA
-        print(parameters)
         self.dispatch("after_optimizer_setup", **parameters)
-
-        # load existing optimizer state dictionary if it exists
-        if optimizer_state_dict:
-            self.optimizer.load_state_dict(optimizer_state_dict)
 
         # initialize sampler if provided
         if sampler is not None:
@@ -338,10 +317,16 @@ class ModelTrainer(Pluggable):
         # this field stores the names of all dynamic embeddings in the model (determined after first forward pass)
         dynamic_embeddings = None
 
-        # -- ModelCardPlugin -> update optimizer and scheduler in model card
-        # -- MetricHistoryPlugin -> initializes history lists for all metrics to collect
-        # -- LogFilePlugin -> adds a file handler
-        self.dispatch("after_training_setup", **parameters)
+        # determine whether to save best model, minimize training loss if training with dev data, else maximize score
+        save_best_model = not train_with_dev and not param_selection_mode and not use_final_model_for_eval
+        best_model_value = None
+
+        # Sanity checks
+        assert len(train_data) > 0
+        if epoch >= max_epochs:
+            log.warning(f"Starting at epoch {epoch + 1}/{max_epochs}. No training will be done.")
+        if epoch == 0:
+            self.check_for_and_delete_previous_best_models(base_path)
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
@@ -354,12 +339,12 @@ class ModelTrainer(Pluggable):
             log_line(log)
             log.info("Parameters:")
             log.info(f' - learning_rate: "{lr_info}"')
-            log.info(f' - mini_batch_size: "{self.mini_batch_size}"')
+            log.info(f' - mini_batch_size: "{mini_batch_size}"')
             log.info(f' - max_epochs: "{max_epochs}"')
             log.info(f' - shuffle: "{shuffle}"')
             log.info(f' - train_with_dev: "{train_with_dev}"')
             log_line(log)
-            log.info(f'Model training base path: "{self.base_path}"')
+            log.info(f'Model training base path: "{base_path}"')
             log_line(log)
             log.info(f"Device: {flair.device}")
             log_line(log)
@@ -368,10 +353,10 @@ class ModelTrainer(Pluggable):
             total_train_samples = 0
 
             for epoch in range(epoch + 1, max_epochs + 1):
-                # - ModelCardPlugin -> updates epoch in model card
                 # - SchedulerPlugin -> load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
                 # - LossFilePlugin -> get the current epoch for loss file logging
                 self.dispatch("before_training_epoch", epoch=epoch)
+                self.model.model_card["training_parameters"]["epoch"] = epoch
 
                 current_learning_rate = [group["lr"] for group in optimizer.param_groups]
                 momentum = [group["momentum"] if "momentum" in group else 0 for group in optimizer.param_groups]
@@ -396,7 +381,7 @@ class ModelTrainer(Pluggable):
 
                 batch_loader = DataLoader(
                     train_data,
-                    batch_size=self.mini_batch_size,
+                    batch_size=mini_batch_size,
                     shuffle=shuffle_data_this_epoch,
                     num_workers=0 if num_workers is None else num_workers,
                     sampler=sampler,
@@ -514,20 +499,7 @@ class ModelTrainer(Pluggable):
                 }
 
                 # evaluate on train / dev / test split depending on training settings
-                if log_train:
-                    train_eval_result = self.model.evaluate(self.corpus.train, **eval_kw)
-
-                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
-                    store_embeddings(self.corpus.train, embeddings_storage_mode)
-
-                    self.publish_eval_result(train_eval_result, "train_eval", global_step=epoch)
-
-                if log_train_part:
-                    # get a random sample of training sentences
-                    train_part_indices = list(range(_len_dataset(self.corpus.train)))
-                    random.shuffle(train_part_indices)
-                    train_part_indices = train_part_indices[:train_part_size]
-                    train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
+                if evaluate_train_sample:
 
                     # evaluate on those
                     train_part_eval_result = self.model.evaluate(train_part, **eval_kw)
@@ -541,12 +513,12 @@ class ModelTrainer(Pluggable):
 
                     self.publish_eval_result(train_part_eval_result, "train_part", global_step=epoch)
 
-                if log_dev:
+                if evaluate_dev_split:
                     # evaluate on dev data
                     assert self.corpus.dev
                     dev_eval_result = self.model.evaluate(
                         self.corpus.dev,
-                        out_path=self.base_path / "dev.tsv",
+                        out_path=base_path / "dev.tsv",
                         **eval_kw
                     )
 
@@ -563,11 +535,11 @@ class ModelTrainer(Pluggable):
 
                     self.publish_eval_result(dev_eval_result, "dev", global_step=epoch)
 
-                if log_test:
+                if evaluate_test_split:
                     assert self.corpus.test
                     test_eval_result = self.model.evaluate(
                         self.corpus.test,
-                        out_path=self.base_path / "test.tsv",
+                        out_path=base_path / "test.tsv",
                         **eval_kw,
                     )
 
@@ -587,7 +559,7 @@ class ModelTrainer(Pluggable):
                 current_epoch_has_best_model_so_far = False
                 validation_scores: tuple
 
-                if log_dev:
+                if evaluate_dev_split:
                     validation_scores = dev_eval_result.main_score, dev_eval_result.loss
 
                     if best_model_value is None or dev_eval_result.main_score > best_model_value:
@@ -613,14 +585,14 @@ class ModelTrainer(Pluggable):
 
                 if save_best_model and current_epoch_has_best_model_so_far:
                     log.info("saving best model")
-                    self.model.save(self.base_path / "best-model.pt", checkpoint=save_optimizer_state)
+                    self.model.save(base_path / "best-model.pt", checkpoint=save_optimizer_state)
 
             # - SWAPlugin -> restores SGD weights from SWA
             self.dispatch("after_training_loop")
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
-                self.model.save(self.base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
 
         except KeyboardInterrupt:
             log_line(log)
@@ -641,7 +613,7 @@ class ModelTrainer(Pluggable):
 
             if not param_selection_mode:
                 log.info("Saving model ...")
-                self.model.save(self.base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
 
         except Exception:
@@ -654,7 +626,7 @@ class ModelTrainer(Pluggable):
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
             self.return_values["test_score"] = self.final_test(
-                base_path=self.base_path,
+                base_path=base_path,
                 eval_mini_batch_size=eval_batch_size,
                 num_workers=num_workers,
                 main_evaluation_metric=main_evaluation_metric,
@@ -912,3 +884,37 @@ class ModelTrainer(Pluggable):
         log_line(log)
 
         return Path(learning_rate_tsv)
+
+
+    def _initialize_model_card(self, **training_parameters):
+        """
+        initializes model card with library versions and parameters
+        :param training_parameters:
+        :return:
+        """
+        # create a model card for this model with Flair and PyTorch version
+        model_card = {
+            "flair_version": flair.__version__,
+            "pytorch_version": torch.__version__,
+        }
+
+        # record Transformers version if library is loaded
+        try:
+            import transformers
+
+            model_card["transformers_version"] = transformers.__version__
+        except ImportError:
+            pass
+
+        # remember all parameters used in train() call
+        model_card["training_parameters"] = {
+            k: str(v) if isinstance(v, Path) else v for k, v in training_parameters.items()
+        }
+
+        return model_card
+
+        # remember all activated plugins
+        # model_card["plugins"] = [plugin.__class__ for plugin in trainer.plugins]
+
+        # add model card to model
+        # trainer.model.model_card = model_card

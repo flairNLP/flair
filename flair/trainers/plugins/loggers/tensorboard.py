@@ -18,35 +18,25 @@ class TensorboardLogger(TrainerPlugin):
         :param tracked_metrics: List of tuples that specify which metrics (in addition to the main_score) shall be plotted in tensorboard, could be [("macro avg", 'f1-score'), ("macro avg", 'precision')] for example  # noqa: E501
         """
         super().__init__()
-        self.log_dir = log_dir
         self.comment = comment
         self.tracked_metrics = tracked_metrics
-        self.writer = None
-
-        self._warned = False
-
-    @TrainerPlugin.hook
-    def after_data_setup(self, **kw):
-        """
-        Initializes a TensorBoard summary writer
-        :param kw:
-        :return:
-        """
 
         try:
             from torch.utils.tensorboard import SummaryWriter
 
-            if self.log_dir is not None and not os.path.exists(self.log_dir):
-                os.mkdir(self.log_dir)
+            if log_dir is not None and not os.path.exists(log_dir):
+                os.mkdir(log_dir)
 
-            self.writer = SummaryWriter(log_dir=self.log_dir, comment=self.comment)
+            self.writer = SummaryWriter(log_dir=log_dir, comment=self.comment)
 
-            log.info(f"tensorboard logging path is {self.log_dir}")
+            log.info(f"tensorboard logging path is {log_dir}")
 
         except ImportError:
             log_line(log)
             log.warning("ATTENTION! PyTorch >= 1.1.0 and pillow are required for TensorBoard support!")
             log_line(log)
+
+        self._warned = False
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):

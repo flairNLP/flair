@@ -1,15 +1,10 @@
 import copy
-import inspect
 import logging
-import os
-from typing import List
 
 from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
 
 from flair.optim import LinearSchedulerWithWarmup
-from flair.trainers.plugins.base import TrainerPlugin, TrainingInterrupt
-from flair.trainers.plugins.metric_records import MetricRecord
-from flair.training_utils import AnnealOnPlateau
+from flair.trainers.plugins.base import TrainerPlugin
 
 log = logging.getLogger("flair")
 

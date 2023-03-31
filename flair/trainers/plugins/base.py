@@ -256,7 +256,7 @@ class BasePlugin:
 class TrainerPlugin(BasePlugin):
     @property
     def trainer(self):
-        return self.trainer
+        return self.pluggable
 
     @property
     def model(self):
@@ -265,7 +265,3 @@ class TrainerPlugin(BasePlugin):
     @property
     def corpus(self):
         return self.trainer.corpus
-
-    @property
-    def base_path(self):
-        return self.trainer.base_path
