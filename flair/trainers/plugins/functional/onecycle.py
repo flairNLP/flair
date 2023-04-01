@@ -70,16 +70,6 @@ class OneCyclePlugin(TrainerPlugin):
         self.store_learning_rate()
 
     @TrainerPlugin.hook
-    def before_training_loop(self, **kw):
-        """
-        Store learning rate and set previous_learning_rate
-        :param kw:
-        :return:
-        """
-        self.store_learning_rate()
-        self.previous_learning_rate = self.current_learning_rate
-
-    @TrainerPlugin.hook
     def before_training_epoch(self, **kw):
         """
         load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
