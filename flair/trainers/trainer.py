@@ -374,17 +374,24 @@ class ModelTrainer(Pluggable):
         log.info(f' - shuffle: "{shuffle}"')
         log.info(f' - train_with_dev: "{train_with_dev}"')
         log_line(log)
+        log.info("Plugins:")
+        for plugin in plugins:
+            log.info(' - ' + str(plugin))
+        log_line(log)
         log.info(f'Model training base path: "{base_path}"')
         log_line(log)
-        log.info(f"Device: {flair.device}")
-        log_line(log)
-        log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
+        log.info("Computation:")
+        log.info(f" - compute on device: {flair.device}")
+        log.info(f" - embedding storage: {embeddings_storage_mode}")
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
             total_train_samples = 0
 
             for epoch in range(epoch + 1, max_epochs + 1):
+
+                log_line(log)
+
                 # - SchedulerPlugin -> load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
                 # - LossFilePlugin -> get the current epoch for loss file logging
                 self.dispatch("before_training_epoch", epoch=epoch)
@@ -648,9 +655,9 @@ class ModelTrainer(Pluggable):
 
     def _sample_train_split(self, monitor_train_sample):
         train_part_size = 0
-        if monitor_train_sample is float:
+        if isinstance(monitor_train_sample, float):
             train_part_size = int(_len_dataset(self.corpus.train) * monitor_train_sample)
-        if monitor_train_sample is int:
+        if isinstance(monitor_train_sample, int):
             train_part_size = monitor_train_sample
         assert train_part_size > 0
         # get a random sample of training sentences

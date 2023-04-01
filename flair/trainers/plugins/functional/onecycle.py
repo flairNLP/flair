@@ -77,3 +77,6 @@ class OneCyclePlugin(TrainerPlugin):
         """
         self.scheduler.step()
         self.store_learning_rate()
+
+    def __str__(self):
+        return f"OneCycle | warmup_fraction: '{self.warmup_fraction}'"

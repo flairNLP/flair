@@ -106,7 +106,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         # in Flair <0.9.1, optimizer and scheduler used to train model are not saved
         optimizer = scheduler = None
 
-        print(self.model_card)
         # write out a "model card" if one is set
         if self.model_card is not None:
             # special handling for optimizer:

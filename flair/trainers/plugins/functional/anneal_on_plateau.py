@@ -142,3 +142,9 @@ class AnnealingPlugin(TrainerPlugin):
         """
         if current_model_is_best and isinstance(self.scheduler, AnnealOnPlateau):
             self.scheduler.step(*validation_scores)
+
+    def __str__(self):
+        return f"AnnealOnPlateau | " \
+               f"patience: '{self.patience}', " \
+               f"anneal_factor: '{self.anneal_factor}', " \
+               f"min_learning_rate: '{self.min_learning_rate}'"
