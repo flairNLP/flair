@@ -19,14 +19,16 @@ class AnnealingPlugin(TrainerPlugin):
     Plugin for annealing logic in Flair.
     """
 
-    def __init__(self,
-                 base_path,
-                 min_learning_rate,
-                 anneal_factor,
-                 patience,
-                 initial_extra_patience,
-                 anneal_with_restarts,
-                 anneal_against_dev_loss):
+    def __init__(
+        self,
+        base_path,
+        min_learning_rate,
+        anneal_factor,
+        patience,
+        initial_extra_patience,
+        anneal_with_restarts,
+        anneal_against_dev_loss,
+    ):
         super().__init__()
 
         # path to store the model
@@ -53,11 +55,11 @@ class AnnealingPlugin(TrainerPlugin):
         ]
 
     @TrainerPlugin.hook
-    def after_optimizer_setup(
-            self,
-            train_with_dev,
-            optimizer,
-            **kw,
+    def after_setup(
+        self,
+        train_with_dev,
+        optimizer,
+        **kw,
     ):
         """
         initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers
@@ -71,13 +73,14 @@ class AnnealingPlugin(TrainerPlugin):
         anneal_mode = "min" if train_with_dev or self.anneal_against_dev_loss else "max"
 
         # instantiate the scheduler
-        self.scheduler = AnnealOnPlateau(factor=self.anneal_factor,
-                                         patience=self.patience,
-                                         initial_extra_patience=self.initial_extra_patience,
-                                         mode=anneal_mode,
-                                         verbose=True,
-                                         optimizer=self.trainer.optimizer,
-                                         )
+        self.scheduler = AnnealOnPlateau(
+            factor=self.anneal_factor,
+            patience=self.patience,
+            initial_extra_patience=self.initial_extra_patience,
+            mode=anneal_mode,
+            verbose=True,
+            optimizer=self.trainer.optimizer,
+        )
 
         self.store_learning_rate()
 
@@ -98,11 +101,7 @@ class AnnealingPlugin(TrainerPlugin):
         )
 
         # reload last best model if annealing with restarts is enabled
-        if (
-                self.anneal_with_restarts
-                and lr_changed
-                and os.path.exists(self.base_path / "best-model.pt")
-        ):
+        if self.anneal_with_restarts and lr_changed and os.path.exists(self.base_path / "best-model.pt"):
             if self.anneal_with_restarts:
                 log.info("resetting to best model")
                 self.model.load_state_dict(self.model.load(self.base_path / "best-model.pt").state_dict())

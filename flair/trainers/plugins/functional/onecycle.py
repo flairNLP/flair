@@ -20,7 +20,6 @@ class OneCyclePlugin(TrainerPlugin):
 
         self.warmup_fraction = warmup_fraction
 
-
     def store_learning_rate(self):
         optimizer = self.trainer.optimizer
 
@@ -64,9 +63,9 @@ class OneCyclePlugin(TrainerPlugin):
         num_train_steps = int(steps_per_epoch * max_epochs)
         num_warmup_steps = int(num_train_steps * self.warmup_fraction)
 
-        self.scheduler = LinearSchedulerWithWarmup(num_train_steps=num_train_steps,
-                                                   num_warmup_steps=num_warmup_steps,
-                                                   optimizer=self.trainer.optimizer)
+        self.scheduler = LinearSchedulerWithWarmup(
+            num_train_steps=num_train_steps, num_warmup_steps=num_warmup_steps, optimizer=self.trainer.optimizer
+        )
 
         self.store_learning_rate()
 

@@ -8,14 +8,13 @@ class AmpPlugin(TrainerPlugin):
     Simple plugin for AMP
     """
 
-    def __init__(self):
+    def __init__(self, opt_level):
         super().__init__()
 
-        self.wrapped_backward = None
-        self.amp = None
+        self.opt_level = opt_level
 
-    @TrainerPlugin.hook
-    def before_training_setup(self, **kw):
+        self.wrapped_backward = None
+
         if sys.version_info < (3, 0):
             raise RuntimeError("Apex currently only supports Python 3. Aborting.")
 
@@ -46,15 +45,18 @@ class AmpPlugin(TrainerPlugin):
             scaled_loss.backward()
 
     @TrainerPlugin.hook
-    def after_optimizer_setup(self, amp_opt_level, **kw):
+    def after_setup(self, **kw):
         """
         Wraps with AMP
         :param kw:
         :return:
         """
+
         optimizer = self.trainer.optimizer
 
-        self.trainer.model, self.trainer.optimizer = self.amp.initialize(self.model, optimizer, opt_level=amp_opt_level)
+        self.trainer.model, self.trainer.optimizer = self.amp.initialize(
+            self.model, optimizer, opt_level=self.opt_level
+        )
 
         # replace trainers backward function
         self.wrapped_backward = self.trainer.backward
