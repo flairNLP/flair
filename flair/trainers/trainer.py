@@ -200,7 +200,6 @@ class ModelTrainer(Pluggable):
             learning_rate=learning_rate,
             max_epochs=max_epochs,
             optimizer=optimizer,
-            warmup_fraction=warmup_fraction,
             mini_batch_size=mini_batch_size,
             embeddings_storage_mode=embeddings_storage_mode,
             use_final_model_for_eval=use_final_model_for_eval,
