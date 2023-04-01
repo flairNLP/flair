@@ -42,7 +42,7 @@ class OneCyclePlugin(TrainerPlugin):
             raise ValueError("Batch growth with OneCycle policy is not implemented.")
 
     @TrainerPlugin.hook
-    def after_optimizer_setup(
+    def after_setup(
         self,
         dataset_size,
         mini_batch_size,
