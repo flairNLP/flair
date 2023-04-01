@@ -30,18 +30,6 @@ class OneCyclePlugin(TrainerPlugin):
         ]
 
     @TrainerPlugin.hook
-    def before_training_setup(self, scheduler, batch_growth_annealing, **kw):
-        """
-        Checks for impossible parameter combination
-        :param scheduler:
-        :param batch_growth_annealing:
-        :param kw:
-        :return:
-        """
-        if isinstance(scheduler, OneCycleLR) and batch_growth_annealing:
-            raise ValueError("Batch growth with OneCycle policy is not implemented.")
-
-    @TrainerPlugin.hook
     def after_setup(
         self,
         dataset_size,
