@@ -82,7 +82,7 @@ class TestRelationClassifier(BaseModelTest):
         },
         allow_unk_tag=False,
     )
-    training_args = dict(max_epochs=25, learning_rate=4e-5, mini_batch_size=4)
+    training_args = dict(max_epochs=2, learning_rate=4e-4, mini_batch_size=4)
     finetune_instead_of_train = True
 
     @pytest.fixture

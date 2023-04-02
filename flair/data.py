@@ -4,7 +4,6 @@ import re
 import typing
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict, namedtuple
-from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Union, cast
@@ -420,14 +419,6 @@ class DataPoint:
     def __lt__(self, other):
         return self.start_position < other.start_position
 
-    def __eq__(self, other):
-        # TODO: does it make sense to exclude labels? Two data points of identical text (but different labels)
-        #  would be equal now.
-        return self.unlabeled_identifier == other.unlabeled_identifier
-
-    def __hash__(self):
-        return hash(self.unlabeled_identifier)
-
     def __len__(self):
         raise NotImplementedError
 
@@ -440,12 +431,6 @@ class _PartOfSentence(DataPoint, ABC):
     def __init__(self, sentence):
         super().__init__()
         self.sentence: Sentence = sentence
-
-    def _init_labels(self):
-        if self.unlabeled_identifier in self.sentence._known_spans:
-            self.annotation_layers = self.sentence._known_spans[self.unlabeled_identifier].annotation_layers
-            del self.sentence._known_spans[self.unlabeled_identifier]
-        self.sentence._known_spans[self.unlabeled_identifier] = self
 
     def add_label(self, typename: str, value: str, score: float = 1.0):
         super().add_label(typename, value, score)
@@ -498,7 +483,7 @@ class Token(_PartOfSentence):
 
     @property
     def idx(self) -> int:
-        if isinstance(self._internal_index, int):
+        if self._internal_index is not None:
             return self._internal_index
         else:
             return -1
@@ -570,10 +555,25 @@ class Span(_PartOfSentence):
     This class represents one textual span consisting of Tokens.
     """
 
+    def __new__(self, tokens: List[Token]):
+        # check if the span already exists. If so, return it
+        unlabeled_identifier = self._make_unlabeled_identifier(tokens)
+        if unlabeled_identifier in tokens[0].sentence._known_spans:
+            span = tokens[0].sentence._known_spans[unlabeled_identifier]
+            return span
+
+        # else make a new span
+        else:
+            span = super(Span, self).__new__(self)
+            span.initialized = False
+            tokens[0].sentence._known_spans[unlabeled_identifier] = span
+            return span
+
     def __init__(self, tokens: List[Token]):
-        super().__init__(tokens[0].sentence)
-        self.tokens = tokens
-        super()._init_labels()
+        if not self.initialized:
+            super().__init__(tokens[0].sentence)
+            self.tokens = tokens
+            self.initialized: bool = True
 
     @property
     def start_position(self) -> int:
@@ -587,9 +587,14 @@ class Span(_PartOfSentence):
     def text(self) -> str:
         return "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
 
+    @staticmethod
+    def _make_unlabeled_identifier(tokens: List[Token]):
+        text = "".join([t.text + t.whitespace_after * " " for t in tokens]).strip()
+        return f'Span[{tokens[0].idx - 1}:{tokens[-1].idx}]: "{text}"'
+
     @property
     def unlabeled_identifier(self) -> str:
-        return f'Span[{self.tokens[0].idx - 1}:{self.tokens[-1].idx}]: "{self.text}"'
+        return self._make_unlabeled_identifier(self.tokens)
 
     def __repr__(self):
         return self.__str__()
@@ -609,11 +614,26 @@ class Span(_PartOfSentence):
 
 
 class Relation(_PartOfSentence):
+    def __new__(self, first: Span, second: Span):
+        # check if the relation already exists. If so, return it
+        unlabeled_identifier = self._make_unlabeled_identifier(first, second)
+        if unlabeled_identifier in first.sentence._known_spans:
+            span = first.sentence._known_spans[unlabeled_identifier]
+            return span
+
+        # else make a new relation
+        else:
+            span = super(Relation, self).__new__(self)
+            span.initialized = False
+            first.sentence._known_spans[unlabeled_identifier] = span
+            return span
+
     def __init__(self, first: Span, second: Span):
-        super().__init__(sentence=first.sentence)
-        self.first: Span = first
-        self.second: Span = second
-        super()._init_labels()
+        if not self.initialized:
+            super().__init__(sentence=first.sentence)
+            self.first: Span = first
+            self.second: Span = second
+            self.initialized: bool = True
 
     def __repr__(self):
         return str(self)
@@ -626,14 +646,19 @@ class Relation(_PartOfSentence):
     def text(self):
         return f"{self.first.text} -> {self.second.text}"
 
-    @property
-    def unlabeled_identifier(self) -> str:
+    @staticmethod
+    def _make_unlabeled_identifier(first, second):
+        text = f"{first.text} -> {second.text}"
         return (
             f"Relation"
-            f"[{self.first.tokens[0].idx - 1}:{self.first.tokens[-1].idx}]"
-            f"[{self.second.tokens[0].idx - 1}:{self.second.tokens[-1].idx}]"
-            f': "{self.text}"'
+            f"[{first.tokens[0].idx - 1}:{first.tokens[-1].idx}]"
+            f"[{second.tokens[0].idx - 1}:{second.tokens[-1].idx}]"
+            f': "{text}"'
         )
+
+    @property
+    def unlabeled_identifier(self) -> str:
+        return self._make_unlabeled_identifier(self.first, self.second)
 
     @property
     def start_position(self) -> int:
@@ -779,7 +804,7 @@ class Sentence(DataPoint):
         # set token idx and sentence
         token.sentence = self
         token._internal_index = len(self.tokens) + 1
-        if token.start_position == 0 and len(self) > 0:
+        if token.start_position == 0 and token._internal_index > 1:
             token.start_position = len(self.to_original_text()) + self[-1].whitespace_after
 
         # append token to sentence
@@ -812,7 +837,6 @@ class Sentence(DataPoint):
         for token in self:
             token.clear_embeddings(embedding_names)
 
-    @lru_cache(maxsize=1)  # cache last context, as training repeats calls
     def left_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
         left_context: List[Token] = []
@@ -827,7 +851,6 @@ class Sentence(DataPoint):
             left_context = sentence.tokens + left_context
         return left_context[-context_length:]
 
-    @lru_cache(maxsize=1)  # cache last context, as training repeats calls
     def right_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
         right_context: List[Token] = []
@@ -917,7 +940,9 @@ class Sentence(DataPoint):
         if len(self) == 0:
             return ""
         # otherwise, return concatenation of tokens with the correct offsets
-        return self[0].start_position * " " + "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
+        return (self[0].start_position - self.start_position) * " " + "".join(
+            [t.text + t.whitespace_after * " " for t in self.tokens]
+        ).strip()
 
     def to_dict(self, tag_type: str = None):
         labels = []
@@ -1407,7 +1432,9 @@ class Corpus(typing.Generic[T_co]):
             _len_dataset(self.test) if self.test else 0,
         )
 
-    def make_label_dictionary(self, label_type: str, min_count: int = -1, add_unk: bool = True) -> Dictionary:
+    def make_label_dictionary(
+        self, label_type: str, min_count: int = -1, add_unk: bool = True, add_dev_test: bool = False
+    ) -> Dictionary:
         """
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
@@ -1420,6 +1447,12 @@ class Corpus(typing.Generic[T_co]):
 
         assert self.train
         datasets = [self.train]
+
+        if add_dev_test and self.dev is not None:
+            datasets.append(self.dev)
+
+        if add_dev_test and self.test is not None:
+            datasets.append(self.test)
 
         data: ConcatDataset = ConcatDataset(datasets)
 
@@ -1434,25 +1467,25 @@ class Corpus(typing.Generic[T_co]):
 
             # go through all labels of label_type and count values
             labels = sentence.get_labels(label_type)
-            for label in labels:
-                if label.value not in all_sentence_labels:
-                    label_value_counter[label.value] += 1
-
-                # check if there are any span labels
-                if type(label.data_point) == Span and len(label.data_point) > 1:
-                    label_dictionary.span_labels = True
+            label_value_counter.update(label.value for label in labels if label.value not in all_sentence_labels)
+            if not label_dictionary.span_labels:
+                for label in labels:
+                    # check if there are any span labels
+                    if type(label.data_point) == Span and len(label.data_point) > 1:
+                        label_dictionary.span_labels = True
+                        break
 
             if not label_dictionary.multi_label:
                 if len(labels) > 1:
                     label_dictionary.multi_label = True
 
         # if an unk threshold is set, UNK all label values below this threshold
-        erfasst_count = 0
+        total_count = 0
         unked_count = 0
         for label, count in label_value_counter.most_common():
             if count >= min_count:
                 label_dictionary.add_item(label)
-                erfasst_count += count
+                total_count += count
             else:
                 unked_count += count
 
@@ -1472,22 +1505,28 @@ class Corpus(typing.Generic[T_co]):
         )
 
         if unked_count > 0:
-            log.info(f" - at UNK threshold {min_count}, {unked_count} instances are UNK'ed and {erfasst_count} remain")
+            log.info(f" - at UNK threshold {min_count}, {unked_count} instances are UNK'ed and {total_count} remain")
 
         return label_dictionary
 
-    def _corrupt_labels(self, noise_share: float, label_type: str, labels: List[str], split: str = "train"):
+    def add_label_noise(
+        self,
+        label_type: str,
+        labels: List[str],
+        noise_share: float = 0.2,
+        split: str = "train",
+        noise_transition_matrix: Optional[Dict[str, List[float]]] = None,
+    ):
         """
         Generates uniform label noise distribution in the chosen dataset split.
-        :noise_share: the desired share of noise in the train split.
         :label_type: the type of labels for which the noise should be simulated.
         :labels: an array with unique labels of said type (retrievable from label dictionary).
+        :noise_share: the desired share of noise in the train split.
         :split: in which dataset split the noise is to be simulated.
+        :noise_transition_matrix: provides pre-defined probabilities for label flipping based on the
+        initial label value (relevant for class-dependent label noise simulation).
         """
         import numpy as np
-
-        if noise_share < 0 or noise_share > 1:
-            raise ValueError("noise_share must be between 0 and 1.")
 
         if split == "train":
             assert self.train
@@ -1503,32 +1542,60 @@ class Corpus(typing.Generic[T_co]):
 
         data: ConcatDataset = ConcatDataset(datasets)
 
-        orig_label_p = 1 - noise_share
-        other_label_p = noise_share / (len(labels) - 1)
-
         corrupted_count = 0
         total_label_count = 0
 
-        log.info("Generating noisy labels. Progress:")
+        if noise_transition_matrix:
+            ntm_labels = noise_transition_matrix.keys()
 
-        for data_point in Tqdm.tqdm(_iter_dataset(data)):
-            for label in data_point.get_labels(label_type):
-                total_label_count += 1
-                orig_label = label.value
-                prob_dist = [other_label_p] * len(labels)
-                prob_dist[labels.index(orig_label)] = orig_label_p
-                # sample randomly from a label distribution according to the probabilities defined by the desired noise share
-                new_label = np.random.choice(a=labels, p=prob_dist)
-                # replace the old label with the new one
-                label.data_point.set_label(label_type, new_label)
-                # keep track of the old (clean) label using another label type category
-                label.data_point.add_label(label_type + "_clean", orig_label)
-                # keep track of how many labels in total are flipped
-                if new_label != orig_label:
-                    corrupted_count += 1
+            if set(ntm_labels) != set(labels):
+                raise AssertionError(
+                    "Label values in the noise transition matrix have to coincide with label values in the dataset"
+                )
+
+            log.info("Generating noisy labels. Progress:")
+
+            for data_point in Tqdm.tqdm(_iter_dataset(data)):
+                for label in data_point.get_labels(label_type):
+                    total_label_count += 1
+                    orig_label = label.value
+                    # sample randomly from a label distribution according to the probabilities defined by the noise transition matrix
+                    new_label = np.random.choice(a=list(ntm_labels), p=noise_transition_matrix[orig_label])
+                    # replace the old label with the new one
+                    label.data_point.set_label(label_type, new_label)
+                    # keep track of the old (clean) label using another label type category
+                    label.data_point.add_label(label_type + "_clean", orig_label)
+                    # keep track of how many labels in total are flipped
+                    if new_label != orig_label:
+                        corrupted_count += 1
+
+        else:
+            if noise_share < 0 or noise_share > 1:
+                raise ValueError("noise_share must be between 0 and 1.")
+
+            orig_label_p = 1 - noise_share
+            other_label_p = noise_share / (len(labels) - 1)
+
+            log.info("Generating noisy labels. Progress:")
+
+            for data_point in Tqdm.tqdm(_iter_dataset(data)):
+                for label in data_point.get_labels(label_type):
+                    total_label_count += 1
+                    orig_label = label.value
+                    prob_dist = [other_label_p] * len(labels)
+                    prob_dist[labels.index(orig_label)] = orig_label_p
+                    # sample randomly from a label distribution according to the probabilities defined by the desired noise share
+                    new_label = np.random.choice(a=labels, p=prob_dist)
+                    # replace the old label with the new one
+                    label.data_point.set_label(label_type, new_label)
+                    # keep track of the old (clean) label using another label type category
+                    label.data_point.add_label(label_type + "_clean", orig_label)
+                    # keep track of how many labels in total are flipped
+                    if new_label != orig_label:
+                        corrupted_count += 1
 
         log.info(
-            f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count/total_label_count)*100, 2)}%."
+            f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count / total_label_count) * 100, 2)}%."
         )
 
     def get_label_distribution(self):
@@ -1576,7 +1643,6 @@ class MultiCorpus(Corpus):
         train_parts = []
         dev_parts = []
         test_parts = []
-        print(self.corpora)
         for corpus in self.corpora:
             if corpus.train:
                 train_parts.append(corpus.train)

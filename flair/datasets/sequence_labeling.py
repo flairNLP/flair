@@ -469,7 +469,7 @@ class ColumnDataset(FlairDataset):
         path_to_column_file = Path(path_to_column_file)
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
-        self.column_delimiter = column_delimiter
+        self.column_delimiter = re.compile(column_delimiter)
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
         self.label_name_map = label_name_map
@@ -671,9 +671,7 @@ class ColumnDataset(FlairDataset):
         if span_level_tag_columns:
             for span_column in span_level_tag_columns:
                 try:
-                    bioes_tags = [
-                        re.split(self.column_delimiter, line.rstrip())[span_column] for line in filtered_lines
-                    ]
+                    bioes_tags = [self.column_delimiter.split(line.rstrip())[span_column] for line in filtered_lines]
 
                     # discard tags from tokens that are not added to the sentence
                     bioes_tags = [tag for tag, token in zip(bioes_tags, tokens) if token._internal_index is not None]
@@ -717,56 +715,64 @@ class ColumnDataset(FlairDataset):
 
     def _parse_token(self, line: str, column_name_map: Dict[int, str], last_token: Optional[Token] = None) -> Token:
         # get fields from line
-        fields: List[str] = re.split(self.column_delimiter, line.rstrip())
-
+        fields: List[str] = self.column_delimiter.split(line.rstrip())
+        field_count = len(fields)
         # get head_id if exists (only in dependency parses)
         head_id = int(fields[self.head_id_column]) if self.head_id_column else None
 
-        # initialize token
-        token = Token(fields[self.text_column], head_id=head_id, whitespace_after=self.default_whitespace_after)
-
-        # go through all columns
-        for column in column_name_map:
-            if len(fields) > column:
-                if (
-                    column != self.text_column
-                    and column != self.head_id_column
-                    and column_name_map[column] != self.SPACE_AFTER_KEY
-                ):
-                    # 'feats' and 'misc' column should be split into different fields
-                    if column_name_map[column] in self.FEATS:
-                        for feature in fields[column].split("|"):
-                            # special handling for whitespace after
-                            if feature == "SpaceAfter=No":
-                                token.whitespace_after = 0
-                                continue
-
-                            if "=" in feature:
-                                # add each other feature as label-value pair
-                                label_name = feature.split("=")[0]
-                                label_value = self._remap_label(feature.split("=")[1])
-                                if label_value != "O":
-                                    token.add_label(label_name, label_value)
-
-                    else:
-                        # get the task name (e.g. 'ner')
-                        label_name = column_name_map[column]
-                        # get the label value
-                        label_value = self._remap_label(fields[column])
-                        # add label
-                        if label_value != "O":
-                            token.add_label(label_name, label_value)
-
-                if column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == "-":
-                    token.whitespace_after = 0
         if last_token is None:
             start = 0
         else:
             assert last_token.end_position is not None
-            start = last_token.end_position
-            if last_token.whitespace_after > 0:
-                start += last_token.whitespace_after
-        token.start_position = start
+            start = last_token.end_position + last_token.whitespace_after
+
+        # initialize token
+        token = Token(
+            fields[self.text_column],
+            head_id=head_id,
+            whitespace_after=self.default_whitespace_after,
+            start_position=start,
+        )
+
+        # go through all columns
+        for column, column_type in column_name_map.items():
+            if field_count <= column:
+                continue
+
+            if column == self.text_column:
+                continue
+
+            if column == self.head_id_column:
+                continue
+
+            if column_type == self.SPACE_AFTER_KEY:
+                if fields[column] == "-":
+                    token.whitespace_after = 0
+                continue
+
+            # 'feats' and 'misc' column should be split into different fields
+            if column_type in self.FEATS:
+                for feature in fields[column].split("|"):
+                    # special handling for whitespace after
+                    if feature == "SpaceAfter=No":
+                        token.whitespace_after = 0
+                        continue
+
+                    if "=" in feature:
+                        # add each other feature as label-value pair
+                        label_name, original_label_value = feature.split("=", 1)
+                        label_value = self._remap_label(original_label_value)
+                        if label_value != "O":
+                            token.add_label(label_name, label_value)
+            else:
+                # get the task name (e.g. 'ner')
+                label_name = column_type
+                # get the label value
+                label_value = self._remap_label(fields[column])
+                # add label
+                if label_value != "O":
+                    token.add_label(label_name, label_value)
+
         return token
 
     def _remap_label(self, tag):

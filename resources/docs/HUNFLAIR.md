@@ -58,8 +58,8 @@ Span[6:7]: "Mouse" → Species (0.9979)
 
 Scientific texts are difficult to tokenize. For this reason, we recommend to install [SciSpaCy](https://allenai.github.io/scispacy/) for improved pre-processing and tokenization of scientific / biomedical texts:
  ```
-pip install scispacy==0.2.5
-pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz
+pip install scispacy==0.5.1
+pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_sm-0.5.1.tar.gz
 ```
 
 Use this code to apply scientific tokenization: 
@@ -121,10 +121,14 @@ We provide a set of quick tutorials to get you started with *HunFlair*:
 ## Citing HunFlair
 Please cite the following paper when using *HunFlair*:
 ~~~
-@article{weber2020hunflair,
-    title={HunFlair: An Easy-to-Use Tool for State-of-the-Art Biomedical Named Entity Recognition},
-    author={Weber, Leon and S{\"a}nger, Mario and M{\"u}nchmeyer, Jannes  and Habibi, Maryam and Leser, Ulf and Akbik, Alan},
-    journal={arXiv preprint arXiv:2008.07347},
-    year={2020}
+@article{weber2021hunflair,
+  title={HunFlair: an easy-to-use tool for state-of-the-art biomedical named entity recognition},
+  author={Weber, Leon and S{\"a}nger, Mario and M{\"u}nchmeyer, Jannes and Habibi, Maryam and Leser, Ulf and Akbik, Alan},
+  journal={Bioinformatics},
+  volume={37},
+  number={17},
+  pages={2792--2794},
+  year={2021},
+  publisher={Oxford University Press}
 }
 ~~~

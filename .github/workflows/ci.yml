@@ -28,4 +28,4 @@ jobs:
           path: ./cache
           key: cache-v1.1
       - name: Run tests
-        run: pytest --runintegration -vv
+        run: pytest --runintegration --durations=0 -vv

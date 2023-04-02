@@ -1,5 +1,6 @@
 import logging
 import random
+import sys
 from collections import defaultdict
 from enum import Enum
 from functools import reduce
@@ -354,7 +355,10 @@ def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionar
 
 
 def log_line(log):
-    log.info("-" * 100)
+    if sys.version_info >= (3, 8):
+        log.info("-" * 100, stacklevel=3)
+    else:
+        log.info("-" * 100)
 
 
 def add_file_handler(log, output_file):

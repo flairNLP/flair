@@ -18,7 +18,7 @@ class TestEntityLinker(BaseModelTest):
 
     @pytest.fixture
     def corpus(self, tasks_base_path):
-        yield NEL_ENGLISH_AIDA().downsample(0.05)
+        yield NEL_ENGLISH_AIDA().downsample(0.01)
 
     @pytest.fixture
     def train_test_sentence(self):
