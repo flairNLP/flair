@@ -384,7 +384,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 multi_label = True
                 break
 
-        log.info(f"Evaluating as a multi-label problem: {multi_label}")
+        log.debug(f"Evaluating as a multi-label problem: {multi_label}")
 
         # compute numbers by formatting true and predicted such that Scikit-Learn can use them
         y_true = []
@@ -498,10 +498,10 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 scores[(avg_type, metric_type)] = value
 
         scores["accuracy"] = accuracy_score
-        scores["loss"] = eval_loss.item()
 
         if average_over > 0:
             eval_loss /= average_over
+        scores["loss"] = eval_loss.item()
 
         result = Result(
             main_score=main_score,

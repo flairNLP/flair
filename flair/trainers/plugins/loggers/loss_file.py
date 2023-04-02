@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Union
 
 from flair.trainers.plugins.base import TrainerPlugin
 from flair.trainers.plugins.metric_records import MetricName
@@ -11,7 +11,7 @@ class LossFilePlugin(TrainerPlugin):
     Plugin that manages the loss.tsv file output
     """
 
-    def __init__(self, base_path, epoch: int, metrics_to_collect: Dict[Tuple, str] = None):
+    def __init__(self, base_path, epoch: int, metrics_to_collect: Dict[Union[Tuple, str], str] = None):
         super().__init__()
 
         self.first_epoch = epoch + 1
@@ -43,16 +43,16 @@ class LossFilePlugin(TrainerPlugin):
         # Add all potentially relevant metrics. If a metric is not published
         # after the first epoch (when the header is written), the column is
         # removed at that point.
-        for prefix in ["train", "train_part", "dev", "test"]:
+        for prefix in ["train", "train_sample", "dev", "test"]:
             for name, header in metrics_to_collect.items():
-                name = MetricName(name)
+                metric_name = MetricName(name)
 
-                if prefix == "train" and name != "loss":
-                    name = "train_eval" + name
+                if prefix == "train" and metric_name != "loss":
+                    metric_name = "train_eval" + metric_name
                 else:
-                    name = prefix + name
+                    metric_name = prefix + metric_name
 
-                self.headers[name] = f"{prefix.upper()}_{header}"
+                self.headers[metric_name] = f"{prefix.upper()}_{header}"
 
         # initialize the first log line
         self.current_row: Optional[Dict[MetricName, str]] = None
@@ -70,7 +70,6 @@ class LossFilePlugin(TrainerPlugin):
     @TrainerPlugin.hook
     def metric_recorded(self, record):
         """
-        TODO: I don't really understand this
         :param record:
         :return:
         """
@@ -78,6 +77,9 @@ class LossFilePlugin(TrainerPlugin):
             if record.name == "learning_rate" and not record.is_scalar:
                 # record is a list of scalars
                 value = ",".join([f"{lr:.4f}" for lr in record.value])
+            elif record.name == "bad_epochs":
+                assert record.is_scalar
+                value = record.value
             else:
                 assert record.is_scalar
 
@@ -88,7 +90,7 @@ class LossFilePlugin(TrainerPlugin):
     @TrainerPlugin.hook
     def after_evaluation(self, epoch, **kw):
         """
-        This somehow prints all relevant metrics (TODO: I don't really understand how)
+        This prints all relevant metrics
         :param epoch:
         :param kw:
         :return:

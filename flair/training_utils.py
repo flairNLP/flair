@@ -251,7 +251,7 @@ class AnnealOnPlateau(object):
         self.cooldown_counter = 0
         self.num_bad_epochs = 0
 
-    def step(self, metric, auxiliary_metric=None):
+    def step(self, metric, auxiliary_metric=None) -> bool:
         # convert `metrics` to float, in case it's a zero-dim Tensor
         current = float(metric)
         epoch = self.last_epoch + 1
@@ -289,13 +289,16 @@ class AnnealOnPlateau(object):
             self.cooldown_counter -= 1
             self.num_bad_epochs = 0  # ignore any bad epochs in cooldown
 
-        if self.num_bad_epochs > self.effective_patience:
+        reduce_learning_rate = True if self.num_bad_epochs > self.effective_patience else False
+        if reduce_learning_rate:
             self._reduce_lr(epoch)
             self.cooldown_counter = self.cooldown
             self.num_bad_epochs = 0
             self.effective_patience = self.default_patience
 
         self._last_lr = [group["lr"] for group in self.optimizer.param_groups]
+
+        return reduce_learning_rate
 
     def _reduce_lr(self, epoch):
         for i, param_group in enumerate(self.optimizer.param_groups):
@@ -304,7 +307,7 @@ class AnnealOnPlateau(object):
             if old_lr - new_lr > self.eps:
                 param_group["lr"] = new_lr
                 if self.verbose:
-                    log.info("Epoch {:5d}: reducing learning rate" " of group {} to {:.4e}.".format(epoch, i, new_lr))
+                    log.info(" - reducing learning rate" " of group {} to {:.4e}.".format(epoch, i, new_lr))
 
     @property
     def in_cooldown(self):

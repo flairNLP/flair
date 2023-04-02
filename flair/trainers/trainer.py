@@ -376,7 +376,7 @@ class ModelTrainer(Pluggable):
         log_line(log)
         log.info("Plugins:")
         for plugin in plugins:
-            log.info(' - ' + str(plugin))
+            log.info(" - " + str(plugin))
         log_line(log)
         log.info(f'Model training base path: "{base_path}"')
         log_line(log)
@@ -389,7 +389,6 @@ class ModelTrainer(Pluggable):
             total_train_samples = 0
 
             for epoch in range(epoch + 1, max_epochs + 1):
-
                 log_line(log)
 
                 # - SchedulerPlugin -> load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
@@ -403,11 +402,7 @@ class ModelTrainer(Pluggable):
                 lr_info = " - lr: " + ",".join([f"{m:.4f}" for m in current_learning_rate])
                 momentum_info = " - momentum: " + ",".join([f"{m:.4f}" for m in momentum])
 
-                if len(current_learning_rate) == 1:
-                    current_learning_rate = current_learning_rate[0]
-                    momentum = momentum[0]
-
-                self._record(MetricRecord.scalar_list(("optimizer", "learning_rate"), current_learning_rate, epoch))
+                self._record(MetricRecord.scalar_list("learning_rate", current_learning_rate, epoch))
                 self._record(MetricRecord.scalar_list(("optimizer", "momentum"), momentum, epoch))
 
                 # if shuffle_first_epoch==False, the first epoch is not shuffled
@@ -487,7 +482,7 @@ class ModelTrainer(Pluggable):
                             f" - loss {intermittent_loss:.8f}"
                             f" - time (sec): {(current_time - epoch_start_time):.2f}"
                             f" - samples/sec: {epoch_train_samples / (current_time - epoch_start_time):.2f}"
-                            f" - {lr_info}{momentum_info}"
+                            f"{lr_info}{momentum_info}"
                         )
 
                     # - SchedulerPlugin -> do the scheduler step if one-cycle or linear decay
@@ -542,7 +537,7 @@ class ModelTrainer(Pluggable):
                     )
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
-                    store_embeddings(self.corpus.dev, embeddings_storage_mode)
+                    store_embeddings(evaluation_split_data, embeddings_storage_mode)
 
                     self._publish_eval_result(eval_result, evaluation_split, global_step=epoch)
 
@@ -562,7 +557,7 @@ class ModelTrainer(Pluggable):
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = train_loss
 
-                # - LossFilePlugin -> somehow prints all relevant metrics (TODO: I don't really understand how)
+                # - LossFilePlugin -> somehow prints all relevant metrics
                 # - AnnealPlugin -> scheduler step
                 self.dispatch(
                     "after_evaluation",
