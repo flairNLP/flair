@@ -496,10 +496,11 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         else:
             tokenizer_kwargs["is_split_into_words"] = True
 
-        if isinstance(self.tokenizer, ByT5Tokenizer):
+        if not isinstance(self.tokenizer, ByT5Tokenizer):
             texts: Union[List[List[str]], List[str]] = [[t.text for t in tokens] for tokens in flair_tokens]
         else:
             texts = [" ".join([t.text for t in tokens]) for tokens in flair_tokens]
+            del tokenizer_kwargs["is_split_into_words"]
 
         batch_encoding = self.tokenizer(
             texts,
