@@ -394,7 +394,7 @@ class ModelTrainer(Pluggable):
                 # - SchedulerPlugin -> load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
                 # - LossFilePlugin -> get the current epoch for loss file logging
                 self.dispatch("before_training_epoch", epoch=epoch)
-                self.model.model_card["training_parameters"]["epoch"] = epoch
+                self.model.model_card["training_parameters"]["epoch"] = epoch # type: ignore
 
                 current_learning_rate = [group["lr"] for group in self.optimizer.param_groups]
                 momentum = [group["momentum"] if "momentum" in group else 0 for group in self.optimizer.param_groups]
@@ -495,14 +495,13 @@ class ModelTrainer(Pluggable):
                     }
                     self.dispatch("after_training_batch", **batch_kw)
 
-                if epoch_train_samples > 0:
-                    train_loss = epoch_train_loss / epoch_train_samples
-                    self._record(MetricRecord.scalar(("train", "loss"), train_loss, epoch))
+                train_loss = epoch_train_loss / epoch_train_samples
+                self._record(MetricRecord.scalar(("train", "loss"), train_loss, epoch))
 
-                    total_train_samples += epoch_train_samples
+                total_train_samples += epoch_train_samples
 
                 log_line(log)
-                log.info(f"EPOCH {epoch} done: loss {epoch_train_loss:.4f}{lr_info}")
+                log.info(f"EPOCH {epoch} done: loss {train_loss:.4f}{lr_info}")
 
                 # - CheckpointPlugin -> executes save_model_each_k_epochs
                 # - SchedulerPlugin -> log bad epochs

@@ -307,7 +307,7 @@ class AnnealOnPlateau(object):
             if old_lr - new_lr > self.eps:
                 param_group["lr"] = new_lr
                 if self.verbose:
-                    log.info(" - reducing learning rate" " of group {} to {:.4e}.".format(epoch, i, new_lr))
+                    log.info(f" - reducing learning rate of group {epoch} to {new_lr}")
 
     @property
     def in_cooldown(self):
