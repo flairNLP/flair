@@ -8,6 +8,7 @@ import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from copy import copy
+from deprecated import deprecated
 from operator import attrgetter
 from pathlib import Path
 from tarfile import (
@@ -230,7 +231,6 @@ def bioc_to_internal(bioc_file: Path):
             document_text += " " + text
 
             for annotation in passage.xpath(".//annotation"):
-
                 entity_types = [
                     i.text.replace(" ", "_")
                     for i in annotation.xpath("./infon")
@@ -644,6 +644,7 @@ class HUNER_GENE_BIO_INFER(HunerDataset):
         return merge_datasets([train_data, test_data])
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class JNLPBA(ColumnCorpus):
     """
     Original corpus of the JNLPBA shared task.
@@ -990,6 +991,7 @@ class HUNER_GENE_CELL_FINDER(HunerDataset):
         return data
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class MIRNA(ColumnCorpus):
     """
     Original miRNA corpus.
@@ -1617,6 +1619,7 @@ class HUNER_GENE_LOCTEXT(HunerDataset):
         return filter_and_map_entities(dataset, {"protein": GENE_TAG})
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class CHEMDNER(ColumnCorpus):
     """
     Original corpus of the CHEMDNER shared task.
@@ -1720,6 +1723,7 @@ class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
         return all_data
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class IEPA(ColumnCorpus):
     """
     IEPA corpus as provided by http://corpora.informatik.hu-berlin.de/
@@ -1835,6 +1839,7 @@ class HUNER_GENE_IEPA(HunerDataset):
         return merge_datasets([train_data, test_data])
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class LINNEAUS(ColumnCorpus):
     """
     Original LINNEAUS corpus containing species annotations.
@@ -1939,6 +1944,7 @@ class HUNER_SPECIES_LINNEAUS(HunerDataset):
         return LINNEAUS.download_and_parse_dataset(data_dir)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class CDR(ColumnCorpus):
     """
     CDR corpus as provided by https://github.com/JHnlp/BioCreative-V-CDR-Corpus
@@ -2054,6 +2060,7 @@ class HUNER_CHEMICAL_CDR(HunerDataset):
         return all_data
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class VARIOME(ColumnCorpus):
     """
     Variome corpus as provided by http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/hvp_bioc.xml.zip
@@ -2213,6 +2220,7 @@ class HUNER_SPECIES_VARIOME(HunerDataset):
         return all_data
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class NCBI_DISEASE(ColumnCorpus):
     """
     Original NCBI disease corpus containing disease annotations.
@@ -2468,6 +2476,7 @@ class ScaiCorpus(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class SCAI_CHEMICALS(ScaiCorpus):
     """
     Original SCAI chemicals corpus containing chemical annotations.
@@ -2496,6 +2505,7 @@ class SCAI_CHEMICALS(ScaiCorpus):
         return corpus_file
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class SCAI_DISEASE(ScaiCorpus):
     """
     Original SCAI disease corpus containing disease annotations.
@@ -2575,6 +2585,7 @@ class HUNER_DISEASE_SCAI(HunerDataset):
         return filter_and_map_entities(corpus, entity_mapping)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class OSIRIS(ColumnCorpus):
     """
     Original OSIRIS corpus containing variation and gene annotations.
@@ -2645,7 +2656,6 @@ class OSIRIS(ColumnCorpus):
             file for file in os.listdir(str(corpus_folder)) if file.endswith(".txt") and not file.startswith("README")
         ]
         for text_file in input_files:
-
             with open(os.path.join(str(corpus_folder), text_file), encoding="utf8") as text_reader:
                 document_text = text_reader.read()
                 if not document_text:
@@ -2770,7 +2780,7 @@ class S800(ColumnCorpus):
                 start, end = int(fields[2]), int(fields[3])
 
                 if start == end:
-                    continue # Illegal annotation
+                    continue  # Illegal annotation
 
                 entities_per_document[fname].append(Entity((start, end), "Species"))
 
@@ -3449,6 +3459,7 @@ class BIOSEMANTICS(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class BC2GM(ColumnCorpus):
     """
     Original BioCreative-II-GM corpus containing gene annotations.
@@ -3754,6 +3765,7 @@ class HUNER_CHEMICAL_CEMP(HunerDataset):
         return filter_and_map_entities(dataset, entity_type_mapping)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class CHEBI(ColumnCorpus):
     """
     Original CHEBI corpus containing all annotations.
@@ -4018,6 +4030,7 @@ class BioNLPCorpus(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class BIONLP2013_PC(BioNLPCorpus):
     """
     Corpus of the BioNLP'2013 Pathway Curation shared task
@@ -4060,6 +4073,7 @@ class BIONLP2013_PC(BioNLPCorpus):
         return train_folder, dev_folder, test_folder
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class BIONLP2013_CG(BioNLPCorpus):
     """
     Corpus of the BioNLP'2013 Cancer Genetics shared task
@@ -4088,6 +4102,7 @@ class BIONLP2013_CG(BioNLPCorpus):
         return train_folder, dev_folder, test_folder
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class ANAT_EM(ColumnCorpus):
     """
     Corpus for anatomical named entity mention recognition.
@@ -4967,6 +4982,7 @@ class AZDZ(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class PDR(ColumnCorpus):
     """
     Corpus of plant-disease relations from Kim et al., consisting of named entity annotations
