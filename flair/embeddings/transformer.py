@@ -24,6 +24,7 @@ from transformers import (
     LayoutLMv2FeatureExtractor,
     PretrainedConfig,
     PreTrainedTokenizer,
+    ByT5Tokenizer,
 )
 from transformers.tokenization_utils_base import LARGE_INTEGER
 from transformers.utils import PaddingStrategy
@@ -198,6 +199,23 @@ def _legacy_reconstruct_word_ids(
     for _word_ids in word_ids_list:
         # padding
         _word_ids.extend([None] * (max_len - len(_word_ids)))
+    return word_ids_list
+
+
+def _reconstruct_byt5_word_ids(
+    flair_tokens: List[List[Token]], padding_length: int
+) -> List[List[Optional[int]]]:
+    word_ids_list = []
+    for flair_token_list in flair_tokens:
+        reconstruct = []
+        for i, token in enumerate(flair_token_list):
+            reconstruct.extend([i]*len(token.text))
+            reconstruct.append(None)
+        if len(reconstruct) > padding_length:
+            reconstruct = reconstruct[:padding_length]
+        reconstruct.extend([None] * (padding_length - len(reconstruct)))
+        word_ids_list.append(reconstruct)
+
     return word_ids_list
 
 
@@ -480,8 +498,13 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         else:
             tokenizer_kwargs["is_split_into_words"] = True
 
+        if isinstance(self.tokenizer, ByT5Tokenizer):
+            texts = [[t.text for t in tokens] for tokens in flair_tokens]
+        else:
+            texts = [" ".join([t.text for t in tokens]) for tokens in flair_tokens]
+
         batch_encoding = self.tokenizer(
-            [[t.text for t in tokens] for tokens in flair_tokens],
+            texts,
             stride=self.stride,
             return_overflowing_tokens=self.allow_long_sentences,
             truncation=self.truncate,
@@ -541,9 +564,10 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         if self.token_embedding or self.needs_manual_ocr:
             model_kwargs["token_lengths"] = torch.tensor(sentence_lengths, device=device)
-
             if self.tokenizer.is_fast:
                 word_ids_list = [batch_encoding.word_ids(i) for i in range(input_ids.size()[0])]
+            elif isinstance(self.tokenizer, ByT5Tokenizer):
+                word_ids_list = _reconstruct_byt5_word_ids(flair_tokens, input_ids.size()[1])
             else:
                 word_ids_list = _legacy_reconstruct_word_ids(
                     self,
