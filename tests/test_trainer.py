@@ -42,7 +42,7 @@ def test_text_classifier_multi(results_base_path, tasks_base_path):
         "Parameters:",
         "- learning_rate: ",
         "patience",
-        "embedding storage",
+        "embedding storage:",
         "epoch 1 - iter",
         "EPOCH 1 done: loss",
         "Results:",

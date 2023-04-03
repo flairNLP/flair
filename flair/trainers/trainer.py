@@ -1,4 +1,3 @@
-import datetime
 import inspect
 import logging
 import os
@@ -7,7 +6,7 @@ import time
 import warnings
 from inspect import signature
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import List, Optional, Tuple, Type, Union
 
 import torch
 from torch.optim.sgd import SGD
@@ -17,8 +16,6 @@ import flair
 import flair.nn
 from flair.data import Corpus, Dictionary, _len_dataset
 from flair.datasets import DataLoader
-from flair.nn import Model
-from flair.optim import ExpAnnealLR, LinearSchedulerWithWarmup
 from flair.trainers.plugins import (
     CheckpointPlugin,
     LogFilePlugin,
@@ -32,13 +29,7 @@ from flair.trainers.plugins import (
 )
 from flair.trainers.plugins.functional.anneal_on_plateau import AnnealingPlugin
 from flair.trainers.plugins.functional.onecycle import OneCyclePlugin
-from flair.training_utils import (
-    AnnealOnPlateau,
-    identify_dynamic_embeddings,
-    init_output_file,
-    log_line,
-    store_embeddings,
-)
+from flair.training_utils import identify_dynamic_embeddings, log_line, store_embeddings
 
 log = logging.getLogger("flair")
 
@@ -394,7 +385,7 @@ class ModelTrainer(Pluggable):
                 # - SchedulerPlugin -> load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
                 # - LossFilePlugin -> get the current epoch for loss file logging
                 self.dispatch("before_training_epoch", epoch=epoch)
-                self.model.model_card["training_parameters"]["epoch"] = epoch # type: ignore
+                self.model.model_card["training_parameters"]["epoch"] = epoch  # type: ignore
 
                 current_learning_rate = [group["lr"] for group in self.optimizer.param_groups]
                 momentum = [group["momentum"] if "momentum" in group else 0 for group in self.optimizer.param_groups]

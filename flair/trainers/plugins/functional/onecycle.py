@@ -1,7 +1,4 @@
-import copy
 import logging
-
-from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
 
 from flair.optim import LinearSchedulerWithWarmup
 from flair.trainers.plugins.base import TrainerPlugin
