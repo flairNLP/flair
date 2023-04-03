@@ -6,10 +6,9 @@ from flair.trainers.plugins.base import TrainerPlugin
 log = logging.getLogger("flair")
 
 
-class OneCyclePlugin(TrainerPlugin):
+class LinearSchedulerPlugin(TrainerPlugin):
     """
-    Plugin for all schedulers. Idea: separate plugins
-    for AnnealOnPlateau and OneCycle
+    Plugin for LinearSchedulerWithWarmup.
     """
 
     def __init__(self, warmup_fraction: float, **kwargs):
@@ -76,4 +75,4 @@ class OneCyclePlugin(TrainerPlugin):
         self.store_learning_rate()
 
     def __str__(self):
-        return f"OneCycle | warmup_fraction: '{self.warmup_fraction}'"
+        return f"LinearScheduler | warmup_fraction: '{self.warmup_fraction}'"
