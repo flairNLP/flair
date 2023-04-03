@@ -18,13 +18,13 @@ from transformers import (
     AutoFeatureExtractor,
     AutoModel,
     AutoTokenizer,
+    ByT5Tokenizer,
     FeatureExtractionMixin,
     LayoutLMTokenizer,
     LayoutLMTokenizerFast,
     LayoutLMv2FeatureExtractor,
     PretrainedConfig,
     PreTrainedTokenizer,
-    ByT5Tokenizer,
 )
 from transformers.tokenization_utils_base import LARGE_INTEGER
 from transformers.utils import PaddingStrategy
@@ -202,14 +202,12 @@ def _legacy_reconstruct_word_ids(
     return word_ids_list
 
 
-def _reconstruct_byt5_word_ids(
-    flair_tokens: List[List[Token]], padding_length: int
-) -> List[List[Optional[int]]]:
+def _reconstruct_byt5_word_ids(flair_tokens: List[List[Token]], padding_length: int) -> List[List[Optional[int]]]:
     word_ids_list = []
     for flair_token_list in flair_tokens:
-        reconstruct = []
+        reconstruct: List[Optional[int]] = []
         for i, token in enumerate(flair_token_list):
-            reconstruct.extend([i]*len(token.text))
+            reconstruct.extend([i] * len(token.text))
             reconstruct.append(None)
         if len(reconstruct) > padding_length:
             reconstruct = reconstruct[:padding_length]
@@ -499,7 +497,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             tokenizer_kwargs["is_split_into_words"] = True
 
         if isinstance(self.tokenizer, ByT5Tokenizer):
-            texts = [[t.text for t in tokens] for tokens in flair_tokens]
+            texts: Union[List[List[str]], List[str]] = [[t.text for t in tokens] for tokens in flair_tokens]
         else:
             texts = [" ".join([t.text for t in tokens]) for tokens in flair_tokens]
 
