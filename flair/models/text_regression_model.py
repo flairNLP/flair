@@ -136,7 +136,6 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         out_path: Union[str, Path] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
@@ -146,7 +145,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
-        data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
+        data_loader = DataLoader(data_points, batch_size=mini_batch_size)
 
         with torch.no_grad():
             eval_loss = torch.zeros(1, device=flair.device)

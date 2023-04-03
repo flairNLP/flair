@@ -337,13 +337,13 @@ class ModelTrainer(Pluggable):
                     "lr": learning_rate,
                 },
             ]
+            self.optimizer = optimizer(params=params, **kwargs)
             log.info(
                 f"Modifying learning rate to {decoder_learning_rate} for the following "
                 f"parameters: {[name for name, param in self.model.named_parameters() if 'embeddings' not in name]}"
             )
         else:
-            params = self.model.parameters()
-        self.optimizer = optimizer(params=params, **kwargs)
+            self.optimizer = optimizer(params=self.model.parameters(), **kwargs)
 
         # initialize sampler if provided
         if sampler is not None:

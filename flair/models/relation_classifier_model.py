@@ -541,7 +541,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         :param dataset: A dataset of sentences to transform
         :return: A dataset of encoded sentences specific to the `RelationClassifier`
         """
-        data_loader: DataLoader = DataLoader(dataset, batch_size=1, num_workers=0)
+        data_loader: DataLoader = DataLoader(dataset, batch_size=1)
         original_sentences: List[Sentence] = [batch[0] for batch in iter(data_loader)]
         return FlairDatapointDataset(self.transform_sentence(original_sentences))
 
