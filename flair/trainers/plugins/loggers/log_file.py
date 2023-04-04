@@ -17,7 +17,7 @@ class LogFilePlugin(TrainerPlugin):
 
         self.log_handler = add_file_handler(log, Path(base_path) / "training.log")
 
-    @TrainerPlugin.hook("_training_exception", "after_teardown")
+    @TrainerPlugin.hook("_training_exception", "after_training")
     def close_file_handler(self, **kw):
         self.log_handler.close()
         log.removeHandler(self.log_handler)
