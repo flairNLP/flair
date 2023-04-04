@@ -1,12 +1,10 @@
 import logging
-import os
 from abc import abstractmethod
 from pathlib import Path
 from typing import Generic, List, Union
 
 import torch.utils.data.dataloader
 from deprecated import deprecated
-from torch.utils.data.dataset import ConcatDataset, Subset
 
 from flair.data import DT, FlairDataset, Sentence, Tokenizer
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
