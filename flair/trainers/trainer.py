@@ -141,7 +141,7 @@ class ModelTrainer(Pluggable):
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         monitor_test: bool = False,
         monitor_train_sample: Union[float, int] = 0.0,
-        use_final_model_for_eval: bool = True,
+        use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
         exclude_labels: List[str] = [],
         # sampling and shuffling
@@ -467,29 +467,41 @@ class ModelTrainer(Pluggable):
         # -- AnnealingPlugin -> initialize schedulers (requires instantiated optimizer)
         self.dispatch("after_setup", **parameters)
 
+        final_eval_info = (
+            "model after last epoch (final-model.pt)"
+            if use_final_model_for_eval
+            else "model from best epoch (best-model.pt)"
+        )
+
         lr_info = ",".join([f"{group['lr']:.6f}" for group in self.optimizer.param_groups])
 
         log_line(log)
         log.info(f'Model: "{self.model}"')
         log_line(log)
-        log.info(f'Corpus: "{self.corpus}"')
+        log.info(f"{self.corpus}")
+        log.info(f"     -> {len(train_data)} sentences used for training")
+        log.info(f"        (train_with_dev={train_with_dev}, train_with_test={train_with_test})")
         log_line(log)
-        log.info("Parameters:")
+        log.info("Training Params:")
         log.info(f' - learning_rate: "{lr_info}"')
         log.info(f' - mini_batch_size: "{mini_batch_size}"')
         log.info(f' - max_epochs: "{max_epochs}"')
         log.info(f' - shuffle: "{shuffle}"')
-        log.info(f' - train_with_dev: "{train_with_dev}"')
         log_line(log)
         log.info("Plugins:")
         for plugin in plugins:
             log.info(" - " + str(plugin))
         log_line(log)
-        log.info(f'Model training base path: "{base_path}"')
+        log.info("Evaluation:")
+        log.info(f' - final test uses: "{final_eval_info}"')
+        log.info(f' - evaluation metric: "{main_evaluation_metric}"')
         log_line(log)
         log.info("Computation:")
         log.info(f" - compute on device: {flair.device}")
         log.info(f" - embedding storage: {embeddings_storage_mode}")
+        log_line(log)
+        log.info(f'Model training base path: "{base_path}"')
+        log_line(log)
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
@@ -664,6 +676,7 @@ class ModelTrainer(Pluggable):
                     validation_scores=validation_scores,
                 )
 
+                print("save", save_best_model, current_epoch_has_best_model_so_far)
                 if save_best_model and current_epoch_has_best_model_so_far:
                     log.info("saving best model")
                     self.model.save(base_path / "best-model.pt", checkpoint=save_optimizer_state)
