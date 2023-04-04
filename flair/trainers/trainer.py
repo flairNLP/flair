@@ -128,7 +128,39 @@ class ModelTrainer(Pluggable):
         initial_extra_patience: int = 0,
         anneal_with_restarts: bool = False,
         anneal_against_dev_loss: bool = False,
-        plugins=None,
+        learning_rate: float = 0.1,
+        decoder_learning_rate: Optional[float] = None,
+        mini_batch_size: int = 32,
+        eval_batch_size: int = 64,
+        mini_batch_chunk_size: Optional[int] = None,
+        max_epochs: int = 100,
+        optimizer: Type[torch.optim.Optimizer] = torch.optim.SGD,
+        train_with_dev: bool = False,
+        train_with_test: bool = False,
+        # evaluation and monitoring
+        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        monitor_test: bool = False,
+        monitor_train_sample: Union[float, int] = 0.0,
+        use_final_model_for_eval: bool = True,
+        gold_label_dictionary_for_eval: Optional[Dictionary] = None,
+        exclude_labels: List[str] = [],
+        # sampling and shuffling
+        sampler=None,
+        shuffle: bool = True,
+        shuffle_first_epoch: bool = True,
+        # evaluation and monitoring
+        embeddings_storage_mode: str = "cpu",
+        epoch: int = 0,
+        # when and what to save
+        save_final_model: bool = True,
+        save_optimizer_state: bool = False,
+        save_model_each_k_epochs: int = 0,
+        # logging parameters
+        create_file_logs: bool = True,
+        create_loss_file: bool = True,
+        write_weights: bool = False,
+        # plugins
+        plugins: List[TrainerPlugin] = None,
         **kwargs,
     ):
         # activate annealing plugin
@@ -146,20 +178,60 @@ class ModelTrainer(Pluggable):
             )
         )
 
-        return self.train_custom(base_path, plugins=plugins, **kwargs)
+        # call self.train_custom with all parameters (minus the ones specific to the AnnealingPlugin)
+        local_variables = locals()
+        for var in [
+            "self",
+            "anneal_factor",
+            "patience",
+            "min_learning_rate",
+            "initial_extra_patience",
+            "anneal_with_restarts",
+            "anneal_against_dev_loss",
+            "kwargs",
+        ]:
+            local_variables.pop(var)
+        return self.train_custom(**local_variables, **kwargs)
 
     def fine_tune(
         self,
         base_path: Union[Path, str],
-        learning_rate: float = 5e-5,
-        max_epochs: int = 10,
-        optimizer=torch.optim.AdamW,
+        # training parameters
         warmup_fraction: float = 0.1,
+        learning_rate: float = 5e-5,
+        decoder_learning_rate: Optional[float] = None,
         mini_batch_size: int = 4,
-        embeddings_storage_mode: str = "none",
+        eval_batch_size: int = 16,
+        mini_batch_chunk_size: Optional[int] = None,
+        max_epochs: int = 10,
+        optimizer: Type[torch.optim.Optimizer] = torch.optim.AdamW,
+        train_with_dev: bool = False,
+        train_with_test: bool = False,
+        # evaluation and monitoring
+        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        monitor_test: bool = False,
+        monitor_train_sample: Union[float, int] = 0.0,
         use_final_model_for_eval: bool = True,
-        plugins=None,
-        **trainer_args,
+        gold_label_dictionary_for_eval: Optional[Dictionary] = None,
+        exclude_labels: List[str] = [],
+        # sampling and shuffling
+        sampler=None,
+        shuffle: bool = True,
+        shuffle_first_epoch: bool = True,
+        # evaluation and monitoring
+        embeddings_storage_mode: str = "none",
+        epoch: int = 0,
+        # when and what to save
+        save_final_model: bool = True,
+        save_optimizer_state: bool = False,
+        save_model_each_k_epochs: int = 0,
+        # logging parameters
+        create_file_logs: bool = True,
+        create_loss_file: bool = True,
+        write_weights: bool = False,
+        # plugins
+        plugins: List[TrainerPlugin] = None,
+        **kwargs,
     ):
         # annealing logic
         if plugins is None:
@@ -168,14 +240,41 @@ class ModelTrainer(Pluggable):
 
         return self.train_custom(
             base_path=base_path,
+            # training parameters
             learning_rate=learning_rate,
+            decoder_learning_rate=decoder_learning_rate,
+            mini_batch_size=mini_batch_size,
+            eval_batch_size=eval_batch_size,
+            mini_batch_chunk_size=mini_batch_chunk_size,
             max_epochs=max_epochs,
             optimizer=optimizer,
-            mini_batch_size=mini_batch_size,
-            embeddings_storage_mode=embeddings_storage_mode,
+            train_with_dev=train_with_dev,
+            train_with_test=train_with_test,
+            # evaluation and monitoring
+            main_evaluation_metric=main_evaluation_metric,
+            monitor_test=monitor_test,
+            monitor_train_sample=monitor_train_sample,
             use_final_model_for_eval=use_final_model_for_eval,
+            gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
+            exclude_labels=exclude_labels,
+            # sampling and shuffling
+            sampler=sampler,
+            shuffle=shuffle,
+            shuffle_first_epoch=shuffle_first_epoch,
+            # evaluation and monitoring
+            embeddings_storage_mode=embeddings_storage_mode,
+            epoch=epoch,
+            # when and what to save
+            save_final_model=save_final_model,
+            save_optimizer_state=save_optimizer_state,
+            save_model_each_k_epochs=save_model_each_k_epochs,
+            # logging parameters
+            create_file_logs=create_file_logs,
+            create_loss_file=create_loss_file,
+            write_weights=write_weights,
+            # plugins
             plugins=plugins,
-            **trainer_args,
+            **kwargs,
         )
 
     def train_custom(
