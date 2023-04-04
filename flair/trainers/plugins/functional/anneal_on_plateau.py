@@ -21,7 +21,6 @@ class AnnealingPlugin(TrainerPlugin):
         patience,
         initial_extra_patience,
         anneal_with_restarts,
-        anneal_against_dev_loss,
     ):
         super().__init__()
 
@@ -37,7 +36,6 @@ class AnnealingPlugin(TrainerPlugin):
         self.anneal_factor = anneal_factor
         self.patience = patience
         self.initial_extra_patience = initial_extra_patience
-        self.anneal_against_dev_loss = anneal_against_dev_loss
 
     def store_learning_rate(self):
         optimizer = self.trainer.optimizer
@@ -64,7 +62,7 @@ class AnnealingPlugin(TrainerPlugin):
         """
 
         # minimize training loss if training with dev data, else maximize dev score
-        anneal_mode = "min" if train_with_dev or self.anneal_against_dev_loss else "max"
+        anneal_mode = "min" if train_with_dev else "max"
 
         # instantiate the scheduler
         self.scheduler: AnnealOnPlateau = AnnealOnPlateau(
