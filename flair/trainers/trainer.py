@@ -127,7 +127,6 @@ class ModelTrainer(Pluggable):
         min_learning_rate: Union[float, List[float]] = 0.0001,
         initial_extra_patience: int = 0,
         anneal_with_restarts: bool = False,
-        anneal_against_dev_loss: bool = False,
         learning_rate: float = 0.1,
         decoder_learning_rate: Optional[float] = None,
         mini_batch_size: int = 32,
@@ -174,7 +173,6 @@ class ModelTrainer(Pluggable):
                 min_learning_rate=min_learning_rate,
                 initial_extra_patience=initial_extra_patience,
                 anneal_with_restarts=anneal_with_restarts,
-                anneal_against_dev_loss=anneal_against_dev_loss,
             )
         )
 
@@ -187,7 +185,6 @@ class ModelTrainer(Pluggable):
             "min_learning_rate",
             "initial_extra_patience",
             "anneal_with_restarts",
-            "anneal_against_dev_loss",
             "kwargs",
         ]:
             local_variables.pop(var)

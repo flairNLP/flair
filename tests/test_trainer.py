@@ -39,7 +39,6 @@ def test_text_classifier_multi(results_base_path, tasks_base_path):
     expected_substrings = [
         "compute on device: ",
         "Corpus: ",
-        "Parameters:",
         "- learning_rate: ",
         "patience",
         "embedding storage:",
