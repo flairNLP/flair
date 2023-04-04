@@ -492,9 +492,8 @@ class ModelTrainer(Pluggable):
         for plugin in plugins:
             log.info(" - " + str(plugin))
         log_line(log)
-        log.info("Evaluation:")
-        log.info(f' - final test uses: "{final_eval_info}"')
-        log.info(f' - evaluation metric: "{main_evaluation_metric}"')
+        log.info(f"Final evaluation on {final_eval_info}")
+        log.info(f' - metric: "{main_evaluation_metric}"')
         log_line(log)
         log.info("Computation:")
         log.info(f" - compute on device: {flair.device}")
@@ -676,7 +675,6 @@ class ModelTrainer(Pluggable):
                     validation_scores=validation_scores,
                 )
 
-                print("save", save_best_model, current_epoch_has_best_model_so_far)
                 if save_best_model and current_epoch_has_best_model_so_far:
                     log.info("saving best model")
                     self.model.save(base_path / "best-model.pt", checkpoint=save_optimizer_state)

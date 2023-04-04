@@ -28,7 +28,8 @@ class LossFilePlugin(TrainerPlugin):
                 "loss": "LOSS",
                 ("micro avg", "precision"): "PRECISION",
                 ("micro avg", "recall"): "RECALL",
-                ("micro avg", "f1-score"): "ACCURACY",
+                ("micro avg", "f1-score"): "F1",
+                "accuracy": "ACCURACY",
             }
 
         # set up headers
