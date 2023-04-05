@@ -2,7 +2,6 @@ import inspect
 import itertools
 import logging
 import typing
-import warnings
 from abc import ABC, abstractmethod
 from collections import Counter
 from pathlib import Path
