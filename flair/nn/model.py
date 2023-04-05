@@ -101,9 +101,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         """
         model_state = self._get_state_dict()
 
-        # in Flair <0.9.1, optimizer and scheduler used to train model are not saved
-        optimizer = scheduler = None
-
         # write out a "model card" if one is set
         if self.model_card is not None:
             model_state["model_card"] = self.model_card
