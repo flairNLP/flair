@@ -20,4 +20,4 @@ class LogFilePlugin(TrainerPlugin):
     @TrainerPlugin.hook
     def after_training(self, **kw):
         self.log_handler.close()
-        log.handlers.clear()
+        log.removeHandler(self.log_handler)
