@@ -46,8 +46,9 @@ class Pluggable:
 
         self._plugins: List[BasePlugin] = []
 
-        self._event_queue: Queue = Queue()
+        # This flag tracks, whether an event is currently being processed (otherwise it is added to the queue)
         self._processing_events = False
+        self._event_queue: Queue = Queue()
 
         for plugin in plugins:
             if isclass(plugin):
@@ -97,15 +98,18 @@ class Pluggable:
         self._event_queue.put((event, args, kwargs))
 
         if not self._processing_events:
-            self._processing_events = True
 
-            while not self._event_queue.empty():
-                event, args, kwargs = self._event_queue.get()
+            try:
+                self._processing_events = True
 
-                for hook in self._hook_handles[event].values():
-                    hook(*args, **kwargs)
+                while not self._event_queue.empty():
+                    event, args, kwargs = self._event_queue.get()
 
-            self._processing_events = False
+                    for hook in self._hook_handles[event].values():
+                        hook(*args, **kwargs)
+            finally:
+                # Reset the flag, since an exception event might be dispatched
+                self._processing_events = False
 
     def remove_hook(self, handle: "HookHandle"):
         """Remove a hook handle from this instance."""
