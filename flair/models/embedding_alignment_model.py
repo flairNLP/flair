@@ -1,7 +1,6 @@
 import logging
 from typing import List, Tuple, Union, Optional
 from collections import Counter
-from itertools import chain
 import random
 
 import torch
@@ -21,8 +20,9 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
         label_type: str,
         label_dictionary: Dictionary,
         train_corpus: List[Sentence],  # just training set corpus.train
-        knn: int = 5,
         use_memory: bool = False,
+        mix_memory: bool = False,
+        knn: int = 5,
         **classifierargs,
     ):
         """
@@ -37,10 +37,10 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
 
         :param document_embeddings: Embedding used to encode sentence (transformer document embeddings for now)
         :param label_type: Name of the gold labels to use.
-        :param train_corpus: corpus.train set from the corpus. The model uses the training set for the KNN algorithm.
+        :param train_corpus: corpus.train set from the corpus. The model uses training set for the KNN algorithm.
         :param knn: number of neighbours for KNN predictions
-
-        # Update: this model works and was tested on TREC_6 & TREC_50
+        :param use_memory: (experimental) store a single embedding from a previous batch and detach
+        :param mix_memory: (experimental) use embedding from memory only if no sentence pair was found in the current batch
         """
 
         super(EmbeddingAlignmentClassifier, self).__init__(**classifierargs)
@@ -60,8 +60,9 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
 
         # store previous embedding for each label (ensures that we always find positive and negative pairs)
         self.use_memory = use_memory
+        self.mix_memory = mix_memory
         if self.use_memory:
-            self.memory = {label: [] for label in self.label_dictionary.get_items()}
+            self.memory = {label: None for label in self.label_dictionary.get_items()}
             self.memory.pop("<unk>", None)  # disregard unk label
 
         # loss function: MSE between cosine similarities and 0s (pairs of different class) and 1s (pairs of same class)
@@ -87,21 +88,21 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
         label = sentence.get_label(self._label_type).value
         embedding_names = self.embeddings.get_names()
 
-        # positive sentence
-        positive_pairs = [sentence_pair for sentence_pair in mini_batch
-                          if sentence_pair.get_label(self._label_type).value == label
-                          and sentence_pair != sentence]
+        # positive sentences
+        positive_sentences = [sentence_pair for sentence_pair in mini_batch
+                              if sentence_pair.get_label(self._label_type).value == label
+                              and sentence_pair != sentence]
 
         # negative sentences
-        negative_pairs = [sentence_pair for sentence_pair in mini_batch
-                          if sentence_pair not in positive_pairs
-                          and sentence_pair != sentence]
+        negative_sentences = [sentence_pair for sentence_pair in mini_batch
+                              if sentence_pair not in positive_sentences
+                              and sentence_pair != sentence]
 
         sentence_pair_embedding: Optional[torch.tensor] = None
-        if sample == "positive" and positive_pairs:
-            sentence_pair_embedding = random.choice(positive_pairs).get_embedding(embedding_names)
-        if sample == "negative" and negative_pairs:
-            sentence_pair_embedding = random.choice(negative_pairs).get_embedding(embedding_names)
+        if sample == "positive" and positive_sentences:
+            sentence_pair_embedding = random.choice(positive_sentences).get_embedding(embedding_names)
+        if sample == "negative" and negative_sentences:
+            sentence_pair_embedding = random.choice(negative_sentences).get_embedding(embedding_names)
 
         return sentence_pair_embedding
 
@@ -112,18 +113,15 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
 
         label = sentence.get_label(self._label_type).value
 
-        positive_pairs = self.memory[label]
-
-        negative_labels = [negative_label for negative_label in list(self.memory.keys())
-                           if negative_label != label]
-        negative_pairs = [self.memory[negative_label] for negative_label in negative_labels]
-        negative_pairs = list(chain.from_iterable(negative_pairs))
+        positive_sentence = self.memory[label]
+        negative_labels = [negative_label for negative_label in list(self.memory.keys()) if negative_label != label]
+        negative_sentences = [self.memory[negative_label] for negative_label in negative_labels]
 
         sentence_pair_embedding: Optional[torch.FloatTensor] = None
-        if sample == "positive" and positive_pairs:
-            sentence_pair_embedding = random.choice(positive_pairs)
-        if sample == "negative" and negative_pairs:
-            sentence_pair_embedding = random.choice(negative_pairs)
+        if sample == "positive" and torch.is_tensor(positive_sentence):
+            sentence_pair_embedding = positive_sentence
+        if sample == "negative" and negative_sentences:
+            sentence_pair_embedding = random.choice(negative_sentences)
 
         # return raw embedding
         return sentence_pair_embedding
@@ -150,6 +148,13 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
             if not torch.is_tensor(negative_sample):
                 negative_sample = self._find_embedding_pair_in_batch(sentence, mini_batch=sentences, sample="negative")
 
+            # if no samples found
+            if self.mix_memory:
+                if not torch.is_tensor(positive_sample):
+                    positive_sample = self._find_embedding_pair_in_memory(sentence, sample="positive")
+                if not torch.is_tensor(negative_sample):
+                    negative_sample = self._find_embedding_pair_in_memory(sentence, sample="negative")
+
             # add sentence pair from the same class and label 1
             if torch.is_tensor(positive_sample):
                 embedding_pairs.append((sentence.get_embedding(embedding_names), positive_sample))
@@ -161,15 +166,10 @@ class EmbeddingAlignmentClassifier(flair.nn.Classifier[Sentence]):
                 labels.append(0)
 
         # refresh memory after each forward pass
-        if self.use_memory:
+        if self.use_memory or self.mix_memory:
             for sentence in sentences:
-                self.memory[sentence.get_label(self._label_type).value] = []
-
-            for sentence in sentences:
-                # detach vs no detach -> does not work without .detach()
-                # Error: Trying to backward through the graph a second time (or directly access saved tensors
-                # after they have already been freed)
-                self.memory[sentence.get_label().value].append(sentence.embedding.clone().detach())
+                # detach (no gradient updates) and store embeddings in memory
+                self.memory[sentence.get_label().value] = sentence.embedding.clone().detach()
 
         # return MSE loss between sentence pair similarities and 0s and 1s
         return self._calculate_loss(embedding_pairs, torch.FloatTensor(labels))
