@@ -98,7 +98,6 @@ class Pluggable:
         self._event_queue.put((event, args, kwargs))
 
         if not self._processing_events:
-
             try:
                 self._processing_events = True
 
