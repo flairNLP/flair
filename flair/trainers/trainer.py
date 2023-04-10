@@ -585,7 +585,7 @@ class ModelTrainer(Pluggable):
 
                         current_time = time.time()
 
-                        lr_info, momentum_info = self._get_current_lr_and_momentum(epoch, lr_info)
+                        lr_info, momentum_info = self._get_current_lr_and_momentum(epoch)
                         log.info(
                             f"epoch {epoch}"
                             f" - iter {batch_no + 1}/{len(batch_loader)}"
