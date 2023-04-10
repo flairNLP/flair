@@ -470,17 +470,19 @@ class ModelTrainer(Pluggable):
             else "model from best epoch (best-model.pt)"
         )
 
-        lr_info = ",".join([f"{group['lr']:.6f}" for group in self.optimizer.param_groups])
-
         log_line(log)
         log.info(f'Model: "{self.model}"')
         log_line(log)
         log.info(f"{self.corpus}")
-        log.info(f"     -> {len(train_data)} sentences used for training")
+        log_line(log)
+        log.info(f"Train:  {len(train_data)} sentences")
         log.info(f"        (train_with_dev={train_with_dev}, train_with_test={train_with_test})")
         log_line(log)
         log.info("Training Params:")
-        log.info(f' - learning_rate: "{lr_info}"')
+        log.info(
+            f' - learning_rate: "{learning_rate}" '
+            f'{"(decoder: " + str(decoder_learning_rate) + ")" if decoder_learning_rate else ""}'
+        )
         log.info(f' - mini_batch_size: "{mini_batch_size}"')
         log.info(f' - max_epochs: "{max_epochs}"')
         log.info(f' - shuffle: "{shuffle}"')
@@ -511,7 +513,7 @@ class ModelTrainer(Pluggable):
                 self.dispatch("before_training_epoch", epoch=epoch)
                 self.model.model_card["training_parameters"]["epoch"] = epoch  # type: ignore
 
-                lr_info, momentum_info = self._get_current_lr_and_momentum(epoch, lr_info)
+                lr_info, momentum_info = self._get_current_lr_and_momentum(epoch)
 
                 # if shuffle_first_epoch==False, the first epoch is not shuffled
                 shuffle_data_this_epoch = shuffle
@@ -754,7 +756,7 @@ class ModelTrainer(Pluggable):
 
         return return_values
 
-    def _get_current_lr_and_momentum(self, epoch, lr_info):
+    def _get_current_lr_and_momentum(self, epoch):
         current_learning_rate = [group["lr"] for group in self.optimizer.param_groups]
         momentum = [group["momentum"] if "momentum" in group else 0 for group in self.optimizer.param_groups]
         lr_info = " - lr: " + ",".join([f"{m:.6f}" for m in current_learning_rate])
