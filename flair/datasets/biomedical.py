@@ -5178,9 +5178,9 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         sentence_splitter: SentenceSplitter = None,
-        train_split_name: Union[str, bool] = None,
-        dev_split_name: Union[str, bool] = None,
-        test_split_name: Union[str, bool] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
     ):
         """
         :param dataset_name: Name of the dataset in the huggingface hub (e.g. nlmchem or bigbio/nlmchem)
@@ -5280,7 +5280,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         Converts a dataset given in hugging datasets format to our internal corpus representation.
         """
         id_to_text = {}
-        id_to_entities = {}
+        id_to_entities: Dict[str, List] = {}
         for document in dataset[split]:
             document_id = document["document_id"]
             passage_offsets = []
