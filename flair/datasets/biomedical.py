@@ -8,7 +8,6 @@ import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from copy import copy
-from deprecated import deprecated
 from operator import attrgetter
 from pathlib import Path
 from tarfile import (
@@ -23,6 +22,7 @@ from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from zipfile import BadZipFile, LargeZipFile
 
 import ftfy
+from deprecated import deprecated
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
