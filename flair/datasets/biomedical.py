@@ -5177,7 +5177,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         dataset_name: str,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
         train_split_name: Optional[str] = None,
         dev_split_name: Optional[str] = None,
         test_split_name: Optional[str] = None,
@@ -5212,11 +5212,12 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
             full_dataset_name = dataset_name
             dataset_name = dataset_name.replace("bigbio/", "")
 
+        self.sentence_splitter = sentence_splitter if sentence_splitter else SciSpacySentenceSplitter()
+
         dataset_dir_name = self.build_corpus_directory_name(dataset_name)
-        data_folder = base_path / dataset_dir_name
+        data_folder = base_path / dataset_dir_name / self.sentence_splitter.name
 
         train_file = data_folder / "train.conll"
-        # test_file = data_folder / "test.conll"
 
         # Download data if necessary
         # Some datasets in BigBio only have train or test splits, not both
@@ -5252,10 +5253,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
             if type_mapping:
                 splits = {split: filter_and_map_entities(dataset, type_mapping) for split, dataset in splits.items()}
 
-            if sentence_splitter is None:
-                sentence_splitter = SciSpacySentenceSplitter()
-
-            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
+            conll_writer = CoNLLWriter(sentence_splitter=self.sentence_splitter)
             conll_writer.process_dataset(splits, data_folder)
 
         super(BIGBIO_NER_CORPUS, self).__init__(
