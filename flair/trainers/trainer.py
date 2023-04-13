@@ -42,7 +42,6 @@ class ModelTrainer(Pluggable):
         "before_training_optimizer_step",
         "after_training_batch",
         "after_training_epoch",
-        "evaluation",
         "after_evaluation",
         "after_training_loop",
         "training_interrupt",
