@@ -22,6 +22,7 @@ from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from zipfile import BadZipFile, LargeZipFile
 
 import ftfy
+from deprecated import deprecated
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
@@ -349,9 +350,12 @@ class CoNLLWriter:
         self.sentence_splitter = sentence_splitter
 
     def process_dataset(self, datasets: Dict[str, InternalBioNerDataset], out_dir: Path):
-        self.write_to_conll(datasets["train"], out_dir / "train.conll")
-        self.write_to_conll(datasets["dev"], out_dir / "dev.conll")
-        self.write_to_conll(datasets["test"], out_dir / "test.conll")
+        if "train" in datasets:
+            self.write_to_conll(datasets["train"], out_dir / "train.conll")
+        if "dev" in datasets:
+            self.write_to_conll(datasets["dev"], out_dir / "dev.conll")
+        if "test" in datasets:
+            self.write_to_conll(datasets["test"], out_dir / "test.conll")
 
     def write_to_conll(self, dataset: InternalBioNerDataset, output_file: Path):
         os.makedirs(str(output_file.parent), exist_ok=True)
@@ -640,6 +644,7 @@ class HUNER_GENE_BIO_INFER(HunerDataset):
         return merge_datasets([train_data, test_data])
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class JNLPBA(ColumnCorpus):
     """
     Original corpus of the JNLPBA shared task.
@@ -986,6 +991,7 @@ class HUNER_GENE_CELL_FINDER(HunerDataset):
         return data
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class MIRNA(ColumnCorpus):
     """
     Original miRNA corpus.
@@ -1613,6 +1619,7 @@ class HUNER_GENE_LOCTEXT(HunerDataset):
         return filter_and_map_entities(dataset, {"protein": GENE_TAG})
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class CHEMDNER(ColumnCorpus):
     """
     Original corpus of the CHEMDNER shared task.
@@ -1716,6 +1723,7 @@ class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
         return all_data
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class IEPA(ColumnCorpus):
     """
     IEPA corpus as provided by http://corpora.informatik.hu-berlin.de/
@@ -1831,6 +1839,7 @@ class HUNER_GENE_IEPA(HunerDataset):
         return merge_datasets([train_data, test_data])
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class LINNEAUS(ColumnCorpus):
     """
     Original LINNEAUS corpus containing species annotations.
@@ -1935,6 +1944,7 @@ class HUNER_SPECIES_LINNEAUS(HunerDataset):
         return LINNEAUS.download_and_parse_dataset(data_dir)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class CDR(ColumnCorpus):
     """
     CDR corpus as provided by https://github.com/JHnlp/BioCreative-V-CDR-Corpus
@@ -2050,6 +2060,7 @@ class HUNER_CHEMICAL_CDR(HunerDataset):
         return all_data
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class VARIOME(ColumnCorpus):
     """
     Variome corpus as provided by http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/hvp_bioc.xml.zip
@@ -2209,6 +2220,7 @@ class HUNER_SPECIES_VARIOME(HunerDataset):
         return all_data
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class NCBI_DISEASE(ColumnCorpus):
     """
     Original NCBI disease corpus containing disease annotations.
@@ -2464,6 +2476,7 @@ class ScaiCorpus(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class SCAI_CHEMICALS(ScaiCorpus):
     """
     Original SCAI chemicals corpus containing chemical annotations.
@@ -2492,6 +2505,7 @@ class SCAI_CHEMICALS(ScaiCorpus):
         return corpus_file
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class SCAI_DISEASE(ScaiCorpus):
     """
     Original SCAI disease corpus containing disease annotations.
@@ -2571,6 +2585,7 @@ class HUNER_DISEASE_SCAI(HunerDataset):
         return filter_and_map_entities(corpus, entity_mapping)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class OSIRIS(ColumnCorpus):
     """
     Original OSIRIS corpus containing variation and gene annotations.
@@ -2765,7 +2780,7 @@ class S800(ColumnCorpus):
                 start, end = int(fields[2]), int(fields[3])
 
                 if start == end:
-                    continue
+                    continue  # Illegal annotation
 
                 entities_per_document[fname].append(Entity((start, end), "Species"))
 
@@ -3444,6 +3459,7 @@ class BIOSEMANTICS(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class BC2GM(ColumnCorpus):
     """
     Original BioCreative-II-GM corpus containing gene annotations.
@@ -3749,6 +3765,7 @@ class HUNER_CHEMICAL_CEMP(HunerDataset):
         return filter_and_map_entities(dataset, entity_type_mapping)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class CHEBI(ColumnCorpus):
     """
     Original CHEBI corpus containing all annotations.
@@ -4013,6 +4030,7 @@ class BioNLPCorpus(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class BIONLP2013_PC(BioNLPCorpus):
     """
     Corpus of the BioNLP'2013 Pathway Curation shared task
@@ -4055,6 +4073,7 @@ class BIONLP2013_PC(BioNLPCorpus):
         return train_folder, dev_folder, test_folder
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class BIONLP2013_CG(BioNLPCorpus):
     """
     Corpus of the BioNLP'2013 Cancer Genetics shared task
@@ -4083,6 +4102,7 @@ class BIONLP2013_CG(BioNLPCorpus):
         return train_folder, dev_folder, test_folder
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class ANAT_EM(ColumnCorpus):
     """
     Corpus for anatomical named entity mention recognition.
@@ -4962,6 +4982,7 @@ class AZDZ(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class PDR(ColumnCorpus):
     """
     Corpus of plant-disease relations from Kim et al., consisting of named entity annotations
@@ -5138,3 +5159,569 @@ class HUNER_SPECIES(HunerMultiCorpus):
 
     def __init__(self, sentence_splitter: SentenceSplitter = None):
         super(HUNER_SPECIES, self).__init__(entity_type="SPECIES", sentence_splitter=sentence_splitter)
+
+
+class BIGBIO_NER_CORPUS(ColumnCorpus):
+    """
+    This class implements an adapter to data sets implemented in the BigBio framework:
+
+        https://github.com/bigscience-workshop/biomedical
+
+    The BigBio framework harmonizes over 120 biomedical data sets and provides a uniform
+    programming api to access them. This adapter allows to use all named entity recognition
+    data sets by using the bigbio_kb schema.
+    """
+
+    def __init__(
+        self,
+        dataset_name: str,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ):
+        """
+        :param dataset_name: Name of the dataset in the huggingface hub (e.g. nlmchem or bigbio/nlmchem)
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param sentence_splitter: Custom implementation of :class:`SentenceSplitter` which
+            segments the text into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
+        :param train_split_name: Name of the training split in bigbio, usually train (default: None)
+        :param dev_split_name: Name of the development split in bigbio, usually validation (default: None)
+        :param test_split_name: Name of the test split in bigbio, usually test (default: None)
+        """
+
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # build dataset name and full huggingface reference name
+        if dataset_name.startswith("/"):  # Absolute path for local BigBio datasets
+            full_dataset_name = dataset_name
+            dataset_name = dataset_name.split("/")[-1]
+            dataset_name = dataset_name.split(".")[0]
+        elif not dataset_name.startswith("bigbio/"):
+            full_dataset_name = "bigbio" + "/" + dataset_name
+        else:
+            full_dataset_name = dataset_name
+            dataset_name = dataset_name.replace("bigbio/", "")
+
+        self.sentence_splitter = sentence_splitter if sentence_splitter else SciSpacySentenceSplitter()
+
+        dataset_dir_name = self.build_corpus_directory_name(dataset_name)
+        data_folder = base_path / dataset_dir_name / self.sentence_splitter.name
+
+        train_file = data_folder / "train.conll"
+
+        # Download data if necessary
+        # Some datasets in BigBio only have train or test splits, not both
+        # If only test split, assign it to train split
+        # If only train split, sample other from it (sample_missing_splits=True)
+        if not train_file.exists():
+            from datasets import load_dataset
+
+            dataset = load_dataset(full_dataset_name, name=dataset_name + "_bigbio_kb")
+
+            if "train" in dataset:
+                train_split_name = "train"
+            if "test" in dataset:
+                test_split_name = "test"
+            if "validation" in dataset:
+                dev_split_name = "validation"
+
+            assert not (train_split_name is None and test_split_name is None)
+
+            splits = {}
+            # Not every dataset has a dev / validation set!
+            if train_split_name is not None:
+                splits["train"] = self.to_internal_dataset(dataset, train_split_name)
+            if test_split_name is not None:
+                splits["test"] = self.to_internal_dataset(dataset, test_split_name)
+            if dev_split_name is not None:
+                splits["dev"] = self.to_internal_dataset(dataset, dev_split_name)
+            if "train" not in splits and "test" in splits:
+                splits["train"] = splits.pop("test")
+
+            # Perform type mapping if necessary
+            type_mapping = self.get_entity_type_mapping()
+            if type_mapping:
+                splits = {split: filter_and_map_entities(dataset, type_mapping) for split, dataset in splits.items()}
+
+            conll_writer = CoNLLWriter(sentence_splitter=self.sentence_splitter)
+            conll_writer.process_dataset(splits, data_folder)
+
+        super(BIGBIO_NER_CORPUS, self).__init__(
+            data_folder, columns, in_memory=in_memory, comment_symbol="#", sample_missing_splits=True
+        )
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        """
+        Return the mapping of entity type given in the dataset to canonical types. Note, if
+        a entity type is not present in the map it is discarded.
+        """
+        return None
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        """
+        Builds the directory name for the given data set.
+        """
+        return "bigbio-" + dataset_name.lower()
+
+    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
+        """
+        Converts a dataset given in hugging datasets format to our internal corpus representation.
+        """
+        id_to_text = {}
+        id_to_entities: Dict[str, List] = {}
+        for document in dataset[split]:
+            document_id = document["document_id"]
+            passage_offsets = []
+
+            # Collect all texts of the document, each passage will be
+            # a text in our internal format
+            for passage in document["passages"]:
+                passage_id = document_id + "#" + str(passage["id"])
+                id_to_text[passage_id] = " ".join(passage["text"])
+                passage_offsets.append((passage_id, passage["offsets"]))
+
+                id_to_entities[passage_id] = []
+
+            # Sort passages by start offset
+            passage_offsets = sorted(passage_offsets, key=lambda e: e[1][0][0])
+
+            # Transform all entity annotations into internal format
+            for entity in document["entities"]:
+                # Find the passage of the entity (necessary for offset adaption)
+                passage_id, passage_offset = self.bin_search_passage(
+                    passage_offsets, 0, len(passage_offsets) - 1, entity
+                )
+
+                # Adapt entity offsets according to passage offsets
+                entity_offset = entity["offsets"][0]
+                entity_offset = (entity_offset[0] - passage_offset[0], entity_offset[1] - passage_offset[0])
+
+                id_to_entities[passage_id].append(Entity(char_span=entity_offset, entity_type=entity["type"]))
+
+                # FIXME: This is just for debugging purposes
+                # passage_text = id_to_text[passage_id]
+                # doc_text = passage_text[entity_offset[0] : entity_offset[1]]
+                # mention_text = entity["text"][0]
+                # if doc_text != mention_text:
+                #     print(f"Annotation error ({document['document_id']}) - Doc: {doc_text} vs. Mention: {mention_text}")
+
+        return InternalBioNerDataset(documents=id_to_text, entities_per_document=id_to_entities)
+
+    def bin_search_passage(self, passages: List[Tuple[str, List[Tuple[int, int]]]], low: int, high: int, entity: Dict):
+        """
+        Helper methods to find the passage to a given entity mention (incl. offset). The implementation
+        uses binary search to find the passage in the ordered sequence passages.
+        """
+        # Check base case
+        if high >= low:
+            # Get element in the middle
+            mid = (high + low) // 2
+            first_text_offset = passages[mid][1][0]
+            first_mention_offset = entity["offsets"][0]
+
+            # Is the mention with the passage offsets?
+            if first_mention_offset[0] >= first_text_offset[0] and first_mention_offset[1] <= first_text_offset[1]:
+                return passages[mid][0], first_text_offset
+
+            # If element is smaller than mid, then it can only
+            # be present in left subarray
+            elif first_text_offset[0] > first_mention_offset[0]:
+                return self.bin_search_passage(passages, low, mid - 1, entity)
+            else:
+                # Else the element can only be present in right subarray
+                return self.bin_search_passage(passages, mid + 1, high, entity)
+
+        else:
+            # This should never happen :-D
+            return -1, -1
+
+
+class HUNER_GENE_NLM_GENE(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_NLM_GENE, self).__init__(*args, dataset_name="nlm_gene", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Gene": GENE_TAG, "GENERIF": GENE_TAG, "STARGENE": GENE_TAG, "Domain": GENE_TAG, "Other": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_DRUGPROT(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_DRUGPROT, self).__init__(*args, dataset_name="drugprot", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"GENE-N": GENE_TAG, "GENE-Y": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_CHEMICAL_DRUGPROT(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_CHEMICAL_DRUGPROT, self).__init__(*args, dataset_name="drugprot", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"CHEMICAL": CHEMICAL_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_BIORED(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"GeneOrGeneProduct": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_CHEMICAL_BIORED(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_CHEMICAL_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"ChemicalEntity": CHEMICAL_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_DISEASE_BIORED(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_DISEASE_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"DiseaseOrPhenotypicFeature": DISEASE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_SPECIES_BIORED(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_SPECIES_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"OrganismTaxon": SPECIES_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_CELL_LINE_BIORED(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_CELL_LINE_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"CellLine": CELL_LINE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_CPI(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_CPI, self).__init__(*args, dataset_name="cpi", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"protein": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_CHEMICAL_CPI(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_CHEMICAL_CPI, self).__init__(*args, dataset_name="cpi", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"compound": CHEMICAL_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_BIONLP_ST_2013_PC, self).__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Gene_or_gene_product": GENE_TAG, "Complex": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_CHEMICAL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_CHEMICAL_BIONLP_ST_2013_PC, self).__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Simple_chemical": CHEMICAL_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_BIONLP_ST_2013_GE(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_BIONLP_ST_2013_GE, self).__init__(*args, dataset_name="bionlp_st_2013_ge", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"protein": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_BIONLP_ST_2011_GE(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_BIONLP_ST_2011_GE, self).__init__(*args, dataset_name="bionlp_st_2011_ge", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Protein": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_BIONLP_ST_2011_ID, self).__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Protein": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_CHEMICAL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_CHEMICAL_BIONLP_ST_2011_ID, self).__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Chemical": CHEMICAL_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_SPECIES_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_SPECIES_BIONLP_ST_2011_ID, self).__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Organism": SPECIES_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_BIONLP_ST_2011_REL(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_BIONLP_ST_2011_REL, self).__init__(*args, dataset_name="bionlp_st_2011_rel", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Protein": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_BIONLP_ST_2011_EPI(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_BIONLP_ST_2011_EPI, self).__init__(*args, dataset_name="bionlp_st_2011_epi", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Protein": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_SPECIES_BIONLP_ST_2019_BB(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_SPECIES_BIONLP_ST_2019_BB, self).__init__(*args, dataset_name="bionlp_st_2019_bb", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Microorganism": SPECIES_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_BIOID(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_BIOID, self).__init__(*args, dataset_name="bioid", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"gene": GENE_TAG, "protein": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_CHEMICAL_BIOID(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_CHEMICAL_BIOID, self).__init__(*args, dataset_name="bioid", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"chemical": CHEMICAL_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_SPECIES_BIOID(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_SPECIES_BIOID, self).__init__(*args, dataset_name="bioid", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"species": SPECIES_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_CELL_LINE_BIOID(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_CELL_LINE_BIOID, self).__init__(*args, dataset_name="bioid", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"cell": CELL_LINE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_GNORMPLUS(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_GNORMPLUS, self).__init__(*args, dataset_name="gnormplus", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Gene": GENE_TAG, "FamilyName": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_PROGENE(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        # Special case for ProGene: We need to use the split_0_train and split_0_test splits
+        # as they are currently provided in BigBio
+        train_split_name = "split_0_train"
+        dev_split_name = "split_0_validation"
+        test_split_name = "split_0_test"
+        super(HUNER_GENE_PROGENE, self).__init__(
+            *args,
+            dataset_name="progene",
+            **kwargs,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"progene_text": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_CHEMICAL_NLM_CHEM(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_CHEMICAL_NLM_CHEM, self).__init__(*args, dataset_name="nlmchem", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Chemical": CHEMICAL_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_SETH_CORPUS(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_SETH_CORPUS, self).__init__(*args, dataset_name="seth_corpus", **kwargs)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Gene": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+
+class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_GENE_TMVAR_V3, self).__init__(
+            *args,
+            dataset_name="tmvar_v3",
+            **kwargs,
+        )
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"Gene": GENE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+    # Some offsets are broken in tmvar_v3, we need to fix them
+    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
+        """
+        Converts a dataset given in hugging datasets format to our internal corpus representation.
+        """
+        # dataset = dataset.map(map_fn, batched=True)
+        return super(HUNER_GENE_TMVAR_V3, self).to_internal_dataset(dataset, split)
+
+
+class HUNER_SPECIES_TMVAR_V3(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_SPECIES_TMVAR_V3, self).__init__(
+            *args,
+            dataset_name="tmvar_v3",
+            **kwargs,
+        )
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"['Species']": SPECIES_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
+
+    # Some offsets are broken in tmvar_v3, we need to fix them
+    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
+        """
+        Converts a dataset given in hugging datasets format to our internal corpus representation.
+        """
+        # dataset = dataset.map(map_fn, batched=True)
+        return super(HUNER_SPECIES_TMVAR_V3, self).to_internal_dataset(dataset, split)
+
+
+class HUNER_CELL_LINE_TMVAR_V3(BIGBIO_NER_CORPUS):
+    def __init__(self, *args, **kwargs):
+        super(HUNER_CELL_LINE_TMVAR_V3, self).__init__(
+            *args,
+            dataset_name="tmvar_v3",
+            **kwargs,
+        )
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return {"['CellLine']": CELL_LINE_TAG}
+
+    def build_corpus_directory_name(self, dataset_name: str) -> str:
+        return self.__class__.__name__.lower()
