@@ -112,8 +112,8 @@ class ModelTrainer(Pluggable):
 
         return train_data
 
-    def backward(self, loss):
-        """Calls backward on the loss. TODO: can this function be made private?
+    def _backward(self, loss):
+        """Calls backward on the loss.
 
         This allows plugins to overwrite the backward call.
         """
@@ -556,7 +556,7 @@ class ModelTrainer(Pluggable):
                         batch_train_samples += datapoint_count
                         batch_train_loss += loss.item()
 
-                        self.backward(loss)
+                        self._backward(loss)
 
                         # identify dynamic embeddings (always deleted) on first sentence
                         if dynamic_embeddings is None:
