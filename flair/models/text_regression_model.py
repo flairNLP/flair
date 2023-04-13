@@ -138,7 +138,6 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         mini_batch_size: int = 32,
         num_workers: Optional[int] = 8,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
         **kwargs,

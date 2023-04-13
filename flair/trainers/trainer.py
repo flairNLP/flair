@@ -118,7 +118,6 @@ class ModelTrainer:
         use_swa: bool = False,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: List[str] = [],
         create_file_logs: bool = True,
         create_loss_file: bool = True,
         epoch: int = 0,
@@ -622,7 +621,6 @@ class ModelTrainer:
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
-                        exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{train_eval_result.loss}\t{train_eval_result.log_line}"
                     log.info(
@@ -643,7 +641,6 @@ class ModelTrainer:
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
-                        exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{train_part_eval_result.loss}" f"\t{train_part_eval_result.log_line}"
                     log.info(
@@ -671,7 +668,6 @@ class ModelTrainer:
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
-                        exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{dev_eval_result.loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -714,7 +710,6 @@ class ModelTrainer:
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
-                        exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{test_eval_result.loss}\t{test_eval_result.log_line}"
                     log.info(
@@ -884,7 +879,6 @@ class ModelTrainer:
                 num_workers=num_workers,
                 main_evaluation_metric=main_evaluation_metric,
                 gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
-                exclude_labels=exclude_labels,
             )
         else:
             final_score = 0
@@ -988,7 +982,6 @@ class ModelTrainer:
         main_evaluation_metric: Tuple[str, str],
         num_workers: Optional[int] = 8,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: List[str] = [],
     ):
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
@@ -1012,7 +1005,6 @@ class ModelTrainer:
             embedding_storage_mode="none",
             main_evaluation_metric=main_evaluation_metric,
             gold_label_dictionary=gold_label_dictionary_for_eval,
-            exclude_labels=exclude_labels,
             return_loss=False,
         )
 
