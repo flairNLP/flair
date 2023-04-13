@@ -78,9 +78,8 @@ class LossFilePlugin(TrainerPlugin):
             if record.name == "learning_rate" and not record.is_scalar:
                 # record is a list of scalars
                 value = ",".join([f"{lr:.4f}" for lr in record.value])
-            elif record.name == "bad_epochs":
-                assert record.is_scalar
-                value = record.value
+            elif record.is_scalar and isinstance(record.value, int):
+                value = str(record.value)
             else:
                 assert record.is_scalar
 
