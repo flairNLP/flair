@@ -39,6 +39,7 @@ class ModelTrainer(Pluggable):
         "after_setup",
         "before_training_epoch",
         "before_training_batch",
+        "before_training_optimizer_step",
         "after_training_batch",
         "after_training_epoch",
         "evaluation",
@@ -546,6 +547,15 @@ class ModelTrainer(Pluggable):
                     batch_train_loss = 0.0
                     batch_train_samples = 0
 
+                    batch_kw = {
+                        "batch_no": batch_no,
+                        "batch": batch,
+                        "total_number_of_batches": len(batch_loader),
+                        "epoch": epoch,
+                    }
+
+                    self.dispatch("before_training_batch", **batch_kw)
+
                     batch_steps = self.get_batch_steps(batch, mini_batch_chunk_size=mini_batch_chunk_size)
 
                     # forward and backward for batch
@@ -564,6 +574,8 @@ class ModelTrainer(Pluggable):
 
                         # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                         store_embeddings(batch_step, embeddings_storage_mode, dynamic_embeddings)
+
+                    self.dispatch("before_training_optimizer_step", **batch_kw)
 
                     # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
@@ -597,12 +609,6 @@ class ModelTrainer(Pluggable):
 
                     # - SchedulerPlugin -> do the scheduler step if one-cycle or linear decay
                     # - WeightExtractorPlugin -> extracts weights
-                    batch_kw = {
-                        "batch_no": batch_no,
-                        "batch": batch,
-                        "total_number_of_batches": len(batch_loader),
-                        "epoch": epoch,
-                    }
                     self.dispatch("after_training_batch", **batch_kw)
 
                 train_loss = epoch_train_loss / epoch_train_samples
