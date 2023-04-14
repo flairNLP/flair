@@ -711,7 +711,7 @@ class ModelTrainer(Pluggable):
             log.info("Done.")
 
         except Exception:
-            self.dispatch("_training_exception")  # TODO: no plugin calls this event
+            self.dispatch("_training_exception")
             raise
         finally:
             # TensorboardLogger -> closes writer
