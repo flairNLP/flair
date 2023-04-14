@@ -27,7 +27,7 @@ def _iter_dataset(dataset: Optional[Dataset]) -> typing.Iterable:
         return []
     from flair.datasets import DataLoader
 
-    return map(lambda x: x[0], DataLoader(dataset, batch_size=1, num_workers=0))
+    return map(lambda x: x[0], DataLoader(dataset, batch_size=1))
 
 
 def _len_dataset(dataset: Optional[Dataset]) -> int:
@@ -35,7 +35,7 @@ def _len_dataset(dataset: Optional[Dataset]) -> int:
         return 0
     from flair.datasets import DataLoader
 
-    loader = DataLoader(dataset, batch_size=1, num_workers=0)
+    loader = DataLoader(dataset, batch_size=1)
     return len(loader)
 
 

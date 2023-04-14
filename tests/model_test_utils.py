@@ -156,32 +156,6 @@ class BaseModelTest:
         loaded_model.predict([self.empty_sentence])
         del loaded_model
 
-    @pytest.mark.integration
-    def test_train_resume_classifier(
-        self, results_base_path, corpus, embeddings, example_sentence, train_test_sentence
-    ):
-        flair.set_seed(123)
-        label_dict = corpus.make_label_dictionary(label_type=self.train_label_type)
-
-        model = self.build_model(embeddings, label_dict)
-        corpus = self.transform_corpus(model, corpus)
-
-        trainer = ModelTrainer(model, corpus)
-        if self.finetune_instead_of_train:
-            trainer.fine_tune(results_base_path, shuffle=False, **self.training_args, checkpoint=True)
-        else:
-            trainer.train(results_base_path, shuffle=False, **self.training_args, checkpoint=True)
-
-        del model
-        checkpoint_model = self.model_cls.load(results_base_path / "checkpoint.pt")
-
-        trainer.resume(model=checkpoint_model, max_epochs=self.training_args.get("max_epochs", 2) + 1)
-        checkpoint_model.predict(train_test_sentence)
-
-        self.assert_training_example(train_test_sentence)
-
-        del trainer, checkpoint_model, corpus
-
     def test_forward_loss(self, labeled_sentence, embeddings):
         label_dict = Dictionary()
         for label in labeled_sentence.get_labels(self.train_label_type):

@@ -1,12 +1,10 @@
 import logging
-import os
 from abc import abstractmethod
 from pathlib import Path
 from typing import Generic, List, Union
 
 import torch.utils.data.dataloader
 from deprecated import deprecated
-from torch.utils.data.dataset import ConcatDataset, Subset
 
 from flair.data import DT, FlairDataset, Sentence, Tokenizer
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
@@ -22,54 +20,22 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         shuffle=False,
         sampler=None,
         batch_sampler=None,
-        num_workers=None,
         drop_last=False,
         timeout=0,
         worker_init_fn=None,
     ):
-        # in certain cases, multi-CPU data loading makes no sense and slows
-        # everything down. For this reason, we detect if a dataset is in-memory:
-        # if so, num_workers is set to 0 for faster processing
-        flair_dataset = dataset
-        while True:
-            if type(flair_dataset) is Subset:
-                flair_dataset = flair_dataset.dataset
-            elif type(flair_dataset) is ConcatDataset:
-                flair_dataset = flair_dataset.datasets[0]
-            else:
-                break
-
-        if type(flair_dataset) is list:
-            num_workers = 0
-        elif isinstance(flair_dataset, FlairDataset) and flair_dataset.is_in_memory():
-            num_workers = 0
-
-        if num_workers is None:
-            num_workers = min(self.estimate_max_workers(), 8)
-        else:
-            num_workers = min(num_workers, self.estimate_max_workers())
-
         super(DataLoader, self).__init__(
             dataset,
             batch_size=batch_size,
             shuffle=shuffle,
             sampler=sampler,
             batch_sampler=batch_sampler,
-            num_workers=num_workers,
+            num_workers=0,
             collate_fn=list,
             drop_last=drop_last,
             timeout=timeout,
             worker_init_fn=worker_init_fn,
         )
-
-    @staticmethod
-    def estimate_max_workers():
-        if hasattr(os, "sched_getaffinity"):
-            try:
-                return len(os.sched_getaffinity(0))
-            except Exception:
-                pass
-        return os.cpu_count() or 1
 
 
 class FlairDatapointDataset(FlairDataset, Generic[DT]):

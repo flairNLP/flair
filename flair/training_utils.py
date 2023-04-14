@@ -23,18 +23,20 @@ class Result(object):
     def __init__(
         self,
         main_score: float,
-        log_header: str,
-        log_line: str,
         detailed_results: str,
-        loss: float,
         classification_report: dict = {},
+        scores: dict = {},
     ):
+        assert "loss" in scores, "No loss provided."
+
         self.main_score: float = main_score
-        self.log_header: str = log_header
-        self.log_line: str = log_line
+        self.scores = scores
         self.detailed_results: str = detailed_results
         self.classification_report = classification_report
-        self.loss: float = loss
+
+    @property
+    def loss(self):
+        return self.scores["loss"]
 
     def __str__(self):
         return f"{str(self.detailed_results)}\nLoss: {self.loss}'"
@@ -249,7 +251,7 @@ class AnnealOnPlateau(object):
         self.cooldown_counter = 0
         self.num_bad_epochs = 0
 
-    def step(self, metric, auxiliary_metric=None):
+    def step(self, metric, auxiliary_metric=None) -> bool:
         # convert `metrics` to float, in case it's a zero-dim Tensor
         current = float(metric)
         epoch = self.last_epoch + 1
@@ -287,13 +289,16 @@ class AnnealOnPlateau(object):
             self.cooldown_counter -= 1
             self.num_bad_epochs = 0  # ignore any bad epochs in cooldown
 
-        if self.num_bad_epochs > self.effective_patience:
+        reduce_learning_rate = True if self.num_bad_epochs > self.effective_patience else False
+        if reduce_learning_rate:
             self._reduce_lr(epoch)
             self.cooldown_counter = self.cooldown
             self.num_bad_epochs = 0
             self.effective_patience = self.default_patience
 
         self._last_lr = [group["lr"] for group in self.optimizer.param_groups]
+
+        return reduce_learning_rate
 
     def _reduce_lr(self, epoch):
         for i, param_group in enumerate(self.optimizer.param_groups):
@@ -302,7 +307,7 @@ class AnnealOnPlateau(object):
             if old_lr - new_lr > self.eps:
                 param_group["lr"] = new_lr
                 if self.verbose:
-                    log.info("Epoch {:5d}: reducing learning rate" " of group {} to {:.4e}.".format(epoch, i, new_lr))
+                    log.info(f" - reducing learning rate of group {epoch} to {new_lr}")
 
     @property
     def in_cooldown(self):

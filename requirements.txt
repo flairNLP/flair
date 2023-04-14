@@ -8,7 +8,6 @@ mpld3==0.3
 scikit-learn>=0.21.3
 sqlitedict>=1.6.0
 deprecated>=1.2.4
-hyperopt>=0.2.7
 boto3
 transformers[sentencepiece]>=4.18.0
 bpemb>=0.3.2
