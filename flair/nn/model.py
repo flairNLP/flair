@@ -538,7 +538,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
     flair.nn.Model. All features shared by all classifiers are implemented here,
     including the loss calculation and the predict() method. Currently, the
     TextClassifier, RelationExtractor, TextPairClassifier and
-    SimpleSequenceTagger implement this class.
+    TokenClassifier implement this class.
     """
 
     def __init__(
@@ -857,8 +857,13 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
+                self._post_process_batch_after_prediction(batch, label_name)
+
             if return_loss:
                 return overall_loss, label_count
+
+    def _post_process_batch_after_prediction(self, batch, label_name):
+        pass
 
     def _get_label_threshold(self, label_value):
         label_threshold = self.multi_label_threshold["default"]

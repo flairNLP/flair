@@ -127,6 +127,14 @@ class Dictionary:
         self.add_item("<START>")
         self.add_item("<STOP>")
 
+    def is_span_prediction_problem(self) -> bool:
+        if self.span_labels:
+            return True
+        for item in self.get_items():
+            if item.startswith("B-") or item.startswith("S-") or item.startswith("I-"):
+                return True
+        return False
+
     def start_stop_tags_are_set(self):
         if {"<START>".encode(), "<STOP>".encode()}.issubset(self.item2idx.keys()):
             return True
