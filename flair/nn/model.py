@@ -819,9 +819,23 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                         sentence.remove_labels(label_name)
 
                     if return_loss:
-                        gold_labels = self._prepare_label_tensor(data_points)
+                        # filter data points that have labels outside of dictionary
+                        filtered_indices = []
+                        has_unknown_label = False
+                        for idx, dp in enumerate(data_points):
+                            if all(
+                                label in self.label_dictionary.get_items() for label in self._get_label_of_datapoint(dp)
+                            ):
+                                filtered_indices.append(idx)
+                            else:
+                                has_unknown_label = True
+
+                        if has_unknown_label:
+                            scores = torch.index_select(scores, 0, torch.tensor(filtered_indices, device=flair.device))
+
+                        gold_labels = self._prepare_label_tensor([data_points[index] for index in filtered_indices])
                         overall_loss += self._calculate_loss(scores, gold_labels)[0]
-                        label_count += len(data_points)
+                        label_count += len(filtered_indices)
 
                     if self.multi_label:
                         sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
@@ -860,6 +874,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 self._post_process_batch_after_prediction(batch, label_name)
 
             if return_loss:
+                if has_unknown_label:
+                    log.info(
+                        f"During evaluation, encountered labels that are not in the label_dictionary:"
+                        f"Evaluation loss is computed without them."
+                    )
                 return overall_loss, label_count
 
     def _post_process_batch_after_prediction(self, batch, label_name):
