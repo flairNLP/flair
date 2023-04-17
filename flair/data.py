@@ -1779,25 +1779,18 @@ def get_spans_from_bio(bioes_tags: List[str], bioes_scores=None) -> List[typing.
             bioes_tag = "O-"
 
         # anything that is not OUT is IN
-        in_span = False if bioes_tag == "O-" else True
+        in_span = bioes_tag != "O-"
 
         # does this prediction start a new span?
         starts_new_span = False
 
         # begin and single tags start new spans
-        if bioes_tag[0:2] in {"B-", "S-"}:
+        if bioes_tag[:2] in {"B-", "S-"}:
             starts_new_span = True
-
-        # in IOB format, an I tag starts a span if it follows an O or is a different span
-        if bioes_tag[0:2] == "I-" and previous_tag[2:] != bioes_tag[2:]:
-            starts_new_span = True
-
-        # single tags that change prediction start new spans
-        if bioes_tag[0:2] == "S-" and previous_tag[2:] != bioes_tag[2:]:
-            starts_new_span = True
-
-        if previous_tag[0:2] == "S-" and previous_tag[2:] != bioes_tag[2:] and in_span:
-            starts_new_span = True
+        elif in_span and previous_tag[2:] != bioes_tag[2:]:  # predicted class changed
+            # If the current tag is I- or the previous tag was S-, we start a new span
+            if bioes_tag[:2] == "I-" or previous_tag[2:] == "S-":
+                starts_new_span = True
 
         # if an existing span is ended (either by reaching O or starting a new span)
         if (starts_new_span or not in_span) and len(current_span) > 0:
