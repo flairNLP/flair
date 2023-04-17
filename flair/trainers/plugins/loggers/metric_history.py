@@ -30,8 +30,8 @@ class MetricHistoryPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_training(self, **kw):
-        """
-        Returns metric history
+        """Returns metric history.
+
         :param kw:
         :return:
         """

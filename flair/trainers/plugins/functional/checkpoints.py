@@ -19,8 +19,8 @@ class CheckpointPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_training_epoch(self, epoch, **kw):
-        """
-        Executes save_model_each_k_epochs
+        """Saves the model each k epochs.
+
         :param epoch:
         :param kw:
         :return:

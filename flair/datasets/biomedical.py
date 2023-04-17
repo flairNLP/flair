@@ -5027,10 +5027,9 @@ class HUNER_SPECIES(HunerMultiCorpus):
 
 
 class BIGBIO_NER_CORPUS(ColumnCorpus):
-    """
-    This class implements an adapter to data sets implemented in the BigBio framework:
+    """This class implements an adapter to data sets implemented in the BigBio framework.
 
-        https://github.com/bigscience-workshop/biomedical
+    see https://github.com/bigscience-workshop/biomedical
 
     The BigBio framework harmonizes over 120 biomedical data sets and provides a uniform
     programming api to access them. This adapter allows to use all named entity recognition
@@ -5047,7 +5046,8 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         dev_split_name: Optional[str] = None,
         test_split_name: Optional[str] = None,
     ):
-        """
+        """Initialize the BigBio Corpus.
+
         :param dataset_name: Name of the dataset in the huggingface hub (e.g. nlmchem or bigbio/nlmchem)
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -5057,7 +5057,6 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         :param dev_split_name: Name of the development split in bigbio, usually validation (default: None)
         :param test_split_name: Name of the test split in bigbio, usually test (default: None)
         """
-
         if base_path is None:
             base_path = flair.cache_root / "datasets"
         else:
@@ -5126,22 +5125,18 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
-        """
-        Return the mapping of entity type given in the dataset to canonical types. Note, if
-        a entity type is not present in the map it is discarded.
+        """Return the mapping of entity type given in the dataset to canonical types.
+
+        Note, if a entity type is not present in the map it is discarded.
         """
         return None
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
-        """
-        Builds the directory name for the given data set.
-        """
+        """Builds the directory name for the given data set."""
         return "bigbio-" + dataset_name.lower()
 
     def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
-        """
-        Converts a dataset given in hugging datasets format to our internal corpus representation.
-        """
+        """Converts a dataset given in hugging datasets format to our internal corpus representation."""
         id_to_text = {}
         id_to_entities: Dict[str, List] = {}
         for document in dataset[split]:
@@ -5183,32 +5178,30 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         return InternalBioNerDataset(documents=id_to_text, entities_per_document=id_to_entities)
 
     def bin_search_passage(self, passages: List[Tuple[str, List[Tuple[int, int]]]], low: int, high: int, entity: Dict):
-        """
-        Helper methods to find the passage to a given entity mention (incl. offset). The implementation
-        uses binary search to find the passage in the ordered sequence passages.
+        """Helper methods to find the passage to a given entity mention inclusive offset.
+
+        The implementation uses binary search to find the passage in the ordered sequence passages.
         """
         # Check base case
-        if high >= low:
-            # Get element in the middle
-            mid = (high + low) // 2
-            first_text_offset = passages[mid][1][0]
-            first_mention_offset = entity["offsets"][0]
+        if low > high:
+            raise NotImplementedError("There was a mistake concerning the lower and upper bound.")
 
-            # Is the mention with the passage offsets?
-            if first_mention_offset[0] >= first_text_offset[0] and first_mention_offset[1] <= first_text_offset[1]:
-                return passages[mid][0], first_text_offset
+        # Get element in the middle
+        mid = (high + low) // 2
+        first_text_offset = passages[mid][1][0]
+        first_mention_offset = entity["offsets"][0]
 
-            # If element is smaller than mid, then it can only
-            # be present in left subarray
-            elif first_text_offset[0] > first_mention_offset[0]:
-                return self.bin_search_passage(passages, low, mid - 1, entity)
-            else:
-                # Else the element can only be present in right subarray
-                return self.bin_search_passage(passages, mid + 1, high, entity)
+        # Is the mention with the passage offsets?
+        if first_mention_offset[0] >= first_text_offset[0] and first_mention_offset[1] <= first_text_offset[1]:
+            return passages[mid][0], first_text_offset
 
+        # If element is smaller than mid, then it can only
+        # be present in left subarray
+        elif first_text_offset[0] > first_mention_offset[0]:
+            return self.bin_search_passage(passages, low, mid - 1, entity)
         else:
-            # This should never happen :-D
-            return -1, -1
+            # Else the element can only be present in right subarray
+            return self.bin_search_passage(passages, mid + 1, high, entity)
 
 
 class HUNER_GENE_NLM_GENE(BIGBIO_NER_CORPUS):
@@ -5545,14 +5538,6 @@ class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
     def build_corpus_directory_name(self, dataset_name: str) -> str:
         return self.__class__.__name__.lower()
 
-    # Some offsets are broken in tmvar_v3, we need to fix them
-    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
-        """
-        Converts a dataset given in hugging datasets format to our internal corpus representation.
-        """
-        # dataset = dataset.map(map_fn, batched=True)
-        return super(HUNER_GENE_TMVAR_V3, self).to_internal_dataset(dataset, split)
-
 
 class HUNER_SPECIES_TMVAR_V3(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
@@ -5567,14 +5552,6 @@ class HUNER_SPECIES_TMVAR_V3(BIGBIO_NER_CORPUS):
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
         return self.__class__.__name__.lower()
-
-    # Some offsets are broken in tmvar_v3, we need to fix them
-    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
-        """
-        Converts a dataset given in hugging datasets format to our internal corpus representation.
-        """
-        # dataset = dataset.map(map_fn, batched=True)
-        return super(HUNER_SPECIES_TMVAR_V3, self).to_internal_dataset(dataset, split)
 
 
 class HUNER_CELL_LINE_TMVAR_V3(BIGBIO_NER_CORPUS):

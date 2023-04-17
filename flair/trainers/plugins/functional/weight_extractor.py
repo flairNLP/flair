@@ -3,9 +3,7 @@ from flair.training_utils import WeightExtractor
 
 
 class WeightExtractorPlugin(TrainerPlugin):
-    """
-    Simple Plugin for weight extraction
-    """
+    """Simple Plugin for weight extraction."""
 
     def __init__(self, base_path):
         super().__init__()
@@ -13,8 +11,8 @@ class WeightExtractorPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_training_batch(self, batch_no, epoch, total_number_of_batches, **kw):
-        """
-        extracts weights
+        """Extracts weights.
+
         :param batch_no:
         :param epoch:
         :param total_number_of_batches:

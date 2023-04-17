@@ -313,8 +313,7 @@ class ModelTrainer(Pluggable):
         plugins: List[TrainerPlugin] = [],
         **kwargs,
     ) -> dict:
-        """
-        Trains any class that implements the flair.nn.Model interface.
+        """Trains any class that implements the flair.nn.Model interface.
 
         Args:
             base_path: Main path to which all output during training is logged and models are saved
@@ -357,7 +356,6 @@ class ModelTrainer(Pluggable):
             dict: A dictionary with at least the key "test_score" containing the final evaluation score. Some plugins
                 add additional information to this dictionary, such as the :class:`MetricHistoryPlugin`
         """
-
         # Create output folder
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
@@ -816,8 +814,8 @@ class ModelTrainer(Pluggable):
         )
 
     def _initialize_model_card(self, **training_parameters):
-        """
-        initializes model card with library versions and parameters
+        """Initializes model card with library versions and parameters.
+
         :param training_parameters:
         :return:
         """

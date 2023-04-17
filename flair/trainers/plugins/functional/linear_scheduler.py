@@ -7,9 +7,7 @@ log = logging.getLogger("flair")
 
 
 class LinearSchedulerPlugin(TrainerPlugin):
-    """
-    Plugin for LinearSchedulerWithWarmup.
-    """
+    """Plugin for LinearSchedulerWithWarmup."""
 
     def __init__(self, warmup_fraction: float, **kwargs):
         super().__init__()
@@ -33,15 +31,14 @@ class LinearSchedulerPlugin(TrainerPlugin):
         max_epochs,
         **kw,
     ):
-        """
-        initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers
+        """Initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers.
+
         :param dataset_size:
         :param mini_batch_size:
         :param max_epochs:
         :param kw:
         :return:
         """
-
         # calculate warmup steps
         steps_per_epoch = (dataset_size + mini_batch_size - 1) / mini_batch_size
         num_train_steps = int(steps_per_epoch * max_epochs)
@@ -55,8 +52,8 @@ class LinearSchedulerPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_epoch(self, **kw):
-        """
-        load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
+        """Load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping.
+
         :param kw:
         :return:
         """
@@ -65,8 +62,7 @@ class LinearSchedulerPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_training_batch(self, **kw):
-        """
-        do the scheduler step if one-cycle or linear decay
+        """Do the scheduler step if one-cycle or linear decay.
 
         :param kw:
         :return:

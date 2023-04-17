@@ -7,9 +7,7 @@ from flair.training_utils import init_output_file
 
 
 class LossFilePlugin(TrainerPlugin):
-    """
-    Plugin that manages the loss.tsv file output
-    """
+    """Plugin that manages the loss.tsv file output."""
 
     def __init__(self, base_path, epoch: int, metrics_to_collect: Dict[Union[Tuple, str], str] = None):
         super().__init__()
@@ -60,8 +58,8 @@ class LossFilePlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_epoch(self, epoch, **kw):
-        """
-        Get the current epoch for loss file logging
+        """Get the current epoch for loss file logging.
+
         :param epoch:
         :param kw:
         :return:
@@ -70,7 +68,8 @@ class LossFilePlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):
-        """
+        """Add the metric of a record to the current row.
+
         :param record:
         :return:
         """
@@ -89,8 +88,8 @@ class LossFilePlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_evaluation(self, epoch, **kw):
-        """
-        This prints all relevant metrics
+        """This prints all relevant metrics.
+
         :param epoch:
         :param kw:
         :return:
