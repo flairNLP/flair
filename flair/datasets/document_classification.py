@@ -755,7 +755,7 @@ class IMDB(ClassificationCorpus):
         memory_mode="partial",
         **corpusargs,
     ):
-        """
+        """Initialize the IMDB move review sentiment corpus.
 
         :param base_path: Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
@@ -1393,8 +1393,9 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
 
 
 class GLUE_COLA(ClassificationCorpus):
-    """Corpus of Linguistic Acceptability from GLUE benchmark
-    (https://gluebenchmark.com/tasks).
+    """Corpus of Linguistic Acceptability from GLUE benchmark.
+
+    see https://gluebenchmark.com/tasks
 
     The task is to predict whether an English sentence is grammatically
     correct. Additionaly to the Corpus we have eval_dataset containing
@@ -1408,8 +1409,8 @@ class GLUE_COLA(ClassificationCorpus):
         tokenizer: Tokenizer = SegtokTokenizer(),
         **corpusargs,
     ):
-        """
-        Instantiates CoLA dataset
+        """Instantiates CoLA dataset.
+
         :param base_path: Provide this only if you store the COLA corpus in a specific folder.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
@@ -1491,10 +1492,9 @@ class GLUE_COLA(ClassificationCorpus):
 
 
 class GO_EMOTIONS(ClassificationCorpus):
-    """GoEmotions dataset containing 58k Reddit comments labeled with 27
-    emotion categories, see.
+    """GoEmotions dataset containing 58k Reddit comments labeled with 27 emotion categories.
 
-    https://github.com/google-research/google-research/tree/master/goemotions
+    see https://github.com/google-research/google-research/tree/master/goemotions
     """
 
     def __init__(
@@ -1504,16 +1504,18 @@ class GO_EMOTIONS(ClassificationCorpus):
         memory_mode: str = "partial",
         **corpusargs,
     ):
-        """
+        """Initializes the GoEmotions corpus.
+
         Parameters
         ----------
-        base_path : Provide this only if you want to store the corpus in a specific folder, otherwise use default.
-        tokenizer : Default is SegtokTokenizer().
-        memory_mode : Set to what degree to keep corpus in memory ('full', 'partial' or 'disk'). Use 'full'
-        if full corpus and all embeddings fits into memory for speedups during training. Otherwise use 'partial' and if
-        even this is too much for your memory, use 'disk'.
-        **corpusargs : Other args for ClassificationCorpus.
-
+        base_path: Union[str, Path]
+            Provide this only if you want to store the corpus in a specific folder, otherwise use default.
+        tokenizer: Union[bool, Tokenizer]
+            Specify which tokenizer to use, the default is SegtokTokenizer().
+        memory_mode: str
+            Set to what degree to keep corpus in memory ('full', 'partial' or 'disk'). Use 'full'
+            if full corpus and all embeddings fits into memory for speedups during training. Otherwise use 'partial' and if
+            even this is too much for your memory, use 'disk'.
         """
         label_name_map = {
             "0": "ADMIRATION",
@@ -1597,8 +1599,7 @@ class GO_EMOTIONS(ClassificationCorpus):
 
 
 class TREC_50(ClassificationCorpus):
-    """The TREC Question Classification Corpus, classifying questions into 50
-    fine-grained answer types."""
+    """The TREC Question Classification Corpus, classifying questions into 50 fine-grained answer types."""
 
     def __init__(
         self,
@@ -1656,8 +1657,7 @@ class TREC_50(ClassificationCorpus):
 
 
 class TREC_6(ClassificationCorpus):
-    """The TREC Question Classification Corpus, classifying questions into 6
-    coarse-grained answer types (DESC, HUM, LOC, ENTY, NUM, ABBR)."""
+    """The TREC Question Classification Corpus, classifying questions into 6 coarse-grained answer types."""
 
     def __init__(
         self,
@@ -1717,8 +1717,7 @@ class TREC_6(ClassificationCorpus):
 
 
 class YAHOO_ANSWERS(ClassificationCorpus):
-    """The YAHOO Question Classification Corpus, classifying questions into 10
-    coarse-grained answer types."""
+    """The YAHOO Question Classification Corpus, classifying questions into 10 coarse-grained answer types."""
 
     def __init__(
         self,
@@ -1867,8 +1866,7 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
 class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
     """The Communicative Functions Classification Corpus.
 
-    Classifying sentences from scientific papers into 39 communicative
-    functions.
+    Classifying sentences from scientific papers into 39 communicative functions.
     """
 
     def __init__(
@@ -1878,8 +1876,7 @@ class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
         tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         **corpusargs,
     ):
-        """Instantiates Communicative Functions Classification Corpus with 39
-        classes.
+        """Instantiates Communicative Functions Classification Corpus with 39 classes.
 
         :param base_path: Provide this only if you store the Communicative Functions date in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
@@ -1953,13 +1950,14 @@ def _download_wassa_if_not_there(emotion, data_folder, dataset_name):
 
 
 class WASSA_ANGER(ClassificationCorpus):
-    """WASSA-2017 anger emotion-intensity dataset downloaded from and
-    documented at https://saifmohammad.com/WebPages/EmotionIntensity-
-    SharedTask.html."""
+    """WASSA-2017 anger emotion-intensity corpus.
+
+    see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html.
+    """
 
     def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
-        """
-        Instantiates WASSA-2017 anger emotion-intensity dataset
+        """Instantiates WASSA-2017 anger emotion-intensity corpus.
+
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
@@ -1981,12 +1979,14 @@ class WASSA_ANGER(ClassificationCorpus):
 
 
 class WASSA_FEAR(ClassificationCorpus):
-    """WASSA-2017 fear emotion-intensity dataset downloaded from and documented
-    at https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html."""
+    """WASSA-2017 fear emotion-intensity corpus.
+
+    see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html.
+    """
 
     def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
-        """
-        Instantiates WASSA-2017 fear emotion-intensity dataset
+        """Instantiates WASSA-2017 fear emotion-intensity corpus.
+
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
@@ -2008,12 +2008,14 @@ class WASSA_FEAR(ClassificationCorpus):
 
 
 class WASSA_JOY(ClassificationCorpus):
-    """WASSA-2017 joy emotion-intensity dataset downloaded from and documented
-    at https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html."""
+    """WASSA-2017 joy emotion-intensity dataset corpus.
+
+    see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
+    """
 
     def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
-        """
-        Instantiates WASSA-2017 joy emotion-intensity dataset
+        """Instantiates WASSA-2017 joy emotion-intensity corpus.
+
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
@@ -2035,13 +2037,14 @@ class WASSA_JOY(ClassificationCorpus):
 
 
 class WASSA_SADNESS(ClassificationCorpus):
-    """WASSA-2017 sadness emotion-intensity dataset downloaded from and
-    documented at https://saifmohammad.com/WebPages/EmotionIntensity-
-    SharedTask.html."""
+    """WASSA-2017 sadness emotion-intensity corpus.
+
+    see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html.
+    """
 
     def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
-        """
-        Instantiates WASSA-2017 sadness emotion-intensity dataset
+        """Instantiates WASSA-2017 sadness emotion-intensity dataset.
+
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
