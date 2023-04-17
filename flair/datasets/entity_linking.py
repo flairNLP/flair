@@ -23,9 +23,9 @@ class ZELDA(MultiFileColumnCorpus):
         column_format={0: "text", 2: "nel"},
         **corpusargs,
     ):
-        """
-        Initialize ZELDA Entity Linking corpus introduced in "ZELDA: A Comprehensive Benchmark for Supervised
-        Entity Disambiguation" (Milich and Akbik, 2023).
+        """Initialize ZELDA Entity Linking corpus.
+
+        introduced in "ZELDA: A Comprehensive Benchmark for Supervised Entity Disambiguation" (Milich and Akbik, 2023).
         When calling the constructor for the first time, the dataset gets automatically downloaded.
 
         Parameters
@@ -89,12 +89,11 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
         **corpusargs,
     ):
-        """
-        Initialize Aquaint Entity Linking corpus introduced in: D. Milne and I. H. Witten.
-        Learning to link with wikipedia
-        (https://www.cms.waikato.ac.nz/~ihw/papers/08-DNM-IHW-LearningToLinkWithWikipedia.pdf).
-        If you call the constructor the first time the dataset gets automatically downloaded and transformed in
-        tab-separated column format (aquaint.txt).
+        """Initialize Aquaint Entity Linking corpus.
+
+        introduced in: D. Milne and I. H. Witten. Learning to link with wikipedia
+        https://www.cms.waikato.ac.nz/~ihw/papers/08-DNM-IHW-LearningToLinkWithWikipedia.pdf . If you call the constructor the first
+        time the dataset gets automatically downloaded and transformed in tab-separated column format (aquaint.txt).
 
         Parameters
         ----------
@@ -265,12 +264,12 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
         wiki_language: str = "dewiki",
         **corpusargs,
     ):
-        """
-        Initialize a sentence-segmented version of the HIPE entity linking corpus for historical German (see description
-        of HIPE at https://impresso.github.io/CLEF-HIPE-2020/). This version was segmented by @stefan-it and is hosted
-        at https://github.com/stefan-it/clef-hipe.
-        If you call the constructor the first time the dataset gets automatically downloaded and transformed in
-        tab-separated column format.
+        """Initialize a sentence-segmented version of the HIPE entity linking corpus for historical German.
+
+        see description of HIPE at https://impresso.github.io/CLEF-HIPE-2020/.
+
+        This version was segmented by @stefan-it and is hosted at https://github.com/stefan-it/clef-hipe.
+        If you call the constructor the first time the dataset gets automatically downloaded and transformed in tab-separated column format.
 
         Parameters
         ----------
@@ -593,9 +592,11 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
         **corpusargs,
     ):
-        """
-        Initialize ITTB Entity Linking corpus introduced in "Collective Annotation of Wikipedia Entities in Web Text" Sayali Kulkarni, Amit Singh, Ganesh Ramakrishnan, and Soumen Chakrabarti.
-        If you call the constructor the first time the dataset gets automatically downloaded and transformed in tab-separated column format.
+        """Initialize ITTB Entity Linking corpus introduced in "Collective
+        Annotation of Wikipedia Entities in Web Text" Sayali Kulkarni, Amit
+        Singh, Ganesh Ramakrishnan, and Soumen Chakrabarti. If you call the
+        constructor the first time the dataset gets automatically downloaded
+        and transformed in tab-separated column format.
 
         Parameters
         ----------
@@ -732,10 +733,12 @@ class NEL_ENGLISH_TWEEKI(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize Tweeki Entity Linking corpus introduced in "Tweeki: Linking Named Entities on Twitter to a Knowledge Graph" Harandizadeh, Singh.
-        The data consits of tweets with manually annotated wikipedia links.
-        If you call the constructor the first time the dataset gets automatically downloaded and transformed in tab-separated column format.
+        """Initialize Tweeki Entity Linking corpus introduced in "Tweeki:
+        Linking Named Entities on Twitter to a Knowledge Graph" Harandizadeh,
+        Singh. The data consits of tweets with manually annotated wikipedia
+        links. If you call the constructor the first time the dataset gets
+        automatically downloaded and transformed in tab-separated column
+        format.
 
         Parameters
         ----------
@@ -799,8 +802,10 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the Reddit Entity Linking corpus containing gold annotations only (https://arxiv.org/abs/2101.01228v2) in the NER-like column format.
+        """Initialize the Reddit Entity Linking corpus containing gold
+        annotations only (https://arxiv.org/abs/2101.01228v2) in the NER-like
+        column format.
+
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -1031,9 +1036,9 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
         return annot_array
 
     def _fill_curr_comment(self, fix_flag: bool):
-        """
-        Extends the string containing the current comment thread, which is passed to _text_to_cols method, when the
-        comments are parsed.
+        """Extends the string containing the current comment thread, which is
+        passed to _text_to_cols method, when the comments are parsed.
+
         :param fix_flag: flag indicating whether the method is called when the incorrectly imported rows are parsed (=True)
         or regular rows (=False)
         """
@@ -1061,8 +1066,9 @@ def from_ufsac_to_tsv(
     encoding: str = "utf8",
     cut_multisense: bool = True,
 ):
-    """
-    Function that converts the UFSAC format into tab separated column format in a new file.
+    """Function that converts the UFSAC format into tab separated column format
+    in a new file.
+
     Parameters
     ----------
     xml_file : Union[str, Path]
@@ -1077,12 +1083,11 @@ def from_ufsac_to_tsv(
         Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
         If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
         as one new sense. The default is True.
-
     """
 
     def make_line(word, begin_or_inside, attributes):
-        """
-        Function that creates an output line from a word.
+        """Function that creates an output line from a word.
+
         Parameters
         ----------
         word :
@@ -1106,8 +1111,9 @@ def from_ufsac_to_tsv(
         return line
 
     def split_span(word_fields: List[str], datasetname: str):
-        """
-        Function that splits a word if necessary, i.e. if it is a multiple-word-span.
+        """Function that splits a word if necessary, i.e. if it is a multiple-
+        word-span.
+
         Parameters
         ----------
         word_fields :
@@ -1115,7 +1121,6 @@ def from_ufsac_to_tsv(
         datasetname:
             name of corresponding dataset
         """
-
         span = word_fields[0]
 
         if datasetname in [
@@ -1181,7 +1186,6 @@ def determine_tsv_file(filename: str, data_folder: Path, cut_multisense: bool = 
         If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
         as one new sense. The default is True.
     """
-
     if cut_multisense is True and filename not in [
         "semeval2007task17",
         "trainomatic",
@@ -1221,8 +1225,9 @@ class WSD_UFSAC(MultiCorpus):
         use_raganato_ALL_as_test_data: bool = False,
         name: str = "multicorpus",
     ):
-        """
-        Initialize a custom corpus with any Word Sense Disambiguation (WSD) datasets in the UFSAC format from https://github.com/getalp/UFSAC.
+        """Initialize a custom corpus with any Word Sense Disambiguation (WSD)
+        datasets in the UFSAC format from https://github.com/getalp/UFSAC.
+
         If the constructor is called for the first time the data is automatically downloaded and transformed from xml to a tab separated column format.
         Since only the WordNet 3.0 version for senses is consistently available for all provided datasets we will only consider this version.
         Also we ignore the id annotation used in datasets that were originally created for evaluation tasks
@@ -1363,10 +1368,9 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
         sample_missing_splits: bool = True,
         cut_multisense: bool = True,
     ):
-        """
-        Initialize ragnato_ALL (concatenation of all SensEval and SemEval all-words tasks) provided in UFSAC https://github.com/getalp/UFSAC
-        When first initializing the corpus the whole UFSAC data is downloaded.
-        """
+        """Initialize ragnato_ALL (concatenation of all SensEval and SemEval
+        all-words tasks) provided in UFSAC https://github.com/getalp/UFSAC When
+        first initializing the corpus the whole UFSAC data is downloaded."""
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1429,10 +1433,9 @@ class WSD_SEMCOR(ColumnCorpus):
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):
-        """
-        Initialize SemCor provided in UFSAC https://github.com/getalp/UFSAC
-        When first initializing the corpus the whole UFSAC data is downloaded.
-        """
+        """Initialize SemCor provided in UFSAC https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is
+        downloaded."""
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1505,10 +1508,9 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
         sample_missing_splits: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):
-        """
-        Initialize Princeton WordNet Gloss Corpus provided in UFSAC https://github.com/getalp/UFSAC
-        When first initializing the corpus the whole UFSAC data is downloaded.
-        """
+        """Initialize Princeton WordNet Gloss Corpus provided in UFSAC
+        https://github.com/getalp/UFSAC When first initializing the corpus the
+        whole UFSAC data is downloaded."""
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1580,10 +1582,9 @@ class WSD_MASC(ColumnCorpus):
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):
-        """
-        Initialize MASC (Manually Annotated Sub-Corpus) provided in UFSAC https://github.com/getalp/UFSAC
-        When first initializing the corpus the whole UFSAC data is downloaded.
-        """
+        """Initialize MASC (Manually Annotated Sub-Corpus) provided in UFSAC
+        https://github.com/getalp/UFSAC When first initializing the corpus the
+        whole UFSAC data is downloaded."""
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1658,10 +1659,9 @@ class WSD_OMSTI(ColumnCorpus):
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):
-        """
-        Initialize OMSTI (One Million Sense-Tagged Instances) provided in UFSAC https://github.com/getalp/UFSAC
-        When first initializing the corpus the whole UFSAC data is downloaded.
-        """
+        """Initialize OMSTI (One Million Sense-Tagged Instances) provided in
+        UFSAC https://github.com/getalp/UFSAC When first initializing the
+        corpus the whole UFSAC data is downloaded."""
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1736,10 +1736,9 @@ class WSD_TRAINOMATIC(ColumnCorpus):
         sample_missing_splits: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):
-        """
-        Initialize Train-O-Matic provided in UFSAC https://github.com/getalp/UFSAC
-        When first initializing the corpus the whole UFSAC data is downloaded.
-        """
+        """Initialize Train-O-Matic provided in UFSAC
+        https://github.com/getalp/UFSAC When first initializing the corpus the
+        whole UFSAC data is downloaded."""
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
