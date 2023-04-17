@@ -152,6 +152,9 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
     def label_type(self):
         return self._label_type
 
+    def get_label_dictionary(self):
+        return self.char_dictionary
+
     def words_to_char_indices(
         self,
         tokens: List[str],

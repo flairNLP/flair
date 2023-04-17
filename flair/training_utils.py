@@ -5,8 +5,10 @@ from enum import Enum
 from functools import reduce
 from math import inf
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
+import torch
+import torchmetrics
 from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from torch.optim import Optimizer
@@ -410,3 +412,78 @@ def identify_dynamic_embeddings(data_points: List[DT]):
     if not all_embeddings:
         return None
     return list(set(dynamic_embeddings))
+
+
+class BinarySupportMetric(torchmetrics.classification.BinaryStatScores):
+    is_differentiable = False
+    full_state_update: bool = False
+
+    def compute(self) -> torch.Tensor:
+        """Computes accuracy based on inputs passed in to ``update`` previously."""
+        tp, fp, tn, fn = self._final_state()
+
+        return tp + fn
+
+
+class MutliclassSupportMetric(torchmetrics.classification.MulticlassStatScores):
+    is_differentiable = False
+    full_state_update: bool = False
+
+    def compute(self) -> torch.Tensor:
+        """Computes accuracy based on inputs passed in to ``update`` previously."""
+        tp, fp, tn, fn = self._final_state()
+
+        return tp + fn
+
+
+class MultilabelSupportMetric(torchmetrics.classification.MultilabelStatScores):
+    is_differentiable = False
+    full_state_update: bool = False
+
+    def compute(self) -> torch.Tensor:
+        """Computes accuracy based on inputs passed in to ``update`` previously."""
+        tp, fp, tn, fn = self._final_state()
+
+        return tp + fn
+
+
+class SupportMetric:
+    def __new__(
+        cls,
+        task: Literal["binary", "multiclass", "multilabel"],
+        threshold: float = 0.5,
+        num_classes: Optional[int] = None,
+        num_labels: Optional[int] = None,
+        average: Optional[Literal["micro", "macro", "weighted", "none"]] = "micro",
+        multidim_average: Literal["global", "samplewise"] = "global",
+        top_k: Optional[int] = 1,
+        ignore_index: Optional[int] = None,
+        validate_args: bool = True,
+        **kwargs: Any,
+    ):
+        kwargs.update(dict(multidim_average=multidim_average, ignore_index=ignore_index, validate_args=validate_args))
+        if task == "binary":
+            return BinarySupportMetric(threshold, **kwargs)
+        if task == "multiclass":
+            assert isinstance(num_classes, int)
+            assert isinstance(top_k, int)
+            return MutliclassSupportMetric(num_classes, top_k, average, **kwargs)
+        if task == "multilabel":
+            assert isinstance(num_labels, int)
+            return MultilabelSupportMetric(num_labels, threshold, average, **kwargs)
+        raise ValueError(
+            f"Expected argument `task` to either be `'binary'`, `'multiclass'` or `'multilabel'` but got {task}"
+        )
+
+
+class LabelwiseWrapper(torchmetrics.ClasswiseWrapper):
+    def __init__(self, metric, name, **kwargs):
+        super().__init__(metric, **kwargs)
+
+        self._name = name
+
+    def _convert(self, x: torch.Tensor) -> Dict[str, Any]:
+        name = self._name
+        if self.labels is None:
+            return {f"label_{i}_{name}": val for i, val in enumerate(x)}
+        return {f"label_{lab}_{name}": val for lab, val in zip(self.labels, x)}

@@ -168,6 +168,9 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         label_dictionary = self._task_specific_attributes[self._current_task]["label_dictionary"]
         return label_dictionary
 
+    def get_label_dictionary(self):
+        return self.get_current_label_dictionary()
+
     def get_current_label_type(self):
         return self._task_specific_attributes[self._current_task]["label_type"]
 
@@ -397,6 +400,9 @@ class TARSTagger(FewshotClassifier):
                 "TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
                 "before training this model"
             )
+
+    def get_label_dictionary(self):
+        return self.tars_model.get_label_dictionary()
 
     def _get_tars_formatted_sentence(self, label, sentence):
         original_text = sentence.to_tokenized_string()
@@ -711,6 +717,9 @@ class TARSClassifier(FewshotClassifier):
             )
 
         self.clean_up_labels = True
+
+    def get_label_dictionary(self):
+        return self.tars_model.get_label_dictionary()
 
     def _clean(self, label_value: str) -> str:
         if self.clean_up_labels:

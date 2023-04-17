@@ -205,6 +205,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def label_type(self):
         return self.tag_type
 
+    def get_label_dictionary(self):
+        return self.label_dictionary
+
     def _init_loss_weights(self, loss_weights: Dict[str, float]) -> torch.Tensor:
         """
         Intializes the loss weights based on given dictionary:

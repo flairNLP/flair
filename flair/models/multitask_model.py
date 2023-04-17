@@ -245,6 +245,9 @@ class MultitaskModel(flair.nn.Classifier):
     def label_type(self):
         return self._label_type
 
+    def get_label_dictionary(self):
+        """Overwrite abstractmethod of `Classifier`."""
+
     @staticmethod
     def _fetch_model(model_name) -> str:
         model_map = {}
