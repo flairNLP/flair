@@ -389,11 +389,8 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
 
 
 def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
-    """
-    This test only covers basic universal dependencies datasets.
-    For example, multi-word tokens or the "deps" column sentence annotations
-    are not supported yet.
-    """
+    # This test only covers basic universal dependencies datasets.
+    # For example, multi-word tokens or the "deps" column sentence annotations are not supported yet.
 
     # Here, we use the default token annotation fields.
     corpus = ColumnCorpus(
@@ -422,11 +419,9 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
 
 
 def test_hipe_2022_corpus(tasks_base_path):
-    """
-    This test covers the complete HIPE 2022 dataset.
-    https://github.com/hipe-eval/HIPE-2022-data
-    Includes variant with document separator, and all versions of the dataset.
-    """
+    # This test covers the complete HIPE 2022 dataset.
+    # https://github.com/hipe-eval/HIPE-2022-data
+    # Includes variant with document separator, and all versions of the dataset.
 
     # We have manually checked, that these numbers are correct:
     hipe_stats = {
@@ -687,10 +682,9 @@ def test_hipe_2022_corpus(tasks_base_path):
 
 
 def test_icdar_europeana_corpus(tasks_base_path):
-    """
-    This test covers the complete ICDAR Europeana corpus:
-    https://github.com/stefan-it/historic-domain-adaptation-icdar
-    """
+    # This test covers the complete ICDAR Europeana corpus:
+    # https://github.com/stefan-it/historic-domain-adaptation-icdar
+
     gold_stats = {"fr": {"train": 7936, "dev": 992, "test": 992}, "nl": {"train": 5777, "dev": 722, "test": 723}}
 
     def check_number_sentences(reference: int, actual: int, split_name: str):
@@ -705,9 +699,7 @@ def test_icdar_europeana_corpus(tasks_base_path):
 
 
 def test_masakhane_corpus(tasks_base_path):
-    """
-    This test covers the complete MasakhaNER dataset, including support for v1 and v2.
-    """
+    # This test covers the complete MasakhaNER dataset, including support for v1 and v2.
     supported_versions = ["v1", "v2"]
 
     supported_languages = {
@@ -790,10 +782,8 @@ def test_masakhane_corpus(tasks_base_path):
 
 
 def test_nermud_corpus(tasks_base_path):
-    """
-    This test covers the NERMuD dataset. Official stats can be found here:
-    https://github.com/dhfbk/KIND/tree/main/evalita-2023
-    """
+    # This test covers the NERMuD dataset. Official stats can be found here:
+    # https://github.com/dhfbk/KIND/tree/main/evalita-2023
     gold_stats = {
         "WN": {"train": 10912, "dev": 2594},
         "FIC": {"train": 11423, "dev": 1051},
@@ -831,9 +821,7 @@ def test_jsonl_corpus_should_use_label_type(tasks_base_path):
 
 
 def test_jsonl_dataset_should_use_label_type(tasks_base_path):
-    """
-    Tests whether the dataset respects the label_type parameter
-    """
+    """Tests whether the dataset respects the label_type parameter."""
     dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl", label_type="pos")  # use other type
 
     for sentence in dataset.sentences:
@@ -842,9 +830,7 @@ def test_jsonl_dataset_should_use_label_type(tasks_base_path):
 
 
 def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
-    """
-    Tests reading a JsonlDataset containing multiple tagged entries
-    """
+    """Tests reading a JsonlDataset containing multiple tagged entries."""
     dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl")
 
     assert len(dataset.sentences) == 5
