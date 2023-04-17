@@ -30,10 +30,13 @@ class ZELDA(MultiFileColumnCorpus):
 
         Parameters
         ----------
-        base_path : Union[str, Path], optional
+        base_path: Union[str, Path], optional
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
-        in_memory: If True, keeps dataset in memory giving speedups in training.
+        in_memory: bool
+            If True, keeps dataset in memory giving speedups in training.
+        column_format: Dict[int, str]
+            The column-format to specify which columns correspond to the text or label types.
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -100,10 +103,14 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
         base_path : Union[str, Path], optional
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
-        in_memory: If True, keeps dataset in memory giving speedups in training.
-        agreement_threshold: Some link annotations come with an agreement_score representing the agreement from the human annotators. The score ranges from lowest 0.2
-                             to highest 1.0. The lower the score, the less "important" is the entity because fewer annotators thought it was worth linking.
-                             Default is 0.5 which means the majority of annotators must have annoteted the respective entity mention.
+        in_memory: bool
+            If True, keeps dataset in memory giving speedups in training.
+        agreement_threshold: float
+            Some link annotations come with an agreement_score representing the agreement from the human annotators. The score ranges from lowest 0.2
+            to highest 1.0. The lower the score, the less "important" is the entity because fewer annotators thought it was worth linking.
+            Default is 0.5 which means the majority of annotators must have annoteted the respective entity mention.
+        sentence_splitter: `SentenceSplitter`
+            The sentencesplitter that is used to split the articles into sentences.
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -276,9 +283,11 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
         base_path : Union[str, Path], optional
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
-        in_memory: If True, keeps dataset in memory giving speedups in training.
-        wiki_language : specify the language of the names of the wikipedia pages, i.e. which language version of
-        Wikipedia URLs to use. Since the text is in german the default language is German.
+        in_memory: bool
+            If True, keeps dataset in memory giving speedups in training.
+        wiki_language: str
+            specify the language of the names of the wikipedia pages, i.e. which language version of
+            Wikipedia URLs to use. Since the text is in german the default language is German.
         """
         self.wiki_language = wiki_language
         if not base_path:
@@ -439,18 +448,21 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
         use_ids_and_check_existence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize AIDA CoNLL-YAGO Entity Linking corpus introduced here https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/ambiverse-nlu/aida/downloads.
+        """Initialize AIDA CoNLL-YAGO Entity Linking corpus.
+
+        The corpus got introduced here https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/ambiverse-nlu/aida/downloads.
         License: https://creativecommons.org/licenses/by-sa/3.0/deed.en_US
-        If you call the constructor the first time the dataset gets automatically downloaded and transformed in tab-separated column format.
+        If you call the constructor the first time the dataset gets automatically downloaded.
 
         Parameters
         ----------
         base_path : Union[str, Path], optional
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
-        in_memory: If True, keeps dataset in memory giving speedups in training.
-        use_ids_and_check_existence: If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be ignored. This also means that one works with
+        in_memory: bool
+            If True, keeps dataset in memory giving speedups in training.
+        use_ids_and_check_existence: bool
+            If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be ignored. This also means that one works with
             current wikipedia-arcticle names and possibly alter some of the out-dated ones in the original dataset
         """
         if not base_path:
@@ -592,19 +604,23 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
         **corpusargs,
     ):
-        """Initialize ITTB Entity Linking corpus introduced in "Collective
-        Annotation of Wikipedia Entities in Web Text" Sayali Kulkarni, Amit
-        Singh, Ganesh Ramakrishnan, and Soumen Chakrabarti. If you call the
-        constructor the first time the dataset gets automatically downloaded
-        and transformed in tab-separated column format.
+        """Initialize ITTB Entity Linking corpus.
+
+        The corpus got introduced in "Collective Annotation of Wikipedia Entities in Web Text" Sayali Kulkarni, Amit Singh, Ganesh Ramakrishnan, and Soumen Chakrabarti.
+
+        If you call the constructor the first time the dataset gets automatically downloaded.
 
         Parameters
         ----------
         base_path : Union[str, Path], optional
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
-        in_memory: If True, keeps dataset in memory giving speedups in training.
-        ignore_disagreements: If True annotations with annotator disagreement will be ignored.
+        in_memory: bool
+            If True, keeps dataset in memory giving speedups in training.
+        ignore_disagreements: bool
+            If True annotations with annotator disagreement will be ignored.
+        sentence_splitter: `SentenceSplitter`
+            The sentencesplitter that is used to split the articles into sentences.
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -733,7 +749,9 @@ class NEL_ENGLISH_TWEEKI(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """Initialize Tweeki Entity Linking corpus introduced in "Tweeki:
+        """Initialize Tweeki Entity Linking corpus.
+
+        The dataset got introduced in "Tweeki:
         Linking Named Entities on Twitter to a Knowledge Graph" Harandizadeh,
         Singh. The data consits of tweets with manually annotated wikipedia
         links. If you call the constructor the first time the dataset gets
@@ -745,7 +763,8 @@ class NEL_ENGLISH_TWEEKI(ColumnCorpus):
         base_path : Union[str, Path], optional
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
-        in_memory: If True, keeps dataset in memory giving speedups in training.
+        in_memory: bool
+            If True, keeps dataset in memory giving speedups in training.
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"
@@ -802,9 +821,9 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """Initialize the Reddit Entity Linking corpus containing gold
-        annotations only (https://arxiv.org/abs/2101.01228v2) in the NER-like
-        column format.
+        """Initialize the Reddit Entity Linking corpus containing gold annotations only.
+
+        see https://arxiv.org/abs/2101.01228v2
 
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
@@ -951,8 +970,8 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
         )
 
     def _text_to_cols(self, sentence: Sentence, links: list, outfile):
-        """
-        Convert a tokenized sentence into column format
+        """Convert a tokenized sentence into column format.
+
         :param sentence: Flair Sentence object containing a tokenized post title or comment thread
         :param links: array containing information about the starting and ending position of an entity mention, as well
         as its corresponding wiki tag
@@ -1013,14 +1032,13 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
             outfile.writelines("\n")
 
     def _fill_annot_array(self, annot_array: list, key: str, post_flag: bool) -> list:
-        """
-        Fills the array containing information about the entity mention annotations, used in the _text_to_cols method
+        """Fills the array containing information about the entity mention annotations.
+
         :param annot_array: array to be filled
         :param key: reddit id, on which the post title/comment thread is matched with its corresponding annotation
         :param post_flag: flag indicating whether the annotations are collected for the post titles (=True)
         or comment threads (=False)
         """
-        next_annot = None
         while True:
             # Check if further annotations belong to the current post title or comment thread as well
             try:
@@ -1036,8 +1054,7 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
         return annot_array
 
     def _fill_curr_comment(self, fix_flag: bool):
-        """Extends the string containing the current comment thread, which is
-        passed to _text_to_cols method, when the comments are parsed.
+        """Extends the string containing the current comment thread, which is passed to _text_to_cols method, when the comments are parsed.
 
         :param fix_flag: flag indicating whether the method is called when the incorrectly imported rows are parsed (=True)
         or regular rows (=False)
@@ -1066,8 +1083,7 @@ def from_ufsac_to_tsv(
     encoding: str = "utf8",
     cut_multisense: bool = True,
 ):
-    """Function that converts the UFSAC format into tab separated column format
-    in a new file.
+    """Function that converts the UFSAC format into tab separated column format in a new file.
 
     Parameters
     ----------
@@ -1111,8 +1127,7 @@ def from_ufsac_to_tsv(
         return line
 
     def split_span(word_fields: List[str], datasetname: str):
-        """Function that splits a word if necessary, i.e. if it is a multiple-
-        word-span.
+        """Function that splits a word if necessary, i.e. if it is a multiple-word-span.
 
         Parameters
         ----------
@@ -1174,8 +1189,9 @@ def from_ufsac_to_tsv(
 
 
 def determine_tsv_file(filename: str, data_folder: Path, cut_multisense: bool = True):
-    """
-    Checks if the converted .tsv file already exists and if not, creates it. Returns name of the file.
+    """Checks if the converted .tsv file already exists and if not, creates it.
+
+    Returns name of the file.
     ----------
     string : str
         String that contains the name of the file.
@@ -1225,8 +1241,9 @@ class WSD_UFSAC(MultiCorpus):
         use_raganato_ALL_as_test_data: bool = False,
         name: str = "multicorpus",
     ):
-        """Initialize a custom corpus with any Word Sense Disambiguation (WSD)
-        datasets in the UFSAC format from https://github.com/getalp/UFSAC.
+        """Initialize a custom corpus with any Word Sense Disambiguation (WSD) datasets in the UFSAC format.
+
+         see https://github.com/getalp/UFSAC.
 
         If the constructor is called for the first time the data is automatically downloaded and transformed from xml to a tab separated column format.
         Since only the WordNet 3.0 version for senses is consistently available for all provided datasets we will only consider this version.
@@ -1368,9 +1385,11 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
         sample_missing_splits: bool = True,
         cut_multisense: bool = True,
     ):
-        """Initialize ragnato_ALL (concatenation of all SensEval and SemEval
-        all-words tasks) provided in UFSAC https://github.com/getalp/UFSAC When
-        first initializing the corpus the whole UFSAC data is downloaded."""
+        """Initialize ragnato_ALL (concatenation of all SensEval and SemEval all-words tasks) provided in UFSAC.
+
+        see https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1433,9 +1452,11 @@ class WSD_SEMCOR(ColumnCorpus):
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):
-        """Initialize SemCor provided in UFSAC https://github.com/getalp/UFSAC
-        When first initializing the corpus the whole UFSAC data is
-        downloaded."""
+        """Initialize SemCor provided in UFSAC.
+
+        see https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1508,9 +1529,11 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
         sample_missing_splits: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):
-        """Initialize Princeton WordNet Gloss Corpus provided in UFSAC
-        https://github.com/getalp/UFSAC When first initializing the corpus the
-        whole UFSAC data is downloaded."""
+        """Initialize Princeton WordNet Gloss Corpus provided in UFSAC.
+
+        see https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1582,9 +1605,11 @@ class WSD_MASC(ColumnCorpus):
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):
-        """Initialize MASC (Manually Annotated Sub-Corpus) provided in UFSAC
-        https://github.com/getalp/UFSAC When first initializing the corpus the
-        whole UFSAC data is downloaded."""
+        """Initialize MASC (Manually Annotated Sub-Corpus) provided in UFSAC.
+
+        see https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1659,9 +1684,11 @@ class WSD_OMSTI(ColumnCorpus):
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):
-        """Initialize OMSTI (One Million Sense-Tagged Instances) provided in
-        UFSAC https://github.com/getalp/UFSAC When first initializing the
-        corpus the whole UFSAC data is downloaded."""
+        """Initialize OMSTI (One Million Sense-Tagged Instances) provided in UFSAC.
+
+        see https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1736,9 +1763,11 @@ class WSD_TRAINOMATIC(ColumnCorpus):
         sample_missing_splits: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):
-        """Initialize Train-O-Matic provided in UFSAC
-        https://github.com/getalp/UFSAC When first initializing the corpus the
-        whole UFSAC data is downloaded."""
+        """Initialize Train-O-Matic provided in UFSAC.
+
+        see https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
