@@ -41,3 +41,6 @@ ignore_errors = true
 
 [tool.isort]
 profile = "black"
+
+[tool.pydocstyle]
+match = "^(?!legacy).*\\.py$"
