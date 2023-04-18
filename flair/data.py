@@ -1457,7 +1457,8 @@ class Corpus(typing.Generic[T_co]):
                     label_dictionary.span_labels = True
 
             if not label_dictionary.multi_label:
-                if len(labels) > 1:
+                # check if a datapoint is labeled more than once
+                if len(labels) > len(set(label.unlabeled_identifier for label in labels)):
                     label_dictionary.multi_label = True
 
         # if an unk threshold is set, UNK all label values below this threshold
