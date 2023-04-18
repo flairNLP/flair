@@ -329,8 +329,6 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             label_metrics.setdefault(label, {})[metric_name] = float(value)
 
         # sort by biggest support
-        print(metric_values.keys())
-
         target_names = sorted(label_metrics.keys(), key=lambda label: label_metrics[label]["support"], reverse=True)
 
         rows = [
@@ -374,10 +372,10 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 metric_values[f"{average}_precision"],
                 metric_values[f"{average}_recall"],
                 metric_values[f"{average}_f1-score"],
-                metric_values["micro_support"],
+                metric_values[f"{average}_support"].sum(),
             ]
 
-            report_dict[line_heading] = dict(zip(headers, [float(i) for i in avg]))
+            report_dict[line_heading] = dict(zip(headers, [i.item() for i in avg]))
 
             if line_heading == "accuracy":
                 row_fmt_accuracy = "{:>{width}s} " + " {:>9.{digits}}" * 2 + " {:>9.{digits}f}" + " {:>9}\n"
@@ -409,15 +407,10 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             data_points = FlairDatapointDataset(data_points)
 
         # Create a joined evaluation dictionary (from predicted labels and labels in the evaluation data points)
-        evaluation_label_dictionary = Dictionary(add_unk=False)
-        evaluation_label_dictionary.add_item("O")
-
-        if gold_label_dictionary:
+        if gold_label_dictionary is not None:
             # Add items from the gold label dictionary to the evaluation dictionary
-            for item in gold_label_dictionary.idx2item:
-                evaluation_label_dictionary.add_item(item.decode("UTF-8"))
 
-            evaluation_label_dictionary.multi_label |= gold_label_dictionary.multi_label
+            evaluation_label_dictionary = self.get_label_dictionary().union(gold_label_dictionary)
 
         else:
             # Create new label dictionary for the gold samples and add it to the evaluation_label_dictionary
@@ -425,21 +418,14 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
 
             dictionary = eval_corpus.make_label_dictionary(gold_label_type)
 
-            for item in dictionary.idx2item:
-                evaluation_label_dictionary.add_item(item.decode("UTF-8"))
+            evaluation_label_dictionary = self.get_label_dictionary().union(dictionary)
 
-            evaluation_label_dictionary.multi_label |= dictionary.multi_label
-
-        # Add the labels from the classifiers label dictionary
-        for item in self.get_label_dictionary().idx2item:
-            evaluation_label_dictionary.add_item(item.decode("UTF-8"))
-
-        evaluation_label_dictionary.multi_label |= self.get_label_dictionary().multi_label
+        evaluation_label_dictionary.add_item("O")
 
         metric = self.make_metric(evaluation_label_dictionary)
 
         # write all_predicted_values to out_file if set
-        if out_path:
+        if out_path is not None:
             outfile = open(Path(out_path), "w", encoding="utf-8")
 
         try:
@@ -532,7 +518,8 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                         outfile.write("\n")
 
         finally:
-            outfile.close()
+            if out_path is not None:
+                outfile.close()
 
         if not empty_evaluation:
             metric_values = metric.compute()

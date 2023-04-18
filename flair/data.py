@@ -59,6 +59,21 @@ class Dictionary:
         if add_unk:
             self.add_item("<unk>")
 
+    def union(self, other: "Dictionary") -> "Dictionary":
+        """Create a dictionary object which contains all items from self and other."""
+        result = Dictionary(add_unk=(self.add_unk or other.add_unk))
+
+        result.multi_label = self.multi_label or other.multi_label
+        result.span_labels = self.span_labels or other.span_labels
+
+        for item in self.get_items():
+            result.add_item(item)
+
+        for item in other.get_items():
+            result.add_item(item)
+
+        return result
+
     def remove_item(self, item: str):
         bytes_item = item.encode("utf-8")
         if bytes_item in self.item2idx:

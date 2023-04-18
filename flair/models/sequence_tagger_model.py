@@ -206,7 +206,18 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return self.tag_type
 
     def get_label_dictionary(self):
-        return self.label_dictionary
+        dictionary = Dictionary(add_unk=self.label_dictionary.add_unk)
+
+        for label in self.label_dictionary.get_items():
+            if label == "<unk>":
+                continue
+
+            if len(label) > 2 and label[0] in self.tag_format and label[1] == '-':
+                label = label[2:]
+
+            dictionary.add_item(label)
+
+        return dictionary
 
     def _init_loss_weights(self, loss_weights: Dict[str, float]) -> torch.Tensor:
         """
