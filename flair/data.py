@@ -1442,7 +1442,7 @@ class Corpus(typing.Generic[T_co]):
 
         sentence_label_type_counter: typing.Counter[str] = Counter()
         label_value_counter: typing.Counter[str] = Counter()
-        all_sentence_labels: List[str] = []
+
         for sentence in Tqdm.tqdm(_iter_dataset(data)):
             # count all label types per sentence
             sentence_label_type_counter.update(sentence.annotation_layers.keys())
@@ -1450,8 +1450,7 @@ class Corpus(typing.Generic[T_co]):
             # go through all labels of label_type and count values
             labels = sentence.get_labels(label_type)
             for label in labels:
-                if label.value not in all_sentence_labels:
-                    label_value_counter[label.value] += 1
+                label_value_counter[label.value] += 1
 
                 # check if there are any span labels
                 if type(label.data_point) == Span and len(label.data_point) > 1:
