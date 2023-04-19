@@ -1483,13 +1483,13 @@ class GLUE_COLA(ClassificationCorpus):
             memory_mode="full",
         )
 
-    """
-    This function creates a tsv file with predictions of the eval_dataset (after calling
-    classifier.predict(corpus.eval_dataset, label_name='acceptability')). The resulting file
-    is called CoLA.tsv and is in the format required for submission to the Glue Benchmark.
-    """
-
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
+        """Create eval prediction file.
+
+        This function creates a tsv file with predictions of the eval_dataset (after calling
+        classifier.predict(corpus.eval_dataset, label_name='acceptability')). The resulting file
+        is called CoLA.tsv and is in the format required for submission to the Glue Benchmark.
+        """
         folder_path = Path(folder_path)
         folder_path = folder_path / "CoLA.tsv"
 
@@ -1499,6 +1499,89 @@ class GLUE_COLA(ClassificationCorpus):
                 reverse_label_map = {"grammatical": 1, "not_grammatical": 0}
                 predicted_label = reverse_label_map[datapoint.get_labels("acceptability")[0].value]
                 tsv_file.write(str(index) + "\t" + str(predicted_label) + "\n")
+
+
+class GLUE_SST2(CSVClassificationCorpus):
+    label_map = {0: "negative", 1: "positive"}
+
+    def __init__(
+        self,
+        label_type: str = "sentiment",
+        base_path: Union[str, Path] = None,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        tokenizer: Tokenizer = SegtokTokenizer(),
+        in_memory: bool = False,
+        encoding: str = "utf-8",
+        **datasetargs,
+    ):
+
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        dataset_name = "SST-2"
+
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.tsv"
+
+        sst2_url = "https://dl.fbaipublicfiles.com/glue/data/SST-2.zip"
+
+        if not train_file.is_file():
+            # download zip archive
+            zipped_data_path = cached_path(sst2_url, data_folder)
+
+            # unpack file in datasets directory (zip archive contains a directory named SST-2)
+            unpack_file(zipped_data_path, data_folder.parent, "zip", False)
+
+        kwargs = dict(
+            delimiter="\t",
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            tokenizer=tokenizer,
+            in_memory=in_memory,
+            encoding=encoding,
+            skip_header=True,
+            **datasetargs,
+        )
+
+        super().__init__(
+            name=dataset_name,
+            data_folder=data_folder,
+            label_type=label_type,
+            column_name_map={0: "text", 1: "label"},
+            train_file=train_file,
+            dev_file=data_folder / "dev.tsv",
+            **kwargs,
+        )
+
+        eval_file = data_folder / "test.tsv"
+
+        log.info("Evaluation (no labels): %s", eval_file)
+        self.eval_dataset = CSVClassificationDataset(
+            eval_file,
+            label_type="sentence_index",
+            column_name_map={
+                0: "label_index",
+                1: "text",
+            },
+            **kwargs,
+        )
+
+    def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
+        """Create eval prediction file."""
+        folder_path = Path(folder_path)
+        folder_path = folder_path / "SST-2.tsv"
+
+        reverse_label_map = {label_name: label_numerical for label_numerical, label_name in self.label_map.items()}
+
+        with open(folder_path, mode="w") as tsv_file:
+            tsv_file.write("index\tprediction\n")
+            for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
+                predicted_label = reverse_label_map[datapoint.get_labels(self.label_type)[0].value]
+                tsv_file.write(f"{index}\t{predicted_label}\n")
 
 
 class GO_EMOTIONS(ClassificationCorpus):

@@ -104,6 +104,7 @@ from .document_classification import (
     COMMUNICATIVE_FUNCTIONS,
     GERMEVAL_2018_OFFENSIVE_LANGUAGE,
     GLUE_COLA,
+    GLUE_SST2,
     GO_EMOTIONS,
     IMDB,
     NEWSGROUPS,
