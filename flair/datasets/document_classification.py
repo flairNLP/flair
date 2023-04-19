@@ -1515,7 +1515,6 @@ class GLUE_SST2(CSVClassificationCorpus):
         encoding: str = "utf-8",
         **datasetargs,
     ):
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
