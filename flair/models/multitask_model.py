@@ -113,7 +113,6 @@ class MultitaskModel(flair.nn.Classifier):
         out_path: Union[str, Path] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
@@ -126,7 +125,6 @@ class MultitaskModel(flair.nn.Classifier):
         :param embeddings_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),
             'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
         :param mini_batch_size: size of batches
-        :param num_workers: number of workers for DataLoader class
         :param evaluate_all: choose if all tasks should be evaluated, or a single one, depending on gold_label_type
         :return: Tuple of Result object and loss value (float)
         """
@@ -147,7 +145,6 @@ class MultitaskModel(flair.nn.Classifier):
                 out_path=out_path,
                 embedding_storage_mode=embedding_storage_mode,
                 mini_batch_size=mini_batch_size,
-                num_workers=num_workers,
                 main_evaluation_metric=main_evaluation_metric,
                 exclude_labels=exclude_labels,
                 gold_label_dictionary=gold_label_dictionary,
@@ -169,7 +166,6 @@ class MultitaskModel(flair.nn.Classifier):
                 out_path=f"{out_path}_{task_id}.txt" if out_path is not None else None,
                 embedding_storage_mode=embedding_storage_mode,
                 mini_batch_size=mini_batch_size,
-                num_workers=mini_batch_size,
                 main_evaluation_metric=main_evaluation_metric,
                 exclude_labels=exclude_labels,
                 gold_label_dictionary=gold_label_dictionary,
@@ -197,12 +193,12 @@ class MultitaskModel(flair.nn.Classifier):
             )
             all_classification_report[task_id] = result.classification_report
 
+        scores = {"loss": loss.item() / len(batch_split)}
+
         return Result(
-            loss=loss.item() / len(batch_split),
             main_score=main_score / len(batch_split),
             detailed_results=all_detailed_results,
-            log_header="",
-            log_line="",
+            scores=scores,
             classification_report=all_classification_report,
         )
 

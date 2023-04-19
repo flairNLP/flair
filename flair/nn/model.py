@@ -2,7 +2,6 @@ import inspect
 import itertools
 import logging
 import typing
-import warnings
 from abc import ABC, abstractmethod
 from collections import Counter
 from pathlib import Path
@@ -52,7 +51,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         out_path: Union[str, Path] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
@@ -103,41 +101,12 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         """
         model_state = self._get_state_dict()
 
-        # in Flair <0.9.1, optimizer and scheduler used to train model are not saved
-        optimizer = scheduler = None
-
         # write out a "model card" if one is set
         if self.model_card is not None:
-            # special handling for optimizer:
-            # remember optimizer class and state dictionary
-            if "training_parameters" in self.model_card:
-                training_parameters = self.model_card["training_parameters"]
-
-                if "optimizer" in training_parameters:
-                    optimizer = training_parameters["optimizer"]
-                    if checkpoint:
-                        training_parameters["optimizer_state_dict"] = optimizer.state_dict()
-                    training_parameters["optimizer"] = optimizer.__class__
-
-                if "scheduler" in training_parameters:
-                    scheduler = training_parameters["scheduler"]
-                    if checkpoint:
-                        with warnings.catch_warnings():
-                            warnings.simplefilter("ignore")
-                            training_parameters["scheduler_state_dict"] = scheduler.state_dict()
-                    training_parameters["scheduler"] = scheduler.__class__
-
             model_state["model_card"] = self.model_card
 
         # save model
         torch.save(model_state, str(model_file), pickle_protocol=4)
-
-        # restore optimizer and scheduler to model card if set
-        if self.model_card is not None:
-            if optimizer:
-                self.model_card["training_parameters"]["optimizer"] = optimizer
-            if scheduler:
-                self.model_card["training_parameters"]["scheduler"] = scheduler
 
     @classmethod
     def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Model":
@@ -253,7 +222,6 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         out_path: Union[str, Path] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
@@ -284,7 +252,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             all_true_values = {}
             all_predicted_values = {}
 
-            loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=0)
+            loader = DataLoader(data_points, batch_size=mini_batch_size)
 
             sentence_id = 0
             for batch in Tqdm.tqdm(loader):
@@ -384,7 +352,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 multi_label = True
                 break
 
-        log.info(f"Evaluating as a multi-label problem: {multi_label}")
+        log.debug(f"Evaluating as a multi-label problem: {multi_label}")
 
         # compute numbers by formatting true and predicted such that Scikit-Learn can use them
         y_true = []
@@ -455,13 +423,9 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
 
             if "micro avg" in classification_report_dict:
                 # micro average is only computed if zero-label exists (for instance "O")
-                precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
-                recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
                 micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
             else:
                 # if no zero-label exists (such as in POS tagging) micro average is equal to accuracy
-                precision_score = round(classification_report_dict["accuracy"], 4)
-                recall_score = round(classification_report_dict["accuracy"], 4)
                 micro_f_score = round(classification_report_dict["accuracy"], 4)
 
             # same for the main score
@@ -477,7 +441,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 "Could be an error in your corpus or how you "
                 "initialize the trainer!"
             )
-            accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.0
+            accuracy_score = micro_f_score = macro_f_score = main_score = 0.0
             classification_report = ""
             classification_report_dict = {}
 
@@ -489,20 +453,29 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             "\n\nBy class:\n" + classification_report
         )
 
-        # line for log file
-        log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
+        scores: Dict[Union[Tuple[str, ...], str], Any] = {}
+
+        for avg_type in ("micro avg", "macro avg"):
+            for metric_type in ("f1-score", "precision", "recall"):
+                if avg_type == "micro avg" and avg_type not in classification_report_dict:
+                    value = classification_report_dict["accuracy"]
+
+                else:
+                    value = classification_report_dict[avg_type][metric_type]
+
+                scores[(avg_type, metric_type)] = value
+
+        scores["accuracy"] = accuracy_score
 
         if average_over > 0:
             eval_loss /= average_over
+        scores["loss"] = eval_loss.item()
 
         result = Result(
             main_score=main_score,
-            log_line=log_line,
-            log_header=log_header,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            loss=eval_loss.item(),
+            scores=scores,
         )
 
         return result
