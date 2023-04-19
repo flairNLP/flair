@@ -420,9 +420,7 @@ class BinarySupportMetric(torchmetrics.classification.BinaryStatScores):
 
     def compute(self) -> torch.Tensor:
         """Computes accuracy based on inputs passed in to ``update`` previously."""
-        tp, fp, tn, fn = self._final_state()
-
-        return tp + fn
+        return super().compute()[..., -1]
 
 
 class MutliclassSupportMetric(torchmetrics.classification.MulticlassStatScores):
@@ -431,9 +429,7 @@ class MutliclassSupportMetric(torchmetrics.classification.MulticlassStatScores):
 
     def compute(self) -> torch.Tensor:
         """Computes accuracy based on inputs passed in to ``update`` previously."""
-        tp, fp, tn, fn = self._final_state()
-
-        return tp + fn
+        return super().compute()[..., -1]
 
 
 class MultilabelSupportMetric(torchmetrics.classification.MultilabelStatScores):
@@ -442,9 +438,7 @@ class MultilabelSupportMetric(torchmetrics.classification.MultilabelStatScores):
 
     def compute(self) -> torch.Tensor:
         """Computes accuracy based on inputs passed in to ``update`` previously."""
-        tp, fp, tn, fn = self._final_state()
-
-        return tp + fn
+        return super().compute()[..., -1]
 
 
 class SupportMetric:

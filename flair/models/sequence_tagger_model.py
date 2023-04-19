@@ -209,7 +209,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         dictionary = Dictionary(add_unk=self.label_dictionary.add_unk)
 
         for label in self.label_dictionary.get_items():
-            if label == "<unk>":
+            if label in ("<unk>", "<START>", "<STOP>"):
                 continue
 
             if len(label) > 2 and label[0] in self.tag_format and label[1] == '-':
