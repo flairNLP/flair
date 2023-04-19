@@ -4,6 +4,7 @@ from .language_model import LanguageModel
 from .lemmatizer_model import Lemmatizer
 from .multitask_model import MultitaskModel
 from .pairwise_classification_model import TextPairClassifier
+from .pairwise_regression_model import TextPairRegressor
 from .regexp_tagger import RegexpTagger
 from .relation_classifier_model import RelationClassifier
 from .relation_extractor_model import RelationExtractor
@@ -18,6 +19,7 @@ __all__ = [
     "LanguageModel",
     "Lemmatizer",
     "TextPairClassifier",
+    "TextPairRegressor",
     "RelationClassifier",
     "RelationExtractor",
     "RegexpTagger",
