@@ -76,7 +76,6 @@ class MetricRecord:
             image, etc.).
         :param walltime: Time of recording this metric.
         """
-
         self.name: MetricName = MetricName(name)
         self.typ: RecordType = typ
         self.value: Any = value

@@ -38,9 +38,10 @@ class Embeddings(torch.nn.Module, Generic[DT]):
         raise NotImplementedError
 
     def embed(self, data_points: Union[DT, List[DT]]) -> List[DT]:
-        """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
-        are non-static."""
+        """Add embeddings to all words in a list of sentences.
 
+        If embeddings are already added, updates only if embeddings are non-static.
+        """
         # if only one sentence is passed, convert to list of sentence
         if not isinstance(data_points, list):
             data_points = [data_points]
@@ -62,9 +63,12 @@ class Embeddings(torch.nn.Module, Generic[DT]):
         pass
 
     def get_names(self) -> List[str]:
-        """Returns a list of embedding names. In most cases, it is just a list with one item, namely the name of
+        """Returns a list of embedding names.
+
+        In most cases, it is just a list with one item, namely the name of
         this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
-        Then, the list contains the names of all embeddings in the stack."""
+        Then, the list contains the names of all embeddings in the stack.
+        """
         return [self.name]
 
     def get_named_embeddings_dict(self) -> Dict:
@@ -108,7 +112,8 @@ class Embeddings(torch.nn.Module, Generic[DT]):
 
 
 class ScalarMix(torch.nn.Module):
-    """
+    """Mixes several tensors by a learned weighting.
+
     Computes a parameterised scalar mixture of N tensors.
     This method was proposed by Liu et al. (2019) in the paper:
     "Linguistic Knowledge and Transferability of Contextual Representations" (https://arxiv.org/abs/1903.08855)
@@ -119,8 +124,8 @@ class ScalarMix(torch.nn.Module):
     """
 
     def __init__(self, mixture_size: int, trainable: bool = False) -> None:
-        """
-        Inits scalar mix implementation.
+        """Inits scalar mix implementation.
+
         ``mixture = gamma * sum(s_k * tensor_k)`` where ``s = softmax(w)``, with ``w`` and ``gamma`` scalar parameters.
         :param mixture_size: size of mixtures (usually the number of layers)
         """
@@ -152,7 +157,8 @@ class ScalarMix(torch.nn.Module):
         )
 
     def forward(self, tensors: List[torch.Tensor]) -> torch.Tensor:
-        """
+        """Forward pass of scalar mix.
+
         Computes a weighted average of the ``tensors``.  The input tensors an be any shape
         with at least two dimensions, but must all be the same shape.
         :param tensors: list of input tensors

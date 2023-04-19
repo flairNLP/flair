@@ -1,4 +1,5 @@
-"""
+"""Euclidean distances implemented in pytorch.
+
 This module was copied from the repository the following repository:
 https://github.com/asappresearch/dynamic-classification
 
@@ -26,8 +27,7 @@ class EuclideanDistance(nn.Module):
     """Implement a EuclideanDistance object."""
 
     def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:  # type: ignore
-        """Returns the squared euclidean distance between each
-        element in mat_1 and each element in mat_2.
+        """Returns the squared euclidean distance between each element in mat_1 and each element in mat_2.
 
         Parameters
         ----------

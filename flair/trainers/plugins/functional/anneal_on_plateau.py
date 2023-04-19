@@ -9,9 +9,7 @@ log = logging.getLogger("flair")
 
 
 class AnnealingPlugin(TrainerPlugin):
-    """
-    Plugin for annealing logic in Flair.
-    """
+    """Plugin for annealing logic in Flair."""
 
     def __init__(
         self,
@@ -53,14 +51,13 @@ class AnnealingPlugin(TrainerPlugin):
         optimizer,
         **kw,
     ):
-        """
-        initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers
+        """Initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers.
+
         :param train_with_dev:
         :param optimizer:
         :param kw:
         :return:
         """
-
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
 
@@ -78,8 +75,8 @@ class AnnealingPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_evaluation(self, current_model_is_best, validation_scores, **kw):
-        """
-        Scheduler step of AnnealOnPlateau
+        """Scheduler step of AnnealOnPlateau.
+
         :param current_model_is_best:
         :param validation_scores:
         :param kw:

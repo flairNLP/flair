@@ -15,8 +15,8 @@ log = logging.getLogger("flair")
 
 
 class MultitaskModel(flair.nn.Classifier):
-    """
-    Multitask Model class which acts as wrapper for creating custom multitask models.
+    """Multitask Model class which acts as wrapper for creating custom multitask models.
+
     Takes different tasks as input, parameter sharing is done by objects in flair,
     i.e. creating a Embedding Layer and passing it to two different Models, will
     result in a hard parameter-shared embedding layer. The abstract class takes care
@@ -31,7 +31,8 @@ class MultitaskModel(flair.nn.Classifier):
         loss_factors: Optional[List[float]] = None,
         use_all_tasks: bool = False,
     ):
-        """
+        """Instantiates the MultiTaskModel.
+
         :param models: Key (Task ID) - Value (flair.nn.Model) Pairs to stack model
         """
         super(MultitaskModel, self).__init__()
@@ -61,9 +62,8 @@ class MultitaskModel(flair.nn.Classifier):
         raise NotImplementedError("`_prepare_tensors` is not used for multitask learning")
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
-        """
-        Abstract forward loss implementation of flair.nn.Model's interface.
-        Calls the respective forward loss of each model.
+        """Calls the respective forward loss of each model and sums them weighted by their loss factors.
+
         :param sentences: batch of sentences
         :return: loss
         """
@@ -86,9 +86,10 @@ class MultitaskModel(flair.nn.Classifier):
 
     @staticmethod
     def split_batch_to_task_ids(sentences: Union[List[Sentence], Sentence], all_tasks: bool = False) -> Dict:
-        """
-        Splits a batch of sentences to its respective model. If single sentence is assigned to several tasks
-        (i.e. same corpus but different tasks), then the model assignment for this batch is randomly choosen.
+        """Splits a batch of sentences to its respective model.
+
+        If single sentence is assigned to several tasks (i.e. same corpus but different tasks), then the model
+        assignment for this batch is randomly chosen.
         :param sentences: batch of sentences
         :param all_tasks: use all tasks of each sentence. If deactivated, a random task will be sampled
         :return: Key-value pairs as (task_id, list of sentences ids in batch)
@@ -120,7 +121,8 @@ class MultitaskModel(flair.nn.Classifier):
         evaluate_all: bool = True,
         **evalargs,
     ) -> Result:
-        """
+        """Evaluates the model. Returns a Result object containing evaluation results and a loss value.
+
         :param sentences: batch of sentences
         :param embeddings_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),
             'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
@@ -128,7 +130,6 @@ class MultitaskModel(flair.nn.Classifier):
         :param evaluate_all: choose if all tasks should be evaluated, or a single one, depending on gold_label_type
         :return: Tuple of Result object and loss value (float)
         """
-
         if not evaluate_all:
             if gold_label_type not in self.tasks:
                 raise ValueError(
@@ -203,8 +204,8 @@ class MultitaskModel(flair.nn.Classifier):
         )
 
     def _get_state_dict(self):
-        """
-        Returns the state dict of the multitask model which has multiple models underneath.
+        """Returns the state dict of the multitask model which has multiple models underneath.
+
         :return model_state: model state for the multitask model
         """
         initial_model_state = super()._get_state_dict()
@@ -220,9 +221,7 @@ class MultitaskModel(flair.nn.Classifier):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-        """
-        Initializes the model based on given state dict.
-        """
+        """Initializes the model based on given state dict."""
         models = []
         tasks = []
         loss_factors = state["loss_factors"]

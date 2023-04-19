@@ -275,7 +275,8 @@ def _reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens
 
 
 class TransformerBaseEmbeddings(Embeddings[Sentence]):
-    """Base class for all TransformerEmbeddings
+    """Base class for all TransformerEmbeddings.
+
     This base class handles the tokenizer and the input preparation, however it won't implement the actual model.
     This can be further extended to implement the model in either a pytorch, jit or onnx way of working.
     """
@@ -717,7 +718,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         self.session = None
 
     def optimize_model(self, optimize_model_path, use_external_data_format: bool = False, **kwargs):
-        """Wrapper for onnxruntime.transformers.optimizer.optimize_model"""
+        """Wrapper for `onnxruntime.transformers.optimizer.optimize_model`."""
         from onnxruntime.transformers.optimizer import optimize_model
 
         self.remove_session()
@@ -1334,8 +1335,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     def export_onnx(
         self, path: Union[str, Path], example_sentences: List[Sentence], **kwargs
     ) -> TransformerOnnxEmbeddings:
-        """
-        Export TransformerEmbeddings to OnnxFormat.
+        """Export TransformerEmbeddings to OnnxFormat.
+
         :param example_sentences: a list of sentences that will be used for tracing. It is recommended to take 2-4
         sentences with some variation.
         """

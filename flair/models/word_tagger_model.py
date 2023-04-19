@@ -12,9 +12,7 @@ log = logging.getLogger("flair")
 
 
 class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
-    """
-    This is a simple class of models that tags individual words in text.
-    """
+    """This is a simple class of models that tags individual words in text."""
 
     def __init__(
         self,
@@ -23,8 +21,8 @@ class WordTagger(flair.nn.DefaultClassifier[Sentence, Token]):
         tag_type: str,
         **classifierargs,
     ):
-        """
-        Initializes a WordTagger
+        """Initializes a WordTagger.
+
         :param embeddings: word embeddings used in tagger
         :param tag_dictionary: dictionary of tags you want to predict
         :param tag_type: string identifier for tag type

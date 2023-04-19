@@ -8,12 +8,11 @@ log = logging.getLogger("flair")
 
 
 class TensorboardLogger(TrainerPlugin):
-    """
-    Plugin that takes care of tensorboard logging
-    """
+    """Plugin that takes care of tensorboard logging."""
 
     def __init__(self, log_dir=None, comment="", tracked_metrics=()):
-        """
+        """Initializes the TensorboardLogger.
+
         :param log_dir: Directory into which tensorboard log files will be written  # noqa: E501
         :param tracked_metrics: List of tuples that specify which metrics (in addition to the main_score) shall be plotted in tensorboard, could be [("macro avg", 'f1-score'), ("macro avg", 'precision')] for example  # noqa: E501
         """
@@ -51,8 +50,8 @@ class TensorboardLogger(TrainerPlugin):
 
     @TrainerPlugin.hook
     def _training_finally(self, **kw):
-        """
-        Closes the writer
+        """Closes the writer.
+
         :param kw:
         :return:
         """

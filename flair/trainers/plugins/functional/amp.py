@@ -4,9 +4,7 @@ from flair.trainers.plugins.base import TrainerPlugin
 
 
 class AmpPlugin(TrainerPlugin):
-    """
-    Simple plugin for AMP
-    """
+    """Simple plugin for AMP."""
 
     def __init__(self, opt_level):
         super().__init__()
@@ -46,12 +44,11 @@ class AmpPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_setup(self, **kw):
-        """
-        Wraps with AMP
+        """Wraps with AMP.
+
         :param kw:
         :return:
         """
-
         optimizer = self.trainer.optimizer
 
         self.trainer.model, self.trainer.optimizer = self.amp.initialize(

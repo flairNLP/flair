@@ -32,8 +32,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         end_symbol_for_encoding: bool = True,
         bidirectional_encoding: bool = True,
     ):
-        """
-        Initializes a Lemmatizer model
+        """Initializes a Lemmatizer model.
+
         The model consists of a decoder and an encoder. The encoder is either a RNN-cell (torch.nn.GRU)
         or a Token-Embedding from flair if an embedding is handed to the constructor (token_embedding).
         The output of the encoder is used as the initial hidden state to the decoder, which is an RNN-cell (GRU)
@@ -55,9 +55,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
             computed as the length of the longest token in the sentences plus one.
         :param max_sequence_length: If set to True and max_sequence_length_dependend_on_input is False a fixed
             maximum length for the decoding will be used for all sentences.
-        :param use_attention: whether or not to use attention. Only sensible if encoding via RNN
+        :param use_attention: whether to use attention. Only sensible if encoding via RNN
         """
-
         super().__init__()
 
         self._label_type = label_type
@@ -160,8 +159,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         padding_in_front=False,
         seq_length=None,
     ):
-        """
-        For a given list of strings this function creates index vectors that represent the characters of the strings.
+        """For a given list of strings this function creates index vectors that represent the characters of the strings.
+
         Each string is represented by sequence_length (maximum string length + entries for special symbold) many
         indices representing characters in self.char_dict.
         One can manually set the vector length with the parameter seq_length, though the vector length is always
@@ -407,8 +406,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         return_loss=False,
         embedding_storage_mode="none",
     ):
-        """
-        Predict lemmas of words for a given (list of) sentence(s).
+        """Predict lemmas of words for a given (list of) sentence(s).
+
         :param sentences: sentences to predict
         :param label_name: label name used for predicted lemmas
         :param mini_batch_size: number of tokens that are send through the RNN simultaneously, assuming batching_in_rnn
@@ -707,12 +706,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         return lines
 
     def evaluate(self, *args, **kwargs) -> Result:
-        """
-        Overwrites evaluate of parent class to remove the "by class" printout
-        :param args:
-        :param kwargs:
-        :return:
-        """
+        # Overwrites evaluate of parent class to remove the "by class" printout
         result = super().evaluate(*args, **kwargs)
         result.detailed_results = result.detailed_results.split("\n\n")[0]
         return result

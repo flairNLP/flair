@@ -21,8 +21,7 @@ class UniversalDependenciesCorpus(Corpus):
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
-        """
-        Instantiates a Corpus from CoNLL-U column-formatted task data such as the UD corpora
+        """Instantiates a Corpus from CoNLL-U column-formatted task data such as the UD corpora.
 
         :param data_folder: base folder with the task data
         :param train_file: the name of the train file
@@ -32,7 +31,6 @@ class UniversalDependenciesCorpus(Corpus):
         :param split_multiwords: If set to True, multiwords are split (default), otherwise kept as single tokens
         :return: a Corpus with annotated train, dev and test data
         """
-
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
@@ -63,8 +61,7 @@ class UniversalDependenciesDataset(FlairDataset):
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
-        """
-        Instantiates a column dataset in CoNLL-U format.
+        """Instantiates a column dataset in CoNLL-U format.
 
         :param path_to_conll_file: Path to the CoNLL-U formatted file
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
@@ -505,10 +502,13 @@ class UD_DUTCH(UniversalDependenciesCorpus):
 
 
 class UD_FAROESE(UniversalDependenciesCorpus):
-    """This treebank includes the Faroese treebank dataset from the following link:
+    """This treebank includes the Faroese treebank dataset.
+
+    The data is obtained from the following link:
     https://github.com/UniversalDependencies/UD_Faroese-FarPaHC/tree/master
 
-    Faronese is a small Western Scandinavian language with 60.000-100.000, related to Icelandic and Old Norse"""
+    Faronese is a small Western Scandinavian language with 60.000-100.000, related to Icelandic and Old Norse.
+    """
 
     def __init__(
         self,
