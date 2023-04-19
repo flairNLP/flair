@@ -29,3 +29,19 @@ jobs:
           key: cache-v1.1
       - name: Run tests
         run: pytest --runintegration --durations=0 -vv
+  test_install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install Flair dependencies
+        run: pip install .
+      - name: Install unittest dependencies
+        run: pip freeze
+      - name: Run tests
+        run: |
+          cd resources
+          python -c "import flair"
