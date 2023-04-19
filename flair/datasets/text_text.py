@@ -1041,10 +1041,10 @@ class GLUE_STSB(DataPairCorpus):
         )
 
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
-        """
-        This function creates a tsv file of the predictions of the eval_dataset (after calling
-        classifier.predict(corpus.eval_dataset, label_name='similarity')). The resulting file
-        is called STS-B.tsv and is in the format required for submission to the Glue Benchmark.
+        """Create a tsv file of the predictions of the eval_dataset.
+
+        After calling classifier.predict(corpus.eval_dataset, label_name='similarity'), this function can be used
+        to produce a file called STS-B.tsv suitable for submission to the Glue Benchmark.
         """
         folder_path = Path(folder_path)
         folder_path = folder_path / "STS-B.tsv"
