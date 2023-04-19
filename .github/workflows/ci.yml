@@ -33,15 +33,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.7
+      - name: Set up Python 3.10
         uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.10
       - name: Install Flair dependencies
         run: pip install .
       - name: Install unittest dependencies
         run: pip freeze
-      - name: Run tests
+      - name: Test import
         run: |
           cd resources
           python -c "import flair"
