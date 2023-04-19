@@ -8,7 +8,7 @@ from flair.datasets import ColumnCorpus, FlairDatapointDataset, SentenceDataset
 
 
 def test_dictionary_get_items_with_unk():
-    dictionary: Dictionary = Dictionary()
+    dictionary: Dictionary = Dictionary(add_unk=True)
 
     dictionary.add_item("class_1")
     dictionary.add_item("class_2")

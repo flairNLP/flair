@@ -627,7 +627,7 @@ def test_hipe_2022_corpus(tasks_base_path):
 
                     current_sents = stats["sents"]
                     current_docs = stats["docs"]
-                    current_labels = set(stats["labels"] + ["<unk>"])
+                    current_labels = set(stats["labels"])
 
                     total_sentences = current_sents + current_docs if add_document_separator else stats["sents"]
 
@@ -871,7 +871,7 @@ def test_ontonotes_extraction(tasks_base_path):
         corpus = ONTONOTES(base_path=tmp_dir)
         label_dictionary = corpus.make_label_dictionary("ner")
 
-        assert len(label_dictionary) == 15
+        assert len(label_dictionary) == 14
         assert label_dictionary.span_labels
 
         domain_specific_corpus = ONTONOTES(base_path=tmp_dir, domain=["bc"])
