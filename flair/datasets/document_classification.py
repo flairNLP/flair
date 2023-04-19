@@ -1579,7 +1579,7 @@ class GLUE_SST2(CSVClassificationCorpus):
         with open(folder_path, mode="w") as tsv_file:
             tsv_file.write("index\tprediction\n")
             for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
-                predicted_label = reverse_label_map[datapoint.get_labels(self.label_type)[0].value]
+                predicted_label = reverse_label_map[datapoint.get_labels(self.eval_dataset.label_type)[0].value]
                 tsv_file.write(f"{index}\t{predicted_label}\n")
 
 
