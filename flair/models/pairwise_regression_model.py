@@ -325,7 +325,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
                 "spearman": metric.spearmanr(),
             }
 
-            if main_evaluation_metric[0] == 0:
+            if main_evaluation_metric[0] in ("correlation", "other"):
                 main_score = scores[main_evaluation_metric[1]]
             else:
                 main_score = scores["spearman"]
