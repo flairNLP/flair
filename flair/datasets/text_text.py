@@ -982,6 +982,84 @@ class GLUE_WNLI(DataPairCorpus):
                 tsv_file.write(str(index) + "\t" + datapoint.get_labels("entailment")[0].value + "\n")
 
 
+class GLUE_STSB(DataPairCorpus):
+    def __init__(
+        self,
+        label_type="similarity",
+        base_path: Union[str, Path] = None,
+        max_tokens_per_doc=-1,
+        max_chars_per_doc=-1,
+        use_tokenizer=True,
+        in_memory: bool = True,
+        sample_missing_splits: bool = True,
+    ):
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        else:
+            base_path = Path(base_path)
+
+        dataset_name = "glue"
+
+        data_folder = base_path / dataset_name
+
+        data_file = data_folder / "STS-B" / "train.tsv"
+
+        # if data is not downloaded yet, download it
+        if not data_file.is_file():
+            # get the zip file
+            zipped_data_path = cached_path(
+                "https://dl.fbaipublicfiles.com/glue/data/STS-B.zip",
+                Path("datasets") / dataset_name,
+            )
+
+            unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
+
+            # rename test file to eval_dataset, since it has no labels
+            os.rename(
+                str(data_folder / data_folder / "STS-B" / "test.tsv"),
+                str(data_folder / data_folder / "STS-B" / "eval_dataset.tsv"),
+            )
+
+        super().__init__(
+            data_folder / "STS-B",
+            label_type=label_type,
+            columns=[7, 8, 9],
+            skip_first_line=True,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            sample_missing_splits=sample_missing_splits,
+        )
+
+        self.eval_dataset = DataPairDataset(
+            data_folder / "STS-B" / "eval_dataset.tsv",
+            label_type=label_type,
+            columns=[7, 8, 9],
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_first_line=True,
+            label=False,
+        )
+
+    def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
+        """
+        This function creates a tsv file of the predictions of the eval_dataset (after calling
+        classifier.predict(corpus.eval_dataset, label_name='similarity')). The resulting file
+        is called STS-B.tsv and is in the format required for submission to the Glue Benchmark.
+        """
+        folder_path = Path(folder_path)
+        folder_path = folder_path / "STS-B.tsv"
+
+        with open(folder_path, mode="w") as tsv_file:
+            tsv_file.write("index\tprediction\n")
+            datapoint: DataPair
+            for index, datapoint in enumerate(_iter_dataset(self.eval_dataset)):
+                tsv_file.write(str(index) + "\t" + datapoint.get_labels("entailment")[0].value + "\n")
+
+
 class SUPERGLUE_RTE(DataPairCorpus):
     def __init__(
         self,
