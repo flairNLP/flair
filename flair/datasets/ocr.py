@@ -22,8 +22,8 @@ class OcrJsonDataset(FlairDataset):
         normalize_coords_to_thousands: bool = True,
         label_name_map: Dict[str, str] = None,
     ):
-        """
-        Instantiates a Dataset from a OCR-Json format.
+        """Instantiates a Dataset from a OCR-Json format.
+
         The folder is structured with a "images" folder and a "tagged" folder.
         Those folders contain respectively .jpg and .json files with matching file name.
         The json contains 3 fields "words", "bbox", "labels" which are lists of equal length
@@ -136,8 +136,7 @@ class OcrCorpus(Corpus):
         label_name_map: Dict[str, str] = None,
         **corpusargs,
     ):
-        """
-        Instantiates a Corpus from a OCR-Json format
+        """Instantiates a Corpus from a OCR-Json format.
 
         :param train_path: the folder for the training data
         :param dev_path: the folder for the dev data
@@ -210,8 +209,8 @@ class SROIE(OcrCorpus):
         label_name_map: Dict[str, str] = None,
         **corpusargs,
     ):
-        """
-        Instantiates the SROIE corpus with perfect ocr boxes.
+        """Instantiates the SROIE corpus with perfect ocr boxes.
+
         :param base_path: the path to store the dataset or load it from
         :param label_type: the label_type to add the ocr labels to
         :param encoding: the encoding to load the .json files with

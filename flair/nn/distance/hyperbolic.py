@@ -1,4 +1,5 @@
-"""
+"""Hyperbolic distances implemented in pytorch.
+
 This module was copied from the repository the following repository:
 https://github.com/asappresearch/dynamic-classification
 
@@ -55,7 +56,7 @@ def log_map(x, y):
 
 
 def norm(x):
-    """Compute the norm"""
+    """Compute the norm."""
     n = torch.sqrt(torch.abs(mdot(x, x)))
     return n
 
@@ -75,8 +76,7 @@ class HyperbolicDistance(nn.Module):
     """Implement a HyperbolicDistance object."""
 
     def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:  # type: ignore
-        """Returns the squared euclidean distance between each
-        element in mat_1 and each element in mat_2.
+        """Returns the squared euclidean distance between each element in mat_1 and each element in mat_2.
 
         Parameters
         ----------

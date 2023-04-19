@@ -7,14 +7,16 @@ STOP_TAG: str = "<STOP>"
 
 
 class CRF(torch.nn.Module):
-    """
+    """Conditional Random Field.
+
     Conditional Random Field Implementation according to sgrvinod (https://github.com/sgrvinod).
     Classifier which predicts single tag / class / label for given word based on not just the word,
     but also on previous seen annotations.
     """
 
     def __init__(self, tag_dictionary, tagset_size: int, init_from_state_dict: bool):
-        """
+        """Initialize the Conditional Random Field.
+
         :param tag_dictionary: tag dictionary in order to find ID for start and stop tags
         :param tagset_size: number of tag from tag dictionary
         :param init_from_state_dict: whether we load pretrained model from state dict
@@ -33,8 +35,8 @@ class CRF(torch.nn.Module):
         self.to(flair.device)
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
-        """
-        Forward propagation of Conditional Random Field.
+        """Forward propagation of Conditional Random Field.
+
         :param features: output from RNN / Linear layer in shape (batch size, seq len, hidden size)
         :return: CRF scores (emission scores for each token + transitions prob from previous state) in
         shape (batch_size, seq len, tagset size, tagset size)

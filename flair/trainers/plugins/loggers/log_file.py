@@ -8,9 +8,7 @@ log = logging.getLogger("flair")
 
 
 class LogFilePlugin(TrainerPlugin):
-    """
-    Plugin for the training.log file
-    """
+    """Plugin for the training.log file."""
 
     def __init__(self, base_path):
         super().__init__()

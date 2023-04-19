@@ -118,7 +118,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         return already_sampled_negative_labels
 
     def train(self, mode=True):
-        """Populate label similarity map based on cosine similarity before running epoch
+        """Populate label similarity map based on cosine similarity before running epoch.
 
         If the `num_negative_labels_to_sample` is set to an integer value then before starting
         each epoch the model would create a similarity measure between the label names based
@@ -126,15 +126,11 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         """
         if mode and self.num_negative_labels_to_sample is not None:
             self._compute_label_similarity_for_current_epoch()
-            super().train(mode)
 
         super().train(mode)
 
     def _compute_label_similarity_for_current_epoch(self):
-        """
-        Compute the similarity between all labels for better sampling of negatives
-        """
-
+        """Compute the similarity between all labels for better sampling of negatives."""
         # get and embed all labels by making a Sentence object that contains only the label text
         all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
         label_sentences = [Sentence(label) for label in all_labels]
@@ -182,10 +178,11 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         multi_label: bool = True,
         force_switch: bool = False,
     ):
-        """
-        Adds a new task to an existing TARS model. Sets necessary attributes and finally 'switches'
-        to the new task. Parameters are similar to the constructor except for model choice, batch
-        size and negative sampling. This method does not store the resultant model onto disk.
+        """Adds a new task to an existing TARS model.
+
+        Sets necessary attributes and finally 'switches' to the new task. Parameters are similar to the constructor
+        except for model choice, batch size and negative sampling. This method does not store the resultant model onto
+        disk.
         :param task_name: a string depicting the name of the task
         :param label_dictionary: dictionary of the labels you want to predict
         :param label_type: string to identify the label type ('ner', 'sentiment', etc.)
@@ -221,15 +218,11 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         self.switch_to_task(task_name)
 
     def list_existing_tasks(self) -> Set[str]:
-        """
-        Lists existing tasks in the loaded TARS model on the console.
-        """
+        """Lists existing tasks in the loaded TARS model on the console."""
         return set(self._task_specific_attributes.keys())
 
     def switch_to_task(self, task_name):
-        """
-        Switches to a task which was previously added.
-        """
+        """Switches to a task which was previously added."""
         if task_name not in self._task_specific_attributes:
             log.error(
                 "Provided `%s` does not exist in the model. Consider calling " "`add_and_switch_to_new_task` first.",
@@ -267,13 +260,12 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         candidate_label_set: Union[List[str], Set[str], str],
         multi_label: bool = True,
     ):
-        """
-        Method to make zero shot predictions from the TARS model
+        """Make zero shot predictions from the TARS model.
+
         :param sentences: input sentence objects to classify
         :param candidate_label_set: set of candidate labels
         :param multi_label: indicates whether multi-label or single class prediction. Defaults to True.
         """
-
         # check if candidate_label_set is empty
         if candidate_label_set is None or len(candidate_label_set) == 0:
             log.warning("Provided candidate_label_set is empty")
@@ -324,11 +316,11 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
 
 
 class TARSTagger(FewshotClassifier):
-    """
-    TARS model for sequence tagging. In the backend, the model uses a BERT based 5-class
-    sequence labeler which given a <label, text> pair predicts the probability for each word
-    to belong to one of the BIOES classes. The input data is a usual Sentence object which is inflated
-    by the model internally before pushing it through the transformer stack of BERT.
+    """TARS model for sequence tagging.
+
+    In the backend, the model uses a BERT based 5-class sequence labeler which given a <label, text> pair predicts the
+    probability for each word to belong to one of the BIOES classes. The input data is a usual Sentence object which
+    is inflated by the model internally before pushing it through the transformer stack of BERT.
     """
 
     static_label_type = "tars_label"
@@ -343,8 +335,8 @@ class TARSTagger(FewshotClassifier):
         prefix: bool = True,
         **tagger_args,
     ):
-        """
-        Initializes a TextClassifier
+        """Initializes a TarsTagger.
+
         :param task_name: a string depicting the name of the task
         :param label_dictionary: dictionary of labels you want to predict
         :param embeddings: name of the pre-trained transformer model e.g.,
@@ -476,9 +468,8 @@ class TARSTagger(FewshotClassifier):
         embedding_storage_mode="none",
         most_probable_first: bool = True,
     ):
-        # return
-        """
-        Predict sequence tags for Named Entity Recognition task
+        """Predict sequence tags for Named Entity Recognition task.
+
         :param sentences: a Sentence or a List of Sentence
         :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
         up to a point when it has no more effect.
@@ -634,10 +625,10 @@ class TARSTagger(FewshotClassifier):
 
 
 class TARSClassifier(FewshotClassifier):
-    """
-    TARS model for text classification. In the backend, the model uses a BERT based binary
-    text classifier which given a <label, text> pair predicts the probability of two classes
-    "True", and "False". The input data is a usual Sentence object which is inflated
+    """TARS model for text classification.
+
+    In the backend, the model uses a BERT based binary text classifier which given a <label, text> pair predicts the
+    probability of two classes "True", and "False". The input data is a usual Sentence object which is inflated
     by the model internally before pushing it through the transformer stack of BERT.
     """
 
@@ -655,8 +646,8 @@ class TARSClassifier(FewshotClassifier):
         prefix: bool = True,
         **tagger_args,
     ):
-        """
-        Initializes a TextClassifier
+        """Initializes a TarsClassifier.
+
         :param task_name: a string depicting the name of the task
         :param label_dictionary: dictionary of labels you want to predict
         :param embeddings: name of the pre-trained transformer model e.g.,
@@ -810,8 +801,8 @@ class TARSClassifier(FewshotClassifier):
         label_threshold: float = 0.5,
         multi_label: Optional[bool] = None,
     ):
-        """
-        Predict sequence tags for Named Entity Recognition task
+        """Predict sentences on the Text Classification task.
+
         :param sentences: a Sentence or a List of Sentence
         :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
         up to a point when it has no more effect.

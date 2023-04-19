@@ -166,7 +166,7 @@ class TestRelationClassifier(BaseModelTest):
         split: Optional[Dataset],
         ground_truth: Set[Tuple[str, Tuple[str, ...]]],
     ) -> None:
-        """Ground truth is a set of tuples of (<Sentence Text>, <Relation Label Values>)"""
+        # Ground truth is a set of tuples of (<Sentence Text>, <Relation Label Values>)
         assert split is not None
 
         data_loader = DataLoader(split, batch_size=1)

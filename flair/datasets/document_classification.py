@@ -22,9 +22,7 @@ log = logging.getLogger("flair")
 
 
 class ClassificationCorpus(Corpus):
-    """
-    A classification corpus from FastText-formatted text files.
-    """
+    """A classification corpus from FastText-formatted text files."""
 
     def __init__(
         self,
@@ -44,8 +42,7 @@ class ClassificationCorpus(Corpus):
         sample_missing_splits: bool = True,
         encoding: str = "utf-8",
     ):
-        """
-        Instantiates a Corpus from text classification-formatted task data
+        """Instantiates a Corpus from text classification-formatted task data.
 
         :param data_folder: base folder with the task data
         :param label_type: name of the label
@@ -64,7 +61,6 @@ class ClassificationCorpus(Corpus):
         :param encoding: Default is 'utf-8' but some datasets are in 'latin-1
         :return: a Corpus with annotated train, dev and test data
         """
-
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
@@ -128,9 +124,7 @@ class ClassificationCorpus(Corpus):
 
 
 class ClassificationDataset(FlairDataset):
-    """
-    Dataset for classification instantiated from a single FastText-formatted file.
-    """
+    """Dataset for classification instantiated from a single FastText-formatted file."""
 
     def __init__(
         self,
@@ -146,8 +140,9 @@ class ClassificationDataset(FlairDataset):
         allow_examples_without_labels=False,
         encoding: str = "utf-8",
     ):
-        """
-        Reads a data file for text classification. The file should contain one document/text per line.
+        """Reads a data file for text classification.
+
+        The file should contain one document/text per line.
         The line should have the following format:
         __label__<class_name> <text>
         If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
@@ -313,9 +308,7 @@ class ClassificationDataset(FlairDataset):
 
 
 class CSVClassificationCorpus(Corpus):
-    """
-    Classification corpus instantiated from CSV data files.
-    """
+    """Classification corpus instantiated from CSV data files."""
 
     def __init__(
         self,
@@ -335,8 +328,7 @@ class CSVClassificationCorpus(Corpus):
         no_class_label=None,
         **fmtparams,
     ):
-        """
-        Instantiates a Corpus for text classification from CSV column formatted data
+        """Instantiates a Corpus for text classification from CSV column formatted data.
 
         :param data_folder: base folder with the task data
         :param column_name_map: a column name map that indicates which column is text and which the label(s)
@@ -353,7 +345,6 @@ class CSVClassificationCorpus(Corpus):
         :param fmtparams: additional parameters for the CSV file reader
         :return: a Corpus with annotated train, dev and test data
         """
-
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
@@ -411,9 +402,7 @@ class CSVClassificationCorpus(Corpus):
 
 
 class CSVClassificationDataset(FlairDataset):
-    """
-    Dataset for text classification from CSV column formatted data.
-    """
+    """Dataset for text classification from CSV column formatted data."""
 
     def __init__(
         self,
@@ -429,8 +418,7 @@ class CSVClassificationDataset(FlairDataset):
         no_class_label=None,
         **fmtparams,
     ):
-        """
-        Instantiates a Dataset for text classification from CSV column formatted data
+        """Instantiates a Dataset for text classification from CSV column formatted data.
 
         :param path_to_file: path to the file with the CSV data
         :param column_name_map: a column name map that indicates which column is text and which the label(s)
@@ -444,7 +432,6 @@ class CSVClassificationDataset(FlairDataset):
         :param fmtparams: additional parameters for the CSV file reader
         :return: a Corpus with annotated train, dev and test data
         """
-
         path_to_file = Path(path_to_file)
 
         assert path_to_file.exists()
@@ -568,9 +555,11 @@ class CSVClassificationDataset(FlairDataset):
 
 
 class AMAZON_REVIEWS(ClassificationCorpus):
-    """
-    A very large corpus of Amazon reviews with positivity ratings. Corpus is downloaded from and documented at
-    https://nijianmo.github.io/amazon/index.html. We download the 5-core subset which is still tens of millions of
+    """A very large corpus of Amazon reviews with positivity ratings.
+
+    Corpus is downloaded from and documented at
+    https://nijianmo.github.io/amazon/index.html.
+    We download the 5-core subset which is still tens of millions of
     reviews.
     """
 
@@ -591,8 +580,9 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         memory_mode="partial",
         **corpusargs,
     ):
-        """
-        Constructs corpus object. Split_max indicates how many data points from each of the 28 splits are used, so
+        """Constructs corpus object.
+
+        Split_max indicates how many data points from each of the 28 splits are used, so
         set this higher or lower to increase/decrease corpus size.
         :param label_name_map: Map label names to different schema. By default, the 5-star rating is mapped onto 3
         classes (POSITIVE, NEGATIVE, NEUTRAL)
@@ -604,7 +594,6 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param corpusargs: Arguments for ClassificationCorpus
         """
-
         # dataset name includes the split size
         dataset_name = self.__class__.__name__.lower() + "_" + str(split_max) + "_" + str(fraction_of_5_star_reviews)
 
@@ -753,9 +742,9 @@ class AMAZON_REVIEWS(ClassificationCorpus):
 
 
 class IMDB(ClassificationCorpus):
-    """
-    Corpus of IMDB movie reviews labeled by sentiment (POSITIVE, NEGATIVE). Downloaded from and documented at
-    http://ai.stanford.edu/~amaas/data/sentiment/.
+    """Corpus of IMDB movie reviews labeled by sentiment (POSITIVE, NEGATIVE).
+
+    Downloaded from and documented at http://ai.stanford.edu/~amaas/data/sentiment/.
     """
 
     def __init__(
@@ -766,7 +755,7 @@ class IMDB(ClassificationCorpus):
         memory_mode="partial",
         **corpusargs,
     ):
-        """
+        """Initialize the IMDB move review sentiment corpus.
 
         :param base_path: Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
@@ -777,7 +766,6 @@ class IMDB(ClassificationCorpus):
          processing or 'none' for less memory.
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -837,9 +825,13 @@ class IMDB(ClassificationCorpus):
 
 
 class NEWSGROUPS(ClassificationCorpus):
-    """
-    20 newsgroups corpus available at "http://qwone.com/~jason/20Newsgroups", classifying
-    news items into one of 20 categories. Each data point is a full news article so documents may be very long.
+    """20 newsgroups corpus, classifying news items into one of 20 categories.
+
+    Downloaded from http://qwone.com/~jason/20Newsgroups
+
+
+     Each data point is a full news article so documents may be very
+     long.
     """
 
     def __init__(
@@ -849,15 +841,14 @@ class NEWSGROUPS(ClassificationCorpus):
         memory_mode: str = "partial",
         **corpusargs,
     ):
-        """
-        Instantiates 20 newsgroups corpus.
+        """Instantiates 20 newsgroups corpus.
+
         :param base_path: Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param memory_mode: Set to 'partial' because this is a big corpus, but you can also set to 'full' for faster
          processing or 'none' for less memory.
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -924,9 +915,11 @@ class NEWSGROUPS(ClassificationCorpus):
 
 
 class STACKOVERFLOW(ClassificationCorpus):
-    """
-    Stackoverflow corpus available at "https://github.com/jacoxu/StackOverflow", classifying
-    news items into one of 20 labels. Each data point is a question.
+    """Stackoverflow corpus classifying questions into one of 20 labels.
+
+    The data will be downloaded from "https://github.com/jacoxu/StackOverflow",
+
+    Each data point is a question.
     """
 
     def __init__(
@@ -936,15 +929,14 @@ class STACKOVERFLOW(ClassificationCorpus):
         memory_mode: str = "partial",
         **corpusargs,
     ):
-        """
-        Instantiates Stackoverflow corpus.
+        """Instantiates Stackoverflow corpus.
+
         :param base_path: Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param memory_mode: Set to 'partial' because this is a big corpus, but you can also set to 'full' for faster
          processing or 'none' for less memory.
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1013,24 +1005,26 @@ class STACKOVERFLOW(ClassificationCorpus):
 
 
 class SENTIMENT_140(ClassificationCorpus):
-    """
-    Twitter sentiment corpus downloaded from and documented at http://help.sentiment140.com/for-students. Two sentiments
-    in train data (POSITIVE, NEGATIVE) and three sentiments in test data (POSITIVE, NEGATIVE, NEUTRAL).
+    """Twitter sentiment corpus.
+
+    See http://help.sentiment140.com/for-students
+
+    Two sentiments in train data (POSITIVE, NEGATIVE) and three
+    sentiments in test data (POSITIVE, NEGATIVE, NEUTRAL).
     """
 
     def __init__(
         self, label_name_map=None, tokenizer: Tokenizer = SegtokTokenizer(), memory_mode: str = "partial", **corpusargs
     ):
-        """
-        Instantiates twitter sentiment corpus.
+        """Instantiates twitter sentiment corpus.
+
         :param label_name_map: By default, the numeric values are mapped to ('NEGATIVE', 'POSITIVE' and 'NEUTRAL')
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param memory_mode: Set to 'partial' because this is a big corpus, but you can also set to 'full' for faster
          processing or 'none' for less memory.
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
-        # by defaut, map point score to POSITIVE / NEGATIVE values
+        # by default, map point score to POSITIVE / NEGATIVE values
         if label_name_map is None:
             label_name_map = {"0": "NEGATIVE", "2": "NEUTRAL", "4": "POSITIVE"}
 
@@ -1085,9 +1079,9 @@ class SENTIMENT_140(ClassificationCorpus):
 
 
 class SENTEVAL_CR(ClassificationCorpus):
-    """
-    The customer reviews dataset of SentEval, see https://github.com/facebookresearch/SentEval, classified into
-    NEGATIVE or POSITIVE sentiment.
+    """The customer reviews dataset of SentEval, classified into NEGATIVE or POSITIVE sentiment.
+
+    see https://github.com/facebookresearch/SentEval
     """
 
     def __init__(
@@ -1096,13 +1090,12 @@ class SENTEVAL_CR(ClassificationCorpus):
         memory_mode: str = "full",
         **corpusargs,
     ):
-        """
-        Instantiates SentEval customer reviews dataset.
+        """Instantiates SentEval customer reviews dataset.
+
         :param corpusargs: Other args for ClassificationCorpus.
         :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer())
         :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
         """
-
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1137,9 +1130,9 @@ class SENTEVAL_CR(ClassificationCorpus):
 
 
 class SENTEVAL_MR(ClassificationCorpus):
-    """
-    The movie reviews dataset of SentEval, see https://github.com/facebookresearch/SentEval, classified into
-    NEGATIVE or POSITIVE sentiment.
+    """The movie reviews dataset of SentEval, classified into NEGATIVE or POSITIVE sentiment.
+
+    see https://github.com/facebookresearch/SentEval
     """
 
     def __init__(
@@ -1148,13 +1141,12 @@ class SENTEVAL_MR(ClassificationCorpus):
         memory_mode: str = "full",
         **corpusargs,
     ):
-        """
-        Instantiates SentEval movie reviews dataset.
+        """Instantiates SentEval movie reviews dataset.
+
         :param corpusargs: Other args for ClassificationCorpus.
         :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
         :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
         """
-
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1189,9 +1181,9 @@ class SENTEVAL_MR(ClassificationCorpus):
 
 
 class SENTEVAL_SUBJ(ClassificationCorpus):
-    """
-    The subjectivity dataset of SentEval, see https://github.com/facebookresearch/SentEval, classified into
-    SUBJECTIVE or OBJECTIVE sentiment.
+    """The subjectivity dataset of SentEval, classified into SUBJECTIVE or OBJECTIVE sentiment.
+
+    see https://github.com/facebookresearch/SentEval
     """
 
     def __init__(
@@ -1200,13 +1192,12 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
         memory_mode: str = "full",
         **corpusargs,
     ):
-        """
-        Instantiates SentEval subjectivity dataset.
+        """Instantiates SentEval subjectivity dataset.
+
         :param corpusargs: Other args for ClassificationCorpus.
         :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
         :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
         """
-
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1241,9 +1232,9 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
 
 
 class SENTEVAL_MPQA(ClassificationCorpus):
-    """
-    The opinion-polarity dataset of SentEval, see https://github.com/facebookresearch/SentEval, classified into
-    NEGATIVE or POSITIVE polarity.
+    """The opinion-polarity dataset of SentEval, classified into NEGATIVE or POSITIVE polarity.
+
+    see https://github.com/facebookresearch/SentEval
     """
 
     def __init__(
@@ -1252,13 +1243,12 @@ class SENTEVAL_MPQA(ClassificationCorpus):
         memory_mode: str = "full",
         **corpusargs,
     ):
-        """
-        Instantiates SentEval opinion polarity dataset.
+        """Instantiates SentEval opinion polarity dataset.
+
         :param corpusargs: Other args for ClassificationCorpus.
         :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
         :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
         """
-
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1293,9 +1283,9 @@ class SENTEVAL_MPQA(ClassificationCorpus):
 
 
 class SENTEVAL_SST_BINARY(ClassificationCorpus):
-    """
-    The Stanford sentiment treebank dataset of SentEval, see https://github.com/facebookresearch/SentEval, classified
-    into NEGATIVE or POSITIVE sentiment.
+    """The Stanford sentiment treebank dataset of SentEval, classified into NEGATIVE or POSITIVE sentiment.
+
+    see https://github.com/facebookresearch/SentEval
     """
 
     def __init__(
@@ -1304,13 +1294,12 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
         memory_mode: str = "full",
         **corpusargs,
     ):
-        """
-        Instantiates SentEval Stanford sentiment treebank dataset.
+        """Instantiates SentEval Stanford sentiment treebank dataset.
+
         :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
         :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         # this dataset name
         dataset_name = self.__class__.__name__.lower() + "_v2"
 
@@ -1352,9 +1341,9 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
 
 
 class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
-    """
-    The Stanford sentiment treebank dataset of SentEval, see https://github.com/facebookresearch/SentEval, classified
-    into 5 sentiment classes.
+    """The Stanford sentiment treebank dataset of SentEval, classified into 5 sentiment classes.
+
+    see https://github.com/facebookresearch/SentEval
     """
 
     def __init__(
@@ -1363,13 +1352,12 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
         memory_mode: str = "full",
         **corpusargs,
     ):
-        """
-        Instantiates SentEval Stanford sentiment treebank dataset.
+        """Instantiates SentEval Stanford sentiment treebank dataset.
+
         :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
         :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1405,10 +1393,13 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
 
 
 class GLUE_COLA(ClassificationCorpus):
-    """
-    Corpus of Linguistic Acceptability from GLUE benchmark (https://gluebenchmark.com/tasks).
-    The task is to predict whether an English sentence is grammatically correct.
-    Additionaly to the Corpus we have eval_dataset containing the unlabeled test data for Glue evaluation.
+    """Corpus of Linguistic Acceptability from GLUE benchmark.
+
+    see https://gluebenchmark.com/tasks
+
+    The task is to predict whether an English sentence is grammatically
+    correct. Additionaly to the Corpus we have eval_dataset containing
+    the unlabeled test data for Glue evaluation.
     """
 
     def __init__(
@@ -1418,13 +1409,12 @@ class GLUE_COLA(ClassificationCorpus):
         tokenizer: Tokenizer = SegtokTokenizer(),
         **corpusargs,
     ):
-        """
-        Instantiates CoLA dataset
+        """Instantiates CoLA dataset.
+
         :param base_path: Provide this only if you store the COLA corpus in a specific folder.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1502,8 +1492,9 @@ class GLUE_COLA(ClassificationCorpus):
 
 
 class GO_EMOTIONS(ClassificationCorpus):
-    """
-    GoEmotions dataset containing 58k Reddit comments labeled with 27 emotion categories, see. https://github.com/google-research/google-research/tree/master/goemotions
+    """GoEmotions dataset containing 58k Reddit comments labeled with 27 emotion categories.
+
+    see https://github.com/google-research/google-research/tree/master/goemotions
     """
 
     def __init__(
@@ -1513,18 +1504,19 @@ class GO_EMOTIONS(ClassificationCorpus):
         memory_mode: str = "partial",
         **corpusargs,
     ):
-        """
+        """Initializes the GoEmotions corpus.
+
         Parameters
         ----------
-        base_path : Provide this only if you want to store the corpus in a specific folder, otherwise use default.
-        tokenizer : Default is SegtokTokenizer().
-        memory_mode : Set to what degree to keep corpus in memory ('full', 'partial' or 'disk'). Use 'full'
-        if full corpus and all embeddings fits into memory for speedups during training. Otherwise use 'partial' and if
-        even this is too much for your memory, use 'disk'.
-        **corpusargs : Other args for ClassificationCorpus.
-
+        base_path: Union[str, Path]
+            Provide this only if you want to store the corpus in a specific folder, otherwise use default.
+        tokenizer: Union[bool, Tokenizer]
+            Specify which tokenizer to use, the default is SegtokTokenizer().
+        memory_mode: str
+            Set to what degree to keep corpus in memory ('full', 'partial' or 'disk'). Use 'full'
+            if full corpus and all embeddings fits into memory for speedups during training. Otherwise use 'partial' and if
+            even this is too much for your memory, use 'disk'.
         """
-
         label_name_map = {
             "0": "ADMIRATION",
             "1": "AMUSEMENT",
@@ -1607,9 +1599,7 @@ class GO_EMOTIONS(ClassificationCorpus):
 
 
 class TREC_50(ClassificationCorpus):
-    """
-    The TREC Question Classification Corpus, classifying questions into 50 fine-grained answer types.
-    """
+    """The TREC Question Classification Corpus, classifying questions into 50 fine-grained answer types."""
 
     def __init__(
         self,
@@ -1618,14 +1608,13 @@ class TREC_50(ClassificationCorpus):
         memory_mode="full",
         **corpusargs,
     ):
-        """
-        Instantiates TREC Question Classification Corpus with 6 classes.
+        """Instantiates TREC Question Classification Corpus with 6 classes.
+
         :param base_path: Provide this only if you store the TREC corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
         :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1668,10 +1657,7 @@ class TREC_50(ClassificationCorpus):
 
 
 class TREC_6(ClassificationCorpus):
-    """
-    The TREC Question Classification Corpus, classifying questions into 6 coarse-grained answer types
-    (DESC, HUM, LOC, ENTY, NUM, ABBR).
-    """
+    """The TREC Question Classification Corpus, classifying questions into 6 coarse-grained answer types."""
 
     def __init__(
         self,
@@ -1680,14 +1666,13 @@ class TREC_6(ClassificationCorpus):
         memory_mode="full",
         **corpusargs,
     ):
-        """
-        Instantiates TREC Question Classification Corpus with 6 classes.
+        """Instantiates TREC Question Classification Corpus with 6 classes.
+
         :param base_path: Provide this only if you store the TREC corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
         :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1732,9 +1717,7 @@ class TREC_6(ClassificationCorpus):
 
 
 class YAHOO_ANSWERS(ClassificationCorpus):
-    """
-    The YAHOO Question Classification Corpus, classifying questions into 10 coarse-grained answer types
-    """
+    """The YAHOO Question Classification Corpus, classifying questions into 10 coarse-grained answer types."""
 
     def __init__(
         self,
@@ -1743,14 +1726,13 @@ class YAHOO_ANSWERS(ClassificationCorpus):
         memory_mode="partial",
         **corpusargs,
     ):
-        """
-        Instantiates YAHOO Question Classification Corpus with 10 classes.
+        """Instantiates YAHOO Question Classification Corpus with 10 classes.
+
         :param base_path: Provide this only if you store the YAHOO corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
         :param memory_mode: Set to 'partial' by default since this is a rather big corpus. Can also be 'full' or 'none'.
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1809,10 +1791,11 @@ class YAHOO_ANSWERS(ClassificationCorpus):
 
 
 class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
-    """
-    GermEval 2018 corpus for identification of offensive language.
-    Classifying German tweets into 2 coarse-grained categories OFFENSIVE and OTHER
-    or 4 fine-grained categories ABUSE, INSULT, PROFATINTY and OTHER.
+    """GermEval 2018 corpus for identification of offensive language.
+
+    Classifying German tweets into 2 coarse-grained categories OFFENSIVE
+    and OTHER or 4 fine-grained categories ABUSE, INSULT, PROFATINTY and
+    OTHER.
     """
 
     def __init__(
@@ -1823,15 +1806,14 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
         fine_grained_classes: bool = False,
         **corpusargs,
     ):
-        """
-        Instantiates GermEval 2018 Offensive Language Classification Corpus.
+        """Instantiates GermEval 2018 Offensive Language Classification Corpus.
+
         :param base_path: Provide this only if you store the Offensive Language corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
         :param fine_grained_classes: Set to True to load the dataset with 4 fine-grained classes
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1882,8 +1864,8 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
 
 
 class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
-    """
-    The Communicative Functions Classification Corpus.
+    """The Communicative Functions Classification Corpus.
+
     Classifying sentences from scientific papers into 39 communicative functions.
     """
 
@@ -1894,14 +1876,13 @@ class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
         tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         **corpusargs,
     ):
-        """
-        Instantiates Communicative Functions Classification Corpus with 39 classes.
+        """Instantiates Communicative Functions Classification Corpus with 39 classes.
+
         :param base_path: Provide this only if you store the Communicative Functions date in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
         :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1969,19 +1950,18 @@ def _download_wassa_if_not_there(emotion, data_folder, dataset_name):
 
 
 class WASSA_ANGER(ClassificationCorpus):
-    """
-    WASSA-2017 anger emotion-intensity dataset downloaded from and documented at
-     https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
+    """WASSA-2017 anger emotion-intensity corpus.
+
+    see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html.
     """
 
     def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
-        """
-        Instantiates WASSA-2017 anger emotion-intensity dataset
+        """Instantiates WASSA-2017 anger emotion-intensity corpus.
+
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1999,19 +1979,18 @@ class WASSA_ANGER(ClassificationCorpus):
 
 
 class WASSA_FEAR(ClassificationCorpus):
-    """
-    WASSA-2017 fear emotion-intensity dataset downloaded from and documented at
-     https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
+    """WASSA-2017 fear emotion-intensity corpus.
+
+    see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html.
     """
 
     def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
-        """
-        Instantiates WASSA-2017 fear emotion-intensity dataset
+        """Instantiates WASSA-2017 fear emotion-intensity corpus.
+
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -2029,19 +2008,18 @@ class WASSA_FEAR(ClassificationCorpus):
 
 
 class WASSA_JOY(ClassificationCorpus):
-    """
-    WASSA-2017 joy emotion-intensity dataset downloaded from and documented at
-     https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
+    """WASSA-2017 joy emotion-intensity dataset corpus.
+
+    see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
     """
 
     def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
-        """
-        Instantiates WASSA-2017 joy emotion-intensity dataset
+        """Instantiates WASSA-2017 joy emotion-intensity corpus.
+
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -2059,19 +2037,18 @@ class WASSA_JOY(ClassificationCorpus):
 
 
 class WASSA_SADNESS(ClassificationCorpus):
-    """
-    WASSA-2017 sadness emotion-intensity dataset downloaded from and documented at
-     https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
+    """WASSA-2017 sadness emotion-intensity corpus.
+
+    see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html.
     """
 
     def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
-        """
-        Instantiates WASSA-2017 sadness emotion-intensity dataset
+        """Instantiates WASSA-2017 sadness emotion-intensity dataset.
+
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
         :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param corpusargs: Other args for ClassificationCorpus.
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:

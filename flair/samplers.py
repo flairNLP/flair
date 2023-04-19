@@ -11,8 +11,9 @@ log = logging.getLogger("flair")
 
 class FlairSampler(Sampler):
     def set_dataset(self, data_source):
-        """Initialize by passing a block_size and a plus_window parameter.
-        :param data_source: dataset to sample from
+        """Initialize the data source for the FlairSampler.
+
+        :param data_source: dataset to sample from.
         """
         self.data_source = data_source
         self.num_samples = len(self.data_source)
@@ -28,8 +29,8 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
         super(ImbalancedClassificationDatasetSampler, self).__init__(None)
 
     def set_dataset(self, data_source):
-        """
-        Initialize by passing a classification dataset with labels, i.e. either TextClassificationDataSet or
+        """Initialize the dataset used for sampling.
+
         :param data_source:
         """
         self.data_source = data_source
@@ -53,8 +54,9 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
 
 
 class ChunkSampler(FlairSampler):
-    """Splits data into blocks and randomizes them before sampling. This causes some order of the data to be preserved,
-    while still shuffling the data.
+    """Splits data into blocks and randomizes them before sampling.
+
+    This causes some order of the data to be preserved, while still shuffling the data.
     """
 
     def __init__(self, block_size=5, plus_window=5):
@@ -80,13 +82,16 @@ class ChunkSampler(FlairSampler):
 
 
 class ExpandingChunkSampler(FlairSampler):
-    """Splits data into blocks and randomizes them before sampling. Block size grows with each epoch.
+    """Splits data into blocks and randomizes them before sampling.
+
+    Block size grows with each epoch.
     This causes some order of the data to be preserved, while still shuffling the data.
     """
 
     def __init__(self, step=3):
-        """Initialize by passing a block_size and a plus_window parameter.
-        :param data_source: dataset to sample from
+        """Initialize the ExpandingChunkSampler.
+
+        :param step: every *step* epochs the block size increments by one.
         """
         super(ExpandingChunkSampler, self).__init__(None)
         self.block_size = 1

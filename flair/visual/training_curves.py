@@ -17,9 +17,8 @@ log = logging.getLogger("flair")
 
 
 class Plotter(object):
-    """
-    Plots training parameters (loss, f-score, and accuracy) and training
-    weights over time.
+    """Plots training parameters (loss, f-score, and accuracy) and training weights over time.
+
     Input files are the output files 'loss.tsv' and 'weights.txt' from
     training either a sequence tagger or text classification model.
     """
