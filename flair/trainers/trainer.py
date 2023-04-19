@@ -188,6 +188,7 @@ class ModelTrainer(Pluggable):
             "min_learning_rate",
             "initial_extra_patience",
             "anneal_with_restarts",
+            "attach_default_scheduler",
             "kwargs",
         ]:
             local_variables.pop(var)
