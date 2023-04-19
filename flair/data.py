@@ -125,6 +125,14 @@ class Dictionary:
         self.add_item("<START>")
         self.add_item("<STOP>")
 
+    def is_span_prediction_problem(self) -> bool:
+        if self.span_labels:
+            return True
+        for item in self.get_items():
+            if item.startswith("B-") or item.startswith("S-") or item.startswith("I-"):
+                return True
+        return False
+
     def start_stop_tags_are_set(self):
         if {"<START>".encode(), "<STOP>".encode()}.issubset(self.item2idx.keys()):
             return True
@@ -1430,14 +1438,15 @@ class Corpus(typing.Generic[T_co]):
         )
 
     def make_label_dictionary(
-        self, label_type: str, min_count: int = -1, add_unk: bool = True, add_dev_test: bool = False
+        self, label_type: str, min_count: int = -1, add_unk: bool = False, add_dev_test: bool = False
     ) -> Dictionary:
         """Creates a dictionary of all labels assigned to the sentences in the corpus.
 
         :return: dictionary of labels
         """
         if min_count > 0 and not add_unk:
-            raise ValueError("Cannot require a minimum count if no unk-token is created.")
+            add_unk = True
+            log.info("Adding <unk>-token to dictionary since min_count is set.")
 
         label_dictionary: Dictionary = Dictionary(add_unk=add_unk)
         label_dictionary.span_labels = False
@@ -1458,6 +1467,20 @@ class Corpus(typing.Generic[T_co]):
         sentence_label_type_counter: typing.Counter[str] = Counter()
         label_value_counter: typing.Counter[str] = Counter()
         all_sentence_labels: List[str] = []
+
+        # first, determine the datapoint type by going through dataset until first label is found
+        datapoint_type = None
+        for sentence in Tqdm.tqdm(_iter_dataset(data)):
+            labels = sentence.get_labels(label_type)
+            print(labels)
+            for label in labels:
+                datapoint_type = type(label.data_point)
+            if datapoint_type:
+                break
+
+        if datapoint_type == Span:
+            label_dictionary.span_labels = True
+
         for sentence in Tqdm.tqdm(_iter_dataset(data)):
             # count all label types per sentence
             sentence_label_type_counter.update(sentence.annotation_layers.keys())
@@ -1465,12 +1488,10 @@ class Corpus(typing.Generic[T_co]):
             # go through all labels of label_type and count values
             labels = sentence.get_labels(label_type)
             label_value_counter.update(label.value for label in labels if label.value not in all_sentence_labels)
-            if not label_dictionary.span_labels:
-                for label in labels:
-                    # check if there are any span labels
-                    if type(label.data_point) == Span and len(label.data_point) > 1:
-                        label_dictionary.span_labels = True
-                        break
+
+            # special handling for Token-level annotations. Add all untagged as 'O' label
+            if datapoint_type == Token and len(sentence) > len(labels):
+                label_value_counter["O"] += len(sentence) - len(labels)
 
             if not label_dictionary.multi_label:
                 if len(labels) > 1:
