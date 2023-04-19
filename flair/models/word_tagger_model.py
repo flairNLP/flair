@@ -17,12 +17,12 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
     """
 
     def __init__(
-        self,
-        embeddings: TokenEmbeddings,
-        label_dictionary: Dictionary,
-        label_type: str,
-        span_encoding: str = "BIOES",
-        **classifierargs,
+            self,
+            embeddings: TokenEmbeddings,
+            label_dictionary: Dictionary,
+            label_type: str,
+            span_encoding: str = "BIOES",
+            **classifierargs,
     ):
         """
         Initializes a TokenClassifier
@@ -119,16 +119,43 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
     def _post_process_batch_after_prediction(self, batch, label_name):
         if self.span_prediction_problem:
             for sentence in batch:
-                start = -1
+                # internal variables
+                previous_tag = "O-"
+                current_span: List[Token] = []
+
                 for token in sentence:
-                    label = token.get_label(label_name).value
-                    if label.startswith("S-"):
-                        sentence[token.idx - 1 : token.idx].set_label(label_name, label[2:])
-                    if label.startswith("B-"):
-                        start = token.idx
-                    if label.startswith("E-") and start != -1:
-                        sentence[start - 1 : token.idx].set_label(label_name, label[2:])
-                        start = -1
+                    bioes_tag = token.get_label(label_name).value
+
+                    # non-set tags are OUT tags
+                    if bioes_tag == "" or bioes_tag == "O" or bioes_tag == "_":
+                        bioes_tag = "O-"
+
+                    # anything that is not OUT is IN
+                    in_span = bioes_tag != "O-"
+
+                    # does this prediction start a new span?
+                    starts_new_span = False
+
+                    # begin and single tags start new spans
+                    if bioes_tag[:2] in {"B-", "S-"}:
+                        starts_new_span = True
+                    elif in_span and previous_tag[2:] != bioes_tag[2:]:  # predicted class changed
+                        # If the current tag is I- or the previous tag was S-, we start a new span
+                        if bioes_tag[:2] == "I-" or previous_tag[2:] == "S-":
+                            starts_new_span = True
+
+                    # if an existing span is ended (either by reaching O or starting a new span)
+                    if (starts_new_span or not in_span) and len(current_span) > 0:
+                        # reset for-loop variables for new span
+                        sentence[current_span[0].idx - 1: current_span[-1].idx].set_label(label_name, previous_tag[2:])
+                        current_span = []
+
+                    if in_span:
+                        current_span.append(token)
+
+                    # remember previous tag
+                    previous_tag = bioes_tag
+
                     token.remove_labels(label_name)
                     token.remove_labels(self.label_type)
 
