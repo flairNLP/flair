@@ -146,8 +146,8 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
 
                     # if an existing span is ended (either by reaching O or starting a new span)
                     if (starts_new_span or not in_span) and len(current_span) > 0:
-                        # reset for-loop variables for new span
                         sentence[current_span[0].idx - 1: current_span[-1].idx].set_label(label_name, previous_tag[2:])
+                        # reset for-loop variables for new span
                         current_span = []
 
                     if in_span:
@@ -158,6 +158,10 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
 
                     token.remove_labels(label_name)
                     token.remove_labels(self.label_type)
+
+                # if there is a span at end of sentence, add it
+                if len(current_span) > 0:
+                    sentence[current_span[0].idx - 1: current_span[-1].idx].set_label(label_name, previous_tag[2:])
 
     @property
     def label_type(self):
