@@ -8,8 +8,8 @@ from flair.data import Sentence, Span, Token
 
 @dataclass
 class TokenCollection:
-    """
-    A utility class for RegexpTagger to hold all tokens for a given Sentence and define some functionality
+    """A utility class for RegexpTagger to hold all tokens for a given Sentence and define some functionality.
+
     :param sentence: A Sentence object
     """
 
@@ -27,7 +27,8 @@ class TokenCollection:
         return list(self.sentence)
 
     def get_token_span(self, span: Tuple[int, int]) -> Span:
-        """
+        """Find a span by the token character positions.
+
         Given an interval specified with start and end pos as tuple, this function returns a Span object
         spanning the tokens included in the interval. If the interval is overlapping with a token span, a
         ValueError is raised
@@ -42,8 +43,7 @@ class TokenCollection:
 
 class RegexpTagger:
     def __init__(self, mapping: Union[List[Tuple[str, str]], Tuple[str, str]]):
-        """
-        This tagger is capable of tagging sentence objects with given regexp -> label mappings.
+        r"""This tagger is capable of tagging sentence objects with given regexp -> label mappings.
 
         I.e: The tuple (r'(["\'])(?:(?=(\\?))\2.)*?\1', 'QUOTE') maps every match of the regexp to
         a <QUOTE> labeled span and therefore labels the given sentence object with RegexpTagger.predict().
@@ -62,8 +62,8 @@ class RegexpTagger:
         return self._regexp_mapping
 
     def register_labels(self, mapping: Union[List[Tuple[str, str]], Tuple[str, str]]):
-        """
-        Register a regexp -> label mapping.
+        """Register a regexp -> label mapping.
+
         :param mapping: A list of tuples or a single tuple representing a mapping as regexp -> label
         """
         mapping = self._listify(mapping)
@@ -77,8 +77,8 @@ class RegexpTagger:
                 )
 
     def remove_labels(self, labels: Union[List[str], str]):
-        """
-        Remove a registered regexp -> label mapping given by label.
+        """Remove a registered regexp -> label mapping given by label.
+
         :param labels: A list of labels or a single label as strings.
         """
         labels = self._listify(labels)
@@ -96,9 +96,7 @@ class RegexpTagger:
             return element
 
     def predict(self, sentences: Union[List[Sentence], Sentence]) -> List[Sentence]:
-        """
-        Predict the given sentences according to the registered mappings.
-        """
+        """Predict the given sentences according to the registered mappings."""
         if not isinstance(sentences, list):
             sentences = [sentences]
         if not sentences:
@@ -110,8 +108,8 @@ class RegexpTagger:
         return sentences
 
     def _label(self, sentence: Sentence):
-        """
-        This will add a complex_label to the given sentence for every match.span() for every registered_mapping.
+        """This will add a complex_label to the given sentence for every match.span() for every registered_mapping.
+
         If a match span overlaps with a token span an exception is raised.
         """
         collection = TokenCollection(sentence)

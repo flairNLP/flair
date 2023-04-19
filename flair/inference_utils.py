@@ -20,8 +20,7 @@ logger = logging.getLogger("flair")
 
 
 class WordEmbeddingsStore:
-    """
-    class to simulate a WordEmbeddings class from flair.
+    """Class to simulate a WordEmbeddings class from flair.
 
     Run this to generate a headless (without word embeddings) model as well a stored word embeddings:
 
@@ -63,7 +62,8 @@ class WordEmbeddingsStore:
     """
 
     def __init__(self, embedding: WordEmbeddings, backend="sqlite", verbose=True):
-        """
+        """Instantiates the WordEmbeddingsStore.
+
         :param embedding: Flair WordEmbeddings instance.
         :param backend: cache database backend name e.g ``'sqlite'``, ``'lmdb'``.
                         Default value is ``'sqlite'``.
@@ -101,9 +101,7 @@ class WordEmbeddingsStore:
 
     @staticmethod
     def _get_store_path(embedding, backend="sqlite"):
-        """
-        get the filename of the store
-        """
+        """Get the filename of the store."""
         cache_dir = flair.cache_root
         embedding_filename = re.findall("/(embeddings/.*)", embedding.name)[0]
         store_path = cache_dir / (embedding_filename + "." + backend)
@@ -123,9 +121,9 @@ class WordEmbeddingsStore:
 
     @staticmethod
     def create_stores(model, backend="sqlite"):
-        """
-        creates database versions of all word embeddings in the model and
-        deletes the original vectors to save memory
+        """Creates database versions of all word embeddings in the model.
+
+        Also deletes the original vectors to save memory.
         """
         for embedding in WordEmbeddingsStore._word_embeddings(model):
             if type(embedding) == WordEmbeddings:
@@ -134,9 +132,7 @@ class WordEmbeddingsStore:
 
     @staticmethod
     def load_stores(model, backend="sqlite"):
-        """
-        loads the db versions of all word embeddings in the model
-        """
+        """Loads the db versions of all word embeddings in the model."""
         embeds = WordEmbeddingsStore._word_embeddings(model)
         for i, embedding in enumerate(embeds):
             if type(embedding) == WordEmbeddings:
@@ -144,9 +140,7 @@ class WordEmbeddingsStore:
 
     @staticmethod
     def delete_stores(model, backend="sqlite"):
-        """
-        deletes the db versions of all word embeddings
-        """
+        """Deletes the db versions of all word embeddings."""
         for embedding in WordEmbeddingsStore._word_embeddings(model):
             store_path: Path = WordEmbeddingsStore._get_store_path(embedding)
             logger.info(f"delete store: {str(store_path)}")

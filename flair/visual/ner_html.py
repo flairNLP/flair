@@ -54,7 +54,8 @@ def render_ner_html(
     wrap_page=True,
     label_name="ner",
 ) -> str:
-    """
+    """Create the html code to visualize some sentences.
+
     :param sentences: single sentence or list of sentences to convert to HTML
     :param title: title of the HTML page
     :param colors: dict where keys are tags and values are color HTML codes

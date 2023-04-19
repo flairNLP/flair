@@ -12,9 +12,8 @@ log = logging.getLogger("flair")
 
 
 class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
-    """
-    This is a simple class of models that tags individual words in text.
-    """
+    """This is a simple class of models that tags individual words in text."""
+
 
     def __init__(
             self,
@@ -24,8 +23,8 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
             span_encoding: str = "BIOES",
             **classifierargs,
     ):
-        """
-        Initializes a TokenClassifier
+        """Initializes a TokenClassifier
+        
         :param embeddings: word embeddings used in tagger
         :param tag_dictionary: dictionary of tags you want to predict
         :param tag_type: string identifier for tag type

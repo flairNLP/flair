@@ -80,7 +80,6 @@ class Pluggable:
         :param func: Function to be called when the event is emitted.
         :param *events: List of events to call this function on.
         """
-
         self.validate_event(*events)
 
         handle: HookHandle = HookHandle(

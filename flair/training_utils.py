@@ -155,10 +155,11 @@ class WeightExtractor(object):
 
 
 class AnnealOnPlateau(object):
-    """This class is a modification of
+    """A learningrate sheduler for annealing on plateau.
+
+    This class is a modification of
     torch.optim.lr_scheduler.ReduceLROnPlateau that enables
     setting an "auxiliary metric" to break ties.
-
     Reduce learning rate when a metric has stopped improving.
     Models often benefit from reducing the learning rate by a factor
     of 2-10 once learning stagnates. This scheduler reads a metrics
@@ -333,8 +334,8 @@ class AnnealOnPlateau(object):
 
 
 def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
-    """
-    Creates a local file.
+    """Creates a local file which can be appended to.
+
     :param base_path: the path to the directory
     :param file_name: the file name
     :return: the created file
@@ -348,8 +349,8 @@ def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
 
 
 def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionary) -> List[List[int]]:
-    """
-    Convert list of labels (strings) to a one hot list.
+    """Convert list of labels to a one hot list.
+
     :param label_list: list of labels
     :param label_dict: label dictionary
     :return: converted label list

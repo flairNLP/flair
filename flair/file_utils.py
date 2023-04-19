@@ -1,6 +1,4 @@
-"""
-Utilities for working with the local dataset cache. Copied from AllenNLP
-"""
+"""Utilities for working with the local dataset cache. Copied from AllenNLP."""
 import base64
 import functools
 import io
@@ -32,8 +30,9 @@ url_proxies: Optional[typing.Dict[str, str]] = None
 
 
 def set_proxies(proxies: typing.Dict[str, str]) -> None:
-    """
-    Allows for data downloaded from urls to be forwarded to a proxy, see https://requests.readthedocs.io/en/latest/user/advanced/#proxies
+    """Allows for data downloaded from urls to be forwarded to a proxy.
+
+    see https://requests.readthedocs.io/en/latest/user/advanced/#proxies
     :param proxies: A dictionary of proxies according to the requests documentation.
     :return: None
     """
@@ -42,8 +41,9 @@ def set_proxies(proxies: typing.Dict[str, str]) -> None:
 
 
 def load_big_file(f: str):
-    """
-    Workaround for loading a big pickle file. Files over 2GB cause pickle errors on certain Mac and Windows distributions.
+    """Workaround for loading a big pickle file.
+
+    Files over 2GB cause pickle errors on certain Mac and Windows distributions.
     :param f:
     :return:
     """
@@ -55,8 +55,8 @@ def load_big_file(f: str):
 
 
 def url_to_filename(url: str, etag: str = None) -> str:
-    """
-    Converts a url into a filename in a reversible way.
+    """Converts an url into a filename in a reversible way.
+
     If `etag` is specified, add it on the end, separated by a period
     (which necessarily won't appear in the base64-encoded filename).
     Get rid of the quotes in the etag, since Windows doesn't like them.
@@ -74,9 +74,9 @@ def url_to_filename(url: str, etag: str = None) -> str:
 
 
 def filename_to_url(filename: str) -> Tuple[str, Optional[str]]:
-    """
-    Recovers the the url from the encoded filename. Returns it and the ETag
-    (which may be ``None``)
+    """Recovers the the url from the encoded filename.
+
+    Returns it and the ETag (which may be ``None``)
     """
     etag: Optional[str]
     try:
@@ -92,7 +92,8 @@ def filename_to_url(filename: str) -> Tuple[str, Optional[str]]:
 
 
 def cached_path(url_or_filename: str, cache_dir: Union[str, Path]) -> Path:
-    """
+    """Download the given path and return the local path from the cache.
+
     Given something that might be a URL (or might be a local path),
     determine which. If it's a URL, download the file and cache it, and
     return the path to the cached file. If it's already a local path,
@@ -147,8 +148,7 @@ def unzip_file(file: Union[str, Path], unzip_to: Union[str, Path]):
 
 
 def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True):
-    """
-    Unpacks a file to the given location.
+    """Unpacks an archive file to the given location.
 
     :param file Archive file to unpack
     :param unpack_to Destination where to store the output
@@ -198,9 +198,9 @@ def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True
 
 # TODO(joelgrus): do we want to do checksums or anything like that?
 def get_from_cache(url: str, cache_dir: Path) -> Path:
-    """
-    Given a URL, look for the corresponding dataset in the local cache.
-    If it's not there, download it. Then return the path to the cached file.
+    """Given a URL, look for the corresponding file in the local cache or download it.
+
+    return: the path to the cached file.
     """
     cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -317,7 +317,8 @@ class Tqdm:
 
     @staticmethod
     def set_slower_interval(use_slower_interval: bool) -> None:
-        """
+        """Slows down the tqdm update interval.
+
         If ``use_slower_interval`` is ``True``, we will dramatically slow down ``tqdm's`` default
         output rate.  ``tqdm's`` default output rate is great for interactively watching progress,
         but it is not great for log files.  You might want to set this if you are primarily going

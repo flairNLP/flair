@@ -38,9 +38,7 @@ log = logging.getLogger("flair")
 
 
 class MultiFileJsonlCorpus(Corpus):
-    """
-    This class represents a generic Jsonl corpus with multiple train, dev, and test files.
-    """
+    """This class represents a generic Jsonl corpus with multiple train, dev, and test files."""
 
     def __init__(
         self,
@@ -53,8 +51,8 @@ class MultiFileJsonlCorpus(Corpus):
         label_type: str = "ner",
         **corpusargs,
     ):
-        """
-        Instantiates a MuliFileJsonlCorpus as, e.g., created with doccanos JSONL export.
+        """Instantiates a MuliFileJsonlCorpus as, e.g., created with doccanos JSONL export.
+
         Note that at least one of train_files, test_files, and dev_files must contain one path.
         Otherwise, the initialization will fail.
 
@@ -135,8 +133,7 @@ class JsonlCorpus(MultiFileJsonlCorpus):
         name: Optional[str] = None,
         **corpusargs,
     ):
-        """
-        Instantiates a JsonlCorpus with one file per Dataset (train, dev, and test).
+        """Instantiates a JsonlCorpus with one file per Dataset (train, dev, and test).
 
         :param data_folder: Path to the folder containing the JSONL corpus
         :param train_file: the name of the train file
@@ -173,8 +170,7 @@ class JsonlDataset(FlairDataset):
         label_column_name: str = "label",
         label_type: str = "ner",
     ):
-        """
-        Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.
+        """Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.
 
         The expected file format is:
         { "<text_column_name>": "<text>", "label_column_name": [[<start_char_index>, <end_char_index>, <label>],...] }
@@ -182,7 +178,6 @@ class JsonlDataset(FlairDataset):
         :param path_to_json._file: File to read
         :param text_column_name: Name of the text column
         :param label_column_name: Name of the label column
-
         """
         path_to_json_file = Path(path_to_jsonl_file)
 
@@ -209,8 +204,7 @@ class JsonlDataset(FlairDataset):
             self._add_label_to_sentence(raw_text, sentence, label[0], label[1], label[2])
 
     def _add_label_to_sentence(self, text: str, sentence: Sentence, start: int, end: int, label: str):
-        """
-        Adds a NE label to a given sentence.
+        """Adds a NE label to a given sentence.
 
         :param text: raw sentence (with all whitespaces etc.). Is used to determine the token indices.
         :param sentence: Tokenized flair Sentence.
@@ -219,7 +213,6 @@ class JsonlDataset(FlairDataset):
         :param label: Label to assign to the given range.
         :return: Nothing. Changes sentence as INOUT-param
         """
-
         annotated_part = text[start:end]
 
         # Remove leading and trailing whitespaces from annotated spans
@@ -256,21 +249,15 @@ class JsonlDataset(FlairDataset):
         sentence[start_idx : end_idx + 1].add_label(self.label_type, label)
 
     def is_in_memory(self) -> bool:
-        """
-        Currently all Jsonl Datasets are stored in Memory
-        """
+        # Currently all Jsonl Datasets are stored in Memory
         return True
 
     def __len__(self):
-        """
-        Number of sentences in the Dataset
-        """
+        """Number of sentences in the Dataset."""
         return len(self.sentences)
 
-    def __getitem__(self, index: int = 0) -> Sentence:
-        """
-        Returns the sentence at a given index
-        """
+    def __getitem__(self, index: int) -> Sentence:
+        """Returns the sentence at a given index."""
         return self.sentences[index]
 
 
@@ -292,8 +279,8 @@ class MultiFileColumnCorpus(Corpus):
         default_whitespace_after: int = 1,
         **corpusargs,
     ):
-        """
-        Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
+        r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
+
         :param data_folder: base folder with the task data
         :param column_format: a map specifying the column format
         :param train_files: the name of the train files
@@ -397,8 +384,8 @@ class ColumnCorpus(MultiFileColumnCorpus):
         comment_symbol="# ",
         **corpusargs,
     ):
-        """
-        Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
+        r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
+
         :param data_folder: base folder with the task data
         :param column_format: a map specifying the column format
         :param train_file: the name of the train file
@@ -414,7 +401,6 @@ class ColumnCorpus(MultiFileColumnCorpus):
         :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
         :return: a Corpus with annotated train, dev and test data
         """
-
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(
             data_folder, dev_file, test_file, train_file, autofind_splits
@@ -452,8 +438,8 @@ class ColumnDataset(FlairDataset):
         label_name_map: Dict[str, str] = None,
         default_whitespace_after: int = 1,
     ):
-        """
-        Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
+        r"""Instantiates a column dataset.
+
         :param path_to_column_file: path to the file with the column-formatted data
         :param column_name_map: a map specifying the column format
         :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
@@ -982,10 +968,10 @@ class ONTONOTES(MultiFileColumnCorpus):
         clusters: DefaultDict[int, List[Tuple[int, int]]],
         coref_stacks: DefaultDict[int, List[int]],
     ) -> None:
-        """
-        For a given coref label, add it to a currently open span(s), complete a span(s) or
-        ignore it, if it is outside of all spans. This method mutates the clusters and coref_stacks
-        dictionaries.
+        """For a given coref label, add it to a currently open span(s), complete a span(s) or ignore it, if it is outside of all spans.
+
+        This method mutates the clusters and coref_stacks dictionaries.
+
         # Parameters
         label : `str`
             The coref label for this word.
@@ -1030,9 +1016,8 @@ class ONTONOTES(MultiFileColumnCorpus):
         span_labels: List[List[str]],
         current_span_labels: List[Optional[str]],
     ) -> None:
-        """
-        Given a sequence of different label types for a single word and the current
-        span label we are inside, compute the BIO tag for each label and append to a list.
+        """Given a sequence of different label types for a single word and the current span label we are inside, compute the BIO tag for each label and append to a list.
+
         # Parameters
         annotations : `List[str]`
             A list of labels to compute BIO tags for.
@@ -1190,11 +1175,11 @@ class ONTONOTES(MultiFileColumnCorpus):
 
     @classmethod
     def dataset_document_iterator(cls, file_path: Union[Path, str]) -> Iterator[List]:
-        """
-        An iterator over CONLL formatted files which yields documents, regardless
-        of the number of document annotations in a particular file. This is useful
-        for conll data which has been preprocessed, such as the preprocessing which
-        takes place for the 2012 CONLL Coreference Resolution task.
+        """An iterator over CONLL formatted files which yields documents, regardless of the number of document annotations in a particular file.
+
+        This is useful for conll data which has been preprocessed, such
+        as the preprocessing which takes place for the 2012 CONLL
+        Coreference Resolution task.
         """
         with open(file_path, "r", encoding="utf8") as open_file:
             conll_rows = []
@@ -1218,9 +1203,7 @@ class ONTONOTES(MultiFileColumnCorpus):
 
     @classmethod
     def sentence_iterator(cls, file_path: Union[Path, str]) -> Iterator:
-        """
-        An iterator over the sentences in an individual CONLL formatted file.
-        """
+        """An iterator over the sentences in an individual CONLL formatted file."""
         for document in cls.dataset_document_iterator(file_path):
             for sentence in document:
                 yield sentence
@@ -1234,8 +1217,9 @@ class CONLL_03(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the CoNLL-03 corpus. This is only possible if you've manually downloaded it to your machine.
+        """Initialize the CoNLL-03 corpus.
+
+        This is only possible if you've manually downloaded it to your machine.
         Obtain the corpus from https://www.clips.uantwerpen.be/conll2003/ner/ and put the eng.testa, .testb, .train
         files in a folder called 'conll_03'. Then set the base_path parameter in the constructor to the path to the
         parent directory where the conll_03 folder resides.
@@ -1280,8 +1264,9 @@ class CONLL_03_GERMAN(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the CoNLL-03 corpus for German. This is only possible if you've manually downloaded it to your machine.
+        """Initialize the CoNLL-03 corpus for German.
+
+        This is only possible if you've manually downloaded it to your machine.
         Obtain the corpus from https://www.clips.uantwerpen.be/conll2003/ner/ and put the respective files in a folder called
         'conll_03_german'. Then set the base_path parameter in the constructor to the path to the parent directory where
         the conll_03_german folder resides.
@@ -1328,9 +1313,10 @@ class CONLL_03_DUTCH(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the CoNLL-03 corpus for Dutch. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the CoNLL-03 corpus for Dutch.
+
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -1395,9 +1381,10 @@ class CONLL_03_SPANISH(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the CoNLL-03 corpus for Spanish. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the CoNLL-03 corpus for Spanish.
+
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -1438,8 +1425,8 @@ class CONLL_2000(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the CoNLL-2000 corpus for English chunking.
+        """Initialize the CoNLL-2000 corpus for English chunking.
+
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -1641,12 +1628,12 @@ class NER_ARABIC_ANER(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize a preprocessed version of the Arabic Named Entity Recognition Corpus (ANERCorp) dataset available
-        from https://github.com/EmnamoR/Arabic-named-entity-recognition/blob/master/ANERCorp.rar.
-        http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp
+        """Initialize a preprocessed version of the Arabic Named Entity Recognition Corpus (ANERCorp).
+
+        The dataset is downloaded from http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp
         Column order is swapped
         The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -1691,10 +1678,9 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize a preprocessed and modified version of the American and Qatari Modeling of Arabic (AQMAR) dataset available
-        from http://www.cs.cmu.edu/~ark/ArabicNER/AQMAR_Arabic_NER_corpus-1.0.zip.
-        via http://www.cs.cmu.edu/~ark/AQMAR/
+        """Initialize a preprocessed and modified version of the American and Qatari Modeling of Arabic (AQMAR) dataset.
+
+        The dataset is downloaded from  http://www.cs.cmu.edu/~ark/AQMAR/
 
         - Modifications from original dataset: Miscellaneous tags (MIS0, MIS1, MIS2, MIS3) are merged to one tag "MISC" as these categories deviate across the original dataset
         - The 28 original Wikipedia articles are merged into a single file containing the articles in alphabetical order
@@ -1797,9 +1783,10 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the WEIBO_NER corpus . The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the WEIBO_NER corpus.
+
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -1909,9 +1896,10 @@ class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the eng corpus of the MIT Movie Corpus (it has simpler queries compared to the trivia10k13 corpus)
-        in BIO format. The first time you call this constructor it will automatically download the dataset.
+        """Initialize the eng corpus of the MIT Movie Corpus.
+
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -1954,9 +1942,10 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the trivia10k13 corpus of the MIT Movie Corpus (it has more complex queries compared to the eng corpus)
-        in BIO format. The first time you call this constructor it will automatically download the dataset.
+        """Initialize the trivia10k13 corpus of the MIT Movie Corpus.
+
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -1993,9 +1982,10 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
 
 
 class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
-    """
-    Initialize corpus of SEC-fillings annotated with English NER tags. See paper "Domain Adaption of Named Entity
-    Recognition to Support Credit Risk Assessment" by Alvarado et al, 2015: https://aclanthology.org/U15-1010/
+    """Initialize corpus of SEC-fillings annotated with English NER tags.
+
+    See paper "Domain Adaption of Named Entity Recognition to Support Credit Risk Assessment" by Alvarado et al, 2015: https://aclanthology.org/U15-1010/
+
     :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
     POS tags or chunks respectively
     :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -2045,8 +2035,9 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the experimental MIT Restaurant corpus available on https://groups.csail.mit.edu/sls/downloads/restaurant/.
+        """Initialize the MIT Restaurant corpus.
+
+        The corpus will be downloaded from https://groups.csail.mit.edu/sls/downloads/restaurant/.
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -2088,9 +2079,10 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the STACKOVERFLOW_NER corpus. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the STACKOVERFLOW_NER corpus.
+
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -2182,12 +2174,11 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize a dataset called twitter_ner which can be found on the following page:
-        https://raw.githubusercontent.com/aritter/twitter_nlp/master/data/annotated/ner.txt.
+        """Initialize the twitter_ner corpus.
 
-        The first time you call this constructor it will automatically
-        download the dataset.
+        The corpus will be downoaded from https://raw.githubusercontent.com/aritter/twitter_nlp/master/data/annotated/ner.txt.
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -2229,15 +2220,15 @@ class NER_ENGLISH_PERSON(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
     ):
-        """
-        Initialize the PERSON_NER corpus for person names. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the PERSON_NER corpus for person names.
+
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -2284,13 +2275,13 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the WEBPAGES_NER corpus introduced in the paper "Design Challenges and Misconceptions in Named Entity
-        Recognition" by Ratinov and Roth (2009): https://aclanthology.org/W09-1119/.
+        """Initialize the WEBPAGES_NER corpus.
+
+        The corpus was introduced in the paper "Design Challenges and Misconceptions in Named Entity Recognition" by Ratinov and Roth (2009): https://aclanthology.org/W09-1119/.
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        POS tags instead
+            to point to a different folder but typically this should not be necessary.
+            POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
@@ -2354,9 +2345,10 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the WNUT_2020_NER corpus. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the WNUT_2020_NER corpus.
+
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -2417,9 +2409,10 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the wikigold corpus. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the wikigold corpus.
+
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -2542,15 +2535,15 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the EUROPARL_NER_GERMAN corpus. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the EUROPARL_NER_GERMAN corpus.
+
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -2597,11 +2590,12 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
         )
 
     def _add_IOB_tags(self, data_file: Union[str, Path], encoding: str = "utf8", ner_column: int = 1):
-        """
-        Function that adds IOB tags if only chunk names are provided (e.g. words are tagged PER instead
-        of B-PER or I-PER). Replaces '0' with 'O' as the no-chunk tag since ColumnCorpus expects
+        """Function that adds IOB tags if only chunk names are provided.
+
+        e.g. words are tagged PER instead of B-PER or I-PER. Replaces '0' with 'O' as the no-chunk tag since ColumnCorpus expects
         the letter 'O'. Additionally it removes lines with no tags in the data file and can also
         be used if the data is only partially IOB tagged.
+
         Parameters
         ----------
         data_file : Union[str, Path]
@@ -2610,7 +2604,6 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
             Encoding used in open function. The default is "utf8".
         ner_column : int, optional
             Specifies the ner-tagged column. The default is 1 (the second column).
-
         """
 
         def add_I_prefix(current_line: List[str], ner: int, tag: str):
@@ -2663,15 +2656,14 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the LER_GERMAN (Legal Entity Recognition) corpus. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the LER_GERMAN (Legal Entity Recognition) corpus.
+
+        The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -2705,9 +2697,10 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the GermEval NER corpus for German. This is only possible if you've manually downloaded it to your
-        machine. Obtain the corpus from https://sites.google.com/site/germeval2014ner/data and put it into some folder.
+        """Initialize the GermEval NER corpus for German.
+
+        This is only possible if you've manually downloaded it to your machine.
+        Obtain the corpus from https://sites.google.com/site/germeval2014ner/data and put it into some folder.
         Then point the base_path parameter in the constructor to this folder
         :param base_path: Path to the GermEval corpus on your machine
         :param in_memory:If True, keeps dataset in memory giving speedups in training.
@@ -2763,9 +2756,11 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize corpus with Named Entity Model for German, Politics (NEMGP) data from
-        https://www.thomas-zastrow.de/nlp/. The first time you call this constructor it will automatically download the
+        """Initialize corpus with Named Entity Model for German Politics (NEMGP).
+
+        data from https://www.thomas-zastrow.de/nlp/.
+
+        The first time you call this constructor it will automatically download the
         dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -2881,9 +2876,9 @@ class NER_HUNGARIAN(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the NER Business corpus for Hungarian. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the NER Business corpus for Hungarian.
+
+        The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -2931,9 +2926,9 @@ class NER_ICELANDIC(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the ICELANDIC_NER corpus. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the ICELANDIC_NER corpus.
+
+        The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -2990,9 +2985,10 @@ class NER_JAPANESE(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the Hironsan/IOB2 corpus for Japanese. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the Hironsan/IOB2 corpus for Japanese.
+
+        The first time you call this constructor it will automatically download the dataset.
+
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -3068,8 +3064,8 @@ class NER_MASAKHANE(MultiCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the Masakhane corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data.
+        """Initialize the Masakhane corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data.
+
         It consists of ten African languages. Pass a language code or a list of language codes to initialize the corpus
         with the languages you require. If you pass "all", all languages will be initialized.
         :version: Specifies version of the dataset. Currently, only "v1" and "v2" are supported, using "v2" as default.
@@ -3194,8 +3190,8 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Download and Initialize the MultiCoNer corpus.
+        """Download and Initialize the MultiCoNer corpus.
+
         :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
         :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
         POS tags or chunks respectively
@@ -3260,8 +3256,9 @@ class NER_MULTI_CONER_V2(MultiFileColumnCorpus):
         use_dev_as_test: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the MultiCoNer V2 corpus for the Semeval2023 workshop. This is only possible if you've applied and downloaded it to your machine.
+        """Initialize the MultiCoNer V2 corpus for the Semeval2023 workshop.
+
+        This is only possible if you've applied and downloaded it to your machine.
         Apply for the corpus from here https://multiconer.github.io/dataset and unpack the .zip file's content into
         a folder called 'ner_multi_coner_v2'. Then set the base_path parameter in the constructor to the path to the
         parent directory where the ner_multi_coner_v2 folder resides. You can also create the multiconer in
@@ -3342,10 +3339,11 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         in_memory: bool = False,
         **corpusargs,
     ):
-        """
-        WkiAnn corpus for cross-lingual NER consisting of datasets from 282 languages that exist
-        in Wikipedia. See https://elisa-ie.github.io/wikiann/ for details and for the languages and their
+        """Initialize the WkiAnn corpus for cross-lingual NER consisting of datasets from 282 languages that exist in Wikipedia.
+
+        See https://elisa-ie.github.io/wikiann/ for details and for the languages and their
         respective abbreveations, i.e. "en" for english. (license: https://opendatacommons.org/licenses/by/)
+
         Parameters
         ----------
         languages : Union[str, List[str]]
@@ -3358,7 +3356,8 @@ class NER_MULTI_WIKIANN(MultiCorpus):
             to point to a different folder but typically this should not be necessary.
             The data is in bio-format. It will by default (with the string "ner" as value) be transformed
             into the bioes format. If you dont want that set it to None.
-
+        in_memory : bool, optional
+            Specify that the dataset should be loaded in memory, which speeds up the training process but takes increases the RAM usage significantly.
         """
         if type(languages) == str:
             languages = [languages]
@@ -3764,23 +3763,19 @@ class NER_MULTI_XTREME(MultiCorpus):
         in_memory: bool = False,
         **corpusargs,
     ):
-        """
-        Xtreme corpus for cross-lingual NER consisting of datasets of a total of 176 languages. The data comes from the google
-        research work XTREME https://github.com/google-research/xtreme. All datasets for NER and respective language abbreviations (e.g.
-        "en" for english can be found here https://www.amazon.com/clouddrive/share/d3KGCRCIYwhKJF0H3eWA26hjg2ZCRhjpEQtDL70FSBN/folder/C43gs51bSIaq5sFTQkWNCQ?_encoding=UTF8&*Version*=1&*entries*=0&mgh=1 )
+        """Xtreme corpus for cross-lingual NER consisting of datasets of a total of 40 languages.
+
+        The data comes from the google research work XTREME https://github.com/google-research/xtreme.
         The data is derived from the wikiann dataset https://elisa-ie.github.io/wikiann/ (license: https://opendatacommons.org/licenses/by/)
 
         Parameters
         ----------
         languages : Union[str, List[str]], optional
-            Default the 40 languages that are used in XTREME are loaded. Otherwise on can hand over a strings or a list of strings
-            consisiting of abbreviations for languages. All datasets will be loaded in a MultiCorpus object.
+            Specify the languages you want to load. Provide an empty list or string to select all languages.
         base_path : Union[str, Path], optional
-            Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-            to point to a different folder but typically this should not be necessary.
-            The data is in bio-format. It will by default (with the string "ner" as value) be transformed
-            into the bioes format. If you dont want that set it to None.
-
+            Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+        in_memory : bool, optional
+            Specify that the dataset should be loaded in memory, which speeds up the training process but takes increases the RAM usage significantly.
         """
         # if no languages are given as argument all languages used in XTREME will be loaded
         if not languages:
@@ -3996,15 +3991,14 @@ class NER_SWEDISH(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the NER_SWEDISH corpus for Swedish. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the NER_SWEDISH corpus for Swedish.
+
+        The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -4035,18 +4029,18 @@ class NER_SWEDISH(ColumnCorpus):
         )
 
     def _add_IOB2_tags(self, data_file: Union[str, Path], encoding: str = "utf8"):
-        """
-        Function that adds IOB2 tags if only chunk names are provided (e.g. words are tagged PER instead
-        of B-PER or I-PER). Replaces '0' with 'O' as the no-chunk tag since ColumnCorpus expects
+        """Function that adds IOB2 tags if only chunk names are provided.
+
+        e.g. words are tagged PER instead of B-PER or I-PER. Replaces '0' with 'O' as the no-chunk tag since ColumnCorpus expects
         the letter 'O'. Additionally it removes lines with no tags in the data file and can also
         be used if the data is only partially IOB tagged.
+
         Parameters
         ----------
         data_file : Union[str, Path]
             Path to the data file.
         encoding : str, optional
             Encoding used in open function. The default is "utf8".
-
         """
         with open(file=data_file, mode="r", encoding=encoding) as f:
             lines = f.readlines()
@@ -4085,9 +4079,9 @@ class NER_TURKU(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the Finnish TurkuNER corpus. The first time you call this constructor it will automatically
-        download the dataset.
+        """Initialize the Finnish TurkuNER corpus.
+
+        The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -4137,9 +4131,9 @@ class NER_UKRAINIAN(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the Ukrainian NER corpus from lang-uk project. The first time you call this constructor it will
-        automatically download the dataset.
+        """Initialize the Ukrainian NER corpus from lang-uk project.
+
+        The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         POS tags instead
@@ -4287,9 +4281,9 @@ class UP_CHINESE(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the Chinese dataset from the Universal Propositions Bank, comming from that webpage:
-        https://github.com/System-T/UniversalPropositions/tree/master/UP_Chinese
+        """Initialize the Chinese dataset from the Universal Propositions Bank.
+
+        The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -4337,9 +4331,9 @@ class UP_ENGLISH(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the English dataset from the Universal Propositions Bank, comming from that webpage:
-        https://github.com/System-T/UniversalPropositions.
+        """Initialize the English dataset from the Universal Propositions Bank.
+
+        The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -4388,9 +4382,9 @@ class UP_FRENCH(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the French dataset from the Universal Propositions Bank, comming from that webpage:
-        https://github.com/System-T/UniversalPropositions.
+        """Initialize the French dataset from the Universal Propositions Bank.
+
+        The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -4438,9 +4432,9 @@ class UP_FINNISH(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the Finnish dataset from the Universal Propositions Bank, comming from that webpage:
-        https://github.com/System-T/UniversalPropositions/tree/master/UP_Finnish
+        """Initialize the Finnish dataset from the Universal Propositions Bank.
+
+        The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -4488,9 +4482,9 @@ class UP_GERMAN(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the German dataset from the Universal Propositions Bank, comming from that webpage:
-        https://github.com/System-T/UniversalPropositions.
+        """Initialize the German dataset from the Universal Propositions Bank.
+
+        The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -4538,9 +4532,9 @@ class UP_ITALIAN(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the Italian dataset from the Universal Propositions Bank, comming from that webpage:
-        https://github.com/System-T/UniversalPropositions/tree/master/UP_Italian
+        """Initialize the Italian dataset from the Universal Propositions Bank.
+
+        The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -4588,9 +4582,9 @@ class UP_SPANISH(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the Spanish dataset from the Universal Propositions Bank, comming from that webpage:
-        https://github.com/System-T/UniversalPropositions
+        """Initialize the Spanish dataset from the Universal Propositions Bank.
+
+        The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -4638,9 +4632,9 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
         document_as_sequence: bool = False,
         **corpusargs,
     ):
-        """
-        Initialize the Spanish AnCora dataset from the Universal Propositions Bank, comming from that webpage:
-        https://github.com/System-T/UniversalPropositions
+        """Initialize the Spanish AnCora dataset from the Universal Propositions Bank.
+
+        The dataset is downloaded from https://github.com/System-T/UniversalPropositions
 
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -4722,8 +4716,9 @@ class NER_HIPE_2022(ColumnCorpus):
         preproc_fn=None,
         **corpusargs,
     ):
-        """
-        Initialize the CLEF-HIPE 2022 NER dataset. The first time you call this constructor it will automatically
+        """Initialize the CLEF-HIPE 2022 NER dataset.
+
+        The first time you call this constructor it will automatically
         download the specified dataset (by given a language).
         :dataset_name: Supported datasets are: ajmc, hipe2020, letemps, newseye, sonar and topres19th.
         :language: Language for a supported dataset.
@@ -4843,8 +4838,9 @@ class NER_ICDAR_EUROPEANA(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ):
-        """
-        Initialize the ICDAR Europeana NER dataset. The dataset is based on the French and Dutch Europeana NER corpora
+        """Initialize the ICDAR Europeana NER dataset.
+
+        The dataset is based on the French and Dutch Europeana NER corpora
         from the Europeana Newspapers NER dataset (https://lab.kb.nl/dataset/europeana-newspapers-ner), with additional
         preprocessing steps being performed (sentence splitting, punctuation normalizing, training/development/test splits).
         The resulting dataset is released in the "Data Centric Domain Adaptation for Historical Text with OCR Errors" ICDAR paper
@@ -4854,7 +4850,6 @@ class NER_ICDAR_EUROPEANA(ColumnCorpus):
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
         """
-
         supported_languages = ["fr", "nl"]
 
         if language not in supported_languages:
@@ -4902,8 +4897,9 @@ class NER_NERMUD(MultiCorpus):
         in_memory: bool = False,
         **corpusargs,
     ):
-        """
-        Initilize the NERMuD 2023 dataset. NERMuD is a task presented at EVALITA 2023 consisting in the extraction and classification
+        """Initilize the NERMuD 2023 dataset.
+
+        NERMuD is a task presented at EVALITA 2023 consisting in the extraction and classification
         of named-entities in a document, such as persons, organizations, and locations. NERMuD 2023 will include two different sub-tasks:
 
         - Domain-agnostic classification (DAC). Participants will be asked to select and classify entities among three categories

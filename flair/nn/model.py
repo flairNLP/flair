@@ -24,23 +24,26 @@ log = logging.getLogger("flair")
 
 
 class Model(torch.nn.Module, typing.Generic[DT], ABC):
-    """Abstract base class for all downstream task models in Flair,
-    such as SequenceTagger and TextClassifier.
-    Every new type of model must implement these methods."""
+    """Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.
+
+    Every new type of model must implement these methods.
+    """
 
     model_card: Optional[Dict[str, Any]] = None
 
     @property
     @abstractmethod
     def label_type(self):
-        """Each model predicts labels of a certain type.
-        TODO: can we find a better name for this?"""
+        """Each model predicts labels of a certain type."""
+        # TODO: can we find a better name for this?
         raise NotImplementedError
 
     @abstractmethod
     def forward_loss(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
         """Performs a forward pass and returns a loss tensor for backpropagation.
-        Implement this to enable training."""
+
+        Implement this to enable training.
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -57,8 +60,9 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         return_loss: bool = True,
         **kwargs,
     ) -> Result:
-        """Evaluates the model. Returns a Result object containing evaluation
-        results and a loss value. Implement this to enable evaluation.
+        """Evaluates the model. Returns a Result object containing evaluation results and a loss value.
+
+        Implement this to enable evaluation.
         :param data_loader: DataLoader that iterates over dataset to be evaluated
         :param out_path: Optional output path to store predictions
         :param embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU  # noqa: E501
@@ -95,8 +99,8 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         return model_name
 
     def save(self, model_file: Union[str, Path], checkpoint: bool = False):
-        """
-        Saves the current model to the provided file.
+        """Saves the current model to the provided file.
+
         :param model_file: the model file
         """
         model_state = self._get_state_dict()
@@ -110,8 +114,8 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
     @classmethod
     def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Model":
-        """
-        Loads the model from the given file.
+        """Loads the model from the given file.
+
         :param model_path: the model file or the already loaded state dict
         :return: the loaded text classifier model
         """
@@ -210,10 +214,11 @@ class ReduceTransformerVocabMixin(ABC):
 
 
 class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC):
-    """Abstract base class for all Flair models that do classification,
-    both single- and multi-label. It inherits from flair.nn.Model and adds an
-    unified evaluate() function so that all classification models use the same
-    evaluation routines and compute the same numbers."""
+    """Abstract base class for all Flair models that do classification.
+
+    The classifier inherits from flair.nn.Model and adds unified functionality for both, single- and multi-label
+    classification and evaluation. Therefore, it is ensured to have a fair comparison between multiple classifiers.
+    """
 
     def evaluate(
         self,
@@ -491,8 +496,9 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         return_loss=False,
         embedding_storage_mode="none",
     ):
-        """
-        Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
+        """Predicts the class labels for the given sentences.
+
+        The labels are directly added to the sentences.
         :param sentences: list of sentences
         :param mini_batch_size: mini batch size to use
         :param return_probabilities_for_all_classes : return probabilities for all classes instead of only best predicted  # noqa: E501
@@ -533,12 +539,12 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
 
 
 class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
-    """Default base class for all Flair models that do classification, both
-    single- and multi-label. It inherits from flair.nn.Classifier and thus from
-    flair.nn.Model. All features shared by all classifiers are implemented here,
-    including the loss calculation and the predict() method. Currently, the
-    TextClassifier, RelationExtractor, TextPairClassifier and
-    TokenClassifier implement this class.
+    """Default base class for all Flair models that do classification.
+
+    It inherits from flair.nn.Classifier and thus from flair.nn.Model. All features shared by all classifiers are
+    implemented here, including the loss calculation, prediction heads for both single- and multi- label classification
+    and the `predict()` method. Example implementations of this class are the TextClassifier, RelationExtractor,
+    TextPairClassifier and TokenClassifier.
     """
 
     def __init__(
@@ -612,7 +618,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
 
     def _filter_data_point(self, data_point: DT) -> bool:
-        """Specify if a data point should be kept. That way you can remove for example empty texts.
+        """Specify if a data point should be kept.
+
+        That way you can remove for example empty texts. Per default all datapoints that have length zero
+        will be removed.
         Return true if the data point should be kept and false if it should be removed.
         """
         return True if len(data_point) > 0 else False
@@ -623,15 +632,22 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
     @abstractmethod
     def _get_data_points_from_sentence(self, sentence: DT) -> List[DT2]:
-        """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
+        """Returns the data_points to which labels are added.
+
+        The results should be of any type that inherits from DataPoint (Sentence, Span, Token, ... objects).
+        """
         raise NotImplementedError
 
     def _get_data_points_for_batch(self, sentences: List[DT]) -> List[DT2]:
-        """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
+        """Returns the data_points to which labels are added.
+
+        The results should be of any type that inherits from DataPoint (Sentence, Span, Token, ... objects).
+        """
         return [data_point for sentence in sentences for data_point in self._get_data_points_from_sentence(sentence)]
 
     def _get_label_of_datapoint(self, data_point: DT2) -> List[str]:
         """Extracts the labels from the data points.
+
         Each data point might return a list of strings, representing multiple labels.
         """
         if self.multi_label:
@@ -750,14 +766,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         return_loss=False,
         embedding_storage_mode="none",
     ):
-        """
-        Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
+        """Predicts the class labels for the given sentences. The labels are directly added to the sentences.
+
         :param sentences: list of sentences
         :param mini_batch_size: mini batch size to use
         :param return_probabilities_for_all_classes : return probabilities for all classes instead of only best predicted  # noqa: E501
         :param verbose: set to True to display a progress bar
         :param return_loss: set to True to return loss
-        :param label_name: set this to change the name of the label type that is predicted  # noqa: E501
+        :param label_name: set this to change the name of the label type that is predicted
         :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.  # noqa: E501
         'gpu' to store embeddings in GPU memory.
         """
