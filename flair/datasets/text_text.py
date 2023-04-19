@@ -535,7 +535,7 @@ class GLUE_MNLI(DataPairCorpus):
         """
         Creates a DataPairCorpus for the Multi-Genre Natural Language Inference Corpus (MNLI)
         from GLUE benchmark (https://gluebenchmark.com/tasks). Entailment annotations are:
-        entailment, contradiction, neutral. This corpus includes two dev sets mathced/mismatched
+        entailment, contradiction, neutral. This corpus includes two dev sets matched/mismatched
         and two unlabeled test sets: eval_dataset_matched, eval_dataset_mismatched.
         """
 
