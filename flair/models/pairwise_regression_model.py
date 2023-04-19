@@ -16,8 +16,8 @@ from flair.training_utils import MetricRegression, Result, store_embeddings
 
 
 class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
-    """
-    Text Pair Regression Model for tasks such as Semantic Textual Similarity Benchmark,.
+    """Text Pair Regression Model for tasks such as Semantic Textual Similarity Benchmark.
+
     The model takes document embeddings and puts resulting text representation(s) into a linear layer to get the
     score. We provide two ways to embed the DataPairs: Either by embedding both DataPoints
     and concatenating the resulting vectors ("embed_separately=True") or by concatenating the DataPoints and embedding
@@ -35,8 +35,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         decoder: Optional[torch.nn.Module] = None,
         **classifierargs,
     ):
-        """
-        Initialize the Text Pair Regression Model.
+        """Initialize the Text Pair Regression Model.
 
         :param embeddings: embeddings used to embed each data point
         :param label_name:
