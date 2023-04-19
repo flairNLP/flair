@@ -53,7 +53,8 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         # all parameters will be pushed internally to the specified device
         self.to(flair.device)
 
-    def _create_internal_label_dictionary(self, label_dictionary, span_encoding):
+    @staticmethod
+    def _create_internal_label_dictionary(label_dictionary, span_encoding):
         internal_label_dictionary = Dictionary(add_unk=False)
         for label in label_dictionary.get_items():
             if label == "<unk>":
@@ -101,36 +102,70 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
 
     def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Token]:
         # special handling during training if this is a span prediction problem
-        if self.training and self.span_prediction_problem:
+        if self.span_prediction_problem:  # do we need self.training here?
             for token in sentence.tokens:
                 token.set_label(self.label_type, "O")
-            for span in sentence.get_spans(self.label_type):
-                span_label = span.get_label(self.label_type).value
-                if len(span) == 1:
-                    span.tokens[0].set_label(self.label_type, "S-" + span_label)
-                else:
-                    for token in span.tokens:
-                        token.set_label(self.label_type, "I-" + span_label)
-                    span.tokens[0].set_label(self.label_type, "B-" + span_label)
-                    span.tokens[-1].set_label(self.label_type, "E-" + span_label)
+                for span in sentence.get_spans(self.label_type):
+                    span_label = span.get_label(self.label_type).value
+                    if len(span) == 1:
+                        if self.span_encoding == "BIOES":
+                            span.tokens[0].set_label(self.label_type, "S-" + span_label)
+                        elif self.span_encoding == "BIO":
+                            span.tokens[0].set_label(self.label_type, "B-" + span_label)
+                    else:
+                        for token in span.tokens:
+                            token.set_label(self.label_type, "I-" + span_label)
+                        span.tokens[0].set_label(self.label_type, "B-" + span_label)
+                        if self.span_encoding == "BIOES":
+                            span.tokens[-1].set_label(self.label_type, "E-" + span_label)
 
         return sentence.tokens
 
     def _post_process_batch_after_prediction(self, batch, label_name):
-        if self.span_prediction_problem:
-            for sentence in batch:
-                start = -1
-                for token in sentence:
-                    label = token.get_label(label_name).value
-                    if label.startswith("S-"):
-                        sentence[token.idx - 1 : token.idx].set_label(label_name, label[2:])
-                    if label.startswith("B-"):
-                        start = token.idx
-                    if label.startswith("E-") and start != -1:
-                        sentence[start - 1 : token.idx].set_label(label_name, label[2:])
-                        start = -1
-                    token.remove_labels(label_name)
-                    token.remove_labels(self.label_type)
+        for sentence in batch:
+            # internal variables
+            previous_tag = "O-"
+            current_span: List[Token] = []
+
+            for token in sentence:
+                bioes_tag = token.get_label(label_name).value
+
+                # non-set tags are OUT tags
+                if bioes_tag == "" or bioes_tag == "O" or bioes_tag == "_":
+                    bioes_tag = "O-"
+
+                # anything that is not OUT is IN
+                in_span = bioes_tag != "O-"
+
+                # does this prediction start a new span?
+                starts_new_span = False
+
+                # begin and single tags start new spans
+                if bioes_tag[:2] in {"B-", "S-"}:
+                    starts_new_span = True
+                elif in_span and previous_tag[2:] != bioes_tag[2:]:  # predicted class changed
+                    # If the current tag is I- or the previous tag was S-, we start a new span
+                    if bioes_tag[:2] == "I-" or previous_tag[2:] == "S-":
+                        starts_new_span = True
+
+                # if an existing span is ended (either by reaching O or starting a new span)
+                if (starts_new_span or not in_span) and len(current_span) > 0:
+                    sentence[current_span[0].idx - 1 : current_span[-1].idx].set_label(label_name, previous_tag[2:])
+                    # reset for-loop variables for new span
+                    current_span = []
+
+                if in_span:
+                    current_span.append(token)
+
+                # remember previous tag
+                previous_tag = bioes_tag
+
+                token.remove_labels(label_name)
+                token.remove_labels(self.label_type)
+
+            # if there is a span at end of sentence, add it
+            if len(current_span) > 0:
+                sentence[current_span[0].idx - 1 : current_span[-1].idx].set_label(label_name, previous_tag[2:])
 
     @property
     def label_type(self):

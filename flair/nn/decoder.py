@@ -4,6 +4,7 @@ from typing import Optional
 import torch
 
 import flair
+from flair.data import Dictionary, Sentence
 from flair.nn.distance import (
     CosineDistance,
     EuclideanDistance,
@@ -11,6 +12,7 @@ from flair.nn.distance import (
     LogitCosineDistance,
     NegativeScaledDotProduct,
 )
+from flair.training_utils import store_embeddings
 
 logger = logging.getLogger("flair")
 
@@ -121,3 +123,40 @@ class PrototypicalDecoder(torch.nn.Module):
         scores = -distance
 
         return scores
+
+
+class SiameseDecoder(torch.nn.Module):
+    def __init__(self, label_encoder, label_dictionary: Dictionary):
+        super(SiameseDecoder, self).__init__()
+        self.label_encoder = label_encoder
+        verbalized_labels = []
+        for label, idx in label_dictionary.item2idx.items():
+            label = label.decode("utf-8")
+            if label_dictionary.span_labels:
+                if label == "O":
+                    verbalized_labels.append("outside")
+                elif label.startswith("B-"):
+                    verbalized_labels.append("begin " + label.split("-")[1])
+                elif label.startswith("I-"):
+                    verbalized_labels.append("inside " + label.split("-")[1])
+            else:
+                verbalized_labels.append(label)
+        self.verbalized_labels = list(map(Sentence, verbalized_labels))
+
+        self.to(flair.device)
+
+    def forward(self, data_point_tensor):
+        # embed the verbalized labels to make a label tensor
+        self.label_encoder.embed(self.verbalized_labels)
+        if self.label_encoder.embedding_type == "sentence-level":
+            label_tensor = torch.stack([label.get_embedding() for label in self.verbalized_labels])
+        elif self.label_encoder.embedding_type == "word-level":
+            label_tensor = torch.stack(
+                [torch.max(torch.stack([t.get_embedding() for t in vb]), dim=0).values for vb in self.verbalized_labels]
+            )
+            label_tensor = self.label_linear(label_tensor)
+        else:
+            raise Exception("Unknown embedding type.")
+        store_embeddings(self.verbalized_labels, "none")
+
+        return torch.mm(data_point_tensor, label_tensor.T)

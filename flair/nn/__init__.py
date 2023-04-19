@@ -1,5 +1,13 @@
-from .decoder import PrototypicalDecoder
+from .decoder import PrototypicalDecoder, SiameseDecoder
 from .dropout import LockedDropout, WordDropout
 from .model import Classifier, DefaultClassifier, Model
 
-__all__ = ["LockedDropout", "WordDropout", "Classifier", "DefaultClassifier", "Model", "PrototypicalDecoder"]
+__all__ = [
+    "LockedDropout",
+    "WordDropout",
+    "Classifier",
+    "DefaultClassifier",
+    "Model",
+    "PrototypicalDecoder",
+    "SiameseDecoder",
+]

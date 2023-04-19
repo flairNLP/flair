@@ -1472,7 +1472,6 @@ class Corpus(typing.Generic[T_co]):
         datapoint_type = None
         for sentence in Tqdm.tqdm(_iter_dataset(data)):
             labels = sentence.get_labels(label_type)
-            print(labels)
             for label in labels:
                 datapoint_type = type(label.data_point)
             if datapoint_type:
