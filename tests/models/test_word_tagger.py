@@ -28,8 +28,8 @@ class TestWordTagger(BaseModelTest):
                 del model_args[k]
         return self.model_cls(
             embeddings=embeddings,
-            tag_dictionary=label_dict,
-            tag_type=self.train_label_type,
+            label_dictionary=label_dict,
+            label_type=self.train_label_type,
             **model_args,
             **kwargs,
         )
