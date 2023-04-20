@@ -892,8 +892,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             if return_loss:
                 if has_unknown_label:
                     log.info(
-                        f"During evaluation, encountered labels that are not in the label_dictionary:"
-                        f"Evaluation loss is computed without them."
+                        "During evaluation, encountered labels that are not in the label_dictionary:"
+                        "Evaluation loss is computed without them."
                     )
                 return overall_loss, label_count
 
