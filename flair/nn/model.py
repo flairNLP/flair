@@ -877,8 +877,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                                     label_score = softmax[s_idx, l_idx].item()
                                     data_point.add_label(typename=label_name, value=label_value, score=label_score)
                         else:
-                            conf, idx = torch.max(softmax, dim=-1)
-                            for data_point, c, i in zip(data_points, conf, idx):
+                            conf, indices = torch.max(softmax, dim=-1)
+                            for data_point, c, i in zip(data_points, conf, indices):
                                 label_value = self.label_dictionary.get_item_for_index(i.item())
                                 if label_value == "O":
                                     continue

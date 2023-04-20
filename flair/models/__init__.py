@@ -11,7 +11,7 @@ from .sequence_tagger_model import SequenceTagger
 from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier
 from .text_regression_model import TextRegressor
-from .word_tagger_model import TokenClassifier
+from .word_tagger_model import TokenClassifier, WordTagger
 
 __all__ = [
     "EntityLinker",
@@ -23,6 +23,7 @@ __all__ = [
     "RegexpTagger",
     "SequenceTagger",
     "TokenClassifier",
+    "WordTagger",
     "FewshotClassifier",
     "TARSClassifier",
     "TARSTagger",

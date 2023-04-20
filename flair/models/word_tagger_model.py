@@ -11,6 +11,15 @@ from flair.embeddings import TokenEmbeddings
 log = logging.getLogger("flair")
 
 
+def WordTagger(embeddings, tag_dictionary, tag_type, **classifierargs):
+    from warnings import warn
+
+    warn("The WordTagger class is deprecated after Flair version 0.12.2. Use TokenClassifier instead!")
+    return TokenClassifier(
+        embeddings=embeddings, label_dictionary=tag_dictionary, label_type=tag_type, **classifierargs
+    )
+
+
 class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
     """This is a simple class of models that tags individual words in text."""
 
@@ -22,7 +31,7 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         span_encoding: str = "BIOES",
         **classifierargs,
     ):
-        """Initializes a TokenClassifier
+        """Initializes a TokenClassifier.
 
         :param embeddings: word embeddings used in tagger
         :param tag_dictionary: dictionary of tags you want to predict
