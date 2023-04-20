@@ -22,7 +22,7 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         span_encoding: str = "BIOES",
         **classifierargs,
     ):
-        """Initializes a TokenClassifier
+        """Initializes a TokenClassifier.
 
         :param embeddings: word embeddings used in tagger
         :param tag_dictionary: dictionary of tags you want to predict
