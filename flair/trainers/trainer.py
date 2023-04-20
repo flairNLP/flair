@@ -160,21 +160,24 @@ class ModelTrainer(Pluggable):
         write_weights: bool = False,
         # plugins
         plugins: List[TrainerPlugin] = None,
+        attach_default_scheduler: bool = True,
         **kwargs,
     ):
-        # activate annealing plugin
         if plugins is None:
             plugins = []
-        plugins.append(
-            AnnealingPlugin(
-                base_path=base_path,
-                anneal_factor=anneal_factor,
-                patience=patience,
-                min_learning_rate=min_learning_rate,
-                initial_extra_patience=initial_extra_patience,
-                anneal_with_restarts=anneal_with_restarts,
+
+        if attach_default_scheduler:
+            # activate annealing plugin
+            plugins.append(
+                AnnealingPlugin(
+                    base_path=base_path,
+                    anneal_factor=anneal_factor,
+                    patience=patience,
+                    min_learning_rate=min_learning_rate,
+                    initial_extra_patience=initial_extra_patience,
+                    anneal_with_restarts=anneal_with_restarts,
+                )
             )
-        )
 
         # call self.train_custom with all parameters (minus the ones specific to the AnnealingPlugin)
         local_variables = locals()
@@ -185,6 +188,7 @@ class ModelTrainer(Pluggable):
             "min_learning_rate",
             "initial_extra_patience",
             "anneal_with_restarts",
+            "attach_default_scheduler",
             "kwargs",
         ]:
             local_variables.pop(var)
@@ -228,12 +232,15 @@ class ModelTrainer(Pluggable):
         write_weights: bool = False,
         # plugins
         plugins: List[TrainerPlugin] = None,
+        attach_default_scheduler: bool = True,
         **kwargs,
     ):
         # annealing logic
         if plugins is None:
             plugins = []
-        plugins.append(LinearSchedulerPlugin(warmup_fraction=warmup_fraction))
+
+        if attach_default_scheduler:
+            plugins.append(LinearSchedulerPlugin(warmup_fraction=warmup_fraction))
 
         return self.train_custom(
             base_path=base_path,
