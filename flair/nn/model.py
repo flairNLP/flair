@@ -22,6 +22,7 @@ from flair.training_utils import (
     LabelwiseWrapper,
     Result,
     SupportMetric,
+    metric_with_certain_labels_only,
     store_embeddings,
 )
 
@@ -261,42 +262,75 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
 
         averages = ("micro", "macro", "weighted")
 
-        kwargs = {"num_labels": len(evaluation_label_dictionary)}
-
         if evaluation_label_dictionary.multi_label:
-            kwargs["task"] = "multilabel"
+            kwargs = {
+                "task": "multilabel",
+                "num_labels": len(evaluation_label_dictionary),
+            }
         else:
-            kwargs["task"] = "multiclass"
+            kwargs = {
+                "task": "multiclass",
+                "num_classes": len(evaluation_label_dictionary),
+            }
 
         metrics = torchmetrics.MetricCollection([])
 
+        label_indices, label_names = zip(
+            *[
+                (i, label)
+                for i, label in enumerate(evaluation_label_dictionary.get_items())
+                if label not in ("<unk>", "O")
+            ]
+        )
+
+        label_names = list(label_names)
+
+        # Add averaged metrics
         for avg in averages:
             metrics.add_metrics(
                 {
-                    f"{avg}_accuracy": torchmetrics.Accuracy(average=avg, **kwargs),
-                    f"{avg}_f1-score": torchmetrics.F1Score(average=avg, **kwargs),
-                    f"{avg}_recall": torchmetrics.Recall(average=avg, **kwargs),
-                    f"{avg}_precision": torchmetrics.Precision(average=avg, **kwargs),
-                    f"{avg}_support": SupportMetric(average="micro", **kwargs),
+                    f"{avg}_accuracy": metric_with_certain_labels_only(
+                        torchmetrics.Accuracy, average=avg, included_labels=label_indices, **kwargs
+                    ),
+                    f"{avg}_f1-score": metric_with_certain_labels_only(
+                        torchmetrics.F1Score, average=avg, included_labels=label_indices, **kwargs
+                    ),
+                    f"{avg}_recall": metric_with_certain_labels_only(
+                        torchmetrics.Recall, average=avg, included_labels=label_indices, **kwargs
+                    ),
+                    f"{avg}_precision": metric_with_certain_labels_only(
+                        torchmetrics.Precision, average=avg, included_labels=label_indices, **kwargs
+                    ),
                 }
             )
 
-        labels = evaluation_label_dictionary.get_items()
-
+        # Add labelwise metrics
         metrics.add_metrics(
             {
                 "label_f1-score": LabelwiseWrapper(
-                    torchmetrics.F1Score(average=None, **kwargs), labels=labels, name="f1-score"
+                    torchmetrics.F1Score(average=None, **kwargs),
+                    label_names=label_names,
+                    included_labels=label_indices,
+                    name="f1-score",
                 ),
                 "label_recall": LabelwiseWrapper(
-                    torchmetrics.Recall(average=None, **kwargs), labels=labels, name="recall"
+                    torchmetrics.Recall(average=None, **kwargs),
+                    label_names=label_names,
+                    included_labels=label_indices,
+                    name="recall",
                 ),
                 "label_precision": LabelwiseWrapper(
-                    torchmetrics.Precision(average=None, **kwargs), labels=labels, name="precision"
+                    torchmetrics.Precision(average=None, **kwargs),
+                    label_names=label_names,
+                    included_labels=label_indices,
+                    name="precision",
                 ),
                 "label_support": LabelwiseWrapper(
                     SupportMetric(average=None, **kwargs),
-                    labels=labels, name="support"),
+                    label_names=label_names,
+                    included_labels=label_indices,
+                    name="support",
+                ),
             }
         )
 
@@ -323,9 +357,6 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             _, *label_parts, metric_name = metric_composite_name.split("_")
 
             label = "_".join(label_parts)
-
-            if label in ("<unk>", "O"):
-                continue
 
             label_metrics.setdefault(label, {})[metric_name] = value.item()
 
@@ -518,8 +549,12 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                             else:
                                 print("multilabel")
                                 # multi-label problems require one multi-hot array per labeled datapoint
-                                y_true = torch.zeros(len(identifiers), len(evaluation_label_dictionary), dtype=torch.long)
-                                y_pred = torch.zeros(len(identifiers), len(evaluation_label_dictionary), dtype=torch.long)
+                                y_true = torch.zeros(
+                                    len(identifiers), len(evaluation_label_dictionary), dtype=torch.long
+                                )
+                                y_pred = torch.zeros(
+                                    len(identifiers), len(evaluation_label_dictionary), dtype=torch.long
+                                )
 
                                 for i, identifier in enumerate(identifiers):
                                     for label in true_values.get(identifier, ["O"]):

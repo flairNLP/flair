@@ -5,7 +5,12 @@ from enum import Enum
 from functools import reduce
 from math import inf
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Optional, Type, Union
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extension import Literal  # type: ignore
 
 import torch
 import torchmetrics
@@ -13,6 +18,10 @@ from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from torch.optim import Optimizer
 from torch.utils.data import Dataset
+from torchmetrics.classification.stat_scores import (
+    MulticlassStatScores,
+    MultilabelStatScores,
+)
 
 import flair
 from flair.data import DT, Dictionary, Sentence, _iter_dataset
@@ -470,13 +479,55 @@ class SupportMetric:
         )
 
 
+def metric_with_certain_labels_only(
+    metric_type: Union[Type[MulticlassStatScores], Type[MultilabelStatScores]],
+    included_labels: torch.Tensor,
+    average: Optional[Literal["micro", "macro", "weighted", "none"]] = "macro",
+    **kwargs,
+):
+    metric_average = average
+
+    if average == "micro":
+        metric_average = "none"
+
+    metric = metric_type(average=metric_average, **kwargs)
+
+    _final_state_inner = metric._final_state
+
+    def _final_state_wrapper():
+        state = _final_state_inner()
+
+        # manipulate the state variable
+        new_state = (s[torch.tensor(included_labels)] for s in state)
+
+        return new_state
+
+    metric._final_state = _final_state_wrapper  # type: ignore
+
+    if average == "micro":
+        compute_inner = metric.compute
+
+        def compute_wrapper():
+            metric.average = "micro"
+            result = compute_inner()
+            metric.average = "none"
+            return result
+
+        metric.compute = compute_wrapper  # type: ignore
+
+    return metric
+
+
 class LabelwiseWrapper(torchmetrics.ClasswiseWrapper):
-    def __init__(self, metric, name, **kwargs):
-        super().__init__(metric, **kwargs)
+    def __init__(self, metric, name, label_names, included_labels, **kwargs):
+        super().__init__(metric, labels=label_names, **kwargs)
 
         self._name = name
+        self.included_labels = included_labels
 
     def _convert(self, x: torch.Tensor) -> Dict[str, Any]:
+        x = x[torch.tensor(self.included_labels)]
+
         name = self._name
         if self.labels is None:
             return {f"label_{i}_{name}": val for i, val in enumerate(x)}
