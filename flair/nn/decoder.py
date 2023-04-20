@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 
 import torch
 
@@ -31,7 +31,7 @@ class PrototypicalDecoder(torch.nn.Module):
         learning_mode: Optional[str] = "joint",
         normal_distributed_initial_prototypes: bool = False,
     ):
-        super().__init__()
+        super(PrototypicalDecoder, self).__init__()
 
         if not prototype_size:
             prototype_size = embeddings_size
@@ -89,7 +89,7 @@ class PrototypicalDecoder(torch.nn.Module):
     def num_prototypes(self):
         return self.prototype_vectors.size(0)
 
-    def forward(self, embedded):
+    def forward(self, embedded: torch.tensor):
         if self.learning_mode == "learn_only_map_and_prototypes":
             embedded = embedded.detach()
 
@@ -125,10 +125,9 @@ class PrototypicalDecoder(torch.nn.Module):
         return scores
 
 
-class SiameseDecoder(torch.nn.Module):
-    def __init__(self, label_encoder, label_dictionary: Dictionary):
-        super(SiameseDecoder, self).__init__()
-        self.label_encoder = label_encoder
+class LabelVerbalizer(torch.nn.Module):
+    @staticmethod
+    def verbalize_labels(label_dictionary: Dictionary) -> List[str]:
         verbalized_labels = []
         for label, idx in label_dictionary.item2idx.items():
             label = label.decode("utf-8")
@@ -139,24 +138,43 @@ class SiameseDecoder(torch.nn.Module):
                     verbalized_labels.append("begin " + label.split("-")[1])
                 elif label.startswith("I-"):
                     verbalized_labels.append("inside " + label.split("-")[1])
+                elif label.startswith("E-"):
+                    verbalized_labels.append("ending " + label.split("-")[1])
+                elif label.startswith("S-"):
+                    verbalized_labels.append("single " + label.split("-")[1])
             else:
                 verbalized_labels.append(label)
-        self.verbalized_labels = list(map(Sentence, verbalized_labels))
+        return list(map(Sentence, verbalized_labels))
+
+
+class LabelVerbalizerWithMatMult(LabelVerbalizer):
+    def __init__(self, label_encoder, label_dictionary: Dictionary):
+        super(LabelVerbalizerWithMatMult, self).__init__()
+        self.label_encoder = label_encoder
+        self.verbalized_labels = self.verbalize_labels(label_dictionary)
 
         self.to(flair.device)
 
-    def forward(self, data_point_tensor):
-        # embed the verbalized labels to make a label tensor
+    def forward(self, input: torch.tensor):
         self.label_encoder.embed(self.verbalized_labels)
-        if self.label_encoder.embedding_type == "sentence-level":
-            label_tensor = torch.stack([label.get_embedding() for label in self.verbalized_labels])
-        elif self.label_encoder.embedding_type == "word-level":
-            label_tensor = torch.stack(
-                [torch.max(torch.stack([t.get_embedding() for t in vb]), dim=0).values for vb in self.verbalized_labels]
-            )
-            label_tensor = self.label_linear(label_tensor)
-        else:
-            raise Exception("Unknown embedding type.")
+        label_tensor = torch.stack([label.get_embedding() for label in self.verbalized_labels])
         store_embeddings(self.verbalized_labels, "none")
+        return torch.mm(input, label_tensor.T)
 
-        return torch.mm(data_point_tensor, label_tensor.T)
+
+class LabelVerbalizerWithDistanceMetric(LabelVerbalizer):
+    def __init__(self, label_encoder, label_dictionary: Dictionary, distance: torch.nn.Module = CosineDistance):
+        super(LabelVerbalizerWithDistanceMetric, self).__init__()
+        self.label_encoder = label_encoder
+        self.verbalized_labels = self.verbalize_labels(label_dictionary)
+
+        self.distance = distance()
+        self.distance_score_transformation = torch.nn.Identity()
+
+        self.to(flair.device)
+
+    def forward(self, input: torch.tensor):
+        self.label_encoder.embed(self.verbalized_labels)
+        label_tensor = torch.stack([label.get_embedding() for label in self.verbalized_labels])
+        store_embeddings(self.verbalized_labels, "none")
+        return self.distance_score_transformation(self.distance(input, label_tensor))

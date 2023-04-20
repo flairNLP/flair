@@ -1,4 +1,8 @@
-from .decoder import PrototypicalDecoder, SiameseDecoder
+from .decoder import (
+    LabelVerbalizerWithDistanceMetric,
+    LabelVerbalizerWithMatMult,
+    PrototypicalDecoder,
+)
 from .dropout import LockedDropout, WordDropout
 from .model import Classifier, DefaultClassifier, Model
 
@@ -9,5 +13,6 @@ __all__ = [
     "DefaultClassifier",
     "Model",
     "PrototypicalDecoder",
-    "SiameseDecoder",
+    "LabelVerbalizerWithMatMult",
+    "LabelVerbalizerWithDistanceMetric",
 ]
