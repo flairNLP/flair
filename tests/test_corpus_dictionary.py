@@ -150,7 +150,7 @@ def test_tagged_corpus_make_label_dictionary():
         FlairDatapointDataset([]),
     )
 
-    label_dict = corpus.make_label_dictionary("label")
+    label_dict = corpus.make_label_dictionary("label", add_unk=True)
 
     assert 3 == len(label_dict)
     assert "<unk>" in label_dict.get_items()
