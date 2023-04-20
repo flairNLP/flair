@@ -5,7 +5,6 @@ import torch
 
 import flair
 from flair.data import Dictionary, Sentence
-from flair.embeddings import DocumentEmbeddings
 from flair.nn.distance import (
     CosineDistance,
     EuclideanDistance,
@@ -127,7 +126,7 @@ class PrototypicalDecoder(torch.nn.Module):
 
 
 class LabelVerbalizerDecoder(torch.nn.Module):
-    def __init__(self, label_encoder: DocumentEmbeddings, label_dictionary: Dictionary, decoding: str = "dot-product"):
+    def __init__(self, label_encoder, label_dictionary: Dictionary, decoding: str = "dot-product"):
         super(LabelVerbalizerDecoder, self).__init__()
         if decoding not in ["dot-product", "cosine-similarity"]:
             raise RuntimeError("Decoding method needs to be one of the following: dot-product, cosine-similarity")
