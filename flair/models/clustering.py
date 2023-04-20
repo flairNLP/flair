@@ -17,21 +17,20 @@ log = logging.getLogger("flair")
 
 
 class ClusteringModel:
-    """
-    A wrapper class for the sklearn clustering models. With this class clustering with the library 'flair' can be done.
-    """
+    """A wrapper class to apply sklearn clustering models on DocumentEmbeddings."""
 
     def __init__(self, model: Union[ClusterMixin, BaseEstimator], embeddings: DocumentEmbeddings):
-        """
-        :param model: the clustering algortihm from sklearn this wrapper will use.
+        """Instantiate the ClusteringModel.
+
+        :param model: the clustering algorithm from sklearn this wrapper will use.
         :param embeddings: the flair DocumentEmbedding this wrapper uses to calculate a vector for each sentence.
         """
         self.model = model
         self.embeddings = embeddings
 
     def fit(self, corpus: Corpus, **kwargs):
-        """
-        Trains the model.
+        """Trains the model.
+
         :param corpus: the flair corpus this wrapper will use for fitting the model.
         """
         X = self._convert_dataset(corpus)
@@ -41,12 +40,10 @@ class ClusteringModel:
         log.info("Finished clustering.")
 
     def predict(self, corpus: Corpus):
-        """
-        Predict labels given a list of sentences and returns the respective class indices.
+        """Predict labels given a list of sentences and returns the respective class indices.
 
         :param corpus: the flair corpus this wrapper will use for predicting the labels.
         """
-
         X = self._convert_dataset(corpus)
         log.info("Start the prediction " + str(self.model) + " with " + str(len(X)) + " Datapoints.")
         predict = self.model.predict(X)
@@ -58,8 +55,7 @@ class ClusteringModel:
         return predict
 
     def save(self, model_file: Union[str, Path]):
-        """
-        Saves current model.
+        """Saves current model.
 
         :param model_file: path where to save the model.
         """
@@ -69,8 +65,7 @@ class ClusteringModel:
 
     @staticmethod
     def load(model_file: Union[str, Path]):
-        """
-        Loads a model from a given path.
+        """Loads a model from a given path.
 
         :param model_file: path to the file where the model is saved.
         """
@@ -78,13 +73,13 @@ class ClusteringModel:
         return pickle.loads(joblib.load(str(model_file)))
 
     def _convert_dataset(self, corpus, label_type: str = None, batch_size: int = 32, return_label_dict: bool = False):
-        """
+        """Makes a flair-corpus sklearn compatible.
+
         Turns the corpora into X, y datasets as required for most sklearn clustering models.
         Ref.: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.cluster
 
         :param label_type: the label from sentences will be extracted. If the value is none this will be skipped.
         """
-
         log.info("Embed sentences...")
         sentences = []
         for batch in tqdm(DataLoader(corpus.get_all_sentences(), batch_size=batch_size)):
@@ -106,8 +101,8 @@ class ClusteringModel:
         return X, y
 
     def evaluate(self, corpus: Corpus, label_type: str):
-        """
-        This method calculates some evaluation metrics for the clustering.
+        """This method calculates some evaluation metrics for the clustering.
+
         Also, the result of the evaluation is logged.
 
         :param corpus: the flair corpus this wrapper will use for evaluation.

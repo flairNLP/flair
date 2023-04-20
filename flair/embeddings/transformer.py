@@ -275,7 +275,8 @@ def _reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens
 
 
 class TransformerBaseEmbeddings(Embeddings[Sentence]):
-    """Base class for all TransformerEmbeddings
+    """Base class for all TransformerEmbeddings.
+
     This base class handles the tokenizer and the input preparation, however it won't implement the actual model.
     This can be further extended to implement the model in either a pytorch, jit or onnx way of working.
     """
@@ -620,23 +621,29 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         return sentence_tokens, offsets, lengths
 
     def _expand_sentence_with_context(self, sentence) -> Tuple[List[Token], int]:
-        expand_context = self.context_length > 0 and (
-            not self.training or random.randint(1, 100) > (self.context_dropout * 100)
-        )
-
+        # fields to store left and right context
         left_context = []
         right_context = []
 
+        # expand context only if context_length is set
+        expand_context = self.context_length > 0
+
         if expand_context:
-            left_context = sentence.left_context(self.context_length, self.respect_document_boundaries)
-            right_context = sentence.right_context(self.context_length, self.respect_document_boundaries)
+            # if context_dropout is set, randomly deactivate left context during training
+            if not self.training or random.randint(1, 100) > (self.context_dropout * 100):
+                left_context = sentence.left_context(self.context_length, self.respect_document_boundaries)
 
-            if self.use_context_separator:
-                left_context = left_context + [Token(SENTENCE_BOUNDARY_TAG)]
-                right_context = [Token(SENTENCE_BOUNDARY_TAG)] + right_context
+            # if context_dropout is set, randomly deactivate right context during training
+            if not self.training or random.randint(1, 100) > (self.context_dropout * 100):
+                right_context = sentence.right_context(self.context_length, self.respect_document_boundaries)
 
+        # if use_context_separator is set, add a [FLERT] token
+        if self.use_context_separator and self.context_length > 0:
+            left_context = left_context + [Token(SENTENCE_BOUNDARY_TAG)]
+            right_context = [Token(SENTENCE_BOUNDARY_TAG)] + right_context
+
+        # return expanded sentence and context length information
         expanded_sentence = left_context + sentence.tokens + right_context
-
         context_length = len(left_context)
         return expanded_sentence, context_length
 
@@ -711,7 +718,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         self.session = None
 
     def optimize_model(self, optimize_model_path, use_external_data_format: bool = False, **kwargs):
-        """Wrapper for onnxruntime.transformers.optimizer.optimize_model"""
+        """Wrapper for `onnxruntime.transformers.optimizer.optimize_model`."""
         from onnxruntime.transformers.optimizer import optimize_model
 
         self.remove_session()
@@ -1165,11 +1172,24 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     @classmethod
     def from_params(cls, params):
         params["use_context"] = params.pop("context_length", 0)
-        return cls.create_from_state(**params)
+        config_state_dict = params.pop("config_state_dict", None)
+        config = None
+
+        if config_state_dict:
+            model_type = config_state_dict.get("model_type", "bert")
+            config_class = CONFIG_MAPPING[model_type]
+            config = config_class.from_dict(config_state_dict)
+        return cls.create_from_state(saved_config=config, **params)
 
     def to_params(self):
         config_dict = self.model.config.to_dict()
         super_params = super().to_params()
+
+        # those parameters are only from the super class and will be recreated in the constructor.
+        del super_params["truncate"]
+        del super_params["stride"]
+        del super_params["embedding_length"]
+        del super_params["use_lang_emb"]
 
         model_state = {
             **super_params,
@@ -1315,8 +1335,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     def export_onnx(
         self, path: Union[str, Path], example_sentences: List[Sentence], **kwargs
     ) -> TransformerOnnxEmbeddings:
-        """
-        Export TransformerEmbeddings to OnnxFormat.
+        """Export TransformerEmbeddings to OnnxFormat.
+
         :param example_sentences: a list of sentences that will be used for tracing. It is recommended to take 2-4
         sentences with some variation.
         """

@@ -14,7 +14,7 @@ exclude = '''
 '''
 [tool.pytest.ini_options]
 flake8-max-line-length = 210
-flake8-ignore = ["E203", "W503"]  # See https://github.com/PyCQA/pycodestyle/issues/373
+flake8-ignore = ["E203", "W503", "D100", "D101", "D102", "D103", "D104", "D105", "D107", "legacy.py ALL"]  # See https://github.com/PyCQA/pycodestyle/issues/373
 addopts = "--flake8 --mypy --isort"
 filterwarnings = [
     "error",  # Convert all warnings to errors
@@ -26,6 +26,7 @@ filterwarnings = [
     'ignore:The `device` argument is deprecated and will be removed in v5 of Transformers.',  # hf layoutlmv3 calls deprecated hf.
     "ignore:the imp module is deprecated:DeprecationWarning:past",  # ignore DeprecationWarning from hyperopt dependency
     "ignore:.*imp module.*:DeprecationWarning",  # ignore DeprecationWarnings that involve imp module
+    "ignore:The class LayoutLMv3FeatureExtractor is deprecated and will be removed in version 5 of Transformers. Please use LayoutLMv3ImageProcessor instead.",  # huggingface layoutlmv3 has deprecated calls.
 ]
 markers = [
     "integration",
@@ -40,3 +41,6 @@ ignore_errors = true
 
 [tool.isort]
 profile = "black"
+
+[tool.pydocstyle]
+match = "^(?!legacy).*\\.py$"

@@ -35,8 +35,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
         is_token_embedding: bool = False,
         **kwargs,
     ):
-        """
-        Bidirectional transformer embeddings of words from various transformer architectures.
+        """Bidirectional transformer embeddings of words from various transformer architectures.
+
         :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
         options)
         :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
@@ -70,6 +70,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         pooling: str = "mean",
     ):
         """The constructor takes a list of embeddings to be combined.
+
         :param embeddings: a list of token embeddings
         :param fine_tune_mode: if set to "linear" a trainable layer is added, if set to
         "nonlinear", a nonlinearity is added as well. Set this to make the pooling trainable.
@@ -112,9 +113,10 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         return self.__embedding_length
 
     def embed(self, sentences: Union[List[Sentence], Sentence]):
-        """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
-        only if embeddings are non-static."""
+        """Add embeddings to every sentence in the given list of sentences.
 
+        If embeddings are already added, updates only if embeddings are non-static.
+        """
         # if only one sentence is passed, convert to list of sentence
         if isinstance(sentences, Sentence):
             sentences = [sentences]
@@ -170,7 +172,8 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
         **vectorizer_params,
     ):
         """The constructor for DocumentTFIDFEmbeddings.
-        :param train_dataset: the train dataset which will be used to construct vectorizer
+
+        :param train_dataset: the train dataset which will be used to construct a vectorizer
         :param vectorizer_params: parameters given to Scikit-learn's TfidfVectorizer constructor
         """
         super().__init__()
@@ -198,7 +201,6 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
 
     def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to every sentence in the given list of sentences."""
-
         # if only one sentence is passed, convert to list of sentence
         if isinstance(sentences, Sentence):
             sentences = [sentences]
@@ -238,7 +240,8 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         rnn_type="GRU",
         fine_tune: bool = True,
     ):
-        """The constructor takes a list of embeddings to be combined.
+        """Instantiates an RNN that works upon some token embeddings.
+
         :param embeddings: a list of token embeddings
         :param hidden_size: the number of hidden states in the rnn
         :param rnn_layers: the number of layers for the rnn
@@ -311,9 +314,10 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
-        """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
-        only if embeddings are non-static."""
+        """Add embeddings to all sentences in the given list of sentences.
 
+        If embeddings are already added, update only if embeddings are non-static.
+        """
         # TODO: remove in future versions
         if not hasattr(self, "locked_dropout"):
             self.locked_dropout = None
@@ -536,7 +540,8 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         model: str = "bert-base-nli-mean-tokens",
         batch_size: int = 1,
     ):
-        """
+        """Instantiates a document embedding using the SentenceTransformer Embeddings.
+
         :param model: string name of models from SentencesTransformer Class
         :param name: string name of embedding type which will be set to Sentence object
         :param batch_size: int number of sentences to processed in one batch
@@ -609,7 +614,8 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         locked_dropout: float = 0.0,
         fine_tune: bool = True,
     ):
-        """The constructor takes a list of embeddings to be combined.
+        """Instantiates a CNN that works uppons some token embeddings.
+
         :param embeddings: a list of token embeddings
         :param kernels: list of (number of kernels, kernel size)
         :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
@@ -668,9 +674,10 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
-        """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
-        only if embeddings are non-static."""
+        """Add embeddings to all sentences in the given list of sentences.
 
+        If embeddings are already added, update only if embeddings are non-static.
+        """
         # TODO: remove in future versions
         if not hasattr(self, "locked_dropout"):
             self.locked_dropout = None

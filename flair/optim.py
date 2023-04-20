@@ -9,9 +9,9 @@ log = logging.getLogger("flair")
 
 
 class SGDW(Optimizer):
-    r"""Implements stochastic gradient descent (optionally with momentum) with
-    weight decay from the paper `Fixing Weight Decay Regularization in Adam`_.
+    r"""Implements stochastic gradient descent (optionally with momentum) with weight decay.
 
+    Implementation from the paper `Fixing Weight Decay Regularization in Adam`_.
     Nesterov momentum is based on the formula from
     `On the importance of initialization and momentum in deep learning`__.
 
@@ -135,8 +135,7 @@ class SGDW(Optimizer):
 
 
 class ExpAnnealLR(_LRScheduler):
-    """Exponentially anneal the learning rate of each parameter group
-    from the initial lr to end_lr over a number of iterations.
+    """Exponentially anneal the lr of each parameter group from the initial lr to end_lr over a number of iterations.
 
     Args:
         optimizer (Optimizer): Wrapped optimizer.
@@ -158,9 +157,9 @@ class ExpAnnealLR(_LRScheduler):
 
 
 class LinearSchedulerWithWarmup(LambdaLR):
-    """Linearly increase the learning from 0 to initial learning rate during warmup
-    and decrease the learning rate to 0 after the warmup. Uses LambaLR scheduler
-    where the learning rate is multiplied by a lambda factor after calling scheduler.step().
+    """Linearly increase the lr from 0 to initial lr during warmup and decrease the lr to 0 after the warmup.
+
+    Uses LambaLR scheduler where the learning rate is multiplied by a lambda factor after calling scheduler.step().
 
     Args:
         optimizer (Optimizer): Wrapped optimizer.
@@ -185,8 +184,9 @@ class LinearSchedulerWithWarmup(LambdaLR):
 
 
 class ReduceLRWDOnPlateau(ReduceLROnPlateau):
-    """Reduce learning rate and weight decay when a metric has stopped
-    improving. Models often benefit from reducing the learning rate by
+    """Reduce learning rate and weight decay when a metric has stopped improving.
+
+    Models often benefit from reducing the learning rate by
     a factor of 2-10 once learning stagnates. This scheduler reads a metric
     quantity and if no improvement is seen for a 'patience' number
     of epochs, the learning rate and weight decay factor is reduced for

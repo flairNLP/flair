@@ -43,7 +43,8 @@ class SentenceSplitter(ABC):
 
 
 class SegtokSentenceSplitter(SentenceSplitter):
-    """
+    """Sentence Splitter using SegTok.
+
     Implementation of :class:`SentenceSplitter` using the SegTok library.
 
     For further details see: https://github.com/fnl/segtok
@@ -92,7 +93,8 @@ class SegtokSentenceSplitter(SentenceSplitter):
 
 
 class SpacySentenceSplitter(SentenceSplitter):
-    """
+    """Sentence Splitter using Spacy.
+
     Implementation of :class:`SentenceSplitter`, using models from Spacy.
 
     :param model Spacy V2 model or the name of the model to load.
@@ -107,7 +109,7 @@ class SpacySentenceSplitter(SentenceSplitter):
             from spacy.language import Language
         except ImportError:
             raise ImportError(
-                "Please install spacy v2.3.2 or higher before using the SpacySentenceSplitter, "
+                "Please install spacy v3.4.4 or higher before using the SpacySentenceSplitter, "
                 "otherwise you can use SegtokSentenceSplitter as alternative implementation."
             )
 
@@ -159,7 +161,8 @@ class SpacySentenceSplitter(SentenceSplitter):
 
 
 class SciSpacySentenceSplitter(SpacySentenceSplitter):
-    """
+    """Sentence splitter using the spacy model `en_core_sci_sm`.
+
     Convenience class to instantiate :class:`SpacySentenceSplitter` with Spacy model `en_core_sci_sm`
     for sentence splitting and :class:`SciSpacyTokenizer` as tokenizer.
     """
@@ -169,7 +172,8 @@ class SciSpacySentenceSplitter(SpacySentenceSplitter):
 
 
 class TagSentenceSplitter(SentenceSplitter):
-    """
+    """SentenceSplitter which assumes that there is a tag within the text that is used to mark sentence boundaries.
+
     Implementation of :class:`SentenceSplitter` which assumes that there is a special tag within
     the text that is used to mark sentence boundaries.
     """
@@ -215,7 +219,8 @@ class TagSentenceSplitter(SentenceSplitter):
 
 
 class NewlineSentenceSplitter(TagSentenceSplitter):
-    """
+    r"""Sentence Splitter using newline as boundary marker.
+
     Convenience class to instantiate :class:`SentenceTagSplitter` with newline ("\n") as
     sentence boundary marker.
     """
@@ -229,7 +234,8 @@ class NewlineSentenceSplitter(TagSentenceSplitter):
 
 
 class NoSentenceSplitter(SentenceSplitter):
-    """
+    """Sentence Splitter which treats the full text as a single Sentence.
+
     Implementation of :class:`SentenceSplitter` which treats the complete text as one sentence.
     """
 

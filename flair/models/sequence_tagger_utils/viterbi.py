@@ -14,12 +14,11 @@ STOP_TAG: str = "<STOP>"
 
 
 class ViterbiLoss(torch.nn.Module):
-    """
-    Calculates the loss for each sequence up to its length t.
-    """
+    """Calculates the loss for each sequence up to its length t."""
 
     def __init__(self, tag_dictionary: Dictionary):
-        """
+        """Create an instance of the Viterbi loss.
+
         :param tag_dictionary: tag_dictionary of task
         """
         super(ViterbiLoss, self).__init__()
@@ -29,8 +28,7 @@ class ViterbiLoss(torch.nn.Module):
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
     def forward(self, features_tuple: tuple, targets: torch.Tensor) -> torch.Tensor:
-        """
-        Forward propagation of Viterbi Loss
+        """Forward propagation of Viterbi Loss.
 
         :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
             lengths of sentences in batch, transitions from CRF
@@ -82,8 +80,7 @@ class ViterbiLoss(torch.nn.Module):
 
     @staticmethod
     def _log_sum_exp(tensor, dim):
-        """
-        Calculates the log-sum-exponent of a tensor's dimension in a numerically stable way.
+        """Calculates the log-sum-exponent of a tensor's dimension in a numerically stable way.
 
         :param tensor: tensor
         :param dim: dimension to calculate log-sum-exp of
@@ -94,13 +91,13 @@ class ViterbiLoss(torch.nn.Module):
         return m + torch.log(torch.sum(torch.exp(tensor - m_expanded), dim))
 
     def _format_targets(self, targets: torch.Tensor, lengths: torch.IntTensor):
-        """
-        Formats targets into matrix indices.
+        """Formats targets into matrix indices.
+
         CRF scores contain per sentence, per token a (tagset_size x tagset_size) matrix, containing emission score for
-            token j + transition prob from previous token i. Means, if we think of our rows as "to tag" and our columns
-            as "from tag", the matrix in cell [10,5] would contain the emission score for tag 10 + transition score
-            from previous tag 5 and could directly be addressed through the 1-dim indices (10 + tagset_size * 5) = 70,
-            if our tagset consists of 12 tags.
+        token j + transition prob from previous token i. Means, if we think of our rows as "to tag" and our columns
+        as "from tag", the matrix in cell [10,5] would contain the emission score for tag 10 + transition score
+        from previous tag 5 and could directly be addressed through the 1-dim indices (10 + tagset_size * 5) = 70,
+        if our tagset consists of 12 tags.
 
         :param targets: targets as in tag dictionary
         :param lengths: lengths of sentences in batch
@@ -127,12 +124,11 @@ class ViterbiLoss(torch.nn.Module):
 
 
 class ViterbiDecoder:
-    """
-    Decodes a given sequence using the Viterbi algorithm.
-    """
+    """Decodes a given sequence using the Viterbi algorithm."""
 
     def __init__(self, tag_dictionary: Dictionary):
-        """
+        """Initialize the Viterbi Decoder.
+
         :param tag_dictionary: Dictionary of tags for sequence labeling task
         """
         self.tag_dictionary = tag_dictionary
@@ -143,8 +139,8 @@ class ViterbiDecoder:
     def decode(
         self, features_tuple: tuple, probabilities_for_all_classes: bool, sentences: List[Sentence]
     ) -> Tuple[List, List]:
-        """
-        Decoding function returning the most likely sequence of tags.
+        """Decoding function returning the most likely sequence of tags.
+
         :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
             lengths of sentence in batch, transitions of CRF
         :param probabilities_for_all_classes: whether to return probabilities for all tags
@@ -224,8 +220,8 @@ class ViterbiDecoder:
         return tags, all_tags
 
     def _all_scores_for_token(self, scores: torch.Tensor, lengths: torch.IntTensor, sentences: List[Sentence]):
-        """
-        Returns all scores for each tag in tag dictionary.
+        """Returns all scores for each tag in tag dictionary.
+
         :param scores: Scores for current sentence.
         """
         scores = scores.numpy()
