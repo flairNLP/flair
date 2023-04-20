@@ -2,12 +2,12 @@ import pytest
 
 import flair
 from flair.embeddings import TransformerWordEmbeddings
-from flair.models import WordTagger
+from flair.models import TokenClassifier
 from tests.model_test_utils import BaseModelTest
 
 
 class TestWordTagger(BaseModelTest):
-    model_cls = WordTagger
+    model_cls = TokenClassifier
     train_label_type = "pos"
     training_args = dict(
         max_epochs=2,
@@ -28,8 +28,8 @@ class TestWordTagger(BaseModelTest):
                 del model_args[k]
         return self.model_cls(
             embeddings=embeddings,
-            tag_dictionary=label_dict,
-            tag_type=self.train_label_type,
+            label_dictionary=label_dict,
+            label_type=self.train_label_type,
             **model_args,
             **kwargs,
         )

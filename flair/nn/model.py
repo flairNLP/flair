@@ -544,7 +544,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
     It inherits from flair.nn.Classifier and thus from flair.nn.Model. All features shared by all classifiers are
     implemented here, including the loss calculation, prediction heads for both single- and multi- label classification
     and the `predict()` method. Example implementations of this class are the TextClassifier, RelationExtractor,
-    TextPairClassifier and SimpleSequenceTagger.
+    TextPairClassifier and TokenClassifier.
     """
 
     def __init__(
@@ -835,9 +835,23 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                         sentence.remove_labels(label_name)
 
                     if return_loss:
-                        gold_labels = self._prepare_label_tensor(data_points)
+                        # filter data points that have labels outside of dictionary
+                        filtered_indices = []
+                        has_unknown_label = False
+                        for idx, dp in enumerate(data_points):
+                            if all(
+                                label in self.label_dictionary.get_items() for label in self._get_label_of_datapoint(dp)
+                            ):
+                                filtered_indices.append(idx)
+                            else:
+                                has_unknown_label = True
+
+                        if has_unknown_label:
+                            scores = torch.index_select(scores, 0, torch.tensor(filtered_indices, device=flair.device))
+
+                        gold_labels = self._prepare_label_tensor([data_points[index] for index in filtered_indices])
                         overall_loss += self._calculate_loss(scores, gold_labels)[0]
-                        label_count += len(data_points)
+                        label_count += len(filtered_indices)
 
                     if self.multi_label:
                         sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
@@ -864,8 +878,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                                     label_score = softmax[s_idx, l_idx].item()
                                     data_point.add_label(typename=label_name, value=label_value, score=label_score)
                         else:
-                            conf, idx = torch.max(softmax, dim=-1)
-                            for data_point, c, i in zip(data_points, conf, idx):
+                            conf, indices = torch.max(softmax, dim=-1)
+                            for data_point, c, i in zip(data_points, conf, indices):
                                 label_value = self.label_dictionary.get_item_for_index(i.item())
                                 if label_value == "O":
                                     continue
@@ -873,8 +887,18 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
+                self._post_process_batch_after_prediction(batch, label_name)
+
             if return_loss:
+                if has_unknown_label:
+                    log.info(
+                        "During evaluation, encountered labels that are not in the label_dictionary:"
+                        "Evaluation loss is computed without them."
+                    )
                 return overall_loss, label_count
+
+    def _post_process_batch_after_prediction(self, batch, label_name):
+        pass
 
     def _get_label_threshold(self, label_value):
         label_threshold = self.multi_label_threshold["default"]
