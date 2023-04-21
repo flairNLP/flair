@@ -261,8 +261,8 @@ class DataPoint:
     and the property 'label')
     """
 
-    def __init__(self):
-        self.annotation_layers = {}
+    def __init__(self) -> None:
+        self.annotation_layers: Dict[str, List[Label]] = {}
         self._embeddings: Dict[str, torch.Tensor] = {}
         self._metadata: Dict[str, typing.Any] = {}
 
@@ -1670,7 +1670,7 @@ class MultiCorpus(Corpus):
 
     def __str__(self) -> str:
         output = (
-            f"MultiCorpus: "
+            f"MultiCorpus: "  # type: ignore[arg-type]
             f"{len(self.train) if self.train else 0} train + "
             f"{len(self.dev) if self.dev else 0} dev + "
             f"{len(self.test) if self.test else 0} test sentences\n - "

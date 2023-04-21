@@ -49,9 +49,9 @@ class SpacyTokenizer(Tokenizer):
             )
 
         if isinstance(model, Language):
-            self.model: Language = model
+            self.model = model
         elif isinstance(model, str):
-            self.model: Language = spacy.load(model)
+            self.model = spacy.load(model)
         else:
             raise AssertionError(
                 "Unexpected type of parameter model. Please provide a loaded "

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn.functional as F
@@ -49,7 +49,7 @@ class IdentityImageEmbeddings(ImageEmbeddings):
         self.PIL = pythonimagelib
         self.name = "Identity"
         self.transforms = transforms
-        self.__embedding_length = None
+        self.__embedding_length: Optional[int] = None
         self.static_embeddings = True
         super().__init__()
 
@@ -61,6 +61,7 @@ class IdentityImageEmbeddings(ImageEmbeddings):
 
     @property
     def embedding_length(self) -> int:
+        assert self.__embedding_length is not None
         return self.__embedding_length
 
     def __str__(self) -> str:
@@ -163,7 +164,7 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
 
         adaptive_pool_func_map = {"max": AdaptiveMaxPool2d, "avg": AdaptiveAvgPool2d}
 
-        convnet_arch = [] if convnet_parms["dropout"][0] <= 0 else [Dropout2d(convnet_parms["dropout"][0])]
+        convnet_arch: List[Any] = [] if convnet_parms["dropout"][0] <= 0 else [Dropout2d(convnet_parms["dropout"][0])]
         convnet_arch.extend(
             [
                 Conv2d(

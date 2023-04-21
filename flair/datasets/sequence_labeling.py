@@ -1432,10 +1432,7 @@ class CONLL_2000(ColumnCorpus):
             import gzip
             import shutil
 
-            with gzip.open(
-                flair.cache_root / "datasets" / dataset_name / "train.txt.gz",
-                "rb",
-            ) as f_in, open(
+            with gzip.open(flair.cache_root / "datasets" / dataset_name / "train.txt.gz", "rb") as f_in, open(
                 flair.cache_root / "datasets" / dataset_name / "train.txt",
                 "wb",
             ) as f_out:

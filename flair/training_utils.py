@@ -46,8 +46,8 @@ class MetricRegression:
     def __init__(self, name) -> None:
         self.name = name
 
-        self.true = []
-        self.pred = []
+        self.true: List[float] = []
+        self.pred: List[float] = []
 
     def mean_squared_error(self):
         return mean_squared_error(self.true, self.pred)
@@ -259,6 +259,7 @@ class AnnealOnPlateau:
         self.last_epoch = epoch
 
         is_better = False
+        assert self.best is not None
 
         if self.mode == "min" and current < self.best:
             is_better = True

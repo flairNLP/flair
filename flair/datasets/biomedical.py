@@ -5080,8 +5080,24 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
 
 
 class HUNER_GENE_NLM_GENE(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="nlm_gene", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="nlm_gene",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Gene": GENE_TAG, "GENERIF": GENE_TAG, "STARGENE": GENE_TAG, "Domain": GENE_TAG, "Other": GENE_TAG}
@@ -5091,8 +5107,24 @@ class HUNER_GENE_NLM_GENE(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_DRUGPROT(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="drugprot", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="drugprot",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"GENE-N": GENE_TAG, "GENE-Y": GENE_TAG}
@@ -5102,8 +5134,24 @@ class HUNER_GENE_DRUGPROT(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_DRUGPROT(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="drugprot", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="drugprot",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"CHEMICAL": CHEMICAL_TAG}
@@ -5113,8 +5161,24 @@ class HUNER_CHEMICAL_DRUGPROT(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIORED(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="biored", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="biored",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"GeneOrGeneProduct": GENE_TAG}
@@ -5124,8 +5188,24 @@ class HUNER_GENE_BIORED(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_BIORED(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="biored", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="biored",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"ChemicalEntity": CHEMICAL_TAG}
@@ -5135,8 +5215,24 @@ class HUNER_CHEMICAL_BIORED(BIGBIO_NER_CORPUS):
 
 
 class HUNER_DISEASE_BIORED(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="biored", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="biored",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"DiseaseOrPhenotypicFeature": DISEASE_TAG}
@@ -5146,8 +5242,24 @@ class HUNER_DISEASE_BIORED(BIGBIO_NER_CORPUS):
 
 
 class HUNER_SPECIES_BIORED(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="biored", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="biored",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"OrganismTaxon": SPECIES_TAG}
@@ -5157,8 +5269,24 @@ class HUNER_SPECIES_BIORED(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CELL_LINE_BIORED(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="biored", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="biored",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"CellLine": CELL_LINE_TAG}
@@ -5168,8 +5296,24 @@ class HUNER_CELL_LINE_BIORED(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_CPI(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="cpi", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="cpi",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"protein": GENE_TAG}
@@ -5179,8 +5323,24 @@ class HUNER_GENE_CPI(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_CPI(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="cpi", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="cpi",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"compound": CHEMICAL_TAG}
@@ -5190,8 +5350,24 @@ class HUNER_CHEMICAL_CPI(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2013_pc",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Gene_or_gene_product": GENE_TAG, "Complex": GENE_TAG}
@@ -5201,8 +5377,24 @@ class HUNER_GENE_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2013_pc",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Simple_chemical": CHEMICAL_TAG}
@@ -5212,8 +5404,24 @@ class HUNER_CHEMICAL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2013_GE(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bionlp_st_2013_ge", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2013_ge",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"protein": GENE_TAG}
@@ -5223,8 +5431,24 @@ class HUNER_GENE_BIONLP_ST_2013_GE(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2011_GE(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bionlp_st_2011_ge", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_ge",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -5234,8 +5458,24 @@ class HUNER_GENE_BIONLP_ST_2011_GE(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_id",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -5245,8 +5485,24 @@ class HUNER_GENE_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_id",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Chemical": CHEMICAL_TAG}
@@ -5256,8 +5512,24 @@ class HUNER_CHEMICAL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_SPECIES_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_id",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Organism": SPECIES_TAG}
@@ -5267,8 +5539,24 @@ class HUNER_SPECIES_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2011_REL(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bionlp_st_2011_rel", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_rel",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -5278,8 +5566,24 @@ class HUNER_GENE_BIONLP_ST_2011_REL(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2011_EPI(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bionlp_st_2011_epi", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_epi",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -5289,8 +5593,24 @@ class HUNER_GENE_BIONLP_ST_2011_EPI(BIGBIO_NER_CORPUS):
 
 
 class HUNER_SPECIES_BIONLP_ST_2019_BB(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bionlp_st_2019_bb", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2019_bb",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Microorganism": SPECIES_TAG}
@@ -5300,8 +5620,24 @@ class HUNER_SPECIES_BIONLP_ST_2019_BB(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIOID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bioid", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bioid",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"gene": GENE_TAG, "protein": GENE_TAG}
@@ -5311,8 +5647,24 @@ class HUNER_GENE_BIOID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_BIOID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bioid", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bioid",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"chemical": CHEMICAL_TAG}
@@ -5322,8 +5674,24 @@ class HUNER_CHEMICAL_BIOID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_SPECIES_BIOID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bioid", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bioid",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"species": SPECIES_TAG}
@@ -5333,8 +5701,24 @@ class HUNER_SPECIES_BIOID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CELL_LINE_BIOID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="bioid", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bioid",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"cell": CELL_LINE_TAG}
@@ -5344,8 +5728,24 @@ class HUNER_CELL_LINE_BIOID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_GNORMPLUS(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="gnormplus", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="gnormplus",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Gene": GENE_TAG, "FamilyName": GENE_TAG}
@@ -5355,16 +5755,25 @@ class HUNER_GENE_GNORMPLUS(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_PROGENE(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
         # Special case for ProGene: We need to use the split_0_train and split_0_test splits
         # as they are currently provided in BigBio
         train_split_name = "split_0_train"
         dev_split_name = "split_0_validation"
         test_split_name = "split_0_test"
         super().__init__(
-            *args,
             dataset_name="progene",
-            **kwargs,
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
             train_split_name=train_split_name,
             dev_split_name=dev_split_name,
             test_split_name=test_split_name,
@@ -5378,8 +5787,24 @@ class HUNER_GENE_PROGENE(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_NLM_CHEM(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="nlmchem", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="nlmchem",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Chemical": CHEMICAL_TAG}
@@ -5389,8 +5814,24 @@ class HUNER_CHEMICAL_NLM_CHEM(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_SETH_CORPUS(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, dataset_name="seth_corpus", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="seth_corpus",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Gene": GENE_TAG}
@@ -5400,11 +5841,23 @@ class HUNER_GENE_SETH_CORPUS(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
         super().__init__(
-            *args,
             dataset_name="tmvar_v3",
-            **kwargs,
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
         )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
@@ -5415,11 +5868,23 @@ class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
 
 
 class HUNER_SPECIES_TMVAR_V3(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
         super().__init__(
-            *args,
             dataset_name="tmvar_v3",
-            **kwargs,
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
         )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
@@ -5430,11 +5895,23 @@ class HUNER_SPECIES_TMVAR_V3(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CELL_LINE_TMVAR_V3(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
         super().__init__(
-            *args,
             dataset_name="tmvar_v3",
-            **kwargs,
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
         )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:

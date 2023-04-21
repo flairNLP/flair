@@ -40,20 +40,20 @@ class FeideggerCorpus(Corpus):
 
         feidegger_dataset: Dataset = FeideggerDataset(dataset_info, **kwargs)
 
-        train_indices = list(np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0])
+        train_indices = list(np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0])  # type: ignore[attr-defined]
         train = torch.utils.data.dataset.Subset(feidegger_dataset, train_indices)
 
-        dev_indices = list(np.where(np.in1d(feidegger_dataset.split, [8]))[0])
+        dev_indices = list(np.where(np.in1d(feidegger_dataset.split, [8]))[0])  # type: ignore[attr-defined]
         dev = torch.utils.data.dataset.Subset(feidegger_dataset, dev_indices)
 
-        test_indices = list(np.where(np.in1d(feidegger_dataset.split, [9]))[0])
+        test_indices = list(np.where(np.in1d(feidegger_dataset.split, [9]))[0])  # type: ignore[attr-defined]
         test = torch.utils.data.dataset.Subset(feidegger_dataset, test_indices)
 
         super().__init__(train, dev, test, name="feidegger")
 
 
 class FeideggerDataset(FlairDataset):
-    def __init__(self, dataset_info, in_memory: bool = True, **kwargs):
+    def __init__(self, dataset_info, **kwargs) -> None:
         super().__init__()
 
         self.data_points: List[DataPair] = []
@@ -78,3 +78,6 @@ class FeideggerDataset(FlairDataset):
 
     def __getitem__(self, index: int = 0) -> DataPair:
         return self.data_points[index]
+
+    def is_in_memory(self) -> bool:
+        return True

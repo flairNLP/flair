@@ -1273,7 +1273,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
         self.name: str = "muse-crosslingual"
         self.static_embeddings = True
         self.__embedding_length: int = 300
-        self.language_embeddings = {}
+        self.language_embeddings: Dict[str, Any] = {}
         super().__init__()
         self.eval()
 

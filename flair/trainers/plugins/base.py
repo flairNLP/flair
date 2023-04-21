@@ -219,7 +219,7 @@ class BasePlugin:
         """Mark method as a hook triggered by the `Pluggable`."""
         if len(events) == 0:
             events = (func.__name__,)
-        setattr(func, "_plugin_hook_events", events)
+        func._plugin_hook_events = events  # type: ignore[attr-defined]
         return func
 
     @classmethod

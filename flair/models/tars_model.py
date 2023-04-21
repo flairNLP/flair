@@ -30,7 +30,7 @@ log = logging.getLogger("flair")
 class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
     def __init__(self) -> None:
         self._current_task = None
-        self._task_specific_attributes = {}
+        self._task_specific_attributes: Dict[str, Dict[str, Any]] = {}
         self.label_nearest_map = None
         self.tars_model: flair.nn.Classifier[Sentence]
         self.separator: str
@@ -172,7 +172,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
 
     def add_and_switch_to_new_task(
         self,
-        task_name,
+        task_name: str,
         label_dictionary: Union[List, Set, Dictionary, str],
         label_type: str,
         multi_label: bool = True,
@@ -190,7 +190,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         :param force_switch: if True, will overwrite existing task with same name
         """
         if task_name in self._task_specific_attributes and not force_switch:
-            log.warning("Task `%s` already exists in TARS model. Switching to it.", task_name)
+            log.warning(f"Task `{task_name}` already exists in TARS model. Switching to it.")
         else:
             # make label dictionary if no Dictionary object is passed
             if isinstance(label_dictionary, Dictionary):

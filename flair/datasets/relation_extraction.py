@@ -422,7 +422,7 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
 
         for source_filename, target_filename in zip(source_filenames, target_filenames):
             with (source_data_folder / source_filename).open(encoding="utf-8") as source_file, (
-                data_folder / target_filename,
+                data_folder / target_filename
             ).open("w", encoding="utf-8") as target_file:
                 # write CoNLL-U Plus header
                 target_file.write("# global.columns = id form ner\n")
