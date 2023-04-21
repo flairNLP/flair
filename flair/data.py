@@ -261,6 +261,7 @@ class Label:
     def unlabeled_identifier(self):
         return f"{self.data_point.unlabeled_identifier}"
 
+
 class DataPoint:
     """This is the parent class of all data points in Flair.
 
@@ -474,16 +475,20 @@ class EntityLinkingLabel(Label):
             score=score,
             concept_name=self.concept_name,
             additional_ids=self.additional_ids,
-            database=self.database
+            database=self.database,
         )
 
     def __str__(self):
-        return f"{self.data_point.unlabeled_identifier}{flair._arrow} " \
-                   f"{self.concept_name} - {self.database}:{self._value} ({round(self._score, 4)})"
+        return (
+            f"{self.data_point.unlabeled_identifier}{flair._arrow} "
+            f"{self.concept_name} - {self.database}:{self._value} ({round(self._score, 4)})"
+        )
 
     def __repr__(self):
-        return f"{self.data_point.unlabeled_identifier}{flair._arrow} " \
-                   f"{self.concept_name} - {self.database}:{self._value} ({round(self._score, 4)})"
+        return (
+            f"{self.data_point.unlabeled_identifier}{flair._arrow} "
+            f"{self.concept_name} - {self.database}:{self._value} ({round(self._score, 4)})"
+        )
 
     def __len__(self):
         return len(self.data_point)
