@@ -1,10 +1,10 @@
 repos:
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 23.3.0
     hooks:
       - id: black-jupyter
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v4.4.0
     hooks:
       - id: end-of-file-fixer
         exclude: |
@@ -19,12 +19,12 @@ repos:
               tests/resources/.*\.(tsv|txt|testa|testb|train|conllu|json)
           )$
   - repo: https://github.com/pycqa/isort
-    rev: 5.11.5
+    rev: 5.11.5 # Newer version does not support python-3.7 anymore
     hooks:
       - id: isort
         name: isort (python)
   - repo: https://github.com/PyCQA/flake8
-    rev: "4.0.1"
+    rev: "4.0.1" # flake8 requires python-3.8 minimum, currently we have <= 5.0.0 in requirements-dev.txt
     hooks:
       - id: flake8
         args: ["--max-line-length=210", "--ignore=E203,W503"]
