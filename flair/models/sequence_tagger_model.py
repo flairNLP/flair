@@ -291,7 +291,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return sentence_tensor, lengths
 
-    def forward(self, sentence_tensor: torch.Tensor, lengths: torch.LongTensor):  # type: ignore[override]
+    def forward(self, sentence_tensor: torch.Tensor, lengths: torch.LongTensor):
         """Forward propagation through network.
 
         :param sentence_tensor: A tensor representing the batch of sentences.
@@ -432,7 +432,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return_loss=False,
         embedding_storage_mode="none",
         force_token_predictions: bool = False,
-    ):  # type: ignore
+    ):
         """Predicts labels for current batch with CRF or Softmax.
 
         :param sentences: List of sentences in batch

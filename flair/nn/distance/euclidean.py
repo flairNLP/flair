@@ -26,7 +26,7 @@ from torch import Tensor
 class EuclideanDistance(nn.Module):
     """Implement a EuclideanDistance object."""
 
-    def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:  # type: ignore
+    def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:
         """Returns the squared euclidean distance between each element in mat_1 and each element in mat_2.
 
         Parameters
@@ -50,7 +50,7 @@ class EuclideanDistance(nn.Module):
 class EuclideanMean(nn.Module):
     """Implement a EuclideanMean object."""
 
-    def forward(self, data: Tensor) -> Tensor:  # type: ignore
+    def forward(self, data: Tensor) -> Tensor:
         """Performs a forward pass through the network.
 
         Parameters

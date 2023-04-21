@@ -240,9 +240,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         output_vectors = self.character_decoder(output)
         return output_vectors, hidden
 
-    def _prepare_tensors(  # type: ignore[override]
-        self, sentences: List[Sentence]
-    ) -> Tuple[Optional[torch.Tensor], ...]:
+    def _prepare_tensors(self, sentences: List[Sentence]) -> Tuple[Optional[torch.Tensor], ...]:
         # get all tokens
         tokens = [token for sentence in sentences for token in sentence]
 
@@ -280,7 +278,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
         return encoder_input_indices, lengths, token_embedding_hidden
 
-    def forward(  # type: ignore[override]
+    def forward(
         self,
         encoder_input_indices: Optional[torch.Tensor],
         lengths: Optional[torch.Tensor],

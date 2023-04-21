@@ -1189,19 +1189,19 @@ class Image(DataPoint):
 
     @property
     def start_position(self) -> int:
-        pass
+        raise NotImplementedError
 
     @property
     def end_position(self) -> int:
-        pass
+        raise NotImplementedError
 
     @property
-    def text(self):
-        pass
+    def text(self) -> str:
+        raise NotImplementedError
 
     @property
-    def unlabeled_identifier(self):
-        pass
+    def unlabeled_identifier(self) -> str:
+        raise NotImplementedError
 
 
 class Corpus(typing.Generic[T_co]):
@@ -1717,7 +1717,7 @@ class ConcatFlairDataset(Dataset):
         super(ConcatFlairDataset, self).__init__()
         self.datasets = list(datasets)
         self.ids = list(ids)
-        assert len(self.datasets) > 0, "datasets should not be an empty iterable"  # type: ignore[arg-type]
+        assert len(self.datasets) > 0, "datasets should not be an empty iterable"
         for d in self.datasets:
             assert not isinstance(d, IterableDataset), "ConcatSentenceDataset does not support IterableDataset"
         self.cumulative_sizes = self.cumsum(self.datasets)

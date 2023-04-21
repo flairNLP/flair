@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Callable, List, Type
 
 import pytest
-from tqdm import tqdm  # type: ignore
+from tqdm import tqdm
 
 import flair
 import flair.datasets.biomedical as biomedical

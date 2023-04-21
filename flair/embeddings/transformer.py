@@ -114,7 +114,7 @@ def fill_masked_elements(
     lengths: torch.LongTensor,
 ):
     for i in torch.arange(int(all_token_embeddings.shape[0])):
-        all_token_embeddings[i, : lengths[i], :] = insert_missing_embeddings(  # type: ignore
+        all_token_embeddings[i, : lengths[i], :] = insert_missing_embeddings(
             sentence_hidden_states[i][mask[i] & (word_ids[i] >= 0)], word_ids[i], lengths[i]
         )
     return all_token_embeddings
@@ -159,7 +159,7 @@ def document_mean_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths
     result = torch.zeros(sentence_hidden_states.shape[0], sentence_hidden_states.shape[2])
 
     for i in torch.arange(sentence_hidden_states.shape[0]):
-        result[i] = sentence_hidden_states[i, : sentence_lengths[i]].mean(dim=0)  # type: ignore
+        result[i] = sentence_hidden_states[i, : sentence_lengths[i]].mean(dim=0)
 
 
 @torch.jit.script_if_tracing
@@ -167,7 +167,7 @@ def document_max_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths:
     result = torch.zeros(sentence_hidden_states.shape[0], sentence_hidden_states.shape[2])
 
     for i in torch.arange(sentence_hidden_states.shape[0]):
-        result[i], _ = sentence_hidden_states[i, : sentence_lengths[i]].max(dim=0)  # type: ignore
+        result[i], _ = sentence_hidden_states[i, : sentence_lengths[i]].max(dim=0)
 
 
 def _legacy_reconstruct_word_ids(
@@ -584,7 +584,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         if self.feature_extractor is not None:
             images = [sent.get_metadata("image") for sent in sentences]
-            image_encodings = self.feature_extractor(images, return_tensors="pt")["pixel_values"]  # type: ignore
+            image_encodings = self.feature_extractor(images, return_tensors="pt")["pixel_values"]
             if cpu_overflow_to_sample_mapping is not None:
                 batched_image_encodings = [image_encodings[i] for i in cpu_overflow_to_sample_mapping]
                 image_encodings = torch.stack(batched_image_encodings)
