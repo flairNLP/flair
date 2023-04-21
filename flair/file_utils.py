@@ -101,10 +101,7 @@ def cached_path(url_or_filename: str, cache_dir: Union[str, Path]) -> Path:
     """
     cache_dir = Path(cache_dir)
 
-    if flair.cache_root not in cache_dir.parents:
-        dataset_cache = flair.cache_root / cache_dir
-    else:
-        dataset_cache = cache_dir
+    dataset_cache = flair.cache_root / cache_dir if flair.cache_root not in cache_dir.parents else cache_dir
 
     parsed = urlparse(url_or_filename)
 
@@ -118,10 +115,10 @@ def cached_path(url_or_filename: str, cache_dir: Union[str, Path]) -> Path:
         return Path(url_or_filename)
     elif len(parsed.scheme) < 2:
         # File, but it doesn't exist.
-        raise FileNotFoundError("file {} not found".format(url_or_filename))
+        raise FileNotFoundError(f"file {url_or_filename} not found")
     else:
         # Something unknown
-        raise ValueError("unable to parse {} as a URL or as a local path".format(url_or_filename))
+        raise ValueError(f"unable to parse {url_or_filename} as a URL or as a local path")
 
 
 def download_s3_to_path(bucket_name: str, cache_path: Path) -> Path:
@@ -177,9 +174,8 @@ def unpack_file(file: Path, unpack_to: Path, mode: Optional[str] = None, keep: b
     elif mode == "gz" or (mode is None and str(file).endswith("gz")):
         import gzip
 
-        with gzip.open(str(file), "rb") as f_in:
-            with open(str(unpack_to), "wb") as f_out:
-                shutil.copyfileobj(f_in, f_out)
+        with gzip.open(str(file), "rb") as f_in, open(str(unpack_to), "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
 
     elif mode == "rar" or (mode is None and str(file).endswith("rar")):
         import patoolib
@@ -213,7 +209,7 @@ def get_from_cache(url: str, cache_dir: Path) -> Path:
     # make HEAD request to check ETag
     response = requests.head(url, headers={"User-Agent": "Flair"}, allow_redirects=True)
     if response.status_code != 200:
-        raise IOError(f"HEAD request failed for url {url} with status code {response.status_code}.")
+        raise OSError(f"HEAD request failed for url {url} with status code {response.status_code}.")
 
     # add ETag to filename if it exists
     # etag = response.headers.get("ETag")
@@ -269,10 +265,7 @@ def extract_single_zip_file(
 ) -> Path:
     cache_dir = Path(cache_dir)
     cached_archive_path = cached_path(archive_path, cache_dir=cache_dir)
-    if flair.cache_root not in cache_dir.parents:
-        dataset_cache = flair.cache_root / cache_dir
-    else:
-        dataset_cache = cache_dir
+    dataset_cache = flair.cache_root / cache_dir if flair.cache_root not in cache_dir.parents else cache_dir
     if member_path is not None:
         output_path = dataset_cache / member_path
         if output_path.exists():
@@ -291,9 +284,8 @@ def extract_single_zip_file(
 def get_the_only_file_in_the_archive(members_list: Sequence[str], archive_path: str) -> str:
     if len(members_list) > 1:
         raise ValueError(
-            "The archive %s contains multiple files, so you must select "
-            "one of the files inside providing a uri of the type: %s"
-            % (
+            "The archive {} contains multiple files, so you must select "
+            "one of the files inside providing a uri of the type: {}".format(
                 archive_path,
                 format_embeddings_file_uri("path_or_url_to_archive", "path_inside_archive"),
             )
@@ -303,7 +295,7 @@ def get_the_only_file_in_the_archive(members_list: Sequence[str], archive_path: 
 
 def format_embeddings_file_uri(main_file_path_or_url: str, path_inside_archive: Optional[str] = None) -> str:
     if path_inside_archive:
-        return "({})#{}".format(main_file_path_or_url, path_inside_archive)
+        return f"({main_file_path_or_url})#{path_inside_archive}"
     return main_file_path_or_url
 
 

@@ -35,7 +35,7 @@ class Pluggable:
 
     valid_events: Optional[Set[EventIdenifier]] = None
 
-    def __init__(self, *, plugins: Sequence[PluginArgument] = []):
+    def __init__(self, *, plugins: Sequence[PluginArgument] = []) -> None:
         """Initialize a `Pluggable`.
 
         :param plugins: Plugins which should be attached to this `Pluggable`.
@@ -69,10 +69,10 @@ class Pluggable:
         for event in events:
             assert isinstance(event, EventIdenifier)
 
-            if self.valid_events is not None:
-                if event not in self.valid_events:
-                    raise RuntimeError(f"Event '{event}' not recognized. Available: {', '.join(self.valid_events)}")
+            if self.valid_events is not None and event not in self.valid_events:
+                raise RuntimeError(f"Event '{event}' not recognized. Available: {', '.join(self.valid_events)}")
             return event
+        return None
 
     def register_hook(self, func: Callable, *events: EventIdenifier):
         """Register a hook.
@@ -118,7 +118,9 @@ class Pluggable:
 class HookHandle:
     """Represents the registration information of a hook callback."""
 
-    def __init__(self, _id: HookHandleId, *, events: Sequence[EventIdenifier], func: Callable, pluggable: Pluggable):
+    def __init__(
+        self, _id: HookHandleId, *, events: Sequence[EventIdenifier], func: Callable, pluggable: Pluggable
+    ) -> None:
         """Intitialize `HookHandle`.
 
         :param _id: Id, the callback is stored as in the `Pluggable`.
@@ -158,10 +160,10 @@ class HookHandle:
         except TypeError as err:
             sig = signature(self._func)
 
-            if not any((p.kind == p.VAR_KEYWORD for p in sig.parameters.values())):
+            if not any(p.kind == p.VAR_KEYWORD for p in sig.parameters.values()):
                 # If there is no **kw argument in the callback, check if any of the passed kw args is not accepted by
                 # the callback
-                for name in kw.keys():
+                for name in kw:
                     if name not in sig.parameters:
                         raise TypeError(
                             f"Hook callback {self.func_name}() does not accept keyword argument '{name}'"
@@ -173,7 +175,7 @@ class HookHandle:
 class BasePlugin:
     """Base class for all plugins."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the base plugin."""
         self._hook_handles: List[HookHandle] = []
         self._pluggable: Optional[Pluggable] = None
@@ -193,7 +195,7 @@ class BasePlugin:
                 func = getattr(self, name)
 
                 # get attribute hook events (mayr aise an AttributeError)
-                events = getattr(func, "_plugin_hook_events")
+                events = func._plugin_hook_events
 
                 # register function as a hook
                 handle = pluggable.register_hook(func, *events)

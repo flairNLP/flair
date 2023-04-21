@@ -1,8 +1,8 @@
 import numpy
 
 
-class Highlighter(object):
-    def __init__(self):
+class Highlighter:
+    def __init__(self) -> None:
         self.color_map = [
             "#ff0000",
             "#ff4000",
@@ -40,7 +40,7 @@ class Highlighter(object):
 
         colors = []
 
-        for i, act in enumerate(activation):
+        for _i, act in enumerate(activation):
             try:
                 colors.append(self.color_map[numpy.where(act > lookup)[0][-1]])
             except IndexError:
@@ -69,4 +69,4 @@ class Highlighter(object):
 
     @staticmethod
     def _render(char, color):
-        return '<span style="background-color: {}">{}</span>'.format(color, char)
+        return f'<span style="background-color: {color}">{char}</span>'

@@ -9,7 +9,9 @@ from flair.training_utils import init_output_file
 class LossFilePlugin(TrainerPlugin):
     """Plugin that manages the loss.tsv file output."""
 
-    def __init__(self, base_path, epoch: int, metrics_to_collect: Optional[Dict[Union[Tuple, str], str]] = None):
+    def __init__(
+        self, base_path, epoch: int, metrics_to_collect: Optional[Dict[Union[Tuple, str], str]] = None
+    ) -> None:
         super().__init__()
 
         self.first_epoch = epoch + 1
@@ -110,11 +112,11 @@ class LossFilePlugin(TrainerPlugin):
                     # write header
                     f.write("\t".join(self.headers.values()) + "\n")
 
-                for col in self.headers.keys():
+                for col in self.headers:
                     assert col in self.current_row, str(col) + "   " + str(self.current_row.keys())
 
-                assert all(col in self.current_row for col in self.headers.keys())
+                assert all(col in self.current_row for col in self.headers)
 
-                f.write("\t".join([str(self.current_row[col]) for col in self.headers.keys()]) + "\n")
+                f.write("\t".join([str(self.current_row[col]) for col in self.headers]) + "\n")
 
             self.current_row = {}

@@ -18,15 +18,15 @@ class FlairSampler(Sampler):
         self.data_source = data_source
         self.num_samples = len(self.data_source)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.num_samples
 
 
 class ImbalancedClassificationDatasetSampler(FlairSampler):
     """Use this to upsample rare classes and downsample common classes in your unbalanced classification dataset."""
 
-    def __init__(self):
-        super(ImbalancedClassificationDatasetSampler, self).__init__(None)
+    def __init__(self) -> None:
+        super().__init__(None)
 
     def set_dataset(self, data_source):
         """Initialize the dataset used for sampling.
@@ -59,8 +59,8 @@ class ChunkSampler(FlairSampler):
     This causes some order of the data to be preserved, while still shuffling the data.
     """
 
-    def __init__(self, block_size=5, plus_window=5):
-        super(ChunkSampler, self).__init__(None)
+    def __init__(self, block_size=5, plus_window=5) -> None:
+        super().__init__(None)
         self.block_size = block_size
         self.plus_window = plus_window
         self.data_source = None
@@ -88,12 +88,12 @@ class ExpandingChunkSampler(FlairSampler):
     This causes some order of the data to be preserved, while still shuffling the data.
     """
 
-    def __init__(self, step=3):
+    def __init__(self, step=3) -> None:
         """Initialize the ExpandingChunkSampler.
 
         :param step: every *step* epochs the block size increments by one.
         """
-        super(ExpandingChunkSampler, self).__init__(None)
+        super().__init__(None)
         self.block_size = 1
         self.epoch_count = 0
         self.step = step

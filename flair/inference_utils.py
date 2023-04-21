@@ -61,7 +61,7 @@ class WordEmbeddingsStore:
     >>> print(sentence.get_spans('ner'))
     """
 
-    def __init__(self, embedding: WordEmbeddings, backend="sqlite", verbose=True):
+    def __init__(self, embedding: WordEmbeddings, backend="sqlite", verbose=True) -> None:
         """Instantiates the WordEmbeddingsStore.
 
         :param embedding: Flair WordEmbeddings instance.
@@ -151,7 +151,7 @@ class WordEmbeddingsStore:
 
 
 class WordEmbeddingsStoreBackend:
-    def __init__(self, embedding, backend, verbose=True):
+    def __init__(self, embedding, backend, verbose=True) -> None:
         # get db filename from embedding name
         self.name = embedding.name
         self.store_path: Path = WordEmbeddingsStore._get_store_path(embedding, backend)
@@ -165,7 +165,7 @@ class WordEmbeddingsStoreBackend:
 
 
 class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
-    def __init__(self, embedding, verbose):
+    def __init__(self, embedding, verbose) -> None:
         super().__init__(embedding, "sqlite", verbose)
         # if embedding database already exists
         if self.store_path.exists() and self.store_path.is_file():
@@ -187,7 +187,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
             self.db.execute(
                 f"CREATE TABLE embedding(word text,{','.join('v' + str(i) + ' float' for i in range(self.k))});"
             )
-            vectors_it = ([word] + pwe.get_vector(word).tolist() for word in pwe.vocab.keys())
+            vectors_it = ([word, *pwe.get_vector(word).tolist()] for word in pwe.vocab)
             if verbose:
                 logger.info("load vectors to store")
             self.db.executemany(
@@ -213,7 +213,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
 
 
 class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
-    def __init__(self, embedding, verbose):
+    def __init__(self, embedding, verbose) -> None:
         super().__init__(embedding, "lmdb", verbose)
         try:
             import lmdb
@@ -232,7 +232,7 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                         # we need to set self.k
                         with self.env.begin() as txn:
                             cursor = txn.cursor()
-                            for key, value in cursor:
+                            for _key, value in cursor:
                                 vector = pickle.loads(value)
                                 self.k = vector.shape[0]
                                 break

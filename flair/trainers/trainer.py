@@ -51,7 +51,7 @@ class ModelTrainer(Pluggable):
         "metric_recorded",
     }
 
-    def __init__(self, model: flair.nn.Model, corpus: Corpus):
+    def __init__(self, model: flair.nn.Model, corpus: Corpus) -> None:
         """Initialize a model trainer.
 
         :param model: The model that you want to train. The model should inherit from flair.nn.Model  # noqa: E501
@@ -323,6 +323,7 @@ class ModelTrainer(Pluggable):
         """Trains any class that implements the flair.nn.Model interface.
 
         Args:
+        ----
             base_path: Main path to which all output during training is logged and models are saved
             learning_rate (float): The learning rate of the optimizer
             decoder_learning_rate (Optional[float]): Optional, if set, the decoder is trained with a separate learning rate
@@ -360,6 +361,7 @@ class ModelTrainer(Pluggable):
             **kwargs: Additional arguments, for instance for the optimizer
 
         Returns:
+        -------
             dict: A dictionary with at least the key "test_score" containing the final evaluation score. Some plugins
                 add additional information to this dictionary, such as the :class:`MetricHistoryPlugin`
         """
@@ -791,10 +793,7 @@ class ModelTrainer(Pluggable):
 
     def _flat_dict_items(self, d, composite_key=()):
         for key, value in d.items():
-            if isinstance(key, str):
-                key = composite_key + (key,)
-            else:
-                key = composite_key + tuple(key)
+            key = (*composite_key, key) if isinstance(key, str) else composite_key + tuple(key)
 
             if isinstance(value, dict):
                 yield from self._flat_dict_items(value, composite_key=key)

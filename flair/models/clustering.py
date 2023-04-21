@@ -19,7 +19,7 @@ log = logging.getLogger("flair")
 class ClusteringModel:
     """A wrapper class to apply sklearn clustering models on DocumentEmbeddings."""
 
-    def __init__(self, model: Union[ClusterMixin, BaseEstimator], embeddings: DocumentEmbeddings):
+    def __init__(self, model: Union[ClusterMixin, BaseEstimator], embeddings: DocumentEmbeddings) -> None:
         """Instantiate the ClusteringModel.
 
         :param model: the clustering algorithm from sklearn this wrapper will use.

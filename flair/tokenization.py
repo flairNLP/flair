@@ -1,4 +1,5 @@
 import logging
+import sys
 from abc import ABC, abstractmethod
 from typing import Callable, List
 
@@ -20,7 +21,7 @@ class Tokenizer(ABC):
 
     @abstractmethod
     def tokenize(self, text: str) -> List[str]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def name(self) -> str:
@@ -35,8 +36,8 @@ class SpacyTokenizer(Tokenizer):
     :param model a Spacy V2 model or the name of the model to load.
     """
 
-    def __init__(self, model):
-        super(SpacyTokenizer, self).__init__()
+    def __init__(self, model) -> None:
+        super().__init__()
 
         try:
             import spacy
@@ -79,8 +80,8 @@ class SegtokTokenizer(Tokenizer):
     For further details see: https://github.com/fnl/segtok
     """
 
-    def __init__(self):
-        super(SegtokTokenizer, self).__init__()
+    def __init__(self) -> None:
+        super().__init__()
 
     def tokenize(self, text: str) -> List[str]:
         return SegtokTokenizer.run_tokenize(text)
@@ -102,8 +103,8 @@ class SegtokTokenizer(Tokenizer):
 class SpaceTokenizer(Tokenizer):
     """Tokenizer based on space character only."""
 
-    def __init__(self):
-        super(SpaceTokenizer, self).__init__()
+    def __init__(self) -> None:
+        super().__init__()
 
     def tokenize(self, text: str) -> List[str]:
         return SpaceTokenizer.run_tokenize(text)
@@ -139,8 +140,8 @@ class JapaneseTokenizer(Tokenizer):
         https://github.com/himkt/konoha
     """
 
-    def __init__(self, tokenizer: str, sudachi_mode: str = "A"):
-        super(JapaneseTokenizer, self).__init__()
+    def __init__(self, tokenizer: str, sudachi_mode: str = "A") -> None:
+        super().__init__()
 
         available_tokenizers = ["mecab", "janome", "sudachi"]
 
@@ -161,7 +162,7 @@ class JapaneseTokenizer(Tokenizer):
             log.warning('  - You can choose tokenizer from ["mecab", "janome", "sudachi"].')
             log.warning("Note that we Flair support only konoha<5.0.0,>=4.0.0")
             log.warning("-" * 100)
-            exit()
+            sys.exit()
 
         self.tokenizer = tokenizer
         self.sentence_tokenizer = konoha.SentenceTokenizer()
@@ -185,8 +186,8 @@ class JapaneseTokenizer(Tokenizer):
 class TokenizerWrapper(Tokenizer):
     """Helper class to wrap tokenizer functions to the class-based tokenizer interface."""
 
-    def __init__(self, tokenizer_func: Callable[[str], List[str]]):
-        super(TokenizerWrapper, self).__init__()
+    def __init__(self, tokenizer_func: Callable[[str], List[str]]) -> None:
+        super().__init__()
         self.tokenizer_func = tokenizer_func
 
     def tokenize(self, text: str) -> List[str]:
@@ -209,8 +210,8 @@ class SciSpacyTokenizer(Tokenizer):
     :class:`SpacyTokenizer`.
     """
 
-    def __init__(self):
-        super(SciSpacyTokenizer, self).__init__()
+    def __init__(self) -> None:
+        super().__init__()
 
         try:
             import spacy
@@ -233,25 +234,28 @@ class SciSpacyTokenizer(Tokenizer):
             """
             prefix_punct = char_classes.PUNCT.replace("|", " ")
 
-            prefixes = (
-                ["§", "%", "=", r"\+"]
-                + char_classes.split_chars(prefix_punct)
-                + char_classes.LIST_ELLIPSES
-                + char_classes.LIST_QUOTES
-                + char_classes.LIST_CURRENCY
-                + char_classes.LIST_ICONS
-            )
+            prefixes = [
+                "§",
+                "%",
+                "=",
+                "\\+",
+                *char_classes.split_chars(prefix_punct),
+                *char_classes.LIST_ELLIPSES,
+                *char_classes.LIST_QUOTES,
+                *char_classes.LIST_CURRENCY,
+                *char_classes.LIST_ICONS,
+            ]
             return prefixes
 
         infixes = (
             char_classes.LIST_ELLIPSES
             + char_classes.LIST_ICONS
             + [
-                r"×",  # added this special x character to tokenize it separately
+                r"x",  # added this special x character to tokenize it separately
                 r"[\(\)\[\]\{\}]",  # want to split at every bracket
                 r"/",  # want to split at every slash
                 r"(?<=[0-9])[+\-\*^](?=[0-9-])",
-                r"(?<=[{al}])\.(?=[{au}])".format(al=char_classes.ALPHA_LOWER, au=char_classes.ALPHA_UPPER),
+                rf"(?<=[{char_classes.ALPHA_LOWER}])\.(?=[{char_classes.ALPHA_UPPER}])",
                 r"(?<=[{a}]),(?=[{a}])".format(a=char_classes.ALPHA),
                 r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=char_classes.ALPHA, h=char_classes.HYPHENS),
                 r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=char_classes.ALPHA),

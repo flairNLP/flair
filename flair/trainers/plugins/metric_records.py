@@ -7,7 +7,7 @@ RecordType = Enum("RecordType", ["scalar", "image", "histogram", "string", "scal
 
 
 class MetricName:
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         self.parts: Tuple[str, ...]
 
         if isinstance(name, str):
@@ -34,7 +34,7 @@ class MetricName:
 
     def __add__(self, other) -> "MetricName":
         if isinstance(other, str):
-            return self.__class__(self.parts + (other,))
+            return self.__class__((*self.parts, other))
         elif isinstance(other, MetricName):
             return self.__class__(self.parts + other.parts)
         else:
@@ -42,7 +42,7 @@ class MetricName:
 
     def __radd__(self, other) -> "MetricName":
         if isinstance(other, str):
-            return self.__class__((other,) + self.parts)
+            return self.__class__((other, *self.parts))
         else:
             # no need to check for MetricName, as __add__ of other would be called in this case
             return self.__class__(tuple(other) + self.parts)
@@ -73,7 +73,7 @@ class MetricRecord:
         typ: RecordType,
         *,
         walltime: Optional[float] = None,
-    ):
+    ) -> None:
         """Create a metric record.
 
         :param name: Name of the metric.
@@ -127,5 +127,5 @@ class MetricRecord:
     def is_histogram(self):
         return self.is_type(RecordType.histogram)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.joined_name} at step {self.global_step}, {self.walltime:.4f})"

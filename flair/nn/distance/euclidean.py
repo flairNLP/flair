@@ -19,8 +19,7 @@ Source: https://github.com/asappresearch/dynamic-classification/blob/55beb5a4840
 
 
 import torch
-import torch.nn as nn
-from torch import Tensor
+from torch import Tensor, nn
 
 
 class EuclideanDistance(nn.Module):

@@ -22,7 +22,7 @@ class ZELDA(MultiFileColumnCorpus):
         in_memory: bool = False,
         column_format={0: "text", 2: "nel"},
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize ZELDA Entity Linking corpus.
 
         introduced in "ZELDA: A Comprehensive Benchmark for Supervised Entity Disambiguation" (Milich and Akbik, 2023).
@@ -38,10 +38,7 @@ class ZELDA(MultiFileColumnCorpus):
         column_format: Dict[int, str]
             The column-format to specify which columns correspond to the text or label types.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -72,7 +69,7 @@ class ZELDA(MultiFileColumnCorpus):
         ]
 
         # init corpus
-        super(ZELDA, self).__init__(
+        super().__init__(
             train_files=[train_file],
             test_files=test_files,
             column_format=column_format,
@@ -91,7 +88,7 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
         agreement_threshold: float = 0.5,
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize Aquaint Entity Linking corpus.
 
         introduced in: D. Milne and I. H. Witten. Learning to link with wikipedia
@@ -112,10 +109,7 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
         sentence_splitter: `SentenceSplitter`
             The sentencesplitter that is used to split the articles into sentences.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         self.agreement_threshold = agreement_threshold
 
@@ -142,7 +136,7 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
                         if not file.endswith(".htm"):
                             continue
 
-                        with open(str(data_folder / file), "r", encoding="utf-8") as txt_in:
+                        with open(str(data_folder / file), encoding="utf-8") as txt_in:
                             text = txt_in.read()
 
                         # get rid of html syntax, we only need the text
@@ -254,7 +248,7 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
                 os.remove(parsed_dataset)
                 raise
 
-        super(NEL_ENGLISH_AQUAINT, self).__init__(
+        super().__init__(
             data_folder,
             column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
@@ -270,7 +264,7 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
         in_memory: bool = True,
         wiki_language: str = "dewiki",
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize a sentence-segmented version of the HIPE entity linking corpus for historical German.
 
         see description of HIPE at https://impresso.github.io/CLEF-HIPE-2020/.
@@ -290,10 +284,7 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
             Wikipedia URLs to use. Since the text is in german the default language is German.
         """
         self.wiki_language = wiki_language
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -332,7 +323,7 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
                     wiki_language + "_dev.tsv",
                 ],
             ):
-                with open(doc_path, "r", encoding="utf-8") as read, open(
+                with open(doc_path, encoding="utf-8") as read, open(
                     data_folder / file_name, "w", encoding="utf-8"
                 ) as write:
                     # ignore first line
@@ -352,10 +343,7 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
 
                         else:
                             line_list = line.split("\t")
-                            if not line_list[7] in [
-                                "_",
-                                "NIL",
-                            ]:  # line has wikidata link
+                            if line_list[7] not in ["_", "NIL"]:  # line has wikidata link
                                 wikiname = qid_wikiname_dict[line_list[7]]
 
                                 if wikiname != "O":
@@ -376,7 +364,7 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
 
                         line = read.readline()
 
-        super(NEL_GERMAN_HIPE, self).__init__(
+        super().__init__(
             data_folder,
             column_format={0: "text", 1: "nel"},
             train_file=train_file_name,
@@ -388,7 +376,7 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
 
     def _get_qid_wikiname_dict(self, path):
         qid_set = set()
-        with open(path, mode="r", encoding="utf-8") as read:
+        with open(path, encoding="utf-8") as read:
             # read all Q-IDs
 
             # ignore first line
@@ -398,7 +386,7 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
             while line:
                 if not (line[0] == "#" or line == "\n"):  # commented or empty lines
                     line_list = line.split("\t")
-                    if not line_list[7] in ["_", "NIL"]:  # line has wikidata link
+                    if line_list[7] not in ["_", "NIL"]:  # line has wikidata link
                         qid_set.add(line_list[7])
 
                 line = read.readline()
@@ -447,7 +435,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
         in_memory: bool = True,
         use_ids_and_check_existence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize AIDA CoNLL-YAGO Entity Linking corpus.
 
         The corpus got introduced here https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/ambiverse-nlu/aida/downloads.
@@ -465,10 +453,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
             If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be ignored. This also means that one works with
             current wikipedia-arcticle names and possibly alter some of the out-dated ones in the original dataset
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -501,9 +486,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
                     testb_unprocessed_path,
                 ],
             ):
-                with open(data_folder / name, "w", encoding="utf-8") as write, open(
-                    path, "r", encoding="utf-8"
-                ) as read:
+                with open(data_folder / name, "w", encoding="utf-8") as write, open(path, encoding="utf-8") as read:
                     for line in read:
                         line_list = line.split("\t")
                         if len(line_list) <= 4:
@@ -536,7 +519,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
                 # delete unprocessed file
                 os.remove(path)
 
-        super(NEL_ENGLISH_AIDA, self).__init__(
+        super().__init__(
             data_folder,
             column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
@@ -550,7 +533,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
         # collect all wikiids
         wikiid_set = set()
         for data_file in ["aida_conll_testa", "aida_conll_testb", "aida_conll_train"]:
-            with open(base_folder / data_file, mode="r", encoding="utf-8") as read:
+            with open(base_folder / data_file, encoding="utf-8") as read:
                 line = read.readline()
                 while line:
                     row = line.split("\t")
@@ -603,7 +586,7 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
         ignore_disagreements: bool = False,
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize ITTB Entity Linking corpus.
 
         The corpus got introduced in "Collective Annotation of Wikipedia Entities in Web Text" Sayali Kulkarni, Amit Singh, Ganesh Ramakrishnan, and Soumen Chakrabarti.
@@ -622,10 +605,7 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
         sentence_splitter: `SentenceSplitter`
             The sentencesplitter that is used to split the articles into sentences.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower() + "_" + type(sentence_splitter).__name__
@@ -658,7 +638,7 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
             with open(parsed_dataset, "w", encoding="utf-8") as write:
                 # iterate through all documents
                 for doc_name in doc_names:
-                    with open(data_folder / "crawledDocs" / doc_name, "r", encoding="utf-8") as read:
+                    with open(data_folder / "crawledDocs" / doc_name, encoding="utf-8") as read:
                         text = read.read()
 
                         # split sentences and tokenize
@@ -733,7 +713,7 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
 
                             write.write("\n")  # empty line after each sentence
 
-        super(NEL_ENGLISH_IITB, self).__init__(
+        super().__init__(
             data_folder,
             column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
@@ -748,7 +728,7 @@ class NEL_ENGLISH_TWEEKI(ColumnCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize Tweeki Entity Linking corpus.
 
         The dataset got introduced in "Tweeki:
@@ -766,10 +746,7 @@ class NEL_ENGLISH_TWEEKI(ColumnCorpus):
         in_memory: bool
             If True, keeps dataset in memory giving speedups in training.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -784,7 +761,7 @@ class NEL_ENGLISH_TWEEKI(ColumnCorpus):
         if not parsed_dataset.exists():
             original_file_path = cached_path(f"{tweeki_gold_el_path}", Path("datasets") / dataset_name)
 
-            with open(original_file_path, "r", encoding="utf-8") as read, open(
+            with open(original_file_path, encoding="utf-8") as read, open(
                 parsed_dataset, "w", encoding="utf-8"
             ) as write:
                 line = read.readline()
@@ -805,7 +782,7 @@ class NEL_ENGLISH_TWEEKI(ColumnCorpus):
 
             os.rename(original_file_path, str(original_file_path) + "_original")
 
-        super(NEL_ENGLISH_TWEEKI, self).__init__(
+        super().__init__(
             data_folder,
             column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
@@ -820,7 +797,7 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the Reddit Entity Linking corpus containing gold annotations only.
 
         see https://arxiv.org/abs/2101.01228v2
@@ -831,10 +808,7 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -852,8 +826,8 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
 
             with open(data_folder / corpus_file_name, "w", encoding="utf-8") as txtout:
                 # First parse the post titles
-                with open(data_folder / "posts.tsv", "r", encoding="utf-8") as tsvin1, open(
-                    data_folder / "gold_post_annotations.tsv", "r", encoding="utf-8"
+                with open(data_folder / "posts.tsv", encoding="utf-8") as tsvin1, open(
+                    data_folder / "gold_post_annotations.tsv", encoding="utf-8"
                 ) as tsvin2:
                     posts = csv.reader(tsvin1, delimiter="\t")
                     self.post_annotations = csv.reader(tsvin2, delimiter="\t")
@@ -890,8 +864,8 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
                             )
 
                 # Then parse the comments
-                with open(data_folder / "comments.tsv", "r", encoding="utf-8") as tsvin3, open(
-                    data_folder / "gold_comment_annotations.tsv", "r", encoding="utf-8"
+                with open(data_folder / "comments.tsv", encoding="utf-8") as tsvin3, open(
+                    data_folder / "gold_comment_annotations.tsv", encoding="utf-8"
                 ) as tsvin4:
                     self.comments = csv.reader(tsvin3, delimiter="\t")
                     self.comment_annotations = csv.reader(tsvin4, delimiter="\t")
@@ -961,7 +935,7 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
                                 txtout,
                             )
 
-        super(NEL_ENGLISH_REDDIT, self).__init__(
+        super().__init__(
             data_folder,
             column_format={0: "text", 1: "nel"},
             train_file=corpus_file_name,
@@ -1118,10 +1092,7 @@ def from_ufsac_to_tsv(
             attributes[-1] = attributes[-1].split(";")[0]  # take only first sense
 
         for attrib in attributes:
-            if attrib != "O":
-                line = line + "\t" + begin_or_inside + attrib
-            else:
-                line = line + "\tO"
+            line = line + "\t" + begin_or_inside + attrib if attrib != "O" else line + "\tO"
         line += "\n"
 
         return line
@@ -1145,7 +1116,7 @@ def from_ufsac_to_tsv(
             return [span]
         elif datasetname == "omsti":
             if (
-                word_fields[3] != "O" and not span == "_" and "__" not in span
+                word_fields[3] != "O" and span != "_" and "__" not in span
             ):  # has annotation and does not consist only of '_' (still not 100% clean)
                 return span.split("_")
             else:
@@ -1240,7 +1211,7 @@ class WSD_UFSAC(MultiCorpus):
         sample_missing_splits_in_each_corpus: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
         name: str = "multicorpus",
-    ):
+    ) -> None:
         """Initialize a custom corpus with any Word Sense Disambiguation (WSD) datasets in the UFSAC format.
 
          see https://github.com/getalp/UFSAC.
@@ -1270,10 +1241,7 @@ class WSD_UFSAC(MultiCorpus):
             will be used as test data. Note that the sample_missing_splits parameters are set to 'only_dev' in this case if set to True.
         :param name: Name of your (costum) corpus
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1367,7 +1335,7 @@ class WSD_UFSAC(MultiCorpus):
             corpora.append(corpus)
         log.info("Done with transforming data into column format and creating corpora...")
 
-        super(WSD_UFSAC, self).__init__(
+        super().__init__(
             corpora,
             sample_missing_splits=sample_missing_splits_in_multicorpus,
             name=name,
@@ -1384,16 +1352,13 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
         banned_sentences: Optional[List[str]] = None,
         sample_missing_splits: bool = True,
         cut_multisense: bool = True,
-    ):
+    ) -> None:
         """Initialize ragnato_ALL (concatenation of all SensEval and SemEval all-words tasks) provided in UFSAC.
 
         see https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         dataset_name = "wsd_ufsac"
 
@@ -1426,7 +1391,7 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
             cut_multisense=cut_multisense,
         )
 
-        super(WSD_RAGANATO_ALL, self).__init__(
+        super().__init__(
             data_folder=data_folder,
             column_format=columns,
             train_file=train_file,
@@ -1451,16 +1416,13 @@ class WSD_SEMCOR(ColumnCorpus):
         sample_missing_splits: Union[bool, str] = True,
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
-    ):
+    ) -> None:
         """Initialize SemCor provided in UFSAC.
 
         see https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         dataset_name = "wsd_ufsac"
 
@@ -1503,7 +1465,7 @@ class WSD_SEMCOR(ColumnCorpus):
 
         train_file = determine_tsv_file(filename="semcor", data_folder=data_folder, cut_multisense=cut_multisense)
 
-        super(WSD_SEMCOR, self).__init__(
+        super().__init__(
             data_folder=data_folder,
             column_format=columns,
             train_file=train_file,
@@ -1528,16 +1490,13 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
         banned_sentences: Optional[List[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
-    ):
+    ) -> None:
         """Initialize Princeton WordNet Gloss Corpus provided in UFSAC.
 
         see https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         dataset_name = "wsd_ufsac"
 
@@ -1578,7 +1537,7 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
             filename="wngt", data_folder=data_folder, cut_multisense=False
         )  # does not have multisense!
 
-        super(WSD_WORDNET_GLOSS_TAGGED, self).__init__(
+        super().__init__(
             data_folder=data_folder,
             column_format=columns,
             train_file=train_file,
@@ -1604,16 +1563,13 @@ class WSD_MASC(ColumnCorpus):
         sample_missing_splits: Union[bool, str] = True,
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
-    ):
+    ) -> None:
         """Initialize MASC (Manually Annotated Sub-Corpus) provided in UFSAC.
 
         see https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         dataset_name = "wsd_ufsac"
 
@@ -1657,7 +1613,7 @@ class WSD_MASC(ColumnCorpus):
 
         train_file = determine_tsv_file(filename="masc", data_folder=data_folder, cut_multisense=cut_multisense)
 
-        super(WSD_MASC, self).__init__(
+        super().__init__(
             data_folder=data_folder,
             column_format=columns,
             train_file=train_file,
@@ -1683,16 +1639,13 @@ class WSD_OMSTI(ColumnCorpus):
         sample_missing_splits: Union[bool, str] = True,
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
-    ):
+    ) -> None:
         """Initialize OMSTI (One Million Sense-Tagged Instances) provided in UFSAC.
 
         see https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         dataset_name = "wsd_ufsac"
 
@@ -1737,7 +1690,7 @@ class WSD_OMSTI(ColumnCorpus):
 
         train_file = determine_tsv_file(filename="omsti", data_folder=data_folder, cut_multisense=cut_multisense)
 
-        super(WSD_OMSTI, self).__init__(
+        super().__init__(
             data_folder=data_folder,
             column_format=columns,
             train_file=train_file,
@@ -1762,16 +1715,13 @@ class WSD_TRAINOMATIC(ColumnCorpus):
         banned_sentences: Optional[List[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
-    ):
+    ) -> None:
         """Initialize Train-O-Matic provided in UFSAC.
 
         see https://github.com/getalp/UFSAC
         When first initializing the corpus the whole UFSAC data is downloaded.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         dataset_name = "wsd_ufsac"
 
@@ -1814,7 +1764,7 @@ class WSD_TRAINOMATIC(ColumnCorpus):
             filename="trainomatic", data_folder=data_folder, cut_multisense=False
         )  # no multisenses
 
-        super(WSD_TRAINOMATIC, self).__init__(
+        super().__init__(
             data_folder=data_folder,
             column_format=columns,
             train_file=train_file,

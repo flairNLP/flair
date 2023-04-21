@@ -9,7 +9,7 @@ from flair.nn.multitask import make_multitask_model_and_corpus
 from flair.trainers import ModelTrainer
 
 
-@pytest.mark.integration
+@pytest.mark.integration()
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
     # --- Embeddings that are shared by both models --- #
     shared_embedding = TransformerDocumentEmbeddings("distilbert-base-uncased", fine_tune=True)

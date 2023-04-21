@@ -11,7 +11,7 @@ class CheckpointPlugin(TrainerPlugin):
         save_model_each_k_epochs,
         save_optimizer_state,
         base_path,
-    ):
+    ) -> None:
         super().__init__()
         self.save_optimizer_state = save_optimizer_state
         self.save_model_each_k_epochs = save_model_each_k_epochs

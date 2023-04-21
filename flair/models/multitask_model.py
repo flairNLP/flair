@@ -30,12 +30,12 @@ class MultitaskModel(flair.nn.Classifier):
         task_ids: Optional[List[str]] = None,
         loss_factors: Optional[List[float]] = None,
         use_all_tasks: bool = False,
-    ):
+    ) -> None:
         """Instantiates the MultiTaskModel.
 
         :param models: Key (Task ID) - Value (flair.nn.Model) Pairs to stack model
         """
-        super(MultitaskModel, self).__init__()
+        super().__init__()
 
         task_ids_internal: List[str] = task_ids if task_ids else [f"Task_{i}" for i in range(len(models))]
 
@@ -158,7 +158,7 @@ class MultitaskModel(flair.nn.Classifier):
         loss = torch.tensor(0.0, device=flair.device)
         main_score = 0.0
         all_detailed_results = ""
-        all_classification_report: Dict[str, Dict[str, Any]] = dict()
+        all_classification_report: Dict[str, Dict[str, Any]] = {}
 
         for task_id, split in batch_split.items():
             result = self.tasks[task_id].evaluate(
@@ -213,7 +213,7 @@ class MultitaskModel(flair.nn.Classifier):
         model_state = {
             **initial_model_state,
             "model_states": {task: model._get_state_dict() for task, model in self.tasks.items()},
-            "loss_factors": [self.loss_factors[task] for task in self.tasks.keys()],
+            "loss_factors": [self.loss_factors[task] for task in self.tasks],
             "use_all_tasks": self.use_all_tasks,
         }
 

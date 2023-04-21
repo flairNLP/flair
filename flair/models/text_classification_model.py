@@ -26,7 +26,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         embeddings: flair.embeddings.DocumentEmbeddings,
         label_type: str,
         **classifierargs,
-    ):
+    ) -> None:
         """Initializes a TextClassifier.
 
         :param embeddings: embeddings used to embed each data point
@@ -38,7 +38,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         :param loss_weights: Dictionary of weights for labels for the loss function
         (if any label's weight is unspecified it will default to 1.0)
         """
-        super(TextClassifier, self).__init__(
+        super().__init__(
             **classifierargs,
             embeddings=embeddings,
             final_embedding_size=embeddings.embedding_length,

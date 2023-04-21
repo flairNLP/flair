@@ -43,7 +43,7 @@ class ImageEmbeddings(Embeddings[Image]):
 
 @register_embeddings
 class IdentityImageEmbeddings(ImageEmbeddings):
-    def __init__(self, transforms):
+    def __init__(self, transforms) -> None:
         import PIL as pythonimagelib
 
         self.PIL = pythonimagelib
@@ -63,13 +63,13 @@ class IdentityImageEmbeddings(ImageEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
 @register_embeddings
 class PrecomputedImageEmbeddings(ImageEmbeddings):
-    def __init__(self, url2tensor_dict, name):
+    def __init__(self, url2tensor_dict, name) -> None:
         self.url2tensor_dict = url2tensor_dict
         self.name = name
         self.__embedding_length = len(list(self.url2tensor_dict.values())[0])
@@ -87,17 +87,17 @@ class PrecomputedImageEmbeddings(ImageEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
 @register_embeddings
 class NetworkImageEmbeddings(ImageEmbeddings):
-    def __init__(self, name, pretrained=True, transforms=None):
+    def __init__(self, name, pretrained=True, transforms=None) -> None:
         super().__init__()
 
         try:
-            import torchvision as torchvision
+            import torchvision
         except ModuleNotFoundError:
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "torchvision" is not installed!')
@@ -152,14 +152,14 @@ class NetworkImageEmbeddings(ImageEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
 @register_embeddings
 class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
-    def __init__(self, feats_in, convnet_parms, posnet_parms, transformer_parms):
-        super(ConvTransformNetworkImageEmbeddings, self).__init__()
+    def __init__(self, feats_in, convnet_parms, posnet_parms, transformer_parms) -> None:
+        super().__init__()
 
         adaptive_pool_func_map = {"max": AdaptiveMaxPool2d, "avg": AdaptiveAvgPool2d}
 
@@ -276,5 +276,5 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
     def embedding_length(self):
         return self._feat_dim
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name

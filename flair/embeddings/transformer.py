@@ -180,7 +180,7 @@ def _legacy_reconstruct_word_ids(
         token_ids = cast(List[int], embedding.tokenizer.convert_tokens_to_ids(token_texts))
         expanded_token_ids = embedding.tokenizer.build_inputs_with_special_tokens(token_ids)
         j = 0
-        for i, token_id in enumerate(token_ids):
+        for _i, token_id in enumerate(token_ids):
             while expanded_token_ids[j] != token_id:
                 token_texts.insert(j, embedding.tokenizer.convert_ids_to_tokens(expanded_token_ids[j]))
                 j += 1
@@ -218,7 +218,7 @@ def _get_processed_token_text(tokenizer, token: str) -> str:
 
 
 def _reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens: List[str]):
-    word_iterator = iter(enumerate((_get_processed_token_text(embedding.tokenizer, token) for token in tokens)))
+    word_iterator = iter(enumerate(_get_processed_token_text(embedding.tokenizer, token) for token in tokens))
     token_id, token_text = next(word_iterator)
     word_ids: List[Optional[int]] = []
     reconstructed_token = ""
@@ -235,7 +235,7 @@ def _reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens
         special_tokens.append(embedding.tokenizer.sep_token)
 
     # iterate over subtokens and reconstruct tokens
-    for subtoken_id, subtoken in enumerate(subtokens):
+    for _subtoken_id, subtoken in enumerate(subtokens):
         # remove special markup
         subtoken = remove_special_markup(subtoken)
 
@@ -301,7 +301,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         feature_extractor: Optional[FeatureExtractionMixin] = None,
         needs_manual_ocr: Optional[bool] = None,
         use_context_separator: bool = True,
-    ):
+    ) -> None:
         self.name = name
         super().__init__()
         self.document_embedding = is_document_embedding
@@ -360,7 +360,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
     def __setstate__(self, state):
         embedding = self.from_params(state)
-        for key in embedding.__dict__.keys():
+        for key in embedding.__dict__:
             self.__dict__[key] = embedding.__dict__[key]
 
     @classmethod
@@ -518,9 +518,9 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             model_kwargs["sub_token_lengths"] = sub_token_lengths
 
         # set language IDs for XLM-style transformers
-        if self.use_lang_emb and getattr(self.tokenizer, "lang2id") is not None:
+        if self.use_lang_emb and self.tokenizer.lang2id is not None:
             model_kwargs["langs"] = torch.zeros_like(input_ids, dtype=input_ids.dtype)
-            lang2id = getattr(self.tokenizer, "lang2id")
+            lang2id = self.tokenizer.lang2id
             if not self.allow_long_sentences:
                 for s_id, sentence in enumerate(sentences):
                     lang_id = lang2id.get(sentence.get_language_code(), 0)
@@ -639,8 +639,8 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         # if use_context_separator is set, add a [FLERT] token
         if self.use_context_separator and self.context_length > 0:
-            left_context = left_context + [Token(SENTENCE_BOUNDARY_TAG)]
-            right_context = [Token(SENTENCE_BOUNDARY_TAG)] + right_context
+            left_context = [*left_context, Token(SENTENCE_BOUNDARY_TAG)]
+            right_context = [Token(SENTENCE_BOUNDARY_TAG), *right_context]
 
         # return expanded sentence and context length information
         expanded_sentence = left_context + sentence.tokens + right_context
@@ -673,7 +673,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
 @register_embeddings
 class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
-    def __init__(self, onnx_model: str, providers: List = [], **kwargs):
+    def __init__(self, onnx_model: str, providers: List = [], **kwargs) -> None:
         # onnx prepares numpy arrays, no mather if it runs on gpu or cpu, the input is on cpu first.
         super().__init__(**kwargs, force_device=torch.device("cpu"))
         self.onnx_model = onnx_model
@@ -741,7 +741,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         input_array = {k: v.numpy() for k, v in tensors.items()}
         embeddings = self.session.run([], input_array)
 
-        result = dict()
+        result = {}
         if self.document_embedding:
             result["document_embeddings"] = torch.tensor(embeddings[0], device=flair.device)
         if self.token_embedding:
@@ -751,7 +751,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
 
     @classmethod
     def collect_dynamic_axes(cls, embedding: "TransformerEmbeddings", tensors):
-        dynamic_axes = dict()
+        dynamic_axes = {}
         for k, v in tensors.items():
             if k in ["sub_token_lengths", "token_lengths"]:
                 dynamic_axes[k] = {0: "sent-count"}
@@ -811,7 +811,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
                 providers = ["CPUExecutionProvider"]
 
         desired_keys_order = [
-            param for param in inspect.signature(embedding.forward).parameters.keys() if param in example_tensors
+            param for param in inspect.signature(embedding.forward).parameters if param in example_tensors
         ]
         torch.onnx.export(
             embedding,
@@ -827,7 +827,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
 
 @register_embeddings
 class TransformerJitEmbeddings(TransformerBaseEmbeddings):
-    def __init__(self, jit_model: Union[bytes, ScriptModule], param_names: List[str], **kwargs):
+    def __init__(self, jit_model: Union[bytes, ScriptModule], param_names: List[str], **kwargs) -> None:
         super().__init__(**kwargs)
         if isinstance(jit_model, bytes):
             buffer = BytesIO(jit_model)
@@ -889,7 +889,7 @@ class TransformerJitWordEmbeddings(TokenEmbeddings, TransformerJitEmbeddings):
     def __init__(
         self,
         **kwargs,
-    ):
+    ) -> None:
         TransformerJitEmbeddings.__init__(self, **kwargs)
 
 
@@ -898,7 +898,7 @@ class TransformerJitDocumentEmbeddings(DocumentEmbeddings, TransformerJitEmbeddi
     def __init__(
         self,
         **kwargs,
-    ):
+    ) -> None:
         TransformerJitEmbeddings.__init__(self, **kwargs)
 
 
@@ -907,7 +907,7 @@ class TransformerOnnxWordEmbeddings(TokenEmbeddings, TransformerOnnxEmbeddings):
     def __init__(
         self,
         **kwargs,
-    ):
+    ) -> None:
         TransformerOnnxEmbeddings.__init__(self, **kwargs)
 
 
@@ -916,7 +916,7 @@ class TransformerOnnxDocumentEmbeddings(DocumentEmbeddings, TransformerOnnxEmbed
     def __init__(
         self,
         **kwargs,
-    ):
+    ) -> None:
         TransformerOnnxEmbeddings.__init__(self, **kwargs)
 
 
@@ -946,7 +946,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         needs_manual_ocr: Optional[bool] = None,
         use_context_separator: bool = True,
         **kwargs,
-    ):
+    ) -> None:
         self.instance_parameters = self.get_instance_parameters(locals=locals())
         del self.instance_parameters["saved_config"]
         del self.instance_parameters["tokenizer_data"]
@@ -1091,10 +1091,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         return tokens[0] == self.tokenizer.cls_token_id
 
     def _calculate_embedding_length(self, model) -> int:
-        if not self.layer_mean:
-            length = len(self.layer_indexes) * model.config.hidden_size
-        else:
-            length = model.config.hidden_size
+        length = len(self.layer_indexes) * model.config.hidden_size if not self.layer_mean else model.config.hidden_size
 
         # in case of doubt: token embedding has higher priority than document embedding
         if self.token_embedding and self.subtoken_pooling == "first_last":
@@ -1167,7 +1164,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         embedding = self.create_from_state(saved_config=config, **state)
 
         # copy values from new embedding
-        for key in embedding.__dict__.keys():
+        for key in embedding.__dict__:
             self.__dict__[key] = embedding.__dict__[key]
 
         if model_state_dict:
@@ -1267,7 +1264,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         else:
             sentence_hidden_states = hidden_states
 
-        result = dict()
+        result = {}
 
         if self.document_embedding:
             if self.cls_pooling == "cls" and self.initial_cls_token:

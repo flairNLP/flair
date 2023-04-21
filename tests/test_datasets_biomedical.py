@@ -10,9 +10,8 @@ import pytest
 from tqdm import tqdm
 
 import flair
-import flair.datasets.biomedical as biomedical
 from flair.data import Sentence, Token, _iter_dataset
-from flair.datasets import ColumnCorpus
+from flair.datasets import ColumnCorpus, biomedical
 from flair.datasets.biomedical import (
     CoNLLWriter,
     Entity,
@@ -308,7 +307,7 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
 
     corpus = CorpusType()
     internal = corpus.to_internal(data_folder)
-    for doc_id, doc_text in internal.documents.items():
+    for doc_id, _doc_text in internal.documents.items():
         misaligned_starts = []
         misaligned_ends: List[int] = []
 

@@ -9,7 +9,7 @@ log = logging.getLogger("flair")
 class LinearSchedulerPlugin(TrainerPlugin):
     """Plugin for LinearSchedulerWithWarmup."""
 
-    def __init__(self, warmup_fraction: float, **kwargs):
+    def __init__(self, warmup_fraction: float, **kwargs) -> None:
         super().__init__()
 
         self.warmup_fraction = warmup_fraction
@@ -70,5 +70,5 @@ class LinearSchedulerPlugin(TrainerPlugin):
         self.scheduler.step()
         self.store_learning_rate()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"LinearScheduler | warmup_fraction: '{self.warmup_fraction}'"

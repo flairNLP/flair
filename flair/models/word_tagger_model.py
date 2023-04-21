@@ -30,7 +30,7 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         label_type: str,
         span_encoding: str = "BIOES",
         **classifierargs,
-    ):
+    ) -> None:
         """Initializes a TokenClassifier.
 
         :param embeddings: word embeddings used in tagger
@@ -79,10 +79,7 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         return internal_label_dictionary
 
     def _determine_if_span_prediction_problem(self, dictionary: Dictionary) -> bool:
-        for item in dictionary.get_items():
-            if item.startswith("B-") or item.startswith("S-") or item.startswith("I-"):
-                return True
-        return False
+        return any(item.startswith(("B-", "S-", "I-")) for item in dictionary.get_items())
 
     def _get_state_dict(self):
         model_state = {

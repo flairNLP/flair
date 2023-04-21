@@ -5,7 +5,7 @@ from flair.training_utils import WeightExtractor
 class WeightExtractorPlugin(TrainerPlugin):
     """Simple Plugin for weight extraction."""
 
-    def __init__(self, base_path):
+    def __init__(self, base_path) -> None:
         super().__init__()
         self.weight_extractor = WeightExtractor(base_path)
 

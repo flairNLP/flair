@@ -10,7 +10,7 @@ log = logging.getLogger("flair")
 class LogFilePlugin(TrainerPlugin):
     """Plugin for the training.log file."""
 
-    def __init__(self, base_path):
+    def __init__(self, base_path) -> None:
         super().__init__()
 
         self.log_handler = add_file_handler(log, Path(base_path) / "training.log")
