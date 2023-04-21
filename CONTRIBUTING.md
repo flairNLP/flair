@@ -69,7 +69,8 @@ In general, it is recommended to ensure all basic tests are running through befo
 
 ### Code Formatting
 
-To ensure a standardized code style we use the formatter [black](https://github.com/ambv/black) and for standardizing
-imports we use [isort](https://github.com/PyCQA/isort). If your code is not formatted properly, the tests will fail.
+To ensure a standardized code style we use the formatter [black](https://github.com/ambv/black) and for standardizing imports we use [ruff](https://github.com/charliermarsh/ruff).
+If your code is not formatted properly, the tests will fail.
+
 We recommend configuring your IDE to run these formatters for you, but you can also always run them manually via
-`black . && isort .` in the flair root folder.
+`black . && ruff --fix .` in the flair root folder.
