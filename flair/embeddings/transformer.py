@@ -441,7 +441,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
     def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
         return self(**tensors)
 
-    def prepare_tensors(self, sentences: List[Sentence], device: torch.device = None):
+    def prepare_tensors(self, sentences: List[Sentence], device: Optional[torch.device] = None):
         if device is None:
             device = flair.device
         flair_tokens, offsets, lengths = self.__gather_flair_tokens(sentences)
@@ -781,7 +781,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         embedding: "TransformerEmbeddings",
         example_sentences: List[Sentence],
         opset_version: int = 14,
-        providers: List = None,
+        providers: Optional[List] = None,
     ):
         path = str(path)
         example_tensors = embedding.prepare_tensors(example_sentences)

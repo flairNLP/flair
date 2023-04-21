@@ -1,7 +1,7 @@
 import logging
 from abc import abstractmethod
 from pathlib import Path
-from typing import Generic, List, Union
+from typing import Generic, List, Optional, Union
 
 import torch.utils.data.dataloader
 from deprecated import deprecated
@@ -110,7 +110,7 @@ class MongoDataset(FlairDataset):
         database: str,
         collection: str,
         text_field: str,
-        categories_field: List[str] = None,
+        categories_field: Optional[List[str]] = None,
         max_tokens_per_doc: int = -1,
         max_chars_per_doc: int = -1,
         tokenizer: Tokenizer = SegtokTokenizer(),

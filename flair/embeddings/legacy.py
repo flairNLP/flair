@@ -2,7 +2,7 @@ import logging
 import re
 from abc import abstractmethod
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 from deprecated import deprecated
@@ -48,8 +48,8 @@ class ELMoEmbeddings(TokenEmbeddings):
     def __init__(
         self,
         model: str = "original",
-        options_file: str = None,
-        weight_file: str = None,
+        options_file: Optional[str] = None,
+        weight_file: Optional[str] = None,
         embedding_mode: str = "all",
     ):
         super().__init__()
@@ -192,7 +192,7 @@ class CharLMEmbeddings(TokenEmbeddings):
         model: str,
         detach: bool = True,
         use_cache: bool = False,
-        cache_directory: Path = None,
+        cache_directory: Optional[Path] = None,
     ):
         """
         initializes contextual string embeddings using a character-level language model.
@@ -1041,8 +1041,8 @@ def _get_transformer_sentence_embeddings(
     layers: List[int],
     pooling_operation: str,
     use_scalar_mix: bool,
-    bos_token: str = None,
-    eos_token: str = None,
+    bos_token: Optional[str] = None,
+    eos_token: Optional[str] = None,
 ) -> List[Sentence]:
     """
     Builds sentence embeddings for Transformer-based architectures.
@@ -1369,7 +1369,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         hidden_size=128,
         rnn_layers=1,
         reproject_words: bool = True,
-        reproject_words_dimension: int = None,
+        reproject_words_dimension: Optional[int] = None,
         bidirectional: bool = False,
         dropout: float = 0.5,
         word_dropout: float = 0.0,

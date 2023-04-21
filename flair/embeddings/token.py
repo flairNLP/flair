@@ -153,7 +153,7 @@ class WordEmbeddings(TokenEmbeddings):
     def __init__(
         self,
         embeddings: Optional[str],
-        field: str = None,
+        field: Optional[str] = None,
         fine_tune: bool = False,
         force_cpu: bool = True,
         stable: bool = False,
@@ -443,7 +443,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 
     def __init__(
         self,
-        path_to_char_dict: Union[str, Dictionary] = None,
+        path_to_char_dict: Optional[Union[str, Dictionary]] = None,
         char_embedding_dim: int = 25,
         hidden_size_char: int = 25,
     ):
@@ -1014,7 +1014,9 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 class FastTextEmbeddings(TokenEmbeddings):
     """FastText Embeddings with oov functionality."""
 
-    def __init__(self, embeddings: str, use_local: bool = True, field: str = None, name: Optional[str] = None):
+    def __init__(
+        self, embeddings: str, use_local: bool = True, field: Optional[str] = None, name: Optional[str] = None
+    ):
         """Initializes fasttext word embeddings.
 
         Constructor downloads required embedding file and stores in cache if use_local is False.
@@ -1394,12 +1396,12 @@ class BPEmbSerializable(BPEmb):
 class BytePairEmbeddings(TokenEmbeddings):
     def __init__(
         self,
-        language: str = None,
+        language: Optional[str] = None,
         dim: int = 50,
         syllables: int = 100000,
         cache_dir=None,
-        model_file_path: Path = None,
-        embedding_file_path: Path = None,
+        model_file_path: Optional[Path] = None,
+        embedding_file_path: Optional[Path] = None,
         name: Optional[str] = None,
         **kwargs,
     ):

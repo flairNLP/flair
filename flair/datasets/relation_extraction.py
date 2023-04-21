@@ -6,7 +6,7 @@ import os
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import conllu
 import gdown
@@ -36,7 +36,7 @@ def convert_ptb_token(token: str) -> str:
 class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         augment_train: bool = False,
         **corpusargs,
@@ -227,7 +227,7 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
 
 
 class RE_ENGLISH_TACRED(ColumnCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, **corpusargs):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True, **corpusargs):
         """TAC Relation Extraction Dataset.
 
         with 41 relations from https://nlp.stanford.edu/projects/tacred/.
@@ -351,7 +351,7 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
 
 
 class RE_ENGLISH_CONLL04(ColumnCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, **corpusargs):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True, **corpusargs):
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -533,7 +533,7 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
 class RE_ENGLISH_DRUGPROT(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
         **corpusargs,

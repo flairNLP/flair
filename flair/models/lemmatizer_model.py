@@ -17,7 +17,7 @@ log = logging.getLogger("flair")
 class Lemmatizer(flair.nn.Classifier[Sentence]):
     def __init__(
         self,
-        embeddings: flair.embeddings.TokenEmbeddings = None,
+        embeddings: Optional[flair.embeddings.TokenEmbeddings] = None,
         label_type: str = "lemma",
         rnn_input_size: int = 50,
         rnn_hidden_size: int = 256,

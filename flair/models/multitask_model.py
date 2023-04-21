@@ -111,7 +111,7 @@ class MultitaskModel(flair.nn.Classifier):
         self,
         data_points,
         gold_label_type: str,
-        out_path: Union[str, Path] = None,
+        out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),

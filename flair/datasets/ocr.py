@@ -20,7 +20,7 @@ class OcrJsonDataset(FlairDataset):
         encoding: str = "utf-8",
         load_images: bool = False,
         normalize_coords_to_thousands: bool = True,
-        label_name_map: Dict[str, str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
     ):
         """Instantiates a Dataset from a OCR-Json format.
 
@@ -133,7 +133,7 @@ class OcrCorpus(Corpus):
         in_memory: bool = True,
         load_images: bool = False,
         normalize_coords_to_thousands: bool = True,
-        label_name_map: Dict[str, str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
         **corpusargs,
     ):
         """Instantiates a Corpus from a OCR-Json format.
@@ -200,13 +200,13 @@ class OcrCorpus(Corpus):
 class SROIE(OcrCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         encoding: str = "utf-8",
         label_type: str = "ner",
         in_memory: bool = True,
         load_images: bool = False,
         normalize_coords_to_thousands: bool = True,
-        label_name_map: Dict[str, str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
         **corpusargs,
     ):
         """Instantiates the SROIE corpus with perfect ocr boxes.

@@ -18,7 +18,7 @@ log = logging.getLogger("flair")
 class ZELDA(MultiFileColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         column_format={0: "text", 2: "nel"},
         **corpusargs,
@@ -86,7 +86,7 @@ class ZELDA(MultiFileColumnCorpus):
 class NEL_ENGLISH_AQUAINT(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         agreement_threshold: float = 0.5,
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
@@ -266,7 +266,7 @@ class NEL_ENGLISH_AQUAINT(ColumnCorpus):
 class NEL_GERMAN_HIPE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         wiki_language: str = "dewiki",
         **corpusargs,
@@ -443,7 +443,7 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
 class NEL_ENGLISH_AIDA(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         use_ids_and_check_existence: bool = False,
         **corpusargs,
@@ -598,7 +598,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
 class NEL_ENGLISH_IITB(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         ignore_disagreements: bool = False,
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
@@ -745,7 +745,7 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
 class NEL_ENGLISH_TWEEKI(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -817,7 +817,7 @@ class NEL_ENGLISH_TWEEKI(ColumnCorpus):
 class NEL_ENGLISH_REDDIT(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1231,11 +1231,11 @@ class WSD_UFSAC(MultiCorpus):
     def __init__(
         self,
         filenames: Union[str, List[str]] = ["masc", "semcor"],
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         cut_multisense: bool = True,
         columns={0: "text", 3: "sense"},
-        banned_sentences: List[str] = None,
+        banned_sentences: Optional[List[str]] = None,
         sample_missing_splits_in_multicorpus: Union[bool, str] = True,
         sample_missing_splits_in_each_corpus: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
@@ -1377,11 +1377,11 @@ class WSD_UFSAC(MultiCorpus):
 class WSD_RAGANATO_ALL(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
+        banned_sentences: Optional[List[str]] = None,
         sample_missing_splits: bool = True,
         cut_multisense: bool = True,
     ):
@@ -1443,11 +1443,11 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
 class WSD_SEMCOR(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
+        banned_sentences: Optional[List[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
@@ -1521,11 +1521,11 @@ class WSD_SEMCOR(ColumnCorpus):
 class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
+        banned_sentences: Optional[List[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):
@@ -1596,11 +1596,11 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
 class WSD_MASC(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
+        banned_sentences: Optional[List[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
@@ -1675,11 +1675,11 @@ class WSD_MASC(ColumnCorpus):
 class WSD_OMSTI(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
+        banned_sentences: Optional[List[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
@@ -1755,11 +1755,11 @@ class WSD_OMSTI(ColumnCorpus):
 class WSD_TRAINOMATIC(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
+        banned_sentences: Optional[List[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
     ):

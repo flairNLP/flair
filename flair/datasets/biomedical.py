@@ -433,9 +433,9 @@ class HunerDataset(ColumnCorpus, ABC):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the HUNER corpus.
 
@@ -522,7 +522,7 @@ class BIO_INFER(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
     ):
         """Initialize the BioInfer corpus.
@@ -631,7 +631,7 @@ class JNLPBA(ColumnCorpus):
     https://www.aclweb.org/anthology/W04-1213.pdf
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         """Initialize the JNLPBA corpus.
 
         :param base_path: Path to the corpus on your machine
@@ -832,9 +832,9 @@ class CELL_FINDER(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the CellFinder corpus.
 
@@ -969,9 +969,9 @@ class MIRNA(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the miRNA corpus.
 
@@ -1314,7 +1314,7 @@ class CLL(ColumnCorpus):
     https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         """Initialize the CLL corpus.
 
         :param base_path: Path to the corpus on your machine
@@ -1379,7 +1379,7 @@ class GELLUS(ColumnCorpus):
     https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         """Initialize the GELLUS corpus.
 
         :param base_path: Path to the corpus on your machine
@@ -1456,9 +1456,9 @@ class LOCTEXT(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the LOCTEXT corpus.
 
@@ -1585,9 +1585,9 @@ class CHEMDNER(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the CHEMDNER corpus.
 
@@ -1686,7 +1686,7 @@ class IEPA(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
     ):
         """Initialize the IEPA corpus.
@@ -1798,9 +1798,9 @@ class LINNEAUS(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        tokenizer: Tokenizer = None,
+        tokenizer: Optional[Tokenizer] = None,
     ):
         """Initialize the LINNEAUS corpus.
 
@@ -1900,9 +1900,9 @@ class CDR(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the CDR corpus.
 
@@ -2011,9 +2011,9 @@ class VARIOME(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the Variome corpus.
 
@@ -2165,9 +2165,9 @@ class NCBI_DISEASE(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the NCBI disease corpus.
 
@@ -2316,9 +2316,9 @@ class ScaiCorpus(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the SCAU corpus.
 
@@ -2523,9 +2523,9 @@ class OSIRIS(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
         load_original_unfixed_annotation=False,
     ):
         """Initialize the OSIRIS corpus.
@@ -2643,9 +2643,9 @@ class S800(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the S800 corpus.
 
@@ -2741,9 +2741,9 @@ class GPRO(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the GPRO corpus.
 
@@ -2883,9 +2883,9 @@ class DECA(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the DECA corpus.
 
@@ -2987,7 +2987,7 @@ class FSU(ColumnCorpus):
     https://www.aclweb.org/anthology/W10-1838/
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         """Initialize the FSU corpus.
 
         :param base_path: Path to the corpus on your machine
@@ -3152,9 +3152,9 @@ class CRAFT(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the CRAFT corpus.
 
@@ -3247,9 +3247,9 @@ class BIOSEMANTICS(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the Biosemantics corpus.
 
@@ -3381,9 +3381,9 @@ class BC2GM(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the BioCreative-II-GM corpus.
 
@@ -3525,9 +3525,9 @@ class CEMP(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the CEMP corpus.
 
@@ -3683,9 +3683,9 @@ class CHEBI(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
         annotator: int = 0,
     ):
         """Initialize the CHEBI corpus.
@@ -3855,9 +3855,9 @@ class BioNLPCorpus(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the BioNLP Corpus.
 
@@ -4012,9 +4012,9 @@ class ANAT_EM(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        tokenizer: Tokenizer = None,
+        tokenizer: Optional[Tokenizer] = None,
     ):
         """Initialize the anatomical named entity mention recognition Corpus.
 
@@ -4199,7 +4199,7 @@ class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
     https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4233,7 +4233,7 @@ class BIOBERT_GENE_BC2GM(ColumnCorpus):
     https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4266,7 +4266,7 @@ class BIOBERT_GENE_JNLPBA(ColumnCorpus):
     https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4299,7 +4299,7 @@ class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
     https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4332,7 +4332,7 @@ class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
     https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4365,7 +4365,7 @@ class BIOBERT_DISEASE_NCBI(ColumnCorpus):
     https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4398,7 +4398,7 @@ class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
     https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4431,7 +4431,7 @@ class BIOBERT_SPECIES_S800(ColumnCorpus):
     https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4464,9 +4464,9 @@ class CRAFT_V4(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initializes version 4.0.1 of the CRAFT corpus.
 
@@ -4765,9 +4765,9 @@ class AZDZ(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        tokenizer: Tokenizer = None,
+        tokenizer: Optional[Tokenizer] = None,
     ):
         """Initializes the Arizona Disease Corpus.
 
@@ -4875,9 +4875,9 @@ class PDR(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
     ):
         """Initialize the plant-disease relations Corpus.
 
@@ -4945,7 +4945,7 @@ class HUNER_DISEASE_PDR(HunerDataset):
 class HunerMultiCorpus(MultiCorpus):
     """Base class to build the union of all HUNER data sets considering a particular entity type."""
 
-    def __init__(self, entity_type: str, sentence_splitter: SentenceSplitter = None):
+    def __init__(self, entity_type: str, sentence_splitter: Optional[SentenceSplitter] = None):
         self.entity_type = entity_type
 
         def entity_type_predicate(member):
@@ -4994,35 +4994,35 @@ class HunerMultiCorpus(MultiCorpus):
 class HUNER_CELL_LINE(HunerMultiCorpus):
     """Union of all HUNER cell line data sets."""
 
-    def __init__(self, sentence_splitter: SentenceSplitter = None):
+    def __init__(self, sentence_splitter: Optional[SentenceSplitter] = None):
         super(HUNER_CELL_LINE, self).__init__(entity_type="CELL_LINE", sentence_splitter=sentence_splitter)
 
 
 class HUNER_CHEMICAL(HunerMultiCorpus):
     """Union of all HUNER chemical data sets."""
 
-    def __init__(self, sentence_splitter: SentenceSplitter = None):
+    def __init__(self, sentence_splitter: Optional[SentenceSplitter] = None):
         super(HUNER_CHEMICAL, self).__init__(entity_type="CHEMICAL", sentence_splitter=sentence_splitter)
 
 
 class HUNER_DISEASE(HunerMultiCorpus):
     """Union of all HUNER disease data sets."""
 
-    def __init__(self, sentence_splitter: SentenceSplitter = None):
+    def __init__(self, sentence_splitter: Optional[SentenceSplitter] = None):
         super(HUNER_DISEASE, self).__init__(entity_type="DISEASE", sentence_splitter=sentence_splitter)
 
 
 class HUNER_GENE(HunerMultiCorpus):
     """Union of all HUNER gene data sets."""
 
-    def __init__(self, sentence_splitter: SentenceSplitter = None):
+    def __init__(self, sentence_splitter: Optional[SentenceSplitter] = None):
         super(HUNER_GENE, self).__init__(entity_type="GENE", sentence_splitter=sentence_splitter)
 
 
 class HUNER_SPECIES(HunerMultiCorpus):
     """Union of all HUNER species data sets."""
 
-    def __init__(self, sentence_splitter: SentenceSplitter = None):
+    def __init__(self, sentence_splitter: Optional[SentenceSplitter] = None):
         super(HUNER_SPECIES, self).__init__(entity_type="SPECIES", sentence_splitter=sentence_splitter)
 
 
@@ -5039,7 +5039,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
     def __init__(
         self,
         dataset_name: str,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         sentence_splitter: Optional[SentenceSplitter] = None,
         train_split_name: Optional[str] = None,
