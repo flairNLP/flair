@@ -1,8 +1,8 @@
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   test:
@@ -11,11 +11,13 @@ jobs:
       TRANSFORMERS_CACHE: ./cache/transformers
       FLAIR_CACHE_ROOT: ./cache/flair
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.7
+      - name: Check pre-commit hooks
+        uses: pre-commit/action@v3.0.0
       - name: Install Flair dependencies
         run: pip install -e .
       - name: Install unittest dependencies
