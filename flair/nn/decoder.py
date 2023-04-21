@@ -89,7 +89,7 @@ class PrototypicalDecoder(torch.nn.Module):
     def num_prototypes(self):
         return self.prototype_vectors.size(0)
 
-    def forward(self, embedded: torch.tensor):
+    def forward(self, embedded):
         if self.learning_mode == "learn_only_map_and_prototypes":
             embedded = embedded.detach()
 
@@ -141,24 +141,24 @@ class LabelVerbalizerDecoder(torch.nn.Module):
     @staticmethod
     def verbalize_labels(label_dictionary: Dictionary) -> List[Sentence]:
         verbalized_labels = []
-        for label, idx in label_dictionary.item2idx.items():
-            label = label.decode("utf-8")
+        for byte_label, idx in label_dictionary.item2idx.items():
+            str_label = byte_label.decode("utf-8")
             if label_dictionary.span_labels:
-                if label == "O":
+                if str_label == "O":
                     verbalized_labels.append("outside")
-                elif label.startswith("B-"):
-                    verbalized_labels.append("begin " + label.split("-")[1])
-                elif label.startswith("I-"):
-                    verbalized_labels.append("inside " + label.split("-")[1])
-                elif label.startswith("E-"):
-                    verbalized_labels.append("ending " + label.split("-")[1])
-                elif label.startswith("S-"):
-                    verbalized_labels.append("single " + label.split("-")[1])
+                elif str_label.startswith("B-"):
+                    verbalized_labels.append("begin " + str_label.split("-")[1])
+                elif str_label.startswith("I-"):
+                    verbalized_labels.append("inside " + str_label.split("-")[1])
+                elif str_label.startswith("E-"):
+                    verbalized_labels.append("ending " + str_label.split("-")[1])
+                elif str_label.startswith("S-"):
+                    verbalized_labels.append("single " + str_label.split("-")[1])
             else:
-                verbalized_labels.append(label)
+                verbalized_labels.append(str_label)
         return list(map(Sentence, verbalized_labels))
 
-    def forward(self, inputs: torch.tensor):
+    def forward(self, inputs):
         self.label_encoder.embed(self.verbalized_labels)
         label_tensor = torch.stack([label.get_embedding() for label in self.verbalized_labels])
         store_embeddings(self.verbalized_labels, "none")
