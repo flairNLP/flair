@@ -346,10 +346,7 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
                             if line_list[7] not in ["_", "NIL"]:  # line has wikidata link
                                 wikiname = qid_wikiname_dict[line_list[7]]
 
-                                if wikiname != "O":
-                                    annotation = line_list[1][:2] + wikiname
-                                else:  # no entry in chosen language
-                                    annotation = "O"
+                                annotation = line_list[1][:2] + wikiname if wikiname != "O" else "O"
 
                             else:
                                 annotation = "O"
@@ -697,19 +694,16 @@ class NEL_ENGLISH_IITB(ColumnCorpus):
                                 if len(labels) == 0:  # no entity
                                     write.write(token.text + "\tO\n")
 
-                                elif len(labels) == 1:  # annotation from one annotator
+                                elif len(labels) == 1 or labels[0].value == labels[1].value:
+                                    # annotation from one annotator or two agreeing annotators
                                     write.write(token.text + "\t" + labels[0].value + "\n")
 
-                                else:  # annotations from two annotators
-                                    if labels[0].value == labels[1].value:  # annotators agree
+                                else:  # annotators disagree: ignore or arbitrarily take first annotation
+                                    if ignore_disagreements:
+                                        write.write(token.text + "\tO\n")
+
+                                    else:
                                         write.write(token.text + "\t" + labels[0].value + "\n")
-
-                                    else:  # annotators disagree: ignore or arbitrarily take first annotation
-                                        if ignore_disagreements:
-                                            write.write(token.text + "\tO\n")
-
-                                        else:
-                                            write.write(token.text + "\t" + labels[0].value + "\n")
 
                             write.write("\n")  # empty line after each sentence
 
@@ -887,7 +881,7 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
                         if comm_key in {"en5rf4c", "es3ia8j", "es3lrmw"}:
                             if comm_key == "en5rf4c":
                                 self.parsed_row = (r.split("\t") for r in self.curr_row[4].split("\n"))
-                                self.curr_comm = next(self.parsed_row)  # type: ignore
+                                self.curr_comm = next(self.parsed_row)  # type: ignore  # noqa: PGH003
                             self._fill_curr_comment(fix_flag=True)
                         # In case we are dealing with properly parsed rows, proceed with a regular parsing procedure
                         else:
@@ -1124,39 +1118,37 @@ def from_ufsac_to_tsv(
         else:  # for all other datasets splitting at '_' is always sensible
             return span.split("_")
 
-    txt_out = open(file=conll_file, mode="w", encoding=encoding)
-    import xml.etree.ElementTree as ET
+    with Path(conll_file).open(mode="w", encoding=encoding) as txt_out:
+        import xml.etree.ElementTree as ET
 
-    tree = ET.parse(xml_file)
-    corpus = tree.getroot()
+        tree = ET.parse(xml_file)
+        corpus = tree.getroot()
 
-    number_of_docs = len(corpus.findall("document"))
+        number_of_docs = len(corpus.findall("document"))
 
-    fields = ["surface_form", "lemma", "pos", "wn30_key"]
-    for document in corpus:
-        # Docstart
-        if number_of_docs > 1:
-            txt_out.write("-DOCSTART-\n\n")
+        fields = ["surface_form", "lemma", "pos", "wn30_key"]
+        for document in corpus:
+            # Docstart
+            if number_of_docs > 1:
+                txt_out.write("-DOCSTART-\n\n")
 
-        for paragraph in document:
-            for sentence in paragraph:
-                for word in sentence:
-                    dictionary = word.attrib
-                    fields_of_word = [word.attrib[field] if (field in dictionary) else "O" for field in fields]
+            for paragraph in document:
+                for sentence in paragraph:
+                    for word in sentence:
+                        dictionary = word.attrib
+                        fields_of_word = [word.attrib[field] if (field in dictionary) else "O" for field in fields]
 
-                    chunks = split_span(fields_of_word, datasetname)
+                        chunks = split_span(fields_of_word, datasetname)
 
-                    txt_out.write(make_line(chunks[0], "B-", fields_of_word[1:]))
+                        txt_out.write(make_line(chunks[0], "B-", fields_of_word[1:]))
 
-                    # if there is more than one word in the chunk we write each in a separate line
-                    for chunk in chunks[1:]:
-                        # print(chunks)
-                        txt_out.write(make_line(chunk, "I-", fields_of_word[1:]))
+                        # if there is more than one word in the chunk we write each in a separate line
+                        for chunk in chunks[1:]:
+                            # print(chunks)
+                            txt_out.write(make_line(chunk, "I-", fields_of_word[1:]))
 
-                # empty line after each sentence
-                txt_out.write("\n")
-
-    txt_out.close()
+                    # empty line after each sentence
+                    txt_out.write("\n")
 
 
 def determine_tsv_file(filename: str, data_folder: Path, cut_multisense: bool = True):

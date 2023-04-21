@@ -31,7 +31,7 @@ class ImageEmbeddings(Embeddings[Image]):
 
     def to_params(self) -> Dict[str, Any]:
         # legacy pickle-like saving for image embeddings, as implementation details are not obvious
-        return self.__getstate__()  # type: ignore
+        return self.__getstate__()  # type: ignore[operator]
 
     @classmethod
     def from_params(cls, params: Dict[str, Any]) -> "Embeddings":

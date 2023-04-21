@@ -73,7 +73,7 @@ class Embeddings(torch.nn.Module, Generic[DT]):
     @staticmethod
     def get_instance_parameters(locals: dict) -> dict:
         class_definition = locals.get("__class__")
-        instance_parameter_names = set(inspect.signature(class_definition.__init__).parameters)  # type: ignore
+        instance_parameter_names = set(inspect.signature(class_definition.__init__).parameters)  # type: ignore[misc]
         instance_parameter_names.remove("self")
         instance_parameter_names.add("__class__")
         instance_parameters = {

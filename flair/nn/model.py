@@ -186,7 +186,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             param_out += f"-- Flair version {self.model_card['flair_version']}\n"
             param_out += f"-- PyTorch version {self.model_card['pytorch_version']}\n"
             if "transformers_version" in self.model_card:
-                param_out += "-- Transformers version " f"{self.model_card['transformers_version']}\n"
+                param_out += f"-- Transformers version {self.model_card['transformers_version']}\n"
             param_out += "------------------------------------\n"
 
             param_out += "------- Training Parameters: -------\n"

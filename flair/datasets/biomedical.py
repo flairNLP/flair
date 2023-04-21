@@ -284,7 +284,8 @@ def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNer
     documents = {}
     entities_per_document = defaultdict(list)
     for text_file in text_files:
-        document_text = open(str(text_file), encoding="utf8").read().strip()
+        with Path(text_file).open(encoding="utf-8") as fin:
+            document_text = fin.read().strip()
         document_id = text_file.stem
 
         for suffix in ann_file_suffixes:
@@ -1192,44 +1193,42 @@ class KaewphanCorpusHelper:
 
     @staticmethod
     def prepare_and_save_dataset(nersuite_folder: Path, output_file: Path):
-        writer = open(str(output_file), "w", encoding="utf8")
-        out_newline = False
+        with output_file.open("w", encoding="utf-8") as writer:
+            out_newline = False
 
-        for file in os.listdir(str(nersuite_folder)):
-            if not file.endswith(".nersuite"):
-                continue
-
-            annotations = []
-            with open(os.path.join(str(nersuite_folder), file), encoding="utf8") as reader:
-                for line in reader.readlines():
-                    columns = line.split("\t")
-                    annotations.append(columns[:4])
-
-            num_annotations = len(annotations)
-            for i, annotation in enumerate(annotations):
-                if len(annotation) == 1:
-                    assert annotation[0] == "\n"
-                    if not out_newline:
-                        writer.write("\n")
-                    out_newline = True
+            for file in os.listdir(str(nersuite_folder)):
+                if not file.endswith(".nersuite"):
                     continue
 
-                has_whitespace = "+"
+                annotations = []
+                with open(os.path.join(str(nersuite_folder), file), encoding="utf8") as reader:
+                    for line in reader.readlines():
+                        columns = line.split("\t")
+                        annotations.append(columns[:4])
 
-                next_annotation = (
-                    annotations[i + 1] if (i + 1) < num_annotations and len(annotations[i + 1]) > 1 else None
-                )
-                if next_annotation and next_annotation[1] == annotation[2]:
-                    has_whitespace = "-"
+                num_annotations = len(annotations)
+                for i, annotation in enumerate(annotations):
+                    if len(annotation) == 1:
+                        assert annotation[0] == "\n"
+                        if not out_newline:
+                            writer.write("\n")
+                        out_newline = True
+                        continue
 
-                writer.write(" ".join([annotation[3], annotation[0], has_whitespace]) + "\n")
-                out_newline = False
+                    has_whitespace = "+"
 
-            if not out_newline:
-                writer.write("\n")
-                out_newline = True
+                    next_annotation = (
+                        annotations[i + 1] if (i + 1) < num_annotations and len(annotations[i + 1]) > 1 else None
+                    )
+                    if next_annotation and next_annotation[1] == annotation[2]:
+                        has_whitespace = "-"
 
-        writer.close()
+                    writer.write(" ".join([annotation[3], annotation[0], has_whitespace]) + "\n")
+                    out_newline = False
+
+                if not out_newline:
+                    writer.write("\n")
+                    out_newline = True
 
     @staticmethod
     def download_gellus_dataset(data_folder: Path):
@@ -2195,13 +2194,12 @@ class NCBI_DISEASE(ColumnCorpus):
         patch_lines = {
             3249: '10923035\t711\t761\tgeneralized epilepsy and febrile seizures " plus "\tSpecificDisease\tD004829+D003294\n'
         }
-        with open(str(orig_train_file), encoding="utf8") as input:
-            with open(str(patched_file), "w", encoding="utf8") as output:
-                line_no = 1
+        with orig_train_file.open(encoding="utf-8") as input, patched_file.open("w", encoding="utf-8") as output:
+            line_no = 1
 
-                for line in input:
-                    output.write(patch_lines[line_no] if line_no in patch_lines else line)
-                    line_no += 1
+            for line in input:
+                output.write(patch_lines[line_no] if line_no in patch_lines else line)
+                line_no += 1
 
     @staticmethod
     def parse_input_file(input_file: Path):
@@ -4950,7 +4948,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
             dataset_name = dataset_name.split("/")[-1]
             dataset_name = dataset_name.split(".")[0]
         elif not dataset_name.startswith("bigbio/"):
-            full_dataset_name = "bigbio" + "/" + dataset_name
+            full_dataset_name = "bigbio/" + dataset_name
         else:
             full_dataset_name = dataset_name
             dataset_name = dataset_name.replace("bigbio/", "")

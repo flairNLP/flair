@@ -25,7 +25,8 @@ class FeideggerCorpus(Corpus):
         json_local_path = cached_path(json_link, Path("datasets") / dataset)
 
         # cache Feidegger images
-        dataset_info = json.load(open(json_local_path))
+        with json_local_path.open(encoding="utf-8") as fin:
+            dataset_info = json.load(fin)
         images_cache_folder = os.path.join(os.path.dirname(json_local_path), "images")
         if not os.path.isdir(images_cache_folder):
             os.mkdir(images_cache_folder)

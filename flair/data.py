@@ -130,8 +130,8 @@ class Dictionary:
             return True
         return any(item.startswith(("B-", "S-", "I-")) for item in self.get_items())
 
-    def start_stop_tags_are_set(self):
-        return bool({b"<START>", b"<STOP>"}.issubset(self.item2idx.keys()))
+    def start_stop_tags_are_set(self) -> bool:
+        return {b"<START>", b"<STOP>"}.issubset(self.item2idx.keys())
 
     def save(self, savefile):
         import pickle
@@ -150,11 +150,10 @@ class Dictionary:
     def load_from_file(cls, filename: Union[str, Path]):
         import pickle
 
-        f = open(filename, "rb")
-        mappings = pickle.load(f, encoding="latin1")
-        idx2item = mappings["idx2item"]
-        item2idx = mappings["item2idx"]
-        f.close()
+        with Path(filename).open("rb") as f:
+            mappings = pickle.load(f, encoding="latin1")
+            idx2item = mappings["idx2item"]
+            item2idx = mappings["item2idx"]
 
         # set 'add_unk' depending on whether <unk> is a key
         add_unk = b"<unk>" in idx2item
@@ -1567,7 +1566,10 @@ class Corpus(typing.Generic[T_co]):
                     total_label_count += 1
                     orig_label = label.value
                     # sample randomly from a label distribution according to the probabilities defined by the noise transition matrix
-                    new_label = np.random.choice(a=list(ntm_labels), p=noise_transition_matrix[orig_label])
+                    new_label = np.random.default_rng().choice(
+                        a=list(ntm_labels),
+                        p=noise_transition_matrix[orig_label],
+                    )
                     # replace the old label with the new one
                     label.data_point.set_label(label_type, new_label)
                     # keep track of the old (clean) label using another label type category
@@ -1592,7 +1594,7 @@ class Corpus(typing.Generic[T_co]):
                     prob_dist = [other_label_p] * len(labels)
                     prob_dist[labels.index(orig_label)] = orig_label_p
                     # sample randomly from a label distribution according to the probabilities defined by the desired noise share
-                    new_label = np.random.choice(a=labels, p=prob_dist)
+                    new_label = np.random.default_rng().choice(a=labels, p=prob_dist)
                     # replace the old label with the new one
                     label.data_point.set_label(label_type, new_label)
                     # keep track of the old (clean) label using another label type category
@@ -1791,13 +1793,13 @@ def get_spans_from_bio(bioes_tags: List[str], bioes_scores=None) -> List[typing.
         # does this prediction start a new span?
         starts_new_span = False
 
-        # begin and single tags start new spans
-        if bioes_tag[:2] in {"B-", "S-"}:
+        if bioes_tag[:2] in {"B-", "S-"} or (
+            in_span and previous_tag[2:] != bioes_tag[2:] and (bioes_tag[:2] == "I-" or previous_tag[2:] == "S-")
+        ):
+            # B- and S- always start new spans
+            # if the predicted class changes, I- starts a new span
+            # if the predicted class changes and S- was previous tag, start a new span
             starts_new_span = True
-        elif in_span and previous_tag[2:] != bioes_tag[2:]:  # predicted class changed
-            # If the current tag is I- or the previous tag was S-, we start a new span
-            if bioes_tag[:2] == "I-" or previous_tag[2:] == "S-":
-                starts_new_span = True
 
         # if an existing span is ended (either by reaching O or starting a new span)
         if (starts_new_span or not in_span) and len(current_span) > 0:

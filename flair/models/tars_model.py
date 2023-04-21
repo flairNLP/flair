@@ -107,7 +107,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
 
             if len(plausible_labels) > 0:
                 num_samples = min(self.num_negative_labels_to_sample, len(plausible_labels))
-                sampled_negative_labels = np.random.choice(
+                sampled_negative_labels = np.random.default_rng().choice(
                     plausible_labels,
                     num_samples,
                     replace=False,
@@ -225,7 +225,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         """Switches to a task which was previously added."""
         if task_name not in self._task_specific_attributes:
             log.error(
-                "Provided `%s` does not exist in the model. Consider calling " "`add_and_switch_to_new_task` first.",
+                "Provided `%s` does not exist in the model. Consider calling `add_and_switch_to_new_task` first.",
                 task_name,
             )
         else:
@@ -235,7 +235,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         if task_name in self._task_specific_attributes:
             if self._current_task == task_name:
                 log.error(
-                    "`%s` is the current task." " Switch to some other task before dropping this.",
+                    "`%s` is the current task. Switch to some other task before dropping this.",
                     task_name,
                 )
             else:

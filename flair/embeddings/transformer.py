@@ -147,7 +147,7 @@ def fill_mean_token_embeddings(
     token_lengths: torch.Tensor,
 ):
     for i in torch.arange(all_token_embeddings.shape[0]):
-        for _id in torch.arange(token_lengths[i]):  # type: ignore
+        for _id in torch.arange(token_lengths[i]):  # type: ignore[call-overload]
             all_token_embeddings[i, _id, :] = torch.nan_to_num(
                 sentence_hidden_states[i][word_ids[i] == _id].mean(dim=0)
             )
@@ -1286,7 +1286,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if self.token_embedding:
             assert word_ids is not None
             assert token_lengths is not None
-            all_token_embeddings = torch.zeros(  # type: ignore
+            all_token_embeddings = torch.zeros(  # type: ignore[call-overload]
                 word_ids.shape[0], token_lengths.max(), self.embedding_length_internal, device=flair.device
             )
             true_tensor = torch.ones_like(word_ids[:, :1], dtype=torch.bool)

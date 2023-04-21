@@ -408,7 +408,7 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
         )
         yield src_token_list[0]
 
-    def convert_to_conllu(self, source_data_folder, data_folder):
+    def convert_to_conllu(self, source_data_folder: Path, data_folder):
         source_filenames = [
             "train.txt",
             "dev.txt",
@@ -421,14 +421,15 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
         ]
 
         for source_filename, target_filename in zip(source_filenames, target_filenames):
-            with open(source_data_folder / source_filename) as source_file:
-                with open(data_folder / target_filename, mode="w", encoding="utf-8") as target_file:
-                    # write CoNLL-U Plus header
-                    target_file.write("# global.columns = id form ner\n")
+            with (source_data_folder / source_filename).open(encoding="utf-8") as source_file, (
+                data_folder / target_filename,
+            ).open("w", encoding="utf-8") as target_file:
+                # write CoNLL-U Plus header
+                target_file.write("# global.columns = id form ner\n")
 
-                    for src_token_list in self._parse_incr(source_file):
-                        token_list = self._src_token_list_to_token_list(src_token_list)
-                        target_file.write(token_list.serialize())
+                for src_token_list in self._parse_incr(source_file):
+                    token_list = self._src_token_list_to_token_list(src_token_list)
+                    target_file.write(token_list.serialize())
 
     def _bio_tags_to_spans(self, tags: List[str]) -> List[Tuple[int, int]]:
         spans = []

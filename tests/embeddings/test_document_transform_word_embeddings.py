@@ -26,13 +26,13 @@ class BaseDocumentsViaWordEmbeddingsTest(BaseEmbeddingsTest):
         assert self.name_field is not None
         kwargs = dict(self.default_args)
         kwargs.pop(self.name_field)
-        return self.embedding_cls(name, **kwargs)  # type: ignore
+        return self.embedding_cls(name, **kwargs)  # type: ignore[call-arg]
 
     def create_embedding_with_args(self, args: Dict[str, Any]):
         kwargs = dict(self.default_args)
         for k, v in args.items():
             kwargs[k] = v
-        return self.embedding_cls(self.base_embeddings, **kwargs)  # type: ignore
+        return self.embedding_cls(self.base_embeddings, **kwargs)  # type: ignore[call-arg]
 
 
 class TestDocumentLstmEmbeddings(BaseDocumentsViaWordEmbeddingsTest):

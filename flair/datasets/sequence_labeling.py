@@ -1147,11 +1147,9 @@ class ONTONOTES(MultiFileColumnCorpus):
         named_entities = span_labels[0]
         srl_frames = [(predicate, labels) for predicate, labels in zip(verbal_predicates, span_labels[1:])]
 
-        if all(parse_pieces):
-            # this would not be reached if parse_pieces contained None, hence the cast
-            parse_tree = "".join(cast(List[str], parse_pieces))
-        else:
-            parse_tree = None
+        # this would not be reached if parse_pieces contained None, hence the cast
+        parse_tree = "".join(cast(List[str], parse_pieces)) if all(parse_pieces) else None
+
         coref_span_tuples = {(cluster_id, span) for cluster_id, span_list in clusters.items() for span in span_list}
         return {
             "document_id": document_id,
@@ -2086,12 +2084,13 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
             answers = 0
 
             cached_path(f"{STACKOVERFLOW_NER_path}{file}.txt", Path("datasets") / dataset_name)
-            for line in open(data_folder / (file + ".txt"), encoding="utf-8"):
-                if line.startswith("Question_ID"):
-                    questions += 1
+            with (data_folder / (file + ".txt")).open(encoding="utf-8") as fin:
+                for line in fin:
+                    if line.startswith("Question_ID"):
+                        questions += 1
 
-                if line.startswith("Answer_to_Question_ID"):
-                    answers += 1
+                    if line.startswith("Answer_to_Question_ID"):
+                        answers += 1
             log.info(f"File {file} has {questions} questions and {answers} answers.")
 
         super().__init__(
@@ -2761,19 +2760,18 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
             train_len = round(num_lines * 0.8)
             test_len = round(num_lines * 0.1)
 
-            train = open(data_folder / "train.txt", "w")
-            test = open(data_folder / "test.txt", "w")
-            dev = open(data_folder / "dev.txt", "w")
-
-            k = 0
-            for line in file.readlines():
-                k += 1
-                if k <= train_len:
-                    train.write(line)
-                elif k > train_len and k <= (train_len + test_len):
-                    test.write(line)
-                elif k > (train_len + test_len) and k <= num_lines:
-                    dev.write(line)
+            with (data_folder / "train.txt").open("w", encoding="utf-8") as train, (data_folder / "test.txt").open(
+                "w", encoding="utf-8"
+            ) as test, (data_folder / "dev.txt").open("w", encoding="utf-8") as dev:
+                k = 0
+                for line in file.readlines():
+                    k += 1
+                    if k <= train_len:
+                        train.write(line)
+                    elif k > train_len and k <= (train_len + test_len):
+                        test.write(line)
+                    elif k > (train_len + test_len) and k <= num_lines:
+                        dev.write(line)
 
 
 class NER_HUNGARIAN(ColumnCorpus):

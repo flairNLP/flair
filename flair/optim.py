@@ -3,7 +3,7 @@ import logging
 import torch
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau, _LRScheduler
-from torch.optim.optimizer import required  # type: ignore
+from torch.optim.optimizer import required  # type: ignore[attr-defined]
 
 log = logging.getLogger("flair")
 

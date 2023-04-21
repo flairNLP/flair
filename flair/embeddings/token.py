@@ -517,7 +517,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             character_embeddings = self.char_embedding(chars).transpose(0, 1)
 
-            packed = torch.nn.utils.rnn.pack_padded_sequence(character_embeddings, chars2_length)  # type: ignore
+            packed = torch.nn.utils.rnn.pack_padded_sequence(character_embeddings, chars2_length)  # type: ignore[arg-type]
 
             lstm_out, self.hidden = self.char_rnn(packed)
 
@@ -1365,7 +1365,8 @@ class BPEmbSerializable(BPEmb):
     def __getstate__(self):
         state = self.__dict__.copy()
         # save the sentence piece model as binary file (not as path which may change)
-        state["spm_model_binary"] = open(self.model_file, mode="rb").read()
+        with self.model_file.open(mode="rb") as fin:
+            state["spm_model_binary"] = fin.read()
         state["spm"] = None
         return state
 
@@ -1419,7 +1420,7 @@ class BytePairEmbeddings(TokenEmbeddings):
             assert (
                 model_file_path is not None and embedding_file_path is not None
             ), "Need to specify model_file_path and embedding_file_path if no language is given in BytePairEmbeddings(...)"
-            dim = None  # type: ignore
+            dim = None  # type: ignore[assignment]
 
         self.embedder = BPEmbSerializable(
             lang=language,

@@ -72,7 +72,7 @@ class TextDataset(Dataset):
             )
             if self.random_case_flip:
                 text_lines = map(self.random_casechange, text_lines)
-            lines = list(map(list if self.split_on_char else str.split, text_lines))  # type: ignore
+            lines = [list(line) if self.split_on_char else line.split() for line in text_lines]
 
         log.info(f"read text file with {len(lines)} lines")
 

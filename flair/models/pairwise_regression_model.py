@@ -279,7 +279,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
             metric = MetricRegression("Evaluation")
 
             if out_path is not None:
-                out_file = open(out_path, "w", encoding="utf-8")
+                out_file = open(out_path, "w", encoding="utf-8")  # noqa: SIM115
 
             total_count = 0
 

@@ -340,7 +340,7 @@ def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
     base_path.mkdir(parents=True, exist_ok=True)
 
     file = base_path / file_name
-    open(file, "w", encoding="utf-8").close()
+    file.touch(exist_ok=True)
     return file
 
 

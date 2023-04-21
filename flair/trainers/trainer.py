@@ -518,7 +518,7 @@ class ModelTrainer(Pluggable):
                 # - SchedulerPlugin -> load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
                 # - LossFilePlugin -> get the current epoch for loss file logging
                 self.dispatch("before_training_epoch", epoch=epoch)
-                self.model.model_card["training_parameters"]["epoch"] = epoch  # type: ignore
+                self.model.model_card["training_parameters"]["epoch"] = epoch  # type: ignore[index]
 
                 lr_info, momentum_info = self._get_current_lr_and_momentum(epoch)
 

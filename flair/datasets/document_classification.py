@@ -529,9 +529,12 @@ class CSVClassificationDataset(FlairDataset):
 
         for column in self.column_name_map:
             column_value = row[column]
-            if self.column_name_map[column].startswith("label") and column_value:
-                if column_value != self.no_class_label:
-                    data_point.add_label(self.label_type, column_value)
+            if (
+                self.column_name_map[column].startswith("label")
+                and column_value
+                and column_value != self.no_class_label
+            ):
+                data_point.add_label(self.label_type, column_value)
 
         return data_point
 
@@ -979,14 +982,15 @@ class STACKOVERFLOW(ClassificationCorpus):
                     label_list.append(labels[int(line) - 1])
 
             # handle data file
-            with open(data_path / "original" / "title_StackOverflow.txt", encoding="latin1") as open_fp:
-                with open(data_folder / "train.txt", "w", encoding="utf-8") as write_fp:
-                    for idx, line in enumerate(open_fp):
-                        line = line.rstrip()
+            with (data_path / "original" / "title_StackOverflow.txt").open(encoding="latin1") as open_fp, (
+                data_folder / "train.txt"
+            ).open("w", encoding="utf-8") as write_fp:
+                for idx, line in enumerate(open_fp):
+                    line = line.rstrip()
 
-                        # Create flair compatible labels
-                        label = label_list[idx]
-                        write_fp.write(f"__label__{label} {line}\n")
+                    # Create flair compatible labels
+                    label = label_list[idx]
+                    write_fp.write(f"__label__{label} {line}\n")
 
         super().__init__(data_folder, label_type="class", tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs)
 
@@ -1045,14 +1049,15 @@ class SENTIMENT_140(ClassificationCorpus):
                     train_file.write(f"__label__{label} {text}\n")
 
             # create test.txt file from CSV
-            with open(data_folder / "test.txt", "w") as train_file:
-                with open(senteval_folder / "testdata.manual.2009.06.14.csv", encoding="latin-1") as csv_train:
-                    csv_reader = csv.reader(csv_train)
+            with (data_folder / "test.txt").open("w", encoding="utf-8") as train_file, (
+                senteval_folder / "testdata.manual.2009.06.14.csv"
+            ).open(encoding="latin-1") as csv_train:
+                csv_reader = csv.reader(csv_train)
 
-                    for row in csv_reader:
-                        label = row[0]
-                        text = row[5]
-                        train_file.write(f"__label__{label} {text}\n")
+                for row in csv_reader:
+                    label = row[0]
+                    text = row[5]
+                    train_file.write(f"__label__{label} {text}\n")
 
         super().__init__(
             data_folder,
@@ -1366,10 +1371,11 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
 
             # convert to FastText format
             for split in ["train", "dev", "test"]:
-                with open(data_folder / f"{split}.txt", "w") as train_file:
-                    with open(data_folder / "raw" / f"stsa.fine.{split}", encoding="latin1") as file:
-                        for line in file:
-                            train_file.write(f"__label__{line[0]} {line[2:]}")
+                with (data_folder / f"{split}.txt").open("w", encoding="utf-8") as train_file, (
+                    data_folder / "raw" / f"stsa.fine.{split}"
+                ).open(encoding="latin1") as file:
+                    for line in file:
+                        train_file.write(f"__label__{line[0]} {line[2:]}")
 
         super().__init__(data_folder, tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs)
 
@@ -1628,20 +1634,21 @@ class GO_EMOTIONS(ClassificationCorpus):
             data_path = flair.cache_root / "datasets" / dataset_name / "raw"
             # create correctly formated txt files
             for name in ["train", "test", "dev"]:
-                with open(data_folder / (name + ".txt"), "w", encoding="utf-8") as txt_file:
-                    with open(data_path / (name + ".tsv"), encoding="utf-8") as tsv_file:
-                        lines = tsv_file.readlines()
-                        for line in lines:
-                            row = line.split("\t")
-                            text = row[0]
-                            # multiple labels are possible
-                            labels = row[1].split(",")
-                            label_string = ""
-                            for label in labels:
-                                label_string += "__label__"
-                                label_string += label
-                                label_string += " "
-                            txt_file.write(f"{label_string}{text}\n")
+                with (data_folder / (name + ".txt")).open("w", encoding="utf-8") as txt_file, (
+                    data_path / (name + ".tsv")
+                ).open(encoding="utf-8") as tsv_file:
+                    lines = tsv_file.readlines()
+                    for line in lines:
+                        row = line.split("\t")
+                        text = row[0]
+                        # multiple labels are possible
+                        labels = row[1].split(",")
+                        label_string = ""
+                        for label in labels:
+                            label_string += "__label__"
+                            label_string += label
+                            label_string += " "
+                        txt_file.write(f"{label_string}{text}\n")
 
         super().__init__(
             data_folder,
@@ -1689,21 +1696,22 @@ class TREC_50(ClassificationCorpus):
 
         if not data_file.is_file():
             for original_filename, new_filename in zip(original_filenames, new_filenames):
-                with open(data_folder / "original" / original_filename, encoding="latin1") as open_fp:
-                    with open(data_folder / new_filename, "w", encoding="utf-8") as write_fp:
-                        for line in open_fp:
-                            line = line.rstrip()
-                            fields = line.split()
-                            old_label = fields[0]
-                            question = " ".join(fields[1:])
+                with (data_folder / "original" / original_filename).open(encoding="latin1") as open_fp, (
+                    data_folder / new_filename
+                ).open("w", encoding="utf-8") as write_fp:
+                    for line in open_fp:
+                        line = line.rstrip()
+                        fields = line.split()
+                        old_label = fields[0]
+                        question = " ".join(fields[1:])
 
-                            # Create flair compatible labels
-                            # TREC-6 : NUM:dist -> __label__NUM
-                            # TREC-50: NUM:dist -> __label__NUM:dist
-                            new_label = "__label__"
-                            new_label += old_label
+                        # Create flair compatible labels
+                        # TREC-6 : NUM:dist -> __label__NUM
+                        # TREC-50: NUM:dist -> __label__NUM:dist
+                        new_label = "__label__"
+                        new_label += old_label
 
-                            write_fp.write(f"{new_label} {question}\n")
+                        write_fp.write(f"{new_label} {question}\n")
 
         super().__init__(data_folder, tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs)
 
@@ -1744,21 +1752,22 @@ class TREC_6(ClassificationCorpus):
 
         if not data_file.is_file():
             for original_filename, new_filename in zip(original_filenames, new_filenames):
-                with open(data_folder / "original" / original_filename, encoding="latin1") as open_fp:
-                    with open(data_folder / new_filename, "w", encoding="utf-8") as write_fp:
-                        for line in open_fp:
-                            line = line.rstrip()
-                            fields = line.split()
-                            old_label = fields[0]
-                            question = " ".join(fields[1:])
+                with (data_folder / "original" / original_filename).open(encoding="latin1") as open_fp, (
+                    data_folder / new_filename
+                ).open("w", encoding="utf-8") as write_fp:
+                    for line in open_fp:
+                        line = line.rstrip()
+                        fields = line.split()
+                        old_label = fields[0]
+                        question = " ".join(fields[1:])
 
-                            # Create flair compatible labels
-                            # TREC-6 : NUM:dist -> __label__NUM
-                            # TREC-50: NUM:dist -> __label__NUM:dist
-                            new_label = "__label__"
-                            new_label += old_label.split(":")[0]
+                        # Create flair compatible labels
+                        # TREC-6 : NUM:dist -> __label__NUM
+                        # TREC-50: NUM:dist -> __label__NUM:dist
+                        new_label = "__label__"
+                        new_label += old_label.split(":")[0]
 
-                            write_fp.write(f"{new_label} {question}\n")
+                        write_fp.write(f"{new_label} {question}\n")
 
         super().__init__(
             data_folder, label_type="question_class", tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs
@@ -1822,14 +1831,12 @@ class YAHOO_ANSWERS(ClassificationCorpus):
             tar.extractall(original, members=members)
 
             for name in ["train", "test"]:
-                file = open(original / "yahoo_answers_csv" / (name + ".csv"))
-                reader = csv.reader(file)
-                writer = open(data_folder / (name + ".txt"), "w", encoding="utf-8")
-                for row in reader:
-                    writer.write("__label__" + label_map[row[0]] + " " + row[1] + "\n")
-
-                file.close()
-                writer.close()
+                with (original / "yahoo_answers_csv" / (name + ".csv")).open(encoding="utf-8") as file, (
+                    data_folder / (name + ".txt")
+                ).open("w", encoding="utf-8") as writer:
+                    reader = csv.reader(file)
+                    for row in reader:
+                        writer.write("__label__" + label_map[row[0]] + " " + row[1] + "\n")
 
         super().__init__(
             data_folder, label_type="question_type", tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs
@@ -1888,15 +1895,16 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
 
         if not data_file.is_file():
             for original_filename, new_filename in zip(original_filenames, new_filenames):
-                with open(data_folder / "original" / original_filename, encoding="utf-8") as open_fp:
-                    with open(data_folder / task_setting / new_filename, "w", encoding="utf-8") as write_fp:
-                        for line in open_fp:
-                            line = line.rstrip()
-                            fields = line.split("\t")
-                            tweet = fields[0]
-                            old_label = fields[2] if task_setting == "fine_grained" else fields[1]
-                            new_label = "__label__" + old_label
-                            write_fp.write(f"{new_label} {tweet}\n")
+                with (data_folder / "original" / original_filename).open(encoding="utf-8") as open_fp, (
+                    data_folder / task_setting / new_filename
+                ).open("w", encoding="utf-8") as write_fp:
+                    for line in open_fp:
+                        line = line.rstrip()
+                        fields = line.split("\t")
+                        tweet = fields[0]
+                        old_label = fields[2] if task_setting == "fine_grained" else fields[1]
+                        new_label = "__label__" + old_label
+                        write_fp.write(f"{new_label} {tweet}\n")
 
         super().__init__(data_folder=task_folder, tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs)
 

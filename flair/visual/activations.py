@@ -57,7 +57,7 @@ class Highlighter:
         return str_
 
     def highlight_selection(self, activations, text, file_="resources/data/highlight.html", n=10):
-        ix = numpy.random.choice(activations.shape[1], size=n)
+        ix = numpy.random.default_rng().choice(activations.shape[1], size=n)
 
         rendered = ""
 

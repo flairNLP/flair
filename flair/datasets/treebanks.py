@@ -144,13 +144,8 @@ class UniversalDependenciesDataset(FlairDataset):
                 if len(tokens) > 0:
                     break
 
-            # comments
-            elif line.startswith("#"):
-                line = file.readline()
-                continue
-
-            # ellipsis
-            elif "." in fields[0]:
+            # comments or ellipsis
+            elif line.startswith("#") or "." in fields[0]:
                 line = file.readline()
                 continue
 

@@ -158,7 +158,7 @@ def test_create_sentence_using_japanese_tokenizer():
     assert sentence.tokens[4].text == "好き"
 
 
-@pytest.mark.skip(reason="SciSpacyTokenizer need optional requirements, " "so we skip the test by default")
+@pytest.mark.skip(reason="SciSpacyTokenizer need optional requirements, so we skip the test by default")
 def test_create_sentence_using_scispacy_tokenizer():
     sentence: Sentence = Sentence(
         "Spinal and bulbar muscular atrophy (SBMA) is an inherited motor neuron",
@@ -202,7 +202,7 @@ def test_create_sentence_using_scispacy_tokenizer():
 
 def test_split_text_segtok():
     segtok_splitter = SegtokSentenceSplitter()
-    sentences = segtok_splitter.split("I love Berlin. " "Berlin is a great city.")
+    sentences = segtok_splitter.split("I love Berlin. Berlin is a great city.")
     assert len(sentences) == 2
     assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 4
@@ -210,7 +210,7 @@ def test_split_text_segtok():
     assert len(sentences[1].tokens) == 6
 
     segtok_splitter = SegtokSentenceSplitter(tokenizer=TokenizerWrapper(no_op_tokenizer))
-    sentences = segtok_splitter.split("I love Berlin. " "Berlin is a great city.")
+    sentences = segtok_splitter.split("I love Berlin. Berlin is a great city.")
     assert len(sentences) == 2
     assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 1
@@ -287,11 +287,11 @@ def test_split_text_on_newline():
     assert len(sentences) == 2
 
 
-@pytest.mark.skip(reason="SpacySentenceSplitter need optional requirements, " "so we skip the test by default")
+@pytest.mark.skip(reason="SpacySentenceSplitter need optional requirements, so we skip the test by default")
 def test_split_text_spacy():
     spacy_splitter = SpacySentenceSplitter("en_core_sci_sm")
 
-    sentences = spacy_splitter.split("This a sentence. " "And here is another one.")
+    sentences = spacy_splitter.split("This a sentence. And here is another one.")
     assert len(sentences) == 2
     assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 4
@@ -306,7 +306,7 @@ def test_split_text_spacy():
     assert len(sentences[1].tokens) == 7
 
     spacy_splitter = SpacySentenceSplitter("en_core_sci_sm", tokenizer=TokenizerWrapper(no_op_tokenizer))
-    sentences = spacy_splitter.split("This a sentence. " "And here is another one.")
+    sentences = spacy_splitter.split("This a sentence. And here is another one.")
     assert len(sentences) == 2
     assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 1
@@ -314,7 +314,7 @@ def test_split_text_spacy():
     assert len(sentences[1].tokens) == 1
 
 
-@pytest.mark.skip(reason="SciSpacySentenceSplitter need optional requirements, " "so we skip the test by default")
+@pytest.mark.skip(reason="SciSpacySentenceSplitter need optional requirements, so we skip the test by default")
 def test_split_text_scispacy():
     scispacy_splitter = SciSpacySentenceSplitter()
     sentences = scispacy_splitter.split("VF inhibits something. ACE-dependent (GH+) issuses too.")
@@ -370,25 +370,25 @@ def test_print_sentence_plain(tasks_base_path):
     sentence = corpus.train[0]
     sentence.infer_space_after()
     assert (
-        'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in '
+        sentence.to_tokenized_string() == 'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in '
         "einer Weise aufgetreten , "
-        'die alles andere als überzeugend war " .' == sentence.to_tokenized_string()
+        'die alles andere als überzeugend war " .'
     )
     assert (
-        'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer '
+        sentence.to_plain_string() == 'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer '
         "Weise aufgetreten, die "
-        'alles andere als überzeugend war".' == sentence.to_plain_string()
+        'alles andere als überzeugend war".'
     )
 
     sentence = corpus.train[1]
     sentence.infer_space_after()
     assert (
-        "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
-        "Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ." == sentence.to_tokenized_string()
+        sentence.to_tokenized_string() == "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
+        "Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
     )
     assert (
-        "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
-        "Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf." == sentence.to_plain_string()
+        sentence.to_plain_string() == "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
+        "Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf."
     )
 
 
