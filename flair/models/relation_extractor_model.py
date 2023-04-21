@@ -23,16 +23,15 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         train_on_gold_pairs_only: bool = False,
         **classifierargs,
     ):
-        """
-        Initializes a RelationClassifier
+        """Initializes a RelationClassifier.
+
         :param document_embeddings: embeddings used to embed each data point
         :param label_dictionary: dictionary of labels you want to predict
         :param beta: Parameter for F-beta score for evaluation and training annealing
-        :param loss_weights: Dictionary of weights for labels for the loss function
         :param train_on_gold_pairs_only: Set true to not train to predict no relation.
-        (if any label's weight is unspecified it will default to 1.0)
+        :param loss_weights: Dictionary of weights for labels for the loss function
+            (if any label's weight is unspecified it will default to 1.0)
         """
-
         # pooling operation to get embeddings for entites
         self.pooling_operation = pooling_operation
         relation_representation_length = 2 * embeddings.embedding_length

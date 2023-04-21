@@ -2,8 +2,9 @@ import torch
 
 
 class LockedDropout(torch.nn.Module):
-    """
-    Implementation of locked (or variational) dropout. Randomly drops out entire parameters in embedding space.
+    """Implementation of locked (or variational) dropout.
+
+    Randomly drops out entire parameters in embedding space.
     """
 
     def __init__(self, dropout_rate=0.5, batch_first=True, inplace=False):
@@ -31,8 +32,9 @@ class LockedDropout(torch.nn.Module):
 
 
 class WordDropout(torch.nn.Module):
-    """
-    Implementation of word dropout. Randomly drops out entire words (or characters) in embedding space.
+    """Implementation of word dropout.
+
+    Randomly drops out entire words (or characters) in embedding space.
     """
 
     def __init__(self, dropout_rate=0.05, inplace=False):

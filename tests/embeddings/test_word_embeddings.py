@@ -25,8 +25,8 @@ class TestNILCEmbeddings(BaseEmbeddingsTest):
     embedding_cls = NILCEmbeddings
     is_token_embedding = True
     is_document_embedding = False
-    default_args = dict(embeddings="glove")
-    valid_args = [dict(embeddings="fasttext", model="cbow")]
+    default_args = dict(embeddings="fasttext", model="cbow", size=50)
+    valid_args = [dict(embeddings="glove")]
 
     name_field = "embeddings"
     invalid_names = ["other", "not/existing/path/to/embeddings"]

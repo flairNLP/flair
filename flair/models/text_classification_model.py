@@ -13,8 +13,8 @@ log = logging.getLogger("flair")
 
 
 class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
-    """
-    Text Classification Model
+    """Text Classification Model.
+
     The model takes word embeddings, puts them into an RNN to obtain a text
     representation, and puts the text representation in the end into a linear
     layer to get the actual class label. The model can handle single and multi
@@ -27,8 +27,8 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         label_type: str,
         **classifierargs,
     ):
-        """
-        Initializes a TextClassifier
+        """Initializes a TextClassifier.
+
         :param embeddings: embeddings used to embed each data point
         :param label_dictionary: dictionary of labels you want to predict
         :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
@@ -38,7 +38,6 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         :param loss_weights: Dictionary of weights for labels for the loss function
         (if any label's weight is unspecified it will default to 1.0)
         """
-
         super(TextClassifier, self).__init__(
             **classifierargs,
             embeddings=embeddings,

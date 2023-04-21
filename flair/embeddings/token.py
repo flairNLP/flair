@@ -38,8 +38,8 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
         allow_long_sentences: bool = True,
         **kwargs,
     ):
-        """
-        Bidirectional transformer embeddings of words from various transformer architectures.
+        """Bidirectional transformer embeddings of words from various transformer architectures.
+
         :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
         options)
         :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
@@ -118,9 +118,12 @@ class StackedEmbeddings(TokenEmbeddings):
         return f'StackedEmbeddings [{",".join([str(e) for e in self.embeddings])}]'
 
     def get_names(self) -> List[str]:
-        """Returns a list of embedding names. In most cases, it is just a list with one item, namely the name of
-        this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
-        Then, the list contains the names of all embeddings in the stack."""
+        """Returns a list of embedding names.
+
+        In most cases, it is just a list with one item, namely the name of this embedding. But in some cases, the
+        embedding is made up by different embeddings (StackedEmbedding).
+        Then, the list contains the names of all embeddings in the stack.
+        """
         # make compatible with serialized models
         if "__names" not in self.__dict__:
             self.__names = [name for embedding in self.embeddings for name in embedding.get_names()]
@@ -158,13 +161,13 @@ class WordEmbeddings(TokenEmbeddings):
         embedding_length: Optional[int] = None,
         name: Optional[str] = None,
     ):
-        """
-        Initializes classic word embeddings. Constructor downloads required files if not there.
+        """Initializes classic word embeddings.
+
+        Constructor downloads required files if not there.
         :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
         If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
         set stable=True to use the stable embeddings as described in https://arxiv.org/abs/2110.02861
         """
-
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         if fine_tune and force_cpu and flair.device.type != "cpu":
@@ -444,8 +447,10 @@ class CharacterEmbeddings(TokenEmbeddings):
         char_embedding_dim: int = 25,
         hidden_size_char: int = 25,
     ):
-        """Uses the default character dictionary if none provided."""
+        """Instantiates a bidirectional lstm layer toi encode words by their character representation.
 
+        Uses the default character dictionary if none provided.
+        """
         super().__init__()
         self.name = "Char"
         self.static_embeddings = False
@@ -561,8 +566,8 @@ class FlairEmbeddings(TokenEmbeddings):
         name: Optional[str] = None,
         has_decoder: bool = False,
     ):
-        """
-        initializes contextual string embeddings using a character-level language model.
+        """Initializes contextual string embeddings using a character-level language model.
+
         :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
                 'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward',
                 etc (see https://github.com/flairNLP/flair/blob/master/resources/docs/embeddings/FLAIR_EMBEDDINGS.md)
@@ -1007,12 +1012,12 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
 @register_embeddings
 class FastTextEmbeddings(TokenEmbeddings):
-    """FastText Embeddings with oov functionality"""
+    """FastText Embeddings with oov functionality."""
 
     def __init__(self, embeddings: str, use_local: bool = True, field: str = None, name: Optional[str] = None):
-        """
-        Initializes fasttext word embeddings. Constructor downloads required embedding file and stores in cache
-        if use_local is False.
+        """Initializes fasttext word embeddings.
+
+        Constructor downloads required embedding file and stores in cache if use_local is False.
 
         :param embeddings: path to your embeddings '.bin' file
         :param use_local: set this to False if you are using embeddings from a remote source
@@ -1103,8 +1108,8 @@ class OneHotEmbeddings(TokenEmbeddings):
         embedding_length: int = 300,
         stable: bool = False,
     ):
-        """
-        Initializes one-hot encoded word embeddings and a trainable embedding layer
+        """Initializes one-hot encoded word embeddings and a trainable embedding layer.
+
         :param vocab_dictionary: the vocabulary that will be encoded
         :param field: by default, the 'text' of tokens is embedded, but you can also embed tags such as 'pos'
         :param embedding_length: dimensionality of the trainable embedding layer
@@ -1398,8 +1403,9 @@ class BytePairEmbeddings(TokenEmbeddings):
         name: Optional[str] = None,
         **kwargs,
     ):
-        """
-        Initializes BP embeddings. Constructor downloads required files if not there.
+        """Initializes BP embeddings.
+
+        Constructor downloads required files if not there.
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
@@ -1484,14 +1490,15 @@ class BytePairEmbeddings(TokenEmbeddings):
 @register_embeddings
 class NILCEmbeddings(WordEmbeddings):
     def __init__(self, embeddings: str, model: str = "skip", size: int = 100):
-        """
-        Initializes portuguese classic word embeddings trained by NILC Lab (http://www.nilc.icmc.usp.br/embeddings).
+        """Initializes portuguese classic word embeddings trained by NILC Lab.
+
+        See: http://www.nilc.icmc.usp.br/embeddings
         Constructor downloads required files if not there.
+
         :param embeddings: one of: 'fasttext', 'glove', 'wang2vec' or 'word2vec'
         :param model: one of: 'skip' or 'cbow'. This is not applicable to glove.
         :param size: one of: 50, 100, 300, 600 or 1000.
         """
-
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         base_path = "http://143.107.183.175:22980/download.php?file=embeddings/"

@@ -82,7 +82,7 @@ class TestRelationClassifier(BaseModelTest):
         },
         allow_unk_tag=False,
     )
-    training_args = dict(max_epochs=25, learning_rate=4e-5, mini_batch_size=4)
+    training_args = dict(max_epochs=2, learning_rate=4e-4, mini_batch_size=4)
     finetune_instead_of_train = True
 
     @pytest.fixture
@@ -166,10 +166,10 @@ class TestRelationClassifier(BaseModelTest):
         split: Optional[Dataset],
         ground_truth: Set[Tuple[str, Tuple[str, ...]]],
     ) -> None:
-        """Ground truth is a set of tuples of (<Sentence Text>, <Relation Label Values>)"""
+        # Ground truth is a set of tuples of (<Sentence Text>, <Relation Label Values>)
         assert split is not None
 
-        data_loader = DataLoader(split, batch_size=1, num_workers=0)
+        data_loader = DataLoader(split, batch_size=1)
         assert all(isinstance(sentence, EncodedSentence) for sentence in map(itemgetter(0), data_loader))
         assert {
             (sentence.to_tokenized_string(), tuple(label.value for label in sentence.get_labels("relation")))

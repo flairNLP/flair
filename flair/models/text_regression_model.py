@@ -136,7 +136,6 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         out_path: Union[str, Path] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
@@ -146,7 +145,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
-        data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
+        data_loader = DataLoader(data_points, batch_size=mini_batch_size)
 
         with torch.no_grad():
             eval_loss = torch.zeros(1, device=flair.device)
@@ -186,8 +185,6 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
-            log_line = f"{metric.mean_squared_error()}\t{metric.spearmanr()}" f"\t{metric.pearsonr()}"
-            log_header = "MSE\tSPEARMAN\tPEARSON"
 
             detailed_result = (
                 f"AVG: mse: {metric.mean_squared_error():.4f} - "
@@ -198,10 +195,14 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
 
             result: Result = Result(
                 main_score=metric.pearsonr(),
-                loss=eval_loss.item(),
-                log_header=log_header,
-                log_line=log_line,
                 detailed_results=detailed_result,
+                scores={
+                    "loss": eval_loss.item(),
+                    "mse": metric.mean_squared_error(),
+                    "mae": metric.mean_absolute_error(),
+                    "pearson": metric.pearsonr(),
+                    "spearman": metric.spearmanr(),
+                },
             )
 
             return result

@@ -8,7 +8,7 @@ from flair.datasets import ColumnCorpus, FlairDatapointDataset, SentenceDataset
 
 
 def test_dictionary_get_items_with_unk():
-    dictionary: Dictionary = Dictionary()
+    dictionary: Dictionary = Dictionary(add_unk=True)
 
     dictionary.add_item("class_1")
     dictionary.add_item("class_2")
@@ -150,7 +150,7 @@ def test_tagged_corpus_make_label_dictionary():
         FlairDatapointDataset([]),
     )
 
-    label_dict = corpus.make_label_dictionary("label")
+    label_dict = corpus.make_label_dictionary("label", add_unk=True)
 
     assert 3 == len(label_dict)
     assert "<unk>" in label_dict.get_items()

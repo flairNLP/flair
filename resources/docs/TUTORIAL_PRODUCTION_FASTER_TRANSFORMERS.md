@@ -1,9 +1,6 @@
 # Speed up prediction speed of Transformer Embeddings
 
-**NOTICE:** The full feature is still in progress, and currently only available for TransformerEmbeddings. Idealy you want to export the full model (embeddings + SequenceTagger/TextClassification/...) in a single file.
-For the latest updates track [This Issue](https://github.com/flairNLP/flair/issues/2640)
-
-This tutorial shows you, how to export a `TransformerDocumentEmbedding` or `TransformerWordEmbedding` to [ONNX](https://onnxruntime.ai/) or to use [TorchScript](https://pytorch.org/docs/stable/jit.html).
+This tutorial shows you, how to export a `TransformerDocumentEmbedding` or `TransformerWordEmbedding` to [ONNX](https://onnxruntime.ai/) or to use [JIT and TorchScript](https://pytorch.org/docs/stable/jit.html).
 Both are ways to speed up the model prediction time and find common use in production environments.
 
 ## Assumption
@@ -78,16 +75,25 @@ You can use the tools and then update the onnx-model via:
 ```python
 model.embeddings.remove_session()
 model.embeddings.onnx_model = "path-to-new-onnx-model.onnx"
-model.embeddings.providers = [] # updated providers config
+model.embeddings.providers = [...] # updated providers config
 model.embeddings.create_session()
 ```
 
+### Saving the model
+
+After doing all optimizations you want to do, you can use run
+```python
+model.save("flert_onnx_model.pt")
+```
+**Notice:** you now have to take care of both, the torch model and the onnx model (which might consist of several files)
+
+Now you have an optimized onnx model that you can use for faster inference.
 
 
 ## TransformerJitEmbeddings
 
 If you don't want to use ONNX, you might want to speed up your Embeddings using [TorchScript](https://pytorch.org/docs/stable/jit.html).
-**Notice:** if you want to use aws neutron instead of jit, you can do so by following the same tutorial. However, you need to aditionally force long sequences by setting `model.embeddings.force_max_length=True` before starting.
+**Notice:** if you want to use aws neutron instead of jit, you can do so by following the same tutorial. However, you need to additionally force long sequences by setting `model.embeddings.force_max_length=True` before starting.
 To do so, we need to take a look of how the `TransformerEmbeddings` work:
 
 There are 3 parts:
@@ -99,7 +105,7 @@ To use jit, we are not allowed to pass keyword arguments, and we are also not al
 To deal with these limitations we need to write a wrapper torch model, but first lets inspect the tensors: 
 ```python
 tensors = model.embeddings.prepare_tensors(sentences)
-print(sorted(tensors.keys())) # ["attention_mask", "input_ids", "overflow_to_sample_mapping", "word_ids"] 
+print(sorted(tensors.keys()))  # ["attention_mask", "input_ids", "overflow_to_sample_mapping", "word_ids"] 
 ```
 This shows us the parameters that our wrapper model needs to implement. We know that the output has only the key `"token_embeddings"` as our model uses a TokenEmbedding and no DocumentEmbedding.
 
@@ -146,4 +152,8 @@ script_module = torch.jit.trace(wrapper, parameter_list)
 
 # replace the embeddings with jit embeddings.
 model.embeddings = TransformerJitWordEmbeddings.create_from_embedding(script_module, model.embeddings, parameter_names)
+
+model.save("flert_jit.pt")
 ```
+
+Now you have an optimized jit model that you can use for faster inference.

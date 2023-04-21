@@ -22,7 +22,7 @@ log = logging.getLogger("flair")
 
 
 def convert_ptb_token(token: str) -> str:
-    """Convert PTB tokens to normal tokens"""
+    """Convert PTB tokens to normal tokens."""
     return {
         "-lrb-": "(",
         "-rrb-": ")",
@@ -41,9 +41,9 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
         augment_train: bool = False,
         **corpusargs,
     ):
-        """
-        SemEval-2010 Task 8 on Multi-Way Classification of Semantic Relations Between Pairs of
-        Nominals: https://aclanthology.org/S10-1006.pdf
+        """SemEval-2010 Task 8 on Multi-Way Classification of Semantic Relations Between Pairs of Nominals.
+
+        see https://aclanthology.org/S10-1006.pdf
         :param base_path:
         :param in_memory:
         :param augment_train:
@@ -228,8 +228,9 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
 
 class RE_ENGLISH_TACRED(ColumnCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, **corpusargs):
-        """
-        TAC Relation Extraction Dataset with 41 relations from https://nlp.stanford.edu/projects/tacred/.
+        """TAC Relation Extraction Dataset.
+
+        with 41 relations from https://nlp.stanford.edu/projects/tacred/.
         Manual download is required for this dataset.
         :param base_path:
         :param in_memory:
@@ -537,9 +538,10 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
         **corpusargs,
     ):
-        """
-        DrugProt corpus: Biocreative VII Track 1 from https://zenodo.org/record/5119892#.YSdSaVuxU5k/ on
-        drug and chemical-protein interactions.
+        """Initialize the DrugProt corpus.
+
+        Biocreative VII Track 1 from https://zenodo.org/record/5119892#.YSdSaVuxU5k/ on drug and chemical-protein
+        interactions.
         """
         if not base_path:
             base_path = flair.cache_root / "datasets"

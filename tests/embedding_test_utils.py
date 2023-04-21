@@ -22,12 +22,11 @@ class BaseEmbeddingsTest:
         "typical proportionalities of ∼ 1nmV − 1 [ 3,4 ] .",
         "🤟 🤟  🤟 hüllo",
         "🤟hallo 🤟 🤟 🤟 🤟",
-        "🤟hallo 🤟 🤟 🤟 🤟",
         "🤟",
     ]
 
     def create_embedding_from_name(self, name: str):
-        """Overwrite this method if it is more complex to load an embedding by name"""
+        """Overwrite this method if it is more complex to load an embedding by name."""
         assert self.name_field is not None
         kwargs = dict(self.default_args)
         kwargs.pop(self.name_field)
