@@ -1,13 +1,13 @@
 # Tutorial 1.1: Tokenization in Flair
 
-Tokenization is used to detect words in a given text. 
-This tutorial gives more details on tokenization in Flair and how to change tokenizers. 
+Tokenization is used to detect words in a given text.
+This tutorial gives more details on tokenization in Flair and how to change tokenizers.
 
 ## Example Sentence
 
-Let us use the following example sentence: "The grass is green." 
+Let us use the following example sentence: "The grass is green."
 
-To show default tokenization, we make a `Sentence` object and iterate over all tokens: 
+To show default tokenization, we make a `Sentence` object and iterate over all tokens:
 
 ```python
 # The sentence objects holds a sentence that we may want to embed or tag
@@ -21,7 +21,7 @@ for token in sentence:
     print(token)
 ```
 
-This will print: 
+This will print:
 
 ```console
 Token[0]: "The"
@@ -31,7 +31,7 @@ Token[3]: "green"
 Token[4]: "."
 ```
 
-Showing us that 5 tokens are automatically detected. 
+Showing us that 5 tokens are automatically detected.
 
 ## Tokenization
 
@@ -60,13 +60,13 @@ In this case, no tokenization is performed and the text is split on whitespaces,
 
 ### Using a different tokenizer
 
-You can also pass custom tokenizers to the initialization method. For instance, you can tokenize Japanese sentences with the konoha tokenizer. For this, you first need to install konoha. 
+You can also pass custom tokenizers to the initialization method. For instance, you can tokenize Japanese sentences with the konoha tokenizer. For this, you first need to install konoha.
 
 ```
 pip install konoha
 ```
 
-And then run this code: 
+And then run this code:
 
 ```python
 from flair.data import Sentence
@@ -88,7 +88,7 @@ This should print:
 Sentence[5]: "私はベルリンが好き"
 ```
 
-Similarly, you can use a tokenizer provided by SpaCy. 
+Similarly, you can use a tokenizer provided by SpaCy.
 
 
 ### Using pretokenized sequences
@@ -105,4 +105,3 @@ This should print:
 ```console
 Sentence[5]: "The grass is green ."
 ```
-

@@ -102,10 +102,10 @@ There are 3 parts:
 * A mapping from the embeddings to the Tokens/Sentence objects.
 
 To use jit, we are not allowed to pass keyword arguments, and we are also not allowed to pass `None`. Also, if we want to use strict mode, we are not allowed to return a dictionary.
-To deal with these limitations we need to write a wrapper torch model, but first lets inspect the tensors: 
+To deal with these limitations we need to write a wrapper torch model, but first lets inspect the tensors:
 ```python
 tensors = model.embeddings.prepare_tensors(sentences)
-print(sorted(tensors.keys()))  # ["attention_mask", "input_ids", "overflow_to_sample_mapping", "word_ids"] 
+print(sorted(tensors.keys()))  # ["attention_mask", "input_ids", "overflow_to_sample_mapping", "word_ids"]
 ```
 This shows us the parameters that our wrapper model needs to implement. We know that the output has only the key `"token_embeddings"` as our model uses a TokenEmbedding and no DocumentEmbedding.
 

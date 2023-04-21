@@ -115,5 +115,5 @@ However, FastText embeddings have the functionality of returning vectors for out
 
 ## Next
 
-Now that you are familiar with classic word embeddings, check 
+Now that you are familiar with classic word embeddings, check
 out the [**`FlairEmbeddings`**](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) next!

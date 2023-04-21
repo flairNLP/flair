@@ -52,7 +52,7 @@ In your favorite virtual environment, simply do:
 pip install flair
 ```
 
-Flair requires Python 3.7+. 
+Flair requires Python 3.7+.
 
 ### Example 1: Tag Entities in Text
 
@@ -82,15 +82,15 @@ This should print:
 Sentence: "I love Berlin ." → ["Berlin"/LOC]
 ```
 
-This means that "Berlin" was tagged as a **location entity** in this sentence. 
+This means that "Berlin" was tagged as a **location entity** in this sentence.
 
    * *to learn more about NER tagging in Flair, check out our [NER tutorial](https://flairnlp.github.io/docs/tutorial-basics/tagging-entities)!*
 
 
-### Example 2: Detect Sentiment 
+### Example 2: Detect Sentiment
 
 Let's run **sentiment analysis** over an example sentence to determine whether it is POSITIVE or NEGATIVE.
-Same code as above, just a different model: 
+Same code as above, just a different model:
 
 ```python
 from flair.data import Sentence
@@ -115,7 +115,7 @@ This should print:
 Sentence[4]: "I love Berlin ." → POSITIVE (0.9983)
 ```
 
-This means that the sentence "I love Berlin" was tagged as having **POSITIVE** sentiment. 
+This means that the sentence "I love Berlin" was tagged as having **POSITIVE** sentiment.
 
    * *to learn more about sentiment analysis in Flair, check out our [sentiment analysis tutorial](https://flairnlp.github.io/docs/tutorial-basics/tagging-sentiment)!*
 
@@ -123,9 +123,9 @@ This means that the sentence "I love Berlin" was tagged as having **POSITIVE** s
 
 On our new :fire: [**Flair documentation page**](https://flairnlp.github.io/docs/intro) you will find many tutorials to get you started!
 
-In particular: 
-- [Tutorial 1: Basic tagging](https://flairnlp.github.io/docs/category/tutorial-1-basic-tagging) → how to tag your text 
-- [Tutorial 2: Training models](https://flairnlp.github.io/docs/category/tutorial-2-training-models) → how to train your own state-of-the-art NLP models 
+In particular:
+- [Tutorial 1: Basic tagging](https://flairnlp.github.io/docs/category/tutorial-1-basic-tagging) → how to tag your text
+- [Tutorial 2: Training models](https://flairnlp.github.io/docs/category/tutorial-2-training-models) → how to train your own state-of-the-art NLP models
 - [Tutorial 3: Embeddings](https://flairnlp.github.io/docs/category/tutorial-3-embeddings) → how to produce embeddings for words and documents
 
 There is also a dedicated landing page for our [biomedical NER and datasets](/resources/docs/HUNFLAIR.md) with
@@ -141,7 +141,7 @@ written for an older version of Flair and some examples may no longer work.
 There are also good third-party articles and posts that illustrate how to use Flair:
 * [Training an NER model with Flair](https://medium.com/thecyphy/training-custom-ner-model-using-flair-df1f9ea9c762)
 * [Training a text classifier with Flair](https://towardsdatascience.com/text-classification-with-state-of-the-art-nlp-library-flair-b541d7add21f)
-* [Zero and few-shot learning](https://towardsdatascience.com/zero-and-few-shot-learning-c08e145dc4ed) 
+* [Zero and few-shot learning](https://towardsdatascience.com/zero-and-few-shot-learning-c08e145dc4ed)
 * [Visualisation tool for highlighting the extracted entities](https://github.com/lunayach/visNER)
 * [Flair functionality and how to use in Colab](https://www.analyticsvidhya.com/blog/2019/02/flair-nlp-library-python/)
 * [Benchmarking NER algorithms](https://towardsdatascience.com/benchmark-ner-algorithm-d4ab01b2d4c3)

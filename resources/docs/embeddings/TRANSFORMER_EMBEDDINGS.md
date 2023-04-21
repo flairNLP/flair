@@ -1,6 +1,6 @@
 # Transformer Embeddings
 
-Flair supports various Transformer-based architectures like BERT or XLNet from [HuggingFace](https://github.com/huggingface), 
+Flair supports various Transformer-based architectures like BERT or XLNet from [HuggingFace](https://github.com/huggingface),
 with two classes `TransformerWordEmbeddings` (to embed words) and `TransformerDocumentEmbeddings` (to embed documents).
 
 ## Embeddings Words with Transformers
@@ -40,7 +40,7 @@ embedding.embed(sentence)
 
 ## Embeddings Documents with Transformers
 
-To embed a whole sentence as one (instead of each word in the sentence), simply use the TransformerDocumentEmbeddings 
+To embed a whole sentence as one (instead of each word in the sentence), simply use the TransformerDocumentEmbeddings
 instead:
 
 ```python
@@ -58,7 +58,7 @@ embedding.embed(sentence)
 
 ## Arguments
 
-There are several options that you can set when you init the TransformerWordEmbeddings 
+There are several options that you can set when you init the TransformerWordEmbeddings
 and TransformerDocumentEmbeddings classes:
 
 | Argument             | Default             | Description
@@ -181,5 +181,5 @@ for all supported pretrained models!
 
 ## Next
 
-You can now either go back to the [embedding overview](/resources/docs/TUTORIAL_EMBEDDINGS_OVERVIEW.md), 
+You can now either go back to the [embedding overview](/resources/docs/TUTORIAL_EMBEDDINGS_OVERVIEW.md),
 or check out [how to train models](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md).

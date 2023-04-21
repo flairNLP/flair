@@ -143,5 +143,5 @@ Note that while we get some of our best results with `PooledFlairEmbeddings` the
 
 ## Next
 
-Now that you are familiar with Flair embeddings, check 
+Now that you are familiar with Flair embeddings, check
 out the [**`TransformerEmbeddings`**](/resources/docs/embeddings/TRANSFORMER_EMBEDDINGS.md) next!

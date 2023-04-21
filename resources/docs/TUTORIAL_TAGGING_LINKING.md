@@ -2,4 +2,4 @@
 
 **Important**: This tutorial has been moved to https://flairnlp.github.io/docs/tutorial-basics/entity-linking
 
-All Flair documentation is now found at: https://flairnlp.github.io/ 
+All Flair documentation is now found at: https://flairnlp.github.io/

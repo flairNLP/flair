@@ -24,14 +24,14 @@ Then, in your favorite virtual environment, simply do:
 pip install flair
 ```
 
-#### Example 1: Biomedical NER 
+#### Example 1: Biomedical NER
 Let's run named entity recognition (NER) over an example sentence. All you need to do is
 make a Sentence, load a pre-trained model and use it to predict tags for the sentence:
 ```python
 from flair.data import Sentence
 from flair.nn import Classifier
 
-# make a sentence 
+# make a sentence
 sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome")
 
 # load biomedical tagger
@@ -62,7 +62,7 @@ pip install scispacy==0.5.1
 pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_sm-0.5.1.tar.gz
 ```
 
-Use this code to apply scientific tokenization: 
+Use this code to apply scientific tokenization:
 
 ```python
 from flair.data import Sentence
