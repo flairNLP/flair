@@ -740,10 +740,12 @@ class TARSClassifier(FewshotClassifier):
             "task_specific_attributes": self._task_specific_attributes,
         }
         if self._current_task is not None:
-            model_state.update({
-                "label_type": self.get_current_label_type(),
-                "label_dictionary": self.get_current_label_dictionary(),
-            })
+            model_state.update(
+                {
+                    "label_type": self.get_current_label_type(),
+                    "label_dictionary": self.get_current_label_dictionary(),
+                }
+            )
         return model_state
 
     @classmethod
