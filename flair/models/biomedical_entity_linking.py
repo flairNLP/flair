@@ -1,19 +1,26 @@
-import flair
-import faiss
 import logging
-import numpy as np
 import os
 import pickle
 import re
-import subprocess
 import stat
 import string
+import subprocess
 import tempfile
-import torch
-
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from flair.data import Sentence, EntityLinkingLabel, Label
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional, Tuple, Union
+
+import faiss
+import numpy as np
+import torch
+from huggingface_hub import cached_download, hf_hub_url
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from tqdm import tqdm
+
+import flair
+from flair.data import EntityLinkingLabel, Label, Sentence
 from flair.datasets import (
     NEL_CTD_CHEMICAL_DICT,
     NEL_CTD_DISEASE_DICT,
@@ -22,12 +29,6 @@ from flair.datasets import (
 )
 from flair.embeddings import TransformerDocumentEmbeddings
 from flair.file_utils import cached_path
-from huggingface_hub import hf_hub_url, cached_download
-from pathlib import Path
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from tqdm import tqdm
-from typing import List, Tuple, Union, Optional, Dict, Iterable
 
 log = logging.getLogger("flair")
 
@@ -42,6 +43,7 @@ class EntityPreprocessor:
     This class provides the basic interface for such transformations and should be extended by
     subclasses that implement concrete transformations.
     """
+
     def process_mention(self, entity_mention: Label, sentence: Sentence) -> str:
         """
         Processes the given entity mention and applies the transformation procedure to it.
@@ -84,10 +86,7 @@ class BasicEntityPreprocessor(EntityPreprocessor):
     """
 
     def __init__(
-        self,
-        lowercase: bool = True,
-        remove_punctuation: bool = True,
-        punctuation_symbols: str = string.punctuation
+        self, lowercase: bool = True, remove_punctuation: bool = True, punctuation_symbols: str = string.punctuation
     ) -> None:
         """
         Initializes the mention preprocessor.
@@ -99,9 +98,7 @@ class BasicEntityPreprocessor(EntityPreprocessor):
         """
         self.lowercase = lowercase
         self.remove_punctuation = remove_punctuation
-        self.rmv_puncts_regex = re.compile(
-            r"[\s{}]+".format(re.escape(punctuation_symbols))
-        )
+        self.rmv_puncts_regex = re.compile(r"[\s{}]+".format(re.escape(punctuation_symbols)))
 
     def process_entry(self, entity_name: str) -> str:
         if self.lowercase:
@@ -131,12 +128,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
         PubMed ID: 18817555
     """
 
-    def __init__(
-            self,
-            ab3p_path: Path,
-            word_data_dir: Path,
-            preprocessor: Optional[EntityPreprocessor] = None
-    ) -> None:
+    def __init__(self, ab3p_path: Path, word_data_dir: Path, preprocessor: Optional[EntityPreprocessor] = None) -> None:
         """
         Creates the mention pre-processor
 
@@ -180,11 +172,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
         return entity_name
 
     @classmethod
-    def load(
-            cls,
-            ab3p_path: Path = None,
-            preprocessor: Optional[EntityPreprocessor] = None
-    ):
+    def load(cls, ab3p_path: Path = None, preprocessor: Optional[EntityPreprocessor] = None):
         data_dir = flair.cache_root / "ab3p"
         if not data_dir.exists():
             data_dir.mkdir(parents=True)
@@ -201,7 +189,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
     @classmethod
     def download_ab3p(cls, data_dir: Path, word_data_dir: Path) -> Path:
         """
-            Downloads the Ab3P tool and all necessary data files.
+        Downloads the Ab3P tool and all necessary data files.
         """
 
         # Download word data for Ab3P if not already downloaded
@@ -230,9 +218,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
             cached_path(ab3p_url + file, word_data_dir)
 
         # Download Ab3P executable
-        ab3p_path = cached_path(
-            "https://github.com/dmis-lab/BioSyn/raw/master/Ab3P/identify_abbr", data_dir
-        )
+        ab3p_path = cached_path("https://github.com/dmis-lab/BioSyn/raw/master/Ab3P/identify_abbr", data_dir)
 
         ab3p_path.chmod(ab3p_path.stat().st_mode | stat.S_IXUSR)
         return ab3p_path
@@ -360,11 +346,7 @@ class DictionaryDataset:
     https://github.com/dmis-lab/BioSyn/blob/master/src/biosyn/data_loader.py#L89
     """
 
-    def __init__(
-            self,
-            dictionary_path: Union[Path, str],
-            load_into_memory: bool = True
-    ) -> None:
+    def __init__(self, dictionary_path: Union[Path, str], load_into_memory: bool = True) -> None:
         """
         :param dictionary_path str: Path to the dictionary file
         :param load_into_memory bool: Indicates whether the dictionary entries should be loaded in
@@ -428,11 +410,7 @@ class EntityRetrieverModel(ABC):
     """
 
     @abstractmethod
-    def get_top_k(
-            self,
-            entity_mention: str,
-            top_k: int
-    ) -> List[Tuple[str, str, float]]:
+    def get_top_k(self, entity_mention: str, top_k: int) -> List[Tuple[str, str, float]]:
         """
         Returns the top-k entity / concept identifiers for the given entity mention.
 
@@ -449,6 +427,7 @@ class ExactStringMatchingRetrieverModel(EntityRetrieverModel):
     Implementation of an entity retriever model which uses exact string matching to
     find the entity / concept identifier for a given entity mention.
     """
+
     def __init__(self, dictionary: DictionaryDataset):
         # Build index which maps concept / entity names to concept / entity ids
         self.name_to_id_index = {name: cui for name, cui in dictionary.data}
@@ -461,11 +440,7 @@ class ExactStringMatchingRetrieverModel(EntityRetrieverModel):
         # Load dictionary
         return cls(DictionaryDataset.load(dictionary_name_or_path))
 
-    def get_top_k(
-            self,
-            entity_mention: str,
-            top_k: int
-    ) -> List[Tuple[str, str, float]]:
+    def get_top_k(self, entity_mention: str, top_k: int) -> List[Tuple[str, str, float]]:
         """
         Returns the top-k entity / concept identifiers for the given entity mention. Note that
         the model either returns the entity with an identical name in the knowledge base / dictionary
@@ -503,24 +478,24 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
         index_use_cuda: bool,
         top_k_extra_dense: int = 10,
         top_k_extra_sparse: int = 10,
-        preprocessor: Optional[EntityPreprocessor] = BasicEntityPreprocessor()
+        preprocessor: Optional[EntityPreprocessor] = BasicEntityPreprocessor(),
     ) -> None:
         """
-            Initializes the BiEncoderEntityRetrieverModel.
+        Initializes the BiEncoderEntityRetrieverModel.
 
-            :param model_name_or_path: Name of or path to the transformer model to be used.
-            :param dictionary_name_or_path: Name of or path to the transformer model to be used.
-            :param use_sparse_embeddings: Indicates whether to use sparse embeddings or not
-            :param use_cosine: Indicates whether to use cosine similarity (instead of inner product)
-            :param max_length: Maximal number of tokens used for embedding an entity mention / concept name
-            :param batch_size: Batch size used during embedding of the dictionary and top-k prediction
-            :param index_use_cuda: Indicates whether to use CUDA while indexing the dictionary / knowledge base
-            :param top_k_extra_sparse: Number of extra entities (resp. their sparse embeddings) which should be
-                retrieved while combining sparse and dense scores
-            :param top_k_extra_dense: Number of extra entities (resp. their dense embeddings) which should be
-                retrieved while combining sparse and dense scores
-            :param preprocessor: Preprocessing strategy to clean and transform entity / concept names from
-                the knowledge base
+        :param model_name_or_path: Name of or path to the transformer model to be used.
+        :param dictionary_name_or_path: Name of or path to the transformer model to be used.
+        :param use_sparse_embeddings: Indicates whether to use sparse embeddings or not
+        :param use_cosine: Indicates whether to use cosine similarity (instead of inner product)
+        :param max_length: Maximal number of tokens used for embedding an entity mention / concept name
+        :param batch_size: Batch size used during embedding of the dictionary and top-k prediction
+        :param index_use_cuda: Indicates whether to use CUDA while indexing the dictionary / knowledge base
+        :param top_k_extra_sparse: Number of extra entities (resp. their sparse embeddings) which should be
+            retrieved while combining sparse and dense scores
+        :param top_k_extra_dense: Number of extra entities (resp. their dense embeddings) which should be
+            retrieved while combining sparse and dense scores
+        :param preprocessor: Preprocessing strategy to clean and transform entity / concept names from
+            the knowledge base
         """
         self.use_sparse_embeds = use_sparse_embeddings
         self.use_cosine = use_cosine
@@ -532,14 +507,11 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
         self.preprocessor = preprocessor
 
         # Load dense encoder
-        self.dense_encoder = TransformerDocumentEmbeddings(
-            model=model_name_or_path,
-            is_token_embedding=False
-        )
+        self.dense_encoder = TransformerDocumentEmbeddings(model=model_name_or_path, is_token_embedding=False)
 
         # Load sparse encoder
         if self.use_sparse_embeds:
-            #FIXME: What happens if sparse encoder isn't pre-trained???
+            # FIXME: What happens if sparse encoder isn't pre-trained???
             self._load_sparse_encoder(model_name_or_path)
             self._load_sparse_weight(model_name_or_path)
 
@@ -549,16 +521,12 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
             batch_size=batch_size,
         )
 
-    def _load_sparse_encoder(
-        self, model_name_or_path: Union[str, Path]
-    ) -> BigramTfIDFVectorizer:
+    def _load_sparse_encoder(self, model_name_or_path: Union[str, Path]) -> BigramTfIDFVectorizer:
         sparse_encoder_path = os.path.join(model_name_or_path, "sparse_encoder.pk")
         # check file exists
         if not os.path.isfile(sparse_encoder_path):
             # download from huggingface hub and cache it
-            sparse_encoder_url = hf_hub_url(
-                model_name_or_path, filename="sparse_encoder.pk"
-            )
+            sparse_encoder_url = hf_hub_url(model_name_or_path, filename="sparse_encoder.pk")
             sparse_encoder_path = cached_download(
                 url=sparse_encoder_url,
                 cache_dir=flair.cache_root / "models" / model_name_or_path,
@@ -573,9 +541,7 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
         # check file exists
         if not os.path.isfile(sparse_weight_path):
             # download from huggingface hub and cache it
-            sparse_weight_url = hf_hub_url(
-                model_name_or_path, filename="sparse_weight.pt"
-            )
+            sparse_weight_url = hf_hub_url(model_name_or_path, filename="sparse_weight.pt")
             sparse_weight_path = cached_download(
                 url=sparse_weight_url,
                 cache_dir=flair.cache_root / "models" / model_name_or_path,
@@ -601,12 +567,7 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
 
         return sparse_embeds
 
-    def _embed_dense(
-        self,
-        names: np.ndarray,
-        batch_size: int = 2048,
-        show_progress: bool = False
-    ) -> np.ndarray:
+    def _embed_dense(self, names: np.ndarray, batch_size: int = 2048, show_progress: bool = False) -> np.ndarray:
         """
         Embeds the given numpy array of entity / concept names, either originating from the
         knowledge base or recognized in a text, into dense representations using a
@@ -638,9 +599,7 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
                 # embed batch
                 self.dense_encoder.embed(batch)
 
-                dense_embeds += [
-                    name.embedding.cpu().detach().numpy() for name in batch
-                ]
+                dense_embeds += [name.embedding.cpu().detach().numpy() for name in batch]
 
                 if flair.device.type == "cuda":
                     torch.cuda.empty_cache()
@@ -651,14 +610,9 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
 
         return dense_embeds
 
-    def _embed_dictionary(
-            self,
-            model_name_or_path: str,
-            dictionary_name_or_path: str,
-            batch_size: int
-    ):
+    def _embed_dictionary(self, model_name_or_path: str, dictionary_name_or_path: str, batch_size: int):
         """
-            Computes the embeddings for the given knowledge base / dictionary.
+        Computes the embeddings for the given knowledge base / dictionary.
         """
         # Load dictionary
         self.dictionary = DictionaryDataset.load(dictionary_name_or_path).data
@@ -687,9 +641,7 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
 
             # Compute dense embeddings (if necessary)
             self.dict_dense_embeddings = self._embed_dense(
-                names=concept_names,
-                batch_size=batch_size,
-                show_progress=True
+                names=concept_names, batch_size=batch_size, show_progress=True
             )
 
             # To use cosine similarity, we normalize the vectors and then use inner product
@@ -729,7 +681,7 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
 
     def _load_cached_dense_emb_dictionary(self, cached_dictionary_path: Path):
         """
-            Loads pre-computed dense dictionary embedding from disk.
+        Loads pre-computed dense dictionary embedding from disk.
         """
         with cached_dictionary_path.open("rb") as cached_file:
             log.info("Loaded dictionary from cached file {}".format(cached_dictionary_path))
@@ -738,19 +690,21 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
             self.dictionary, self.dict_sparse_embeddings, self.dense_dictionary_index = (
                 cached_dictionary["dictionary"],
                 cached_dictionary["sparse_dictionary_embeds"],
-                cached_dictionary["dense_dictionary_index"]
+                cached_dictionary["dense_dictionary_index"],
             )
 
             if self.index_use_cuda:
-                self.dense_dictionary_index = faiss.index_cpu_to_gpu(faiss.StandardGpuResources(), 0, self.dense_dictionary_index)
+                self.dense_dictionary_index = faiss.index_cpu_to_gpu(
+                    faiss.StandardGpuResources(), 0, self.dense_dictionary_index
+                )
 
     def retrieve_sparse_topk_candidates(
-            self,
-            mention_embeddings: np.ndarray,
-            dict_concept_embeddings: np.ndarray,
-            top_k: int,
-            normalise: bool = False,
-        ) -> Tuple[np.ndarray, np.ndarray]:
+        self,
+        mention_embeddings: np.ndarray,
+        dict_concept_embeddings: np.ndarray,
+        top_k: int,
+        normalise: bool = False,
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Returns top-k indexes (in descending order) for the given entity mentions resp. mention
         embeddings.
@@ -766,14 +720,10 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
             score_matrix = np.matmul(mention_embeddings, dict_concept_embeddings.T)
 
         if normalise:
-            score_matrix = (score_matrix - score_matrix.min()) / (
-                score_matrix.max() - score_matrix.min()
-            )
+            score_matrix = (score_matrix - score_matrix.min()) / (score_matrix.max() - score_matrix.min())
 
         def indexing_2d(arr, cols):
-            rows = np.repeat(
-                np.arange(0, cols.shape[0])[:, np.newaxis], cols.shape[1], axis=1
-            )
+            rows = np.repeat(np.arange(0, cols.shape[0])[:, np.newaxis], cols.shape[1], axis=1)
             return arr[rows, cols]
 
         # Get topk indexes without sorting
@@ -787,11 +737,7 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
 
         return (topk_idxs, topk_scores)
 
-    def get_top_k(
-            self,
-            entity_mention: str,
-            top_k: int
-    ) -> List[Tuple[str, str, float]]:
+    def get_top_k(self, entity_mention: str, top_k: int) -> List[Tuple[str, str, float]]:
         """
         Returns the top-k entities for a given entity mention.
 
@@ -802,19 +748,13 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
         """
 
         # Compute dense embedding for the given entity mention
-        mention_dense_embeds = self._embed_dense(
-            names=np.array([entity_mention]),
-            batch_size=self.batch_size
-        )
+        mention_dense_embeds = self._embed_dense(names=np.array([entity_mention]), batch_size=self.batch_size)
 
         # Search for more than top-k candidates if combining them with sparse scores
         top_k_dense = top_k if not self.use_sparse_embeds else top_k + self.top_k_extra_dense
 
         # Get candidates from dense embeddings
-        dense_scores, dense_ids = self.dense_dictionary_index.search(
-            x=mention_dense_embeds,
-            k=top_k_dense
-        )
+        dense_scores, dense_ids = self.dense_dictionary_index.search(x=mention_dense_embeds, k=top_k_dense)
 
         # If using sparse embeds: calculate hybrid scores with dense and sparse embeds
         if self.use_sparse_embeds:
@@ -825,7 +765,7 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
             sparse_ids, sparse_distances = self.retrieve_sparse_topk_candidates(
                 mention_embeddings=mention_sparse_embeds,
                 dict_concept_embeddings=self.dict_sparse_embeddings,
-                top_k=top_k + self.top_k_extra_sparse
+                top_k=top_k + self.top_k_extra_sparse,
             )
 
             # Combine dense and sparse scores
@@ -843,19 +783,13 @@ class BiEncoderEntityRetrieverModel(EntityRetrieverModel):
                 ids = top_dense_ids
                 distances = top_dense_scores
 
-                for sparse_id, sparse_distance in zip(
-                    top_sparse_ids, top_sparse_distances
-                ):
+                for sparse_id, sparse_distance in zip(top_sparse_ids, top_sparse_distances):
                     if sparse_id not in ids:
                         ids = np.append(ids, sparse_id)
-                        distances = np.append(
-                            distances, sparse_weight * sparse_distance
-                        )
+                        distances = np.append(distances, sparse_weight * sparse_distance)
                     else:
                         index = np.where(ids == sparse_id)[0][0]
-                        distances[index] = (
-                            sparse_weight * sparse_distance
-                        ) + distances[index]
+                        distances[index] = (sparse_weight * sparse_distance) + distances[index]
 
                 sorted_indizes = np.argsort(-distances)
                 ids = ids[sorted_indizes][:top_k]
@@ -879,11 +813,8 @@ class BiomedicalEntityLinker:
     Entity linking model which expects text/sentences with annotated entity mentions and predicts
     entity / concept to these mentions according to a knowledge base / dictionary.
     """
-    def __init__(
-            self,
-            retriever_model: EntityRetrieverModel,
-            mention_preprocessor: EntityPreprocessor
-    ):
+
+    def __init__(self, retriever_model: EntityRetrieverModel, mention_preprocessor: EntityPreprocessor):
         self.preprocessor = mention_preprocessor
         self.retriever_model = retriever_model
 
@@ -910,11 +841,7 @@ class BiomedicalEntityLinker:
             self.preprocessor.initialize(sentences)
 
         # Build label name
-        label_name = (
-            input_entity_annotation_layer + "_nen"
-            if (input_entity_annotation_layer is not None)
-            else "nen"
-        )
+        label_name = input_entity_annotation_layer + "_nen" if (input_entity_annotation_layer is not None) else "nen"
 
         # For every sentence ..
         for sentence in sentences:
@@ -972,7 +899,7 @@ class BiomedicalEntityLinker:
         batch_size: int = 1024,
         index_use_cuda: bool = False,
         use_cosine: bool = True,
-        preprocessor: EntityPreprocessor = Ab3PEntityPreprocessor.load(preprocessor=BasicEntityPreprocessor())
+        preprocessor: EntityPreprocessor = Ab3PEntityPreprocessor.load(preprocessor=BasicEntityPreprocessor()),
     ):
         """
         Loads a model for biomedical named entity normalization.
@@ -1014,17 +941,10 @@ class BiomedicalEntityLinker:
                     index_use_cuda=index_use_cuda,
                 )
 
-        return cls(
-            retriever_model=retriever_model,
-            mention_preprocessor=preprocessor
-        )
+        return cls(retriever_model=retriever_model, mention_preprocessor=preprocessor)
 
     @staticmethod
-    def __get_model_path(
-        model_name: str,
-        use_sparse_and_dense_embeds: bool
-    ) -> str:
-
+    def __get_model_path(model_name: str, use_sparse_and_dense_embeds: bool) -> str:
         model_name = model_name.lower()
         model_path = model_name
 
@@ -1059,16 +979,11 @@ class BiomedicalEntityLinker:
             elif model_name == "chemical":
                 model_path = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
             elif model_name == "gene":
-                raise ValueError(
-                    "No trained model for gene entity linking using only dense embeddings."
-                )
+                raise ValueError("No trained model for gene entity linking using only dense embeddings.")
         return model_path
 
     @staticmethod
-    def __get_dictionary_path(
-            dictionary_path: str,
-            model_name: str
-    ) -> str:
+    def __get_dictionary_path(dictionary_path: str, model_name: str) -> str:
         # determine dictionary to use
         if dictionary_path == "disease":
             dictionary_path = "ctd-disease"
