@@ -417,7 +417,7 @@ class TARSTagger(FewshotClassifier):
             "current_task": self._current_task,
             "tag_type": self.get_current_label_type(),
             "tag_dictionary": self.get_current_label_dictionary(),
-            "tars_model": self.tars_model,
+            "tars_embeddings": self.tars_model.embeddings.save_embeddings(use_state_dict=False),
             "num_negative_labels_to_sample": self.num_negative_labels_to_sample,
             "prefix": self.prefix,
             "task_specific_attributes": self._task_specific_attributes,
@@ -437,13 +437,18 @@ class TARSTagger(FewshotClassifier):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
+        tars_embeddings = state.get("tars_embeddings")
+
+        if tars_embeddings is None:
+            tars_model = state["tars_model"]
+            tars_embeddings = tars_model.embeddings
         # init new TARS classifier
         model = super()._init_model_with_state_dict(
             state,
             task_name=state.get("current_task"),
             label_dictionary=state.get("tag_dictionary"),
             label_type=state.get("tag_type"),
-            embeddings=state.get("tars_model").embeddings,
+            embeddings=tars_embeddings,
             num_negative_labels_to_sample=state.get("num_negative_labels_to_sample"),
             prefix=state.get("prefix"),
             **kwargs,
@@ -730,22 +735,30 @@ class TARSClassifier(FewshotClassifier):
         model_state = {
             **super()._get_state_dict(),
             "current_task": self._current_task,
-            "label_type": self.get_current_label_type(),
-            "label_dictionary": self.get_current_label_dictionary(),
-            "tars_model": self.tars_model,
+            "tars_embeddings": self.tars_model.embeddings.save_embeddings(use_state_dict=False),
             "num_negative_labels_to_sample": self.num_negative_labels_to_sample,
             "task_specific_attributes": self._task_specific_attributes,
         }
+        if self._current_task is not None:
+            model_state.update(
+                {
+                    "label_type": self.get_current_label_type(),
+                    "label_dictionary": self.get_current_label_dictionary(),
+                }
+            )
         return model_state
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
         # get the serialized embeddings
-        tars_model = state.get("tars_model")
-        if hasattr(tars_model, "embeddings"):
-            embeddings = tars_model.embeddings
-        else:
-            embeddings = tars_model.document_embeddings
+        tars_embeddings = state.get("tars_embeddings")
+
+        if tars_embeddings is None:
+            tars_model = state["tars_model"]
+            if hasattr(tars_model, "embeddings"):
+                tars_embeddings = tars_model.embeddings
+            else:
+                tars_embeddings = tars_model.document_embeddings
 
         # remap state dict for models serialized with Flair <= 0.11.3
         import re
@@ -762,7 +775,7 @@ class TARSClassifier(FewshotClassifier):
             task_name=state["current_task"],
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type", "default_label"),
-            embeddings=embeddings,
+            embeddings=tars_embeddings,
             num_negative_labels_to_sample=state.get("num_negative_labels_to_sample"),
             **kwargs,
         )

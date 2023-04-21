@@ -1156,6 +1156,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         config = None
 
         if config_state_dict:
+            # some models like the tars model somehow lost this information.
+            if config_state_dict.get("_name_or_path") == "None":
+                config_state_dict["_name_or_path"] = state.get("model", "None")
+
             model_type = config_state_dict.get("model_type", "bert")
             config_class = CONFIG_MAPPING[model_type]
             config = config_class.from_dict(config_state_dict)
