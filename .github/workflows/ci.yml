@@ -1,8 +1,8 @@
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   test:
@@ -13,19 +13,63 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.7
+        id: setup-python
         uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - name: Install Flair dependencies
-        run: pip install -e .
-      - name: Install unittest dependencies
-        run: pip install -r requirements-dev.txt
-      - name: Show installed dependencies
-        run: pip freeze
+      #----------------------------------------------
+      #       Try to load cached poetry installation
+      #----------------------------------------------
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.local
+            ~/.cache/pypoetry
+          key: poetry-0 # increment to reset cache
+      #----------------------------------------------
+      #       Install poetry if not using cached
+      #----------------------------------------------
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-in-project: true
+      #----------------------------------------------
+      #       load cached venv if cache exists
+      #----------------------------------------------
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      #----------------------------------------------
+      # install dependencies if cache does not exist
+      #----------------------------------------------
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction --no-root
+      #----------------------------------------------
+      # install your root project, if required
+      #----------------------------------------------
+      - name: Install project
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction
+      #----------------------------------------------
+      #              run test suite
+      #----------------------------------------------
       - name: Cache downloaded models/datasets
         uses: actions/cache@v3
         with:
           path: ./cache
           key: cache-v1.1
       - name: Run tests
-        run: pytest --runintegration --durations=0 -vv
+        run: |
+          source .venv/bin/activate
+          python -c 'import flair'
+          pytest --runintegration --durations=0 -vv

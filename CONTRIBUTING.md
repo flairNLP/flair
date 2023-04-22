@@ -6,12 +6,11 @@ side, please stick to the following process:
 1. Check if there is already [an issue](https://github.com/zalandoresearch/flair/issues) for your concern.
 2. If there is not, open a new one to start a discussion. We hate to close finished PRs!
 3. If we decide your concern needs code changes, we would be happy to accept a pull request. Please consider the
-commit guidelines below.
+   commit guidelines below.
 
 In case you just want to help out and don't know where to start,
 [issues with "help wanted" label](https://github.com/zalandoresearch/flair/labels/help%20wanted) are good for
 first-time contributors.
-
 
 ## Git Commit Guidelines
 
@@ -19,7 +18,6 @@ If there is already a ticket, use this number at the start of your commit messag
 Use meaningful commit messages that described what you did.
 
 **Example:** `GH-42: Added new type of embeddings: DocumentEmbedding.`
-
 
 ## Developing locally
 
@@ -29,41 +27,54 @@ the code should hopefully be easy.
 
 ### Setup
 
-You can either use [Pipenv](https://pipenv.readthedocs.io/) for this:
+We use [poetry](https://python-poetry.org) for dependency and virtual environment management. Additionally
+[pre-commit](https://pre-commit.com/) is recommended to do code formatting and checking on your code when you commit.
+Install poetry and pre-commit on your system if you have not already. Using the [pipx](https://pypa.github.io/pipx/)
+package installer:
 
 ```bash
-pipenv install --dev && pipenv shell
+# Install pipx and make sure the PATH is set up
+pip install pipx
+python -m pipx ensurepath
+
+# Install pre-commit and poetry via pipx
+pipx install pre-commit
+pipx install poetry
 ```
 
-Or create a python environment of your preference and run:
-```bash
-pip install -r requirements-dev.txt
-```
+After these pre-conditions are met, switch into the checked out flair folder.
 
-### Git pre-commit Hooks
-After installing the dependencies, install `pre-commit` hooks via:
 ```bash
+# Activate on-commit formatting and checks
 pre-commit install
-```
 
-This will automatically run code formatters black and isort for each git commit.
+# Install dependencies (including dev dependencies)
+poetry install
+
+# You can turn on the installed environment
+poetry shell
+```
 
 ### Tests
 
 To only run typechecks and check the code formatting execute:
+
 ```bash
 pytest flair
 ```
 
 To run all basic tests execute:
+
 ```bash
 pytest
 ```
 
 To run integration tests execute:
+
 ```bash
 pytest --runintegration
 ```
+
 The integration tests will train small models and therefore take more time.
 In general, it is recommended to ensure all basic tests are running through before testing the integration tests
 

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 23.3.0
     hooks:
       - id: black-jupyter
   - repo: https://github.com/pre-commit/pre-commit-hooks
