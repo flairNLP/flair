@@ -21,6 +21,7 @@ class ReduceTransformerVocabPlugin(TrainerPlugin):
         self.save_optimizer_state = save_optimizer_state
         self.disabled = False
 
+    @TrainerPlugin.hook("after_setup")
     def register_transformer_smaller_training_vocab(self):
         if not isinstance(self.model, ReduceTransformerVocabMixin):
             log.warning("Cannot reduce the transformer vocab: model is not supported.")
@@ -40,8 +41,9 @@ class ReduceTransformerVocabPlugin(TrainerPlugin):
                 )
             )
 
+    @TrainerPlugin.hook("after_training")
     def save_model_at_the_end(self):
-        # saves the model
+        # saves the model with full vocab as checkpoints etc were created with reduced vocab.
         if self.disabled:
             return
 
