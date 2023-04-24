@@ -231,6 +231,8 @@ class ModelTrainer(Pluggable):
         create_file_logs: bool = True,
         create_loss_file: bool = True,
         write_weights: bool = False,
+        # amp
+        use_amp: bool = False,
         # plugins
         plugins: Optional[List[TrainerPlugin]] = None,
         attach_default_scheduler: bool = True,
@@ -319,6 +321,8 @@ class ModelTrainer(Pluggable):
         create_file_logs: bool = True,
         create_loss_file: bool = True,
         write_weights: bool = False,
+        # amp
+        use_amp: bool = False,
         # plugins
         plugins: List[TrainerPlugin] = [],
         **kwargs,
