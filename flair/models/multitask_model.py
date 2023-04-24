@@ -1,12 +1,13 @@
 import logging
 import random
+import typing
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 
 import flair.nn
-from flair.data import DT, Sentence
+from flair.data import DT, Corpus, Sentence
 from flair.file_utils import cached_path
 from flair.nn import Classifier
 from flair.training_utils import Result
@@ -199,6 +200,10 @@ class MultitaskModel(flair.nn.Classifier):
             scores=scores,
             classification_report=all_classification_report,
         )
+
+    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+        for model in self.tasks.values():
+            yield from model.get_used_tokens(corpus)
 
     def _get_state_dict(self):
         """Returns the state dict of the multitask model which has multiple models underneath."""

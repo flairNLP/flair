@@ -4,7 +4,7 @@ from typing import List
 
 from transformer_smaller_training_vocab import reduce_train_vocab
 
-from flair.embeddings import TransformerEmbeddings, Embeddings, StackedEmbeddings
+from flair.embeddings import Embeddings, StackedEmbeddings, TransformerEmbeddings
 from flair.models import FewshotClassifier
 from flair.nn import Model
 from flair.nn.model import ReduceTransformerVocabMixin
@@ -14,7 +14,6 @@ log = logging.getLogger("flair")
 
 
 class ReduceTransformerVocabPlugin(TrainerPlugin):
-
     def __init__(self, base_path: Path, save_optimizer_state: bool):
         super().__init__()
         self.base_path = base_path
@@ -22,7 +21,7 @@ class ReduceTransformerVocabPlugin(TrainerPlugin):
         self.disabled = False
 
     @TrainerPlugin.hook("after_setup")
-    def register_transformer_smaller_training_vocab(self):
+    def register_transformer_smaller_training_vocab(self, **kw):
         if not isinstance(self.model, ReduceTransformerVocabMixin):
             log.warning("Cannot reduce the transformer vocab: model is not supported.")
             self.disabled = True
@@ -42,7 +41,7 @@ class ReduceTransformerVocabPlugin(TrainerPlugin):
             )
 
     @TrainerPlugin.hook("after_training")
-    def save_model_at_the_end(self):
+    def save_model_at_the_end(self, **kw):
         # saves the model with full vocab as checkpoints etc were created with reduced vocab.
         if self.disabled:
             return

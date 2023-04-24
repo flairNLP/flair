@@ -27,9 +27,10 @@ from flair.trainers.plugins import (
     MetricName,
     MetricRecord,
     Pluggable,
+    ReduceTransformerVocabPlugin,
     TrainerPlugin,
     TrainingInterrupt,
-    WeightExtractorPlugin, ReduceTransformerVocabPlugin,
+    WeightExtractorPlugin,
 )
 from flair.training_utils import identify_dynamic_embeddings, log_line, store_embeddings
 
