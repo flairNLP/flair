@@ -313,7 +313,7 @@ class DataPoint:
                 else:
                     self._embeddings[name] = vector.to(device, non_blocking=True)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
+    def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
         if embedding_names is None:
             self._embeddings = {}
         else:
@@ -352,12 +352,12 @@ class DataPoint:
         if typename in self.annotation_layers.keys():
             del self.annotation_layers[typename]
 
-    def get_label(self, label_type: str = None, zero_tag_value="O"):
+    def get_label(self, label_type: Optional[str] = None, zero_tag_value="O"):
         if len(self.get_labels(label_type)) == 0:
             return Label(self, zero_tag_value)
         return self.get_labels(label_type)[0]
 
-    def get_labels(self, typename: str = None):
+    def get_labels(self, typename: Optional[str] = None):
         if typename is None:
             return self.labels
 
@@ -472,7 +472,7 @@ class Token(_PartOfSentence):
     def __init__(
         self,
         text: str,
-        head_id: int = None,
+        head_id: Optional[int] = None,
         whitespace_after: int = 1,
         start_position: int = 0,
         sentence=None,
@@ -682,7 +682,7 @@ class Sentence(DataPoint):
         self,
         text: Union[str, List[str], List[Token]],
         use_tokenizer: Union[bool, Tokenizer] = True,
-        language_code: str = None,
+        language_code: Optional[str] = None,
         start_position: int = 0,
     ):
         """Class to hold all metadata related to a text.
@@ -831,7 +831,7 @@ class Sentence(DataPoint):
         for token in self:
             token.to(device, pin_memory)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
+    def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
         super().clear_embeddings(embedding_names)
 
         # clear token embeddings
@@ -946,7 +946,7 @@ class Sentence(DataPoint):
             [t.text + t.whitespace_after * " " for t in self.tokens]
         ).strip()
 
-    def to_dict(self, tag_type: str = None):
+    def to_dict(self, tag_type: Optional[str] = None):
         labels = []
 
         if tag_type:
@@ -1100,7 +1100,7 @@ class Sentence(DataPoint):
                 previous_sentence._next_sentence = sentence
             previous_sentence = sentence
 
-    def get_labels(self, label_type: str = None):
+    def get_labels(self, label_type: Optional[str] = None):
         # if no label if specified, return all labels
         if label_type is None:
             return sorted(self.labels)
@@ -1138,7 +1138,7 @@ class DataPair(DataPoint, typing.Generic[DT, DT2]):
         self.first.to(device, pin_memory)
         self.second.to(device, pin_memory)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
+    def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
         self.first.clear_embeddings(embedding_names)
         self.second.clear_embeddings(embedding_names)
 
@@ -1189,19 +1189,19 @@ class Image(DataPoint):
 
     @property
     def start_position(self) -> int:
-        pass
+        raise NotImplementedError
 
     @property
     def end_position(self) -> int:
-        pass
+        raise NotImplementedError
 
     @property
-    def text(self):
-        pass
+    def text(self) -> str:
+        raise NotImplementedError
 
     @property
-    def unlabeled_identifier(self):
-        pass
+    def unlabeled_identifier(self) -> str:
+        raise NotImplementedError
 
 
 class Corpus(typing.Generic[T_co]):
@@ -1362,7 +1362,7 @@ class Corpus(typing.Generic[T_co]):
         splits = randomly_split_into_two_datasets(dataset, sampled_size)
         return splits[0]
 
-    def obtain_statistics(self, label_type: str = None, pretty_print: bool = True) -> Union[dict, str]:
+    def obtain_statistics(self, label_type: Optional[str] = None, pretty_print: bool = True) -> Union[dict, str]:
         """Print statistics about the class distribution and sentence sizes.
 
         only labels of sentences are taken into account
@@ -1717,7 +1717,7 @@ class ConcatFlairDataset(Dataset):
         super(ConcatFlairDataset, self).__init__()
         self.datasets = list(datasets)
         self.ids = list(ids)
-        assert len(self.datasets) > 0, "datasets should not be an empty iterable"  # type: ignore[arg-type]
+        assert len(self.datasets) > 0, "datasets should not be an empty iterable"
         for d in self.datasets:
             assert not isinstance(d, IterableDataset), "ConcatSentenceDataset does not support IterableDataset"
         self.cumulative_sizes = self.cumsum(self.datasets)

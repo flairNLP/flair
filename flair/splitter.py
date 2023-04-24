@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Union
+from typing import Any, List, Optional, Union
 
 from segtok.segmenter import split_multi
 
@@ -101,7 +101,7 @@ class SpacySentenceSplitter(SentenceSplitter):
     :param tokenizer Custom tokenizer to use (default :class:`SpacyTokenizer`)
     """
 
-    def __init__(self, model: Union[Any, str], tokenizer: Tokenizer = None):
+    def __init__(self, model: Union[Any, str], tokenizer: Optional[Tokenizer] = None):
         super(SpacySentenceSplitter, self).__init__()
 
         try:

@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 
 import flair
 from flair.data import Corpus, FlairDataset, Sentence, Token
@@ -225,7 +225,7 @@ class UniversalDependenciesDataset(FlairDataset):
 class UD_ENGLISH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -251,7 +251,7 @@ class UD_ENGLISH(UniversalDependenciesCorpus):
 class UD_GALICIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -276,7 +276,7 @@ class UD_GALICIAN(UniversalDependenciesCorpus):
 class UD_ANCIENT_GREEK(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -302,7 +302,7 @@ class UD_ANCIENT_GREEK(UniversalDependenciesCorpus):
 class UD_KAZAKH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -327,7 +327,7 @@ class UD_KAZAKH(UniversalDependenciesCorpus):
 class UD_OLD_CHURCH_SLAVONIC(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -355,7 +355,7 @@ class UD_OLD_CHURCH_SLAVONIC(UniversalDependenciesCorpus):
 class UD_ARMENIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -381,7 +381,7 @@ class UD_ARMENIAN(UniversalDependenciesCorpus):
 class UD_ESTONIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -407,7 +407,7 @@ class UD_ESTONIAN(UniversalDependenciesCorpus):
 class UD_GERMAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -433,7 +433,7 @@ class UD_GERMAN(UniversalDependenciesCorpus):
 class UD_GERMAN_HDT(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         split_multiwords: bool = True,
     ):
@@ -478,7 +478,7 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
 class UD_DUTCH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -512,7 +512,7 @@ class UD_FAROESE(UniversalDependenciesCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -538,7 +538,7 @@ class UD_FAROESE(UniversalDependenciesCorpus):
 class UD_FRENCH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -563,7 +563,7 @@ class UD_FRENCH(UniversalDependenciesCorpus):
 class UD_ITALIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -588,7 +588,7 @@ class UD_ITALIAN(UniversalDependenciesCorpus):
 class UD_LATIN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -614,7 +614,7 @@ class UD_LATIN(UniversalDependenciesCorpus):
 class UD_SPANISH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -639,7 +639,7 @@ class UD_SPANISH(UniversalDependenciesCorpus):
 class UD_PORTUGUESE(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -664,7 +664,7 @@ class UD_PORTUGUESE(UniversalDependenciesCorpus):
 class UD_ROMANIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -689,7 +689,7 @@ class UD_ROMANIAN(UniversalDependenciesCorpus):
 class UD_CATALAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -714,7 +714,7 @@ class UD_CATALAN(UniversalDependenciesCorpus):
 class UD_POLISH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -740,7 +740,7 @@ class UD_POLISH(UniversalDependenciesCorpus):
 class UD_CZECH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         split_multiwords: bool = True,
     ):
@@ -796,7 +796,7 @@ class UD_CZECH(UniversalDependenciesCorpus):
 class UD_SLOVAK(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -822,7 +822,7 @@ class UD_SLOVAK(UniversalDependenciesCorpus):
 class UD_SWEDISH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -848,7 +848,7 @@ class UD_SWEDISH(UniversalDependenciesCorpus):
 class UD_DANISH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -874,7 +874,7 @@ class UD_DANISH(UniversalDependenciesCorpus):
 class UD_NORWEGIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -900,7 +900,7 @@ class UD_NORWEGIAN(UniversalDependenciesCorpus):
 class UD_FINNISH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -926,7 +926,7 @@ class UD_FINNISH(UniversalDependenciesCorpus):
 class UD_SLOVENIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -952,7 +952,7 @@ class UD_SLOVENIAN(UniversalDependenciesCorpus):
 class UD_CROATIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -978,7 +978,7 @@ class UD_CROATIAN(UniversalDependenciesCorpus):
 class UD_SERBIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1004,7 +1004,7 @@ class UD_SERBIAN(UniversalDependenciesCorpus):
 class UD_BULGARIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1030,7 +1030,7 @@ class UD_BULGARIAN(UniversalDependenciesCorpus):
 class UD_ARABIC(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1055,7 +1055,7 @@ class UD_ARABIC(UniversalDependenciesCorpus):
 class UD_HEBREW(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1080,7 +1080,7 @@ class UD_HEBREW(UniversalDependenciesCorpus):
 class UD_TURKISH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1107,7 +1107,9 @@ class UD_TURKISH(UniversalDependenciesCorpus):
 
 
 class UD_UKRAINIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+    def __init__(
+        self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True, split_multiwords: bool = True
+    ):
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
         else:
@@ -1130,7 +1132,7 @@ class UD_UKRAINIAN(UniversalDependenciesCorpus):
 class UD_PERSIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1159,7 +1161,7 @@ class UD_PERSIAN(UniversalDependenciesCorpus):
 class UD_RUSSIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1185,7 +1187,7 @@ class UD_RUSSIAN(UniversalDependenciesCorpus):
 class UD_HINDI(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1211,7 +1213,7 @@ class UD_HINDI(UniversalDependenciesCorpus):
 class UD_INDONESIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1237,7 +1239,7 @@ class UD_INDONESIAN(UniversalDependenciesCorpus):
 class UD_JAPANESE(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1263,7 +1265,7 @@ class UD_JAPANESE(UniversalDependenciesCorpus):
 class UD_CHINESE(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1289,7 +1291,7 @@ class UD_CHINESE(UniversalDependenciesCorpus):
 class UD_KOREAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1315,7 +1317,7 @@ class UD_KOREAN(UniversalDependenciesCorpus):
 class UD_BASQUE(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1341,7 +1343,7 @@ class UD_BASQUE(UniversalDependenciesCorpus):
 class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1367,7 +1369,7 @@ class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
 class UD_GREEK(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1393,7 +1395,7 @@ class UD_GREEK(UniversalDependenciesCorpus):
 class UD_NAIJA(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1419,7 +1421,7 @@ class UD_NAIJA(UniversalDependenciesCorpus):
 class UD_LIVVI(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1444,7 +1446,7 @@ class UD_LIVVI(UniversalDependenciesCorpus):
 class UD_BURYAT(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1469,7 +1471,7 @@ class UD_BURYAT(UniversalDependenciesCorpus):
 class UD_NORTH_SAMI(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1494,7 +1496,7 @@ class UD_NORTH_SAMI(UniversalDependenciesCorpus):
 class UD_MARATHI(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1520,7 +1522,7 @@ class UD_MARATHI(UniversalDependenciesCorpus):
 class UD_MALTESE(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1544,7 +1546,7 @@ class UD_MALTESE(UniversalDependenciesCorpus):
 class UD_AFRIKAANS(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1568,7 +1570,7 @@ class UD_AFRIKAANS(UniversalDependenciesCorpus):
 class UD_GOTHIC(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1594,7 +1596,7 @@ class UD_GOTHIC(UniversalDependenciesCorpus):
 class UD_OLD_FRENCH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1620,7 +1622,7 @@ class UD_OLD_FRENCH(UniversalDependenciesCorpus):
 class UD_WOLOF(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1644,7 +1646,7 @@ class UD_WOLOF(UniversalDependenciesCorpus):
 class UD_BELARUSIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1670,7 +1672,7 @@ class UD_BELARUSIAN(UniversalDependenciesCorpus):
 class UD_COPTIC(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1702,7 +1704,7 @@ class UD_COPTIC(UniversalDependenciesCorpus):
 class UD_IRISH(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1728,7 +1730,7 @@ class UD_IRISH(UniversalDependenciesCorpus):
 class UD_LATVIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):
@@ -1754,7 +1756,7 @@ class UD_LATVIAN(UniversalDependenciesCorpus):
 class UD_LITHUANIAN(UniversalDependenciesCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
     ):

@@ -9,7 +9,7 @@ from flair.training_utils import init_output_file
 class LossFilePlugin(TrainerPlugin):
     """Plugin that manages the loss.tsv file output."""
 
-    def __init__(self, base_path, epoch: int, metrics_to_collect: Dict[Union[Tuple, str], str] = None):
+    def __init__(self, base_path, epoch: int, metrics_to_collect: Optional[Dict[Union[Tuple, str], str]] = None):
         super().__init__()
 
         self.first_epoch = epoch + 1

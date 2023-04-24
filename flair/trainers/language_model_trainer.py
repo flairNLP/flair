@@ -5,7 +5,7 @@ import random
 import sys
 import time
 from pathlib import Path
-from typing import Iterable, Type, Union
+from typing import Iterable, Optional, Type, Union
 
 import torch
 from torch import cuda
@@ -167,7 +167,7 @@ class LanguageModelTrainer:
         epoch: int = 0,
         split: int = 0,
         loss: float = 10000,
-        optimizer_state: dict = None,
+        optimizer_state: Optional[dict] = None,
     ):
         self.model: LanguageModel = model
         self.optimizer: Type[Optimizer] = optimizer

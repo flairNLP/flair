@@ -75,7 +75,7 @@ def loss(x, y):
 class HyperbolicDistance(nn.Module):
     """Implement a HyperbolicDistance object."""
 
-    def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:  # type: ignore
+    def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:
         """Returns the squared euclidean distance between each element in mat_1 and each element in mat_2.
 
         Parameters
@@ -106,7 +106,7 @@ class HyperbolicDistance(nn.Module):
 class HyperbolicMean(nn.Module):
     """Compute the mean point in the hyperboloid model."""
 
-    def forward(self, data: Tensor) -> Tensor:  # type: ignore
+    def forward(self, data: Tensor) -> Tensor:
         """Performs a forward pass through the network.
 
         Parameters

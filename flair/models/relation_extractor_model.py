@@ -18,7 +18,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         embeddings: flair.embeddings.TokenEmbeddings,
         label_type: str,
         entity_label_type: str,
-        entity_pair_filters: List[Tuple[str, str]] = None,
+        entity_pair_filters: Optional[List[Tuple[str, str]]] = None,
         pooling_operation: str = "first_last",
         train_on_gold_pairs_only: bool = False,
         **classifierargs,

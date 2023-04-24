@@ -41,7 +41,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
         train_initial_hidden_state: bool = False,
-        loss_weights: Dict[str, float] = None,
+        loss_weights: Optional[Dict[str, float]] = None,
         init_from_state_dict: bool = False,
         allow_unk_predictions: bool = False,
     ):
@@ -291,7 +291,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return sentence_tensor, lengths
 
-    def forward(self, sentence_tensor: torch.Tensor, lengths: torch.LongTensor):  # type: ignore[override]
+    def forward(self, sentence_tensor: torch.Tensor, lengths: torch.LongTensor):
         """Forward propagation through network.
 
         :param sentence_tensor: A tensor representing the batch of sentences.
@@ -432,7 +432,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return_loss=False,
         embedding_storage_mode="none",
         force_token_predictions: bool = False,
-    ):  # type: ignore
+    ):
         """Predicts labels for current batch with CRF or Softmax.
 
         :param sentences: List of sentences in batch
@@ -919,7 +919,7 @@ for entity in sentence.get_spans('ner'):
         self,
         repo_id: str,
         token: Optional[str] = None,
-        private: bool = None,
+        private: Optional[bool] = None,
         commit_message: str = "Add new SequenceTagger model.",
     ):
         """Uploads the Sequence Tagger model to a Hugging Face Hub repository.

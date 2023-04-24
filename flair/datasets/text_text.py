@@ -203,7 +203,7 @@ class DataPairCorpus(Corpus):
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         in_memory: bool = True,
-        label_type: str = None,
+        label_type: Optional[str] = None,
         autofind_splits=True,
         sample_missing_splits: bool = True,
         skip_first_line: bool = False,
@@ -314,7 +314,7 @@ class DataPairDataset(FlairDataset):
         max_chars_per_doc=-1,
         use_tokenizer=True,
         in_memory: bool = True,
-        label_type: str = None,
+        label_type: Optional[str] = None,
         skip_first_line: bool = False,
         separator: str = "\t",
         encoding: str = "utf-8",
@@ -400,7 +400,7 @@ class DataPairDataset(FlairDataset):
                 source_line = source_file.readline()
 
     # create a DataPair object from strings
-    def _make_data_pair(self, first_element: str, second_element: str, label: str = None):
+    def _make_data_pair(self, first_element: str, second_element: str, label: Optional[str] = None):
         first_sentence = Sentence(first_element, use_tokenizer=self.use_tokenizer)
         second_sentence = Sentence(second_element, use_tokenizer=self.use_tokenizer)
 
@@ -439,7 +439,7 @@ class GLUE_RTE(DataPairCorpus):
     def __init__(
         self,
         label_type="entailment",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,
@@ -524,7 +524,7 @@ class GLUE_MNLI(DataPairCorpus):
         self,
         label_type="entailment",
         evaluate_on_matched: bool = True,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,
@@ -644,7 +644,7 @@ class GLUE_MRPC(DataPairCorpus):
     def __init__(
         self,
         label_type="paraphrase",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,
@@ -724,7 +724,7 @@ class GLUE_QNLI(DataPairCorpus):
     def __init__(
         self,
         label_type="entailment",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,
@@ -810,7 +810,7 @@ class GLUE_QQP(DataPairCorpus):
     def __init__(
         self,
         label_type="paraphrase",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,
@@ -897,7 +897,7 @@ class GLUE_WNLI(DataPairCorpus):
     def __init__(
         self,
         label_type="entailment",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,
@@ -982,7 +982,7 @@ class GLUE_STSB(DataPairCorpus):
     def __init__(
         self,
         label_type="similarity",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,
@@ -1059,7 +1059,7 @@ class GLUE_STSB(DataPairCorpus):
 class SUPERGLUE_RTE(DataPairCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,

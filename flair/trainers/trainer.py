@@ -159,7 +159,7 @@ class ModelTrainer(Pluggable):
         create_loss_file: bool = True,
         write_weights: bool = False,
         # plugins
-        plugins: List[TrainerPlugin] = None,
+        plugins: Optional[List[TrainerPlugin]] = None,
         attach_default_scheduler: bool = True,
         **kwargs,
     ):
@@ -231,7 +231,7 @@ class ModelTrainer(Pluggable):
         create_loss_file: bool = True,
         write_weights: bool = False,
         # plugins
-        plugins: List[TrainerPlugin] = None,
+        plugins: Optional[List[TrainerPlugin]] = None,
         attach_default_scheduler: bool = True,
         **kwargs,
     ):

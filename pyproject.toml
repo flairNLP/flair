@@ -9,6 +9,7 @@ exclude = '''
     | \.pytest_cache
     | build
     | dist
+    | venv
   )/
 )
 '''
@@ -34,6 +35,9 @@ markers = [
 testpaths = ["flair", "tests"]
 [tool.mypy]
 ignore_missing_imports = true
+disable_error_code = ["annotation-unchecked"]
+exclude = [".git/", ".venv/", "__pycache__", "build", "venv"]
+warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module="flair.embeddings.legacy"

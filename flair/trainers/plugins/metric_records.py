@@ -1,7 +1,7 @@
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Iterable, Iterator, Tuple, Union
+from typing import Any, Iterable, Iterator, Optional, Tuple, Union
 
 RecordType = Enum("RecordType", ["scalar", "image", "histogram", "string", "scalar_list"])
 
@@ -66,7 +66,13 @@ class MetricRecord:
     """Represents a recorded metric value."""
 
     def __init__(
-        self, name: Union[Iterable[str], str], value: Any, global_step: int, typ: RecordType, *, walltime: float = None
+        self,
+        name: Union[Iterable[str], str],
+        value: Any,
+        global_step: int,
+        typ: RecordType,
+        *,
+        walltime: Optional[float] = None,
     ):
         """Create a metric record.
 

@@ -4,10 +4,10 @@ import os
 import tempfile
 from operator import itemgetter
 from pathlib import Path
-from typing import Callable, List, Type
+from typing import Callable, List, Optional, Type
 
 import pytest
-from tqdm import tqdm  # type: ignore
+from tqdm import tqdm
 
 import flair
 import flair.datasets.biomedical as biomedical
@@ -166,7 +166,7 @@ def test_conll_writer_one_token_multiple_entities2():
 def assert_conll_writer_output(
     dataset: InternalBioNerDataset,
     expected_output: List[str],
-    sentence_splitter: SentenceSplitter = None,
+    sentence_splitter: Optional[SentenceSplitter] = None,
 ):
     fd, outfile_path = tempfile.mkstemp()
     try:

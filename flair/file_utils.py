@@ -54,7 +54,7 @@ def load_big_file(f: str):
     return bf
 
 
-def url_to_filename(url: str, etag: str = None) -> str:
+def url_to_filename(url: str, etag: Optional[str] = None) -> str:
     """Converts an url into a filename in a reversible way.
 
     If `etag` is specified, add it on the end, separated by a period
@@ -147,7 +147,7 @@ def unzip_file(file: Union[str, Path], unzip_to: Union[str, Path]):
         zipObj.extractall(Path(unzip_to))
 
 
-def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True):
+def unpack_file(file: Path, unpack_to: Path, mode: Optional[str] = None, keep: bool = True):
     """Unpacks an archive file to the given location.
 
     :param file Archive file to unpack

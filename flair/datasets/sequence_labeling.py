@@ -269,13 +269,13 @@ class MultiFileColumnCorpus(Corpus):
         test_files=None,
         dev_files=None,
         column_delimiter: str = r"\s+",
-        comment_symbol: str = None,
+        comment_symbol: Optional[str] = None,
         encoding: str = "utf-8",
-        document_separator_token: str = None,
+        document_separator_token: Optional[str] = None,
         skip_first_line: bool = False,
         in_memory: bool = True,
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
+        banned_sentences: Optional[List[str]] = None,
         default_whitespace_after: int = 1,
         **corpusargs,
     ):
@@ -429,13 +429,13 @@ class ColumnDataset(FlairDataset):
         path_to_column_file: Union[str, Path],
         column_name_map: Dict[int, str],
         column_delimiter: str = r"\s+",
-        comment_symbol: str = None,
-        banned_sentences: List[str] = None,
+        comment_symbol: Optional[str] = None,
+        banned_sentences: Optional[List[str]] = None,
         in_memory: bool = True,
-        document_separator_token: str = None,
+        document_separator_token: Optional[str] = None,
         encoding: str = "utf-8",
         skip_first_line: bool = False,
-        label_name_map: Dict[str, str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
         default_whitespace_after: int = 1,
     ):
         r"""Instantiates a column dataset.
@@ -802,7 +802,7 @@ class ONTONOTES(MultiFileColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         version: str = "v4",
         language: str = "english",
         domain: Union[None, str, List[str], Dict[str, Union[None, str, List[str]]]] = None,
@@ -839,7 +839,7 @@ class ONTONOTES(MultiFileColumnCorpus):
     @classmethod
     def get_available_domains(
         cls,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         version: str = "v4",
         language: str = "english",
         split: str = "train",
@@ -857,7 +857,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         split: str = "train",
         version: str = "v4",
         language: str = "english",
-        domain: Union[str, List[str], Dict[str, Union[None, str, List[str]]]] = None,
+        domain: Optional[Union[str, List[str], Dict[str, Union[None, str, List[str]]]]] = None,
     ) -> Iterable[Path]:
         processed_split_path = processed_data_path / "splits" / version / language / split
 
@@ -947,7 +947,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         return processed_data_path
 
     @classmethod
-    def _ensure_data_downloaded(cls, base_path: Union[str, Path] = None) -> Path:
+    def _ensure_data_downloaded(cls, base_path: Optional[Union[str, Path]] = None) -> Path:
         if not base_path:
             base_path = flair.cache_root / "datasets"
         else:
@@ -1212,7 +1212,7 @@ class ONTONOTES(MultiFileColumnCorpus):
 class CONLL_03(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         column_format={0: "text", 1: "pos", 3: "ner"},
         in_memory: bool = True,
         **corpusargs,
@@ -1260,7 +1260,7 @@ class CONLL_03(ColumnCorpus):
 class CONLL_03_GERMAN(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1309,7 +1309,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
 class CONLL_03_DUTCH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1377,7 +1377,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
 class CONLL_03_SPANISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1421,7 +1421,7 @@ class CONLL_03_SPANISH(ColumnCorpus):
 class CONLL_2000(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1481,7 +1481,7 @@ class CONLL_2000(ColumnCorpus):
 class WNUT_17(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1588,7 +1588,7 @@ class FEWNERD(ColumnCorpus):
 class BIOSCOPE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1623,7 +1623,7 @@ class BIOSCOPE(ColumnCorpus):
 class NER_ARABIC_ANER(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -1673,7 +1673,7 @@ class NER_ARABIC_ANER(ColumnCorpus):
 class NER_ARABIC_AQMAR(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -1729,7 +1729,7 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
 class NER_BASQUE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1778,7 +1778,7 @@ class NER_BASQUE(ColumnCorpus):
 class NER_CHINESE_WEIBO(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -1837,7 +1837,7 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
 class NER_DANISH_DANE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1892,7 +1892,7 @@ class NER_DANISH_DANE(ColumnCorpus):
 class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1938,7 +1938,7 @@ class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
 class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -1994,7 +1994,7 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2031,7 +2031,7 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
 class NER_ENGLISH_RESTAURANT(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2075,7 +2075,7 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
 class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2170,7 +2170,7 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
 class NER_ENGLISH_TWITTER(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2217,7 +2217,7 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
 class NER_ENGLISH_PERSON(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
     ):
         """Initialize the PERSON_NER corpus for person names.
@@ -2271,7 +2271,7 @@ class NER_ENGLISH_PERSON(ColumnCorpus):
 class NER_ENGLISH_WEBPAGES(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2340,7 +2340,7 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
 class NER_ENGLISH_WNUT_2020(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -2404,7 +2404,7 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
 class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -2449,7 +2449,7 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
 class NER_FINNISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2497,7 +2497,7 @@ class NER_FINNISH(ColumnCorpus):
 class NER_GERMAN_BIOFID(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2531,7 +2531,7 @@ class NER_GERMAN_BIOFID(ColumnCorpus):
 class NER_GERMAN_EUROPARL(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2652,7 +2652,7 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
 class NER_GERMAN_LEGAL(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2693,7 +2693,7 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
 class NER_GERMAN_GERMEVAL(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2751,7 +2751,7 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
 class NER_GERMAN_POLITICS(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         column_delimiter: str = r"\s+",
         in_memory: bool = True,
         **corpusargs,
@@ -2871,7 +2871,7 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
 class NER_HUNGARIAN(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -2922,7 +2922,7 @@ class NER_HUNGARIAN(ColumnCorpus):
 class NER_ICELANDIC(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -2981,7 +2981,7 @@ class NER_ICELANDIC(ColumnCorpus):
 class NER_JAPANESE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -3060,7 +3060,7 @@ class NER_MASAKHANE(MultiCorpus):
         self,
         languages: Union[str, List[str]] = "luo",
         version: str = "v2",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -3186,7 +3186,7 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
     def __init__(
         self,
         task: str = "multi",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -3251,7 +3251,7 @@ class NER_MULTI_CONER_V2(MultiFileColumnCorpus):
     def __init__(
         self,
         task: str = "multi",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         use_dev_as_test: bool = True,
         **corpusargs,
@@ -3335,7 +3335,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
     def __init__(
         self,
         languages: Union[str, List[str]] = "en",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
     ):
@@ -3759,7 +3759,7 @@ class NER_MULTI_XTREME(MultiCorpus):
     def __init__(
         self,
         languages: Union[str, List[str]] = "en",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
     ):
@@ -3911,7 +3911,7 @@ class NER_MULTI_WIKINER(MultiCorpus):
     def __init__(
         self,
         languages: Union[str, List[str]] = "en",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
     ):
@@ -3987,7 +3987,7 @@ class NER_MULTI_WIKINER(MultiCorpus):
 class NER_SWEDISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -4075,7 +4075,7 @@ class NER_SWEDISH(ColumnCorpus):
 class NER_TURKU(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -4127,7 +4127,7 @@ class NER_TURKU(ColumnCorpus):
 class NER_UKRAINIAN(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -4175,7 +4175,7 @@ class NER_UKRAINIAN(ColumnCorpus):
 class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -4208,7 +4208,7 @@ class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
 class KEYPHRASE_INSPEC(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -4244,7 +4244,7 @@ class KEYPHRASE_INSPEC(ColumnCorpus):
 class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -4276,7 +4276,7 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
 class UP_CHINESE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -4326,7 +4326,7 @@ class UP_CHINESE(ColumnCorpus):
 class UP_ENGLISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -4377,7 +4377,7 @@ class UP_ENGLISH(ColumnCorpus):
 class UP_FRENCH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -4427,7 +4427,7 @@ class UP_FRENCH(ColumnCorpus):
 class UP_FINNISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -4477,7 +4477,7 @@ class UP_FINNISH(ColumnCorpus):
 class UP_GERMAN(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -4527,7 +4527,7 @@ class UP_GERMAN(ColumnCorpus):
 class UP_ITALIAN(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -4577,7 +4577,7 @@ class UP_ITALIAN(ColumnCorpus):
 class UP_SPANISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -4627,7 +4627,7 @@ class UP_SPANISH(ColumnCorpus):
 class UP_SPANISH_ANCORA(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
@@ -4706,7 +4706,7 @@ class NER_HIPE_2022(ColumnCorpus):
         self,
         dataset_name: str,
         language: str,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         version: str = "v2.1",
         branch_name: str = "main",
@@ -4834,7 +4834,7 @@ class NER_ICDAR_EUROPEANA(ColumnCorpus):
     def __init__(
         self,
         language: str,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ):
@@ -4893,7 +4893,7 @@ class NER_NERMUD(MultiCorpus):
     def __init__(
         self,
         domains: Union[str, List[str]] = "all",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
     ):

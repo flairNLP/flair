@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 import flair
 from flair.data import (
@@ -36,8 +36,8 @@ class ClassificationCorpus(Corpus):
         filter_if_longer_than: int = -1,
         tokenizer: Union[bool, Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "partial",
-        label_name_map: Dict[str, str] = None,
-        skip_labels: List[str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
+        skip_labels: Optional[List[str]] = None,
         allow_examples_without_labels=False,
         sample_missing_splits: bool = True,
         encoding: str = "utf-8",
@@ -135,8 +135,8 @@ class ClassificationDataset(FlairDataset):
         filter_if_longer_than: int = -1,
         tokenizer: Union[bool, Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "partial",
-        label_name_map: Dict[str, str] = None,
-        skip_labels: List[str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
+        skip_labels: Optional[List[str]] = None,
         allow_examples_without_labels=False,
         encoding: str = "utf-8",
     ):
@@ -749,7 +749,7 @@ class IMDB(ClassificationCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         rebalance_corpus: bool = True,
         tokenizer: Tokenizer = SegtokTokenizer(),
         memory_mode="partial",
@@ -836,7 +836,7 @@ class NEWSGROUPS(ClassificationCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         tokenizer: Tokenizer = SegtokTokenizer(),
         memory_mode: str = "partial",
         **corpusargs,
@@ -924,7 +924,7 @@ class STACKOVERFLOW(ClassificationCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         tokenizer: Tokenizer = SegtokTokenizer(),
         memory_mode: str = "partial",
         **corpusargs,
@@ -1405,7 +1405,7 @@ class GLUE_COLA(ClassificationCorpus):
     def __init__(
         self,
         label_type="acceptability",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         tokenizer: Tokenizer = SegtokTokenizer(),
         **corpusargs,
     ):
@@ -1497,7 +1497,7 @@ class GLUE_SST2(CSVClassificationCorpus):
     def __init__(
         self,
         label_type: str = "sentiment",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         tokenizer: Tokenizer = SegtokTokenizer(),
@@ -1581,7 +1581,7 @@ class GO_EMOTIONS(ClassificationCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         tokenizer: Union[bool, Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "partial",
         **corpusargs,
@@ -1685,7 +1685,7 @@ class TREC_50(ClassificationCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode="full",
         **corpusargs,
@@ -1743,7 +1743,7 @@ class TREC_6(ClassificationCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode="full",
         **corpusargs,
@@ -1803,7 +1803,7 @@ class YAHOO_ANSWERS(ClassificationCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         memory_mode="partial",
         **corpusargs,
@@ -1882,7 +1882,7 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         tokenizer: Union[bool, Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "full",
         fine_grained_classes: bool = False,
@@ -1953,7 +1953,7 @@ class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         memory_mode: str = "full",
         tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
         **corpusargs,
@@ -2037,7 +2037,9 @@ class WASSA_ANGER(ClassificationCorpus):
     see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html.
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
+    def __init__(
+        self, base_path: Optional[Union[str, Path]] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs
+    ):
         """Instantiates WASSA-2017 anger emotion-intensity corpus.
 
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
@@ -2066,7 +2068,9 @@ class WASSA_FEAR(ClassificationCorpus):
     see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html.
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
+    def __init__(
+        self, base_path: Optional[Union[str, Path]] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs
+    ):
         """Instantiates WASSA-2017 fear emotion-intensity corpus.
 
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
@@ -2095,7 +2099,9 @@ class WASSA_JOY(ClassificationCorpus):
     see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
+    def __init__(
+        self, base_path: Optional[Union[str, Path]] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs
+    ):
         """Instantiates WASSA-2017 joy emotion-intensity corpus.
 
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
@@ -2124,7 +2130,9 @@ class WASSA_SADNESS(ClassificationCorpus):
     see https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html.
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs):
+    def __init__(
+        self, base_path: Optional[Union[str, Path]] = None, tokenizer: Tokenizer = SegtokTokenizer(), **corpusargs
+    ):
         """Instantiates WASSA-2017 sadness emotion-intensity dataset.
 
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
