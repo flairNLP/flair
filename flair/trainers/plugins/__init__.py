@@ -2,6 +2,7 @@ from .base import BasePlugin, Pluggable, TrainerPlugin, TrainingInterrupt
 from .functional.anneal_on_plateau import AnnealingPlugin
 from .functional.checkpoints import CheckpointPlugin
 from .functional.linear_scheduler import LinearSchedulerPlugin
+from .functional.reduce_transformer_vocab import ReduceTransformerVocabPlugin
 from .functional.weight_extractor import WeightExtractorPlugin
 from .loggers.clearml_logger import ClearmlLoggerPlugin
 from .loggers.log_file import LogFilePlugin
@@ -24,6 +25,7 @@ __all__ = [
     "Pluggable",
     "TrainerPlugin",
     "TrainingInterrupt",
+    "ReduceTransformerVocabPlugin",
     "MetricName",
     "MetricRecord",
 ]

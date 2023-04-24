@@ -1,0 +1,75 @@
+import logging
+from pathlib import Path
+from typing import List
+
+from transformer_smaller_training_vocab import reduce_train_vocab
+
+from flair.embeddings import TransformerEmbeddings, Embeddings, StackedEmbeddings
+from flair.models import FewshotClassifier
+from flair.nn import Model
+from flair.nn.model import ReduceTransformerVocabMixin
+from flair.trainers.plugins import TrainerPlugin
+
+log = logging.getLogger("flair")
+
+
+class ReduceTransformerVocabPlugin(TrainerPlugin):
+
+    def __init__(self, base_path: Path, save_optimizer_state: bool):
+        super().__init__()
+        self.base_path = base_path
+        self.save_optimizer_state = save_optimizer_state
+        self.disabled = False
+
+    def register_transformer_smaller_training_vocab(self):
+        if not isinstance(self.model, ReduceTransformerVocabMixin):
+            log.warning("Cannot reduce the transformer vocab: model is not supported.")
+            self.disabled = True
+            return
+
+        embeddings = get_transformer_embeddings(self.model)
+        if not embeddings:
+            self.disabled = True
+            log.warning("Cannot reduce the transformer vocab: no transformer embeddings found.")
+
+        tokens = list(self.model.get_used_tokens(self.corpus))
+        for emb in embeddings:
+            self.trainer.context_stack.enter_context(
+                reduce_train_vocab(
+                    model=emb.model, tokenizer=emb.tokenizer, texts=tokens, optimizer=self.trainer.optimizer
+                )
+            )
+
+    def save_model_at_the_end(self):
+        # saves the model
+        if self.disabled:
+            return
+
+        if (self.base_path / "best-model.pt").exists():
+            self.model.save(self.base_path / "best-model.pt", checkpoint=self.save_optimizer_state)
+        elif (self.base_path / "final-model.pt").exists():
+            self.model.save(self.base_path / "final-model.pt", checkpoint=self.save_optimizer_state)
+
+
+def get_transformer_embeddings(model: Model) -> List[TransformerEmbeddings]:
+    if isinstance(model, FewshotClassifier):
+        embeddings = model.tars_embeddings
+    else:
+        embeddings = getattr(model, "embeddings", None)
+
+    if embeddings is None:
+        log.warning(f"Could not extract embeddings of Model of type {type(model)}")
+        return []
+
+    transformer_embeddings = set()
+
+    def scan_embeddings(emb: Embeddings):
+        if isinstance(emb, StackedEmbeddings):
+            for sub_emb in emb.embeddings:
+                scan_embeddings(sub_emb)
+        if isinstance(emb, TransformerEmbeddings):
+            transformer_embeddings.add(emb)
+
+    scan_embeddings(embeddings)
+
+    return list(transformer_embeddings)
