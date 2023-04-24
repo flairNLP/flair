@@ -478,7 +478,7 @@ class ModelTrainer(Pluggable):
         # -- AnnealingPlugin -> initialize schedulers (requires instantiated optimizer)
         self.dispatch("after_setup", **parameters)
 
-        scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
+        scaler = torch.cuda.amp.GradScaler(enabled=use_amp and flair.device.type != "cpu")
 
         final_eval_info = (
             "model after last epoch (final-model.pt)"
