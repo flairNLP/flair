@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import List, Optional, Tuple, Type, Union
 
 import torch
-from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
 
