@@ -109,7 +109,7 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
 
     def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Token]:
         # special handling during training if this is a span prediction problem
-        if self.span_prediction_problem:  # do we need self.training here?
+        if self.training and self.span_prediction_problem:
             for token in sentence.tokens:
                 token.set_label(self.label_type, "O")
                 for span in sentence.get_spans(self.label_type):
