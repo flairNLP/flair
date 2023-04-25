@@ -127,19 +127,28 @@ class PrototypicalDecoder(torch.nn.Module):
 
 class LabelVerbalizerDecoder(torch.nn.Module):
     """
-    A class for decoding labels using the idea of siamese networks / bi-encoders. This can be used for all classification tasks in flair.
+    A class for decoding labels using the idea of siamese networks / bi-encoders.
+    This can be used for all classification tasks in flair.
 
     Args:
-        label_encoder (flair.embeddings.TokenEmbeddings): The label encoder used to encode the labels into an embedding.
-        label_dictionary (flair.data.Dictionary): The label dictionary containing the mapping between labels and indices.
-        decoding (str): The decoding method to use. Can be either "dot-product" or "cosine-distance". Default is "dot-product".
+        label_encoder (flair.embeddings.TokenEmbeddings):
+            The label encoder used to encode the labels into an embedding.
+        label_dictionary (flair.data.Dictionary):
+            The label dictionary containing the mapping between labels and indices.
+        decoding (str):
+            The decoding method to use. Can be either "dot-product" or "cosine-distance". Default is "dot-product".
 
     Attributes:
-        label_encoder (flair.embeddings.TokenEmbeddings): The label encoder used to encode the labels into an embedding.
-        label_dictionary (flair.data.Dictionary): The label dictionary containing the mapping between labels and indices.
-        decoding (str): The decoding method to use.
-        distance (flair.nn.distance): Only for cosine-distance.
-        distance_score_transformation (torch.nn.Module): Only for cosine-distance, identity function.
+        label_encoder (flair.embeddings.TokenEmbeddings):
+            The label encoder used to encode the labels into an embedding.
+        label_dictionary (flair.data.Dictionary):
+            The label dictionary containing the mapping between labels and indices.
+        decoding (str):
+            The decoding method to use.
+        distance (flair.nn.distance):
+            Only for cosine-distance.
+        distance_score_transformation (torch.nn.Module):
+            Only for cosine-distance, identity function.
 
     Methods:
         forward(self, label_embeddings: torch.Tensor, context_embeddings: torch.Tensor) -> torch.Tensor:
