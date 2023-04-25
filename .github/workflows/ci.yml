@@ -37,29 +37,17 @@ jobs:
         with:
           virtualenvs-in-project: true
       #----------------------------------------------
-      #       load cached venv if cache exists
+      #       Lock dependencies to get fresh versions
       #----------------------------------------------
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Run poetry lock
+        run: poetry lock
       #----------------------------------------------
       # install dependencies if cache does not exist
       #----------------------------------------------
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: |
           poetry config virtualenvs.in-project true
           poetry install --no-interaction --no-root
-      #----------------------------------------------
-      # install your root project, if required
-      #----------------------------------------------
-      - name: Install project
-        run: |
-          poetry config virtualenvs.in-project true
-          poetry install --no-interaction
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
