@@ -19,7 +19,7 @@ class BaseEmbeddingsTest:
     name_field: Optional[str] = None
     weired_texts: List[str] = [
         "Hybrid mesons , qq ̄ states with an admixture",
-        "typical proportionalities of ~ 1nmV - 1 [ 3,4 ] .",
+        "typical proportionalities of \u223C 1nmV \u2212 1 [ 3,4 ] .",
         "🤟 🤟  🤟 hüllo",
         "🤟hallo 🤟 🤟 🤟 🤟",
         "🤟",

@@ -114,6 +114,7 @@ target-version = "py37"
 select = [
   "C4",
   "COM",
+  "D",
   "E",
   "EXE",
   "F",
@@ -139,6 +140,13 @@ select = [
 
 ignore = [
   "COM812", # Do not force trailing commas for function argument lists
+  "D100",   # Don't force presence of docstrings (D100-D107)
+  "D101",
+  "D102",
+  "D103",
+  "D104",
+  "D105",
+  "D107",
   "E501",   # Ignore line too long
 ]
 
@@ -148,6 +156,12 @@ unfixable = [
   "EXE002", # Do not check python files for executability, doesn't work well on windows
   "F841",   # Do not remove unused variables automatically
 ]
+
+[tool.ruff.per-file-ignores]
+"flair/embeddings/legacy.py" = ["D205"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
 
 [tool.pydocstyle]
 match = "^(?!legacy).*\\.py$"

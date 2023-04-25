@@ -35,7 +35,7 @@ class EuclideanDistance(nn.Module):
         mat_2: torch.Tensor
             matrix of shape (n_2, n_features)
 
-        Returns
+        Returns:
         -------
         dist: torch.Tensor
             distance matrix of shape (n_1, n_2)
@@ -57,7 +57,7 @@ class EuclideanMean(nn.Module):
         data : torch.Tensor
             The input data, as a float tensor
 
-        Returns
+        Returns:
         -------
         torch.Tensor
             The encoded output, as a float tensor
