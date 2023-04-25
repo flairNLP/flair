@@ -27,27 +27,16 @@ the code should hopefully be easy.
 
 ### Setup
 
-We use [poetry](https://python-poetry.org) for dependency and virtual environment management. Additionally
-[pre-commit](https://pre-commit.com/) is recommended to do code formatting and checking on your code when you commit.
-Install poetry and pre-commit on your system if you have not already. Using the [pipx](https://pypa.github.io/pipx/)
-package installer:
+Flair requires python-3.7 or higher. To make sure your code also runs on the oldest supported
+python version, it is recommended to use python-3.7.x for flair development.
+
+We use [poetry](https://python-poetry.org) for dependency and virtual environment management.
+Install poetry following the official guide at https://python-poetry.org/docs/#installation - using the official installer
+or via [pipx](https://pypa.github.io/pipx/).
+
+After the pre-conditions are met, switch into the checked out flair folder.
 
 ```bash
-# Install pipx and make sure the PATH is set up
-pip install pipx
-python -m pipx ensurepath
-
-# Install pre-commit and poetry via pipx
-pipx install pre-commit
-pipx install poetry
-```
-
-After these pre-conditions are met, switch into the checked out flair folder.
-
-```bash
-# Activate on-commit formatting and checks
-pre-commit install
-
 # Install dependencies (including dev dependencies)
 poetry install
 
@@ -80,8 +69,7 @@ In general, it is recommended to ensure all basic tests are running through befo
 
 ### Code Formatting
 
-To ensure a standardized code style we use the formatter [black](https://github.com/ambv/black) and for standardizing imports we use [isort](https://github.com/PyCQA/isort).
-If your code is not formatted properly, the tests will fail.
-
-If you set up pre-commit hooks, every git commit will automatically run these formatters. Otherwise you can also manually run them, or let your IDE run them on every file save.
-Running from the command line works via `black flair/ && isort flair/` in the flair root folder.
+To ensure a standardized code style we use the formatter [black](https://github.com/ambv/black) and for standardizing
+imports we use [isort](https://github.com/PyCQA/isort). If your code is not formatted properly, the tests will fail.
+We recommend configuring your IDE to run these formatters for you, but you can also always run them manually via
+`black . && isort .` in the flair root folder.
