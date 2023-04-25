@@ -126,8 +126,7 @@ class PrototypicalDecoder(torch.nn.Module):
 
 
 class LabelVerbalizerDecoder(torch.nn.Module):
-    """
-    A class for decoding labels using the idea of siamese networks / bi-encoders.
+    """A class for decoding labels using the idea of siamese networks / bi-encoders.
     This can be used for all classification tasks in flair.
 
     Args:
@@ -174,8 +173,7 @@ class LabelVerbalizerDecoder(torch.nn.Module):
 
     @staticmethod
     def verbalize_labels(label_dictionary: Dictionary) -> List[Sentence]:
-        """
-        Takes a label dictionary and returns a list of sentences with verbalized labels.
+        """Takes a label dictionary and returns a list of sentences with verbalized labels.
 
         Args:
             label_dictionary (flair.data.Dictionary): The label dictionary to verbalize.
@@ -208,8 +206,7 @@ class LabelVerbalizerDecoder(torch.nn.Module):
         return list(map(Sentence, verbalized_labels))
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        """
-        Forward pass of the label verbalizer decoder.
+        """Forward pass of the label verbalizer decoder.
 
         Args:
             inputs (torch.Tensor): The input tensor.
