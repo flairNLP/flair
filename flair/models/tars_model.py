@@ -534,6 +534,7 @@ class TARSTagger(FewshotClassifier):
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
                         tars_sentences.append(tars_sentence)
                         labels_to_sentence[label] = tars_sentence
+                    all_labels_to_sentence.append(labels_to_sentence)
 
                 loss_and_count = self.tars_model.predict(
                     tars_sentences,
@@ -905,6 +906,7 @@ class TARSClassifier(FewshotClassifier):
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
                         tars_sentences.append(tars_sentence)
                         labels_to_sentence[label] = tars_sentence
+                    all_labels_to_sentence.append(labels_to_sentence)
 
                 loss_and_count = self.tars_model.predict(
                     tars_sentences,
