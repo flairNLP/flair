@@ -96,8 +96,14 @@ class SGDW(Optimizer):
     def step(self, closure=None):
         """Performs a single optimization step.
 
-        param: closure (callable, optional): A closure that reevaluates the model
+        Parameters
+        ----------
+        closure (callable, optional): A closure that reevaluates the model
                and returns the loss.
+
+        Returns:
+        -------
+        loss (float, optional): The loss if closure was set
         """
         loss = None
         if closure is not None:
