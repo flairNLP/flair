@@ -196,9 +196,9 @@ class TextClassifierLossModifications(TextClassifier):
         last_iters = []
         true_labels = [] 
         for data_point in data_points:
-            last_preds.append(int(data_point.get_label('last_prediction').value))
-            last_confs.append(float(data_point.get_label('last_confidence_sum').value))
-            last_iters.append(int(data_point.get_label('last_iteration').value))
+            last_preds.append(data_point.get_metric('last_prediction'))
+            last_confs.append(data_point.get_metric('last_confidence_sum'))
+            last_iters.append(data_point.get_metric('last_iteration'))
         return torch.tensor(last_preds,device=flair.device),  torch.tensor(last_confs,device=flair.device),torch.tensor(last_iters,device=flair.device)
 
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
@@ -227,9 +227,9 @@ class TextClassifierLossModifications(TextClassifier):
             # function, initialize metrics history
             for dp in data_points:
                 # enable choice of metrics to store?
-                dp.set_label('last_prediction', -1)
-                dp.set_label('last_confidence_sum', 0 )
-                dp.set_label('last_iteration', 0 )
+                dp.set_metric('last_prediction', -1)
+                dp.set_metric('last_confidence_sum', 0 )
+                dp.set_metric('last_iteration', 0 )
 
         #add iter_norm, variability?
 
@@ -298,9 +298,9 @@ class TextClassifierLossModifications(TextClassifier):
 
         #separate in a function (update metrics history)
         for i, dp in enumerate(data_points):
-            dp.set_label('last_prediction',pred[i] )
-            dp.set_label('last_confidence_sum', confidence_sum[i] )
-            dp.set_label('last_iteration',iteration[i] )
+            dp.set_metric('last_prediction',pred[i] )
+            dp.set_metric('last_confidence_sum', confidence_sum[i] )
+            dp.set_metric('last_iteration',iteration[i] )
             # new dp properties: last_iter; last_pred; last_conf, last_sq_sum            
 
         # calculate the loss

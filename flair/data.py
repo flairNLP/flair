@@ -264,6 +264,7 @@ class DataPoint:
         self.annotation_layers = {}
         self._embeddings: Dict[str, torch.Tensor] = {}
         self._metadata: Dict[str, typing.Any] = {}
+        self.metric_history: Dict[str, typing.Any] = {}
 
     @property
     @abstractmethod
@@ -354,6 +355,19 @@ class DataPoint:
             return self.labels
 
         return self.annotation_layers[typename] if typename in self.annotation_layers else []
+
+    def set_metric(self, typename: str, value: typing.Any):
+        self.metric_history[typename] = value
+        return self
+
+    def remove_metrics(self, typename: str):
+        if typename in self.metric_history.keys():
+            del self.metric_history[typename]
+
+    def get_metric(self, typename: str = None, zero_tag_value=-2):
+        if typename not in self.metric_history:
+            return zero_tag_value
+        return self.metric_history[typename]
 
     @property
     def labels(self) -> List[Label]:
