@@ -6,7 +6,7 @@ import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Sentence
+from flair.data import Sentence, DT, DT2
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -186,3 +186,90 @@ class TextClassifierLossModifications(TextClassifier):
             # multiply by loss weight and sum
             loss = torch.mul(loss, batch_weights)
         return torch.sum(loss), labels.size(0)
+
+        
+    def _get_metrics_for_batch(self, data_points):
+        last_preds = []
+        last_confs = []
+        last_iters = []
+        true_labels = [] 
+        for data_point in data_points:
+            last_preds.append(int(data_point.get_label('last_prediction').value))
+            last_confs.append(float(data_point.get_label('last_confidence_sum').value))
+            last_iters.append(int(data_point.get_label('last_iteration').value))
+        return torch.tensor(last_preds,device=flair.device),  torch.tensor(last_confs,device=flair.device),torch.tensor(last_iters,device=flair.device)
+
+    def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
+        # make a forward pass to produce embedded data points and labels
+        sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
+    
+        # get the data points for which to predict labels
+        data_points = self._get_data_points_for_batch(sentences)
+        if self.model_card["training_parameters"]["epoch"]==1:
+            # function, initialize metrics history
+            for dp in data_points:
+                # enable choice of metrics to store?
+                dp.set_label('last_prediction', -1)
+                dp.set_label('last_confidence_sum', 0 )
+                dp.set_label('last_iteration', 0 )
+
+        #add iter_norm, variability?
+
+        #dictionary metrics_history = {'last_conf':, ' last_pred':}
+        last_prediction, last_confidence, last_iteration = self._get_metrics_for_batch(data_points)
+
+        if len(data_points) == 0:
+            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+
+        # get their gold labels as a tensor
+        label_tensor = self._prepare_label_tensor(data_points)
+        if label_tensor.size(0) == 0:
+            return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
+
+        # pass data points through network to get encoded data point tensor
+        data_point_tensor = self._encode_data_points(sentences, data_points)
+
+        # decode
+        scores = self.decoder(data_point_tensor)
+
+        # an optional masking step (no masking in most cases)
+        scores = self._mask_scores(scores, data_points)
+
+        # metric keys 'confidence', msp, bvsb, iter_norm...
+        # metric history keys: confidence_sum, last prediction, last_iter_norm
+        #metrics = self._calculate_metrics_for_batch(scores, label_tensor, )
+        
+        softmax = torch.nn.functional.softmax(scores)
+        #log.info(softmax)
+
+        pred = torch.argmax(softmax, dim=1)
+
+        values, indices = softmax.topk(2)
+
+        # Metric: Max softmax prob (calculate_loss)
+        msp = values[:,0]
+
+        # Best vs second best (calculate_loss)
+        BvSB = msp - values[:,1]
+
+        batch_label_indexer = label_tensor.reshape(label_tensor.size(dim=0),1)
+        current_prob_true_labl = softmax.gather(index=batch_label_indexer, dim=1)[:,0]
+        #print(current_prob_true_labl)
+
+        confidence_sum = torch.add(last_confidence, current_prob_true_labl)
+        confidence = torch.div(confidence_sum,self.model_card["training_parameters"]["epoch"])
+        
+        iteration = last_iteration.clone()
+        prediction_changed_list = (pred != last_prediction).bool()
+        iteration[prediction_changed_list] = self.model_card["training_parameters"]["epoch"]
+
+        iter_norm = torch.div(iteration,self.model_card["training_parameters"]["epoch"])
+        #separate in a function (update metrics history)
+        for i, dp in enumerate(data_points):
+            dp.set_label('last_prediction',pred[i] )
+            dp.set_label('last_confidence_sum', confidence_sum[i] )
+            dp.set_label('last_iteration',iteration[i] )
+            # new dp properties: last_iter; last_pred; last_conf, last_sq_sum            
+
+        # calculate the loss
+        return self._calculate_loss(scores, label_tensor)

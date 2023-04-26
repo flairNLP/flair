@@ -736,22 +736,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
         # make a forward pass to produce embedded data points and labels
         sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
-    
+
         # get the data points for which to predict labels
         data_points = self._get_data_points_for_batch(sentences)
-
-        if self.model_card["training_parameters"]["epoch"]==1:
-            # function, initialize metrics history
-            for dp in data_points:
-                # enable choice of metrics to store?
-                dp.set_label('last_prediction', -1)
-                dp.set_label('last_confidence_sum', 0 )
-
-        #add iter_norm, variability?
-
-        #dictionary metrics_history = {'last_conf':, ' last_pred':}
-        last_pred, last_confidence = self._get_metrics_for_batch(data_points)
-
         if len(data_points) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
@@ -768,41 +755,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
         # an optional masking step (no masking in most cases)
         scores = self._mask_scores(scores, data_points)
-
-        # metric keys 'confidence', msp, bvsb, iter_norm...
-        # metric history keys: confidence_sum, last prediction, last_iter_norm
-        #metrics = self._calculate_metrics_for_batch(scores, label_tensor, )
-        
-        softmax = torch.nn.functional.softmax(scores)
-        #log.info(softmax)
-
-        pred = torch.argmax(softmax, dim=1)
-
-        values, indices = softmax.topk(2)
-
-        # Metric: Max softmax prob (calculate_loss)
-        msp = values[:,0]
-
-        # Best vs second best (calculate_loss)
-        BvSB = msp - values[:,1]
-
-        batch_label_indexer = label_tensor.reshape(label_tensor.size(dim=0),1)
-        current_prob_true_labl = softmax.gather(index=batch_label_indexer, dim=1)[:,0]
-        #print(current_prob_true_labl)
-
-        confidence_sum = torch.add(last_confidence, current_prob_true_labl)
-        confidence = torch.div(confidence_sum,self.model_card["training_parameters"]["epoch"])
-        # end
-
-
-        # separate in a function (update metrics history)
-        for i, dp in enumerate(data_points):
-            dp.set_label('last_prediction',pred[i] )
-            #current_prob_true_labl = softmax[true]
-            dp.set_label('last_confidence_sum', confidence_sum[i] )
-            # new dp properties: last_iter; last_pred; last_conf, last_sq_sum
-            # set them all to zero somewhere in the begining
-            
 
         # calculate the loss
         return self._calculate_loss(scores, label_tensor)
