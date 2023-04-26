@@ -1558,9 +1558,9 @@ class Corpus(typing.Generic[T_co]):
 
         corrupted_count = 0
         total_label_count = 0
-
         if noise_transition_matrix:
             ntm_labels = noise_transition_matrix.keys()
+            generated_ntm = np.zeros((len(list(ntm_labels)), len(list(ntm_labels))))
 
             if set(ntm_labels) != set(labels):
                 raise AssertionError(
@@ -1583,6 +1583,7 @@ class Corpus(typing.Generic[T_co]):
                     if new_label != orig_label:
                         corrupted_count += 1
 
+                    generated_ntm[list(ntm_labels).index(orig_label),list(ntm_labels).index(new_label)] += 1
         else:
             if noise_share < 0 or noise_share > 1:
                 raise ValueError("noise_share must be between 0 and 1.")
@@ -1611,6 +1612,8 @@ class Corpus(typing.Generic[T_co]):
         log.info(
             f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count / total_label_count) * 100, 2)}%."
         )
+
+        return round((corrupted_count / total_label_count) * 100, 2), generated_ntm
 
     def print_noisy_dataset(self, label_type, path, split='train'):
         log.info(path)
