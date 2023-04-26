@@ -255,10 +255,10 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         return self.get_current_label_type()
 
     def predict_zero_shot(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            candidate_label_set: Union[List[str], Set[str], str],
-            multi_label: bool = True,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        candidate_label_set: Union[List[str], Set[str], str],
+        multi_label: bool = True,
     ):
         """Make zero shot predictions from the TARS model.
 
@@ -463,15 +463,15 @@ class TARSTagger(FewshotClassifier):
         return self.tars_model.embeddings
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size=32,
-            return_probabilities_for_all_classes: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
-            most_probable_first: bool = True,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size=32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
+        most_probable_first: bool = True,
     ):
         """Predict sequence tags for Named Entity Recognition task.
 
@@ -819,17 +819,17 @@ class TARSClassifier(FewshotClassifier):
         return self.tars_model.embeddings
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size=32,
-            return_probabilities_for_all_classes: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
-            label_threshold: float = 0.5,
-            multi_label: Optional[bool] = None,
-            force_label: bool = False,
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size=32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
+        label_threshold: float = 0.5,
+        multi_label: Optional[bool] = None,
+        force_label: bool = False,
     ):
         """Predict sentences on the Text Classification task.
 
@@ -890,7 +890,6 @@ class TARSClassifier(FewshotClassifier):
 
         with torch.no_grad():
             for batch in dataloader:
-
                 batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
                 if not batch:
