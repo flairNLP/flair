@@ -814,20 +814,28 @@ class TARSClassifier(FewshotClassifier):
         embedding_storage_mode="none",
         label_threshold: float = 0.5,
         multi_label: Optional[bool] = None,
+        force_label: bool = False,
     ):
         """Predict sentences on the Text Classification task.
 
-        :param sentences: a Sentence or a List of Sentence
-        :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
-        up to a point when it has no more effect.
-        :param all_tag_prob: True to compute the score for each tag on each token,
-        otherwise only the score of the best tag is returned
-        :param verbose: set to True to display a progress bar
-        :param return_loss: set to True to return loss
-        :param label_name: set this to change the name of the label type that is predicted
-        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
-        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
-        'gpu' to store embeddings in GPU memory.
+        Args:
+            return_probabilities_for_all_classes: if True, all classes will be added with their respective confidences.
+            sentences: a Sentence or a List of Sentence
+            force_label: when multilabel is active, you can force to always get atleast one prediction.
+            multi_label: if True multiple labels can be predicted. Defaults to the setting of the configured task.
+            label_threshold: when multi_label, specify the threshold when a class is considered as predicted.
+            mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
+                up to a point when it has no more effect.
+            all_tag_prob: True to compute the score for each tag on each token,
+                otherwise only the score of the best tag is returned
+            verbose: set to True to display a progress bar
+            return_loss: set to True to also compute the loss
+            label_name: set this to change the name of the label type that is predicted
+            embedding_storage_mode: default is 'none' which doesn't store the embeddings in RAM. Only set to 'cpu' or 'gpu' if
+                you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+                'gpu' to store embeddings in GPU memory.
+
+
         """
         if label_name is None:
             label_name = self.get_current_label_type()
@@ -878,6 +886,8 @@ class TARSClassifier(FewshotClassifier):
                     sentence.remove_labels(label_name)
 
                     all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
+                    best_value = ""
+                    best_score = 0.0
 
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
@@ -903,6 +913,9 @@ class TARSClassifier(FewshotClassifier):
                             if score > label_threshold:
                                 # do not add labels below confidence threshold
                                 sentence.add_label(label_name, label, score)
+                            if score > best_score:
+                                best_score = score
+                                best_value = label
 
                     # only use label with highest confidence if enforcing single-label predictions
                     if not multi_label and len(sentence.get_labels(label_name)) > 0:
@@ -919,6 +932,12 @@ class TARSClassifier(FewshotClassifier):
                             typename=label_name,
                             value=best_label.value,
                             score=best_label.score,
+                        )
+                    if multi_label and force_label and len(sentence.get_labels(label_name)) == 0:
+                        sentence.add_label(
+                            typename=label_name,
+                            value=best_value,
+                            score=best_score,
                         )
 
                 # clearing token embeddings to save memory
