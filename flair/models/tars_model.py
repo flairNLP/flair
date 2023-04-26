@@ -895,12 +895,14 @@ class TARSClassifier(FewshotClassifier):
 
                         # add all labels that according to TARS match the text and are above threshold
                         for predicted_tars_label in tars_sentence.get_labels(label_name):
-                            if (
-                                predicted_tars_label.value == self.LABEL_MATCH
-                                and predicted_tars_label.score > label_threshold
-                            ):
+                            score = (
+                                predicted_tars_label.score
+                                if predicted_tars_label.value == self.LABEL_MATCH
+                                else 1 - predicted_tars_label.score
+                            )
+                            if score > label_threshold:
                                 # do not add labels below confidence threshold
-                                sentence.add_label(label_name, label, predicted_tars_label.score)
+                                sentence.add_label(label_name, label, score)
 
                     # only use label with highest confidence if enforcing single-label predictions
                     if not multi_label and len(sentence.get_labels(label_name)) > 0:
