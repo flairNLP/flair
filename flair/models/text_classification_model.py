@@ -9,6 +9,8 @@ import flair.nn
 from flair.data import Sentence, DT, DT2
 from flair.file_utils import cached_path
 
+import os
+
 log = logging.getLogger("flair")
 
 
@@ -160,6 +162,7 @@ class TextClassifierLossModifications(TextClassifier):
             self.pe_norm = True # cce * pe
         elif loss == 'entropy_loss':
             self.entropy_loss = True
+        self.print_out_path = None
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
         # get softmax values
@@ -168,8 +171,7 @@ class TextClassifierLossModifications(TextClassifier):
         entropy = -torch.sum(torch.mul(softmax, torch.log(softmax)), dim = -1)
         # calc cross entropy for each data point
         cross_entropy = torch.nn.functional.nll_loss(torch.log(softmax), labels, reduction='none')
-        #log.info(self.pe_norm)
-        #log.info(self.model_card["training_parameters"]["epoch"])
+
         if self.entropy_loss:
             loss = cross_entropy + entropy
         elif self.pe_norm and self.model_card["training_parameters"]["epoch"]>2:
@@ -205,6 +207,22 @@ class TextClassifierLossModifications(TextClassifier):
     
         # get the data points for which to predict labels
         data_points = self._get_data_points_for_batch(sentences)
+        
+        epoch_log_path = "epoch_log_"+str(self.model_card["training_parameters"]["epoch"])+'.log'
+     
+        if not os.path.isfile(self.print_out_path / epoch_log_path):
+            with open(self.print_out_path / epoch_log_path, "w") as outfile:
+                outfile.write('Text' + "\t" + 
+                            'pred' + "\t" + 
+                            'true' + "\t" + 
+                            'last_pred' + "\t" +
+                            'last_iteration' + "\t" +
+                            'iter_norm' + "\t" +
+                            'current_prob_true_label' + "\t" +
+                            'last_conf_sum' + "\t" +
+                            'confidence' + "\t" +                            
+                            'msp' + "\n")
+                
         if self.model_card["training_parameters"]["epoch"]==1:
             # function, initialize metrics history
             for dp in data_points:
@@ -264,6 +282,20 @@ class TextClassifierLossModifications(TextClassifier):
         iteration[prediction_changed_list] = self.model_card["training_parameters"]["epoch"]
 
         iter_norm = torch.div(iteration,self.model_card["training_parameters"]["epoch"])
+
+        with open(self.print_out_path / epoch_log_path, "a") as outfile:
+            for i in range(len(softmax)):
+                outfile.write(str(data_points[i].text) + "\t" + 
+                            str(pred[i].item()) + "\t" + 
+                            str(label_tensor[i].item()) + "\t" + 
+                            str(last_prediction[i].item()) + "\t" +
+                            str(last_iteration[i].item()) + "\t" +
+                            str(iter_norm[i].item()) + "\t" +
+                            str(current_prob_true_labl[i].item()) + "\t" +
+                            str(last_confidence[i].item()) + "\t" +
+                            str(confidence[i].item()) + "\t" +
+                            str(msp[i].item()) + "\n")
+
         #separate in a function (update metrics history)
         for i, dp in enumerate(data_points):
             dp.set_label('last_prediction',pred[i] )

@@ -448,6 +448,8 @@ class ModelTrainer:
                     group["momentum"] if "momentum" in group else 0 for group in optimizer_instance.param_groups
                 ]
 
+                self.model.print_out_path = base_path
+
                 for epoch in range(epoch + 1, max_epochs + 1):
                     log_line(log)
 
