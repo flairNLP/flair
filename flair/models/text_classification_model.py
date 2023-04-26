@@ -147,6 +147,7 @@ class TextClassifierLossModifications(TextClassifier):
         label_type: str,
         loss: str,
         batch_avg: bool,
+        calculate_sample_metrics: bool = False,
         **classifierargs,
     ):
         super(TextClassifierLossModifications, self).__init__(
@@ -163,6 +164,7 @@ class TextClassifierLossModifications(TextClassifier):
         elif loss == 'entropy_loss':
             self.entropy_loss = True
         self.print_out_path = None
+        self.calculate_sample_metrics = calculate_sample_metrics
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
         # get softmax values
@@ -208,33 +210,34 @@ class TextClassifierLossModifications(TextClassifier):
         # get the data points for which to predict labels
         data_points = self._get_data_points_for_batch(sentences)
         
-        epoch_log_path = "epoch_log_"+str(self.model_card["training_parameters"]["epoch"])+'.log'
-     
-        if not os.path.isfile(self.print_out_path / epoch_log_path):
-            with open(self.print_out_path / epoch_log_path, "w") as outfile:
-                outfile.write('Text' + "\t" + 
-                            'pred' + "\t" + 
-                            'true' + "\t" + 
-                            'last_pred' + "\t" +
-                            'last_iteration' + "\t" +
-                            'iter_norm' + "\t" +
-                            'current_prob_true_label' + "\t" +
-                            'last_conf_sum' + "\t" +
-                            'confidence' + "\t" +                            
-                            'msp' + "\n")
-                
-        if self.model_card["training_parameters"]["epoch"]==1:
-            # function, initialize metrics history
-            for dp in data_points:
-                # enable choice of metrics to store?
-                dp.set_metric('last_prediction', -1)
-                dp.set_metric('last_confidence_sum', 0 )
-                dp.set_metric('last_iteration', 0 )
+        if self.calculate_sample_metrics:
+            epoch_log_path = "epoch_log_"+str(self.model_card["training_parameters"]["epoch"])+'.log'
+        
+            if not os.path.isfile(self.print_out_path / epoch_log_path):
+                with open(self.print_out_path / epoch_log_path, "w") as outfile:
+                    outfile.write('Text' + "\t" + 
+                                'pred' + "\t" + 
+                                'true' + "\t" + 
+                                'last_pred' + "\t" +
+                                'last_iteration' + "\t" +
+                                'iter_norm' + "\t" +
+                                'current_prob_true_label' + "\t" +
+                                'last_conf_sum' + "\t" +
+                                'confidence' + "\t" +                            
+                                'msp' + "\n")
+                    
+            if self.model_card["training_parameters"]["epoch"]==1:
+                # function, initialize metrics history
+                for dp in data_points:
+                    # enable choice of metrics to store?
+                    dp.set_metric('last_prediction', -1)
+                    dp.set_metric('last_confidence_sum', 0 )
+                    dp.set_metric('last_iteration', 0 )
 
-        #add iter_norm, variability?
+            #add iter_norm, variability?
 
-        #dictionary metrics_history = {'last_conf':, ' last_pred':}
-        last_prediction, last_confidence, last_iteration = self._get_metrics_for_batch(data_points)
+            #dictionary metrics_history = {'last_conf':, ' last_pred':}
+            last_prediction, last_confidence, last_iteration = self._get_metrics_for_batch(data_points)
 
         if len(data_points) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
@@ -253,55 +256,54 @@ class TextClassifierLossModifications(TextClassifier):
         # an optional masking step (no masking in most cases)
         scores = self._mask_scores(scores, data_points)
 
-        # metric keys 'confidence', msp, bvsb, iter_norm...
-        # metric history keys: confidence_sum, last prediction, last_iter_norm
-        #metrics = self._calculate_metrics_for_batch(scores, label_tensor, )
-        
-        softmax = torch.nn.functional.softmax(scores)
-        #log.info(softmax)
+        if self.calculate_sample_metrics:
+            # metric keys 'confidence', msp, bvsb, iter_norm...
+            # metric history keys: confidence_sum, last prediction, last_iter_norm
+            # to do: metrics = self._calculate_metrics_for_batch(scores, label_tensor, )
+            
+            softmax = torch.nn.functional.softmax(scores)
 
-        pred = torch.argmax(softmax, dim=1)
+            pred = torch.argmax(softmax, dim=1)
 
-        values, indices = softmax.topk(2)
+            values, indices = softmax.topk(2)
 
-        # Metric: Max softmax prob (calculate_loss)
-        msp = values[:,0]
+            # Metric: Max softmax prob (calculate_loss)
+            msp = values[:,0]
 
-        # Best vs second best (calculate_loss)
-        BvSB = msp - values[:,1]
+            # Best vs second best (calculate_loss)
+            BvSB = msp - values[:,1]
 
-        batch_label_indexer = label_tensor.reshape(label_tensor.size(dim=0),1)
-        current_prob_true_labl = softmax.gather(index=batch_label_indexer, dim=1)[:,0]
-        #print(current_prob_true_labl)
+            batch_label_indexer = label_tensor.reshape(label_tensor.size(dim=0),1)
+            current_prob_true_labl = softmax.gather(index=batch_label_indexer, dim=1)[:,0]
 
-        confidence_sum = torch.add(last_confidence, current_prob_true_labl)
-        confidence = torch.div(confidence_sum,self.model_card["training_parameters"]["epoch"])
-        
-        iteration = last_iteration.clone()
-        prediction_changed_list = (pred != last_prediction).bool()
-        iteration[prediction_changed_list] = self.model_card["training_parameters"]["epoch"]
+            confidence_sum = torch.add(last_confidence, current_prob_true_labl)
+            confidence = torch.div(confidence_sum,self.model_card["training_parameters"]["epoch"])
+            
+            iteration = last_iteration.clone()
+            prediction_changed_list = (pred != last_prediction).bool()
+            iteration[prediction_changed_list] = self.model_card["training_parameters"]["epoch"]
 
-        iter_norm = torch.div(iteration,self.model_card["training_parameters"]["epoch"])
+            iter_norm = torch.div(iteration,self.model_card["training_parameters"]["epoch"])
 
-        with open(self.print_out_path / epoch_log_path, "a") as outfile:
-            for i in range(len(softmax)):
-                outfile.write(str(data_points[i].text) + "\t" + 
-                            str(pred[i].item()) + "\t" + 
-                            str(label_tensor[i].item()) + "\t" + 
-                            str(last_prediction[i].item()) + "\t" +
-                            str(last_iteration[i].item()) + "\t" +
-                            str(iter_norm[i].item()) + "\t" +
-                            str(current_prob_true_labl[i].item()) + "\t" +
-                            str(last_confidence[i].item()) + "\t" +
-                            str(confidence[i].item()) + "\t" +
-                            str(msp[i].item()) + "\n")
+            with open(self.print_out_path / epoch_log_path, "a") as outfile:
+                for i in range(len(softmax)):
+                    outfile.write(str(data_points[i].text) + "\t" + 
+                                str(pred[i].item()) + "\t" + 
+                                str(label_tensor[i].item()) + "\t" + 
+                                str(last_prediction[i].item()) + "\t" +
+                                str(last_iteration[i].item()) + "\t" +
+                                str(iter_norm[i].item()) + "\t" +
+                                str(current_prob_true_labl[i].item()) + "\t" +
+                                str(last_confidence[i].item()) + "\t" +
+                                str(confidence[i].item()) + "\t" +
+                                str(msp[i].item()) + "\n")
 
-        #separate in a function (update metrics history)
-        for i, dp in enumerate(data_points):
-            dp.set_metric('last_prediction',pred[i] )
-            dp.set_metric('last_confidence_sum', confidence_sum[i] )
-            dp.set_metric('last_iteration',iteration[i] )
-            # new dp properties: last_iter; last_pred; last_conf, last_sq_sum            
+            #separate in a function (update metrics history)
+            for i, dp in enumerate(data_points):
+                dp.set_metric('last_prediction',pred[i] )
+                dp.set_metric('last_confidence_sum', confidence_sum[i] )
+                dp.set_metric('last_iteration',iteration[i] )
+                # new dp properties: last_iter; last_pred; last_conf, last_sq_sum            
 
         # calculate the loss
         return self._calculate_loss(scores, label_tensor)
