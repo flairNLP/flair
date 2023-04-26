@@ -255,10 +255,10 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         return self.get_current_label_type()
 
     def predict_zero_shot(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        candidate_label_set: Union[List[str], Set[str], str],
-        multi_label: bool = True,
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            candidate_label_set: Union[List[str], Set[str], str],
+            multi_label: bool = True,
     ):
         """Make zero shot predictions from the TARS model.
 
@@ -463,34 +463,38 @@ class TARSTagger(FewshotClassifier):
         return self.tars_model.embeddings
 
     def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size=32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none",
-        most_probable_first: bool = True,
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size=32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
+            most_probable_first: bool = True,
     ):
         """Predict sequence tags for Named Entity Recognition task.
 
-        :param sentences: a Sentence or a List of Sentence
-        :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
-        up to a point when it has no more effect.
-        :param all_tag_prob: True to compute the score for each tag on each token,
-        otherwise only the score of the best tag is returned
-        :param verbose: set to True to display a progress bar
-        :param return_loss: set to True to return loss
-        :param label_name: set this to change the name of the label type that is predicted
-        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
-        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
-        'gpu' to store embeddings in GPU memory.
+        Args:
+            sentences: a Sentence or a List of Sentence
+            mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
+                up to a point when it has no more effect.
+            all_tag_prob: True to compute the score for each tag on each token,
+                otherwise only the score of the best tag is returned
+            verbose: set to True to display a progress bar
+            return_loss: set to True to also compute the loss
+            label_name: set this to change the name of the label type that is predicted
+            embedding_storage_mode: default is 'none' which doesn't store the embeddings in RAM. Only set to 'cpu' or 'gpu'
+                if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+                'gpu' to store embeddings in GPU memory.
+            return_probabilities_for_all_classes: if True, all classes will be added with their respective confidences.
+            most_probable_first: if True, nested predictions will be removed, if False all predictions will be returned,
+                including overlaps
+
         """
         if label_name is None:
             label_name = self.get_current_label_type()
 
-        # with torch.no_grad():
         if not sentences:
             return sentences
 
@@ -510,6 +514,7 @@ class TARSTagger(FewshotClassifier):
         if verbose:
             dataloader = tqdm(dataloader)
 
+        all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
         overall_loss = 0
         overall_count = 0
         with torch.no_grad():
@@ -519,26 +524,36 @@ class TARSTagger(FewshotClassifier):
                 if not batch:
                     continue
 
-                # go through each sentence in the batch
+                tars_sentences: List[Sentence] = []
+                all_labels_to_sentence: List[Dict[str, Sentence]] = []
                 for sentence in batch:
                     # always remove tags first
                     sentence.remove_labels(label_name)
-
-                    all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
-
-                    all_detected = {}
+                    labels_to_sentence: Dict[str, Sentence] = {}
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
+                        tars_sentences.append(tars_sentence)
+                        labels_to_sentence[label] = tars_sentence
 
-                        loss_and_count = self.tars_model.predict(
-                            tars_sentence,
-                            label_name=label_name,
-                            return_loss=True,
-                        )
+                loss_and_count = self.tars_model.predict(
+                    tars_sentences,
+                    label_name=label_name,
+                    mini_batch_size=mini_batch_size,
+                    return_loss=return_loss,
+                )
 
-                        overall_loss += loss_and_count[0].item()
-                        overall_count += loss_and_count[1]
+                if return_loss:
+                    overall_loss += loss_and_count[0].item()
+                    overall_count += loss_and_count[1]
 
+                # go through each sentence in the batch
+                for sentence, labels_to_sentence in zip(batch, all_labels_to_sentence):
+                    # always remove tags first
+                    sentence.remove_labels(label_name)
+
+                    all_detected = {}
+
+                    for label, tars_sentence in labels_to_sentence.items():
                         for predicted in tars_sentence.get_labels(label_name):
                             predicted.set_value(label, predicted.score)
                             all_detected[predicted] = predicted.score
@@ -804,17 +819,17 @@ class TARSClassifier(FewshotClassifier):
         return self.tars_model.embeddings
 
     def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size=32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none",
-        label_threshold: float = 0.5,
-        multi_label: Optional[bool] = None,
-        force_label: bool = False,
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size=32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
+            label_threshold: float = 0.5,
+            multi_label: Optional[bool] = None,
+            force_label: bool = False,
     ):
         """Predict sentences on the Text Classification task.
 
