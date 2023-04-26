@@ -10,7 +10,7 @@ from collections import defaultdict, deque
 from copy import copy
 from operator import attrgetter
 from pathlib import Path
-from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
+from typing import Dict, Iterable, Iterator, List, NamedTuple, Optional, Tuple, Union
 from warnings import warn
 from zipfile import BadZipFile, LargeZipFile
 
@@ -505,7 +505,7 @@ class HunerDataset(ColumnCorpus, ABC):
         )
 
 
-class NamedEntityLinkingDictionary:
+class AbstractBioNelDictionary(ABC):
     """
     Base class for dictionaries for named entity linking.
     Dictionary contains all entities in the corpus and their associated ids.
@@ -526,57 +526,71 @@ class NamedEntityLinkingDictionary:
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
         data_folder = base_path / dataset_name
-        dataset_file = data_folder / f"{dataset_name}_parsed.txt"
+        self.dataset_file = data_folder / f"{dataset_name}_parsed.txt"
 
         # check if there is a parsed_dict file in cache
-        if dataset_file.exists():
-            self._dictionary = self.parse_dictionary(dataset_file)
+        if not self.dataset_file.exists():
+            logger.info("Preprocess and cache dictionary `%s` file: %s", (dataset_name, self.dataset_file))
+            data_file = self.download_dictionary(data_folder)
 
-        # if no cached dataset exists, download dataset
-        else:
-            data_file = self.download_dataset(data_folder)
-            data = self.parse_dataset(data_file)
-            # cache dataset
-            with open(dataset_file, "w", encoding="utf-8") as f:
-                for name, cui in data:
+            with open(self.dataset_file, "w", encoding="utf-8") as f:
+                for cui, name in  self.parse_dictionary(data_file):
                     f.write(f"{cui}||{name}\n")
 
-            self._dictionary = data
 
-    @classmethod
-    def parse_dictionary(cls, dataset_file: Path):
-        data = []
-        with open(dataset_file, mode="r", encoding="utf-8") as f:
-            lines = f.readlines()
-            for line in lines:
+    @abstractmethod
+    def get_database_names(self) -> List[str]:
+        """
+        List all database names covered by dictionary, e.g. MESH, OMIM
+        """
+
+    @abstractmethod
+    def download_dictionary(self, data_dir: Path) -> Path:
+        """
+        Download dictionary
+        """
+
+    @abstractmethod
+    def parse_dictionary(self, original_file: Path):
+        """
+        Parse data into HunFlair format
+        """
+
+    def stream(self) -> Iterator[Tuple[str, str]]:
+        """
+        Stream preprocessed dictionary
+        """
+        with open(self.dataset_file) as fp:
+            for line in fp:
                 line = line.strip()
                 if line == "":
                     continue
+                assert "||" in line, "Preprocessed BioNelDictionary must have lines in the format: `cui||name`"
                 cui, name = line.split("||")
                 name = name.lower()
-                data.append((name, cui))
-
-        data = np.array(data)
-        return data
-
-    @property
-    def data(self):
-        return self._dictionary
-
-    @classmethod
-    def get_database_name(self):
-        raise NotImplementedError()
-
-    @classmethod
-    def download_dataset(cls, data_dir: Path) -> Path:
-        raise NotImplementedError()
-
-    @classmethod
-    def parse_dataset(cls, original_file: Path):
-        raise NotImplementedError()
+                yield (name, cui)
 
 
-class NEL_CTD_DISEASE_DICT(NamedEntityLinkingDictionary):
+class PreprocessedBioNelDictionary(AbstractBioNelDictionary):
+    """
+    Base dictionary with data already in preprocessed format
+    """
+
+    def __init__(self,path: Path, database_names : Optional[List[str]] = None):
+        self.dataset_file = path
+        self.database_names = database_names
+
+    def get_database_names(self) -> List[str]:
+
+        return self.database_names if self.database_names is not None else []
+
+    def download_dictionary(self):
+        pass
+
+    def parse_dictionary(self):
+        pass
+
+class NEL_CTD_DISEASE_DICT(AbstractBioNelDictionary):
     """
     Dictionary for Named Entity Linking on Diseases
     """
@@ -589,20 +603,17 @@ class NEL_CTD_DISEASE_DICT(NamedEntityLinkingDictionary):
         :param base_path: Path to the corpus on your machine"""
         super(NEL_CTD_DISEASE_DICT, self).__init__(base_path=base_path)
 
-    @classmethod
-    def get_database_name(self):
+    def get_database_names(self):
         return ["MESH", "DO:DOID", "OMIM"]
 
-    @classmethod
-    def download_dataset(cls, data_dir: Path) -> Path:
+    def download_dictionary(self, data_dir: Path) -> Path:
         data_url = "https://ctdbase.org/reports/CTD_diseases.tsv.gz"
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, unpack_to=data_dir / "CTD_diseases.tsv")
 
         return data_dir / "CTD_diseases.tsv"
 
-    @classmethod
-    def parse_dataset(cls, original_file: Path):
+    def parse_dictionary(self, original_file: Path) -> Iterator[Tuple[str, str]]:
         CTD_DISEASES_COLUMNS = [
             "symbol",
             "identifier",
@@ -616,13 +627,13 @@ class NEL_CTD_DISEASE_DICT(NamedEntityLinkingDictionary):
         ]
 
         with open(original_file, mode="r", encoding="utf-8") as f:
-            data = []
             # parse every line
             with open(original_file, mode="r", encoding="utf-8") as f:
                 for line in f:
                     if line.startswith("#"):
                         continue
 
+                    entries = []
                     # parse line
                     values = line.strip().split("\t")
                     row = dict(zip(CTD_DISEASES_COLUMNS, values))
@@ -636,18 +647,18 @@ class NEL_CTD_DISEASE_DICT(NamedEntityLinkingDictionary):
                         return None
 
                     if row.get("symbol") is not None:
-                        data.append((identifier, row["symbol"]))
+                        entries.append((identifier, row["symbol"]))
 
                     synonyms = [s for s in row.get("synonyms", "").split("|") if s != ""]
 
                     for synonym in synonyms:
-                        data.append((identifier, synonym))
+                        entries.append((identifier, synonym))
 
-            data = np.array(data)
-            return data
+                    for e in entries:
+                        yield e
 
 
-class NEL_CTD_CHEMICAL_DICT(NamedEntityLinkingDictionary):
+class NEL_CTD_CHEMICAL_DICT(AbstractBioNelDictionary):
     """
     Dictionary for Named Entity Linking on Chemicals
     """
@@ -660,20 +671,17 @@ class NEL_CTD_CHEMICAL_DICT(NamedEntityLinkingDictionary):
         :param base_path: Path to the corpus on your machine"""
         super(NEL_CTD_CHEMICAL_DICT, self).__init__(base_path=base_path)
 
-    @classmethod
-    def get_database_name(self):
+    def get_database_names(self):
         return ["MESH"]
 
-    @classmethod
-    def download_dataset(cls, data_dir: Path) -> Path:
+    def download_dictionary(self, data_dir: Path) -> Path:
         data_url = "https://ctdbase.org/reports/CTD_chemicals.tsv.gz"
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, unpack_to=data_dir / "CTD_chemicals.tsv")
 
         return data_dir / "CTD_chemicals.tsv"
 
-    @classmethod
-    def parse_dataset(cls, original_file: Path):
+    def parse_dictionary(self, original_file: Path) -> Iterator[Tuple[str, str]]:
         CTD_CHEMICALS_COLUMNS = [
             "symbol",
             "identifier",
@@ -691,6 +699,7 @@ class NEL_CTD_CHEMICAL_DICT(NamedEntityLinkingDictionary):
                 if line.startswith("#"):
                     continue
 
+                entries = []
                 # parse line
                 values = line.strip().split("\t")
                 row: dict = dict(zip(CTD_CHEMICALS_COLUMNS, values))
@@ -700,7 +709,7 @@ class NEL_CTD_CHEMICAL_DICT(NamedEntityLinkingDictionary):
                 if (
                     row.get("symbol") is not None and row.get("symbol") != "MESH:D013749"
                 ):  ## This MeSH ID was used by MeSH when this chemical was part of the MeSH controlled vocabulary.
-                    data.append((identifier, row["symbol"]))
+                    entries.append((identifier, row["symbol"]))
 
                 synonyms = [s for s in row.get("synonyms", "").split("|") if s != ""]
 
@@ -708,13 +717,14 @@ class NEL_CTD_CHEMICAL_DICT(NamedEntityLinkingDictionary):
                     if synonym == row.get("symbol"):
                         continue
 
-                    data.append((identifier, synonym))
+                    entries.append((identifier, synonym))
 
-            data = np.array(data)
-            return data
+                for e in entries:
+                    yield e
 
 
-class NEL_NCBI_HUMAN_GENE_DICT(NamedEntityLinkingDictionary):
+
+class NEL_NCBI_HUMAN_GENE_DICT(AbstractBioNelDictionary):
     """
     Dictionary for Named Entity Linking on Genes
     """
@@ -727,70 +737,7 @@ class NEL_NCBI_HUMAN_GENE_DICT(NamedEntityLinkingDictionary):
         :param base_path: Path to the corpus on your machine"""
         super(NEL_NCBI_HUMAN_GENE_DICT, self).__init__(base_path=base_path)
 
-    @classmethod
-    def get_database_name(self):
-        return ["NCBI Gene"]
-
-    @classmethod
-    def download_dataset(cls, data_dir: Path) -> Path:
-        data_url = "https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz"
-        data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, unpack_to=data_dir / "Homo_sapiens.gene_info")
-
-        return data_dir / "Homo_sapiens.gene_info"
-
-    @classmethod
-    def parse_dataset(cls, original_file: Path):
-        NCBI_GENE_SYNONYMS_FIELDS = tuple(
-            [
-                "Symbol_from_nomenclature_authority",
-                "Full_name_from_nomenclature_authority",
-                "description",
-                "Synonyms",
-                "Other_designations",
-            ]
-        )
-
-        with open(original_file, mode="r", encoding="utf-8") as f:
-            data = []
-            header = f.readline()
-            header = header.strip().split("\t")
-            for line in f:
-                if line.startswith("#"):
-                    continue
-
-                # parse line
-                values = line.strip().split("\t")
-                row: dict = dict(zip(header, values))
-
-                # parse row
-                identifier = row["GeneID"]
-                symbol = row["Symbol"]
-
-                if not cls._names_to_skip(symbol):
-                    data.append((str(identifier), symbol))
-
-                # get synonyms
-                synonyms = set()
-
-                for field in NCBI_GENE_SYNONYMS_FIELDS:
-                    names = row.get(field, "-")
-                    if names in ["-", symbol]:
-                        continue
-
-                    names_list = [name.replace("'", "") for name in names.split("|")]
-                    names_list = [n for n in names_list if not cls._names_to_skip(n)]
-
-                    synonyms.update(names_list)
-
-                for name in synonyms:
-                    data.append((str(identifier), name))
-
-        data = np.array(data)
-        return data
-
-    @classmethod
-    def _names_to_skip(cls, name: str) -> bool:
+    def _is_invalid_name(self, name: str) -> bool:
         """
         Determine if a name should be skipped
         """
@@ -805,8 +752,67 @@ class NEL_NCBI_HUMAN_GENE_DICT(NamedEntityLinkingDictionary):
 
         return any([newentry, empty, text_comment])
 
+    def get_database_names(self):
+        return ["NCBI Gene"]
 
-class NEL_NCBI_TAXONOMY_DICT(NamedEntityLinkingDictionary):
+    def download_dictionary(self, data_dir: Path) -> Path:
+        data_url = "https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz"
+        data_path = cached_path(data_url, data_dir)
+        unpack_file(data_path, unpack_to=data_dir / "Homo_sapiens.gene_info")
+
+        return data_dir / "Homo_sapiens.gene_info"
+
+    def parse_dictionary(self, original_file: Path) -> Iterator[Tuple[str, str]]:
+        NCBI_GENE_SYNONYMS_FIELDS = tuple(
+            [
+                "Symbol_from_nomenclature_authority",
+                "Full_name_from_nomenclature_authority",
+                "description",
+                "Synonyms",
+                "Other_designations",
+            ]
+        )
+
+        with open(original_file, mode="r", encoding="utf-8") as f:
+            header = f.readline()
+            header = header.strip().split("\t")
+            for line in f:
+                if line.startswith("#"):
+                    continue
+
+                entries = []
+                # parse line
+                values = line.strip().split("\t")
+                row: dict = dict(zip(header, values))
+
+                # parse row
+                identifier = row["GeneID"]
+                symbol = row["Symbol"]
+
+                if not self._is_invalid_name(symbol):
+                    entries.append((str(identifier), symbol))
+
+                # get synonyms
+                synonyms = set()
+
+                for field in NCBI_GENE_SYNONYMS_FIELDS:
+                    names = row.get(field, "-")
+                    if names in ["-", symbol]:
+                        continue
+
+                    names_list = [name.replace("'", "") for name in names.split("|")]
+                    names_list = [n for n in names_list if not self._is_invalid_name(n)]
+
+                    synonyms.update(names_list)
+
+                for name in synonyms:
+                    entries.append((str(identifier), name))
+
+                for e in entries:
+                    yield e
+
+
+class NEL_NCBI_TAXONOMY_DICT(AbstractBioNelDictionary):
     """
     Dictionary for Named Entity Linking on Organisms
     """
@@ -819,20 +825,17 @@ class NEL_NCBI_TAXONOMY_DICT(NamedEntityLinkingDictionary):
         :param base_path: Path to the corpus on your machine"""
         super(NEL_NCBI_TAXONOMY_DICT, self).__init__(base_path=base_path)
 
-    @classmethod
-    def get_database_name(self):
+    def get_database_names(self):
         return ["NCBI Taxonomy"]
 
-    @classmethod
-    def download_dataset(cls, data_dir: Path) -> Path:
+    def download_dictionary(self, data_dir: Path) -> Path:
         data_url = "https://ftp.ncbi.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, data_dir)
 
         return data_dir / "names.dmp"
 
-    @classmethod
-    def parse_dataset(cls, original_file: Path):
+    def parse_dictionary(self, original_file: Path) -> Iterator[Tuple[str, str]]:
         NCBI_TAXONOMY_SYNSET = [
             "genbank common name",
             "common name",
@@ -848,7 +851,6 @@ class NEL_NCBI_TAXONOMY_DICT(NamedEntityLinkingDictionary):
             "type material",
         ]
 
-        data = []
         with open(original_file, mode="r", encoding="utf-8") as f:
             curr_identifier = None
             names = []
@@ -879,15 +881,13 @@ class NEL_NCBI_TAXONOMY_DICT(NamedEntityLinkingDictionary):
 
                 elif curr_identifier != parsed_line["identifier"]:
                     for name in names:
-                        data.append((name, curr_identifier))
+                        yield (curr_identifier, name)
 
                     curr_identifier = parsed_line["identifier"]
                     names = []
                     synonym = parsed_line["name"]
                     names.append(synonym)
 
-        data = np.array(data)
-        return data
 
 
 class BIO_INFER(ColumnCorpus):
