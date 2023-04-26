@@ -25,3 +25,4 @@ wikipedia-api
 pptree
 pytorch_revgrad
 transformer-smaller-training-vocab>=0.2.1
+faiss-cpu==1.7.4
