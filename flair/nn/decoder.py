@@ -126,8 +126,7 @@ class PrototypicalDecoder(torch.nn.Module):
 
 
 class LabelVerbalizerDecoder(torch.nn.Module):
-    """A class for decoding labels using the idea of siamese networks / bi-encoders.
-    This can be used for all classification tasks in flair.
+    """A class for decoding labels using the idea of siamese networks / bi-encoders. This can be used for all classification tasks in flair.
 
     Args:
         label_encoder (flair.embeddings.TokenEmbeddings):
