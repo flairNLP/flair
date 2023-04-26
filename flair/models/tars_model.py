@@ -821,7 +821,7 @@ class TARSClassifier(FewshotClassifier):
         Args:
             return_probabilities_for_all_classes: if True, all classes will be added with their respective confidences.
             sentences: a Sentence or a List of Sentence
-            force_label: when multilabel is active, you can force to always get atleast one prediction.
+            force_label: when multilabel is active, you can force to always get at least one prediction.
             multi_label: if True multiple labels can be predicted. Defaults to the setting of the configured task.
             label_threshold: when multi_label, specify the threshold when a class is considered as predicted.
             mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
@@ -870,54 +870,63 @@ class TARSClassifier(FewshotClassifier):
 
         overall_loss = 0
         overall_count = 0
-        batch_no = 0
+
+        all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
+
         with torch.no_grad():
             for batch in dataloader:
-                batch_no += 1
 
                 batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
                 if not batch:
                     continue
 
-                # go through each sentence in the batch
+                tars_sentences: List[Sentence] = []
+                all_labels_to_sentence: List[Dict[str, Sentence]] = []
                 for sentence in batch:
                     # always remove tags first
                     sentence.remove_labels(label_name)
+                    labels_to_sentence: Dict[str, Sentence] = {}
+                    for label in all_labels:
+                        tars_sentence = self._get_tars_formatted_sentence(label, sentence)
+                        tars_sentences.append(tars_sentence)
+                        labels_to_sentence[label] = tars_sentence
 
-                    all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
+                loss_and_count = self.tars_model.predict(
+                    tars_sentences,
+                    label_name=label_name,
+                    mini_batch_size=mini_batch_size,
+                    return_loss=return_loss,
+                )
+
+                if return_loss:
+                    overall_loss += loss_and_count[0].item()
+                    overall_count += loss_and_count[1]
+
+                # go through each sentence in the batch
+                for sentence, labels_to_sentence in zip(batch, all_labels_to_sentence):
+                    # always remove tags first
+                    sentence.remove_labels(label_name)
+
                     best_value = ""
                     best_score = 0.0
 
-                    for label in all_labels:
-                        tars_sentence = self._get_tars_formatted_sentence(label, sentence)
-
-                        loss_and_count = self.tars_model.predict(
-                            tars_sentence,
-                            label_name=label_name,
-                            return_loss=return_loss,
-                            return_probabilities_for_all_classes=label_threshold < 0.5,
-                        )
-
-                        if return_loss:
-                            overall_loss += loss_and_count[0].item()
-                            overall_count += loss_and_count[1]
-
+                    for label, tars_sentence in labels_to_sentence.items():
                         # add all labels that according to TARS match the text and are above threshold
-                        for predicted_tars_label in tars_sentence.get_labels(label_name):
-                            score = (
-                                predicted_tars_label.score
-                                if predicted_tars_label.value == self.LABEL_MATCH
-                                else 1 - predicted_tars_label.score
-                            )
-                            if score > label_threshold:
-                                # do not add labels below confidence threshold
-                                sentence.add_label(label_name, label, score)
-                            if score > best_score:
-                                best_score = score
-                                best_value = label
+                        predicted_tars_label = tars_sentence.get_label(label_name)
+                        score = (
+                            predicted_tars_label.score
+                            if predicted_tars_label.value == self.LABEL_MATCH
+                            else 1 - predicted_tars_label.score
+                        )
+                        if score > label_threshold:
+                            # do not add labels below confidence threshold
+                            sentence.add_label(label_name, label, score)
+                        if score > best_score:
+                            best_score = score
+                            best_value = label
 
-                    # only use label with highest confidence if enforcing single-label predictions
+                    # only use label with the highest confidence if enforcing single-label predictions
                     if not multi_label and len(sentence.get_labels(label_name)) > 0:
                         # get all label scores and do an argmax to get the best label
                         label_scores = torch.tensor(
@@ -933,6 +942,7 @@ class TARSClassifier(FewshotClassifier):
                             value=best_label.value,
                             score=best_label.score,
                         )
+                    # add the label with the highest score even if below the threshold if force label is activated.
                     if multi_label and force_label and len(sentence.get_labels(label_name)) == 0:
                         sentence.add_label(
                             typename=label_name,
