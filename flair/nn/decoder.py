@@ -5,6 +5,7 @@ import torch
 
 import flair
 from flair.data import Dictionary, Sentence
+from flair.embeddings import Embeddings
 from flair.nn.distance import (
     CosineDistance,
     EuclideanDistance,
@@ -133,20 +134,12 @@ class LabelVerbalizerDecoder(torch.nn.Module):
             The label encoder used to encode the labels into an embedding.
         label_dictionary (flair.data.Dictionary):
             The label dictionary containing the mapping between labels and indices.
-        decoding (str):
-            The decoding method to use. Can be either "dot-product" or "cosine-distance". Default is "dot-product".
 
     Attributes:
         label_encoder (flair.embeddings.TokenEmbeddings):
             The label encoder used to encode the labels into an embedding.
         label_dictionary (flair.data.Dictionary):
             The label dictionary containing the mapping between labels and indices.
-        decoding (str):
-            The decoding method to use.
-        distance (flair.nn.distance):
-            Only for cosine-distance.
-        distance_score_transformation (torch.nn.Module):
-            Only for cosine-distance, identity function.
 
     Methods:
         forward(self, label_embeddings: torch.Tensor, context_embeddings: torch.Tensor) -> torch.Tensor:
@@ -155,19 +148,13 @@ class LabelVerbalizerDecoder(torch.nn.Module):
     Examples:
         label_dictionary = corpus.make_label_dictionary("ner")
         label_encoder = TransformerWordEmbeddings('bert-base-ucnased')
-        label_verbalizer_decoder = LabelVerbalizerDecoder(label_encoder, label_dictionary, decoding='dot-product')
+        label_verbalizer_decoder = LabelVerbalizerDecoder(label_encoder, label_dictionary)
     """
 
-    def __init__(self, label_encoder, label_dictionary: Dictionary, decoding: str = "dot-product"):
+    def __init__(self, label_embedding: Embeddings, label_dictionary: Dictionary):
         super(LabelVerbalizerDecoder, self).__init__()
-        if decoding not in ["dot-product", "cosine-similarity"]:
-            raise RuntimeError("Decoding method needs to be one of the following: dot-product, cosine-similarity")
-        self.label_encoder = label_encoder
-        self.verbalized_labels = self.verbalize_labels(label_dictionary)
-        self.decoding = decoding
-        if self.decoding == "cosine-similarity":
-            self.distance = CosineDistance()
-            self.distance_score_transformation = torch.nn.Identity()
+        self.label_embedding = label_embedding
+        self.verbalized_labels: List[Sentence] = self.verbalize_labels(label_dictionary)
         self.to(flair.device)
 
     @staticmethod
@@ -216,19 +203,14 @@ class LabelVerbalizerDecoder(torch.nn.Module):
         Raises:
             RuntimeError: If an unknown decoding type is specified.
         """
-        if self.training or not self.label_encoder._everything_embedded(self.verbalized_labels):
-            self.label_encoder.embed(self.verbalized_labels)
+        if self.training or not self.label_embedding._everything_embedded(self.verbalized_labels):
+            self.label_embedding.embed(self.verbalized_labels)
 
         label_tensor = torch.stack([label.get_embedding() for label in self.verbalized_labels])
 
-        if self.training or not self.label_encoder._everything_embedded(self.verbalized_labels):
+        if self.training:
             store_embeddings(self.verbalized_labels, "none")
 
-        if self.decoding == "dot-product":
-            scores = torch.mm(inputs, label_tensor.T)
-        elif self.decoding == "cosine-similarity":
-            scores = self.distance_score_transformation(self.distance(inputs, label_tensor))
-        else:
-            raise RuntimeError(f"Unknown decoding type: {self.decoding}")
+        scores = torch.mm(inputs, label_tensor.T)
 
         return scores
