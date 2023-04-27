@@ -1,0 +1,2 @@
+[virtualenvs]
+prefer-active-python = true
