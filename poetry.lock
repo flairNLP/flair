@@ -1820,14 +1820,23 @@ tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "pa
 
 [[package]]
 name = "platformdirs"
+<<<<<<< HEAD
 version = "3.5.0"
+=======
+version = "3.4.0"
+>>>>>>> Rename EntityLinker to SpanClassifier | test poetry
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
+<<<<<<< HEAD
     {file = "platformdirs-3.5.0-py3-none-any.whl", hash = "sha256:47692bc24c1958e8b0f13dd727307cff1db103fca36399f457da8e05f222fdc4"},
     {file = "platformdirs-3.5.0.tar.gz", hash = "sha256:7954a68d0ba23558d753f73437c55f89027cf8f5108c19844d4b82e5af396335"},
+=======
+    {file = "platformdirs-3.4.0-py3-none-any.whl", hash = "sha256:01437886022decaf285d8972f9526397bfae2ac55480ed372ed6d9eca048870a"},
+    {file = "platformdirs-3.4.0.tar.gz", hash = "sha256:a5e1536e5ea4b1c238a1364da17ff2993d5bd28e15600c2c8224008aff6bbcad"},
+>>>>>>> Rename EntityLinker to SpanClassifier | test poetry
 ]
 
 [package.dependencies]
@@ -3371,4 +3380,8 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7,<4.0"
+<<<<<<< HEAD
 content-hash = "6a0a8ac677b3c68630046f0885f6d97a2bd7c7617b5a261ba7680fa86e112150"
+=======
+content-hash = "04ab39539dd2dfcccd1afe0b8a38a4483491aa499203fe2bbc2acd44bea15d37"
+>>>>>>> Rename EntityLinker to SpanClassifier | test poetry
