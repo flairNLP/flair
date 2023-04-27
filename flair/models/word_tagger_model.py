@@ -60,7 +60,8 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         # all parameters will be pushed internally to the specified device
         self.to(flair.device)
 
-    def _create_internal_label_dictionary(self, label_dictionary, span_encoding):
+    @staticmethod
+    def _create_internal_label_dictionary(label_dictionary, span_encoding):
         internal_label_dictionary = Dictionary(add_unk=False)
         for label in label_dictionary.get_items():
             if label == "<unk>":
@@ -111,15 +112,19 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         if self.training and self.span_prediction_problem:
             for token in sentence.tokens:
                 token.set_label(self.label_type, "O")
-            for span in sentence.get_spans(self.label_type):
-                span_label = span.get_label(self.label_type).value
-                if len(span) == 1:
-                    span.tokens[0].set_label(self.label_type, "S-" + span_label)
-                else:
-                    for token in span.tokens:
-                        token.set_label(self.label_type, "I-" + span_label)
-                    span.tokens[0].set_label(self.label_type, "B-" + span_label)
-                    span.tokens[-1].set_label(self.label_type, "E-" + span_label)
+                for span in sentence.get_spans(self.label_type):
+                    span_label = span.get_label(self.label_type).value
+                    if len(span) == 1:
+                        if self.span_encoding == "BIOES":
+                            span.tokens[0].set_label(self.label_type, "S-" + span_label)
+                        elif self.span_encoding == "BIO":
+                            span.tokens[0].set_label(self.label_type, "B-" + span_label)
+                    else:
+                        for token in span.tokens:
+                            token.set_label(self.label_type, "I-" + span_label)
+                        span.tokens[0].set_label(self.label_type, "B-" + span_label)
+                        if self.span_encoding == "BIOES":
+                            span.tokens[-1].set_label(self.label_type, "E-" + span_label)
 
         return sentence.tokens
 

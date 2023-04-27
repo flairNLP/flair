@@ -35,7 +35,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
     @abstractmethod
     def label_type(self):
         """Each model predicts labels of a certain type."""
-        # TODO: can we find a better name for this?
         raise NotImplementedError
 
     @abstractmethod
