@@ -665,7 +665,7 @@ class ModelTrainer(Pluggable):
 
                         if eval_result.main_score > best_epoch_score:
                             current_epoch_has_best_model_so_far = True
-                            best_validation_score = eval_result.main_score
+                            best_epoch_score = eval_result.main_score
 
                 # if not using DEV score, determine best model using train loss
                 if not determine_best_epoch_using_dev_score:
@@ -673,7 +673,7 @@ class ModelTrainer(Pluggable):
 
                     if epoch_train_loss < best_epoch_score:
                         current_epoch_has_best_model_so_far = True
-                        best_validation_score = train_loss
+                        best_epoch_score = train_loss
 
                 # - LossFilePlugin -> somehow prints all relevant metrics
                 # - AnnealPlugin -> scheduler step
