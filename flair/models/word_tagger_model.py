@@ -14,7 +14,7 @@ log = logging.getLogger("flair")
 def WordTagger(embeddings, tag_dictionary, tag_type, **classifierargs):
     from warnings import warn
 
-    warn("The WordTagger class is deprecated after Flair version 0.12.2. Use TokenClassifier instead!")
+    warn("The WordTagger class is deprecated and will be removed in Flair 1.0. Use TokenClassifier instead!")
     return TokenClassifier(
         embeddings=embeddings, label_dictionary=tag_dictionary, label_type=tag_type, **classifierargs
     )

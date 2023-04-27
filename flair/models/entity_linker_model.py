@@ -75,7 +75,7 @@ class CandidateGenerator:
         return set(self.mention_to_candidates_map[mention]) if mention in self.mention_to_candidates_map else set()
 
 
-class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
+class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
     """Entity Linking Model.
 
     The model expects text/sentences with annotated entity mentions and predicts entities to these mentions.
@@ -101,7 +101,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         the embedding of the first and the embedding of the last word.
         :param label_type: name of the label you use.
         """
-        super(EntityLinker, self).__init__(
+        super(SpanClassifier, self).__init__(
             embeddings=embeddings,
             label_dictionary=label_dictionary,
             final_embedding_size=embeddings.embedding_length * 2
@@ -222,7 +222,14 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         return masked_scores
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "EntityLinker":
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "SpanClassifier":
         from typing import cast
 
-        return cast("EntityLinker", super().load(model_path=model_path))
+        return cast("SpanClassifier", super().load(model_path=model_path))
+
+
+def EntityLinker(**classifierargs):
+    from warnings import warn
+
+    warn("The EntityLinker class is deprecated and will be removed in Flair 1.0. Use SpanClassifier instead!")
+    return SpanClassifier(**classifierargs)

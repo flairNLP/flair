@@ -996,7 +996,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
                 transformer_model = T5EncoderModel(saved_config, **kwargs)
             else:
-                transformer_model = AutoModel.from_config(saved_config, **kwargs)
+                transformer_model = AutoModel.from_config(saved_config)
         transformer_model = transformer_model.to(flair.device)
 
         self.truncate = True
