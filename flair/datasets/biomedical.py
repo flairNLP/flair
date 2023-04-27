@@ -505,7 +505,7 @@ class HunerDataset(ColumnCorpus, ABC):
         )
 
 
-class AbstractBioNelDictionary(ABC):
+class AbstractBiomedicalEntityLinkingDictionary(ABC):
     """
     Base class for dictionaries for named entity linking.
     Dictionary contains all entities in the corpus and their associated ids.
@@ -530,7 +530,7 @@ class AbstractBioNelDictionary(ABC):
 
         # check if there is a parsed_dict file in cache
         if not self.dataset_file.exists():
-            logger.info("Preprocess and cache dictionary `%s` file: %s", (dataset_name, self.dataset_file))
+            logger.info("Preprocess and cache dictionary `%s` file: %s", dataset_name, self.dataset_file)
             data_file = self.download_dictionary(data_folder)
 
             with open(self.dataset_file, "w", encoding="utf-8") as f:
@@ -565,13 +565,13 @@ class AbstractBioNelDictionary(ABC):
                 line = line.strip()
                 if line == "":
                     continue
-                assert "||" in line, "Preprocessed BioNelDictionary must have lines in the format: `cui||name`"
+                assert "||" in line, "Preprocessed EntityLinkingDictionary must have lines in the format: `cui||name`"
                 cui, name = line.split("||")
                 name = name.lower()
                 yield (name, cui)
 
 
-class PreprocessedBioNelDictionary(AbstractBioNelDictionary):
+class ParsedBiomedicalEntityLinkingDictionary(AbstractBiomedicalEntityLinkingDictionary):
     """
     Base dictionary with data already in preprocessed format
     """
@@ -590,7 +590,7 @@ class PreprocessedBioNelDictionary(AbstractBioNelDictionary):
     def parse_dictionary(self):
         pass
 
-class NEL_CTD_DISEASE_DICT(AbstractBioNelDictionary):
+class CTD_DISEASE_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     """
     Dictionary for Named Entity Linking on Diseases
     """
@@ -601,7 +601,7 @@ class NEL_CTD_DISEASE_DICT(AbstractBioNelDictionary):
     ):
         """
         :param base_path: Path to the corpus on your machine"""
-        super(NEL_CTD_DISEASE_DICT, self).__init__(base_path=base_path)
+        super(CTD_DISEASE_DICTIONARY, self).__init__(base_path=base_path)
 
     def get_database_names(self):
         return ["MESH", "DO:DOID", "OMIM"]
@@ -658,7 +658,7 @@ class NEL_CTD_DISEASE_DICT(AbstractBioNelDictionary):
                         yield e
 
 
-class NEL_CTD_CHEMICAL_DICT(AbstractBioNelDictionary):
+class CTD_CHEMICAL_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     """
     Dictionary for Named Entity Linking on Chemicals
     """
@@ -669,7 +669,7 @@ class NEL_CTD_CHEMICAL_DICT(AbstractBioNelDictionary):
     ):
         """
         :param base_path: Path to the corpus on your machine"""
-        super(NEL_CTD_CHEMICAL_DICT, self).__init__(base_path=base_path)
+        super(CTD_CHEMICAL_DICTIONARY, self).__init__(base_path=base_path)
 
     def get_database_names(self):
         return ["MESH"]
@@ -724,7 +724,7 @@ class NEL_CTD_CHEMICAL_DICT(AbstractBioNelDictionary):
 
 
 
-class NEL_NCBI_HUMAN_GENE_DICT(AbstractBioNelDictionary):
+class NCBI_GENE_HUMAN_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     """
     Dictionary for Named Entity Linking on Genes
     """
@@ -735,7 +735,7 @@ class NEL_NCBI_HUMAN_GENE_DICT(AbstractBioNelDictionary):
     ):
         """
         :param base_path: Path to the corpus on your machine"""
-        super(NEL_NCBI_HUMAN_GENE_DICT, self).__init__(base_path=base_path)
+        super(NCBI_GENE_HUMAN_DICTIONARY, self).__init__(base_path=base_path)
 
     def _is_invalid_name(self, name: str) -> bool:
         """
@@ -812,7 +812,7 @@ class NEL_NCBI_HUMAN_GENE_DICT(AbstractBioNelDictionary):
                     yield e
 
 
-class NEL_NCBI_TAXONOMY_DICT(AbstractBioNelDictionary):
+class NCBI_TAXONOMY_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     """
     Dictionary for Named Entity Linking on Organisms
     """
@@ -823,7 +823,7 @@ class NEL_NCBI_TAXONOMY_DICT(AbstractBioNelDictionary):
     ):
         """
         :param base_path: Path to the corpus on your machine"""
-        super(NEL_NCBI_TAXONOMY_DICT, self).__init__(base_path=base_path)
+        super(NCBI_TAXONOMY_DICTIONARY, self).__init__(base_path=base_path)
 
     def get_database_names(self):
         return ["NCBI Taxonomy"]
