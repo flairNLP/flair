@@ -40,7 +40,9 @@ jobs:
       #       Lock dependencies to get fresh versions
       #----------------------------------------------
       - name: Run poetry lock
-        run: poetry lock
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry lock
       #----------------------------------------------
       # install dependencies if cache does not exist
       #----------------------------------------------
