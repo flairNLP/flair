@@ -337,7 +337,7 @@ class WordEmbeddings(TokenEmbeddings):
 
         word_indices: List[int] = []
         for token in tokens:
-            if "field" not in self.__dict__ or self.field is None:
+            if self.field is None:
                 word = token.text
             else:
                 word = token.get_label(self.field).value
@@ -359,10 +359,6 @@ class WordEmbeddings(TokenEmbeddings):
         return self.name
 
     def extra_repr(self):
-        # fix serialized models
-        if "embeddings" not in self.__dict__:
-            self.embeddings = self.name
-
         return f"'{self.embeddings}'"
 
     def train(self, mode=True):
@@ -391,13 +387,12 @@ class WordEmbeddings(TokenEmbeddings):
             return None
         return super().__getattribute__(item)
 
-    def __setstate__(self, state):
-        if "get_cached_vec" in state:
-            del state["get_cached_vec"]
-        if "force_cpu" not in state:
-            state["force_cpu"] = True
-        if "fine_tune" not in state:
-            state["fine_tune"] = False
+    def __setstate__(self, state: Dict[str, Any]):
+        state.pop("get_cached_vec", None)
+        state.setdefault("embeddings", state["name"])
+        state.setdefault("force_cpu", True)
+        state.setdefault("fine_tune", False)
+        state.setdefault("field", None)
         if "precomputed_word_embeddings" in state:
             precomputed_word_embeddings: KeyedVectors = state.pop("precomputed_word_embeddings")
             vectors = np.row_stack(
@@ -419,7 +414,6 @@ class WordEmbeddings(TokenEmbeddings):
         if "stable" not in state:
             state["stable"] = False
             state["layer_norm"] = None
-
         super().__setstate__(state)
 
     @classmethod
@@ -436,6 +430,15 @@ class WordEmbeddings(TokenEmbeddings):
             "name": self.name,
             "embedding_length": self.__embedding_length,
         }
+
+    def state_dict(self, *args, destination=None, prefix="", keep_vars=False):
+        # when loading the old versions from pickle, the embeddings might not be added as pytorch module.
+        # we do this delayed, when the weights are collected (e.g. for saving), as doing this earlier might
+        # lead to issues while loading (trying to load weights that weren't stored as python weights and therefore
+        # not finding them)
+        if list(self.modules()) == [self]:
+            self.embedding = self.embedding
+        return super().state_dict(*args, destination=destination, prefix=prefix, keep_vars=keep_vars)
 
 
 @register_embeddings
@@ -779,31 +782,14 @@ class FlairEmbeddings(TokenEmbeddings):
         self.eval()
 
     def train(self, mode=True):
-        # make compatible with serialized models (TODO: remove)
-        if "fine_tune" not in self.__dict__:
-            self.fine_tune = False
-        if "chars_per_chunk" not in self.__dict__:
-            self.chars_per_chunk = 512
-
         # unless fine-tuning is set, do not set language model to train() in order to disallow language model dropout
-        if not self.fine_tune:
-            super().train(mode=False)
-        else:
-            super().train(mode)
+        super().train(self.fine_tune and mode)
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        # make compatible with serialized models (TODO: remove)
-        if "with_whitespace" not in self.__dict__:
-            self.with_whitespace = True
-        if "tokenized_lm" not in self.__dict__:
-            self.tokenized_lm = True
-        if "is_lower" not in self.__dict__:
-            self.is_lower = False
-
         # gradients are enable if fine-tuning is enabled
         gradient_context = torch.enable_grad() if self.fine_tune else torch.no_grad()
 
@@ -894,6 +880,17 @@ class FlairEmbeddings(TokenEmbeddings):
 
         lm = LanguageModel(**model_params)
         return cls(lm, **params)
+
+    def __setstate__(self, d: Dict[str, Any]):
+        # make compatible with old models
+        d.setdefault("fine_tune", False)
+        d.setdefault("chars_per_chunk", 512)
+        d.setdefault("with_whitespace", True)
+        d.setdefault("tokenized_lm", True)
+        d.setdefault("is_lower", False)
+        d.setdefault("field", None)
+
+        super().__setstate__(d)
 
 
 @register_embeddings
@@ -991,7 +988,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
     def get_names(self) -> List[str]:
         return [self.name, self.context_embeddings.name]
 
-    def __setstate__(self, d):
+    def __setstate__(self, d: Dict[str, Any]):
         super().__setstate__(d)
 
         if flair.device.type != "cpu":
@@ -1063,9 +1060,9 @@ class FastTextEmbeddings(TokenEmbeddings):
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        for _i, sentence in enumerate(sentences):
-            for token, _token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                if "field" not in self.__dict__ or self.field is None:
+        for sentence in sentences:
+            for token in sentence.tokens:
+                if self.field is None:
                     word = token.text
                 else:
                     word = token.get_label(self.field).value
