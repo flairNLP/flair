@@ -337,10 +337,7 @@ class WordEmbeddings(TokenEmbeddings):
 
         word_indices: List[int] = []
         for token in tokens:
-            if self.field is None:
-                word = token.text
-            else:
-                word = token.get_label(self.field).value
+            word = token.text if self.field is None else token.get_label(self.field).value
             word_indices.append(self.get_cached_token_index(word))
 
         embeddings = self.embedding(torch.tensor(word_indices, dtype=torch.long, device=self.device))
@@ -1062,10 +1059,7 @@ class FastTextEmbeddings(TokenEmbeddings):
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         for sentence in sentences:
             for token in sentence.tokens:
-                if self.field is None:
-                    word = token.text
-                else:
-                    word = token.get_label(self.field).value
+                word = token.text if self.field is None else token.get_label(self.field).value
 
                 word_embedding = self.get_cached_vec(word)
 
