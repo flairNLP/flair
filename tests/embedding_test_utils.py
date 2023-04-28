@@ -23,6 +23,7 @@ class BaseEmbeddingsTest:
         "🤟 🤟  🤟 hüllo",
         "🤟hallo 🤟 🤟 🤟 🤟",
         "🤟",
+        "\uF8F9",
     ]
 
     def create_embedding_from_name(self, name: str):

@@ -114,9 +114,8 @@ def fill_masked_elements(
     lengths: torch.LongTensor,
 ):
     for i in torch.arange(int(all_token_embeddings.shape[0])):
-        all_token_embeddings[i, : lengths[i], :] = insert_missing_embeddings(
-            sentence_hidden_states[i][mask[i] & (word_ids[i] >= 0)], word_ids[i], lengths[i]
-        )
+        r = insert_missing_embeddings(sentence_hidden_states[i][mask[i] & (word_ids[i] >= 0)], word_ids[i], lengths[i])
+        all_token_embeddings[i, : lengths[i], :] = r
     return all_token_embeddings
 
 
@@ -125,13 +124,37 @@ def insert_missing_embeddings(
     token_embeddings: torch.Tensor, word_id: torch.Tensor, length: torch.LongTensor
 ) -> torch.Tensor:
     # in some cases we need to insert zero vectors for tokens without embedding.
-    if token_embeddings.shape[0] < length:
+    if token_embeddings.shape[0] == 0:
+        if token_embeddings.dim() == 2:
+            token_embeddings = torch.zeros(
+                int(length), token_embeddings.shape[1], dtype=token_embeddings.dtype, device=token_embeddings.device
+            )
+        elif token_embeddings.dim() == 3:
+            token_embeddings = torch.zeros(
+                int(length),
+                token_embeddings.shape[1],
+                token_embeddings.shape[2],
+                dtype=token_embeddings.dtype,
+                device=token_embeddings.device,
+            )
+        elif token_embeddings.dim() == 4:
+            token_embeddings = torch.zeros(
+                int(length),
+                token_embeddings.shape[1],
+                token_embeddings.shape[2],
+                token_embeddings.shape[3],
+                dtype=token_embeddings.dtype,
+                device=token_embeddings.device,
+            )
+    elif token_embeddings.shape[0] < length:
         for _id in torch.arange(int(length)):
+            zero_vector = torch.zeros_like(token_embeddings[:1])
+
             if not (word_id == _id).any():
                 token_embeddings = torch.cat(
                     (
                         token_embeddings[:_id],
-                        torch.zeros_like(token_embeddings[:1]),
+                        zero_vector,
                         token_embeddings[_id:],
                     ),
                     dim=0,
