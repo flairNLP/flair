@@ -102,6 +102,7 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
         :param label_type: name of the label you use.
         """
         super().__init__(
+        super(SpanClassifier, self).__init__(
             embeddings=embeddings,
             label_dictionary=label_dictionary,
             final_embedding_size=embeddings.embedding_length * 2
