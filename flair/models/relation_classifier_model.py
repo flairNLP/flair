@@ -45,8 +45,6 @@ class EncodedSentence(Sentence):
     Therefore, these functions work with the regular flair sentence objects.
     """
 
-    pass
-
 
 class EncodingStrategy(ABC):
     """The encoding of the head and tail entities in a sentence with a relation annotation."""
@@ -77,6 +75,7 @@ class EntityMask(EncodingStrategy):
     """An `class`:EncodingStrategy: that masks the head and tail relation entities.
 
     Example:
+    -------
         For the `founded_by` relation from `ORG` to `PER` and
         the sentence "Larry Page and Sergey Brin founded Google .",
         the encoded sentences and relations are
@@ -97,6 +96,7 @@ class TypedEntityMask(EncodingStrategy):
     """An `class`:EncodingStrategy: that masks the head and tail relation entities with their label.
 
     Example:
+    -------
         For the `founded_by` relation from `ORG` to `PER` and
         the sentence "Larry Page and Sergey Brin founded Google .",
         the encoded sentences and relations are
@@ -115,6 +115,7 @@ class EntityMarker(EncodingStrategy):
     """An `class`:EncodingStrategy: that marks the head and tail relation entities.
 
     Example:
+    -------
         For the `founded_by` relation from `ORG` to `PER` and
         the sentence "Larry Page and Sergey Brin founded Google .",
         the encoded sentences and relations are
@@ -139,6 +140,7 @@ class TypedEntityMarker(EncodingStrategy):
     """An `class`:EncodingStrategy: that marks the head and tail relation entities with their label.
 
     Example:
+    -------
         For the `founded_by` relation from `ORG` to `PER` and
         the sentence "Larry Page and Sergey Brin founded Google .",
         the encoded sentences and relations are
@@ -161,6 +163,7 @@ class EntityMarkerPunct(EncodingStrategy):
     """An alternate version of `class`:EntityMarker: with punctuations as control tokens.
 
     Example:
+    -------
         For the `founded_by` relation from `ORG` to `PER` and
         the sentence "Larry Page and Sergey Brin founded Google .",
         the encoded sentences and relations are
@@ -181,6 +184,7 @@ class TypedEntityMarkerPunct(EncodingStrategy):
     """An alternate version of `class`:TypedEntityMarker: with punctuations as control tokens.
 
     Example:
+    -------
         For the `founded_by` relation from `ORG` to `PER` and
         the sentence "Larry Page and Sergey Brin founded Google .",
         the encoded sentences and relations are
@@ -220,6 +224,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     In contrast to (end-to-end) Relation Extraction (RE), RC requires pre-labelled entities.
 
     Example:
+    -------
     For the `founded_by` relation from `ORG` (head) to `PER` (tail) and the sentence
     "Larry Page and Sergey Brin founded Google .", we extract the relations
     - founded_by(head='Google', tail='Larry Page') and

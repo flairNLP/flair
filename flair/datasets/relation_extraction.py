@@ -40,7 +40,7 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
         in_memory: bool = True,
         augment_train: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """SemEval-2010 Task 8 on Multi-Way Classification of Semantic Relations Between Pairs of Nominals.
 
         see https://aclanthology.org/S10-1006.pdf
@@ -48,10 +48,7 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
         :param in_memory:
         :param augment_train:
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -77,7 +74,7 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
                 augment_train=augment_train,
             )
 
-        super(RE_ENGLISH_SEMEVAL2010, self).__init__(
+        super().__init__(
             data_folder,
             train_file=train_file_name,
             test_file="semeval2010-task8-test.conllu",
@@ -227,7 +224,7 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
 
 
 class RE_ENGLISH_TACRED(ColumnCorpus):
-    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True, **corpusargs):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True, **corpusargs) -> None:
         """TAC Relation Extraction Dataset.
 
         with 41 relations from https://nlp.stanford.edu/projects/tacred/.
@@ -235,10 +232,7 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
         :param base_path:
         :param in_memory:
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -256,7 +250,7 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
                 data_folder=data_folder,
             )
 
-        super(RE_ENGLISH_TACRED, self).__init__(
+        super().__init__(
             data_folder,
             column_format={1: "text", 2: "ner"},
             comment_symbol="# ",
@@ -330,10 +324,7 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
 
             prefix = ""
             if tag != "O":
-                if tag != prev_tag:
-                    prefix = "B-"
-                else:
-                    prefix = "I-"
+                prefix = "B-" if tag != prev_tag else "I-"
 
             prev_tag = tag
 
@@ -351,11 +342,8 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
 
 
 class RE_ENGLISH_CONLL04(ColumnCorpus):
-    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True, **corpusargs):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True, **corpusargs) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -380,7 +368,7 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
                 data_folder=data_folder,
             )
 
-        super(RE_ENGLISH_CONLL04, self).__init__(
+        super().__init__(
             data_folder,
             in_memory=in_memory,
             column_format={1: "text", 2: "ner"},
@@ -420,7 +408,7 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
         )
         yield src_token_list[0]
 
-    def convert_to_conllu(self, source_data_folder, data_folder):
+    def convert_to_conllu(self, source_data_folder: Path, data_folder):
         source_filenames = [
             "train.txt",
             "dev.txt",
@@ -433,14 +421,15 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
         ]
 
         for source_filename, target_filename in zip(source_filenames, target_filenames):
-            with open(source_data_folder / source_filename, mode="r") as source_file:
-                with open(data_folder / target_filename, mode="w", encoding="utf-8") as target_file:
-                    # write CoNLL-U Plus header
-                    target_file.write("# global.columns = id form ner\n")
+            with (source_data_folder / source_filename).open(encoding="utf-8") as source_file, (
+                data_folder / target_filename
+            ).open("w", encoding="utf-8") as target_file:
+                # write CoNLL-U Plus header
+                target_file.write("# global.columns = id form ner\n")
 
-                    for src_token_list in self._parse_incr(source_file):
-                        token_list = self._src_token_list_to_token_list(src_token_list)
-                        target_file.write(token_list.serialize())
+                for src_token_list in self._parse_incr(source_file):
+                    token_list = self._src_token_list_to_token_list(src_token_list)
+                    target_file.write(token_list.serialize())
 
     def _bio_tags_to_spans(self, tags: List[str]) -> List[Tuple[int, int]]:
         spans = []
@@ -537,16 +526,13 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
         in_memory: bool = True,
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the DrugProt corpus.
 
         Biocreative VII Track 1 from https://zenodo.org/record/5119892#.YSdSaVuxU5k/ on drug and chemical-protein
         interactions.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         self.sentence_splitter = sentence_splitter
 
@@ -566,7 +552,7 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
                 data_folder=data_folder,
             )
 
-        super(RE_ENGLISH_DRUGPROT, self).__init__(
+        super().__init__(
             data_folder,
             in_memory=in_memory,
             sample_missing_splits=False,
@@ -731,10 +717,7 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
                     tag = entities[entity_id][0]
                     token_start, token_end = entity_span
                     for i in range(token_start, token_end):
-                        if i == token_start:
-                            prefix = "B-"
-                        else:
-                            prefix = "I-"
+                        prefix = "B-" if i == token_start else "I-"
 
                         tags[i] = prefix + tag
 

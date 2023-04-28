@@ -14,14 +14,14 @@ class CRF(torch.nn.Module):
     but also on previous seen annotations.
     """
 
-    def __init__(self, tag_dictionary, tagset_size: int, init_from_state_dict: bool):
+    def __init__(self, tag_dictionary, tagset_size: int, init_from_state_dict: bool) -> None:
         """Initialize the Conditional Random Field.
 
         :param tag_dictionary: tag dictionary in order to find ID for start and stop tags
         :param tagset_size: number of tag from tag dictionary
         :param init_from_state_dict: whether we load pretrained model from state dict
         """
-        super(CRF, self).__init__()
+        super().__init__()
 
         self.tagset_size = tagset_size
         # Transitions are used in the following way: transitions[to, from].

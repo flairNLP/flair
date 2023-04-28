@@ -31,8 +31,8 @@ class PrototypicalDecoder(torch.nn.Module):
         unlabeled_idx: Optional[int] = None,
         learning_mode: Optional[str] = "joint",
         normal_distributed_initial_prototypes: bool = False,
-    ):
-        super(PrototypicalDecoder, self).__init__()
+    ) -> None:
+        super().__init__()
 
         if not prototype_size:
             prototype_size = embeddings_size
@@ -95,10 +95,7 @@ class PrototypicalDecoder(torch.nn.Module):
             embedded = embedded.detach()
 
         # decode embeddings into prototype space
-        if self.metric_space_decoder is not None:
-            encoded = self.metric_space_decoder(embedded)
-        else:
-            encoded = embedded
+        encoded = self.metric_space_decoder(embedded) if self.metric_space_decoder is not None else embedded
 
         prot = self.prototype_vectors
         radii = self.prototype_radii
@@ -152,7 +149,7 @@ class LabelVerbalizerDecoder(torch.nn.Module):
     """
 
     def __init__(self, label_embedding: Embeddings, label_dictionary: Dictionary):
-        super(LabelVerbalizerDecoder, self).__init__()
+        super().__init__()
         self.label_embedding = label_embedding
         self.verbalized_labels: List[Sentence] = self.verbalize_labels(label_dictionary)
         self.to(flair.device)

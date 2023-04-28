@@ -2,7 +2,6 @@ import datetime
 import logging
 import math
 import random
-import sys
 import time
 from pathlib import Path
 from typing import Iterable, Optional, Type, Union
@@ -40,7 +39,7 @@ class TextDataset(Dataset):
         random_case_flip: bool = True,
         document_delimiter: str = "\n",
         shuffle: bool = True,
-    ):
+    ) -> None:
         path = Path(path)
         assert path.exists()
 
@@ -58,7 +57,7 @@ class TextDataset(Dataset):
         else:
             self.files = [path]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.files)
 
     def __getitem__(self, index=0) -> torch.Tensor:
@@ -73,7 +72,7 @@ class TextDataset(Dataset):
             )
             if self.random_case_flip:
                 text_lines = map(self.random_casechange, text_lines)
-            lines = list(map(list if self.split_on_char else str.split, text_lines))  # type: ignore # noqa: E501
+            lines = [list(line) if self.split_on_char else line.split() for line in text_lines]
 
         log.info(f"read text file with {len(lines)} lines")
 
@@ -104,7 +103,7 @@ class TextDataset(Dataset):
         return line
 
 
-class TextCorpus(object):
+class TextCorpus:
     def __init__(
         self,
         path: Union[Path, str],
@@ -113,7 +112,7 @@ class TextCorpus(object):
         character_level: bool = True,
         random_case_flip: bool = True,
         document_delimiter: str = "\n",
-    ):
+    ) -> None:
         self.dictionary: Dictionary = dictionary
         self.forward = forward
         self.split_on_char = character_level
@@ -168,7 +167,7 @@ class LanguageModelTrainer:
         split: int = 0,
         loss: float = 10000,
         optimizer_state: Optional[dict] = None,
-    ):
+    ) -> None:
         self.model: LanguageModel = model
         self.optimizer: Type[Optimizer] = optimizer
         self.corpus: TextCorpus = corpus
@@ -198,15 +197,12 @@ class LanguageModelTrainer:
         amp_opt_level: str = "O1",
         **kwargs,
     ):
-        if use_amp:
-            if sys.version_info < (3, 0):
-                raise RuntimeError("Apex currently only supports Python 3. Aborting.")
-            if amp is None:
-                raise RuntimeError(
-                    "Failed to import apex. Please install apex from "
-                    "https://www.github.com/nvidia/apex "
-                    "to enable mixed-precision training."
-                )
+        if use_amp and amp is None:
+            raise RuntimeError(
+                "Failed to import apex. Please install apex from "
+                "https://www.github.com/nvidia/apex "
+                "to enable mixed-precision training."
+            )
 
         # cast string to Path
         base_path = Path(base_path)
@@ -274,7 +270,7 @@ class LanguageModelTrainer:
                     curr_split += 1
                     train_data = self._batchify(train_slice.flatten(), mini_batch_size)
 
-                    log.info("Split %d" % curr_split + "\t - ({:%H:%M:%S})".format(datetime.datetime.now()))
+                    log.info("Split %d" % curr_split + f"\t - ({datetime.datetime.now():%H:%M:%S})")
 
                     for group in optimizer.param_groups:
                         learning_rate = group["lr"]

@@ -19,8 +19,7 @@ Source: https://github.com/asappresearch/dynamic-classification/blob/55beb5a4840
 
 
 import torch
-import torch.nn as nn
-from torch import Tensor
+from torch import Tensor, nn
 
 
 class EuclideanDistance(nn.Module):
@@ -36,7 +35,7 @@ class EuclideanDistance(nn.Module):
         mat_2: torch.Tensor
             matrix of shape (n_2, n_features)
 
-        Returns
+        Returns:
         -------
         dist: torch.Tensor
             distance matrix of shape (n_1, n_2)
@@ -58,7 +57,7 @@ class EuclideanMean(nn.Module):
         data : torch.Tensor
             The input data, as a float tensor
 
-        Returns
+        Returns:
         -------
         torch.Tensor
             The encoded output, as a float tensor

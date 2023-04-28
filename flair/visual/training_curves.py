@@ -16,7 +16,7 @@ WEIGHT_VALUE = 3
 log = logging.getLogger("flair")
 
 
-class Plotter(object):
+class Plotter:
     """Plots training parameters (loss, f-score, and accuracy) and training weights over time.
 
     Input files are the output files 'loss.tsv' and 'weights.txt' from
@@ -33,7 +33,7 @@ class Plotter(object):
             "dev": {"loss": [], "score": []},
         }
 
-        with open(file_name, "r") as f:
+        with open(file_name) as f:
             tsvin = csv.reader(f, delimiter="\t")
 
             # determine the column index of loss, f-score and accuracy for
@@ -54,17 +54,14 @@ class Plotter(object):
 
             # then get all relevant values from the tsv
             for row in tsvin:
-                if TRAIN_SCORE is not None:
-                    if row[TRAIN_SCORE] != "_":
-                        training_curves["train"]["score"].append(float(row[TRAIN_SCORE]))
+                if TRAIN_SCORE is not None and row[TRAIN_SCORE] != "_":
+                    training_curves["train"]["score"].append(float(row[TRAIN_SCORE]))
 
-                if DEV_SCORE is not None:
-                    if row[DEV_SCORE] != "_":
-                        training_curves["dev"]["score"].append(float(row[DEV_SCORE]))
+                if DEV_SCORE is not None and row[DEV_SCORE] != "_":
+                    training_curves["dev"]["score"].append(float(row[DEV_SCORE]))
 
-                if TEST_SCORE is not None:
-                    if row[TEST_SCORE] != "_":
-                        training_curves["test"]["score"].append(float(row[TEST_SCORE]))
+                if TEST_SCORE is not None and row[TEST_SCORE] != "_":
+                    training_curves["test"]["score"].append(float(row[TEST_SCORE]))
 
         return training_curves
 
@@ -73,9 +70,9 @@ class Plotter(object):
         if type(file_name) is str:
             file_name = Path(file_name)
 
-        weights: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(lambda: list()))
+        weights: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
 
-        with open(file_name, "r") as f:
+        with open(file_name) as f:
             tsvin = csv.reader(f, delimiter="\t")
 
             for row in tsvin:
@@ -95,7 +92,7 @@ class Plotter(object):
         lrs = []
         losses = []
 
-        with open(file_name, "r") as f:
+        with open(file_name) as f:
             tsvin = csv.reader(f, delimiter="\t")
             row = next(tsvin)
             LEARNING_RATE = row.index("LEARNING_RATE")

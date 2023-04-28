@@ -17,7 +17,7 @@ class Embeddings(torch.nn.Module, Generic[DT]):
 
     embeddings_name: str  # class-variable referring to the "class embedding name"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Set some attributes that would otherwise result in errors. Overwrite these in your embedding class."""
         if not hasattr(self, "name"):
             self.name: str = "unnamed_embedding"
@@ -52,15 +52,11 @@ class Embeddings(torch.nn.Module, Generic[DT]):
         return data_points
 
     def _everything_embedded(self, data_points: Sequence[DT]) -> bool:
-        for data_point in data_points:
-            if self.name not in data_point._embeddings.keys():
-                return False
-        return True
+        return all(self.name in data_point._embeddings for data_point in data_points)
 
     @abstractmethod
     def _add_embeddings_internal(self, sentences: List[DT]):
         """Private method for adding embeddings to all words in a list of sentences."""
-        pass
 
     def get_names(self) -> List[str]:
         """Returns a list of embedding names.
@@ -77,7 +73,7 @@ class Embeddings(torch.nn.Module, Generic[DT]):
     @staticmethod
     def get_instance_parameters(locals: dict) -> dict:
         class_definition = locals.get("__class__")
-        instance_parameter_names = set(inspect.signature(class_definition.__init__).parameters)  # type: ignore
+        instance_parameter_names = set(inspect.signature(class_definition.__init__).parameters)  # type: ignore[misc]
         instance_parameter_names.remove("self")
         instance_parameter_names.add("__class__")
         instance_parameters = {
@@ -89,10 +85,10 @@ class Embeddings(torch.nn.Module, Generic[DT]):
 
     @classmethod
     def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def to_params(self) -> Dict[str, Any]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def load_embedding(cls, params: Dict[str, Any]):
@@ -129,7 +125,7 @@ class ScalarMix(torch.nn.Module):
         ``mixture = gamma * sum(s_k * tensor_k)`` where ``s = softmax(w)``, with ``w`` and ``gamma`` scalar parameters.
         :param mixture_size: size of mixtures (usually the number of layers)
         """
-        super(ScalarMix, self).__init__()
+        super().__init__()
         self.mixture_size = mixture_size
 
         initial_scalar_parameters = [0.0] * mixture_size
@@ -171,9 +167,7 @@ class ScalarMix(torch.nn.Module):
                 )
             )
 
-        normed_weights = torch.nn.functional.softmax(
-            torch.cat([parameter for parameter in self.scalar_parameters]), dim=0
-        )
+        normed_weights = torch.nn.functional.softmax(torch.cat(list(self.scalar_parameters)), dim=0)
         normed_weights_split = torch.split(normed_weights, split_size_or_sections=1)
 
         pieces = []

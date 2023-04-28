@@ -22,7 +22,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         pooling_operation: str = "first_last",
         train_on_gold_pairs_only: bool = False,
         **classifierargs,
-    ):
+    ) -> None:
         """Initializes a RelationClassifier.
 
         :param document_embeddings: embeddings used to embed each data point
@@ -37,7 +37,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         relation_representation_length = 2 * embeddings.embedding_length
         if self.pooling_operation == "first_last":
             relation_representation_length *= 2
-        super(RelationExtractor, self).__init__(
+        super().__init__(
             embeddings=embeddings,
             final_embedding_size=relation_representation_length,
             **classifierargs,

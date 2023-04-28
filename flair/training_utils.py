@@ -19,14 +19,14 @@ from flair.data import DT, Dictionary, Sentence, _iter_dataset
 log = logging.getLogger("flair")
 
 
-class Result(object):
+class Result:
     def __init__(
         self,
         main_score: float,
         detailed_results: str,
         classification_report: dict = {},
         scores: dict = {},
-    ):
+    ) -> None:
         assert "loss" in scores, "No loss provided."
 
         self.main_score: float = main_score
@@ -38,16 +38,16 @@ class Result(object):
     def loss(self):
         return self.scores["loss"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{str(self.detailed_results)}\nLoss: {self.loss}'"
 
 
-class MetricRegression(object):
-    def __init__(self, name):
+class MetricRegression:
+    def __init__(self, name) -> None:
         self.name = name
 
-        self.true = []
-        self.pred = []
+        self.true: List[float] = []
+        self.pred: List[float] = []
 
     def mean_squared_error(self):
         return mean_squared_error(self.true, self.pred)
@@ -84,14 +84,12 @@ class MetricRegression(object):
     def to_empty_tsv():
         return "\t_\t_\t_\t_"
 
-    def __str__(self):
-        line = (
-            "mean squared error: {0:.4f} - mean absolute error: {1:.4f} - pearson: {2:.4f} - spearman: {3:.4f}".format(
-                self.mean_squared_error(),
-                self.mean_absolute_error(),
-                self.pearsonr(),
-                self.spearmanr(),
-            )
+    def __str__(self) -> str:
+        line = "mean squared error: {:.4f} - mean absolute error: {:.4f} - pearson: {:.4f} - spearman: {:.4f}".format(
+            self.mean_squared_error(),
+            self.mean_absolute_error(),
+            self.pearsonr(),
+            self.spearmanr(),
         )
         return line
 
@@ -104,16 +102,16 @@ class EvaluationMetric(Enum):
     MEAN_SQUARED_ERROR = "mean squared error"
 
 
-class WeightExtractor(object):
-    def __init__(self, directory: Union[str, Path], number_of_weights: int = 10):
+class WeightExtractor:
+    def __init__(self, directory: Union[str, Path], number_of_weights: int = 10) -> None:
         if type(directory) is str:
             directory = Path(directory)
         self.weights_file = init_output_file(directory, "weights.txt")
-        self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(lambda: defaultdict(lambda: list()))
+        self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(lambda: defaultdict(list))
         self.number_of_weights = number_of_weights
 
     def extract_weights(self, state_dict, iteration):
-        for key in state_dict.keys():
+        for key in state_dict:
             vec = state_dict[key]
             # print(vec)
             try:
@@ -132,7 +130,7 @@ class WeightExtractor(object):
                 value = vec.item()
 
                 with open(self.weights_file, "a") as f:
-                    f.write("{}\t{}\t{}\t{}\n".format(iteration, key, i, float(value)))
+                    f.write(f"{iteration}\t{key}\t{i}\t{float(value)}\n")
 
     def _init_weights_index(self, key, state_dict, weights_to_watch):
         indices = {}
@@ -142,7 +140,7 @@ class WeightExtractor(object):
             vec = state_dict[key]
             cur_indices = []
 
-            for x in range(len(vec.size())):
+            for _x in range(len(vec.size())):
                 index = random.randint(0, len(vec) - 1)
                 vec = vec[index]
                 cur_indices.append(index)
@@ -154,7 +152,7 @@ class WeightExtractor(object):
         self.weights_dict[key] = indices
 
 
-class AnnealOnPlateau(object):
+class AnnealOnPlateau:
     """A learningrate sheduler for annealing on plateau.
 
     This class is a modification of
@@ -167,6 +165,7 @@ class AnnealOnPlateau(object):
     of epochs, the learning rate is reduced.
 
     Args:
+    ----
         optimizer (Optimizer): Wrapped optimizer.
         mode (str): One of `min`, `max`. In `min` mode, lr will
             be reduced when the quantity monitored has stopped
@@ -192,6 +191,7 @@ class AnnealOnPlateau(object):
             ignored. Default: 1e-8.
 
     Example:
+    -------
         >>> optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
         >>> scheduler = ReduceLROnPlateau(optimizer, 'min')
         >>> for epoch in range(10):
@@ -213,19 +213,19 @@ class AnnealOnPlateau(object):
         cooldown=0,
         min_lr=0,
         eps=1e-8,
-    ):
+    ) -> None:
         if factor >= 1.0:
             raise ValueError("Factor should be < 1.0.")
         self.factor = factor
 
         # Attach optimizer
         if not isinstance(optimizer, Optimizer):
-            raise TypeError("{} is not an Optimizer".format(type(optimizer).__name__))
+            raise TypeError(f"{type(optimizer).__name__} is not an Optimizer")
         self.optimizer = optimizer
 
-        if isinstance(min_lr, list) or isinstance(min_lr, tuple):
+        if isinstance(min_lr, (list, tuple)):
             if len(min_lr) != len(optimizer.param_groups):
-                raise ValueError("expected {} min_lrs, got {}".format(len(optimizer.param_groups), len(min_lr)))
+                raise ValueError(f"expected {len(optimizer.param_groups)} min_lrs, got {len(min_lr)}")
             self.min_lrs = list(min_lr)
         else:
             self.min_lrs = [min_lr] * len(optimizer.param_groups)
@@ -259,24 +259,21 @@ class AnnealOnPlateau(object):
         self.last_epoch = epoch
 
         is_better = False
+        assert self.best is not None
 
-        if self.mode == "min":
-            if current < self.best:
-                is_better = True
+        if self.mode == "min" and current < self.best:
+            is_better = True
 
-        if self.mode == "max":
-            if current > self.best:
-                is_better = True
+        if self.mode == "max" and current > self.best:
+            is_better = True
 
         if current == self.best and auxiliary_metric:
             current_aux = float(auxiliary_metric)
-            if self.aux_mode == "min":
-                if current_aux < self.best_aux:
-                    is_better = True
+            if self.aux_mode == "min" and current_aux < self.best_aux:
+                is_better = True
 
-            if self.aux_mode == "max":
-                if current_aux > self.best_aux:
-                    is_better = True
+            if self.aux_mode == "max" and current_aux > self.best_aux:
+                is_better = True
 
         if is_better:
             self.best = current
@@ -290,7 +287,7 @@ class AnnealOnPlateau(object):
             self.cooldown_counter -= 1
             self.num_bad_epochs = 0  # ignore any bad epochs in cooldown
 
-        reduce_learning_rate = True if self.num_bad_epochs > self.effective_patience else False
+        reduce_learning_rate = self.num_bad_epochs > self.effective_patience
         if reduce_learning_rate:
             self._reduce_lr(epoch)
             self.cooldown_counter = self.cooldown
@@ -344,7 +341,7 @@ def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
     base_path.mkdir(parents=True, exist_ok=True)
 
     file = base_path / file_name
-    open(file, "w", encoding="utf-8").close()
+    file.touch(exist_ok=True)
     return file
 
 

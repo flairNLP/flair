@@ -885,7 +885,7 @@ TESTB_FILE = "tests/resources/tasks/jsonl/testa.jsonl"
 
 
 @pytest.mark.parametrize(
-    "train_files,dev_files,test_files,expected_size",
+    ("train_files", "dev_files", "test_files", "expected_size"),
     [
         (
             [TRAIN_FILE],

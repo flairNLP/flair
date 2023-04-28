@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, List, Optional, Tuple, Union
 
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
@@ -34,7 +34,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         word_dropout: float = 0.0,
         decoder: Optional[torch.nn.Module] = None,
         **classifierargs,
-    ):
+    ) -> None:
         """Initialize the Text Pair Regression Model.
 
         :param embeddings: embeddings used to embed each data point
@@ -89,7 +89,8 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
 
     def forward_loss(self, pairs: List[TextPair]) -> Tuple[torch.Tensor, int]:
         loss, num = self._forward_loss_and_scores(pairs=pairs, return_num=True, return_scores=False)
-        assert isinstance(loss, torch.Tensor) and isinstance(num, int)
+        assert isinstance(loss, torch.Tensor)
+        assert isinstance(num, int)
 
         return loss, num
 
@@ -137,7 +138,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         return torch.cat(target_values, 0).to(flair.device)
 
     def _filter_data_point(self, pair: TextPair) -> bool:
-        return True if len(pair) > 0 else False
+        return len(pair) > 0
 
     def _encode_data_points(self, data_points: List[TextPair]):
         # get a tensor of data points
@@ -278,7 +279,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
             metric = MetricRegression("Evaluation")
 
             if out_path is not None:
-                out_file = open(out_path, "w", encoding="utf-8")
+                out_file = open(out_path, "w", encoding="utf-8")  # noqa: SIM115
 
             total_count = 0
 

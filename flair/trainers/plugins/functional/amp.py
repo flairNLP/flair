@@ -1,20 +1,15 @@
-import sys
-
 from flair.trainers.plugins.base import TrainerPlugin
 
 
 class AmpPlugin(TrainerPlugin):
     """Simple plugin for AMP."""
 
-    def __init__(self, opt_level):
+    def __init__(self, opt_level) -> None:
         super().__init__()
 
         self.opt_level = opt_level
 
         self.wrapped_backward = None
-
-        if sys.version_info < (3, 0):
-            raise RuntimeError("Apex currently only supports Python 3. Aborting.")
 
         try:
             from apex import amp

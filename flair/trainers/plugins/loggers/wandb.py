@@ -6,7 +6,7 @@ log = logging.getLogger("flair")
 
 
 class WandbLoggingHandler(logging.Handler):
-    def __init__(self, wandb, *args, **kwargs):
+    def __init__(self, wandb, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.wandb = wandb
@@ -32,7 +32,7 @@ class WandbLoggingHandler(logging.Handler):
 
 
 class WandbLogger(TrainerPlugin):
-    def __init__(self, wandb, emit_alerts=True, alert_level=logging.WARNING, **kwargs):
+    def __init__(self, wandb, emit_alerts=True, alert_level=logging.WARNING, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.wandb = wandb

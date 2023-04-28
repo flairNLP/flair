@@ -14,13 +14,13 @@ default_metrics_to_collect = {
 
 
 class MetricHistoryPlugin(TrainerPlugin):
-    def __init__(self, metrics_to_collect: Mapping = default_metrics_to_collect):
+    def __init__(self, metrics_to_collect: Mapping = default_metrics_to_collect) -> None:
         super().__init__()
 
         self.metric_history: Dict[str, list] = {}
         self.metrics_to_collect: Mapping = metrics_to_collect
         for target in self.metrics_to_collect.values():
-            self.metric_history[target] = list()
+            self.metric_history[target] = []
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):

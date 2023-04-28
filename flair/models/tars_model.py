@@ -28,14 +28,14 @@ log = logging.getLogger("flair")
 
 
 class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         self._current_task = None
-        self._task_specific_attributes = {}
+        self._task_specific_attributes: Dict[str, Dict[str, Any]] = {}
         self.label_nearest_map = None
         self.tars_model: flair.nn.Classifier[Sentence]
         self.separator: str
 
-        super(FewshotClassifier, self).__init__()
+        super().__init__()
 
     def forward_loss(self, data_points: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
         if not isinstance(data_points, list):
@@ -107,7 +107,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
 
             if len(plausible_labels) > 0:
                 num_samples = min(self.num_negative_labels_to_sample, len(plausible_labels))
-                sampled_negative_labels = np.random.choice(
+                sampled_negative_labels = np.random.default_rng().choice(
                     plausible_labels,
                     num_samples,
                     replace=False,
@@ -172,7 +172,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
 
     def add_and_switch_to_new_task(
         self,
-        task_name,
+        task_name: str,
         label_dictionary: Union[List, Set, Dictionary, str],
         label_type: str,
         multi_label: bool = True,
@@ -190,7 +190,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         :param force_switch: if True, will overwrite existing task with same name
         """
         if task_name in self._task_specific_attributes and not force_switch:
-            log.warning("Task `%s` already exists in TARS model. Switching to it.", task_name)
+            log.warning(f"Task `{task_name}` already exists in TARS model. Switching to it.")
         else:
             # make label dictionary if no Dictionary object is passed
             if isinstance(label_dictionary, Dictionary):
@@ -225,7 +225,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         """Switches to a task which was previously added."""
         if task_name not in self._task_specific_attributes:
             log.error(
-                "Provided `%s` does not exist in the model. Consider calling " "`add_and_switch_to_new_task` first.",
+                "Provided `%s` does not exist in the model. Consider calling `add_and_switch_to_new_task` first.",
                 task_name,
             )
         else:
@@ -235,7 +235,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         if task_name in self._task_specific_attributes:
             if self._current_task == task_name:
                 log.error(
-                    "`%s` is the current task." " Switch to some other task before dropping this.",
+                    "`%s` is the current task. Switch to some other task before dropping this.",
                     task_name,
                 )
             else:
@@ -334,7 +334,7 @@ class TARSTagger(FewshotClassifier):
         num_negative_labels_to_sample: int = 2,
         prefix: bool = True,
         **tagger_args,
-    ):
+    ) -> None:
         """Initializes a TarsTagger.
 
         :param task_name: a string depicting the name of the task
@@ -346,7 +346,7 @@ class TARSTagger(FewshotClassifier):
         labels for each positive label. The model would sample all the negative labels
         if None is passed. That slows down the training considerably.
         """
-        super(TARSTagger, self).__init__()
+        super().__init__()
 
         if isinstance(embeddings, str):
             embeddings = TransformerWordEmbeddings(
@@ -585,6 +585,7 @@ class TARSTagger(FewshotClassifier):
 
         if return_loss:
             return overall_loss, overall_count
+        return None
 
     def _print_predictions(self, batch, gold_label_type):
         lines = []
@@ -650,7 +651,7 @@ class TARSClassifier(FewshotClassifier):
         num_negative_labels_to_sample: int = 2,
         prefix: bool = True,
         **tagger_args,
-    ):
+    ) -> None:
         """Initializes a TarsClassifier.
 
         :param task_name: a string depicting the name of the task
@@ -666,7 +667,7 @@ class TARSClassifier(FewshotClassifier):
         :param multi_label_threshold: If multi-label you can set the threshold to make predictions
         :param beta: Parameter for F-beta score for evaluation and training annealing
         """
-        super(TARSClassifier, self).__init__()
+        super().__init__()
 
         if isinstance(embeddings, str):
             embeddings = TransformerDocumentEmbeddings(
@@ -885,7 +886,7 @@ class TARSClassifier(FewshotClassifier):
                             tars_sentence,
                             label_name=label_name,
                             return_loss=return_loss,
-                            return_probabilities_for_all_classes=True if label_threshold < 0.5 else False,
+                            return_probabilities_for_all_classes=label_threshold < 0.5,
                         )
 
                         if return_loss:
@@ -902,28 +903,28 @@ class TARSClassifier(FewshotClassifier):
                                 sentence.add_label(label_name, label, predicted_tars_label.score)
 
                     # only use label with highest confidence if enforcing single-label predictions
-                    if not multi_label:
-                        if len(sentence.get_labels(label_name)) > 0:
-                            # get all label scores and do an argmax to get the best label
-                            label_scores = torch.tensor(
-                                [label.score for label in sentence.get_labels(label_name)],
-                                dtype=torch.float,
-                            )
-                            best_label = sentence.get_labels(label_name)[torch.argmax(label_scores)]
+                    if not multi_label and len(sentence.get_labels(label_name)) > 0:
+                        # get all label scores and do an argmax to get the best label
+                        label_scores = torch.tensor(
+                            [label.score for label in sentence.get_labels(label_name)],
+                            dtype=torch.float,
+                        )
+                        best_label = sentence.get_labels(label_name)[torch.argmax(label_scores)]
 
-                            # remove previously added labels and only add the best label
-                            sentence.remove_labels(label_name)
-                            sentence.add_label(
-                                typename=label_name,
-                                value=best_label.value,
-                                score=best_label.score,
-                            )
+                        # remove previously added labels and only add the best label
+                        sentence.remove_labels(label_name)
+                        sentence.add_label(
+                            typename=label_name,
+                            value=best_label.value,
+                            score=best_label.score,
+                        )
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
         if return_loss:
             return overall_loss, overall_count
+        return None
 
     @classmethod
     def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TARSClassifier":

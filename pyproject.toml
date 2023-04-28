@@ -46,16 +46,13 @@ wikipedia-api = ">=0.5.7"
 
 [tool.poetry.group.dev.dependencies]
 black = { extras = ["jupyter"], version = ">=23.3.0" }
-flake8 = ">=4.0.1,<5.0.0"
-flake8-black = ">=0.3.6"
-flake8-docstrings = ">=1.7.0"
 konoha = ">=4.6.5,<5.0.0"
 mypy = ">=1.2.0"
 pytest = ">=7.3.1"
-pytest-flake8 = ">=1.1.1"
+pytest-black-ng = ">=0.4.1"
 pytest-github-actions-annotate-failures = ">=0.1.8"
-pytest-isort = ">=3.1.0"
 pytest-mypy = ">=0.10.3"
+pytest-ruff = ">=0.0.5"
 types-dataclasses = ">=0.6.6"
 types-Deprecated = ">=1.2.9.2"
 types-requests = ">=2.28.11.17"
@@ -82,9 +79,7 @@ exclude = '''
 )
 '''
 [tool.pytest.ini_options]
-flake8-max-line-length = 210
-flake8-ignore = ["E203", "W503", "D100", "D101", "D102", "D103", "D104", "D105", "D107", "legacy.py ALL"]  # See https://github.com/PyCQA/pycodestyle/issues/373
-addopts = "--flake8 --mypy --isort"
+addopts = "--black --mypy --ruff"
 filterwarnings = [
     "error",  # Convert all warnings to errors
     'ignore:torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables',  # Distilbert warning
@@ -111,8 +106,62 @@ warn_unused_ignores = true
 module="flair.embeddings.legacy"
 ignore_errors = true
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+line-length = 120
+target-version = "py37"
+
+#select = ["ALL"]    # Uncommit to autofix all the things
+select = [
+  "C4",
+  "COM",
+  "D",
+  "E",
+  "EXE",
+  "F",
+  "I",
+  "INP",
+  "ISC",
+  "NPY",
+  "PD",
+  "PGH",
+  "PIE",
+  "PLE",
+  "PYI",
+  "Q",
+  "RSE",
+  "RUF",
+  "SIM",
+  "T10",
+  "TID",
+  "UP",
+  "W",
+  "YTT",
+]
+
+ignore = [
+  "COM812", # Do not force trailing commas for function argument lists
+  "D100",   # Don't force presence of docstrings (D100-D107)
+  "D101",
+  "D102",
+  "D103",
+  "D104",
+  "D105",
+  "D107",
+  "E501",   # Ignore line too long
+]
+
+unfixable = [
+  "ERA",    # Do not delete commented code
+  "EXE001", # Do not check python files for executability, doesn't work well on windows
+  "EXE002", # Do not check python files for executability, doesn't work well on windows
+  "F841",   # Do not remove unused variables automatically
+]
+
+[tool.ruff.per-file-ignores]
+"flair/embeddings/legacy.py" = ["D205"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
 
 [tool.pydocstyle]
 match = "^(?!legacy).*\\.py$"

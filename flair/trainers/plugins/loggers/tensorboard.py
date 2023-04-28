@@ -10,7 +10,7 @@ log = logging.getLogger("flair")
 class TensorboardLogger(TrainerPlugin):
     """Plugin that takes care of tensorboard logging."""
 
-    def __init__(self, log_dir=None, comment="", tracked_metrics=()):
+    def __init__(self, log_dir=None, comment="", tracked_metrics=()) -> None:
         """Initializes the TensorboardLogger.
 
         :param log_dir: Directory into which tensorboard log files will be written  # noqa: E501

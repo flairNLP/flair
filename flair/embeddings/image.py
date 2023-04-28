@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn.functional as F
@@ -31,7 +31,7 @@ class ImageEmbeddings(Embeddings[Image]):
 
     def to_params(self) -> Dict[str, Any]:
         # legacy pickle-like saving for image embeddings, as implementation details are not obvious
-        return self.__getstate__()  # type: ignore
+        return self.__getstate__()  # type: ignore[operator]
 
     @classmethod
     def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
@@ -43,13 +43,13 @@ class ImageEmbeddings(Embeddings[Image]):
 
 @register_embeddings
 class IdentityImageEmbeddings(ImageEmbeddings):
-    def __init__(self, transforms):
+    def __init__(self, transforms) -> None:
         import PIL as pythonimagelib
 
         self.PIL = pythonimagelib
         self.name = "Identity"
         self.transforms = transforms
-        self.__embedding_length = None
+        self.__embedding_length: Optional[int] = None
         self.static_embeddings = True
         super().__init__()
 
@@ -61,15 +61,16 @@ class IdentityImageEmbeddings(ImageEmbeddings):
 
     @property
     def embedding_length(self) -> int:
+        assert self.__embedding_length is not None
         return self.__embedding_length
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
 @register_embeddings
 class PrecomputedImageEmbeddings(ImageEmbeddings):
-    def __init__(self, url2tensor_dict, name):
+    def __init__(self, url2tensor_dict, name) -> None:
         self.url2tensor_dict = url2tensor_dict
         self.name = name
         self.__embedding_length = len(list(self.url2tensor_dict.values())[0])
@@ -87,17 +88,17 @@ class PrecomputedImageEmbeddings(ImageEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
 @register_embeddings
 class NetworkImageEmbeddings(ImageEmbeddings):
-    def __init__(self, name, pretrained=True, transforms=None):
+    def __init__(self, name, pretrained=True, transforms=None) -> None:
         super().__init__()
 
         try:
-            import torchvision as torchvision
+            import torchvision
         except ModuleNotFoundError:
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "torchvision" is not installed!')
@@ -152,18 +153,18 @@ class NetworkImageEmbeddings(ImageEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
 @register_embeddings
 class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
-    def __init__(self, feats_in, convnet_parms, posnet_parms, transformer_parms):
-        super(ConvTransformNetworkImageEmbeddings, self).__init__()
+    def __init__(self, feats_in, convnet_parms, posnet_parms, transformer_parms) -> None:
+        super().__init__()
 
         adaptive_pool_func_map = {"max": AdaptiveMaxPool2d, "avg": AdaptiveAvgPool2d}
 
-        convnet_arch = [] if convnet_parms["dropout"][0] <= 0 else [Dropout2d(convnet_parms["dropout"][0])]
+        convnet_arch: List[Any] = [] if convnet_parms["dropout"][0] <= 0 else [Dropout2d(convnet_parms["dropout"][0])]
         convnet_arch.extend(
             [
                 Conv2d(
@@ -276,5 +277,5 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
     def embedding_length(self):
         return self._feat_dim
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name

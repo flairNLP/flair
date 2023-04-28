@@ -19,7 +19,7 @@ class BaseEmbeddingsTest:
     name_field: Optional[str] = None
     weired_texts: List[str] = [
         "Hybrid mesons , qq ̄ states with an admixture",
-        "typical proportionalities of ∼ 1nmV − 1 [ 3,4 ] .",
+        "typical proportionalities of \u223C 1nmV \u2212 1 [ 3,4 ] .",
         "🤟 🤟  🤟 hüllo",
         "🤟hallo 🤟 🤟 🤟 🤟",
         "🤟",
@@ -30,7 +30,7 @@ class BaseEmbeddingsTest:
         assert self.name_field is not None
         kwargs = dict(self.default_args)
         kwargs.pop(self.name_field)
-        return self.embedding_cls(name, **kwargs)  # type: ignore
+        return self.embedding_cls(name, **kwargs)  # type: ignore[call-arg]
 
     def create_embedding_with_args(self, args: Dict[str, Any]):
         kwargs = dict(self.default_args)
