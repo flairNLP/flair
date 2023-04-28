@@ -53,10 +53,7 @@ class ReduceTransformerVocabPlugin(TrainerPlugin):
 
 
 def get_transformer_embeddings(model: Model) -> List[TransformerEmbeddings]:
-    if isinstance(model, FewshotClassifier):
-        embeddings = model.tars_embeddings
-    else:
-        embeddings = getattr(model, "embeddings", None)
+    embeddings = model.tars_embeddings if isinstance(model, FewshotClassifier) else getattr(model, "embeddings", None)
 
     if embeddings is None:
         log.warning(f"Could not extract embeddings of Model of type {type(model)}")
