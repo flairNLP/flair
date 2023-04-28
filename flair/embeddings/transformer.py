@@ -1332,7 +1332,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             assert word_ids is not None
             assert token_lengths is not None
             all_token_embeddings = torch.zeros(  # type: ignore[call-overload]
-                word_ids.shape[0], token_lengths.max(), self.embedding_length_internal, device=flair.device,
+                word_ids.shape[0],
+                token_lengths.max(),
+                self.embedding_length_internal,
+                device=flair.device,
                 dtype=sentence_hidden_states.dtype,
             )
             true_tensor = torch.ones_like(word_ids[:, :1], dtype=torch.bool)
