@@ -59,7 +59,11 @@ jobs:
           path: ./cache
           key: cache-v1.1
       - name: Run tests
+        # The import is a workaround for invalid sequences in transformers files. These
+        # cause an error when discovered during pytest, but by importing them first we
+        # create the import cache and pytest will not discover them while running the
+        # tests
         run: |
           source .venv/bin/activate
-          python -c 'import flair'
+          python -c 'import transformers.models.distilbert.modeling_distilbert'
           pytest --runintegration --durations=0 -vv
