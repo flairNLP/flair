@@ -174,6 +174,7 @@ class LabelVerbalizerDecoder(torch.nn.Module):
         for byte_label, idx in label_dictionary.item2idx.items():
             str_label = byte_label.decode("utf-8")
             if label_dictionary.span_labels:
+                # verbalize BIOES labels
                 if str_label == "O":
                     verbalized_labels.append("outside")
                 elif str_label.startswith("B-"):
@@ -184,6 +185,9 @@ class LabelVerbalizerDecoder(torch.nn.Module):
                     verbalized_labels.append("ending " + str_label.split("-")[1])
                 elif str_label.startswith("S-"):
                     verbalized_labels.append("single " + str_label.split("-")[1])
+                # if label is not BIOES, use label itself
+                else:
+                    verbalized_labels.append(str_label)
             else:
                 verbalized_labels.append(str_label)
         return list(map(Sentence, verbalized_labels))
