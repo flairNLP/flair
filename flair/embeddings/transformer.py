@@ -1172,6 +1172,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
     @classmethod
     def from_params(cls, params):
+        params.pop("truncate", None)
+        params.pop("stride", None)
+        params.pop("embedding_length", None)
+        params.pop("use_lang_emb", None)
         params["use_context"] = params.pop("context_length", 0)
         config_state_dict = params.pop("config_state_dict", None)
         config = None
