@@ -23,6 +23,7 @@ filterwarnings = [
     'ignore:bilinear is deprecated and will be removed in Pillow 10',  # huggingface layoutlmv2 has deprecated calls.
     'ignore:nearest is deprecated and will be removed in Pillow 10',  # huggingface layoutlmv2 has deprecated calls.
     'ignore:The `device` argument is deprecated and will be removed in v5 of Transformers.',  # hf layoutlmv3 calls deprecated hf.
+    'ignore:distutils Version classes are deprecated:DeprecationWarning',  # pandas 1.15 (last to be compatible with python 3.7)
     "ignore:the imp module is deprecated:DeprecationWarning:past",  # ignore DeprecationWarning from hyperopt dependency
     "ignore:.*imp module.*:DeprecationWarning",  # ignore DeprecationWarnings that involve imp module
     "ignore:The class LayoutLMv3FeatureExtractor is deprecated and will be removed in version 5 of Transformers. Please use LayoutLMv3ImageProcessor instead.",  # huggingface layoutlmv3 has deprecated calls.
