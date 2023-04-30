@@ -6,15 +6,6 @@ import torch
 import flair
 
 
-@pytest.fixture(scope="session", autouse=True)
-def set_torch_threads():
-    print(torch.get_num_threads())
-    print(torch.get_num_interop_threads())
-    assert False
-    torch.set_num_threads(2)
-    torch.set_num_interop_threads(2)
-
-
 @pytest.fixture(scope="module")
 def resources_path():
     return Path(__file__).parent / "resources"
