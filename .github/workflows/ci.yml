@@ -14,45 +14,18 @@ jobs:
       - uses: actions/checkout@v2
       - name: Set up Python 3.7
         id: setup-python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.7
-      #----------------------------------------------
-      #       Try to load cached poetry installation
-      #----------------------------------------------
-      - name: Load cached Poetry installation
-        id: cached-poetry
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.local
-            ~/.cache/pypoetry
-          key: poetry-0 # increment to reset cache
-      #----------------------------------------------
-      #       Install poetry if not using cached
-      #----------------------------------------------
-      - name: Install Poetry
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-in-project: true
-      #----------------------------------------------
-      #       Lock dependencies to get fresh versions
-      #----------------------------------------------
+          cache: poetry
+      - name: Install poetry
+        run: pipx install poetry
       - name: Run poetry lock
         run: |
-          poetry config virtualenvs.in-project true
-          poetry lock
-      #----------------------------------------------
-      # install dependencies if cache does not exist
-      #----------------------------------------------
+          poetry lock -vv
       - name: Install dependencies
         run: |
-          poetry config virtualenvs.in-project true
-          poetry install --no-interaction --no-root
-      #----------------------------------------------
-      #              run test suite
-      #----------------------------------------------
+          poetry install --no-interaction
       - name: Cache downloaded models/datasets
         uses: actions/cache@v3
         with:
@@ -60,6 +33,6 @@ jobs:
           key: cache-v1.1
       - name: Run tests
         run: |
-          source .venv/bin/activate
+          poetry shell
           python -c 'import flair'
           pytest --runintegration --durations=0 -vv
