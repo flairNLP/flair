@@ -8,7 +8,10 @@ import flair
 
 @pytest.fixture(scope="session", autouse=True)
 def set_torch_threads():
-    torch.set_num_threads(4)
+    print(torch.get_num_threads())
+    print(torch.get_num_interop_threads())
+    assert False
+    torch.set_num_threads(2)
     torch.set_num_interop_threads(2)
 
 

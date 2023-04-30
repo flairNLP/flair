@@ -34,4 +34,4 @@ jobs:
       - name: Run tests
         run: |
           poetry run python -c 'import flair'
-          poetry run pytest --runintegration --durations=0 -vv
+          poetry run pytest --runintegration --durations=0 -vvvx
