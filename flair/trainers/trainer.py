@@ -595,8 +595,11 @@ class ModelTrainer(Pluggable):
                     # do the optimizer step
                     scaler.unscale_(self.optimizer)
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
+                    scale_before = scaler.get_scale()
                     scaler.step(self.optimizer)
                     scaler.update()
+                    scale_after = scaler.get_scale()
+                    batch_kw["optimizer_was_run"] = scale_before <= scale_after
 
                     if batch_train_samples > 0:
                         train_loss = batch_train_loss / batch_train_samples
