@@ -12,14 +12,14 @@ jobs:
       FLAIR_CACHE_ROOT: ./cache/flair
     steps:
       - uses: actions/checkout@v2
+      - name: Install poetry
+        run: pipx install poetry
       - name: Set up Python 3.7
         id: setup-python
         uses: actions/setup-python@v4
         with:
           python-version: 3.7
           cache: poetry
-      - name: Install poetry
-        run: pipx install poetry
       - name: Run poetry lock
         run: |
           poetry lock -vv
