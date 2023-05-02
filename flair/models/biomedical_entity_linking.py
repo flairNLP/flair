@@ -661,18 +661,17 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return dense_index
 
-    def _fit_and_cache_sparse_encoder(self, sparse_encoder_path: str, sparse_weight_path: str):
+    def _fit_sparse_encoder(self):
         """Fit sparse encoder to current dictionary"""
 
-        sparse_weight = self.sparse_weight if self.sparse_weight is not None else DEFAULT_SPARSE_WEIGHT
         logger.info(
             "Hybrid model has no pretrained sparse encoder. Fit to dictionary `%s` (sparse_weight=%s)",
             self.dictionary_name_or_path,
-            sparse_weight,
+            self.sparse_weight,
         )
-        sparse_encoder = BigramTfIDFVectorizer().fit([name for name, cui in self.dictionary])
-        sparse_encoder.save(sparse_encoder_path)
-        torch.save(torch.FloatTensor(self.sparse_weight), sparse_weight_path)
+        self.sparse_encoder = BigramTfIDFVectorizer().fit([name for name, cui in self.dictionary])
+        # sparse_encoder.save(Path(sparse_encoder_path))
+        # torch.save(torch.FloatTensor(self.sparse_weight), sparse_weight_path)
 
     def _set_sparse_weigth_and_encoder(
         self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]
@@ -692,6 +691,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
                         filename="sparse_encoder.pk",
                         cache_dir=flair.cache_root / "models" / model_name_or_path,
                     )
+                    self.sparse_encoder = BigramTfIDFVectorizer.load(path=sparse_encoder_path)
 
                 if not os.path.exists(sparse_weight_path):
                     sparse_weight_path = hf_hub_download(
@@ -699,29 +699,23 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
                         filename="sparse_weight.pt",
                         cache_dir=flair.cache_root / "models" / model_name_or_path,
                     )
+                    self.sparse_weight = torch.load(sparse_weight_path, map_location="cpu").item()
             else:
                 if self.force_hybrid_search:
-                    if not os.path.exists(sparse_encoder_path) and not os.path.exists(sparse_weight_path):
-                        self._fit_and_cache_sparse_encoder(
-                            sparse_encoder_path=sparse_encoder_path, sparse_weight_path=sparse_weight_path
-                        )
+                    self.sparse_weight = self.sparse_weight if self.sparse_weight is not None else DEFAULT_SPARSE_WEIGHT
+                    self._fit_sparse_encoder()
                 else:
                     raise ValueError(
-                        f"Hybrid model has no pretrained sparse encoder. Please pass `force_hybrid_search=True` if you want to fit a sparse model to dictionary `{dictionary_name_or_path}`"
+                        f"A: Hybrid model has no pretrained sparse encoder. Please pass `force_hybrid_search=True` if you want to fit a sparse model to dictionary `{dictionary_name_or_path}`"
                     )
         else:
-            if not os.path.exists(sparse_encoder_path) and not os.path.exists(sparse_weight_path):
-                if self.force_hybrid_search:
-                    self._fit_and_cache_sparse_encoder(
-                        sparse_encoder_path=sparse_encoder_path, sparse_weight_path=sparse_weight_path
-                    )
-                else:
-                    raise ValueError(
-                        f"Hybrid model has no pretrained sparse encoder. Please pass `force_hybrid_search=True` if you want to fit a sparse model to dictionary `{dictionary_name_or_path}`"
-                    )
-
-        self.sparse_encoder = BigramTfIDFVectorizer.load(path=sparse_encoder_path)
-        self.sparse_weight = torch.load(sparse_weight_path, map_location="cpu").item()
+            if self.force_hybrid_search:
+                self.sparse_weight = self.sparse_weight if self.sparse_weight is not None else DEFAULT_SPARSE_WEIGHT
+                self._fit_sparse_encoder()
+            else:
+                raise ValueError(
+                    f"Local hybrid model has no pretrained sparse encoder. Please pass `force_hybrid_search=True` if you want to fit a sparse model to dictionary `{dictionary_name_or_path}`"
+                )
 
     def embed_sparse(self, inputs: np.ndarray) -> np.ndarray:
         """
@@ -793,7 +787,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         pp_name = self.preprocessor.name if self.preprocessor is not None else "null"
 
-        embeddings_cache_file = cache_folder / f"{file_name}_pp={pp_name}.pk"
+        embeddings_cache_file = cache_folder / f"{file_name}-{pp_name}.pk"
 
         # If exists, load the cached dictionary indices
         if embeddings_cache_file.exists():
@@ -1113,6 +1107,7 @@ class BiomedicalEntityLinker:
                 index_batch_size=index_batch_size,
                 sparse_weight=sparse_weight,
                 preprocessor=preprocessor,
+                force_hybrid_search=force_hybrid_search,
             )
 
         logger.info(
@@ -1144,7 +1139,6 @@ class BiomedicalEntityLinker:
         if model_name_or_path == "cambridgeltl/SapBERT-from-PubMedBERT-fulltext":
             assert entity_type is not None, f"For model {model_name_or_path} you must specify `entity_type`"
 
-        entity_type = None
         if hybrid_search:
             # load model by entity_type
             if model_name_or_path in ENTITY_TYPES:
