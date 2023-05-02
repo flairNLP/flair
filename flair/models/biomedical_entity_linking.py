@@ -35,23 +35,23 @@ from flair.file_utils import cached_path
 logger = logging.getLogger("flair")
 
 
-PRETRAINED_MODELS = [
+PRETRAINED_DENSE_MODELS = [
     "cambridgeltl/SapBERT-from-PubMedBERT-fulltext",
 ]
 
 # Dense + sparse retrieval
-PRETRAINED_HYBRID_MODELS = [
-    "dmis-lab/biosyn-sapbert-bc5cdr-disease",
-    "dmis-lab/biosyn-sapbert-ncbi-disease",
-    "dmis-lab/biosyn-sapbert-bc5cdr-chemical",
-    "dmis-lab/biosyn-biobert-bc5cdr-disease",
-    "dmis-lab/biosyn-biobert-ncbi-disease",
-    "dmis-lab/biosyn-biobert-bc5cdr-chemical",
-    "dmis-lab/biosyn-biobert-bc2gn",
-    "dmis-lab/biosyn-sapbert-bc2gn",
-]
+PRETRAINED_HYBRID_MODELS = {
+    "dmis-lab/biosyn-sapbert-bc5cdr-disease": "disease",
+    "dmis-lab/biosyn-sapbert-ncbi-disease": "disease",
+    "dmis-lab/biosyn-sapbert-bc5cdr-chemical": "chemical",
+    "dmis-lab/biosyn-biobert-bc5cdr-disease": "disease",
+    "dmis-lab/biosyn-biobert-ncbi-disease": "disease",
+    "dmis-lab/biosyn-biobert-bc5cdr-chemical": "chemical",
+    "dmis-lab/biosyn-biobert-bc2gn": "gene",
+    "dmis-lab/biosyn-sapbert-bc2gn": "gene",
+}
 
-PRETRAINED_MODELS = PRETRAINED_HYBRID_MODELS + PRETRAINED_MODELS
+PRETRAINED_MODELS = list(PRETRAINED_HYBRID_MODELS) + PRETRAINED_DENSE_MODELS
 
 # just in case we add: fuzzy search, Levenstein, ...
 STRING_MATCHING_MODELS = ["exact-string-match"]
@@ -59,6 +59,13 @@ STRING_MATCHING_MODELS = ["exact-string-match"]
 MODELS = PRETRAINED_MODELS + STRING_MATCHING_MODELS
 
 ENTITY_TYPES = ["disease", "chemical", "gene", "species"]
+
+ENTITY_TYPE_TO_LABELS = {
+    "disease": "diseases",
+    "gene": "genes",
+    "species": "species",
+    "chemical": "chemical",
+}
 
 ENTITY_TYPE_TO_HYBRID_MODEL = {
     "disease": "dmis-lab/biosyn-sapbert-bc5cdr-disease",
@@ -78,6 +85,13 @@ ENTITY_TYPE_TO_DICTIONARY = {
     "species": "ncbi-taxonomy",
     "disease": "ctd-disease",
     "chemical": "ctd-chemical",
+}
+
+ENTITY_TYPE_TO_ANNOTATION_LAYER = {
+    "disease": "diseases",
+    "gene": "genes",
+    "chemical": "chemicals",
+    "species": "species",
 }
 
 BIOMEDICAL_DICTIONARIES = {
@@ -438,7 +452,7 @@ class BigramTfIDFVectorizer:
     def save(self, path: Path) -> None:
         with path.open("wb") as fout:
             pickle.dump(self.encoder, fout)
-            logger.info("Sparse encoder saved in %s", path)
+            # logger.info("Sparse encoder saved in %s", path)
 
     @classmethod
     def load(cls, path: Path) -> "BigramTfIDFVectorizer":
@@ -448,7 +462,7 @@ class BigramTfIDFVectorizer:
         newVectorizer = cls()
         with open(path, "rb") as fin:
             newVectorizer.encoder = pickle.load(fin)
-            logger.info("Sparse encoder loaded from %s", path)
+            # logger.info("Sparse encoder loaded from %s", path)
 
         return newVectorizer
 
@@ -785,7 +799,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         if embeddings_cache_file.exists():
 
             with embeddings_cache_file.open("rb") as fp:
-                logger.info("Load cached emebddings from  %s", embeddings_cache_file)
+                logger.info("Load cached emebddings from:  %s", embeddings_cache_file)
                 embeddings = pickle.load(fp)
 
         else:
@@ -946,9 +960,16 @@ class BiomedicalEntityLinker:
     entity / concept to these mentions according to a knowledge base / dictionary.
     """
 
-    def __init__(self, candidate_generator: AbstractCandidateGenerator, preprocessor: AbstractEntityPreprocessor):
+    def __init__(
+        self,
+        candidate_generator: AbstractCandidateGenerator,
+        preprocessor: AbstractEntityPreprocessor,
+        entity_type: str,
+    ):
         self.preprocessor = preprocessor
         self.candidate_generator = candidate_generator
+        self.entity_type = entity_type
+        self.annotation_layer = ENTITY_TYPE_TO_ANNOTATION_LAYER[self.entity_type]
 
     def build_entity_linking_label(self, data_point: Span, prediction: Tuple[str, str, int]) -> EntityLinkingLabel:
         """
@@ -983,7 +1004,8 @@ class BiomedicalEntityLinker:
         )
 
     def extract_mentions(
-        self, sentences: List[Sentence], input_entity_annotation_layer: Optional[str] = None
+        self,
+        sentences: List[Sentence],
     ) -> Tuple[List[int], List[Span], List[str]]:
         """
         Unpack all mentions in sentences for batch search.
@@ -994,7 +1016,7 @@ class BiomedicalEntityLinker:
         data_points = []
         mentions = []
         for i, sentence in enumerate(sentences):
-            for entity in sentence.get_labels(input_entity_annotation_layer):
+            for entity in sentence.get_labels(self.annotation_layer):
                 source.append(i)
                 data_points.append(entity.data_point)
                 mentions.append(
@@ -1003,12 +1025,14 @@ class BiomedicalEntityLinker:
                     else entity.data_point.text,
                 )
 
+        assert len(mentions) > 0, f"There are no entity mentions of type `{self.entity_type}`"
+
         return source, data_points, mentions
 
     def predict(
         self,
         sentences: Union[List[Sentence], Sentence],
-        input_entity_annotation_layer: str = None,
+        # input_entity_annotation_layer: str = None,
         top_k: int = 1,
     ) -> None:
         """
@@ -1016,7 +1040,6 @@ class BiomedicalEntityLinker:
         with tag input_entity_annotation_layer.
 
         :param sentences: One or more sentences to run the prediction on
-        :param input_entity_annotation_layer: Entity type to run the prediction on
         :param top_k: Number of best-matching entity / concept identifiers which should be predicted
             per entity mention
         """
@@ -1028,11 +1051,9 @@ class BiomedicalEntityLinker:
             self.preprocessor.initialize(sentences)
 
         # Build label name
-        label_name = input_entity_annotation_layer + "_nen" if (input_entity_annotation_layer is not None) else "nen"
+        # label_name = input_entity_annotation_layer + "_nen" if (input_entity_annotation_layer is not None) else "nen"
 
-        source, data_points, mentions = self.extract_mentions(
-            sentences=sentences, input_entity_annotation_layer=input_entity_annotation_layer
-        )
+        source, data_points, mentions = self.extract_mentions(sentences=sentences)
 
         # Retrieve top-k concept / entity candidates
         predictions = self.candidate_generator.search(entity_mentions=mentions, top_k=top_k)
@@ -1041,7 +1062,7 @@ class BiomedicalEntityLinker:
         for i, data_point, prediction in zip(source, data_points, predictions):
 
             sentences[i].add_label(
-                typename=label_name,
+                typename=self.annotation_layer,
                 value_or_label=self.build_entity_linking_label(prediction=prediction, data_point=data_point),
             )
 
@@ -1057,6 +1078,7 @@ class BiomedicalEntityLinker:
         preprocessor: AbstractEntityPreprocessor = Ab3PEntityPreprocessor.load(preprocessor=EntityPreprocessor()),
         force_hybrid_search: bool = False,
         sparse_weight: float = DEFAULT_SPARSE_WEIGHT,
+        entity_type: Optional[str] = None,
     ):
         """
         Loads a model for biomedical named entity normalization.
@@ -1069,11 +1091,15 @@ class BiomedicalEntityLinker:
             )
 
         if isinstance(model_name_or_path, str):
-            model_name_or_path = cls.__get_model_path(
+            model_name_or_path, entity_type = cls.__get_model_path_and_entity_type(
                 model_name_or_path=model_name_or_path,
+                entity_type=entity_type,
                 hybrid_search=hybrid_search,
                 force_hybrid_search=force_hybrid_search,
             )
+        else:
+            assert entity_type is not None, "When using a custom model you must specify `entity_type`"
+            assert entity_type in ENTITY_TYPES, f"Invalid entity type `{entity_type}! Must be one of: {ENTITY_TYPES}"
 
         if model_name_or_path == "exact-string-match":
             candidate_generator = ExactMatchCandidateGenerator.load(dictionary_name_or_path)
@@ -1089,62 +1115,77 @@ class BiomedicalEntityLinker:
                 preprocessor=preprocessor,
             )
 
-        logger.info("Load model `%s` with dictionary `%s`", model_name_or_path, dictionary_name_or_path)
+        logger.info(
+            "BiomedicalEntityLinker predicts: Entity type: %s with Dictionary `%s`",
+            entity_type,
+            dictionary_name_or_path,
+        )
 
-        return cls(candidate_generator=candidate_generator, preprocessor=preprocessor)
+        return cls(candidate_generator=candidate_generator, preprocessor=preprocessor, entity_type=entity_type)
 
     @staticmethod
-    def __get_model_path(
-        model_name_or_path: Union[str, Path], hybrid_search: bool = False, force_hybrid_search: bool = False
-    ) -> str:
+    def __get_model_path_and_entity_type(
+        model_name_or_path: Union[str, Path],
+        entity_type: Optional[str] = None,
+        hybrid_search: bool = False,
+        force_hybrid_search: bool = False,
+    ) -> Tuple[str, str]:
         """
         Try to figure out what model the user wants
         """
 
-        if isinstance(model_name_or_path, str):
+        if model_name_or_path not in MODELS and model_name_or_path not in ENTITY_TYPES:
+            raise ValueError(
+                f"""Unknown model `{model_name_or_path}`! \n
+                    Available entity types are: {ENTITY_TYPES} \n
+                    If you want to pass a local path please use the `Path` class, i.e. `model_name_or_path=Path(my_path)`"""
+            )
 
-            if model_name_or_path not in MODELS and model_name_or_path not in ENTITY_TYPES:
-                raise ValueError(
-                    f"""Unknown model `{model_name_or_path}`! \n
-                        Available entity types are: {ENTITY_TYPES} \n
-                        If you want to pass a local path please use the `Path` class, i.e. `model_name_or_path=Path(my_path)`"""
-                )
+        if model_name_or_path == "cambridgeltl/SapBERT-from-PubMedBERT-fulltext":
+            assert entity_type is not None, f"For model {model_name_or_path} you must specify `entity_type`"
 
-            if hybrid_search:
-                # load model by entity_type
-                if model_name_or_path in ENTITY_TYPES:
-                    # check if we have a hybrid pre-trained model
-                    if model_name_or_path in ENTITY_TYPE_TO_HYBRID_MODEL:
-                        model_name_or_path = ENTITY_TYPE_TO_HYBRID_MODEL[model_name_or_path]
-                    else:
-                        # check if user really wants to use hybrid search anyway
-                        if not force_hybrid_search:
-                            raise ValueError(
-                                f"""
-                                Model for entity type `{model_name_or_path}` was not trained for hybrid search!
-                                If you want to proceed anyway please pass `force_hybrid_search=True`:
-                                we will fit a sparse encoder for you. The default value of `sparse_weight` is `{DEFAULT_SPARSE_WEIGHT}`.
-                                """
-                            )
-                        model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
+        entity_type = None
+        if hybrid_search:
+            # load model by entity_type
+            if model_name_or_path in ENTITY_TYPES:
+                # check if we have a hybrid pre-trained model
+                if model_name_or_path in ENTITY_TYPE_TO_HYBRID_MODEL:
+                    entity_type = model_name_or_path
+                    model_name_or_path = ENTITY_TYPE_TO_HYBRID_MODEL[model_name_or_path]
                 else:
-                    if model_name_or_path not in PRETRAINED_HYBRID_MODELS and not force_hybrid_search:
+                    # check if user really wants to use hybrid search anyway
+                    if not force_hybrid_search:
                         raise ValueError(
                             f"""
-                            Model `{model_name_or_path}` was not trained for hybrid search!
+                            Model for entity type `{model_name_or_path}` was not trained for hybrid search!
                             If you want to proceed anyway please pass `force_hybrid_search=True`:
                             we will fit a sparse encoder for you. The default value of `sparse_weight` is `{DEFAULT_SPARSE_WEIGHT}`.
                             """
                         )
-
+                    model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
             else:
+                if model_name_or_path not in PRETRAINED_HYBRID_MODELS and not force_hybrid_search:
+                    raise ValueError(
+                        f"""
+                        Model `{model_name_or_path}` was not trained for hybrid search!
+                        If you want to proceed anyway please pass `force_hybrid_search=True`:
+                        we will fit a sparse encoder for you. The default value of `sparse_weight` is `{DEFAULT_SPARSE_WEIGHT}`.
+                        """
+                    )
+                entity_type = PRETRAINED_HYBRID_MODELS[model_name_or_path]
+
+        else:
+            if model_name_or_path in ENTITY_TYPES:
                 model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
 
-        return model_name_or_path
+        assert entity_type is not None, f"Impossible to determine entity type for model `{model_name_or_path}`"
+
+        return model_name_or_path, entity_type
 
     @staticmethod
     def __get_dictionary_path(
-        model_name_or_path: str, dictionary_name_or_path: Optional[Union[str, Path]] = None
+        model_name_or_path: str,
+        dictionary_name_or_path: Optional[Union[str, Path]] = None,
     ) -> str:
         """
         Try to figure out what dictionary (depending on the model) the user wants
