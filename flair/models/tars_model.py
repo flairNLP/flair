@@ -943,23 +943,10 @@ class TARSClassifier(FewshotClassifier):
                             best_value = label
 
                     # only use label with the highest confidence if enforcing single-label predictions
-                    if not multi_label and len(sentence.get_labels(label_name)) > 0:
-                        # get all label scores and do an argmax to get the best label
-                        label_scores = torch.tensor(
-                            [label.score for label in sentence.get_labels(label_name)],
-                            dtype=torch.float,
-                        )
-                        best_label = sentence.get_labels(label_name)[torch.argmax(label_scores)]
-
+                    # add the label with the highest score even if below the threshold if force label is activated.
+                    if not multi_label or (multi_label and force_label and len(sentence.get_labels(label_name)) == 0):
                         # remove previously added labels and only add the best label
                         sentence.remove_labels(label_name)
-                        sentence.add_label(
-                            typename=label_name,
-                            value=best_label.value,
-                            score=best_label.score,
-                        )
-                    # add the label with the highest score even if below the threshold if force label is activated.
-                    if multi_label and force_label and len(sentence.get_labels(label_name)) == 0:
                         sentence.add_label(
                             typename=label_name,
                             value=best_value,
