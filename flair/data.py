@@ -1221,9 +1221,11 @@ class Corpus(typing.Generic[T_co]):
         test: Optional[Dataset[T_co]] = None,
         name: str = "corpus",
         sample_missing_splits: Union[bool, str] = True,
+        split_seed = None,
     ):
         # set name
         self.name: str = name
+        self.split_seed = split_seed
 
         # abort if no data is provided
         if not train and not dev and not test:
@@ -1233,13 +1235,13 @@ class Corpus(typing.Generic[T_co]):
         if test is None and sample_missing_splits and train and not sample_missing_splits == "only_dev":
             train_length = _len_dataset(train)
             test_size: int = round(train_length / 10)
-            test, train = randomly_split_into_two_datasets(train, test_size)
+            test, train = randomly_split_into_two_datasets(train, test_size, split_seed)
 
         # sample dev data from train if none is provided
         if dev is None and sample_missing_splits and train and not sample_missing_splits == "only_test":
             train_length = _len_dataset(train)
             dev_size: int = round(train_length / 10)
-            dev, train = randomly_split_into_two_datasets(train, dev_size)
+            dev, train = randomly_split_into_two_datasets(train, dev_size, split_seed)
 
         # set train dev and test data
         self._train: Optional[Dataset[T_co]] = train
@@ -1266,13 +1268,13 @@ class Corpus(typing.Generic[T_co]):
         downsample_test=True,
     ):
         if downsample_train and self._train is not None:
-            self._train = self._downsample_to_proportion(self._train, percentage)
+            self._train = self._downsample_to_proportion(self._train, percentage, self.split_seed)
 
         if downsample_dev and self._dev is not None:
-            self._dev = self._downsample_to_proportion(self._dev, percentage)
+            self._dev = self._downsample_to_proportion(self._dev, percentage, self.split_seed)
 
         if downsample_test and self._test is not None:
-            self._test = self._downsample_to_proportion(self._test, percentage)
+            self._test = self._downsample_to_proportion(self._test, percentage, self.split_seed)
 
         return self
 
@@ -1366,9 +1368,9 @@ class Corpus(typing.Generic[T_co]):
         return list(map((lambda t: t.text), tokens))
 
     @staticmethod
-    def _downsample_to_proportion(dataset: Dataset, proportion: float):
+    def _downsample_to_proportion(dataset: Dataset, proportion: float, split_seed):
         sampled_size: int = round(_len_dataset(dataset) * proportion)
-        splits = randomly_split_into_two_datasets(dataset, sampled_size)
+        splits = randomly_split_into_two_datasets(dataset, sampled_size, split_seed)
         return splits[0]
 
     def obtain_statistics(self, label_type: str = None, pretty_print: bool = True) -> Union[dict, str]:
@@ -1790,9 +1792,10 @@ def iob2(tags):
     return True
 
 
-def randomly_split_into_two_datasets(dataset, length_of_first):
+def randomly_split_into_two_datasets(dataset, length_of_first, split_seed=None):
     import random
-
+    if split_seed is not None:
+        random.seed(split_seed)
     indices = [i for i in range(len(dataset))]
     random.shuffle(indices)
 

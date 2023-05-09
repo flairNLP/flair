@@ -43,6 +43,7 @@ class ClassificationCorpus(Corpus):
         allow_examples_without_labels=False,
         sample_missing_splits: bool = True,
         encoding: str = "utf-8",
+        split_seed = None,
     ):
         """
         Instantiates a Corpus from text classification-formatted task data
@@ -121,7 +122,7 @@ class ClassificationCorpus(Corpus):
         )
 
         super(ClassificationCorpus, self).__init__(
-            train, dev, test, name=str(data_folder), sample_missing_splits=sample_missing_splits
+            train, dev, test, name=str(data_folder), sample_missing_splits=sample_missing_splits, split_seed=split_seed
         )
 
         log.info(f"Initialized corpus {self.name} (label type name is '{label_type}')")

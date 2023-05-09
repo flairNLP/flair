@@ -21,6 +21,8 @@ argParser.add_argument("-cdn", "--class_dependent_noise", help="number of seeds"
 argParser.add_argument("-n", "--noise_share", help="number between 0 and 90", default=0.25)
 argParser.add_argument("-e", "--exp_name", help="experiment name / results base path", default='test_metrics')
 
+argParser.add_argument('--fix_split_seed', dest='fix_split_seed_flag',  help="add argument if validation split and downsampling seed should be fixed", action='store_true')
+argParser.set_defaults(fix_split_seed_flag=False)
 
 ## Add LR and BS as arguments
 lr = 5e-6
@@ -64,11 +66,11 @@ for seed in seeds:
 
     flair.set_seed(seed)
 
-
+    random_split_seed = 42 if args.fix_split_seed else seed
     if args.dataset == 'trec':
-        corpus = flair.datasets.TREC_6()
+        corpus = flair.datasets.TREC_6(split_seed=random_split_seed)
     else:
-        corpus = flair.datasets.YAHOO_ANSWERS().downsample(0.1)
+        corpus = flair.datasets.YAHOO_ANSWERS(split_seed=random_split_seed).downsample(0.1)
     
     label_dict = corpus.make_label_dictionary(label_type=label_type, add_unk=False)
     labels = label_dict.get_items()
