@@ -17,8 +17,9 @@ argParser.add_argument("-d", "--dataset", help="trec is the only option for now"
 # for now only downsampled yahoo answers
 argParser.add_argument("-g", "--gpu", help="gpu id", default=0)
 argParser.add_argument("-s", "--num_seeds", help="number of seeds", default=1, type=int)
-argParser.add_argument("-cdn", "--class_dependent_noise", help="number of seeds", default=True, type=bool)
-argParser.add_argument("-n", "--noise_share", help="number between 0 and 90", default=0.25)
+argParser.add_argument("-cdn",'--class_dependent_noise', dest='class_dependent_noise_flag',  help="add argument if class-dependent noise should be added (flag)", action='store_true')
+argParser.set_defaults(class_dependent_noise_flag=False)
+argParser.add_argument("-n", "--noise_share", help="number between 0 and 90", default=0.25, type=float)
 argParser.add_argument("-e", "--exp_name", help="experiment name / results base path", default='test_metrics')
 
 argParser.add_argument('--fix_split_seed', dest='fix_split_seed_flag',  help="add argument if validation split and downsampling seed should be fixed", action='store_true')
@@ -44,7 +45,8 @@ else:
 
 flair.device = torch.device('cuda:'+str(args.gpu)) 
 
-experiment_path = args.exp_name+'_'+args.dataset+'_'+args.variant+'_'+str(args.class_dependent_noise)+'_'+str(args.noise_share)
+experiment_path = args.exp_name+'_'+args.dataset+'_'+args.variant+'_'+str(args.class_dependent_noise_flag)+'_'+str(args.noise_share)
+base_results_path = 'results'
 results_path = 'results'+os.sep+experiment_path
 base_resources_path = 'resources'+os.sep+'noisy_classification'
 
@@ -102,7 +104,16 @@ for seed in seeds:
     train_accs.append(layer_eval_train.main_score)
     val_accs.append(layer_eval_dev.main_score)
     test_accs.append(layer_eval_test.main_score)
-
+    
+    #reorder conf mat labels to match generated ntm label order
+    conf_mat_label_order = list(layer_eval_test.classification_report.keys())[:len(labels)]
+    reindexing_array = [list(conf_mat_label_order).index(x) for x in labels]
+    np.savetxt(results_path+os.sep+'conf_mat_'+str(seed)+'.csv',layer_eval_test.conf_mat[reindexing_array,:][:,reindexing_array],delimiter=',')
+    
+    # also output label order in a separate file
+    with open(results_path+os.sep+'label_order_'+str(seed)+'.csv', 'w') as f:
+        for line in labels:
+            f.write(f"{line}\n")
 outfile.write(f"{str(sum(train_accs) / len(train_accs))}")
 outfile.write(f", {str(sum(val_accs) / len(val_accs))}")
 outfile.write(f", {str(sum(test_accs) / len(test_accs))}\n")

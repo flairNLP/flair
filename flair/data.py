@@ -1560,6 +1560,9 @@ class Corpus(typing.Generic[T_co]):
 
         corrupted_count = 0
         total_label_count = 0
+        
+        generated_ntm = np.zeros((len(list(labels)), len(list(labels))))
+
         if noise_transition_matrix:
             ntm_labels = noise_transition_matrix.keys()
             generated_ntm = np.zeros((len(list(ntm_labels)), len(list(ntm_labels))))
@@ -1594,7 +1597,7 @@ class Corpus(typing.Generic[T_co]):
             other_label_p = noise_share / (len(labels) - 1)
 
             log.info("Generating noisy labels. Progress:")
-
+            ntm_labels = labels
             for data_point in Tqdm.tqdm(_iter_dataset(data)):
                 for label in data_point.get_labels(label_type):
                     total_label_count += 1
@@ -1611,6 +1614,10 @@ class Corpus(typing.Generic[T_co]):
                     if new_label != orig_label:
                         corrupted_count += 1
 
+                    generated_ntm[list(ntm_labels).index(orig_label),list(ntm_labels).index(new_label)] += 1
+
+            reindexing_array = [list(ntm_labels).index(x) for x in labels]
+            generated_ntm = generated_ntm[reindexing_array,:][:,reindexing_array]
         log.info(
             f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count / total_label_count) * 100, 2)}%."
         )
