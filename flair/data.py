@@ -1569,7 +1569,6 @@ class Corpus(typing.Generic[T_co]):
             new_noise_share, noise_transition_matrix = self.generate_NTM(noise_transition_matrix, noise_share)
             
             ntm_labels = noise_transition_matrix.keys()
-            generated_ntm = np.zeros((len(list(ntm_labels)), len(list(ntm_labels))))
 
             if set(ntm_labels) != set(labels):
                 raise AssertionError(

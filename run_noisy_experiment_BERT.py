@@ -21,6 +21,8 @@ argParser.add_argument("-cdn",'--class_dependent_noise', dest='class_dependent_n
 argParser.set_defaults(class_dependent_noise_flag=False)
 argParser.add_argument("-n", "--noise_share", help="number between 0 and 90", default=0.25, type=float)
 argParser.add_argument("-e", "--exp_name", help="experiment name / results base path", default='test_metrics')
+argParser.add_argument("--dev_noisy", dest='dev_noisy_flag', help="if True dev set has the same type of noise as train, if False dev set is clean", action='store_true')
+argParser.set_defaults(dev_noisy_flag=False)
 
 argParser.add_argument('--fix_split_seed', dest='fix_split_seed_flag',  help="add argument if validation split and downsampling seed should be fixed", action='store_true')
 argParser.set_defaults(fix_split_seed_flag=False)
@@ -31,8 +33,10 @@ batch_size = 16
 num_epochs = 10
 
 args = argParser.parse_args()
-
-datasets_label_order_ntm = {'trec': ['ABBR','ENTY','DESC','HUM','LOC','NUM'],'yahoo_answers':[''] }
+datasets_label_order_ntm = {'trec': ['ABBR','ENTY','DESC','HUM','LOC','NUM'],'yahoo_answers':[
+    'Sports','Family_&_Relationships','Entertainment_&_Music','Politics_&_Government','Science_&_Mathematics','Health','Society_&_Culture',
+'Education_&_Reference','Business_&_Finance','Computers_&_Internet'
+] }
 datasets_label_type = {'trec': 'question_class','yahoo_answers':'question_type' }
 
 if args.num_seeds == 6:
@@ -63,12 +67,12 @@ val_accs=[]
 train_accs=[]
 
 for seed in seeds:
-    experiment_path_with_seed = args.exp_name+'_'+args.dataset+'_'+args.variant+'_'+str(args.class_dependent_noise)+'_'+str(args.noise_share)+'_'+str(seed)
+    experiment_path_with_seed = args.exp_name+'_'+args.dataset+'_'+args.variant+'_'+str(args.class_dependent_noise_flag)+'_'+str(args.noise_share)+'_'+str(seed)
     resources_path = base_resources_path+os.sep+experiment_path_with_seed
 
     flair.set_seed(seed)
 
-    random_split_seed = 42 if args.fix_split_seed else seed
+    random_split_seed = 42 if args.fix_split_seed_flag else seed
     if args.dataset == 'trec':
         corpus = flair.datasets.TREC_6(split_seed=random_split_seed)
     else:
@@ -78,14 +82,27 @@ for seed in seeds:
     labels = label_dict.get_items()
 
     if args.class_dependent_noise == True:
-        nt_matrix = np.load(args.dataset+'_ntm.npy')
+        if args.dataset == 'trec':
+            nt_matrix = np.load(args.dataset+'_ntm.npy')
+        else:
+            nt_matrix = np.genfromtxt('results/test_YA_tunelr0.1_yahoo_answers_cce_False_0.0/conf_mat_42.csv', delimiter=',')
+            # todo: also read label order from file
+        
         ntm_dict = {}
         for i,label in enumerate(datasets_label_order_ntm[args.dataset]):
             ntm_dict[label] = nt_matrix[i]
-        share, new_ntm = corpus.add_label_noise(noise_share=args.noise_share, labels=datasets_label_order_ntm[args.dataset], label_type=label_type, noise_transition_matrix=ntm_dict) # seed removed from corrupt_labels
-        np.savetxt(results_path+os.sep+'CDN_matrix_'+str(seed)+'.csv', new_ntm, fmt="%d", delimiter=",")
+        share, sampled_ntm = corpus.add_label_noise(noise_share=args.noise_share, labels=labels, label_type=label_type, noise_transition_matrix=ntm_dict) # seed removed from corrupt_labels
+        if args.dev_noisy_flag == True:
+            share_dev, sampled_ntm_dev = corpus.add_label_noise(noise_share=args.noise_share, labels=labels, label_type=label_type, noise_transition_matrix=ntm_dict, split='dev')
+        np.savetxt(results_path+os.sep+'CDN_matrix_'+str(seed)+'.csv', sampled_ntm, fmt="%d", delimiter=",")
     else:
-        share = corpus.add_label_noise(noise_share=args.noise_share, labels=datasets_label_order_ntm[args.dataset], label_type=label_type)
+        if args.noise_share > 0:
+            share = corpus.add_label_noise(noise_share=args.noise_share, labels=datasets_label_order_ntm[args.dataset], label_type=label_type)
+    
+    if not os.path.isdir(resources_path):
+        os.mkdir(resources_path)
+
+    corpus.print_noisy_dataset(label_type=label_type,path=resources_path)
 
     embeddings =TransformerEmbeddings('bert-base-cased', fine_tune=True, layers='all')
     classifier = TextClassifierLossModifications(embeddings, label_dictionary=label_dict, label_type=label_type, batch_avg=False, loss=args.variant, calculate_sample_metrics=True)
@@ -93,14 +110,13 @@ for seed in seeds:
 
     trainer.fine_tune(resources_path,learning_rate=lr,mini_batch_size=batch_size,max_epochs=num_epochs, scheduler=OneCycleLR, cycle_momentum=True)
 
-    corpus.print_noisy_dataset(label_type=label_type,path=resources_path)
-    
     layer_eval_test = classifier.evaluate(corpus.test, gold_label_type=label_type)
     layer_eval_dev = classifier.evaluate(corpus.dev, gold_label_type=label_type)
     layer_eval_train = classifier.evaluate(corpus.train, gold_label_type=label_type)
     outfile.write(f"{str(layer_eval_train.main_score)}")
     outfile.write(f", {str(layer_eval_dev.main_score)}")
     outfile.write(f", {str(layer_eval_test.main_score)}\n")
+    outfile.write(f"{str(layer_eval_test.conf_mat)}\n")
     train_accs.append(layer_eval_train.main_score)
     val_accs.append(layer_eval_dev.main_score)
     test_accs.append(layer_eval_test.main_score)
