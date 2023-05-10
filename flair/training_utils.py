@@ -28,6 +28,7 @@ class Result(object):
         detailed_results: str,
         loss: float,
         classification_report: dict = {},
+        conf_mat: object = {},
     ):
         self.main_score: float = main_score
         self.log_header: str = log_header
@@ -35,6 +36,7 @@ class Result(object):
         self.detailed_results: str = detailed_results
         self.classification_report = classification_report
         self.loss: float = loss
+        self.conf_mat = conf_mat
 
     def __str__(self):
         return f"{str(self.detailed_results)}\nLoss: {self.loss}'"

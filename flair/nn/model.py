@@ -445,6 +445,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 output_dict=True,
                 labels=labels,
             )
+            confusion_matrix = sklearn.metrics.confusion_matrix(y_true,y_pred, labels=labels)
 
             accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
             macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
@@ -503,6 +504,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
             loss=eval_loss.item(),
+            conf_mat=confusion_matrix,
         )
 
         return result
