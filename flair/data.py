@@ -1564,6 +1564,10 @@ class Corpus(typing.Generic[T_co]):
         generated_ntm = np.zeros((len(list(labels)), len(list(labels))))
 
         if noise_transition_matrix:
+
+            # with a given NTM (or confusion matrix) with any noise share, generate a ntm for a given noise_share
+            new_noise_share, noise_transition_matrix = self.generate_NTM(noise_transition_matrix, noise_share)
+            
             ntm_labels = noise_transition_matrix.keys()
             generated_ntm = np.zeros((len(list(ntm_labels)), len(list(ntm_labels))))
 
@@ -1647,7 +1651,34 @@ class Corpus(typing.Generic[T_co]):
                 clean_label = label.data_point.get_label(label_type+'_clean')
                 outfile.write(f"{str(data_point.text)}\t{str(clean_label.value)}\t{str(label.value)}\t{str(clean_label.value!=label.value)}\n")
         outfile.close()
+    
+    def generate_NTM(self, ntm, noise_share):
+        import numpy as np
 
+        labels = list(ntm.keys())
+        ntm_numpy = np.array(list(ntm.values()))
+        if ntm_numpy[0,0] < 1:
+            if ntm_numpy.sum() == len(labels):
+                original_ntm = ntm_numpy
+            else:
+                log.info('Error: provided NTM not valid')
+        else:
+            # this must be a test conf mat
+            original_ntm = ntm_numpy/ntm_numpy.sum(axis=1, keepdims=True)
+        train_class_distribution  = self.get_label_distribution()
+        posterior_class_probs = np.array([train_class_distribution[x] for x in labels])
+        
+        #calculate original noise share 
+        old_noise_share = np.sum((1 - original_ntm.diagonal())*posterior_class_probs)/posterior_class_probs.sum()
+
+        factor = old_noise_share/noise_share
+        new_ntm = original_ntm/factor
+        new_ntm_offdiagonals = new_ntm.sum(axis=1) - new_ntm.diagonal()
+        np.fill_diagonal(new_ntm, 1 - new_ntm_offdiagonals)
+        share = np.sum((1 - new_ntm.diagonal())*posterior_class_probs)/posterior_class_probs.sum()
+        log.info(f'ntm {dict(zip(labels,new_ntm))}')
+        return share, dict(zip(labels,new_ntm))
+        
     def get_label_distribution(self):
         class_to_count = defaultdict(lambda: 0)
         for sent in self.train:
