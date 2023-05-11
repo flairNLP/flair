@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, Iterable, List, NamedTuple, Optional, Union, cast
+from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union, cast
 
 import torch
 from deprecated.sphinx import deprecated
@@ -433,61 +433,71 @@ class DataPoint:
         raise NotImplementedError
 
 
-class EntityLinkingLabel(Label):
-    """
-    Label class models entity linking annotations. Each entity linking label has a data point it refers
-    to as well as the identifier and name of the concept / entity from a knowledge base or ontology.
-
-    Optionally, additional concepts identifier and the database name can be provided.
-    """
+class EntityLinkingCandidate:
+    """Represent a single candidate returned by a CandidateGenerator"""
 
     def __init__(
         self,
-        data_point: DataPoint,
         concept_id: str,
         concept_name: str,
+        database_name: str,
         score: float = 1.0,
         additional_ids: Optional[Union[List[str], str]] = None,
-        database: Optional[str] = None,
     ):
         """
-        Initializes the label instance.
-
-        :param data_point: Data point / span the label refers to
         :param concept_id: Identifier of the entity / concept from the knowledge base / ontology
         :param concept_name: (Canonical) name of the entity / concept from the knowledge base / ontology
         :param score: Matching score of the entity / concept according to the entity mention
         :param additional_ids: List of additional identifiers for the concept / entity in the KB / ontology
-        :param database: Name of the knowlege base / ontology
+        :param database_name: Name of the knowlege base / ontology
         """
-        super().__init__(data_point, concept_id, score)
+        self.concept_id = concept_id
         self.concept_name = concept_name
-        self.database = database
-
-        if isinstance(additional_ids, str):
-            additional_ids = [additional_ids]
+        self.database_name = database_name
+        self.score = score
         self.additional_ids = additional_ids
 
-    def spawn(self, value: str, score: float = 1.0):
-        return EntityLinkingLabel(
-            data_point=self.data_point,
-            concept_id=value,
-            score=score,
-            concept_name=self.concept_name,
-            additional_ids=self.additional_ids,
-            database=self.database,
-        )
+
+class EntityLinkingLabel(Label):
+    """
+    Label class models entity linking annotations. Each entity linking label has a data point it refers
+    to as well as the identifier and name of the concept / entity from a knowledge base or ontology.
+    Optionally, additional concepts identifier and the database name can be provided.
+    """
+
+    def __init__(self, data_point: DataPoint, candidates: List[EntityLinkingCandidate]):
+        """
+        Initializes the label instance.
+        :param data_point: Data point / span the label refers to
+        :param candidates: **sorted** list of candidates from candidate generator
+        """
+
+        def is_sorted(lst, key=lambda x: x, comparison=lambda x, y: x > y):
+            for i, el in enumerate(lst[1:]):
+                if comparison(key(el), key(lst[i])):
+                    return False
+            return True
+
+        # candidates must be sorted, regardless if higher is better or not
+        assert is_sorted(candidates, key=lambda x: x.score) or is_sorted(
+            candidates, key=lambda x: x.score, comparison=lambda x, y: x < y
+        ), "List of candidates must be sorted!"
+
+        super().__init__(data_point, candidates[0].concept_id, candidates[0].score)
+        self.candidates = candidates
+        self.concept_name = self.candidates[0].concept_name
+        self.database_name = self.candidates[0].database_name
 
     def __str__(self):
         return (
             f"{self.data_point.unlabeled_identifier}{flair._arrow} "
-            f"{self.concept_name} - {self.database}:{self._value} ({round(self._score, 4)})"
+            f"{self.concept_name} - {self.database_name}:{self._value} ({round(self._score, 4)})"
         )
 
     def __repr__(self):
         return (
             f"{self.data_point.unlabeled_identifier}{flair._arrow} "
-            f"{self.concept_name} - {self.database}:{self._value} ({round(self._score, 4)})"
+            f"{self.concept_name} - {self.database_name}:{self._value} ({round(self._score, 4)})"
         )
 
     def __len__(self):
@@ -499,7 +509,7 @@ class EntityLinkingLabel(Label):
             and self.data_point == other.data_point
             and self.concept_name == other.concept_name
             and self.identifier == other.identifier
-            and self.database == other.database
+            and self.database_name == other.database_name
             and self.score == other.score
         )
 

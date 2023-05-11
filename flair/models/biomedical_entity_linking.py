@@ -6,13 +6,13 @@ import stat
 import string
 import subprocess
 import tempfile
+import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple, Union
 
-import faiss
 import numpy as np
 import torch
 from huggingface_hub import hf_hub_download
@@ -21,16 +21,28 @@ from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 
 import flair
-from flair.data import EntityLinkingLabel, Label, Sentence, Span
+from flair.data import EntityLinkingCandidate, EntityLinkingLabel, Label, Sentence, Span
 from flair.datasets import (
-    CTD_CHEMICAL_DICTIONARY,
-    CTD_DISEASE_DICTIONARY,
+    CTD_CHEMICALS_DICTIONARY,
+    CTD_DISEASES_DICTIONARY,
     NCBI_GENE_HUMAN_DICTIONARY,
     NCBI_TAXONOMY_DICTIONARY,
 )
-from flair.datasets.biomedical import ParsedBiomedicalEntityLinkingDictionary
+from flair.datasets.biomedical import (
+    AbstractBiomedicalEntityLinkingDictionary,
+    ParsedBiomedicalEntityLinkingDictionary,
+)
 from flair.embeddings import TransformerDocumentEmbeddings
 from flair.file_utils import cached_path
+
+FAISS_VERSION = "1.7.4"
+
+try:
+    import faiss
+except ImportError as error:
+    raise ImportError(
+        f"You need to install to run the biomedical entity linking: `pip faiss faiss-cpu=={FAISS_VERSION}`"
+    ) from error
 
 logger = logging.getLogger("flair")
 
@@ -83,8 +95,8 @@ ENTITY_TYPE_TO_DENSE_MODEL = {
 ENTITY_TYPE_TO_DICTIONARY = {
     "gene": "ncbi-gene",
     "species": "ncbi-taxonomy",
-    "disease": "ctd-disease",
-    "chemical": "ctd-chemical",
+    "disease": "ctd-diseases",
+    "chemical": "ctd-chemicals",
 }
 
 ENTITY_TYPE_TO_ANNOTATION_LAYER = {
@@ -95,8 +107,8 @@ ENTITY_TYPE_TO_ANNOTATION_LAYER = {
 }
 
 BIOMEDICAL_DICTIONARIES = {
-    "ctd-disease": CTD_DISEASE_DICTIONARY,
-    "ctd-chemical": CTD_CHEMICAL_DICTIONARY,
+    "ctd-diseases": CTD_DISEASES_DICTIONARY,
+    "ctd-chemicals": CTD_CHEMICALS_DICTIONARY,
     "ncbi-gene": NCBI_GENE_HUMAN_DICTIONARY,
     "ncbi-taxonomy": NCBI_TAXONOMY_DICTIONARY,
 }
@@ -126,20 +138,15 @@ class SimilarityMetric(Enum):
 
 class AbstractEntityPreprocessor(ABC):
     """
-    A entity pre-processor is used to transform / clean an entity mention (recognized by
-    an entity recognition model in the original text). This may include removing certain characters
-    (e.g. punctuation) or converting characters (e.g. HTML-encoded characters) as well as
-    (more sophisticated) domain-specific procedures.
-
-    This class provides the basic interface for such transformations and should be extended by
-    subclasses that implement concrete transformations.
+    A pre-processor used to transform / clean both entity mentions and entity names
+    This class provides the basic interface for such transformations
+    and must provide a `name` attribute to uniquely identify the type of preprocessing applied.
     """
 
     @property
     @abstractmethod
     def name(self) -> str:
         """
-        Define preprocessor name.
         This is needed to correctly cache different multiple version of the dictionary
         """
 
@@ -175,26 +182,17 @@ class AbstractEntityPreprocessor(ABC):
 
 class EntityPreprocessor(AbstractEntityPreprocessor):
     """
-    Basic implementation of MentionPreprocessor, which supports lowercasing, typo correction
-     and removing of punctuation characters.
-
-    Implementation is adapted from:
+    Entity preprocessor adapted from:
         Sung et al. 2020, Biomedical Entity Representations with Synonym Marginalization
         https://github.com/dmis-lab/BioSyn/blob/master/src/biosyn/preprocesser.py#L5
     """
 
-    def __init__(
-        self,
-        lowercase: bool = True,
-        remove_punctuation: bool = True,
-    ) -> None:
+    def __init__(self, lowercase: bool = True, remove_punctuation: bool = True):
         """
         Initializes the mention preprocessor.
 
         :param lowercase: Indicates whether to perform lowercasing or not (True by default)
         :param remove_punctuation: Indicates whether to perform removal punctuations symbols (True by default)
-        :param punctuation_symbols: String containing all punctuation symbols that should be removed
-            (default is given by string.punctuation)
         """
         self.lowercase = lowercase
         self.remove_punctuation = remove_punctuation
@@ -224,16 +222,11 @@ class EntityPreprocessor(AbstractEntityPreprocessor):
 
 class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
     """
-    Implementation of MentionPreprocessor which utilizes Ab3P, an (biomedical)abbreviation definition detector,
-    given in:
-        https://github.com/ncbi-nlp/Ab3P
-
-    Ab3P applies a set of rules reflecting simple patterns such as Alpha Beta (AB) as well as more involved cases.
-    The algorithm is described in detail in the following paper:
-
+    Entity preprocessor which uses Ab3P, an (biomedical)abbreviation definition detector:
         Abbreviation definition identification based on automatic precision estimates.
         Sohn S, Comeau DC, Kim W, Wilbur WJ. BMC Bioinformatics. 2008 Sep 25;9:402.
         PubMed ID: 18817555
+        https://github.com/ncbi-nlp/Ab3P
     """
 
     def __init__(
@@ -244,8 +237,7 @@ class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
 
         :param ab3p_path: Path to the folder containing the Ab3P implementation
         :param word_data_dir: Path to the word data directory
-        :param preprocessor: Entity mention text preprocessor that is used before trying to link
-            the mention text to an abbreviation.
+        :param preprocessor: Basic entity preprocessor
         """
         self.ab3p_path = ab3p_path
         self.word_data_dir = word_data_dir
@@ -304,9 +296,7 @@ class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
 
     @classmethod
     def download_ab3p(cls, data_dir: Path, word_data_dir: Path) -> Path:
-        """
-        Downloads the Ab3P tool and all necessary data files.
-        """
+        """Downloads the Ab3P tool and all necessary data files."""
 
         # Download word data for Ab3P if not already downloaded
         ab3p_url = "https://raw.githubusercontent.com/dmis-lab/BioSyn/master/Ab3P/WordData/"
@@ -350,6 +340,9 @@ class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
             "Rous sarcoma virus ( RSV ) is a retrovirus.":
                 {"RSV": "Rous sarcoma virus"}
         }
+
+        :param sentences: list of senternces
+        :result abbreviation_dict: abbreviations and their resolution detected in each input sentence
         """
         abbreviation_dict = defaultdict(dict)
 
@@ -416,10 +409,109 @@ class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
         return abbreviation_dict
 
 
+class BiomedicalEntityLinkingDictionary:
+    """
+    Load dictionary: either pre-definded or from path
+    Every line in the file must be formatted as follows: concept_id||concept_name
+    If multiple concept ids are associated to a given name
+    they must be separated by a `|`.
+    """
+
+    def __init__(
+        self, reader: Union[AbstractBiomedicalEntityLinkingDictionary, ParsedBiomedicalEntityLinkingDictionary]
+    ):
+        self.reader = reader
+
+    @classmethod
+    def load(
+        cls, dictionary_name_or_path: Union[Path, str], database_name: Optional[str] = None
+    ) -> "EntityLinkingDictionary":
+        """Load dictionary: either pre-definded or from path"""
+
+        if isinstance(dictionary_name_or_path, str):
+            if (
+                dictionary_name_or_path not in ENTITY_TYPE_TO_DICTIONARY
+                and dictionary_name_or_path not in BIOMEDICAL_DICTIONARIES
+            ):
+                raise ValueError(
+                    f"Unkwnon dictionary `{dictionary_name_or_path}`!"
+                    f" Available dictionaries are: {tuple(BIOMEDICAL_DICTIONARIES)}"
+                    " If you want to pass a local path please use the `Path` class, i.e. `model_name_or_path=Path(my_path)`"
+                )
+
+            dictionary_name_or_path = ENTITY_TYPE_TO_DICTIONARY.get(dictionary_name_or_path, dictionary_name_or_path)
+
+            reader = BIOMEDICAL_DICTIONARIES[dictionary_name_or_path]()
+
+        else:
+            # use custom dictionary file
+            assert (
+                database_name is not None
+            ), "When providing a path to a custom dictionary you must specify the `database_name`!"
+            reader = ParsedBiomedicalEntityLinkingDictionary(path=dictionary_name_or_path, database_name=database_name)
+
+        return cls(reader=reader)
+
+    @property
+    def database_name(self) -> str:
+        """Database name of the dictionary"""
+
+        return self.reader.database_name
+
+    def stream(self) -> Iterator[Tuple[str, str]]:
+        """
+        Stream entries from preprocessed dictionary
+        """
+
+        for entry in self.reader.stream():
+            yield entry
+
+
+class AbstractCandidateGenerator(ABC):
+    """
+    Base class for a candidate genertor
+    """
+
+    @abstractmethod
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, str, float]]]:
+        """
+        Returns the top-k entity / concept identifiers for the each entity mention.
+
+        :param entity_mentions: Entity mentions
+        :param top_k: Number of best-matching entities from the knowledge base to return
+        :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
+        """
+
+
+class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
+    """
+    Candidate generator using exact string matching as search criterion
+    """
+
+    def __init__(self, dictionary: BiomedicalEntityLinkingDictionary):
+        # Build index which maps concept / entity names to concept / entity ids
+        self.name_to_id_index = dict(dictionary.data)
+
+    @classmethod
+    def load(cls, dictionary_name_or_path: str) -> "ExactStringMatchingRetrieverModel":
+        """Compatibility function"""
+        return cls(BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path))
+
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, str, float]]]:
+        """
+        Returns the top-k entity / concept identifiers for the each entity mention.
+
+        :param entity_mentions: Entity mentions
+        :param top_k: Number of best-matching entities from the knowledge base to return
+        :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
+        """
+
+        return [[(em, self.name_to_id_index.get(em), 1.0)] for em in entity_mentions]
+
+
 class BigramTfIDFVectorizer:
     """
-    Helper class to encode a list of entity mentions or dictionary entries into a sparse tensor.
-
+    Wrapper for sklearn TfIDFVectorizer w/ fixed ngram range at the character level
     Implementation adapted from:
         Sung et al.: Biomedical Entity Representations with Synonym Marginalization, 2020
         https://github.com/dmis-lab/BioSyn/tree/master/src/biosyn/sparse_encoder.py#L8
@@ -429,162 +521,39 @@ class BigramTfIDFVectorizer:
         self.encoder = TfidfVectorizer(analyzer="char", ngram_range=(1, 2))
 
     def fit(self, names: List[str]):
-        """
-        Fit vectorizer
-        """
+        """Learn vocabulary"""
         self.encoder.fit(names)
         return self
 
     def transform(self, names: List[str]) -> torch.Tensor:
-        """
-        Convert string names to sparse vectors
-        """
+        """Convert strings to sparse vectors"""
         vec = self.encoder.transform(names).toarray()
         vec = torch.FloatTensor(vec)
         return vec
 
     def __call__(self, mentions: List[str]) -> torch.Tensor:
-        """
-        Short for `transform`
-        """
+        """Short for `transform`"""
         return self.transform(mentions)
-
-    def save(self, path: Path) -> None:
-        with path.open("wb") as fout:
-            pickle.dump(self.encoder, fout)
-            # logger.info("Sparse encoder saved in %s", path)
 
     @classmethod
     def load(cls, path: Path) -> "BigramTfIDFVectorizer":
-        """
-        Instantiate from path
-        """
+        """Instantiate from path"""
         newVectorizer = cls()
+
         with open(path, "rb") as fin:
-            newVectorizer.encoder = pickle.load(fin)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                newVectorizer.encoder = pickle.load(fin)
             # logger.info("Sparse encoder loaded from %s", path)
 
         return newVectorizer
 
 
-class BiomedicalEntityLinkingDictionary:
-    """
-    A class used to load dictionary data from a custom dictionary file.
-    Every line in the file must be formatted as follows:
-    concept_unique_id||concept_name
-    with one line per concept name. Multiple synonyms for the same concept should
-    be in separate lines with the same concept_unique_id.
-
-    Slightly modifed from Sung et al. 2020
-    Biomedical Entity Representations with Synonym Marginalization
-    https://github.com/dmis-lab/BioSyn/blob/master/src/biosyn/data_loader.py#L89
-    """
-
-    def __init__(self, reader):
-        self.reader = reader
-
-    @classmethod
-    def load(cls, dictionary_name_or_path: Union[Path, str]) -> "EntityLinkingDictionary":
-        """
-        Load dictionary: either pre-definded or from path
-        """
-
-        if isinstance(dictionary_name_or_path, str):
-            if (
-                dictionary_name_or_path not in ENTITY_TYPE_TO_DICTIONARY
-                and dictionary_name_or_path not in BIOMEDICAL_DICTIONARIES
-            ):
-                raise ValueError(
-                    f"""Unkwnon dictionary `{dictionary_name_or_path}`,
-                    Available dictionaries are: {tuple(BIOMEDICAL_DICTIONARIES)} \n
-                    If you want to pass a local path please use the `Path` class, i.e. `model_name_or_path=Path(my_path)`"""
-                )
-
-            dictionary_name_or_path = ENTITY_TYPE_TO_DICTIONARY.get(dictionary_name_or_path, dictionary_name_or_path)
-
-            reader = BIOMEDICAL_DICTIONARIES[dictionary_name_or_path]()
-
-        else:
-            # use custom dictionary file
-            reader = ParsedBiomedicalEntityLinkingDictionary(path=dictionary_name_or_path)
-
-        return cls(reader=reader)
-
-    def get_database_names(self) -> List[str]:
-        """
-        List all database names covered by dictionary, e.g. MESH, OMIM
-        """
-
-        return self.reader.get_database_names()
-
-    def stream(self) -> Iterator[Tuple[str, str]]:
-        """
-        Stream preprocessed dictionary
-        """
-
-        for entry in self.reader.stream():
-            yield entry
-
-
-class AbstractCandidateGenerator(ABC):
-    """
-    An entity retriever model is used to find the top-k entities / concepts of a knowledge base /
-    dictionary for a given entity mention in text.
-    """
-
-    @abstractmethod
-    def search(self, entity_mentions: List[str], top_k: int) -> List[Tuple[str, str, float]]:
-        """
-        Returns the top-k entity / concept identifiers for the given entity mention.
-
-        :param entity_mentions: Entity mention text under investigation
-        :param top_k: Number of (best-matching) entities from the knowledge base to return
-        :result: List of tuples highlighting the top-k entities. Each tuple has the following
-            structure (entity / concept name, concept ids, score).
-        """
-
-
-class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
-    """
-    Implementation of an entity retriever model which uses exact string matching to
-    find the entity / concept identifier for a given entity mention.
-    """
-
-    def __init__(self, dictionary: BiomedicalEntityLinkingDictionary):
-        # Build index which maps concept / entity names to concept / entity ids
-        self.name_to_id_index = dict(dictionary.data)
-
-    @classmethod
-    def load(cls, dictionary_name_or_path: str) -> "ExactStringMatchingRetrieverModel":
-        """
-        Compatibility function
-        """
-        # Load dictionary
-        return cls(BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path))
-
-    def search(self, entity_mentions: List[str], top_k: int) -> List[Tuple[str, str, float]]:
-        """
-        Returns the top-k entity / concept identifiers for the given entity mention. Note that
-        the model either returns the entity with an identical name in the knowledge base / dictionary
-        or none.
-
-        :param entity_mention: Entity mention under investigation
-        :param top_k: Number of (best-matching) entities from the knowledge base to return
-        :result: List of tuples highlighting the top-k entities. Each tuple has the following
-            structure (entity / concept name, concept ids, score).
-        """
-
-        return [(em, self.name_to_id_index.get(em), 1.0) for em in entity_mentions]
-
-
 class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
     """
-    Implementation of EntityRetrieverModel which uses dense (transformer-based) embeddings and (optionally)
-    sparse character-based representations, for normalizing an entity mention to specific identifiers
-    in a knowledge base / dictionary.
-
-    To this end, the model embeds the entity mention text and all concept names from the knowledge
-    base and outputs the k best-matching concepts based on embedding similarity.
+    Candidate generator using both dense (transformer-based)
+    and (optionally) sparse vector representations,
+    to search candidates in a knowledge base / dictionary.
     """
 
     def __init__(
@@ -594,36 +563,43 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         similarity_metric: SimilarityMetric = SimilarityMetric.COSINE,
         preprocessor: AbstractEntityPreprocessor = Ab3PEntityPreprocessor.load(preprocessor=EntityPreprocessor()),
         max_length: int = 25,
-        index_batch_size: int = 1024,
+        batch_size: int = 1024,
         hybrid_search: bool = False,
         sparse_weight: Optional[float] = None,
         force_hybrid_search: bool = False,
+        dictionary: Optional[BiomedicalEntityLinkingDictionary] = None,
     ):
         """
         Initializes the BiEncoderEntityRetrieverModel.
 
         :param model_name_or_path: Name of or path to the transformer model to be used.
         :param dictionary_name_or_path: Name of or path to the transformer model to be used.
-        :param hybrid_search: Indicates whether to use sparse embeddings or not
-        :param use_cosine: Indicates whether to use cosine similarity (instead of inner product)
-        :param max_length: Maximal number of tokens used for embedding an entity mention / concept name
-        :param index_batch_size: Batch size used during embedding of the dictionary and top-k prediction
         :param similarity_metric: which metric to use to compute similarity
+        :param preprocessor: Preprocessing for entity mentions and names
+        :param max_length: Maximum number of input tokens to transformer model
+        :param batch_size: how many entity mentions/names to embed in one forward pass
+        :param hybrid_search: Indicates whether to use sparse embeddings or not
         :param sparse_weight: default sparse weight
-        :param preprocessor: Preprocessing strategy to clean and transform entity / concept names from the knowledge base
+        :param force_hybrid_search: if pre-trained model is not hybrid (dense+sparse) fit a sparse encoder
+        :param dictionary: optionally pass a dictionary
         """
         self.model_name_or_path = model_name_or_path
         self.dictionary_name_or_path = dictionary_name_or_path
         self.preprocessor = preprocessor
         self.similarity_metric = similarity_metric
         self.max_length = max_length
-        self.index_batch_size = index_batch_size
+        self.batch_size = batch_size
         self.hybrid_search = hybrid_search
         self.sparse_weight = sparse_weight
         self.force_hybrid_search = force_hybrid_search
 
-        # Load dictionary
-        self.dictionary = list(BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path).stream())
+        # allow to pass custom dictionary
+        if dictionary is not None:
+            self.dictionary = dictionary
+        else:
+            self.dictionary = BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path)
+
+        self.dictionary_data = list(self.dictionary.stream())
 
         # Load encoders
         self.dense_encoder = TransformerDocumentEmbeddings(model=model_name_or_path, is_token_embedding=False)
@@ -634,10 +610,10 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
                 model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
             )
 
-        self.embeddings = self._load_emebddings(
+        self.embeddings = self._load_embeddings(
             model_name_or_path=model_name_or_path,
             dictionary_name_or_path=dictionary_name_or_path,
-            batch_size=self.index_batch_size,
+            batch_size=self.batch_size,
         )
 
         self.dense_index = self.build_dense_index(self.embeddings["dense"])
@@ -646,7 +622,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
     def higher_is_better(self):
         """
         Determine if similarity is proportional to score.
-        E.g. for L2 lower is better
+        E.g. for L2 lower is better, while INNER_PRODUCT higher is better
         """
 
         return self.similarity_metric in [SimilarityMetric.COSINE, SimilarityMetric.INNER_PRODUCT]
@@ -686,14 +662,17 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
             if model_name_or_path in PRETRAINED_HYBRID_MODELS:
 
                 if not os.path.exists(sparse_encoder_path):
+
                     sparse_encoder_path = hf_hub_download(
                         repo_id=model_name_or_path,
                         filename="sparse_encoder.pk",
                         cache_dir=flair.cache_root / "models" / model_name_or_path,
                     )
+
                     self.sparse_encoder = BigramTfIDFVectorizer.load(path=sparse_encoder_path)
 
                 if not os.path.exists(sparse_weight_path):
+
                     sparse_weight_path = hf_hub_download(
                         repo_id=model_name_or_path,
                         filename="sparse_weight.pt",
@@ -719,8 +698,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
     def embed_sparse(self, inputs: np.ndarray) -> np.ndarray:
         """
-        Embeds the given numpy array of entity names, either originating from the knowledge base
-        or recognized in a text, into sparse representations.
+        Create sparse embeddings from array of entity mentions/names.
 
         :param entity_names: An array of entity / concept names
         :returns sparse_embeds np.array: Numpy array containing the sparse embeddings
@@ -735,9 +713,8 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
     def embed_dense(self, inputs: np.ndarray, batch_size: int = 1024, show_progress: bool = False) -> np.ndarray:
         """
-        Embeds the given numpy array of entity / concept names, either originating from the
-        knowledge base or recognized in a text, into dense representations using a
-        TransformerDocumentEmbedding model.
+
+        Create dense embeddings from array of entity mentions/names.
 
         :param names: Numpy array of entity / concept names
         :param batch_size: Batch size used while embedding the name
@@ -752,7 +729,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
             if show_progress:
                 iterations = tqdm(
                     range(0, len(inputs), batch_size),
-                    desc="Embed inputs",
+                    desc=f"Embedding `{self.dictionary.database_name}` dictionary:",
                 )
             else:
                 iterations = range(0, len(inputs), batch_size)
@@ -774,10 +751,8 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return dense_embeds
 
-    def _load_emebddings(self, model_name_or_path: str, dictionary_name_or_path: str, batch_size: int):
-        """
-        Computes the embeddings for the given knowledge base / dictionary.
-        """
+    def _load_embeddings(self, model_name_or_path: str, dictionary_name_or_path: str, batch_size: int):
+        """Compute and cache the embeddings for the given knowledge base / dictionary."""
 
         # Check for embedded dictionary in cache
         dictionary_name = os.path.splitext(os.path.basename(dictionary_name_or_path))[0]
@@ -800,7 +775,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
             cache_folder.mkdir(parents=True, exist_ok=True)
 
-            names = [self.preprocessor.process_entity_name(name) for name, cui in self.dictionary]
+            names = [self.preprocessor.process_entity_name(name) for name, cui in self.dictionary_data]
 
             # Compute dense embeddings (if necessary)
             dense_embeddings = self.embed_dense(inputs=names, batch_size=batch_size, show_progress=True)
@@ -829,13 +804,11 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         normalise: bool = False,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Returns top-k indexes (in descending order) for the given entity mentions resp. mention
-        embeddings.
+        Find candidates with sparse representations
 
-        :param score_matrix: 2d numpy array of scores
+        :param entity_mentions: list of entity mentions (queries)
         :param top_k: number of candidates to retrieve
-        :return res: d numpy array of ids [# of query , # of dict]
-        :return scores: numpy array of top scores
+        :param normalise: normalise scores
         """
 
         mention_embeddings = self.sparse_encoder(entity_mentions)
@@ -865,11 +838,14 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
     def search_dense(self, entity_mentions: List[str], top_k: int = 1) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Dense search via FAISS index
+        Find candidates with dense representations (FAISS)
+
+        :param entity_mentions: list of entity mentions (queries)
+        :param top_k: number of candidates to retrieve
         """
 
         # Compute dense embedding for the given entity mention
-        mention_dense_embeds = self.embed_dense(inputs=np.array(entity_mentions), batch_size=self.index_batch_size)
+        mention_dense_embeds = self.embed_dense(inputs=np.array(entity_mentions), batch_size=self.batch_size)
 
         if self.similarity_metric == SimilarityMetric.COSINE:
             faiss.normalize_L2(mention_dense_embeds)
@@ -918,13 +894,13 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return hybrid_scores, hybrid_ids
 
-    def search(self, entity_mentions: List[str], top_k: int) -> List[Tuple[str, str, float]]:
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, str, float]]]:
         """
-        Returns the top-k entities for a given entity mention.
+        Returns the top-k entity / concept identifiers for the each entity mention.
 
-        :param entity_mentions: Entity mentions (search queries)
-        :param top_k: Number of (best-matching) entities from the knowledge base to return
-        :result: List of tuples w/ the top-k entities: (concept name, concept ids, score).
+        :param entity_mentions: Entity mentions
+        :param top_k: Number of best-matching entities from the knowledge base to return
+        :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
         """
 
         scores, ids = self.search_dense(entity_mentions=entity_mentions, top_k=top_k)
@@ -942,17 +918,13 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
             )
 
         return [
-            tuple(self.dictionary[i]) + (score,)
+            [tuple(self.dictionary_data[i]) + (score,) for i, score in zip(mention_ids, mention_scores)]
             for mention_ids, mention_scores in zip(ids, scores)
-            for i, score in zip(mention_ids, mention_scores)
         ]
 
 
 class BiomedicalEntityLinker:
-    """
-    Entity linking model which expects text/sentences with annotated entity mentions and predicts
-    entity / concept to these mentions according to a knowledge base / dictionary.
-    """
+    """Entity linking model for the biomedical domain"""
 
     def __init__(
         self,
@@ -963,70 +935,68 @@ class BiomedicalEntityLinker:
         self.preprocessor = preprocessor
         self.candidate_generator = candidate_generator
         self.entity_type = entity_type
-        self.annotation_layer = ENTITY_TYPE_TO_ANNOTATION_LAYER[self.entity_type]
+        self.annotation_layers = [ENTITY_TYPE_TO_ANNOTATION_LAYER.get(self.entity_type, "ner")]
 
-    def build_entity_linking_label(self, data_point: Span, prediction: Tuple[str, str, int]) -> EntityLinkingLabel:
-        """
-        Create entity linking label from retriever model result
-        """
+    def build_candidate(self, candidate: Tuple[str, str, float]):
+        """Get nice container with all info about entity linking candidate"""
 
-        # if concept identifier is made up of multiple ids, separated by '|'
-        # separate it into cui and additional_labels
-        cui = prediction[1]
-        if "|" in cui:
-            labels = cui.split("|")
-            cui = labels[0]
+        concept_name = candidate[0]
+        concept_id = candidate[1]
+        score = candidate[2]
+        database_name = self.candidate_generator.dictionary.database_name
+
+        if "|" in concept_id:
+            labels = concept_id.split("|")
+            concept_id = labels[0]
             additional_labels = labels[1:]
         else:
             additional_labels = None
 
-        # determine database:
-        if ":" in cui:
-            cui_parts = cui.split(":")
-            database = ":".join(cui_parts[0:-1])
-            cui = cui_parts[-1]
-        else:
-            database = None
-
-        return EntityLinkingLabel(
-            data_point=data_point,
-            concept_id=cui,
-            concept_name=prediction[0],
+        return EntityLinkingCandidate(
+            concept_id=concept_id,
+            concept_name=concept_name,
+            score=score,
             additional_ids=additional_labels,
-            database=database,
-            score=prediction[2],
+            database_name=database_name,
         )
 
     def extract_mentions(
         self,
         sentences: List[Sentence],
+        annotation_layers: Optional[List[str]] = None,
     ) -> Tuple[List[int], List[Span], List[str]]:
-        """
-        Unpack all mentions in sentences for batch search.
-        Output is list of (sentence index, mention text).
-        """
+        """Unpack all mentions in sentences for batch search."""
 
         source = []
         data_points = []
         mentions = []
+        mention_annotationa_layers = []
+
+        # get all valid annotation layers: pre-determined and user input
+        annotation_layers = (
+            self.annotation_layers + annotation_layers if annotation_layers is not None else self.annotation_layers
+        )
+
         for i, sentence in enumerate(sentences):
-            for entity in sentence.get_labels(self.annotation_layer):
-                source.append(i)
-                data_points.append(entity.data_point)
-                mentions.append(
-                    self.preprocessor.process_mention(entity, sentence)
-                    if self.preprocessor is not None
-                    else entity.data_point.text,
-                )
+            for annotation_layer in annotation_layers:
+                for entity in sentence.get_labels(annotation_layer):
+                    source.append(i)
+                    data_points.append(entity.data_point)
+                    mentions.append(
+                        self.preprocessor.process_mention(entity, sentence)
+                        if self.preprocessor is not None
+                        else entity.data_point.text,
+                    )
+                    mention_annotationa_layers.append(annotation_layer)
 
-        assert len(mentions) > 0, f"There are no entity mentions of type `{self.entity_type}`"
+        # assert len(mentions) > 0, f"There are no entity mentions of type `{self.entity_type}`"
 
-        return source, data_points, mentions
+        return source, data_points, mentions, mention_annotationa_layers
 
     def predict(
         self,
         sentences: Union[List[Sentence], Sentence],
-        # input_entity_annotation_layer: str = None,
+        annotation_layers: Optional[List[str]] = None,
         top_k: int = 1,
     ) -> None:
         """
@@ -1034,8 +1004,8 @@ class BiomedicalEntityLinker:
         with tag input_entity_annotation_layer.
 
         :param sentences: One or more sentences to run the prediction on
-        :param top_k: Number of best-matching entity / concept identifiers which should be predicted
-            per entity mention
+        :param annotation_layers: list of annotation layers to extract entity mentions
+        :param top_k: Number of best-matching entity / concept identifiers
         """
         # make sure sentences is a list of sentences
         if not isinstance(sentences, list):
@@ -1047,17 +1017,23 @@ class BiomedicalEntityLinker:
         # Build label name
         # label_name = input_entity_annotation_layer + "_nen" if (input_entity_annotation_layer is not None) else "nen"
 
-        source, data_points, mentions = self.extract_mentions(sentences=sentences)
+        source, data_points, mentions, mentions_annotation_layers = self.extract_mentions(
+            sentences=sentences, annotation_layers=annotation_layers
+        )
 
         # Retrieve top-k concept / entity candidates
-        predictions = self.candidate_generator.search(entity_mentions=mentions, top_k=top_k)
+        candidates = self.candidate_generator.search(entity_mentions=mentions, top_k=top_k)
 
         # Add a label annotation for each candidate
-        for i, data_point, prediction in zip(source, data_points, predictions):
+        for i, data_point, mention_candidates, mentions_annotation_layer in zip(
+            source, data_points, candidates, mentions_annotation_layers
+        ):
 
             sentences[i].add_label(
-                typename=self.annotation_layer,
-                value_or_label=self.build_entity_linking_label(prediction=prediction, data_point=data_point),
+                typename=mentions_annotation_layer,
+                value_or_label=EntityLinkingLabel(
+                    data_point=data_point, candidates=[self.build_candidate(c) for c in mention_candidates]
+                ),
             )
 
     @classmethod
@@ -1067,12 +1043,13 @@ class BiomedicalEntityLinker:
         dictionary_name_or_path: Optional[Union[str, Path]] = None,
         hybrid_search: bool = True,
         max_length: int = 25,
-        index_batch_size: int = 1024,
+        batch_size: int = 1024,
         similarity_metric: SimilarityMetric = SimilarityMetric.COSINE,
         preprocessor: AbstractEntityPreprocessor = Ab3PEntityPreprocessor.load(preprocessor=EntityPreprocessor()),
         force_hybrid_search: bool = False,
         sparse_weight: float = DEFAULT_SPARSE_WEIGHT,
         entity_type: Optional[str] = None,
+        dictionary: Optional[List[Tuple[str, str]]] = None,
     ):
         """
         Loads a model for biomedical named entity normalization.
@@ -1104,16 +1081,18 @@ class BiomedicalEntityLinker:
                 hybrid_search=hybrid_search,
                 similarity_metric=similarity_metric,
                 max_length=max_length,
-                index_batch_size=index_batch_size,
+                batch_size=batch_size,
                 sparse_weight=sparse_weight,
                 preprocessor=preprocessor,
                 force_hybrid_search=force_hybrid_search,
+                dictionary=dictionary,
             )
 
         logger.info(
-            "BiomedicalEntityLinker predicts: Entity type: %s with Dictionary `%s`",
-            entity_type,
+            "BiomedicalEntityLinker predicts: Dictionary `%s` (entity type: %s) with %s classes",
             dictionary_name_or_path,
+            entity_type,
+            len(candidate_generator.dictionary_data),
         )
 
         return cls(candidate_generator=candidate_generator, preprocessor=preprocessor, entity_type=entity_type)
@@ -1131,9 +1110,9 @@ class BiomedicalEntityLinker:
 
         if model_name_or_path not in MODELS and model_name_or_path not in ENTITY_TYPES:
             raise ValueError(
-                f"""Unknown model `{model_name_or_path}`! \n
-                    Available entity types are: {ENTITY_TYPES} \n
-                    If you want to pass a local path please use the `Path` class, i.e. `model_name_or_path=Path(my_path)`"""
+                f"Unknown model `{model_name_or_path}`!"
+                f" Available entity types are: {ENTITY_TYPES}"
+                " If you want to pass a local path please use the `Path` class, i.e. `model_name_or_path=Path(my_path)`"
             )
 
         if model_name_or_path == "cambridgeltl/SapBERT-from-PubMedBERT-fulltext":
@@ -1172,7 +1151,9 @@ class BiomedicalEntityLinker:
             if model_name_or_path in ENTITY_TYPES:
                 model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
 
-        assert entity_type is not None, f"Impossible to determine entity type for model `{model_name_or_path}`"
+        assert (
+            entity_type is not None
+        ), f"Impossible to determine entity type for model `{model_name_or_path}`: please specify via `entity_type`"
 
         return model_name_or_path, entity_type
 
@@ -1186,7 +1167,9 @@ class BiomedicalEntityLinker:
         """
 
         if model_name_or_path in STRING_MATCHING_MODELS and dictionary_name_or_path is None:
-            raise ValueError("When using a string-matchin retriever you must specify `dictionary_name_or_path`!")
+            raise ValueError(
+                "When using a string-matching candidate generator you must specify `dictionary_name_or_path`!"
+            )
 
         if dictionary_name_or_path is not None:
             if dictionary_name_or_path in ENTITY_TYPES:
