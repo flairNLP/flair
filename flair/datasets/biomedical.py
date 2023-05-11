@@ -538,28 +538,22 @@ class AbstractBiomedicalEntityLinkingDictionary(ABC):
                     f.write(f"{cui}||{name}\n")
 
 
+    @property
     @abstractmethod
-    def get_database_names(self) -> List[str]:
-        """
-        List all database names covered by dictionary, e.g. MESH, OMIM
-        """
+    def database_name(self) -> str:
+        """Name of the database represented by the dictionary"""
 
     @abstractmethod
     def download_dictionary(self, data_dir: Path) -> Path:
-        """
-        Download dictionary
-        """
+        """Download dictionary"""
 
     @abstractmethod
     def parse_dictionary(self, original_file: Path):
-        """
-        Parse data into HunFlair format
-        """
+        """Parse data into HunFlair format"""
 
     def stream(self) -> Iterator[Tuple[str, str]]:
-        """
-        Stream preprocessed dictionary
-        """
+        """Stream preprocessed dictionary"""
+
         with open(self.dataset_file) as fp:
             for line in fp:
                 line = line.strip()
@@ -573,16 +567,19 @@ class AbstractBiomedicalEntityLinkingDictionary(ABC):
 
 class ParsedBiomedicalEntityLinkingDictionary(AbstractBiomedicalEntityLinkingDictionary):
     """
-    Base dictionary with data already in preprocessed format
+    Base dictionary with data already in preprocessed format.
+    Every line in the file must be formatted as follows: concept_id||concept_name
+    If multiple concept ids are associated to a given name
+    they must be separated by a `|`
     """
 
-    def __init__(self,path: Path, database_names : Optional[List[str]] = None):
+    def __init__(self,path: Path, database_name :str):
         self.dataset_file = path
-        self.database_names = database_names
+        self._database_name = database_name
 
-    def get_database_names(self) -> List[str]:
-
-        return self.database_names if self.database_names is not None else []
+    @property
+    def database_name(self):
+        return self._database_name
 
     def download_dictionary(self):
         pass
@@ -590,7 +587,7 @@ class ParsedBiomedicalEntityLinkingDictionary(AbstractBiomedicalEntityLinkingDic
     def parse_dictionary(self):
         pass
 
-class CTD_DISEASE_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
+class CTD_DISEASES_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     """
     Dictionary for Named Entity Linking on Diseases
     """
@@ -601,10 +598,11 @@ class CTD_DISEASE_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     ):
         """
         :param base_path: Path to the corpus on your machine"""
-        super(CTD_DISEASE_DICTIONARY, self).__init__(base_path=base_path)
+        super(CTD_DISEASES_DICTIONARY, self).__init__(base_path=base_path)
 
-    def get_database_names(self):
-        return ["MESH", "DO:DOID", "OMIM"]
+    @property
+    def database_name(self):
+        return "CTD-DISEASES"
 
     def download_dictionary(self, data_dir: Path) -> Path:
         data_url = "https://ctdbase.org/reports/CTD_diseases.tsv.gz"
@@ -658,7 +656,7 @@ class CTD_DISEASE_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
                         yield e
 
 
-class CTD_CHEMICAL_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
+class CTD_CHEMICALS_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     """
     Dictionary for Named Entity Linking on Chemicals
     """
@@ -669,10 +667,11 @@ class CTD_CHEMICAL_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     ):
         """
         :param base_path: Path to the corpus on your machine"""
-        super(CTD_CHEMICAL_DICTIONARY, self).__init__(base_path=base_path)
+        super(CTD_CHEMICALS_DICTIONARY, self).__init__(base_path=base_path)
 
-    def get_database_names(self):
-        return ["MESH"]
+    @property
+    def database_name(self):
+        return "CTD-CHEMICALS" 
 
     def download_dictionary(self, data_dir: Path) -> Path:
         data_url = "https://ctdbase.org/reports/CTD_chemicals.tsv.gz"
@@ -752,8 +751,9 @@ class NCBI_GENE_HUMAN_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
 
         return any([newentry, empty, text_comment])
 
-    def get_database_names(self):
-        return ["NCBI Gene"]
+    @property
+    def database_name(self):
+        return "NCBI-GENE" 
 
     def download_dictionary(self, data_dir: Path) -> Path:
         data_url = "https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz"
@@ -825,8 +825,9 @@ class NCBI_TAXONOMY_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
         :param base_path: Path to the corpus on your machine"""
         super(NCBI_TAXONOMY_DICTIONARY, self).__init__(base_path=base_path)
 
-    def get_database_names(self):
-        return ["NCBI Taxonomy"]
+    @property
+    def database_name(self):
+        return "NCBI-TAXONOMY" 
 
     def download_dictionary(self, data_dir: Path) -> Path:
         data_url = "https://ftp.ncbi.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
