@@ -473,7 +473,7 @@ class AbstractCandidateGenerator(ABC):
     """
 
     @abstractmethod
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, str, float]]]:
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
         """
         Returns the top-k entity / concept identifiers for the each entity mention.
 
@@ -481,6 +481,29 @@ class AbstractCandidateGenerator(ABC):
         :param top_k: Number of best-matching entities from the knowledge base to return
         :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
         """
+
+    def build_candidate(self, candidate: Tuple[str, str, float]) -> EntityLinkingCandidate:
+        """Get nice container with all info about entity linking candidate"""
+
+        concept_name = candidate[0]
+        concept_id = candidate[1]
+        score = candidate[2]
+        database_name = self.dictionary.database_name
+
+        if "|" in concept_id:
+            labels = concept_id.split("|")
+            concept_id = labels[0]
+            additional_labels = labels[1:]
+        else:
+            additional_labels = None
+
+        return EntityLinkingCandidate(
+            concept_id=concept_id,
+            concept_name=concept_name,
+            score=score,
+            additional_ids=additional_labels,
+            database_name=database_name,
+        )
 
 
 class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
@@ -490,14 +513,14 @@ class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
 
     def __init__(self, dictionary: BiomedicalEntityLinkingDictionary):
         # Build index which maps concept / entity names to concept / entity ids
-        self.name_to_id_index = dict(dictionary.data)
+        self.name_to_id_index = dict(list(dictionary.stream()))
 
     @classmethod
     def load(cls, dictionary_name_or_path: str) -> "ExactStringMatchingRetrieverModel":
         """Compatibility function"""
         return cls(BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path))
 
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, str, float]]]:
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
         """
         Returns the top-k entity / concept identifiers for the each entity mention.
 
@@ -506,7 +529,7 @@ class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
         :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
         """
 
-        return [[(em, self.name_to_id_index.get(em), 1.0)] for em in entity_mentions]
+        return [[self.build_candidate((em, self.name_to_id_index.get(em), 1.0))] for em in entity_mentions]
 
 
 class BigramTfIDFVectorizer:
@@ -894,7 +917,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return hybrid_scores, hybrid_ids
 
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, str, float]]]:
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
         """
         Returns the top-k entity / concept identifiers for the each entity mention.
 
@@ -918,7 +941,10 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
             )
 
         return [
-            [tuple(self.dictionary_data[i]) + (score,) for i, score in zip(mention_ids, mention_scores)]
+            [
+                self.build_candidate(tuple(self.dictionary_data[i]) + (score,))
+                for i, score in zip(mention_ids, mention_scores)
+            ]
             for mention_ids, mention_scores in zip(ids, scores)
         ]
 
@@ -936,29 +962,6 @@ class BiomedicalEntityLinker:
         self.candidate_generator = candidate_generator
         self.entity_type = entity_type
         self.annotation_layers = [ENTITY_TYPE_TO_ANNOTATION_LAYER.get(self.entity_type, "ner")]
-
-    def build_candidate(self, candidate: Tuple[str, str, float]):
-        """Get nice container with all info about entity linking candidate"""
-
-        concept_name = candidate[0]
-        concept_id = candidate[1]
-        score = candidate[2]
-        database_name = self.candidate_generator.dictionary.database_name
-
-        if "|" in concept_id:
-            labels = concept_id.split("|")
-            concept_id = labels[0]
-            additional_labels = labels[1:]
-        else:
-            additional_labels = None
-
-        return EntityLinkingCandidate(
-            concept_id=concept_id,
-            concept_name=concept_name,
-            score=score,
-            additional_ids=additional_labels,
-            database_name=database_name,
-        )
 
     def extract_mentions(
         self,
@@ -1031,9 +1034,7 @@ class BiomedicalEntityLinker:
 
             sentences[i].add_label(
                 typename=mentions_annotation_layer,
-                value_or_label=EntityLinkingLabel(
-                    data_point=data_point, candidates=[self.build_candidate(c) for c in mention_candidates]
-                ),
+                value_or_label=EntityLinkingLabel(data_point=data_point, candidates=mention_candidates),
             )
 
     @classmethod
