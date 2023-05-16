@@ -294,6 +294,7 @@ class ModelTrainer(Pluggable):
         optimizer: Type[torch.optim.Optimizer] = SGD,
         train_with_dev: bool = False,
         train_with_test: bool = False,
+        max_grad_norm: Optional[float] = 5.0,
         # evaluation and monitoring
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         monitor_test: bool = False,
@@ -335,6 +336,8 @@ class ModelTrainer(Pluggable):
         optimizer: The optimizer to use (typically SGD or Adam)
         train_with_dev (bool): If True, the data from dev split is added to the training data
         train_with_test (bool): If True, the data from test split is added to the training data
+        max_grad_norm (Optional[float]): If not None, gradients are clipped to this value before an optimizer.step is
+            called.
         main_evaluation_metric: The metric to optimize (often micro-average or macro-average F1-score, or accuracy)
         monitor_test (bool): If True, test data is evaluated at end of each epoch
         monitor_train_sample: Set this to evaluate on a sample of the train data at the end of each epoch.
@@ -584,7 +587,8 @@ class ModelTrainer(Pluggable):
                     self.dispatch("before_training_optimizer_step", **batch_kw)
 
                     # do the optimizer step
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
+                    if max_grad_norm is not None:
+                        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)
                     self.optimizer.step()
 
                     if batch_train_samples > 0:
