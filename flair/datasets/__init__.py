@@ -117,6 +117,7 @@ from .document_classification import (
     STACKOVERFLOW,
     TREC_6,
     TREC_50,
+    AGNEWS,
     WASSA_ANGER,
     WASSA_FEAR,
     WASSA_JOY,
