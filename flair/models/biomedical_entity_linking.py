@@ -482,13 +482,12 @@ class AbstractCandidateGenerator(ABC):
         :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
         """
 
-    def build_candidate(self, candidate: Tuple[str, str, float]) -> EntityLinkingCandidate:
+    def build_candidate(self, candidate: Tuple[str, str, float], database_name: str) -> EntityLinkingCandidate:
         """Get nice container with all info about entity linking candidate"""
 
         concept_name = candidate[0]
         concept_id = candidate[1]
         score = candidate[2]
-        database_name = self.dictionary.database_name
 
         if "|" in concept_id:
             labels = concept_id.split("|")
@@ -513,6 +512,7 @@ class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
 
     def __init__(self, dictionary: BiomedicalEntityLinkingDictionary):
         # Build index which maps concept / entity names to concept / entity ids
+        self.dictionary = dictionary
         self.name_to_id_index = dict(list(dictionary.stream()))
 
     @classmethod
@@ -529,7 +529,14 @@ class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
         :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
         """
 
-        return [[self.build_candidate((em, self.name_to_id_index.get(em), 1.0))] for em in entity_mentions]
+        return [
+            [
+                self.build_candidate(
+                    candidate=(em, self.name_to_id_index.get(em), 1.0), database_name=self.dictionary.database_name
+                )
+            ]
+            for em in entity_mentions
+        ]
 
 
 class BigramTfIDFVectorizer:
@@ -942,7 +949,9 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return [
             [
-                self.build_candidate(tuple(self.dictionary_data[i]) + (score,))
+                self.build_candidate(
+                    candidate=tuple(self.dictionary_data[i]) + (score,), database_name=self.dictionary.database_name
+                )
                 for i, score in zip(mention_ids, mention_scores)
             ]
             for mention_ids, mention_scores in zip(ids, scores)
