@@ -973,12 +973,10 @@ class BiomedicalEntityLinker:
         source = []
         data_points = []
         mentions = []
-        mention_annotationa_layers = []
+        mention_annotation_layers = []
 
-        # get all valid annotation layers: pre-determined and user input
-        annotation_layers = (
-            self.annotation_layers + annotation_layers if annotation_layers is not None else self.annotation_layers
-        )
+        # use default annotation layers only if are not provided
+        annotation_layers = annotation_layers if annotation_layers is not None else self.annotation_layers
 
         for i, sentence in enumerate(sentences):
             for annotation_layer in annotation_layers:
@@ -990,11 +988,11 @@ class BiomedicalEntityLinker:
                         if self.preprocessor is not None
                         else entity.data_point.text,
                     )
-                    mention_annotationa_layers.append(annotation_layer)
+                    mention_annotation_layers.append(annotation_layer)
 
         # assert len(mentions) > 0, f"There are no entity mentions of type `{self.entity_type}`"
 
-        return source, data_points, mentions, mention_annotationa_layers
+        return source, data_points, mentions, mention_annotation_layers
 
     def predict(
         self,
