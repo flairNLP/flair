@@ -472,7 +472,7 @@ class EntityLinkingLabel(Label):
         :param candidates: **sorted** list of candidates from candidate generator
         """
 
-        def is_sorted(lst, key=lambda x: x, comparison=lambda x, y: x > y):
+        def is_sorted(lst, key=lambda x: x, comparison=lambda x, y: x >= y):
             for i, el in enumerate(lst[1:]):
                 if comparison(key(el), key(lst[i])):
                     return False
@@ -480,7 +480,7 @@ class EntityLinkingLabel(Label):
 
         # candidates must be sorted, regardless if higher is better or not
         assert is_sorted(candidates, key=lambda x: x.score) or is_sorted(
-            candidates, key=lambda x: x.score, comparison=lambda x, y: x < y
+            candidates, key=lambda x: x.score, comparison=lambda x, y: x <= y
         ), "List of candidates must be sorted!"
 
         super().__init__(data_point, candidates[0].concept_id, candidates[0].score)
