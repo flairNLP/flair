@@ -13,6 +13,7 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple, Union
 
+import joblib
 import numpy as np
 import torch
 from huggingface_hub import hf_hub_download
@@ -565,15 +566,19 @@ class BigramTfIDFVectorizer:
         """Short for `transform`"""
         return self.transform(mentions)
 
+    def save(self, path: Path):
+        """Save vectorizer to disk"""
+        joblib.dump(self.encoder, str(path))
+
     @classmethod
     def load(cls, path: Path) -> "BigramTfIDFVectorizer":
         """Instantiate from path"""
         newVectorizer = cls()
 
-        with open(path, "rb") as fin:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                newVectorizer.encoder = pickle.load(fin)
+        # with open(path, "rb") as fin:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            newVectorizer.encoder = joblib.load(str(path))
             # logger.info("Sparse encoder loaded from %s", path)
 
         return newVectorizer
@@ -657,6 +662,16 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return self.similarity_metric in [SimilarityMetric.COSINE, SimilarityMetric.INNER_PRODUCT]
 
+    def _get_cache_name(self, model_name_or_path: str, dictionary_name_or_path: str) -> str:
+        """Fixed name for caching"""
+
+        # Check for embedded dictionary in cache
+        dictionary_name = os.path.splitext(os.path.basename(dictionary_name_or_path))[0]
+        file_name = f"{model_name_or_path.split('/')[-1]}_{dictionary_name}"
+        pp_name = self.preprocessor.name if self.preprocessor is not None else "null"
+
+        return f"{file_name}-{pp_name}"
+
     # separate method to allow more sophisticated logic in the future,
     # e.g. ANN with IndexIP, HNSW...
     def build_dense_index(self, embeddings: np.ndarray) -> faiss.Index:
@@ -667,7 +682,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return dense_index
 
-    def _fit_sparse_encoder(self):
+    def _fit_sparse_encoder(self) -> BigramTfIDFVectorizer:
         """Fit sparse encoder to current dictionary"""
 
         logger.info(
@@ -675,9 +690,38 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
             self.dictionary_name_or_path,
             self.sparse_weight,
         )
-        self.sparse_encoder = BigramTfIDFVectorizer().fit([name for name, cui in self.dictionary])
+        sparse_encoder = BigramTfIDFVectorizer().fit([name for name, cui in self.dictionary_data])
         # sparse_encoder.save(Path(sparse_encoder_path))
         # torch.save(torch.FloatTensor(self.sparse_weight), sparse_weight_path)
+
+        return sparse_encoder
+
+    def _handle_sparse_encoder(self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]):
+        """If necessary fit and cache sparse encoder"""
+
+        if self.force_hybrid_search:
+
+            self.sparse_weight = self.sparse_weight if self.sparse_weight is not None else DEFAULT_SPARSE_WEIGHT
+
+            if isinstance(model_name_or_path, str):
+                cache_name = self._get_cache_name(
+                    model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
+                )
+                path = flair.cache_root / "models" / f"{cache_name}-sparse-encoder.pk"
+            else:
+                path = model_name_or_path / "sparse_encoder.pk"
+
+            if path.exists():
+                self.sparse_encoder = BigramTfIDFVectorizer.load(path)
+            else:
+                self.sparse_encoder = self._fit_sparse_encoder()
+                logger.info("Save fitted sparse encoder to %s", path)
+                self.sparse_encoder.save(path)
+        else:
+            model_type = "Hybrid model" if isinstance(model_name_or_path, str) else "Local hybrid model"
+            raise ValueError(
+                f"{model_type} has no pretrained sparse encoder. Please pass `force_hybrid_search=True` if you want to fit a sparse model to dictionary `{dictionary_name_or_path}`"
+            )
 
     def _set_sparse_weigth_and_encoder(
         self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]
@@ -686,45 +730,29 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         sparse_encoder_path = os.path.join(model_name_or_path, "sparse_encoder.pk")
         sparse_weight_path = os.path.join(model_name_or_path, "sparse_weight.pt")
 
-        if isinstance(model_name_or_path, str):
+        if isinstance(model_name_or_path, str) and model_name_or_path in PRETRAINED_HYBRID_MODELS:
+            if not os.path.exists(sparse_encoder_path):
 
-            # check file exists
-            if model_name_or_path in PRETRAINED_HYBRID_MODELS:
-
-                if not os.path.exists(sparse_encoder_path):
-
-                    sparse_encoder_path = hf_hub_download(
-                        repo_id=model_name_or_path,
-                        filename="sparse_encoder.pk",
-                        cache_dir=flair.cache_root / "models" / model_name_or_path,
-                    )
-
-                    self.sparse_encoder = BigramTfIDFVectorizer.load(path=sparse_encoder_path)
-
-                if not os.path.exists(sparse_weight_path):
-
-                    sparse_weight_path = hf_hub_download(
-                        repo_id=model_name_or_path,
-                        filename="sparse_weight.pt",
-                        cache_dir=flair.cache_root / "models" / model_name_or_path,
-                    )
-                    self.sparse_weight = torch.load(sparse_weight_path, map_location="cpu").item()
-            else:
-                if self.force_hybrid_search:
-                    self.sparse_weight = self.sparse_weight if self.sparse_weight is not None else DEFAULT_SPARSE_WEIGHT
-                    self._fit_sparse_encoder()
-                else:
-                    raise ValueError(
-                        f"A: Hybrid model has no pretrained sparse encoder. Please pass `force_hybrid_search=True` if you want to fit a sparse model to dictionary `{dictionary_name_or_path}`"
-                    )
-        else:
-            if self.force_hybrid_search:
-                self.sparse_weight = self.sparse_weight if self.sparse_weight is not None else DEFAULT_SPARSE_WEIGHT
-                self._fit_sparse_encoder()
-            else:
-                raise ValueError(
-                    f"Local hybrid model has no pretrained sparse encoder. Please pass `force_hybrid_search=True` if you want to fit a sparse model to dictionary `{dictionary_name_or_path}`"
+                sparse_encoder_path = hf_hub_download(
+                    repo_id=model_name_or_path,
+                    filename="sparse_encoder.pk",
+                    cache_dir=flair.cache_root / "models" / model_name_or_path,
                 )
+
+                self.sparse_encoder = BigramTfIDFVectorizer.load(path=sparse_encoder_path)
+
+            if not os.path.exists(sparse_weight_path):
+
+                sparse_weight_path = hf_hub_download(
+                    repo_id=model_name_or_path,
+                    filename="sparse_weight.pt",
+                    cache_dir=flair.cache_root / "models" / model_name_or_path,
+                )
+                self.sparse_weight = torch.load(sparse_weight_path, map_location="cpu").item()
+        else:
+            self._handle_sparse_encoder(
+                model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
+            )
 
     def embed_sparse(self, inputs: np.ndarray) -> np.ndarray:
         """
@@ -784,21 +812,18 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
     def _load_embeddings(self, model_name_or_path: str, dictionary_name_or_path: str, batch_size: int):
         """Compute and cache the embeddings for the given knowledge base / dictionary."""
 
-        # Check for embedded dictionary in cache
-        dictionary_name = os.path.splitext(os.path.basename(dictionary_name_or_path))[0]
-        file_name = f"bio_nen_{model_name_or_path.split('/')[-1]}_{dictionary_name}"
-
         cache_folder = flair.cache_root / "datasets"
+        cache_name = self._get_cache_name(
+            model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
+        )
 
-        pp_name = self.preprocessor.name if self.preprocessor is not None else "null"
-
-        embeddings_cache_file = cache_folder / f"{file_name}-{pp_name}.pk"
+        embeddings_cache_file = cache_folder / f"{cache_name}-embeddings.pk"
 
         # If exists, load the cached dictionary indices
         if embeddings_cache_file.exists():
 
             with embeddings_cache_file.open("rb") as fp:
-                logger.info("Load cached emebddings from:  %s", embeddings_cache_file)
+                logger.info("BiEncoderCandidateGenerator: load cached emebddings `%s`", f"{cache_name}-embeddings.pk")
                 embeddings = pickle.load(fp)
 
         else:
