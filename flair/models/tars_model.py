@@ -412,10 +412,9 @@ class TARSTagger(FewshotClassifier):
 
         for entity_label in sentence.get_labels(self.label_type):
             if entity_label.value == label:
-                new_span = Span(
-                    [tars_sentence.get_token(token.idx + label_length) for token in entity_label.data_point]
-                )
-                new_span.add_label(self.static_label_type, value="entity")
+                start_pos = entity_label.data_point[0].idx + label_length - 1
+                end_pos = entity_label.data_point[-1].idx + label_length
+                tars_sentence[start_pos:end_pos].add_label(self.static_label_type, value="entity")
         tars_sentence.copy_context_from_sentence(sentence)
         return tars_sentence
 
@@ -596,9 +595,10 @@ class TARSTagger(FewshotClassifier):
                             # only add if all tokens have no label
                             if tag_this:
                                 # make and add a corresponding predicted span
-                                predicted_span = Span(
-                                    [sentence.get_token(token.idx - label_length) for token in label.data_point]
-                                )
+                                start_pos = label.data_point.data_point[0].idx - label_length - 1
+                                end_pos = label.data_point.data_point[-1].idx - label_length
+
+                                predicted_span = sentence[start_pos:end_pos]
                                 predicted_span.add_label(label_name, value=label.value, score=label.score)
 
                                 # set indices so that no token can be tagged twice
