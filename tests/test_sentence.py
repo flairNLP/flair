@@ -1,3 +1,6 @@
+import copy
+import pickle
+
 from flair.data import Sentence
 
 
@@ -73,3 +76,37 @@ def test_start_end_position_pretokenized() -> None:
         (10, 18),
         (19, 20),
     ]
+
+
+def test_spans_support_deepcopy() -> None:
+    sentence = Sentence(["I", "live", "in", "Vienna", "."])
+    sentence[3:4].add_label("ner", "LOC")
+
+    _ = copy.deepcopy(sentence)
+
+
+def test_spans_support_pickle() -> None:
+    sentence = Sentence(["I", "live", "in", "Vienna", "."])
+    sentence[3:4].add_label("ner", "LOC")
+
+    pickle_data = pickle.dumps(sentence)
+    _ = pickle.loads(pickle_data)
+
+
+def test_relations_support_deepcopy() -> None:
+    sentence = Sentence(["Vienna", "is", "the", "capital", "of", "Austria"])
+    sentence[0:1].add_label("ner", "LOC")
+    sentence[5:6].add_label("ner", "LOC")
+    sentence[sentence[0:1], sentence[5:6]].add_label("rel", "capital")
+
+    _ = copy.deepcopy(sentence)
+
+
+def test_relations_support_pickle() -> None:
+    sentence = Sentence(["Vienna", "is", "the", "capital", "of", "Austria"])
+    sentence[0:1].add_label("ner", "LOC")
+    sentence[5:6].add_label("ner", "LOC")
+    sentence[sentence[0:1], sentence[5:6]].add_label("rel", "capital")
+
+    pickle_data = pickle.dumps(sentence)
+    _ = pickle.loads(pickle_data)

@@ -367,11 +367,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         """
         valid_entities: list[_Entity] = list(self._valid_entities(sentence))
 
-        # Use a dictionary to find gold relation annotations for a given entity pair
-        relation_to_gold_label: dict[str, str] = {
-            relation.unlabeled_identifier: relation.get_label(self.label_type, zero_tag_value=self.zero_tag_value).value
-            for relation in sentence.get_relations(self.label_type)
-        }
+        # ensure that all existing relations without label have the label set to zero_tag_value.
+        for relation in sentence.get_relations(self.label_type):
+            relation.set_label(self.label_type, relation.get_label(self.label_type, self.zero_tag_value).value)
 
         # Yield head and tail entity pairs from the cross product of all entities
         for head, tail in itertools.product(valid_entities, repeat=2):
@@ -388,9 +386,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                 continue
 
             # Obtain gold label, if existing
-            original_relation: Relation = Relation(first=head.span, second=tail.span)
-            gold_label: Optional[str] = relation_to_gold_label.get(original_relation.unlabeled_identifier)
-
+            gold_relation = sentence[head.span, tail.span]
+            gold_label: Optional[str] = gold_relation.get_label(self.label_type, zero_tag_value=None).value
             yield head, tail, gold_label
 
     def _encode_sentence(
@@ -474,7 +471,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                 tail=tail,
                 gold_label=gold_label if gold_label is not None else self.zero_tag_value,
             )
-            original_relation: Relation = Relation(first=head.span, second=tail.span)
+            original_relation: Relation = sentence[head.span, tail.span]
             yield masked_sentence, original_relation
 
     def _encode_sentence_for_training(self, sentence: Sentence) -> Iterator[EncodedSentence]:

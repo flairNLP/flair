@@ -22,7 +22,6 @@ from flair.data import (
     Corpus,
     FlairDataset,
     MultiCorpus,
-    Relation,
     Sentence,
     Token,
     get_spans_from_bio,
@@ -727,9 +726,7 @@ class ColumnDataset(FlairDataset):
                     tail_end = int(indices[3])
                     label = indices[4]
                     # head and tail span indices are 1-indexed and end index is inclusive
-                    relation = Relation(
-                        first=sentence[head_start - 1 : head_end], second=sentence[tail_start - 1 : tail_end]
-                    )
+                    relation = sentence[sentence[head_start - 1 : head_end], sentence[tail_start - 1 : tail_end]]
                     remapped = self._remap_label(label)
                     if remapped != "O":
                         relation.add_label(typename="relation", value=remapped)
