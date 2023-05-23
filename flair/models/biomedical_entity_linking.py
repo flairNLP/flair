@@ -6,6 +6,7 @@ import stat
 import string
 import subprocess
 import tempfile
+import time
 import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -42,7 +43,7 @@ try:
     import faiss
 except ImportError as error:
     raise ImportError(
-        f"You need to install to run the biomedical entity linking: `pip faiss faiss-cpu=={FAISS_VERSION}`"
+        f"You need to install faiss to run the biomedical entity linking: `pip faiss faiss-cpu=={FAISS_VERSION}`"
     ) from error
 
 logger = logging.getLogger("flair")
@@ -474,7 +475,7 @@ class AbstractCandidateGenerator(ABC):
     """
 
     @abstractmethod
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
+    def search(self, entity_mentions: List[str], top_k: int, timeit: bool = False) -> List[List[EntityLinkingCandidate]]:
         """
         Returns the top-k entity / concept identifiers for the each entity mention.
 
@@ -521,7 +522,7 @@ class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
         """Compatibility function"""
         return cls(BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path))
 
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
+    def search(self, entity_mentions: List[str], top_k: int, timeit: bool = False) -> List[List[EntityLinkingCandidate]]:
         """
         Returns the top-k entity / concept identifiers for the each entity mention.
 
@@ -717,11 +718,11 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
                 self.sparse_encoder = self._fit_sparse_encoder()
                 logger.info("Save fitted sparse encoder to %s", path)
                 self.sparse_encoder.save(path)
-        else:
-            model_type = "Hybrid model" if isinstance(model_name_or_path, str) else "Local hybrid model"
-            raise ValueError(
-                f"{model_type} has no pretrained sparse encoder. Please pass `force_hybrid_search=True` if you want to fit a sparse model to dictionary `{dictionary_name_or_path}`"
-            )
+        # else:
+        #     model_type = "Hybrid model" if isinstance(model_name_or_path, str) else "Local hybrid model"
+        #     raise ValueError(
+        #         f"{model_type} has no pretrained sparse encoder. Please pass `force_hybrid_search=True` if you want to fit a sparse model to dictionary `{dictionary_name_or_path}`"
+        #     )
 
     def _set_sparse_weigth_and_encoder(
         self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]
@@ -787,7 +788,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
             if show_progress:
                 iterations = tqdm(
                     range(0, len(inputs), batch_size),
-                    desc=f"Embedding `{self.dictionary.database_name}` dictionary:",
+                    desc=f"Embedding `{self.dictionary.database_name}` dictionary",
                 )
             else:
                 iterations = range(0, len(inputs), batch_size)
@@ -857,6 +858,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         entity_mentions: List[str],
         top_k: int = 1,
         normalise: bool = False,
+        timeit: bool = False
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Find candidates with sparse representations
@@ -868,10 +870,14 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         mention_embeddings = self.sparse_encoder(entity_mentions)
 
+        start = time.time()
         if self.similarity_metric == SimilarityMetric.COSINE:
             score_matrix = cosine_similarity(mention_embeddings, self.embeddings["sparse"])
         else:
             score_matrix = np.matmul(mention_embeddings, self.embeddings["sparse"].T)
+        elapsed = round(time.time() - start, 2)
+        if timeit:
+            logger.info(f"BiEncoderCandidateGenerator: sparse search with {len(entity_mentions)} query took ~{elapsed}")
 
         if normalise:
             score_matrix = (score_matrix - score_matrix.min()) / (score_matrix.max() - score_matrix.min())
@@ -889,9 +895,10 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
         topk_scores = indexing_2d(score_matrix, topk_idxs)
 
+
         return topk_scores, topk_idxs
 
-    def search_dense(self, entity_mentions: List[str], top_k: int = 1) -> Tuple[np.ndarray, np.ndarray]:
+    def search_dense(self, entity_mentions: List[str], top_k: int = 1, timeit : bool = False) -> Tuple[np.ndarray, np.ndarray]:
         """
         Find candidates with dense representations (FAISS)
 
@@ -905,8 +912,12 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         if self.similarity_metric == SimilarityMetric.COSINE:
             faiss.normalize_L2(mention_dense_embeds)
 
+        start = time.time()
         # Get candidates from dense embeddings
         dists, ids = self.dense_index.search(mention_dense_embeds, top_k)
+        elapsed = round(time.time() - start, 2)
+        if timeit:
+            logger.info(f"BiEncoderCandidateGenerator: dense search with {len(entity_mentions)} query took ~{elapsed}")
 
         return dists, ids
 
@@ -949,7 +960,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return hybrid_scores, hybrid_ids
 
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
+    def search(self, entity_mentions: List[str], top_k: int, timeit: bool = False) -> List[List[EntityLinkingCandidate]]:
         """
         Returns the top-k entity / concept identifiers for the each entity mention.
 
@@ -958,11 +969,11 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
         """
 
-        scores, ids = self.search_dense(entity_mentions=entity_mentions, top_k=top_k)
+        scores, ids = self.search_dense(entity_mentions=entity_mentions, top_k=top_k, timeit=timeit)
 
-        if self.hybrid_search:
+        if self.hybrid_search and self.sparse_encoder is not None:
 
-            sparse_scores, sparse_ids = self.search_sparse(entity_mentions=entity_mentions, top_k=top_k)
+            sparse_scores, sparse_ids = self.search_sparse(entity_mentions=entity_mentions, top_k=top_k, timeit=timeit)
 
             scores, ids = self.combine_dense_and_sparse_results(
                 dense_ids=ids,
@@ -1033,6 +1044,7 @@ class BiomedicalEntityLinker:
         sentences: Union[List[Sentence], Sentence],
         annotation_layers: Optional[List[str]] = None,
         top_k: int = 1,
+        timeit:bool = False
     ) -> None:
         """
         Predicts the best matching top-k entity / concept identifiers of all named entites annotated
@@ -1049,25 +1061,24 @@ class BiomedicalEntityLinker:
         if self.preprocessor is not None:
             self.preprocessor.initialize(sentences)
 
-        # Build label name
-        # label_name = input_entity_annotation_layer + "_nen" if (input_entity_annotation_layer is not None) else "nen"
-
         source, data_points, mentions, mentions_annotation_layers = self.extract_mentions(
             sentences=sentences, annotation_layers=annotation_layers
         )
 
-        # Retrieve top-k concept / entity candidates
-        candidates = self.candidate_generator.search(entity_mentions=mentions, top_k=top_k)
+        # no mentions: nothing to do here
+        if len(mentions) > 0:
+            # Retrieve top-k concept / entity candidates
+            candidates = self.candidate_generator.search(entity_mentions=mentions, top_k=top_k, timeit=timeit)
 
-        # Add a label annotation for each candidate
-        for i, data_point, mention_candidates, mentions_annotation_layer in zip(
-            source, data_points, candidates, mentions_annotation_layers
-        ):
+            # Add a label annotation for each candidate
+            for i, data_point, mention_candidates, mentions_annotation_layer in zip(
+                source, data_points, candidates, mentions_annotation_layers
+            ):
 
-            sentences[i].add_label(
-                typename=mentions_annotation_layer,
-                value_or_label=EntityLinkingLabel(data_point=data_point, candidates=mention_candidates),
-            )
+                sentences[i].add_label(
+                    typename=mentions_annotation_layer,
+                    value_or_label=EntityLinkingLabel(data_point=data_point, candidates=mention_candidates),
+                )
 
     @classmethod
     def load(
@@ -1161,22 +1172,20 @@ class BiomedicalEntityLinker:
                 else:
                     # check if user really wants to use hybrid search anyway
                     if not force_hybrid_search:
-                        raise ValueError(
-                            f"""
-                            Model for entity type `{model_name_or_path}` was not trained for hybrid search!
-                            If you want to proceed anyway please pass `force_hybrid_search=True`:
-                            we will fit a sparse encoder for you. The default value of `sparse_weight` is `{DEFAULT_SPARSE_WEIGHT}`.
-                            """
+                        logger.warning(
+                            "Model for entity type `%s` was not trained for hybrid search: no sparse search will be performed."
+                            " If you want to use sparse search please pass `force_hybrid_search=True`:"
+                            " we will fit a sparse encoder for you. The default value of `sparse_weight` is `%s`.",
+                             model_name_or_path, DEFAULT_SPARSE_WEIGHT
                         )
                     model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
             else:
                 if model_name_or_path not in PRETRAINED_HYBRID_MODELS and not force_hybrid_search:
-                    raise ValueError(
-                        f"""
-                        Model `{model_name_or_path}` was not trained for hybrid search!
-                        If you want to proceed anyway please pass `force_hybrid_search=True`:
-                        we will fit a sparse encoder for you. The default value of `sparse_weight` is `{DEFAULT_SPARSE_WEIGHT}`.
-                        """
+                    logger.warning(
+                        "Model `%s` was not trained for hybrid search: no sparse search will be performed."
+                        " If you want to use sparse search please pass `force_hybrid_search=True`:"
+                        " we will fit a sparse encoder for you. The default value of `sparse_weight` is `%s`.",
+                         model_name_or_path, DEFAULT_SPARSE_WEIGHT
                     )
                 entity_type = PRETRAINED_HYBRID_MODELS[model_name_or_path]
 
