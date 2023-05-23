@@ -163,6 +163,7 @@ from .relation_extraction import (
 # standard NER datasets
 # Expose all sequence labeling datasets
 from .sequence_labeling import (
+    AFRICA_POS,
     BIOSCOPE,
     CONLL_03,
     CONLL_03_DUTCH,
@@ -312,6 +313,7 @@ __all__ = [
     "SentenceDataset",
     "MongoDataset",
     "StringDataset",
+    "AFRICA_POS",
     "ANAT_EM",
     "AZDZ",
     "BC2GM",
