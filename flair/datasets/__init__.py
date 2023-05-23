@@ -163,7 +163,6 @@ from .relation_extraction import (
 # standard NER datasets
 # Expose all sequence labeling datasets
 from .sequence_labeling import (
-    AFRICA_POS,
     BIOSCOPE,
     CONLL_03,
     CONLL_03_DUTCH,
@@ -174,6 +173,7 @@ from .sequence_labeling import (
     KEYPHRASE_INSPEC,
     KEYPHRASE_SEMEVAL2010,
     KEYPHRASE_SEMEVAL2017,
+    MASAKHA_POS,
     NER_ARABIC_ANER,
     NER_ARABIC_AQMAR,
     NER_BASQUE,
@@ -313,7 +313,6 @@ __all__ = [
     "SentenceDataset",
     "MongoDataset",
     "StringDataset",
-    "AFRICA_POS",
     "ANAT_EM",
     "AZDZ",
     "BC2GM",
@@ -449,6 +448,7 @@ __all__ = [
     "KEYPHRASE_INSPEC",
     "KEYPHRASE_SEMEVAL2010",
     "KEYPHRASE_SEMEVAL2017",
+    "MASAKHA_POS",
     "NER_ARABIC_ANER",
     "NER_ARABIC_AQMAR",
     "NER_BASQUE",
