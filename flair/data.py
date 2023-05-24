@@ -457,6 +457,15 @@ class EntityLinkingCandidate:
         self.score = score
         self.additional_ids = additional_ids
 
+    def __str__(self) -> str:
+        string =  f"EntityLinkingCandidate: {self.database_name}:{self.concept_id} - {self.concept_name} - {self.score}"
+        if self.additional_ids is not None:
+            string += f" - {self.additional_ids}"
+        return string
+
+    def __repr__(self) -> str:
+        return str(self)
+
 
 class EntityLinkingLabel(Label):
     """
