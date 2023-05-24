@@ -868,6 +868,8 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         :param normalise: normalise scores
         """
 
+        assert self.sparse_encoder is not None, "BiEncoderCandidateGenerator has no `sparse_encoder`! Pass `force_hybrid_search=True` at initialization"
+
         mention_embeddings = self.sparse_encoder(entity_mentions)
 
         start = time.time()
@@ -877,7 +879,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
             score_matrix = np.matmul(mention_embeddings, self.embeddings["sparse"].T)
         elapsed = round(time.time() - start, 2)
         if timeit:
-            logger.info(f"BiEncoderCandidateGenerator: sparse search with {len(entity_mentions)} query took ~{elapsed}")
+            logger.info("BiEncoderCandidateGenerator: sparse search with %s query took ~%s", len(entity_mentions), elapsed)
 
         if normalise:
             score_matrix = (score_matrix - score_matrix.min()) / (score_matrix.max() - score_matrix.min())
@@ -917,7 +919,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         dists, ids = self.dense_index.search(mention_dense_embeds, top_k)
         elapsed = round(time.time() - start, 2)
         if timeit:
-            logger.info(f"BiEncoderCandidateGenerator: dense search with {len(entity_mentions)} query took ~{elapsed}")
+            logger.info("BiEncoderCandidateGenerator: dense search with %s query took ~%s", len(entity_mentions), elapsed)
 
         return dists, ids
 
@@ -1173,7 +1175,7 @@ class BiomedicalEntityLinker:
                     # check if user really wants to use hybrid search anyway
                     if not force_hybrid_search:
                         logger.warning(
-                            "Model for entity type `%s` was not trained for hybrid search: no sparse search will be performed."
+                            "BiEncoderCandidateGenerator: model for entity type `%s` was not trained for hybrid search: no sparse search will be performed."
                             " If you want to use sparse search please pass `force_hybrid_search=True`:"
                             " we will fit a sparse encoder for you. The default value of `sparse_weight` is `%s`.",
                              model_name_or_path, DEFAULT_SPARSE_WEIGHT
@@ -1182,7 +1184,7 @@ class BiomedicalEntityLinker:
             else:
                 if model_name_or_path not in PRETRAINED_HYBRID_MODELS and not force_hybrid_search:
                     logger.warning(
-                        "Model `%s` was not trained for hybrid search: no sparse search will be performed."
+                        "BiEncoderCandidateGenerator: model `%s` was not trained for hybrid search: no sparse search will be performed."
                         " If you want to use sparse search please pass `force_hybrid_search=True`:"
                         " we will fit a sparse encoder for you. The default value of `sparse_weight` is `%s`.",
                          model_name_or_path, DEFAULT_SPARSE_WEIGHT
