@@ -42,6 +42,7 @@ tqdm = ">=4.63.0"
 transformer-smaller-training-vocab = ">=0.2.3"
 transformers = { extras = ["sentencepiece"], version =">=4.18.0" }
 wikipedia-api = ">=0.5.7"
+urllib3 = "^1.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
