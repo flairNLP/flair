@@ -39,7 +39,7 @@ class Result:
         return self.scores["loss"]
 
     def __str__(self) -> str:
-        return f"{str(self.detailed_results)}\nLoss: {self.loss}'"
+        return f"{self.detailed_results}\nLoss: {self.loss}'"
 
 
 class MetricRegression:
