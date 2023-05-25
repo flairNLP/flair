@@ -42,7 +42,7 @@ jobs:
       - name: Run poetry lock
         run: |
           poetry config virtualenvs.in-project true
-          poetry lock
+          poetry lock -vv
       #----------------------------------------------
       # install dependencies if cache does not exist
       #----------------------------------------------
