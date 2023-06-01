@@ -753,7 +753,7 @@ class NCBI_GENE_HUMAN_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
 
     @property
     def database_name(self):
-        return "NCBI-GENE" 
+        return "NCBI-GENE-HUMAN" 
 
     def download_dictionary(self, data_dir: Path) -> Path:
         data_url = "https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz"
