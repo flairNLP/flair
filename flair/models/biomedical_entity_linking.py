@@ -1,6 +1,5 @@
 import logging
 import os
-import pickle
 import re
 import stat
 import string
@@ -19,7 +18,6 @@ import numpy as np
 import torch
 from huggingface_hub import hf_hub_download
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 
 import flair
@@ -38,13 +36,23 @@ from flair.embeddings import TransformerDocumentEmbeddings
 from flair.file_utils import cached_path
 
 FAISS_VERSION = "1.7.4"
+HNSWLIB_VERSION = "1.17.2"
 
 try:
     import faiss
 except ImportError as error:
     raise ImportError(
-        f"You need to install faiss to run the biomedical entity linking: `pip faiss faiss-cpu=={FAISS_VERSION}`"
+        f"You need to install faiss to run the biomedical entity linking: `pip install faiss-cpu=={FAISS_VERSION}`"
     ) from error
+
+
+try:
+    import hnswlib
+except ImportError as error:
+    raise ImportError(
+        f"You need to install faiss to run the biomedical entity linking: `pip install hnswlib=={HNSWLIB_VERSION}`"
+    ) from error
+
 
 logger = logging.getLogger("flair")
 
@@ -136,6 +144,26 @@ class SimilarityMetric(Enum):
     INNER_PRODUCT = faiss.METRIC_INNER_PRODUCT
     # L2 = faiss.METRIC_L2
     COSINE = auto()
+
+
+HNSWLIB_METRIC = {SimilarityMetric.INNER_PRODUCT: "ip", SimilarityMetric.COSINE: "cosine"}
+
+
+def timeit(func):
+    """
+    # This function shows the execution time of
+    # the function object passed
+    """
+
+    def wrap_func(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        elapsed = round(time.time() - start, 4)
+        class_name, func_name = func.__qualname__.split(".")
+        logger.info("%s: %s took ~%s", class_name, func_name , elapsed)
+        return result
+
+    return wrap_func
 
 
 class AbstractEntityPreprocessor(ABC):
@@ -475,7 +503,7 @@ class AbstractCandidateGenerator(ABC):
     """
 
     @abstractmethod
-    def search(self, entity_mentions: List[str], top_k: int, timeit: bool = False) -> List[List[EntityLinkingCandidate]]:
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
         """
         Returns the top-k entity / concept identifiers for the each entity mention.
 
@@ -522,7 +550,7 @@ class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
         """Compatibility function"""
         return cls(BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path))
 
-    def search(self, entity_mentions: List[str], top_k: int, timeit: bool = False) -> List[List[EntityLinkingCandidate]]:
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
         """
         Returns the top-k entity / concept identifiers for the each entity mention.
 
@@ -628,6 +656,8 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         self.hybrid_search = hybrid_search
         self.sparse_weight = sparse_weight
         self.force_hybrid_search = force_hybrid_search
+        if self.force_hybrid_search:
+            self.hybrid_search = True
 
         # allow to pass custom dictionary
         if dictionary is not None:
@@ -642,17 +672,15 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         self.sparse_encoder: Optional[BigramTfIDFVectorizer] = None
         self.sparse_weight: Optional[float] = None
         if self.hybrid_search:
-            self._set_sparse_weigth_and_encoder(
+            self.sparse_encoder, self.sparse_weight = self._get_sparse_encoder_and_weight(
                 model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
             )
 
-        self.embeddings = self._load_embeddings(
+        self.indices = self._load_indices(
             model_name_or_path=model_name_or_path,
             dictionary_name_or_path=dictionary_name_or_path,
             batch_size=self.batch_size,
         )
-
-        self.dense_index = self.build_dense_index(self.embeddings["dense"])
 
     @property
     def higher_is_better(self):
@@ -673,23 +701,13 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return f"{file_name}-{pp_name}"
 
-    # separate method to allow more sophisticated logic in the future,
-    # e.g. ANN with IndexIP, HNSW...
-    def build_dense_index(self, embeddings: np.ndarray) -> faiss.Index:
-        """Initialize FAISS index"""
-
-        dense_index = faiss.IndexFlatIP(embeddings.shape[1])
-        dense_index.add(embeddings)
-
-        return dense_index
-
+    @timeit
     def _fit_sparse_encoder(self) -> BigramTfIDFVectorizer:
         """Fit sparse encoder to current dictionary"""
 
         logger.info(
-            "Hybrid model has no pretrained sparse encoder. Fit to dictionary `%s` (sparse_weight=%s)",
+            "BiEncoderCandidateGenerator: hybrid model has no pretrained sparse encoder. Fit to dictionary `%s`",
             self.dictionary_name_or_path,
-            self.sparse_weight,
         )
         sparse_encoder = BigramTfIDFVectorizer().fit([name for name, cui in self.dictionary_data])
         # sparse_encoder.save(Path(sparse_encoder_path))
@@ -700,33 +718,26 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
     def _handle_sparse_encoder(self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]):
         """If necessary fit and cache sparse encoder"""
 
-        if self.force_hybrid_search:
+        if isinstance(model_name_or_path, str):
+            cache_name = self._get_cache_name(
+                model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
+            )
+            path = flair.cache_root / "models" / f"{cache_name}-sparse-encoder.pk"
+        else:
+            path = model_name_or_path / "sparse_encoder.pk"
 
-            self.sparse_weight = self.sparse_weight if self.sparse_weight is not None else DEFAULT_SPARSE_WEIGHT
+        if path.exists():
+            sparse_encoder = BigramTfIDFVectorizer.load(path)
+        else:
+            sparse_encoder = self._fit_sparse_encoder()
+            logger.info("Save fitted sparse encoder to %s", path)
+            sparse_encoder.save(path)
 
-            if isinstance(model_name_or_path, str):
-                cache_name = self._get_cache_name(
-                    model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
-                )
-                path = flair.cache_root / "models" / f"{cache_name}-sparse-encoder.pk"
-            else:
-                path = model_name_or_path / "sparse_encoder.pk"
+        return sparse_encoder
 
-            if path.exists():
-                self.sparse_encoder = BigramTfIDFVectorizer.load(path)
-            else:
-                self.sparse_encoder = self._fit_sparse_encoder()
-                logger.info("Save fitted sparse encoder to %s", path)
-                self.sparse_encoder.save(path)
-        # else:
-        #     model_type = "Hybrid model" if isinstance(model_name_or_path, str) else "Local hybrid model"
-        #     raise ValueError(
-        #         f"{model_type} has no pretrained sparse encoder. Please pass `force_hybrid_search=True` if you want to fit a sparse model to dictionary `{dictionary_name_or_path}`"
-        #     )
-
-    def _set_sparse_weigth_and_encoder(
+    def _get_sparse_encoder_and_weight(
         self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]
-    ):
+    ) -> Tuple[BigramTfIDFVectorizer, float]:
 
         sparse_encoder_path = os.path.join(model_name_or_path, "sparse_encoder.pk")
         sparse_weight_path = os.path.join(model_name_or_path, "sparse_weight.pt")
@@ -740,7 +751,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
                     cache_dir=flair.cache_root / "models" / model_name_or_path,
                 )
 
-                self.sparse_encoder = BigramTfIDFVectorizer.load(path=sparse_encoder_path)
+                sparse_encoder = BigramTfIDFVectorizer.load(path=sparse_encoder_path)
 
             if not os.path.exists(sparse_weight_path):
 
@@ -749,12 +760,16 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
                     filename="sparse_weight.pt",
                     cache_dir=flair.cache_root / "models" / model_name_or_path,
                 )
-                self.sparse_weight = torch.load(sparse_weight_path, map_location="cpu").item()
+                sparse_weight = torch.load(sparse_weight_path, map_location="cpu").item()
         else:
-            self._handle_sparse_encoder(
+            sparse_weight = self.sparse_weight if self.sparse_weight is not None else DEFAULT_SPARSE_WEIGHT
+            sparse_encoder = self._handle_sparse_encoder(
                 model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
             )
 
+        return sparse_encoder, sparse_weight
+
+    @timeit
     def embed_sparse(self, inputs: np.ndarray) -> np.ndarray:
         """
         Create sparse embeddings from array of entity mentions/names.
@@ -770,6 +785,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return sparse_embeds
 
+    @timeit
     def embed_dense(self, inputs: np.ndarray, batch_size: int = 1024, show_progress: bool = False) -> np.ndarray:
         """
 
@@ -788,7 +804,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
             if show_progress:
                 iterations = tqdm(
                     range(0, len(inputs), batch_size),
-                    desc=f"Embedding `{self.dictionary.database_name}` dictionary",
+                    desc=f"Embedding `{self.dictionary.database_name}`",
                 )
             else:
                 iterations = range(0, len(inputs), batch_size)
@@ -810,56 +826,131 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return dense_embeds
 
-    def _load_embeddings(self, model_name_or_path: str, dictionary_name_or_path: str, batch_size: int):
-        """Compute and cache the embeddings for the given knowledge base / dictionary."""
+    # separate method to allow more sophisticated logic in the future, e.g.: ANN with HNSW, PQ...
+    @timeit
+    def build_dense_index(self, embeddings: np.ndarray) -> faiss.Index:
+        """Initialize FAISS index"""
 
-        cache_folder = flair.cache_root / "datasets"
+        index = faiss.IndexFlatIP(embeddings.shape[1])
+        index.add(embeddings)
+
+        return index
+
+    # separate method to allow more sophisticated logic in the future...
+    @timeit
+    def build_sparse_index(self, embeddings: np.ndarray) -> hnswlib.Index:
+        """Initialize Annoy index"""
+
+        metric = HNSWLIB_METRIC[self.similarity_metric]
+
+        ######################################
+        # ANNOY
+        ######################################
+        # index = annoy.AnnoyIndex(embeddings.shape[1], metric)
+        # # See https://github.com/spotify/annoy#tradeoffs
+        # n_trees = int(embeddings.shape[0] / 100)
+        # for i, v in enumerate(embeddings.tolist()):
+        #     index.add_item(i, v)
+        # index.build(n_trees, n_jobs=self.cores)
+
+        ######################################
+        # HNSWLIB
+        ######################################
+        index = hnswlib.Index(space=metric, dim=embeddings.shape[1])
+        index.init_index(max_elements=embeddings.shape[0], ef_construction=200, M=16)
+        index.add_items(embeddings, np.arange(embeddings.shape[0]))
+        index.set_ef(50)  # ef should always be > k
+
+        return index
+
+    def _load_indices(self, model_name_or_path: str, dictionary_name_or_path: str, batch_size: int) -> Dict:
+        """Load cached indices if available, otherwise compute embeddings, build index and cache"""
+
         cache_name = self._get_cache_name(
             model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
         )
 
-        embeddings_cache_file = cache_folder / f"{cache_name}-embeddings.pk"
+        cache_folder = flair.cache_root / "datasets" / cache_name
 
-        # If exists, load the cached dictionary indices
-        if embeddings_cache_file.exists():
+        cache_folder.mkdir(parents=True, exist_ok=True)
 
-            with embeddings_cache_file.open("rb") as fp:
-                logger.info("BiEncoderCandidateGenerator: load cached emebddings `%s`", f"{cache_name}-embeddings.pk")
-                embeddings = pickle.load(fp)
+        indices = {}
+        preprocessed_names = None
 
-        else:
+        for index_type in ["sparse", "dense"]:
 
-            cache_folder.mkdir(parents=True, exist_ok=True)
+            if index_type == "sparse" and not self.hybrid_search:
+                continue
 
-            names = [self.preprocessor.process_entity_name(name) for name, cui in self.dictionary_data]
+            file_name = f"index-{index_type}.bin"
 
-            # Compute dense embeddings (if necessary)
-            dense_embeddings = self.embed_dense(inputs=names, batch_size=batch_size, show_progress=True)
+            index_cache_file = cache_folder / file_name
 
-            sparse_embeddings = self.embed_sparse(inputs=names) if self.hybrid_search else None
+            # If exists, load the cached dictionary indices
+            if index_cache_file.exists():
 
-            # Store the pre-computed index on disk for later re-use
-            embeddings = {
-                "dense": dense_embeddings,
-                "sparse": sparse_embeddings,
-            }
+                logger.info(
+                    "BiEncoderCandidateGenerator: %s: load cached %s index from `%s`",
+                    self.dictionary.database_name,
+                    index_type,
+                    cache_name,
+                )
 
-            logger.info("Caching dictionary emebddings into %s", embeddings_cache_file)
-            with embeddings_cache_file.open("wb") as fp:
-                pickle.dump(embeddings, fp)
+                if index_type == "dense":
+                    indices[index_type] = faiss.read_index(str(index_cache_file))
+                else:
 
-        if self.similarity_metric == SimilarityMetric.COSINE:
-            faiss.normalize_L2(embeddings["dense"])
+                    dimension = len(self.sparse_encoder.encoder.vocabulary_)
+                    index = hnswlib.Index(space=HNSWLIB_VERSION[dimension], dim=dimension)
+                    index.load_index(str(index_cache_file))
+                    # index = annoy.AnnoyIndex(dimension, HNSWLIB_METRIC[self.similarity_metric])
+                    # index.load(str(index_cache_file))
+                    # indices[index_type] = index
 
-        return embeddings
+            else:
 
-    def search_sparse(
-        self,
-        entity_mentions: List[str],
-        top_k: int = 1,
-        normalise: bool = False,
-        timeit: bool = False
-    ) -> Tuple[np.ndarray, np.ndarray]:
+                logger.info(
+                    "BiEncoderCandidateGenerator: %s: build %s index. This will take some time...",
+                    self.dictionary.database_name,
+                    index_type,
+                )
+
+                if preprocessed_names is None:
+                    preprocessed_names = [
+                        self.preprocessor.process_entity_name(name) for name, cui in self.dictionary_data
+                    ]
+
+                embeddings = (
+                    self.embed_dense(inputs=preprocessed_names, batch_size=batch_size, show_progress=True)
+                    if index_type == "dense"
+                    else self.embed_sparse(inputs=preprocessed_names)
+                )
+
+                if self.similarity_metric == SimilarityMetric.COSINE:
+                    faiss.normalize_L2(embeddings)
+
+                index = (
+                    self.build_dense_index(embeddings) if index_type == "dense" else self.build_sparse_index(embeddings)
+                )
+
+                if index_type == "dense":
+                    faiss.write_index(index, str(index_cache_file))
+                else:
+                    index.save_index(str(index_cache_file))
+
+                indices[index_type] = index
+
+                logger.info(
+                    "BiEncoderCandidateGenerator: %s: cached %s index in %s",
+                    self.dictionary.database_name,
+                    index_type,
+                    cache_name,
+                )
+
+        return indices
+
+    @timeit
+    def search_sparse(self, entity_mentions: List[str], top_k: int = 1) -> Tuple[np.ndarray, np.ndarray]:
         """
         Find candidates with sparse representations
 
@@ -868,39 +959,26 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         :param normalise: normalise scores
         """
 
-        assert self.sparse_encoder is not None, "BiEncoderCandidateGenerator has no `sparse_encoder`! Pass `force_hybrid_search=True` at initialization"
+        assert (
+            self.sparse_encoder is not None
+        ), "BiEncoderCandidateGenerator has no `sparse_encoder`! Pass `force_hybrid_search=True` at initialization"
 
         mention_embeddings = self.sparse_encoder(entity_mentions)
 
-        start = time.time()
-        if self.similarity_metric == SimilarityMetric.COSINE:
-            score_matrix = cosine_similarity(mention_embeddings, self.embeddings["sparse"])
-        else:
-            score_matrix = np.matmul(mention_embeddings, self.embeddings["sparse"].T)
-        elapsed = round(time.time() - start, 2)
-        if timeit:
-            logger.info("BiEncoderCandidateGenerator: sparse search with %s query took ~%s", len(entity_mentions), elapsed)
+        # idxs = []
+        # dists = []
+        # for v in mention_embeddings.tolist():
+        #     vidxs, vdists = self.indices["sparse"].get_nns_by_vector(v, top_k, include_distances=True)
+        #     idxs.append(vidxs)
+        #     dists.append(vdists)
+        # np.vstack(dists), np.vstack(idxs)
 
-        if normalise:
-            score_matrix = (score_matrix - score_matrix.min()) / (score_matrix.max() - score_matrix.min())
+        idxs, dists = self.indices["sparse"].knn_query(mention_embeddings, k=top_k)
 
-        def indexing_2d(arr, cols):
-            rows = np.repeat(np.arange(0, cols.shape[0])[:, np.newaxis], cols.shape[1], axis=1)
-            return arr[rows, cols]
+        return idxs, dists
 
-        # Get topk indexes without sorting
-        topk_idxs = np.argpartition(score_matrix, -top_k)[:, -top_k:]
-
-        # Get topk indexes with sorting
-        topk_score_matrix = indexing_2d(score_matrix, topk_idxs)
-        topk_argidxs = np.argsort(-topk_score_matrix)
-        topk_idxs = indexing_2d(topk_idxs, topk_argidxs)
-        topk_scores = indexing_2d(score_matrix, topk_idxs)
-
-
-        return topk_scores, topk_idxs
-
-    def search_dense(self, entity_mentions: List[str], top_k: int = 1, timeit : bool = False) -> Tuple[np.ndarray, np.ndarray]:
+    @timeit
+    def search_dense(self, entity_mentions: List[str], top_k: int = 1) -> Tuple[np.ndarray, np.ndarray]:
         """
         Find candidates with dense representations (FAISS)
 
@@ -914,14 +992,10 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         if self.similarity_metric == SimilarityMetric.COSINE:
             faiss.normalize_L2(mention_dense_embeds)
 
-        start = time.time()
         # Get candidates from dense embeddings
-        dists, ids = self.dense_index.search(mention_dense_embeds, top_k)
-        elapsed = round(time.time() - start, 2)
-        if timeit:
-            logger.info("BiEncoderCandidateGenerator: dense search with %s query took ~%s", len(entity_mentions), elapsed)
+        dists, ids = self.indices["dense"].search(mention_dense_embeds, top_k)
 
-        return dists, ids
+        return ids, dists
 
     def combine_dense_and_sparse_results(
         self,
@@ -962,7 +1036,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return hybrid_scores, hybrid_ids
 
-    def search(self, entity_mentions: List[str], top_k: int, timeit: bool = False) -> List[List[EntityLinkingCandidate]]:
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
         """
         Returns the top-k entity / concept identifiers for the each entity mention.
 
@@ -971,11 +1045,11 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
         """
 
-        scores, ids = self.search_dense(entity_mentions=entity_mentions, top_k=top_k, timeit=timeit)
+        ids, scores = self.search_dense(entity_mentions=entity_mentions, top_k=top_k)
 
         if self.hybrid_search and self.sparse_encoder is not None:
 
-            sparse_scores, sparse_ids = self.search_sparse(entity_mentions=entity_mentions, top_k=top_k, timeit=timeit)
+            sparse_ids, sparse_scores = self.search_sparse(entity_mentions=entity_mentions, top_k=top_k)
 
             scores, ids = self.combine_dense_and_sparse_results(
                 dense_ids=ids,
@@ -1046,7 +1120,6 @@ class BiomedicalEntityLinker:
         sentences: Union[List[Sentence], Sentence],
         annotation_layers: Optional[List[str]] = None,
         top_k: int = 1,
-        timeit:bool = False
     ) -> None:
         """
         Predicts the best matching top-k entity / concept identifiers of all named entites annotated
@@ -1070,7 +1143,7 @@ class BiomedicalEntityLinker:
         # no mentions: nothing to do here
         if len(mentions) > 0:
             # Retrieve top-k concept / entity candidates
-            candidates = self.candidate_generator.search(entity_mentions=mentions, top_k=top_k, timeit=timeit)
+            candidates = self.candidate_generator.search(entity_mentions=mentions, top_k=top_k)
 
             # Add a label annotation for each candidate
             for i, data_point, mention_candidates, mentions_annotation_layer in zip(
@@ -1178,7 +1251,8 @@ class BiomedicalEntityLinker:
                             "BiEncoderCandidateGenerator: model for entity type `%s` was not trained for hybrid search: no sparse search will be performed."
                             " If you want to use sparse search please pass `force_hybrid_search=True`:"
                             " we will fit a sparse encoder for you. The default value of `sparse_weight` is `%s`.",
-                             model_name_or_path, DEFAULT_SPARSE_WEIGHT
+                            model_name_or_path,
+                            DEFAULT_SPARSE_WEIGHT,
                         )
                     model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
             else:
@@ -1187,7 +1261,8 @@ class BiomedicalEntityLinker:
                         "BiEncoderCandidateGenerator: model `%s` was not trained for hybrid search: no sparse search will be performed."
                         " If you want to use sparse search please pass `force_hybrid_search=True`:"
                         " we will fit a sparse encoder for you. The default value of `sparse_weight` is `%s`.",
-                         model_name_or_path, DEFAULT_SPARSE_WEIGHT
+                        model_name_or_path,
+                        DEFAULT_SPARSE_WEIGHT,
                     )
                 entity_type = PRETRAINED_HYBRID_MODELS[model_name_or_path]
 
