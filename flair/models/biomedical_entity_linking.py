@@ -15,9 +15,12 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import joblib
 import numpy as np
+import scipy
 import torch
 from huggingface_hub import hf_hub_download
+from scipy.sparse._csr import csr_matrix
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 
 import flair
@@ -36,21 +39,12 @@ from flair.embeddings import TransformerDocumentEmbeddings
 from flair.file_utils import cached_path
 
 FAISS_VERSION = "1.7.4"
-HNSWLIB_VERSION = "1.17.2"
 
 try:
     import faiss
 except ImportError as error:
     raise ImportError(
         f"You need to install faiss to run the biomedical entity linking: `pip install faiss-cpu=={FAISS_VERSION}`"
-    ) from error
-
-
-try:
-    import hnswlib
-except ImportError as error:
-    raise ImportError(
-        f"You need to install faiss to run the biomedical entity linking: `pip install hnswlib=={HNSWLIB_VERSION}`"
     ) from error
 
 
@@ -146,9 +140,6 @@ class SimilarityMetric(Enum):
     COSINE = auto()
 
 
-HNSWLIB_METRIC = {SimilarityMetric.INNER_PRODUCT: "ip", SimilarityMetric.COSINE: "cosine"}
-
-
 def timeit(func):
     """
     # This function shows the execution time of
@@ -160,7 +151,7 @@ def timeit(func):
         result = func(*args, **kwargs)
         elapsed = round(time.time() - start, 4)
         class_name, func_name = func.__qualname__.split(".")
-        logger.info("%s: %s took ~%s", class_name, func_name , elapsed)
+        logger.info("%s: %s took ~%s", class_name, func_name, elapsed)
         return result
 
     return wrap_func
@@ -585,13 +576,12 @@ class BigramTfIDFVectorizer:
         self.encoder.fit(names)
         return self
 
-    def transform(self, names: List[str]) -> torch.Tensor:
+    def transform(self, names: List[str]) -> csr_matrix:
         """Convert strings to sparse vectors"""
-        vec = self.encoder.transform(names).toarray()
-        vec = torch.FloatTensor(vec)
-        return vec
+        embeddings = self.encoder.transform(names)
+        return embeddings
 
-    def __call__(self, mentions: List[str]) -> torch.Tensor:
+    def __call__(self, mentions: List[str]) -> np.ndarray:
         """Short for `transform`"""
         return self.transform(mentions)
 
@@ -665,7 +655,9 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         else:
             self.dictionary = BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path)
 
-        self.dictionary_data = list(self.dictionary.stream())
+        self.dictionary_data = [
+            (self.preprocessor.process_entity_name(name), cui) for name, cui in self.dictionary.stream()
+        ]
 
         # Load encoders
         self.dense_encoder = TransformerDocumentEmbeddings(model=model_name_or_path, is_token_embedding=False)
@@ -679,7 +671,6 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         self.indices = self._load_indices(
             model_name_or_path=model_name_or_path,
             dictionary_name_or_path=dictionary_name_or_path,
-            batch_size=self.batch_size,
         )
 
     @property
@@ -702,7 +693,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         return f"{file_name}-{pp_name}"
 
     @timeit
-    def _fit_sparse_encoder(self) -> BigramTfIDFVectorizer:
+    def fit_sparse_encoder(self) -> BigramTfIDFVectorizer:
         """Fit sparse encoder to current dictionary"""
 
         logger.info(
@@ -729,8 +720,8 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         if path.exists():
             sparse_encoder = BigramTfIDFVectorizer.load(path)
         else:
-            sparse_encoder = self._fit_sparse_encoder()
-            logger.info("Save fitted sparse encoder to %s", path)
+            sparse_encoder = self.fit_sparse_encoder()
+            # logger.info("Save fitted sparse encoder to %s", path)
             sparse_encoder.save(path)
 
         return sparse_encoder
@@ -769,23 +760,16 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return sparse_encoder, sparse_weight
 
-    @timeit
-    def embed_sparse(self, inputs: np.ndarray) -> np.ndarray:
+    def embed_sparse(self, inputs: np.ndarray) -> csr_matrix:
         """
         Create sparse embeddings from array of entity mentions/names.
 
         :param entity_names: An array of entity / concept names
-        :returns sparse_embeds np.array: Numpy array containing the sparse embeddings
+        :returns sparse_embeds csr_matrix: Scipy sparse CSR matrix
         """
-        sparse_embeds = self.sparse_encoder(inputs)
-        sparse_embeds = sparse_embeds.numpy()
 
-        if self.similarity_metric == SimilarityMetric.COSINE:
-            faiss.normalize_L2(sparse_embeds)
+        return self.sparse_encoder(inputs)
 
-        return sparse_embeds
-
-    @timeit
     def embed_dense(self, inputs: np.ndarray, batch_size: int = 1024, show_progress: bool = False) -> np.ndarray:
         """
 
@@ -827,43 +811,42 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         return dense_embeds
 
     # separate method to allow more sophisticated logic in the future, e.g.: ANN with HNSW, PQ...
-    @timeit
-    def build_dense_index(self, embeddings: np.ndarray) -> faiss.Index:
-        """Initialize FAISS index"""
+    def get_dense_index(self, names: List[str], path: Path) -> faiss.Index:
+        """Load or create dense index and save it to disk"""
 
-        index = faiss.IndexFlatIP(embeddings.shape[1])
-        index.add(embeddings)
+        if path.exists():
 
-        return index
+            index = faiss.read_index(str(path))
 
-    # separate method to allow more sophisticated logic in the future...
-    @timeit
-    def build_sparse_index(self, embeddings: np.ndarray) -> hnswlib.Index:
-        """Initialize Annoy index"""
+        else:
 
-        metric = HNSWLIB_METRIC[self.similarity_metric]
+            embeddings = self.embed_dense(inputs=names, batch_size=self.batch_size, show_progress=True)
 
-        ######################################
-        # ANNOY
-        ######################################
-        # index = annoy.AnnoyIndex(embeddings.shape[1], metric)
-        # # See https://github.com/spotify/annoy#tradeoffs
-        # n_trees = int(embeddings.shape[0] / 100)
-        # for i, v in enumerate(embeddings.tolist()):
-        #     index.add_item(i, v)
-        # index.build(n_trees, n_jobs=self.cores)
+            index = faiss.IndexFlatIP(embeddings.shape[1])
+            index.add(embeddings)
 
-        ######################################
-        # HNSWLIB
-        ######################################
-        index = hnswlib.Index(space=metric, dim=embeddings.shape[1])
-        index.init_index(max_elements=embeddings.shape[0], ef_construction=200, M=16)
-        index.add_items(embeddings, np.arange(embeddings.shape[0]))
-        index.set_ef(50)  # ef should always be > k
+            if self.similarity_metric == SimilarityMetric.COSINE:
+                faiss.normalize_L2(embeddings)
+
+            faiss.write_index(index, str(path))
 
         return index
 
-    def _load_indices(self, model_name_or_path: str, dictionary_name_or_path: str, batch_size: int) -> Dict:
+    def get_sparse_index(self, names: List[str], path: Path) -> csr_matrix:
+        """Load or create sparse index and save it to disk"""
+
+        if path.exists():
+            index = scipy.sparse.load_npz(str(path))
+        else:
+            index = self.embed_sparse(inputs=names)
+
+            scipy.sparse.save_npz(str(path), index)
+            # index.save_index # HNSWLIB
+            # index.save # ANNOY
+
+        return index
+
+    def _load_indices(self, model_name_or_path: str, dictionary_name_or_path: str) -> Dict:
         """Load cached indices if available, otherwise compute embeddings, build index and cache"""
 
         cache_name = self._get_cache_name(
@@ -875,76 +858,34 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         cache_folder.mkdir(parents=True, exist_ok=True)
 
         indices = {}
-        preprocessed_names = None
+
+        logger.info(
+            "BiEncoderCandidateGenerator: initialize %s %s",
+            self.dictionary.database_name,
+            "indices" if self.hybrid_search else "index",
+        )
 
         for index_type in ["sparse", "dense"]:
 
             if index_type == "sparse" and not self.hybrid_search:
                 continue
 
-            file_name = f"index-{index_type}.bin"
+            extension = "bin" if index_type == "dense" else "npz"
+
+            file_name = f"index-{index_type}.{extension}"
 
             index_cache_file = cache_folder / file_name
 
-            # If exists, load the cached dictionary indices
-            if index_cache_file.exists():
+            if index_type == "dense":
 
-                logger.info(
-                    "BiEncoderCandidateGenerator: %s: load cached %s index from `%s`",
-                    self.dictionary.database_name,
-                    index_type,
-                    cache_name,
+                indices[index_type] = self.get_dense_index(
+                    names=[n for n, _ in self.dictionary_data], path=index_cache_file
                 )
-
-                if index_type == "dense":
-                    indices[index_type] = faiss.read_index(str(index_cache_file))
-                else:
-
-                    dimension = len(self.sparse_encoder.encoder.vocabulary_)
-                    index = hnswlib.Index(space=HNSWLIB_VERSION[dimension], dim=dimension)
-                    index.load_index(str(index_cache_file))
-                    # index = annoy.AnnoyIndex(dimension, HNSWLIB_METRIC[self.similarity_metric])
-                    # index.load(str(index_cache_file))
-                    # indices[index_type] = index
 
             else:
 
-                logger.info(
-                    "BiEncoderCandidateGenerator: %s: build %s index. This will take some time...",
-                    self.dictionary.database_name,
-                    index_type,
-                )
-
-                if preprocessed_names is None:
-                    preprocessed_names = [
-                        self.preprocessor.process_entity_name(name) for name, cui in self.dictionary_data
-                    ]
-
-                embeddings = (
-                    self.embed_dense(inputs=preprocessed_names, batch_size=batch_size, show_progress=True)
-                    if index_type == "dense"
-                    else self.embed_sparse(inputs=preprocessed_names)
-                )
-
-                if self.similarity_metric == SimilarityMetric.COSINE:
-                    faiss.normalize_L2(embeddings)
-
-                index = (
-                    self.build_dense_index(embeddings) if index_type == "dense" else self.build_sparse_index(embeddings)
-                )
-
-                if index_type == "dense":
-                    faiss.write_index(index, str(index_cache_file))
-                else:
-                    index.save_index(str(index_cache_file))
-
-                indices[index_type] = index
-
-                logger.info(
-                    "BiEncoderCandidateGenerator: %s: cached %s index in %s",
-                    self.dictionary.database_name,
-                    index_type,
-                    cache_name,
+                indices[index_type] = self.get_sparse_index(
+                    names=[n for n, _ in self.dictionary_data], path=index_cache_file
                 )
 
         return indices
@@ -958,22 +899,28 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         :param top_k: number of candidates to retrieve
         :param normalise: normalise scores
         """
-
         assert (
             self.sparse_encoder is not None
         ), "BiEncoderCandidateGenerator has no `sparse_encoder`! Pass `force_hybrid_search=True` at initialization"
 
         mention_embeddings = self.sparse_encoder(entity_mentions)
 
-        # idxs = []
-        # dists = []
-        # for v in mention_embeddings.tolist():
-        #     vidxs, vdists = self.indices["sparse"].get_nns_by_vector(v, top_k, include_distances=True)
-        #     idxs.append(vidxs)
-        #     dists.append(vdists)
-        # np.vstack(dists), np.vstack(idxs)
+        if self.similarity_metric == SimilarityMetric.COSINE:
+            score_matrix = cosine_similarity(mention_embeddings, self.indices["sparse"], dense_output=False)
+        elif self.similarity_metric == SimilarityMetric.INNER_PRODUCT:
+            score_matrix = mention_embeddings.dot(self.indices["sparse"].T)
 
-        idxs, dists = self.indices["sparse"].knn_query(mention_embeddings, k=top_k)
+        score_matrix = score_matrix.toarray()
+
+        num_mentions = score_matrix.shape[0]
+
+        unsorted_indices = np.argpartition(score_matrix, -top_k)[:, -top_k:]
+        unsorted_scores = score_matrix[np.arange(num_mentions)[:, None], unsorted_indices]
+
+        sorted_score_matrix_indices = np.argsort(-unsorted_scores)
+
+        idxs = unsorted_indices[np.arange(num_mentions)[:, None], sorted_score_matrix_indices]
+        dists = unsorted_scores[np.arange(num_mentions)[:, None], sorted_score_matrix_indices]
 
         return idxs, dists
 
@@ -1304,3 +1251,31 @@ class BiomedicalEntityLinker:
                 )
 
         return dictionary_name_or_path
+
+    # @timeit
+    # def build_sparse_index(self, embeddings: csr_matrix) -> csr_matrix:
+    #     """Initialize sparse index"""
+
+    #     index = embeddings
+
+    #     ######################################
+    #     # ANNOY
+    #     ######################################
+    #     # metric = ANNOY_METRIC[self.similarity_metric]
+    #     # index = annoy.AnnoyIndex(embeddings.shape[1], metric)
+    #     # # See https://github.com/spotify/annoy#tradeoffs
+    #     # n_trees = int(embeddings.shape[0] / 100)
+    #     # for i, v in enumerate(embeddings.tolist()):
+    #     #     index.add_item(i, v)
+    #     # index.build(n_trees, n_jobs=min(mp.cpu_count(), 8))
+
+    #     ######################################
+    #     # HNSWLIB
+    #     ######################################
+    #     # metric = HNSWLIB_METRIC[self.similarity_metric]
+    #     # index = hnswlib.Index(space=metric, dim=embeddings.shape[1])
+    #     # index.init_index(max_elements=embeddings.shape[0], ef_construction=200, M=16)
+    #     # index.add_items(embeddings, np.arange(embeddings.shape[0]))
+    #     # index.set_ef(50)  # ef should always be > k
+
+    #     return index
