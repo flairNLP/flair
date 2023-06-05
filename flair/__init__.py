@@ -10,6 +10,10 @@ from .file_utils import set_proxies
 
 cache_root = Path(os.getenv("FLAIR_CACHE_ROOT", Path(Path.home(), ".flair")))
 
+device: torch.device
+"""Flair is using a single device for everything. You can set this device by overwriting this variable."""
+
+
 # global variable: device
 if torch.cuda.is_available():
     device_id = os.environ.get("FLAIR_DEVICE")
