@@ -1,6 +1,7 @@
 from typing import Any
 
-from flair.trainers.plugins import MetricRecord, TrainerPlugin
+from flair.trainers.plugins.base import TrainerPlugin
+from flair.trainers.plugins.metric_records import MetricRecord
 
 
 class ClearmlLoggerPlugin(TrainerPlugin):
