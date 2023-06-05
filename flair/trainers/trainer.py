@@ -531,7 +531,7 @@ class ModelTrainer(Pluggable):
                 self.dispatch("before_training_epoch", epoch=epoch)
                 self.model.model_card["training_parameters"]["epoch"] = epoch  # type: ignore[index]
 
-                lr_info, momentum_info = self._get_current_lr_and_momentum(epoch)
+                lr_info, momentum_info = self._get_current_lr_and_momentum(total_train_samples)
 
                 # if shuffle_first_epoch==False, the first epoch is not shuffled
                 shuffle_data_this_epoch = shuffle
@@ -598,7 +598,9 @@ class ModelTrainer(Pluggable):
                     # do the optimizer step
                     scaler.unscale_(self.optimizer)
                     if max_grad_norm is not None:
-                        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)
+                        gradient_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)
+                    else:
+                        gradient_norm = None
                     scale_before = scaler.get_scale()
                     scaler.step(self.optimizer)
                     scaler.update()
@@ -606,8 +608,11 @@ class ModelTrainer(Pluggable):
                     batch_kw["optimizer_was_run"] = scale_before <= scale_after
 
                     if batch_train_samples > 0:
+                        total_train_samples += batch_train_samples
                         train_loss = batch_train_loss / batch_train_samples
                         self._record(MetricRecord.scalar(("train", "batch_loss"), train_loss, total_train_samples))
+                        if gradient_norm is not None:
+                            self._record(MetricRecord.scalar(("train", "gradient_norm"), gradient_norm, total_train_samples))
 
                         epoch_train_loss += batch_train_loss
                         epoch_train_samples += batch_train_samples
@@ -621,7 +626,7 @@ class ModelTrainer(Pluggable):
 
                         current_time = time.time()
 
-                        lr_info, momentum_info = self._get_current_lr_and_momentum(epoch)
+                        lr_info, momentum_info = self._get_current_lr_and_momentum(total_train_samples)
                         log.info(
                             f"epoch {epoch}"
                             f" - iter {batch_no + 1}/{len(batch_loader)}"
@@ -637,8 +642,6 @@ class ModelTrainer(Pluggable):
 
                 train_loss = epoch_train_loss / epoch_train_samples
                 self._record(MetricRecord.scalar(("train", "loss"), train_loss, epoch))
-
-                total_train_samples += epoch_train_samples
 
                 log_line(log)
                 log.info(f"EPOCH {epoch} done: loss {train_loss:.4f}{lr_info}")
@@ -788,13 +791,13 @@ class ModelTrainer(Pluggable):
 
         return return_values
 
-    def _get_current_lr_and_momentum(self, epoch):
+    def _get_current_lr_and_momentum(self, total_train_samples):
         current_learning_rate = [group["lr"] for group in self.optimizer.param_groups]
         momentum = [group["momentum"] if "momentum" in group else 0 for group in self.optimizer.param_groups]
         lr_info = " - lr: " + ",".join([f"{m:.6f}" for m in current_learning_rate])
         momentum_info = " - momentum: " + ",".join([f"{m:.6f}" for m in momentum])
-        self._record(MetricRecord.scalar_list("learning_rate", current_learning_rate, epoch))
-        self._record(MetricRecord.scalar_list(("optimizer", "momentum"), momentum, epoch))
+        self._record(MetricRecord.scalar_list("learning_rate", current_learning_rate, total_train_samples))
+        self._record(MetricRecord.scalar_list(("optimizer", "momentum"), momentum, total_train_samples))
         return lr_info, momentum_info
 
     def _sample_train_split(self, monitor_train_sample):
