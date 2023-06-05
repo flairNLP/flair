@@ -14,13 +14,6 @@ class ClearmlLoggerPlugin(TrainerPlugin):
             self.task_id = self.task.task_id
         super().__init__()
 
-    def __getstate__(self):
-        # do not pickle the clearml logger, so it won't be required to install it in production.
-        return {
-            "task_id": self.task_id,
-            "task": None,
-        }
-
     @property
     def logger(self):
         try:
