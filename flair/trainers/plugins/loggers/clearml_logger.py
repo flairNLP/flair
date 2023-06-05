@@ -23,7 +23,7 @@ class ClearmlLoggerPlugin(TrainerPlugin):
     @property
     def logger(self):
         try:
-            import clearml_logger
+            import clearml
         except ImportError:
             raise ImportError(
                 "Please install clearml 1.11.0 or higher before using the clearml plugin"
