@@ -64,8 +64,8 @@ class SegtokSentenceSplitter(SentenceSplitter):
                 sentence_offset = text.index(sentence, sentence_offset)
             except ValueError as error:
                 raise AssertionError(
-                    f"Can't find the sentence offset for sentence {repr(sentence)} "
-                    f"starting from position {repr(sentence_offset)}"
+                    f"Can't find the sentence offset for sentence {sentence} "
+                    f"starting from position {sentence_offset}"
                 ) from error
             sentences.append(
                 Sentence(
