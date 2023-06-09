@@ -77,8 +77,8 @@ class StackedEmbeddings(TokenEmbeddings):
         # IMPORTANT: add embeddings as torch modules
         for i, embedding in enumerate(embeddings):
             if overwrite_names:
-                embedding.name = f"{str(i)}-{embedding.name}"
-            self.add_module(f"list_embedding_{str(i)}", embedding)
+                embedding.name = f"{i!s}-{embedding.name}"
+            self.add_module(f"list_embedding_{i!s}", embedding)
 
         self.name: str = "Stack"
         self.__names = [name for embedding in self.embeddings for name in embedding.get_names()]

@@ -3,14 +3,11 @@
 We are happy to accept your contributions to make `flair` better and more awesome! To avoid unnecessary work on either
 side, please stick to the following process:
 
-1. Check if there is already [an issue](https://github.com/zalandoresearch/flair/issues) for your concern.
+1. Check if there is already [an issue](https://github.com/flairNLP/flair/issues) for your concern.
 2. If there is not, open a new one to start a discussion. We hate to close finished PRs!
 3. If we decide your concern needs code changes, we would be happy to accept a pull request. Please consider the
    commit guidelines below.
 
-In case you just want to help out and don't know where to start,
-[issues with "help wanted" label](https://github.com/zalandoresearch/flair/labels/help%20wanted) are good for
-first-time contributors.
 
 ## Git Commit Guidelines
 
@@ -30,18 +27,10 @@ the code should hopefully be easy.
 Flair requires python-3.7 or higher. To make sure your code also runs on the oldest supported
 python version, it is recommended to use python-3.7.x for flair development.
 
-We use [poetry](https://python-poetry.org) for dependency and virtual environment management.
-Install poetry following the official guide at https://python-poetry.org/docs/#installation - using the official installer
-or via [pipx](https://pypa.github.io/pipx/).
-
-After the pre-conditions are met, switch into the checked out flair folder.
-
+Create a python environment of your preference and run:
 ```bash
-# Install dependencies (including dev dependencies)
-poetry install
-
-# You can turn on the installed environment
-poetry shell
+pip install -r requirements-dev.txt
+pip install -e .
 ```
 
 ### Tests
