@@ -4845,13 +4845,13 @@ class MASAKHA_POS(MultiCorpus):
             "ibo",
             "kin",
             "lug",
-            "luo",
+            #"luo",
             "mos",
             "pcm",
             "nya",
             "sna",
             "swa",
-            "tsn",
+            #"tsn",
             "twi",
             "wol",
             "xho",
@@ -4860,7 +4860,7 @@ class MASAKHA_POS(MultiCorpus):
         ]
 
         data_paths = {
-            "v1": "https://raw.githubusercontent.com/masakhane-io/masakhane-pos/main/AfricaPOS",
+            "v1": "https://raw.githubusercontent.com/masakhane-io/masakhane-pos/main/data",
         }
 
         # use all languages if explicitly set to "all"
@@ -4880,7 +4880,7 @@ class MASAKHA_POS(MultiCorpus):
             # download data if necessary
             data_path = f"{data_paths[version]}/{language}"
             cached_path(f"{data_path}/dev.txt", language_folder)
-            cached_path(f"{data_path}/test.txt", language_folder)
+            #cached_path(f"{data_path}/test.txt", language_folder)
             cached_path(f"{data_path}/train.txt", language_folder)
 
             # initialize comlumncorpus and add it to list
@@ -4891,6 +4891,7 @@ class MASAKHA_POS(MultiCorpus):
                 encoding="utf-8",
                 in_memory=in_memory,
                 name=language,
+                test_file=None,
                 **corpusargs,
             )
             corpora.append(corp)
