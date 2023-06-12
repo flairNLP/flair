@@ -1,4 +1,0 @@
-__label__apple apple
-__label__tv tv
-__label__guitar guitar
-__label__apple __label__tv apple tv
