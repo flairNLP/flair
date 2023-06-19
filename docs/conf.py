@@ -9,7 +9,7 @@ version = "0.12.2"
 release = "0.12.2"
 project = "flair"
 author = importlib_metadata.metadata(project)["Author"]
-copyright = "2018 Zalando SE"  # TODO: verify if this is right.
+copyright = f"2023 {author}"
 
 # The full version, including alpha/beta/rc tags
 top_level = project.replace("-", "_")
