@@ -7,7 +7,7 @@ flair
 **Version**: |version|
 
 **Useful links**:
-`Getting started .. _getting_started`_ |
+`Getting started .. _flair_tutorials`_ |
 `Source Repository <https://https://github.com/flairNLP/flair>`_ |
 `Issue Tracker <https://https://github.com/flairNLP/flair/issues>`_ |
 
@@ -25,7 +25,7 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
 
         +++
 
-        .. button-ref:: tutorial/intro
+        .. button-ref:: tutorial/index
             :expand:
             :color: secondary
             :click-parent:
@@ -42,7 +42,7 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
 
         +++
 
-        .. button-ref:: api/flair
+        .. button-ref:: api/index
             :expand:
             :color: secondary
             :click-parent:
@@ -73,5 +73,5 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
    :hidden:
 
    Tutorials <tutorial/index>
-   API reference <api/flair>
+   API reference <api/index>
    Contributing <contributing/index>
