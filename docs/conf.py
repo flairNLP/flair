@@ -42,6 +42,7 @@ extensions = [
     "sphinx_github_style",
     "sphinx_autodoc_typehints",
     "sphinx_multiversion",
+    "sphinx_design",
 ]
 
 

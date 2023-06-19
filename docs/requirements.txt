@@ -5,3 +5,4 @@ sphinx
 importlib-metadata
 sphinx-multiversion
 pydata-sphinx-theme
+sphinx_design

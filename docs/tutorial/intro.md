@@ -6,7 +6,7 @@ sidebar_position: 1
 
 Let's discover **Flair in less than 5 minutes**.
 
-### Requirements and Installation
+## Requirements and Installation
 
 In your favorite virtual environment, simply do:
 
@@ -16,7 +16,7 @@ pip install flair
 
 Flair requires Python 3.7+. 
 
-### Example 1: Tag Entities in Text
+## Example 1: Tag Entities in Text
 
 Let's run **named entity recognition**  (NER) over the following example sentence: "_I love Berlin and New York._"
 
@@ -50,7 +50,7 @@ Sentence[7]: "I love Berlin and New York." → ["Berlin"/LOC, "New York"/LOC]
 The output shows that both "Berlin" and "New York" were tagged as **location entities** (LOC) in this sentence.
 
 
-### Example 2: Detect Sentiment 
+## Example 2: Detect Sentiment 
 
 Let's run **sentiment analysis** over the same sentence to determine whether it is POSITIVE or NEGATIVE.
 
@@ -84,6 +84,6 @@ Sentence[7]: "I love Berlin and New York." → POSITIVE (0.9982)
 The output shows that the sentence "_I love Berlin and New York._" was tagged as having **POSITIVE** sentiment. 
 
 
-### Summary
+## Summary
 
 Congrats, you now know how to use Flair to find entities and detect sentiment!

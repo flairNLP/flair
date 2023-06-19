@@ -7,7 +7,6 @@ flair
 **Version**: |version|
 
 **Useful links**:
-`Getting started .. _getting_started`_ |
 `Source Repository <https://https://github.com/flairNLP/flair>`_ |
 `Issue Tracker <https://https://github.com/flairNLP/flair/issues>`_ |
 
