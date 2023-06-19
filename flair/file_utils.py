@@ -33,8 +33,9 @@ def set_proxies(proxies: typing.Dict[str, str]) -> None:
     """Allows for data downloaded from urls to be forwarded to a proxy.
 
     see https://requests.readthedocs.io/en/latest/user/advanced/#proxies
-    :param proxies: A dictionary of proxies according to the requests documentation.
-    :return: None
+
+    Args:
+        proxies: A dictionary of proxies according to the requests documentation.
     """
     global url_proxies
     url_proxies = proxies
