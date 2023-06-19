@@ -3,12 +3,7 @@ API Docs
 
 .. toctree::
    :maxdepth: 1
+   :glob:
 
    flair
-   flair.data
-   flair.datasets
-   flair.embeddings
-   flair.models
-   flair.splitter
-   flair.tokenization
-   flair.trainers
+   flair.*
