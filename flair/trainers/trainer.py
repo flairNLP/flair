@@ -369,7 +369,7 @@ class ModelTrainer(Pluggable):
 
         Returns:
             A dictionary with at least the key "test_score" containing the final evaluation score. Some plugins add
-            additional information to this dictionary, such as the :class:`MetricHistoryPlugin`
+            additional information to this dictionary, such as the :class:`flair.trainers.plugins.MetricHistoryPlugin`
         """
         # Create output folder
         base_path = Path(base_path)
