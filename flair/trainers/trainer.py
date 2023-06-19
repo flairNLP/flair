@@ -329,49 +329,50 @@ class ModelTrainer(Pluggable):
     ) -> dict:
         """Trains any class that implements the flair.nn.Model interface.
 
-        Args:
-            base_path: Main path to which all output during training is logged and models are saved
-            learning_rate (float): The learning rate of the optimizer
-            decoder_learning_rate (Optional[float]): Optional, if set, the decoder is trained with a separate learning rate
-            mini_batch_size (int): Size of mini-batches during training
-            eval_batch_size (int): Size of mini-batches during evaluation
-            mini_batch_chunk_size (int): If mini-batches are larger than this number, they get broken down into chunks of
-                this size for processing purposes
-            max_epochs (int): Maximum number of epochs to train. Terminates training if this number is surpassed.
-            optimizer: The optimizer to use (typically SGD or Adam)
-            train_with_dev (bool): If True, the data from dev split is added to the training data
-            train_with_test (bool): If True, the data from test split is added to the training data
-            main_evaluation_metric: The metric to optimize (often micro-average or macro-average F1-score, or accuracy)
-            monitor_test (bool): If True, test data is evaluated at end of each epoch
-            monitor_train_sample: Set this to evaluate on a sample of the train data at the end of each epoch.
-                If you set an int, it will sample this many sentences to evaluate on. If you set a float, it will sample
-                a percentage of data points from train.
-            max_grad_norm (Optional[float]): If not None, gradients are clipped to this value before an optimizer.step is
+        Parameters
+        ----------
+        base_path: Main path to which all output during training is logged and models are saved
+        learning_rate: The learning rate of the optimizer
+        decoder_learning_rate: Optional, if set, the decoder is trained with a separate learning rate
+        mini_batch_size: Size of mini-batches during training
+        eval_batch_size: Size of mini-batches during evaluation
+        mini_batch_chunk_size: If mini-batches are larger than this number, they get broken down into chunks of
+            this size for processing purposes
+        max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.
+        optimizer: The optimizer to use (typically SGD or Adam)
+        train_with_dev: If True, the data from dev split is added to the training data
+        train_with_test: If True, the data from test split is added to the training data
+        main_evaluation_metric: The metric to optimize (often micro-average or macro-average F1-score, or accuracy)
+        monitor_test: If True, test data is evaluated at end of each epoch
+        monitor_train_sample: Set this to evaluate on a sample of the train data at the end of each epoch.
+            If you set an int, it will sample this many sentences to evaluate on. If you set a float, it will sample
+            a percentage of data points from train.
+        max_grad_norm: If not None, gradients are clipped to this value before an optimizer.step is
                 called.
-            use_final_model_for_eval (bool): If True, the final model is used for the final evaluation. If False, the
-                model from the best epoch as determined by main_evaluation_metric is used for the final evaluation.
-            gold_label_dictionary_for_eval: Set to force evaluation to use a particular label dictionary
-            exclude_labels: Optionally define a list of labels to exclude from the evaluation
-            sampler: You can pass a data sampler here for special sampling of data.
-            shuffle: If True, data is shuffled during training
-            shuffle_first_epoch: If True, data is shuffled during the first epoch of training
-            embeddings_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),
-                'cpu' (embeddings stored on CPU) or 'gpu' (embeddings stored on GPU)
-            epoch: The starting epoch (normally 0 but could be higher if you continue training model)
-            save_final_model: If True, the final model is saved at the end of training.
-            save_optimizer_state (bool): If True, the optimizer state is saved alongside the model
-            save_model_each_k_epochs: Each k epochs, a model state will be written out. If set to '5', a model will
-                be saved each 5 epochs. Default is 0 which means no model saving.
-            create_file_logs (bool): If True, logging output is written to a file
-            create_loss_file (bool): If True, a loss file logging output is created
-            use_amp (bool): If True, uses the torch automatic mixed precision
-            write_weights (bool): If True, write weights to weights.txt on each batch logging event.
-            plugins: Any additional plugins you want to pass to the trainer
-            **kwargs: Additional arguments, for instance for the optimizer
+        use_final_model_for_eval: If True, the final model is used for the final evaluation. If False, the
+            model from the best epoch as determined by main_evaluation_metric is used for the final evaluation.
+        gold_label_dictionary_for_eval: Set to force evaluation to use a particular label dictionary
+        exclude_labels: Optionally define a list of labels to exclude from the evaluation
+        sampler: You can pass a data sampler here for special sampling of data.
+        shuffle: If True, data is shuffled during training
+        shuffle_first_epoch: If True, data is shuffled during the first epoch of training
+        embeddings_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),
+            'cpu' (embeddings stored on CPU) or 'gpu' (embeddings stored on GPU)
+        epoch: The starting epoch (normally 0 but could be higher if you continue training model)
+        save_final_model: If True, the final model is saved at the end of training.
+        save_optimizer_state: If True, the optimizer state is saved alongside the model
+        save_model_each_k_epochs: Each k epochs, a model state will be written out. If set to '5', a model will
+            be saved each 5 epochs. Default is 0 which means no model saving.
+        create_file_logs: If True, logging output is written to a file
+        create_loss_file: If True, a loss file logging output is created
+        use_amp: If True, uses the torch automatic mixed precision
+        write_weights: If True, write weights to weights.txt on each batch logging event.
+        plugins: Any additional plugins you want to pass to the trainer
+        **kwargs: Additional arguments, for instance for the optimizer
 
         Returns:
         -------
-        dict: A dictionary with at least the key "test_score" containing the final evaluation score. Some plugins
+        training_results: A dictionary with at least the key "test_score" containing the final evaluation score. Some plugins
                 add additional information to this dictionary, such as the :class:`MetricHistoryPlugin`
         """
         # Create output folder
