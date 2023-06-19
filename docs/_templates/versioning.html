@@ -1,0 +1,20 @@
+{% if versions %}
+<h3>{{ _('Versions') }}</h3>
+<ul>
+  {%- for item in versions|reverse %}
+  <li><a href="{{ item.url }}">
+    {% if item.is_released %}
+    {{ item.name }}
+      {% if latest_version and item == latest_version %}
+      (stable)
+      {% endif %}
+    {% else %}
+    latest (dev)
+    {% endif %}
+    {% if item == current_version %}
+    [x]
+    {% endif %}
+  </a></li>
+  {%- endfor %}
+</ul>
+{% endif %}

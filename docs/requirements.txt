@@ -1,0 +1,7 @@
+sphinx-github-style
+sphinx-autodoc-typehints
+myst-parser
+sphinx
+importlib-metadata
+sphinx-multiversion
+pydata-sphinx-theme
