@@ -11,7 +11,7 @@ from .file_utils import set_proxies
 cache_root = Path(os.getenv("FLAIR_CACHE_ROOT", Path(Path.home(), ".flair")))
 """The path to the cache folder Flair is using.
 
-This value defaults to `<Home Directory>/.flair`. 
+This value defaults to `<Home Directory>/.flair`.
 You can choose the path by setting the `FLAIR_CACHE_ROOT` environment variable.
 """
 
@@ -19,7 +19,7 @@ device: torch.device
 """Flair is using a single device for everything. You can set this device by overwriting this variable.
 
 This value will be automatically set to the first found GPU if available and to CPU otherwise.
-You can choose a specific GPU, by setting the `FLAIR_DEVICE` environment variable to its index. 
+You can choose a specific GPU, by setting the `FLAIR_DEVICE` environment variable to its index.
 """
 
 
