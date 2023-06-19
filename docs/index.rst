@@ -12,14 +12,6 @@ flair
 
 Flair is a very simple framework for state-of-the-art Natural Language Processing (NLP)
 
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-   modules
-
-
 .. grid:: 2
 
     .. grid-item-card::
