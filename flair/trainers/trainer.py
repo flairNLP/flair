@@ -368,8 +368,8 @@ class ModelTrainer(Pluggable):
             **kwargs: Additional arguments, for instance for the optimizer
 
         Returns:
-            training_results: A dictionary with at least the key "test_score" containing the final evaluation score. Some plugins
-                    add additional information to this dictionary, such as the :class:`MetricHistoryPlugin`
+            A dictionary with at least the key "test_score" containing the final evaluation score. Some plugins add
+            additional information to this dictionary, such as the :class:`MetricHistoryPlugin`
         """
         # Create output folder
         base_path = Path(base_path)
