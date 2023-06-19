@@ -18,12 +18,10 @@ some additional syntax over markdown.
 
 A tutorial should always be easy to understand, and reference api documentation for future readings.
 
-:::{note}
-You can reference symbols by defining links
-`[flair.set_seed](#flair.set_seed)`
-[flair.set_seed](#flair.set_seed)`
-::: 
-
+```{note}
+  You can reference symbols by defining links
+  `[flair.set_seed](#flair.set_seed)`
+```
 
 ## Docstrings
 
