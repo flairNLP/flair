@@ -7,6 +7,7 @@ flair
 **Version**: |version|
 
 **Useful links**:
+`Getting started .. _getting_started`_ |
 `Source Repository <https://https://github.com/flairNLP/flair>`_ |
 `Issue Tracker <https://https://github.com/flairNLP/flair/issues>`_ |
 
@@ -66,3 +67,11 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
             :click-parent:
 
             To the contributor's guide
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   Tutorials <tutorial/index>
+   API reference <api/flair>
+   Contributing <contributing/index>
