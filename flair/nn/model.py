@@ -322,7 +322,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             true_values_span_aligned = []
             predicted_values_span_aligned = []
             for span in all_spans:
-                list_of_gold_values_for_span = all_true_values[span] if span in all_true_values else ["O"]
+                list_of_gold_values_for_span = all_true_values.get(span, [self.zero_tag_value])
                 # delete exluded labels if exclude_labels is given
                 for excluded_label in exclude_labels:
                     if excluded_label in list_of_gold_values_for_span:
@@ -331,9 +331,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 if not list_of_gold_values_for_span:
                     continue
                 true_values_span_aligned.append(list_of_gold_values_for_span)
-                predicted_values_span_aligned.append(
-                    all_predicted_values[span] if span in all_predicted_values else ["O"]
-                )
+                predicted_values_span_aligned.append(all_predicted_values.get(span, [self.zero_tag_value]))
 
             # write all_predicted_values to out_file if set
             if out_path:
@@ -342,7 +340,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
 
             # make the evaluation dictionary
             evaluation_label_dictionary = Dictionary(add_unk=False)
-            evaluation_label_dictionary.add_item("O")
+            evaluation_label_dictionary.add_item(self.zero_tag_value)
             for true_values in all_true_values.values():
                 for label in true_values:
                     evaluation_label_dictionary.add_item(label)
@@ -394,7 +392,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         counter.update(list(itertools.chain.from_iterable(all_predicted_values.values())))
 
         for label_name, _count in counter.most_common():
-            if label_name == "O" or label_name in exclude_labels:
+            if label_name == self.zero_tag_value or label_name in exclude_labels:
                 continue
             target_names.append(label_name)
             labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
@@ -484,6 +482,10 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         )
 
         return result
+
+    @property
+    def zero_tag_value(self) -> str:
+        return "O"
 
     @abstractmethod
     def predict(
