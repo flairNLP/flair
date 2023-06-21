@@ -6,7 +6,7 @@ import time
 import warnings
 from inspect import signature
 from pathlib import Path
-from typing import List, Optional, Tuple, Type, Union
+from typing import List, Optional, Tuple, Type, Union, Sequence
 
 import torch
 from torch.optim.sgd import SGD
@@ -142,7 +142,7 @@ class ModelTrainer(Pluggable):
         monitor_train_sample: Union[float, int] = 0.0,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: List[str] = [],
+        exclude_labels: Sequence[str] = (),
         # sampling and shuffling
         sampler=None,
         shuffle: bool = True,
@@ -214,7 +214,7 @@ class ModelTrainer(Pluggable):
         monitor_train_sample: Union[float, int] = 0.0,
         use_final_model_for_eval: bool = True,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: List[str] = [],
+        exclude_labels: Sequence[str] = (),
         # sampling and shuffling
         sampler=None,
         shuffle: bool = True,
@@ -300,7 +300,7 @@ class ModelTrainer(Pluggable):
         monitor_train_sample: Union[float, int] = 0.0,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: List[str] = [],
+        exclude_labels: Sequence[str] = (),
         # sampling and shuffling
         sampler=None,
         shuffle: bool = True,
