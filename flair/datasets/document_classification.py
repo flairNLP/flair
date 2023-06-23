@@ -44,6 +44,7 @@ class ClassificationCorpus(Corpus):
         sample_missing_splits: bool = True,
         encoding: str = "utf-8",
         split_seed = None,
+        shuffle = True
     ):
         """
         Instantiates a Corpus from text classification-formatted task data
@@ -65,7 +66,6 @@ class ClassificationCorpus(Corpus):
         :param encoding: Default is 'utf-8' but some datasets are in 'latin-1
         :return: a Corpus with annotated train, dev and test data
         """
-
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
@@ -122,7 +122,7 @@ class ClassificationCorpus(Corpus):
         )
 
         super(ClassificationCorpus, self).__init__(
-            train, dev, test, name=str(data_folder), sample_missing_splits=sample_missing_splits, split_seed=split_seed
+            train, dev, test, name=str(data_folder), sample_missing_splits=sample_missing_splits, split_seed=split_seed, shuffle=shuffle
         )
 
         log.info(f"Initialized corpus {self.name} (label type name is '{label_type}')")

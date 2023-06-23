@@ -1222,10 +1222,12 @@ class Corpus(typing.Generic[T_co]):
         name: str = "corpus",
         sample_missing_splits: Union[bool, str] = True,
         split_seed = None,
+        shuffle=True
     ):
         # set name
         self.name: str = name
         self.split_seed = split_seed
+        self.shuffle=shuffle
 
         # abort if no data is provided
         if not train and not dev and not test:
@@ -1235,13 +1237,13 @@ class Corpus(typing.Generic[T_co]):
         if test is None and sample_missing_splits and train and not sample_missing_splits == "only_dev":
             train_length = _len_dataset(train)
             test_size: int = round(train_length / 10)
-            test, train = randomly_split_into_two_datasets(train, test_size, split_seed)
+            test, train = randomly_split_into_two_datasets(train, test_size, self.split_seed, self.shuffle)
 
         # sample dev data from train if none is provided
         if dev is None and sample_missing_splits and train and not sample_missing_splits == "only_test":
             train_length = _len_dataset(train)
             dev_size: int = round(train_length / 10)
-            dev, train = randomly_split_into_two_datasets(train, dev_size, split_seed)
+            dev, train = randomly_split_into_two_datasets(train, dev_size, self.split_seed, self.shuffle)
 
         # set train dev and test data
         self._train: Optional[Dataset[T_co]] = train
@@ -1829,12 +1831,13 @@ def iob2(tags):
     return True
 
 
-def randomly_split_into_two_datasets(dataset, length_of_first, split_seed=None):
+def randomly_split_into_two_datasets(dataset, length_of_first, split_seed=None, shuffle=True):
     import random
     if split_seed is not None:
         random.seed(split_seed)
     indices = [i for i in range(len(dataset))]
-    random.shuffle(indices)
+    if shuffle:
+        random.shuffle(indices)
 
     first_dataset = indices[:length_of_first]
     second_dataset = indices[length_of_first:]
