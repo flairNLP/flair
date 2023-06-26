@@ -7,9 +7,9 @@ flair
 **Version**: |version|
 
 **Useful links**:
-`Getting started .. tutorial/index/intro`_ |
-`Source Repository <https://https://github.com/flairNLP/flair>`_ |
-`Issue Tracker <https://https://github.com/flairNLP/flair/issues>`_ |
+`Getting started <gtutorial/index/intro.html>`_ |
+`Source Repository <https://github.com/flairNLP/flair>`_ |
+`Issue Tracker <https://github.com/flairNLP/flair/issues>`_ |
 
 Flair is a very simple framework for state-of-the-art Natural Language Processing (NLP)
 
@@ -30,7 +30,7 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
             :color: secondary
             :click-parent:
 
-            To the tutorial
+            To the tutorials
 
     .. grid-item-card::
         :img-top: ./_static/api.svg

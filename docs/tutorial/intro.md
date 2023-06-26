@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+(getting_started)=
+
 # Quick Start
 
 Let's discover **Flair in less than 5 minutes**.
