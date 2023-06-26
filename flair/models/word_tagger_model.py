@@ -225,6 +225,6 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         return cast("TokenClassifier", super().load(model_path=model_path))
 
 
-@deprecated(reason="The WordTagger is deprecated in favour of :class:`flair.models.TokenClassifier`.", version="0.12.2")
+@deprecated(reason="The WordTagger was renamed to :class:`flair.models.TokenClassifier`.", version="0.12.2")
 class WordTagger(TokenClassifier):
     pass
