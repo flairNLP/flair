@@ -77,7 +77,7 @@ source_suffix = {
 
 html_sidebars = {
     "**": [
-        "localtoc.html",
+        "globaltoc.html",
         "searchbox.html",
         "versioning.html",
     ]

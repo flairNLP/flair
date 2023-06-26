@@ -21,7 +21,7 @@ The minimal reproducible example has, like the name says two properties:
 * it is reproducible
 * it is as small as possible
 
-#### Reproducibility
+**Reproducibility**
 
 Please ensure that we can really reproduce your issue.
 
@@ -34,7 +34,7 @@ your trained model, but maybe you can recreate the issue by creating a model wit
 
 Please, be sure to not add local paths, or load any data that others have no access.
 
-#### Minimal
+**Minimal**
 
 After ensuring reproducibility, please also take some time to make it minimal. That way, we can quicker understand
 what the issue is and won't need to spend time debugging code that is unrelated to the issue.
