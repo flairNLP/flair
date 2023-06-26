@@ -15,10 +15,16 @@ copyright = f"2023 {author}"
 top_level = project.replace("-", "_")
 
 linkcode_url = importlib_metadata.metadata(project)["Home-page"]
-
+html_show_sourcelink = True
 
 smv_current_version = ""  # will by overwritten by sphinx-multi-version to the name of the tag or branch.
-html_context = {"github_version": ""}  # dummy value that sphinx-github-style won't crash when run in temp folder.
+html_context = {
+    "display_github": True,
+    "github_user": "flairNLP",
+    "github_repo": "flair",
+    "github_version": "",
+    "conf_py_path": "/docs/",
+}  # dummy value that sphinx-github-style won't crash when run in temp folder.
 
 
 def linkcode_resolve(*args):
@@ -44,7 +50,6 @@ extensions = [
     "sphinx_multiversion",
     "sphinx_design",
 ]
-
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
