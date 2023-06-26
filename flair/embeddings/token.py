@@ -11,6 +11,7 @@ import gensim
 import numpy as np
 import torch
 from bpemb import BPEmb
+from deprecated.sphinx import deprecated
 from gensim.models import KeyedVectors
 from gensim.models.fasttext import FastTextKeyedVectors, load_facebook_vectors
 from torch import nn
@@ -1352,7 +1353,15 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
 
 
 # TODO: keep for backwards compatibility, but remove in future
+@deprecated(
+    reason="""'BPEmbSerializable' is only used in the legacy pickle-embeddings format.
+    Please save your model again to save it in the serializable json format.
+    """,
+    version="0.13.0",
+)
 class BPEmbSerializable(BPEmb):
+    """Helper class to allow pickle-seralizable BPE embeddings."""
+
     def __getstate__(self):
         state = self.__dict__.copy()
         # save the sentence piece model as binary file (not as path which may change)
@@ -1549,3 +1558,19 @@ def replace_with_language_code(string: str):
     string = string.replace("spanish-", "es-")
     string = string.replace("swedish-", "sv-")
     return string
+
+
+__all__ = [
+    "TransformerWordEmbeddings",
+    "StackedEmbeddings",
+    "WordEmbeddings",
+    "CharacterEmbeddings",
+    "FlairEmbeddings",
+    "PooledFlairEmbeddings",
+    "FastTextEmbeddings",
+    "OneHotEmbeddings",
+    "HashEmbeddings",
+    "MuseCrosslingualEmbeddings",
+    "BytePairEmbeddings",
+    "NILCEmbeddings",
+]
