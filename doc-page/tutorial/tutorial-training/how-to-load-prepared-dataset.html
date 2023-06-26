@@ -1,0 +1,1291 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>How to load a prepared dataset &#8212; flair 0.12.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/github_style.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/how-to-load-prepared-dataset';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="How to load a custom dataset" href="how-to-load-custom-dataset.html" />
+    <link rel="prev" title="Training vs fine-tuning" href="train-vs-fine-tune.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">flair 0.12.2 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-basics/index.html">Tutorial 1: Basic Tagging</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tutorial 2: Training models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="how-model-training-works.html">How model training works in Flair</a></li>
+<li class="toctree-l3"><a class="reference internal" href="train-vs-fine-tune.html">Training vs fine-tuning</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">How to load a prepared dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-load-custom-dataset.html">How to load a custom dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-train-sequence-tagger.html">Train a sequence tagger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-train-text-classifier.html">Train a text classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-embeddings/index.html">Tutorial 3: Embeddings</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+</ul>
+</div>
+        <div class="sidebar-primary-item">
+<div id="searchbox"></div></div>
+        <div class="sidebar-primary-item">
+<h3>Versions</h3>
+<ul>
+  <li><a href="how-to-load-prepared-dataset.html">
+    
+    latest (dev)
+    
+    
+    [x]
+    
+  </a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Tutorials</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorial 2: Training models</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">How to load a prepared dataset</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="how-to-load-a-prepared-dataset">
+<h1>How to load a prepared dataset<a class="headerlink" href="#how-to-load-a-prepared-dataset" title="Permalink to this heading">#</a></h1>
+<p>This part of the tutorial shows how you can load a corpus for training a model.</p>
+<section id="the-corpus-object">
+<h2>The Corpus Object<a class="headerlink" href="#the-corpus-object" title="Permalink to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> represents a dataset that you use to train a model. It consists of a list of <code class="docutils literal notranslate"><span class="pre">train</span></code> sentences,
+a list of <code class="docutils literal notranslate"><span class="pre">dev</span></code> sentences, and a list of <code class="docutils literal notranslate"><span class="pre">test</span></code> sentences, which correspond to the training, validation and testing
+split during model training.</p>
+<p>The following example snippet instantiates the Universal Dependency Treebank for English as a corpus object:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">flair.datasets</span>
+<span class="n">corpus</span> <span class="o">=</span> <span class="n">flair</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">UD_ENGLISH</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The first time you call this snippet, it triggers a download of the Universal Dependency Treebank for English onto your
+hard drive. It then reads the train, test and dev splits into the <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> which it returns. Check the length of
+the three splits to see how many Sentences are there:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># print the number of Sentences in the train split</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">corpus</span><span class="o">.</span><span class="kp">train</span><span class="p">))</span>
+
+<span class="c1"># print the number of Sentences in the test split</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">corpus</span><span class="o">.</span><span class="n">test</span><span class="p">))</span>
+
+<span class="c1"># print the number of Sentences in the dev split</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">corpus</span><span class="o">.</span><span class="n">dev</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>You can also access the Sentence objects in each split directly. For instance, let us look at the first Sentence in
+the training split of the English UD:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the first Sentence in the training split</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="n">test</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># print with all annotations</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+
+<span class="c1"># print only with POS annotations (better readability)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="o">.</span><span class="kp">to_tagged_string</span><span class="p">(</span><span class="s1">&#39;pos&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The sentence is fully tagged with syntactic and morphological information. With the latter line,
+you print out only the POS tags:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Sentence: &quot;What if Google Morphed Into GoogleOS ?&quot; → [&quot;What&quot;/WP, &quot;if&quot;/IN, &quot;Google&quot;/NNP, &quot;Morphed&quot;/VBD, &quot;Into&quot;/IN, &quot;GoogleOS&quot;/NNP, &quot;?&quot;/.]</span>
+</pre></div>
+</div>
+<p>So the corpus is tagged and ready for training.</p>
+<section id="helper-functions">
+<h3>Helper functions<a class="headerlink" href="#helper-functions" title="Permalink to this heading">#</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> contains a bunch of useful helper functions.
+For instance, you can downsample the data by calling <code class="docutils literal notranslate"><span class="pre">downsample()</span></code> and passing a ratio. So, if you normally get a
+corpus like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">flair.datasets</span>
+<span class="n">corpus</span> <span class="o">=</span> <span class="n">flair</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">UD_ENGLISH</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>then you can downsample the corpus, simply like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">flair.datasets</span>
+<span class="n">downsampled_corpus</span> <span class="o">=</span> <span class="n">flair</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">UD_ENGLISH</span><span class="p">()</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you print both corpora, you see that the second one has been downsampled to 10% of the data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--- 1 Original ---&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--- 2 Downsampled ---&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">downsampled_corpus</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">--- 1 Original ---</span>
+<span class="go">Corpus: 12543 train + 2002 dev + 2077 test sentences</span>
+
+<span class="go">--- 2 Downsampled ---</span>
+<span class="go">Corpus: 1255 train + 201 dev + 208 test sentences</span>
+</pre></div>
+</div>
+</section>
+<section id="creating-label-dictionaries">
+<h3>Creating label dictionaries<a class="headerlink" href="#creating-label-dictionaries" title="Permalink to this heading">#</a></h3>
+<p>For many learning tasks you need to create a “dictionary” that contains all the labels you want to predict.
+You can generate this dictionary directly out of the <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> by calling the method <code class="docutils literal notranslate"><span class="pre">make_label_dictionary</span></code>
+and passing the desired <code class="docutils literal notranslate"><span class="pre">label_type</span></code>.</p>
+<p>For instance, the UD_ENGLISH corpus instantiated above has multiple layers of annotation like regular
+POS tags (‘pos’), universal POS tags (‘upos’), morphological tags (‘tense’, ‘number’..) and so on.
+Create label dictionaries for universal POS tags by passing <code class="docutils literal notranslate"><span class="pre">label_type='upos'</span></code> like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create label dictionary for a Universal Part-of-Speech tagging task</span>
+<span class="n">upos_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="s1">&#39;upos&#39;</span><span class="p">)</span>
+
+<span class="c1"># print dictionary</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">upos_dictionary</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will print out the created dictionary:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Dictionary with 17 tags: PROPN, PUNCT, ADJ, NOUN, VERB, DET, ADP, AUX, PRON, PART, SCONJ, NUM, ADV, CCONJ, X, INTJ, SYM</span>
+</pre></div>
+</div>
+<section id="dictionaries-for-other-label-types">
+<h4>Dictionaries for other label types<a class="headerlink" href="#dictionaries-for-other-label-types" title="Permalink to this heading">#</a></h4>
+<p>If you don’t know the label types in a corpus, just call <code class="docutils literal notranslate"><span class="pre">make_label_dictionary</span></code> with
+any random label name (e.g. <code class="docutils literal notranslate"><span class="pre">corpus.make_label_dictionary(label_type='abcd')</span></code>). This will print
+out statistics on all label types in the corpus:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">The corpus contains the following label types: &#39;lemma&#39; (in 12543 sentences), &#39;upos&#39; (in 12543 sentences), &#39;pos&#39; (in 12543 sentences), &#39;dependency&#39; (in 12543 sentences), &#39;number&#39; (in 12036 sentences), &#39;verbform&#39; (in 10122 sentences), &#39;prontype&#39; (in 9744 sentences), &#39;person&#39; (in 9381 sentences), &#39;mood&#39; (in 8911 sentences), &#39;tense&#39; (in 8747 sentences), &#39;degree&#39; (in 7148 sentences), &#39;definite&#39; (in 6851 sentences), &#39;case&#39; (in 6486 sentences), &#39;gender&#39; (in 2824 sentences), &#39;numtype&#39; (in 2771 sentences), &#39;poss&#39; (in 2516 sentences), &#39;voice&#39; (in 1085 sentences), &#39;typo&#39; (in 399 sentences), &#39;extpos&#39; (in 185 sentences), &#39;abbr&#39; (in 168 sentences), &#39;reflex&#39; (in 98 sentences), &#39;style&#39; (in 31 sentences), &#39;foreign&#39; (in 5 sentences)</span>
+</pre></div>
+</div>
+<p>This means that you can create dictionaries for any of these label types for the UD_ENGLISH corpus. Let’s create dictionaries for regular part of speech tags
+and a morphological number tagging task:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create label dictionary for a regular POS tagging task</span>
+<span class="n">pos_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="s1">&#39;pos&#39;</span><span class="p">)</span>
+
+<span class="c1"># create label dictionary for a morphological number tagging task</span>
+<span class="n">tense_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you print these dictionaries, you will find that the POS dictionary contains 50 tags and the number dictionary only 2 for this corpus (singular and plural).</p>
+</section>
+<section id="dictionaries-for-other-corpora-types">
+<h4>Dictionaries for other corpora types<a class="headerlink" href="#dictionaries-for-other-corpora-types" title="Permalink to this heading">#</a></h4>
+<p>The method <code class="docutils literal notranslate"><span class="pre">make_label_dictionary</span></code> can be used for any corpus, including text classification corpora:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create label dictionary for a text classification task</span>
+<span class="n">corpus</span> <span class="o">=</span> <span class="n">flair</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">TREC_6</span><span class="p">()</span>
+<span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="s1">&#39;question_class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="the-multicorpus-object">
+<h3>The MultiCorpus Object<a class="headerlink" href="#the-multicorpus-object" title="Permalink to this heading">#</a></h3>
+<p>If you want to train multiple tasks at once, you can use the <code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code> object.
+To initiate the <code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code> you first need to create any number of <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> objects. Afterwards, you can pass
+a list of <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> to the <code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code> object. For instance, the following snippet loads a combination corpus
+consisting of the English, German and Dutch Universal Dependency Treebanks.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">english_corpus</span> <span class="o">=</span> <span class="n">flair</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">UD_ENGLISH</span><span class="p">()</span>
+<span class="n">german_corpus</span> <span class="o">=</span> <span class="n">flair</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">UD_GERMAN</span><span class="p">()</span>
+<span class="n">dutch_corpus</span> <span class="o">=</span> <span class="n">flair</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">UD_DUTCH</span><span class="p">()</span>
+
+<span class="c1"># make a multi corpus consisting of three UDs</span>
+<span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">MultiCorpus</span>
+<span class="n">multi_corpus</span> <span class="o">=</span> <span class="n">MultiCorpus</span><span class="p">([</span><span class="n">english_corpus</span><span class="p">,</span> <span class="n">german_corpus</span><span class="p">,</span> <span class="n">dutch_corpus</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code> inherits from <code class="docutils literal notranslate"><span class="pre">Corpus</span></code>, so you can use it like any other corpus to train your models.</p>
+</section>
+</section>
+<section id="datasets-included-in-flair">
+<h2>Datasets included in Flair<a class="headerlink" href="#datasets-included-in-flair" title="Permalink to this heading">#</a></h2>
+<p>Flair supports many datasets out of the box. It automatically downloads and sets up the
+data the first time you call the corresponding constructor ID.</p>
+<p>The following datasets are supported:</p>
+<section id="named-entity-recognition">
+<h3>Named Entity Recognition<a class="headerlink" href="#named-entity-recognition" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Object</p></th>
+<th class="head"><p>Languages</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘CONLL_03’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://www.clips.uantwerpen.be/conll2002/ner/">CoNLL-03</a> 4-class NER (requires manual download)</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘CONLL_03_GERMAN’</p></td>
+<td><p>German</p></td>
+<td><p><a class="reference external" href="https://www.clips.uantwerpen.be/conll2002/ner/">CoNLL-03</a> 4-class NER (requires manual download)</p></td>
+</tr>
+<tr class="row-even"><td><p>‘CONLL_03_DUTCH’</p></td>
+<td><p>Dutch</p></td>
+<td><p><a class="reference external" href="https://www.clips.uantwerpen.be/conll2002/ner/">CoNLL-03</a> 4-class NER</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘CONLL_03_SPANISH’</p></td>
+<td><p>Spanish</p></td>
+<td><p><a class="reference external" href="https://www.clips.uantwerpen.be/conll2002/ner/">CoNLL-03</a> 4-class NER</p></td>
+</tr>
+<tr class="row-even"><td><p>‘ONTONOTES’</p></td>
+<td><p>Arabic, English, Chinese</p></td>
+<td><p><a class="reference external" href="https://paperswithcode.com/dataset/ontonotes-5-0/">Ontonotes</a> 18-class NER</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘FEWNERD’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://ningding97.github.io/fewnerd/">FewNERD</a> 66-class NER</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_ARABIC_ANER’</p></td>
+<td><p>Arabic</p></td>
+<td><p><a class="reference external" href="http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp">Arabic Named Entity Recognition Corpus</a> 4-class NER</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_ARABIC_AQMAR’</p></td>
+<td><p>Arabic</p></td>
+<td><p><a class="reference external" href="http://www.cs.cmu.edu/~ark/AQMAR/">American and Qatari Modeling of Arabic</a> 4-class NER (modified)</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_BASQUE’</p></td>
+<td><p>Basque</p></td>
+<td><p><a class="reference external" href="http://ixa2.si.ehu.eus/eiec/">NER dataset for Basque</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_CHINESE_WEIBO’</p></td>
+<td><p>Chinese</p></td>
+<td><p><a class="reference external" href="https://paperswithcode.com/sota/chinese-named-entity-recognition-on-weibo-ner/">Weibo NER corpus</a>.</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_DANISH_DANE’</p></td>
+<td><p>Danish</p></td>
+<td><p><a class="reference external" href="https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank">DaNE dataset</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_ENGLISH_MOVIE_SIMPLE’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://groups.csail.mit.edu/sls/downloads/movie/">NER dataset for movie reviews</a> - simple NER</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_ENGLISH_MOVIE_COMPLEX’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://groups.csail.mit.edu/sls/downloads/movie/">NER dataset for movie reviews</a> - complex NER</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_ENGLISH_PERSON’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://github.com/das-sudeshna/genid">PERSON_NER</a> NER with person names</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_ENGLISH_RESTAURANT’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://groups.csail.mit.edu/sls/downloads/restaurant/">NER dataset for restaurant reviews</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_ENGLISH_SEC_FILLINGS’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://github.com/juand-r/entity-recognition-datasets">SEC-fillings</a> with 4-class NER labels from (Alvarado et al, 2015)[https://aclanthology.org/U15-1010/] here</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_ENGLISH_STACKOVERFLOW’</p></td>
+<td><p>English</p></td>
+<td><p>NER on StackOverflow posts</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_ENGLISH_TWITTER’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://github.com/aritter/twitter_nlp/">Twitter NER dataset</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_ENGLISH_WIKIGOLD’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://github.com/juand-r/entity-recognition-datasets/tree/master/data/wikigold">Wikigold</a> a manually annotated collection of Wikipedia text</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_ENGLISH_WNUT_2020’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://github.com/jeniyat/WNUT_2020_NER">WNUT-20</a> named entity extraction</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_ENGLISH_WEBPAGES’</p></td>
+<td><p>English</p></td>
+<td><p>4-class NER on web pages from <a class="reference external" href="https://aclanthology.org/W09-1119/">Ratinov and Roth (2009)</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_FINNISH’</p></td>
+<td><p>Finnish</p></td>
+<td><p><a class="reference external" href="https://github.com/mpsilfve/finer-data">Finer-data</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_GERMAN_BIOFID’</p></td>
+<td><p>German</p></td>
+<td><p><a class="reference external" href="https://www.aclweb.org/anthology/K19-1081/">CoNLL-03</a> Biodiversity literature NER</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_GERMAN_EUROPARL’</p></td>
+<td><p>German</p></td>
+<td><p><a class="reference external" href="https://nlpado.de/~sebastian/software/ner_german.shtml">German Europarl dataset</a> NER in German EU parliament speeches</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_GERMAN_GERMEVAL’</p></td>
+<td><p>German</p></td>
+<td><p><a class="reference external" href="https://sites.google.com/site/germeval2014ner/data/">GermEval 14 NER</a> corpus</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_GERMAN_LEGAL’</p></td>
+<td><p>German</p></td>
+<td><p><a class="reference external" href="https://github.com/elenanereiss/Legal-Entity-Recognition">Legal Entity Recognition</a> NER in German Legal Documents</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_GERMAN_POLITICS’</p></td>
+<td><p>German</p></td>
+<td><p><a class="reference external" href="https://www.thomas-zastrow.de/nlp/">NEMGP</a> corpus</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_HIPE_2022’</p></td>
+<td><p>5 languages</p></td>
+<td><p>NER dataset for <a class="reference external" href="https://hipe-eval.github.io/HIPE-2022/">HIPE-2022</a> (Identifying Historical People, Places and other Entities)</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_HUNGARIAN’</p></td>
+<td><p>Hungarian</p></td>
+<td><p>NER on Hungarian business news</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_ICELANDIC’</p></td>
+<td><p>Icelandic</p></td>
+<td><p>NER on Icelandic</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_JAPANESE’</p></td>
+<td><p>Japanese</p></td>
+<td><p><a class="reference external" href="https://github.com/Hironsan/IOB2Corpus">Japanese NER</a> dataset automatically generated from Wikipedia</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_MASAKHANE’</p></td>
+<td><p>10 languages</p></td>
+<td><p><a class="reference external" href="https://github.com/masakhane-io/masakhane-ner">MasakhaNER: Named Entity Recognition for African Languages</a> corpora</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_SWEDISH’</p></td>
+<td><p>Swedish</p></td>
+<td><p><a class="reference external" href="https://github.com/klintan/swedish-ner-corpus/">Swedish Spraakbanken NER</a> 4-class NER</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_TURKU’</p></td>
+<td><p>Finnish</p></td>
+<td><p><a class="reference external" href="https://github.com/TurkuNLP/turku-ner-corpus">TURKU_NER</a> NER corpus created by the Turku NLP Group, University of Turku, Finland</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_UKRAINIAN’</p></td>
+<td><p>Ukrainian</p></td>
+<td><p><a class="reference external" href="https://github.com/lang-uk/flair-ner">lang-uk</a> NER corpus created by the <a class="reference external" href="https://lang.org.ua/en/">Lang-uk community</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_MULTI_WIKIANN’</p></td>
+<td><p>282 languages</p></td>
+<td><p>Gigantic <a class="reference external" href="https://elisa-ie.github.io/wikiann/">corpus for cross-lingual NER derived from Wikipedia</a>.</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NER_MULTI_WIKINER’</p></td>
+<td><p>8 languages</p></td>
+<td><p><a class="reference external" href="https://github.com/dice-group/FOX/tree/master/input/Wikiner">WikiNER</a> NER dataset automatically generated from Wikipedia (English, German, French, Italian, Spanish, Portuguese, Polish, Russian)</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NER_MULTI_XTREME’</p></td>
+<td><p>176 languages</p></td>
+<td><p><a class="reference external" href="https://github.com/google-research/xtreme">Xtreme</a> corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages</p></td>
+</tr>
+<tr class="row-even"><td><p>‘WNUT_17’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://noisy-text.github.io/2017/files/">WNUT-17</a> emerging entity detection</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="biomedical-named-entity-recognition">
+<h3>Biomedical Named Entity Recognition<a class="headerlink" href="#biomedical-named-entity-recognition" title="Permalink to this heading">#</a></h3>
+<p>We support 31 biomedical NER datasets, listed</p>
+</section>
+<section id="entity-linking">
+<h3>Entity Linking<a class="headerlink" href="#entity-linking" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Object</p></th>
+<th class="head"><p>Languages</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘NEL_ENGLISH_AIDA’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/ambiverse-nlu/aida/downloads">AIDA CoNLL-YAGO Entity Linking corpus</a> on the CoNLL-03 corpus</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NEL_ENGLISH_AQUAINT’</p></td>
+<td><p>English</p></td>
+<td><p>Aquaint Entity Linking corpus introduced in <a class="reference external" href="https://www.cms.waikato.ac.nz/~ihw/papers/08-DNM-IHW-LearningToLinkWithWikipedia.pdf">Milne and Witten (2008)</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘NEL_ENGLISH_IITB’</p></td>
+<td><p>English</p></td>
+<td><p>ITTB Entity Linking corpus introduced in <a class="reference external" href="https://dl.acm.org/doi/10.1145/1557019.1557073">Sayali et al. (2009)</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NEL_ENGLISH_REDDIT’</p></td>
+<td><p>English</p></td>
+<td><p>Reddit Entity Linking corpus introduced in <a class="reference external" href="https://arxiv.org/abs/2101.01228v2">Botzer et al. (2021)</a> (only gold annotations)</p></td>
+</tr>
+<tr class="row-even"><td><p>‘NEL_ENGLISH_TWEEKI’</p></td>
+<td><p>English</p></td>
+<td><p>ITTB Entity Linking corpus introduced in <a class="reference external" href="https://aclanthology.org/2020.wnut-1.29.pdf">Harandizadeh and Singh (2020)</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NEL_GERMAN_HIPE’</p></td>
+<td><p>German</p></td>
+<td><p><a class="reference external" href="https://impresso.github.io/CLEF-HIPE-2020/">HIPE</a> Entity Linking corpus for historical German as a <a class="reference external" href="https://github.com/stefan-it/clef-hipe">sentence-segmented version</a></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="relation-extraction">
+<h3>Relation Extraction<a class="headerlink" href="#relation-extraction" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Object</p></th>
+<th class="head"><p>Languages</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘RE_ENGLISH_CONLL04’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://github.com/bekou/multihead_joint_entity_relation_extraction/tree/master/data/CoNLL04">CoNLL-04</a> Relation Extraction</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘RE_ENGLISH_SEMEVAL2010’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://aclanthology.org/S10-1006.pdf">SemEval-2010 Task 8</a> on Multi-Way Classification of Semantic Relations Between Pairs of Nominals</p></td>
+</tr>
+<tr class="row-even"><td><p>‘RE_ENGLISH_TACRED’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://nlp.stanford.edu/projects/tacred/">TAC Relation Extraction Dataset</a> with 41 relations (download required)</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘RE_ENGLISH_DRUGPROT’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://zenodo.org/record/5119892#.YSdSaVuxU5k/">DrugProt corpus: Biocreative VII Track 1</a> - drug and chemical-protein interactions</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="glue-benchmark">
+<h3>GLUE Benchmark<a class="headerlink" href="#glue-benchmark" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Object</p></th>
+<th class="head"><p>Languages</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘GLUE_COLA’</p></td>
+<td><p>English</p></td>
+<td><p>The Corpus of Linguistic Acceptability from GLUE benchmark</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘GLUE_MNLI’</p></td>
+<td><p>English</p></td>
+<td><p>The Multi-Genre Natural Language Inference Corpus from the GLUE benchmark</p></td>
+</tr>
+<tr class="row-even"><td><p>‘GLUE_RTE’</p></td>
+<td><p>English</p></td>
+<td><p>The RTE task from the GLUE benchmark</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘GLUE_QNLI’</p></td>
+<td><p>English</p></td>
+<td><p>The Stanford Question Answering Dataset formated as NLI task from the GLUE benchmark</p></td>
+</tr>
+<tr class="row-even"><td><p>‘GLUE_WNLI’</p></td>
+<td><p>English</p></td>
+<td><p>The Winograd Schema Challenge formated as NLI task from the GLUE benchmark</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘GLUE_MRPC’</p></td>
+<td><p>English</p></td>
+<td><p>The MRPC task from GLUE benchmark</p></td>
+</tr>
+<tr class="row-even"><td><p>‘GLUE_QQP’</p></td>
+<td><p>English</p></td>
+<td><p>The Quora Question Pairs dataset where the task is to determine whether a pair of questions are semantically equivalent</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘SUPERGLUE_RTE’</p></td>
+<td><p>English</p></td>
+<td><p>The RTE task from the SuperGLUE benchmark</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="universal-proposition-banks">
+<h3>Universal Proposition Banks<a class="headerlink" href="#universal-proposition-banks" title="Permalink to this heading">#</a></h3>
+<p>We also support loading the <a class="reference external" href="https://github.com/System-T/UniversalPropositions">Universal Proposition Banks</a>
+for the purpose of training multilingual frame detection systems.</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Object</p></th>
+<th class="head"><p>Languages</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘UP_CHINESE’</p></td>
+<td><p>Chinese</p></td>
+<td><p>Universal Propositions for <a class="reference external" href="https://github.com/System-T/UniversalPropositions/tree/master/UP_Chinese">Chinese</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UP_ENGLISH’</p></td>
+<td><p>English</p></td>
+<td><p>Universal Propositions for <a class="reference external" href="https://github.com/System-T/UniversalPropositions/tree/master/UP_English-EWT">English</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UP_FINNISH’</p></td>
+<td><p>Finnish</p></td>
+<td><p>Universal Propositions for <a class="reference external" href="https://github.com/System-T/UniversalPropositions/tree/master/UP_Finnish">Finnish</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UP_FRENCH’</p></td>
+<td><p>French</p></td>
+<td><p>Universal Propositions for <a class="reference external" href="https://github.com/System-T/UniversalPropositions/tree/master/UP_French">French</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UP_GERMAN’</p></td>
+<td><p>German</p></td>
+<td><p>Universal Propositions for <a class="reference external" href="https://github.com/System-T/UniversalPropositions/tree/master/UP_German">German</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UP_ITALIAN’,</p></td>
+<td><p>Italian</p></td>
+<td><p>Universal Propositions for <a class="reference external" href="https://github.com/System-T/UniversalPropositions/tree/master/UP_Italian">Italian</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UP_SPANISH’</p></td>
+<td><p>Spanish</p></td>
+<td><p>Universal Propositions for <a class="reference external" href="https://github.com/System-T/UniversalPropositions/tree/master/UP_Spanish">Spanish</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UP_SPANISH_ANCORA’</p></td>
+<td><p>Spanish (Ancora Corpus)</p></td>
+<td><p>Universal Propositions for <a class="reference external" href="https://github.com/System-T/UniversalPropositions/tree/master/UP_Spanish-AnCora">Spanish</a></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="universal-dependency-treebanks">
+<h3>Universal Dependency Treebanks<a class="headerlink" href="#universal-dependency-treebanks" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Object</p></th>
+<th class="head"><p>Languages</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘UD_ARABIC’</p></td>
+<td><p>Arabic</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Arabic-PADT">Arabic</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_BASQUE’</p></td>
+<td><p>Basque</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Basque-BDT">Basque</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_BULGARIAN’</p></td>
+<td><p>Bulgarian</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Bulgarian-BTB">Bulgarian</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_CATALAN’,</p></td>
+<td><p>Catalan</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Catalan-AnCora">Catalan</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_CHINESE’</p></td>
+<td><p>Chinese</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Chinese-GSD">Chinese</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_CHINESE_KYOTO’</p></td>
+<td><p>Classical Chinese</p></td>
+<td><p>Universal Dependency Treebank for Classical <a class="reference external" href="https://github.com/UniversalDependencies/UD_Classical_Chinese-Kyoto/tree/dev">Chinese</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_CROATIAN’</p></td>
+<td><p>Croatian</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Croatian-SET">Croatian</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_CZECH’</p></td>
+<td><p>Czech</p></td>
+<td><p>Very large Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Czech-PDT">Czech</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_DANISH’</p></td>
+<td><p>Danish</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Danish-DDT">Danish</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_DUTCH’</p></td>
+<td><p>Dutch</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Dutch-Alpino">Dutch</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_ENGLISH’</p></td>
+<td><p>English</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_English-EWT">English</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_FINNISH’</p></td>
+<td><p>Finnish</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Finnish-TDT">Finnish</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_FRENCH’</p></td>
+<td><p>French</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_French-GSD">French</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_GERMAN’</p></td>
+<td><p>German</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_German-GSD">German</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_GERMAN-HDT’</p></td>
+<td><p>German</p></td>
+<td><p>Very large Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_German-HDT">German</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_HEBREW’</p></td>
+<td><p>Hebrew</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Hebrew-HTB">Hebrew</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_HINDI’</p></td>
+<td><p>Hindi</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Hindi-HDTB">Hindi</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_INDONESIAN’</p></td>
+<td><p>Indonesian</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Indonesian-GSD">Indonesian</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_ITALIAN’</p></td>
+<td><p>Italian</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Italian-ISDT">Italian</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_JAPANESE’</p></td>
+<td><p>Japanese</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Japanese-GSD">Japanese</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_KOREAN’</p></td>
+<td><p>Korean</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Korean-Kaist">Korean</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_NORWEGIAN’,</p></td>
+<td><p>Norwegian</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal">Norwegian</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_PERSIAN’</p></td>
+<td><p>Persian / Farsi</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Persian-Seraji">Persian</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_POLISH’</p></td>
+<td><p>Polish</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Polish-LFG">Polish</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_PORTUGUESE’</p></td>
+<td><p>Portuguese</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Portuguese-Bosque">Portuguese</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_ROMANIAN’</p></td>
+<td><p>Romanian</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Romanian-RRT">Romanian</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_RUSSIAN’</p></td>
+<td><p>Russian</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Russian-SynTagRus">Russian</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_SERBIAN’</p></td>
+<td><p>Serbian</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Serbian-SET">Serbian</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_SLOVAK’</p></td>
+<td><p>Slovak</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Slovak-SNK">Slovak</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_SLOVENIAN’</p></td>
+<td><p>Slovenian</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Slovenian-SSJ">Slovenian</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_SPANISH’</p></td>
+<td><p>Spanish</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Spanish-GSD">Spanish</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_SWEDISH’</p></td>
+<td><p>Swedish</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Swedish-Talbanken">Swedish</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘UD_TURKISH’</p></td>
+<td><p>Turkish</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Turkish-IMST">Tturkish</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘UD_UKRAINIAN’</p></td>
+<td><p>Ukrainian</p></td>
+<td><p>Universal Dependency Treebank for <a class="reference external" href="https://github.com/UniversalDependencies/UD_Ukrainian-IU">Ukrainian</a></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="text-classification">
+<h3>Text Classification<a class="headerlink" href="#text-classification" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Object</p></th>
+<th class="head"><p>Languages</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘AMAZON_REVIEWS’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://nijianmo.github.io/amazon/index.html/">Amazon product reviews</a> dataset with sentiment annotation</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘COMMUNICATIVE_FUNCTIONS’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://github.com/Alab-NII/FECFevalDataset">Communicative functions</a> of sentences in scholarly papers</p></td>
+</tr>
+<tr class="row-even"><td><p>‘GERMEVAL_2018_OFFENSIVE_LANGUAGE’</p></td>
+<td><p>German</p></td>
+<td><p>Offensive language detection for German</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘GO_EMOTIONS’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="https://github.com/google-research/google-research/tree/master/goemotions">GoEmotions dataset</a> Reddit comments labeled with 27 emotions</p></td>
+</tr>
+<tr class="row-even"><td><p>‘IMDB’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="http://ai.stanford.edu/~amaas/data/sentiment/">IMDB</a> dataset of movie reviews with sentiment annotation</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘NEWSGROUPS’</p></td>
+<td><p>English</p></td>
+<td><p>The popular <a class="reference external" href="http://qwone.com/~jason/20Newsgroups/">20 newsgroups</a> classification dataset</p></td>
+</tr>
+<tr class="row-even"><td><p>‘YAHOO_ANSWERS’</p></td>
+<td><p>English</p></td>
+<td><p>The <a class="reference external" href="https://course.fast.ai/datasets#nlp">10 largest main categories</a> from the Yahoo! Answers</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘SENTIMENT_140’</p></td>
+<td><p>English</p></td>
+<td><p><a class="reference external" href="http://help.sentiment140.com/for-students/">Tweets dataset</a> with sentiment annotation</p></td>
+</tr>
+<tr class="row-even"><td><p>‘SENTEVAL_CR’</p></td>
+<td><p>English</p></td>
+<td><p>Customer reviews dataset of <a class="reference external" href="https://github.com/facebookresearch/SentEval">SentEval</a> with sentiment annotation</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘SENTEVAL_MR’</p></td>
+<td><p>English</p></td>
+<td><p>Movie reviews dataset of <a class="reference external" href="https://github.com/facebookresearch/SentEval">SentEval</a> with sentiment annotation</p></td>
+</tr>
+<tr class="row-even"><td><p>‘SENTEVAL_SUBJ’</p></td>
+<td><p>English</p></td>
+<td><p>Subjectivity dataset of <a class="reference external" href="https://github.com/facebookresearch/SentEval">SentEval</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘SENTEVAL_MPQA’</p></td>
+<td><p>English</p></td>
+<td><p>Opinion-polarity dataset of <a class="reference external" href="https://github.com/facebookresearch/SentEval">SentEval</a> with opinion-polarity annotation</p></td>
+</tr>
+<tr class="row-even"><td><p>‘SENTEVAL_SST_BINARY’</p></td>
+<td><p>English</p></td>
+<td><p>Stanford sentiment treebank dataset of of <a class="reference external" href="https://github.com/facebookresearch/SentEval">SentEval</a> with sentiment annotation</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘SENTEVAL_SST_GRANULAR’</p></td>
+<td><p>English</p></td>
+<td><p>Stanford sentiment treebank dataset of of <a class="reference external" href="https://github.com/facebookresearch/SentEval">SentEval</a> with fine-grained sentiment annotation</p></td>
+</tr>
+<tr class="row-even"><td><p>‘TREC_6’, ‘TREC_50’</p></td>
+<td><p>English</p></td>
+<td><p>The <a class="reference external" href="http://cogcomp.org/Data/QA/QC/">TREC</a> question classification dataset</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="text-regression">
+<h3>Text Regression<a class="headerlink" href="#text-regression" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Object</p></th>
+<th class="head"><p>Languages</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘WASSA_ANGER’</p></td>
+<td><p>English</p></td>
+<td><p>The <a class="reference external" href="https://competitions.codalab.org/competitions/16380#learn_the_details">WASSA</a> emotion-intensity detection challenge (anger)</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘WASSA_FEAR’</p></td>
+<td><p>English</p></td>
+<td><p>The <a class="reference external" href="https://competitions.codalab.org/competitions/16380#learn_the_details">WASSA</a> emotion-intensity detection challenge (fear)</p></td>
+</tr>
+<tr class="row-even"><td><p>‘WASSA_JOY’</p></td>
+<td><p>English</p></td>
+<td><p>The <a class="reference external" href="https://competitions.codalab.org/competitions/16380#learn_the_details">WASSA</a> emotion-intensity detection challenge (joy)</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘WASSA_SADNESS’</p></td>
+<td><p>English</p></td>
+<td><p>The <a class="reference external" href="https://competitions.codalab.org/competitions/16380#learn_the_details">WASSA</a> emotion-intensity detection challenge (sadness)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="other-sequence-labeling">
+<h3>Other Sequence Labeling<a class="headerlink" href="#other-sequence-labeling" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Object</p></th>
+<th class="head"><p>Languages</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘CONLL_2000’</p></td>
+<td><p>English</p></td>
+<td><p>Syntactic chunking with <a class="reference external" href="https://www.clips.uantwerpen.be/conll2000/chunking/">CoNLL-2000</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘BIOSCOPE’</p></td>
+<td><p>English</p></td>
+<td><p>Negation and speculation scoping wih <a class="reference external" href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-S11-S9/">BioScope</a> biomedical texts annotated for uncertainty, negation and their scopes</p></td>
+</tr>
+<tr class="row-even"><td><p>‘KEYPHRASE_INSPEC’</p></td>
+<td><p>English</p></td>
+<td><p>Keyphrase dectection with <a class="reference external" href="https://www.aclweb.org/anthology/W03-1028">INSPEC</a> original corpus (2000 docs) from INSPEC database, adapted by <a class="reference external" href="https://arxiv.org/abs/1910.08840">midas-research</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘KEYPHRASE_SEMEVAL2017’</p></td>
+<td><p>English</p></td>
+<td><p>Keyphrase dectection with <a class="reference external" href="https://arxiv.org/abs/1704.02853">SEMEVAL2017</a> dataset (500 docs) from ScienceDirect, adapted by <a class="reference external" href="https://arxiv.org/abs/1910.08840">midas-research</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘KEYPHRASE_SEMEVAL2010’</p></td>
+<td><p>English</p></td>
+<td><p>Keyphrase dectection with <a class="reference external" href="https://www.aclweb.org/anthology/S10-1004/">SEMEVAL2010</a> dataset (~250 docs) from ACM Digital Library, adapted by <a class="reference external" href="https://arxiv.org/abs/1910.08840">midas-research</a></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="experimental-similarity-learning">
+<h3>Experimental: Similarity Learning<a class="headerlink" href="#experimental-similarity-learning" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Object</p></th>
+<th class="head"><p>Languages</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘FeideggerCorpus’</p></td>
+<td><p>German</p></td>
+<td><p><a class="reference external" href="https://github.com/zalandoresearch/feidegger/">Feidegger</a> dataset fashion images and German-language descriptions</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘OpusParallelCorpus’</p></td>
+<td><p>Any language pair</p></td>
+<td><p>Parallel corpora of the <a class="reference external" href="http://opus.nlpl.eu/">OPUS</a> project, currently supports only Tatoeba corpus</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+
+
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="train-vs-fine-tune.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Training vs fine-tuning</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="how-to-load-custom-dataset.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">How to load a custom dataset</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-corpus-object">The Corpus Object</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#helper-functions">Helper functions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-label-dictionaries">Creating label dictionaries</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#dictionaries-for-other-label-types">Dictionaries for other label types</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#dictionaries-for-other-corpora-types">Dictionaries for other corpora types</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-multicorpus-object">The MultiCorpus Object</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#datasets-included-in-flair">Datasets included in Flair</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#named-entity-recognition">Named Entity Recognition</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#biomedical-named-entity-recognition">Biomedical Named Entity Recognition</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#entity-linking">Entity Linking</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relation-extraction">Relation Extraction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#glue-benchmark">GLUE Benchmark</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#universal-proposition-banks">Universal Proposition Banks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#universal-dependency-treebanks">Universal Dependency Treebanks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#text-classification">Text Classification</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#text-regression">Text Regression</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-sequence-labeling">Other Sequence Labeling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#experimental-similarity-learning">Experimental: Similarity Learning</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/tutorial/tutorial-training/how-to-load-prepared-dataset.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

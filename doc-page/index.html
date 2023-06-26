@@ -1,0 +1,656 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>flair &#8212; flair 0.12.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/github_style.css" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/design-tabs.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorials" href="tutorial/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="#">
+  
+  
+  
+  
+  
+    <p class="title logo__title">flair 0.12.2 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="#">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing/index.html">Contributing</a></li>
+</ul>
+</div>
+        <div class="sidebar-primary-item">
+<div id="searchbox"></div></div>
+        <div class="sidebar-primary-item">
+<h3>Versions</h3>
+<ul>
+  <li><a href="index.html">
+    
+    latest (dev)
+    
+    
+    [x]
+    
+  </a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="flair">
+<h1>flair<a class="headerlink" href="#flair" title="Permalink to this heading">#</a></h1>
+<p id="flair-docs-mainpage"><strong>Version</strong>: 0.12.2</p>
+<p><strong>Useful links</strong>:
+<a class="reference external" href="gtutorial/index/intro.html">Getting started</a> |
+<a class="reference external" href="https://github.com/flairNLP/flair">Source Repository</a> |
+<a class="reference external" href="https://github.com/flairNLP/flair/issues">Issue Tracker</a> |</p>
+<p>Flair is a very simple framework for state-of-the-art Natural Language Processing (NLP)</p>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
+<img alt="" class="sd-card-img-top" src="_images/tutorial.svg" /><div class="sd-card-header docutils">
+<p class="sd-card-text">Tutorial</p>
+</div>
+<div class="sd-card-body docutils">
+<p class="sd-card-text">New to Flair? Check out the Tutorials. It contains an introduction to Flair’s main concepts.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-secondary sd-stretched-link reference internal" href="tutorial/index.html"><span class="doc">To the tutorials</span></a></span></p>
+</div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
+<img alt="" class="sd-card-img-top" src="_images/api.svg" /><div class="sd-card-header docutils">
+<p class="sd-card-text">API-docs</p>
+</div>
+<div class="sd-card-body docutils">
+<p class="sd-card-text">The API-docs provides in-depth information on the classes and functions designed for public use.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-secondary sd-stretched-link reference internal" href="api/index.html"><span class="doc">To the API docs</span></a></span></p>
+</div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
+<img alt="" class="sd-card-img-top" src="_images/contributing.svg" /><div class="sd-card-header docutils">
+<p class="sd-card-text">Contributor’s Guide</p>
+</div>
+<div class="sd-card-body docutils">
+<p class="sd-card-text">Want to add to the codebase? Can help add translation or a flowchart to the
+documentation? The contributing guidelines will guide you through the
+process of improving NumPy.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-secondary sd-stretched-link reference internal" href="contributing/index.html"><span class="doc">To the contributor’s guide</span></a></span></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial/intro.html">Quick Start</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/intro.html#requirements-and-installation">Requirements and Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/intro.html#example-1-tag-entities-in-text">Example 1: Tag Entities in Text</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/intro.html#example-2-detect-sentiment">Example 2: Detect Sentiment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/intro.html#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial/tutorial-basics/index.html">Tutorial 1: Basic Tagging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-basics/basic-types.html">Basics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-basics/how-predictions-work.html">How predictions work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-basics/tagging-entities.html">Tagging entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-basics/tagging-sentiment.html">Tagging sentiment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-basics/entity-linking.html">Tagging and linking entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-basics/part-of-speech-tagging.html">Tagging parts-of-speech</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-basics/other-models.html">Tagging other things</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-basics/how-to-tag-corpus.html">How to tag a whole corpus</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial/tutorial-training/index.html">Tutorial 2: Training models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-training/how-model-training-works.html">How model training works in Flair</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-training/train-vs-fine-tune.html">Training vs fine-tuning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-training/how-to-load-prepared-dataset.html">How to load a prepared dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-training/how-to-load-custom-dataset.html">How to load a custom dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-training/how-to-train-sequence-tagger.html">Train a sequence tagger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-training/how-to-train-text-classifier.html">Train a text classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial/tutorial-embeddings/index.html">Tutorial 3: Embeddings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-embeddings/embeddings.html">Embeddings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-embeddings/transformer-embeddings.html">Transformer embeddings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-embeddings/flair-embeddings.html">Flair embeddings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-embeddings/classic-word-embeddings.html">Classic Word Embeddings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/tutorial-embeddings/other-embeddings.html">Other embeddings in Flair</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/flair.html">flair</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.html#flair.cache_root"><code class="docutils literal notranslate"><span class="pre">cache_root</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.html#flair.device"><code class="docutils literal notranslate"><span class="pre">device</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.html#flair.logger"><code class="docutils literal notranslate"><span class="pre">logger</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.html#flair.set_proxies"><code class="docutils literal notranslate"><span class="pre">set_proxies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.html#flair.set_seed"><code class="docutils literal notranslate"><span class="pre">set_seed()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/flair.data.html">flair.data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.BoundingBox"><code class="docutils literal notranslate"><span class="pre">BoundingBox</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.ConcatFlairDataset"><code class="docutils literal notranslate"><span class="pre">ConcatFlairDataset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.Corpus"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.DataPair"><code class="docutils literal notranslate"><span class="pre">DataPair</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.DataPoint"><code class="docutils literal notranslate"><span class="pre">DataPoint</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.Dictionary"><code class="docutils literal notranslate"><span class="pre">Dictionary</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.FlairDataset"><code class="docutils literal notranslate"><span class="pre">FlairDataset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.Image"><code class="docutils literal notranslate"><span class="pre">Image</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.Label"><code class="docutils literal notranslate"><span class="pre">Label</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.MultiCorpus"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.Relation"><code class="docutils literal notranslate"><span class="pre">Relation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.Sentence"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.Span"><code class="docutils literal notranslate"><span class="pre">Span</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.Token"><code class="docutils literal notranslate"><span class="pre">Token</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.get_spans_from_bio"><code class="docutils literal notranslate"><span class="pre">get_spans_from_bio()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.iob2"><code class="docutils literal notranslate"><span class="pre">iob2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.data.html#flair.data.randomly_split_into_two_datasets"><code class="docutils literal notranslate"><span class="pre">randomly_split_into_two_datasets()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/flair.datasets.html">flair.datasets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/datasets/base.html">flair.datasets.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/datasets/biomedical.html">flair.datasets.biomedical</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/datasets/document_classification.html">flair.datasets.document_classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/datasets/entity_linking.html">flair.datasets.entity_linking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/datasets/ocr.html">flair.datasets.ocr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/datasets/relation_extraction.html">flair.datasets.relation_extraction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/datasets/sequence_labeling.html">flair.datasets.sequence_labeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/datasets/text_image.html">flair.datasets.text_image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/datasets/text_text.html">flair.datasets.text_text</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/datasets/treebanks.html">flair.datasets.treebanks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/flair.embeddings.html">flair.embeddings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/embeddings/base.html">flair.embeddings.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/embeddings/document.html">flair.embeddings.document</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/embeddings/image.html">flair.embeddings.image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/embeddings/legacy.html">flair.embeddings.legacy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/embeddings/token.html">flair.embeddings.token</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/embeddings/transformer.html">flair.embeddings.transformer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/flair.models.html">flair.models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.ClusteringModel"><code class="docutils literal notranslate"><span class="pre">ClusteringModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.EntityLinker"><code class="docutils literal notranslate"><span class="pre">EntityLinker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.FewshotClassifier"><code class="docutils literal notranslate"><span class="pre">FewshotClassifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.LanguageModel"><code class="docutils literal notranslate"><span class="pre">LanguageModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.Lemmatizer"><code class="docutils literal notranslate"><span class="pre">Lemmatizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.MultitaskModel"><code class="docutils literal notranslate"><span class="pre">MultitaskModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.RegexpTagger"><code class="docutils literal notranslate"><span class="pre">RegexpTagger</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.RelationClassifier"><code class="docutils literal notranslate"><span class="pre">RelationClassifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.RelationExtractor"><code class="docutils literal notranslate"><span class="pre">RelationExtractor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.SequenceTagger"><code class="docutils literal notranslate"><span class="pre">SequenceTagger</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.TARSClassifier"><code class="docutils literal notranslate"><span class="pre">TARSClassifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.TARSTagger"><code class="docutils literal notranslate"><span class="pre">TARSTagger</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.TextClassifier"><code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.TextPairClassifier"><code class="docutils literal notranslate"><span class="pre">TextPairClassifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.TextPairRegressor"><code class="docutils literal notranslate"><span class="pre">TextPairRegressor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.TextRegressor"><code class="docutils literal notranslate"><span class="pre">TextRegressor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.TokenClassifier"><code class="docutils literal notranslate"><span class="pre">TokenClassifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.models.html#flair.models.WordTagger"><code class="docutils literal notranslate"><span class="pre">WordTagger</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/flair.splitter.html">flair.splitter</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.splitter.html#flair.splitter.NewlineSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">NewlineSentenceSplitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.splitter.html#flair.splitter.NoSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">NoSentenceSplitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.splitter.html#flair.splitter.SciSpacySentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.splitter.html#flair.splitter.SegtokSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SegtokSentenceSplitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.splitter.html#flair.splitter.SentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.splitter.html#flair.splitter.SpacySentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SpacySentenceSplitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.splitter.html#flair.splitter.TagSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">TagSentenceSplitter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/flair.tokenization.html">flair.tokenization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.tokenization.html#flair.tokenization.JapaneseTokenizer"><code class="docutils literal notranslate"><span class="pre">JapaneseTokenizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.tokenization.html#flair.tokenization.SciSpacyTokenizer"><code class="docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.tokenization.html#flair.tokenization.SegtokTokenizer"><code class="docutils literal notranslate"><span class="pre">SegtokTokenizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.tokenization.html#flair.tokenization.SpaceTokenizer"><code class="docutils literal notranslate"><span class="pre">SpaceTokenizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.tokenization.html#flair.tokenization.SpacyTokenizer"><code class="docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.tokenization.html#flair.tokenization.Tokenizer"><code class="docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.tokenization.html#flair.tokenization.TokenizerWrapper"><code class="docutils literal notranslate"><span class="pre">TokenizerWrapper</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/flair.trainers.html">flair.trainers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.html#flair.trainers.LanguageModelTrainer"><code class="docutils literal notranslate"><span class="pre">LanguageModelTrainer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.html#flair.trainers.ModelTrainer"><code class="docutils literal notranslate"><span class="pre">ModelTrainer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.html#flair.trainers.TextCorpus"><code class="docutils literal notranslate"><span class="pre">TextCorpus</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/flair.trainers.plugins.html">flair.trainers.plugins</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.AmpPlugin"><code class="docutils literal notranslate"><span class="pre">AmpPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.AnnealingPlugin"><code class="docutils literal notranslate"><span class="pre">AnnealingPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.BasePlugin"><code class="docutils literal notranslate"><span class="pre">BasePlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.CheckpointPlugin"><code class="docutils literal notranslate"><span class="pre">CheckpointPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.LinearSchedulerPlugin"><code class="docutils literal notranslate"><span class="pre">LinearSchedulerPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.LogFilePlugin"><code class="docutils literal notranslate"><span class="pre">LogFilePlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.LossFilePlugin"><code class="docutils literal notranslate"><span class="pre">LossFilePlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.MetricHistoryPlugin"><code class="docutils literal notranslate"><span class="pre">MetricHistoryPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.MetricName"><code class="docutils literal notranslate"><span class="pre">MetricName</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.MetricRecord"><code class="docutils literal notranslate"><span class="pre">MetricRecord</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.Pluggable"><code class="docutils literal notranslate"><span class="pre">Pluggable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.TensorboardLogger"><code class="docutils literal notranslate"><span class="pre">TensorboardLogger</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.TrainerPlugin"><code class="docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.TrainingInterrupt"><code class="docutils literal notranslate"><span class="pre">TrainingInterrupt</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flair.trainers.plugins.html#flair.trainers.plugins.WeightExtractorPlugin"><code class="docutils literal notranslate"><span class="pre">WeightExtractorPlugin</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing/index.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing/writing_a_good_issue.html">Writing a good issue</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="contributing/writing_a_good_issue.html#issue-types">Issue types</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="contributing/local_development.html">Local Development</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="contributing/local_development.html#setup">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing/local_development.html#tests">Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing/local_development.html#code-formatting">Code Formatting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="contributing/making_a_pull_request.html">Making a pull request</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="contributing/making_a_pull_request.html#git-commit-guidelines">Git Commit Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="contributing/updating_documentation.html">Updating documentation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="contributing/updating_documentation.html#what-is-good-documentation">What is good documentation?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing/updating_documentation.html#tutorials">Tutorials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing/updating_documentation.html#docstrings">Docstrings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing/updating_documentation.html#building-the-local-docs">Building the local docs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="right-next"
+       href="tutorial/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorials</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="_sources/index.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,741 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>How model training works in Flair &#8212; flair 0.12.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/github_style.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/how-model-training-works';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Training vs fine-tuning" href="train-vs-fine-tune.html" />
+    <link rel="prev" title="Tutorial 2: Training models" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">flair 0.12.2 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-basics/index.html">Tutorial 1: Basic Tagging</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tutorial 2: Training models</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">How model training works in Flair</a></li>
+<li class="toctree-l3"><a class="reference internal" href="train-vs-fine-tune.html">Training vs fine-tuning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html">How to load a prepared dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-load-custom-dataset.html">How to load a custom dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-train-sequence-tagger.html">Train a sequence tagger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-train-text-classifier.html">Train a text classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-embeddings/index.html">Tutorial 3: Embeddings</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+</ul>
+</div>
+        <div class="sidebar-primary-item">
+<div id="searchbox"></div></div>
+        <div class="sidebar-primary-item">
+<h3>Versions</h3>
+<ul>
+  <li><a href="how-model-training-works.html">
+    
+    latest (dev)
+    
+    
+    [x]
+    
+  </a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Tutorials</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorial 2: Training models</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">How model training works in Flair</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="how-model-training-works-in-flair">
+<h1>How model training works in Flair<a class="headerlink" href="#how-model-training-works-in-flair" title="Permalink to this heading">#</a></h1>
+<p>In this section, we explain the main ideas of model training in Flair.</p>
+<p>In particular, we give an introduction to the <code class="docutils literal notranslate"><span class="pre">ModelTrainer</span></code> class, and discuss what decisions you have to make to train good models.</p>
+<section id="example-training-a-part-of-speech-tagger">
+<h2>Example: Training a Part-of-Speech Tagger<a class="headerlink" href="#example-training-a-part-of-speech-tagger" title="Permalink to this heading">#</a></h2>
+<p>As example in this chapter, we train a simple part-of-speech tagger for English. To make the example run fast</p>
+<ul class="simple">
+<li><p>we downsample the training data to 10%</p></li>
+<li><p>we use only simple classic word embeddings (gloVe)</p></li>
+</ul>
+<p>Here is the full training code:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">UD_ENGLISH</span>
+<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span>
+<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">SequenceTagger</span>
+<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
+
+<span class="c1"># 1. load the corpus</span>
+<span class="n">corpus</span> <span class="o">=</span> <span class="n">UD_ENGLISH</span><span class="p">()</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
+
+<span class="c1"># 2. what label do we want to predict?</span>
+<span class="n">label_type</span> <span class="o">=</span> <span class="s1">&#39;upos&#39;</span>
+
+<span class="c1"># 3. make the label dictionary from the corpus</span>
+<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">label_dict</span><span class="p">)</span>
+
+<span class="c1"># 4. initialize embeddings</span>
+<span class="n">embeddings</span> <span class="o">=</span> <span class="n">WordEmbeddings</span><span class="p">(</span><span class="s1">&#39;glove&#39;</span><span class="p">)</span>
+
+<span class="c1"># 5. initialize sequence tagger</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="p">(</span><span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+                        <span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
+                        <span class="n">tag_dictionary</span><span class="o">=</span><span class="n">label_dict</span><span class="p">,</span>
+                        <span class="n">tag_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+
+<span class="c1"># 6. initialize trainer</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+
+<span class="c1"># 7. start training</span>
+<span class="n">trainer</span><span class="o">.</span><span class="kp">train</span><span class="p">(</span><span class="s1">&#39;resources/taggers/example-upos&#39;</span><span class="p">,</span>
+              <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+              <span class="n">mini_batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+              <span class="n">max_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This code (1) loads the English universal dependencies dataset as training corpus, (2) create a label dictionary for universal part-of-speech tags from the corpus, (3) initializes embeddings and (4) runs the trainer for 10 epochs.</p>
+<p>Running this script should produce output that looks like this during training:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">38</span><span class="p">,</span><span class="mi">014</span> <span class="o">----------------------------------------------------------------------------------------------------</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">38</span><span class="p">,</span><span class="mi">016</span> <span class="n">Model</span> <span class="n">training</span> <span class="n">base</span> <span class="n">path</span><span class="p">:</span> <span class="s2">&quot;resources/taggers/example-upos&quot;</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">38</span><span class="p">,</span><span class="mi">017</span> <span class="o">----------------------------------------------------------------------------------------------------</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">38</span><span class="p">,</span><span class="mi">020</span> <span class="n">Device</span><span class="p">:</span> <span class="kp">cuda</span><span class="p">:</span><span class="mi">0</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">38</span><span class="p">,</span><span class="mi">022</span> <span class="o">----------------------------------------------------------------------------------------------------</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">38</span><span class="p">,</span><span class="mi">023</span> <span class="n">Embeddings</span> <span class="kp">storage</span> <span class="n">mode</span><span class="p">:</span> <span class="kp">cpu</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">38</span><span class="p">,</span><span class="mi">025</span> <span class="o">----------------------------------------------------------------------------------------------------</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">39</span><span class="p">,</span><span class="mi">128</span> <span class="n">epoch</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">iter</span> <span class="mi">4</span><span class="o">/</span><span class="mi">40</span> <span class="o">-</span> <span class="n">loss</span> <span class="mf">3.28409882</span> <span class="o">-</span> <span class="n">time</span> <span class="p">(</span><span class="n">sec</span><span class="p">):</span> <span class="mf">1.10</span> <span class="o">-</span> <span class="n">samples</span><span class="o">/</span><span class="n">sec</span><span class="p">:</span> <span class="mf">2611.84</span> <span class="o">-</span> <span class="n">lr</span><span class="p">:</span> <span class="mf">0.100000</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">39</span><span class="p">,</span><span class="mi">474</span> <span class="n">epoch</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">iter</span> <span class="mi">8</span><span class="o">/</span><span class="mi">40</span> <span class="o">-</span> <span class="n">loss</span> <span class="mf">3.13510367</span> <span class="o">-</span> <span class="n">time</span> <span class="p">(</span><span class="n">sec</span><span class="p">):</span> <span class="mf">1.45</span> <span class="o">-</span> <span class="n">samples</span><span class="o">/</span><span class="n">sec</span><span class="p">:</span> <span class="mf">3143.21</span> <span class="o">-</span> <span class="n">lr</span><span class="p">:</span> <span class="mf">0.100000</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">39</span><span class="p">,</span><span class="mi">910</span> <span class="n">epoch</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">iter</span> <span class="mi">12</span><span class="o">/</span><span class="mi">40</span> <span class="o">-</span> <span class="n">loss</span> <span class="mf">3.02619775</span> <span class="o">-</span> <span class="n">time</span> <span class="p">(</span><span class="n">sec</span><span class="p">):</span> <span class="mf">1.88</span> <span class="o">-</span> <span class="n">samples</span><span class="o">/</span><span class="n">sec</span><span class="p">:</span> <span class="mf">3434.39</span> <span class="o">-</span> <span class="n">lr</span><span class="p">:</span> <span class="mf">0.100000</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">40</span><span class="p">,</span><span class="mi">167</span> <span class="n">epoch</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">iter</span> <span class="mi">16</span><span class="o">/</span><span class="mi">40</span> <span class="o">-</span> <span class="n">loss</span> <span class="mf">2.95288554</span> <span class="o">-</span> <span class="n">time</span> <span class="p">(</span><span class="n">sec</span><span class="p">):</span> <span class="mf">2.14</span> <span class="o">-</span> <span class="n">samples</span><span class="o">/</span><span class="n">sec</span><span class="p">:</span> <span class="mf">3783.76</span> <span class="o">-</span> <span class="n">lr</span><span class="p">:</span> <span class="mf">0.100000</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">40</span><span class="p">,</span><span class="mi">504</span> <span class="n">epoch</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">iter</span> <span class="mi">20</span><span class="o">/</span><span class="mi">40</span> <span class="o">-</span> <span class="n">loss</span> <span class="mf">2.86820018</span> <span class="o">-</span> <span class="n">time</span> <span class="p">(</span><span class="n">sec</span><span class="p">):</span> <span class="mf">2.48</span> <span class="o">-</span> <span class="n">samples</span><span class="o">/</span><span class="n">sec</span><span class="p">:</span> <span class="mf">4171.22</span> <span class="o">-</span> <span class="n">lr</span><span class="p">:</span> <span class="mf">0.100000</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">40</span><span class="p">,</span><span class="mi">843</span> <span class="n">epoch</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">iter</span> <span class="mi">24</span><span class="o">/</span><span class="mi">40</span> <span class="o">-</span> <span class="n">loss</span> <span class="mf">2.80507526</span> <span class="o">-</span> <span class="n">time</span> <span class="p">(</span><span class="n">sec</span><span class="p">):</span> <span class="mf">2.82</span> <span class="o">-</span> <span class="n">samples</span><span class="o">/</span><span class="n">sec</span><span class="p">:</span> <span class="mf">4557.72</span> <span class="o">-</span> <span class="n">lr</span><span class="p">:</span> <span class="mf">0.100000</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">41</span><span class="p">,</span><span class="mi">118</span> <span class="n">epoch</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">iter</span> <span class="mi">28</span><span class="o">/</span><span class="mi">40</span> <span class="o">-</span> <span class="n">loss</span> <span class="mf">2.74217397</span> <span class="o">-</span> <span class="n">time</span> <span class="p">(</span><span class="n">sec</span><span class="p">):</span> <span class="mf">3.09</span> <span class="o">-</span> <span class="n">samples</span><span class="o">/</span><span class="n">sec</span><span class="p">:</span> <span class="mf">4878.00</span> <span class="o">-</span> <span class="n">lr</span><span class="p">:</span> <span class="mf">0.100000</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">41</span><span class="p">,</span><span class="mi">420</span> <span class="n">epoch</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">iter</span> <span class="mi">32</span><span class="o">/</span><span class="mi">40</span> <span class="o">-</span> <span class="n">loss</span> <span class="mf">2.69161746</span> <span class="o">-</span> <span class="n">time</span> <span class="p">(</span><span class="n">sec</span><span class="p">):</span> <span class="mf">3.39</span> <span class="o">-</span> <span class="n">samples</span><span class="o">/</span><span class="n">sec</span><span class="p">:</span> <span class="mf">5072.93</span> <span class="o">-</span> <span class="n">lr</span><span class="p">:</span> <span class="mf">0.100000</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">41</span><span class="p">,</span><span class="mi">705</span> <span class="n">epoch</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">iter</span> <span class="mi">36</span><span class="o">/</span><span class="mi">40</span> <span class="o">-</span> <span class="n">loss</span> <span class="mf">2.63837577</span> <span class="o">-</span> <span class="n">time</span> <span class="p">(</span><span class="n">sec</span><span class="p">):</span> <span class="mf">3.68</span> <span class="o">-</span> <span class="n">samples</span><span class="o">/</span><span class="n">sec</span><span class="p">:</span> <span class="mf">5260.02</span> <span class="o">-</span> <span class="n">lr</span><span class="p">:</span> <span class="mf">0.100000</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">41</span><span class="p">,</span><span class="mi">972</span> <span class="n">epoch</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">iter</span> <span class="mi">40</span><span class="o">/</span><span class="mi">40</span> <span class="o">-</span> <span class="n">loss</span> <span class="mf">2.58915523</span> <span class="o">-</span> <span class="n">time</span> <span class="p">(</span><span class="n">sec</span><span class="p">):</span> <span class="mf">3.95</span> <span class="o">-</span> <span class="n">samples</span><span class="o">/</span><span class="n">sec</span><span class="p">:</span> <span class="mf">5394.33</span> <span class="o">-</span> <span class="n">lr</span><span class="p">:</span> <span class="mf">0.100000</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">41</span><span class="p">,</span><span class="mi">975</span> <span class="o">----------------------------------------------------------------------------------------------------</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">41</span><span class="p">,</span><span class="mi">977</span> <span class="n">EPOCH</span> <span class="mi">1</span> <span class="n">done</span><span class="p">:</span> <span class="n">loss</span> <span class="mf">2.5892</span> <span class="o">-</span> <span class="n">lr</span> <span class="mf">0.100000</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="mi">567</span> <span class="n">DEV</span> <span class="p">:</span> <span class="n">loss</span> <span class="mf">2.009714126586914</span> <span class="o">-</span> <span class="n">f1</span><span class="o">-</span><span class="n">score</span> <span class="p">(</span><span class="n">micro</span> <span class="n">avg</span><span class="p">)</span>  <span class="mf">0.41</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">27</span> <span class="mi">17</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="mi">579</span> <span class="n">BAD</span> <span class="n">EPOCHS</span> <span class="p">(</span><span class="n">no</span> <span class="n">improvement</span><span class="p">):</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>The output monitors the loss over the epochs. At the end of each epoch, the development score is computed and printed.</p>
+<p>And a <strong>final evaluation report</strong> gets printed in the end:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Results</span><span class="p">:</span>
+<span class="o">-</span> <span class="n">F</span><span class="o">-</span><span class="n">score</span> <span class="p">(</span><span class="n">micro</span><span class="p">)</span> <span class="mf">0.7732</span>
+<span class="o">-</span> <span class="n">F</span><span class="o">-</span><span class="n">score</span> <span class="p">(</span><span class="n">macro</span><span class="p">)</span> <span class="mf">0.6329</span>
+<span class="o">-</span> <span class="n">Accuracy</span> <span class="mf">0.7732</span>
+
+<span class="n">By</span> <span class="n">class</span><span class="p">:</span>
+              <span class="n">precision</span>    <span class="n">recall</span>  <span class="n">f1</span><span class="o">-</span><span class="n">score</span>   <span class="n">support</span>
+
+        <span class="n">NOUN</span>     <span class="mf">0.7199</span>    <span class="mf">0.7199</span>    <span class="mf">0.7199</span>       <span class="mi">407</span>
+       <span class="n">PUNCT</span>     <span class="mf">0.9263</span>    <span class="mf">0.9843</span>    <span class="mf">0.9544</span>       <span class="mi">319</span>
+        <span class="n">VERB</span>     <span class="mf">0.7521</span>    <span class="mf">0.6938</span>    <span class="mf">0.7218</span>       <span class="mi">258</span>
+        <span class="n">PRON</span>     <span class="mf">0.7782</span>    <span class="mf">0.9300</span>    <span class="mf">0.8474</span>       <span class="mi">200</span>
+         <span class="n">ADP</span>     <span class="mf">0.8559</span>    <span class="mf">0.9515</span>    <span class="mf">0.9011</span>       <span class="mi">206</span>
+       <span class="n">PROPN</span>     <span class="mf">0.6585</span>    <span class="mf">0.6398</span>    <span class="mf">0.6490</span>       <span class="mi">211</span>
+         <span class="n">ADJ</span>     <span class="mf">0.5654</span>    <span class="mf">0.6914</span>    <span class="mf">0.6221</span>       <span class="mi">175</span>
+         <span class="n">DET</span>     <span class="mf">0.9572</span>    <span class="mf">0.8995</span>    <span class="mf">0.9275</span>       <span class="mi">199</span>
+         <span class="n">AUX</span>     <span class="mf">0.8609</span>    <span class="mf">0.8784</span>    <span class="mf">0.8696</span>       <span class="mi">148</span>
+         <span class="n">ADV</span>     <span class="mf">0.5052</span>    <span class="mf">0.5000</span>    <span class="mf">0.5026</span>        <span class="mi">98</span>
+       <span class="n">CCONJ</span>     <span class="mf">0.9833</span>    <span class="mf">0.9077</span>    <span class="mf">0.9440</span>        <span class="mi">65</span>
+         <span class="n">NUM</span>     <span class="mf">0.5435</span>    <span class="mf">0.3289</span>    <span class="mf">0.4098</span>        <span class="mi">76</span>
+        <span class="n">PART</span>     <span class="mf">0.9091</span>    <span class="mf">0.7143</span>    <span class="mf">0.8000</span>        <span class="mi">56</span>
+       <span class="n">SCONJ</span>     <span class="mf">0.7083</span>    <span class="mf">0.5667</span>    <span class="mf">0.6296</span>        <span class="mi">30</span>
+         <span class="n">SYM</span>     <span class="mf">0.3333</span>    <span class="mf">0.2143</span>    <span class="mf">0.2609</span>        <span class="mi">14</span>
+           <span class="n">X</span>     <span class="mf">0.0000</span>    <span class="mf">0.0000</span>    <span class="mf">0.0000</span>        <span class="mi">15</span>
+        <span class="n">INTJ</span>     <span class="mf">0.0000</span>    <span class="mf">0.0000</span>    <span class="mf">0.0000</span>        <span class="mi">14</span>
+
+    <span class="n">accuracy</span>                         <span class="mf">0.7732</span>      <span class="mi">2491</span>
+   <span class="n">macro</span> <span class="n">avg</span>     <span class="mf">0.6504</span>    <span class="mf">0.6247</span>    <span class="mf">0.6329</span>      <span class="mi">2491</span>
+<span class="n">weighted</span> <span class="n">avg</span>     <span class="mf">0.7635</span>    <span class="mf">0.7732</span>    <span class="mf">0.7655</span>      <span class="mi">2491</span>
+</pre></div>
+</div>
+<p>This report gives us a breakdown of the precision, recall and F1 score of all classes, as well as overall.</p>
+<p>Congrats, you just trained your first model!</p>
+</section>
+<section id="step-by-step-walkthrough">
+<h2>Step-by-step walkthrough<a class="headerlink" href="#step-by-step-walkthrough" title="Permalink to this heading">#</a></h2>
+<p>The above code showed you how to train a part-of-speech tagger.</p>
+<p>Now let’s individually look at each of the main steps in the above script:</p>
+<section id="step-1-load-a-corpus">
+<h3>Step 1: Load a Corpus<a class="headerlink" href="#step-1-load-a-corpus" title="Permalink to this heading">#</a></h3>
+<p>The first thing you need is data to train and evaluate your model on.</p>
+<p>In Flair, training is done using the <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> object that holds three “splits”: a <code class="docutils literal notranslate"><span class="pre">train</span></code>, a <code class="docutils literal notranslate"><span class="pre">dev</span></code> and a <code class="docutils literal notranslate"><span class="pre">test</span></code> split.</p>
+<p>:::info</p>
+<p>Splitting your data into three splits is standard procedure in machine learning: the <code class="docutils literal notranslate"><span class="pre">train</span></code> split is used to train the model while the <code class="docutils literal notranslate"><span class="pre">dev</span></code> split is used for model selection and early stopping. The <code class="docutils literal notranslate"><span class="pre">test</span></code> split is used only for the final evaluation.
+:::</p>
+<p>In this example, we use the <a href="https://universaldependencies.org/treebanks/en_ewt/index.html">English Universal Dependencies</a> dataset to train on. It contains many sentences fully annotated with both universal and language-specific part-of-speech tags. Running these lines will load and print the corpus:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1. load the corpus</span>
+<span class="n">corpus</span> <span class="o">=</span> <span class="n">UD_ENGLISH</span><span class="p">()</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which should print:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Corpus</span><span class="p">:</span> <span class="mi">1254</span> <span class="kp">train</span> <span class="o">+</span> <span class="mi">200</span> <span class="n">dev</span> <span class="o">+</span> <span class="mi">208</span> <span class="n">test</span> <span class="n">sentences</span>
+</pre></div>
+</div>
+<p>Showing us that our downsampled training data has three splits: a training split of 1254 sentences, a dev split of 200 sentences, and a test split of 208 sentences.</p>
+<p>:::tip
+The <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> object has a number of very handy helper functions that let you manipulate the data and compute statistics. For instance, in the code above we called <code class="docutils literal notranslate"><span class="pre">.downsample(0.1)</span></code> to downsample the corpus to 10% of its original size. To learn about more helper functions, check out the corpus tutorial.
+:::</p>
+</section>
+<section id="step-2-choose-the-label-type">
+<h3>Step 2: Choose the label type<a class="headerlink" href="#step-2-choose-the-label-type" title="Permalink to this heading">#</a></h3>
+<p>After you load the corpus, you need to decide which label type to predict.</p>
+<p>We choose the label type <strong>‘upos’</strong>, since we want to predict universal part-of-speech tags in this example.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 2. what label do we want to predict?</span>
+<span class="n">label_type</span> <span class="o">=</span> <span class="s1">&#39;upos&#39;</span>
+</pre></div>
+</div>
+<p>:::info</p>
+<p>You might ask: why is specifying the <code class="docutils literal notranslate"><span class="pre">label_type</span></code> even necessary? Well, some corpora have more than one label type. The English UD treebank for instance has both universal PoS tags (‘upos’) and regular PoS tags (‘pos’), plus many other layers of annotation. A tagger is normally trained to predict just type of annotation.</p>
+<p>This means that you need to know which label types a specific corpus has labels for, and choose one of them.
+:::</p>
+</section>
+<section id="step-3-creating-a-label-dictionary">
+<h3>Step 3: Creating a label dictionary<a class="headerlink" href="#step-3-creating-a-label-dictionary" title="Permalink to this heading">#</a></h3>
+<p>Our model needs to predict a set of labels. To determine the label set, run <code class="docutils literal notranslate"><span class="pre">make_label_dictionary</span></code> on the corpus and pass the label type you want to predict. In this example, we pass <strong>‘upos’</strong> since we want to predict universal part-of-speech tags.</p>
+<p>Running these lines will compute and print the label dictionary from the corpus:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 3. make the label dictionary from the corpus</span>
+<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">label_dict</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which should print:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Dictionary</span> <span class="k">with</span> <span class="mi">18</span> <span class="n">tags</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">unk</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">NOUN</span><span class="p">,</span> <span class="n">PUNCT</span><span class="p">,</span> <span class="n">VERB</span><span class="p">,</span> <span class="n">PRON</span><span class="p">,</span> <span class="n">ADP</span><span class="p">,</span> <span class="n">DET</span><span class="p">,</span> <span class="n">AUX</span><span class="p">,</span> <span class="n">ADJ</span><span class="p">,</span> <span class="n">PROPN</span><span class="p">,</span> <span class="n">ADV</span><span class="p">,</span> <span class="n">CCONJ</span><span class="p">,</span> <span class="n">PART</span><span class="p">,</span> <span class="n">SCONJ</span><span class="p">,</span> <span class="n">NUM</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">SYM</span><span class="p">,</span> <span class="n">INTJ</span>
+</pre></div>
+</div>
+<p>Showing us that our label dictionary has 18 PoS tags, including one generic tag (<code class="docutils literal notranslate"><span class="pre">&lt;unk&gt;</span></code>) for all unknown labels.</p>
+</section>
+<section id="step-4-initialize-embeddings">
+<h3>Step 4: Initialize embeddings<a class="headerlink" href="#step-4-initialize-embeddings" title="Permalink to this heading">#</a></h3>
+<p>All models in Flair require you to choose embeddings. In most cases, you’ll want transformer embeddings. Choosing the right embeddings and parameters is crucial in order to train good models.</p>
+<p>In our example, we use simple GloVe embeddings:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 4. initialize embeddings</span>
+<span class="n">embeddings</span> <span class="o">=</span> <span class="n">WordEmbeddings</span><span class="p">(</span><span class="s1">&#39;glove&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>But this is only to make the example code run fast. We generally advise to use transformer-based embeddings instead.</p>
+</section>
+<section id="step-5-initialize-the-model">
+<h3>Step 5: Initialize the Model<a class="headerlink" href="#step-5-initialize-the-model" title="Permalink to this heading">#</a></h3>
+<p>Depending on what you want to do, you need to initialize the appropriate model type.</p>
+<p>For this example, we use the <code class="docutils literal notranslate"><span class="pre">SequenceLabeler</span></code> since we do part-of-speech tagging:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 5. initialize sequence tagger</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="p">(</span><span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+                       <span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
+                       <span class="n">tag_dictionary</span><span class="o">=</span><span class="n">label_dict</span><span class="p">,</span>
+                       <span class="n">tag_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Printing it will give you the PyTorch model that is initialized.</p>
+<p>:::info</p>
+<p>Depending on the task, you need a different model type: For sequence labeling (NER, part-of-speech tagging) you need the <code class="docutils literal notranslate"><span class="pre">SequenceLabeler</span></code>. For text classification you need the <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code>.</p>
+<p>For each model type, we are creating dedicated tutorials to better explain what they do.
+:::</p>
+</section>
+<section id="step-6-initialize-the-trainer">
+<h3>Step 6: Initialize the Trainer<a class="headerlink" href="#step-6-initialize-the-trainer" title="Permalink to this heading">#</a></h3>
+<p>The ModelTrainer is initialized simply by passing the model and the corpus because that is all it needs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 6. initialize trainer</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="step-7-train">
+<h3>Step 7: Train<a class="headerlink" href="#step-7-train" title="Permalink to this heading">#</a></h3>
+<p>Once the trainer is initialized, you can call <code class="docutils literal notranslate"><span class="pre">train</span></code> to launch a standard training run.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 7. start training</span>
+<span class="n">trainer</span><span class="o">.</span><span class="kp">train</span><span class="p">(</span><span class="s1">&#39;resources/taggers/example-upos&#39;</span><span class="p">,</span>
+              <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+              <span class="n">mini_batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+              <span class="n">max_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will launch a “standard training run” with SGD as optimizer. By default, the learning rate is annealed against the development score: if fo 3 epochs there is no improvement on the dev split, the learning rate is halved. If this happens too often, the learning rate will fall below a minimal threshold and training stops early.</p>
+<p>The max_epochs parameter is set to a small number in this script to make it run fast, but normally you should use a much higher value (150 or 200).</p>
+<p>:::info</p>
+<p>There are two main mechanisms to train a model in Flair. (1) The “classic” workflow (SGD with annealing) is invoked as above using the <code class="docutils literal notranslate"><span class="pre">train()</span></code> method. (2) The current state-of-the-art based on fine-tuning (AdamW with One-Cycle) is invoked using the <code class="docutils literal notranslate"><span class="pre">fine_tune()</span></code> method. In most cases, you will want to use the latter.
+:::</p>
+</section>
+<section id="step-8-predict">
+<h3>Step 8: Predict<a class="headerlink" href="#step-8-predict" title="Permalink to this heading">#</a></h3>
+<p>Once the model is trained you can use it to predict tags for new sentences. Just call the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method of the model.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># load the model you trained</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s1">&#39;resources/taggers/example-upos/final-model.pt&#39;</span><span class="p">)</span>
+
+<span class="c1"># create example sentence</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;I love Berlin&#39;</span><span class="p">)</span>
+
+<span class="c1"># predict tags and print</span>
+<span class="n">model</span><span class="o">.</span><span class="kp">predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="o">.</span><span class="kp">to_tagged_string</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>If the model works well, it will correctly tag ‘love’ as a verb in this example.</p>
+</section>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this heading">#</a></h2>
+<p>This tutorial gave you a general overview of the main steps to train a model:</p>
+<ul class="simple">
+<li><p>load a corpus</p></li>
+<li><p>choose a label type</p></li>
+<li><p>create a label dictionary</p></li>
+<li><p>choose embeddings</p></li>
+<li><p>initialize model</p></li>
+<li><p>initialize trainer</p></li>
+<li><p>train</p></li>
+</ul>
+</section>
+</section>
+
+
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial 2: Training models</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="train-vs-fine-tune.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Training vs fine-tuning</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-training-a-part-of-speech-tagger">Example: Training a Part-of-Speech Tagger</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-by-step-walkthrough">Step-by-step walkthrough</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-load-a-corpus">Step 1: Load a Corpus</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-choose-the-label-type">Step 2: Choose the label type</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-creating-a-label-dictionary">Step 3: Creating a label dictionary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-initialize-embeddings">Step 4: Initialize embeddings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-initialize-the-model">Step 5: Initialize the Model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-initialize-the-trainer">Step 6: Initialize the Trainer</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-7-train">Step 7: Train</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-8-predict">Step 8: Predict</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/tutorial/tutorial-training/how-model-training-works.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

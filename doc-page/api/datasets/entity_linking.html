@@ -1,0 +1,950 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>flair.datasets.entity_linking &#8212; flair 0.12.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/github_style.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/datasets/entity_linking';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="flair.datasets.ocr" href="ocr.html" />
+    <link rel="prev" title="flair.datasets.document_classification" href="document_classification.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">flair 0.12.2 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../flair.html">flair</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.data.html">flair.data</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../flair.datasets.html">flair.datasets</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="base.html">flair.datasets.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="biomedical.html">flair.datasets.biomedical</a></li>
+<li class="toctree-l3"><a class="reference internal" href="document_classification.html">flair.datasets.document_classification</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">flair.datasets.entity_linking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ocr.html">flair.datasets.ocr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relation_extraction.html">flair.datasets.relation_extraction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sequence_labeling.html">flair.datasets.sequence_labeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="text_image.html">flair.datasets.text_image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="text_text.html">flair.datasets.text_text</a></li>
+<li class="toctree-l3"><a class="reference internal" href="treebanks.html">flair.datasets.treebanks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.embeddings.html">flair.embeddings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.models.html">flair.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.splitter.html">flair.splitter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.tokenization.html">flair.tokenization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.trainers.html">flair.trainers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.trainers.plugins.html">flair.trainers.plugins</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+</ul>
+</div>
+        <div class="sidebar-primary-item">
+<div id="searchbox"></div></div>
+        <div class="sidebar-primary-item">
+<h3>Versions</h3>
+<ul>
+  <li><a href="entity_linking.html">
+    
+    latest (dev)
+    
+    
+    [x]
+    
+  </a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API Docs</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../flair.datasets.html" class="nav-link">flair.datasets</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">flair.datasets.entity_linking</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="module-flair.datasets.entity_linking">
+<span id="flair-datasets-entity-linking"></span><h1>flair.datasets.entity_linking<a class="headerlink" href="#module-flair.datasets.entity_linking" title="Permalink to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_AIDA">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">NEL_ENGLISH_AIDA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ids_and_check_existence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L428-L575"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_AIDA" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_AIDA.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ids_and_check_existence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L429-L527"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_AIDA.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize AIDA CoNLL-YAGO Entity Linking corpus.</p>
+<p>The corpus got introduced here <a class="reference external" href="https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/ambiverse-nlu/aida/downloads">https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/ambiverse-nlu/aida/downloads</a>.
+License: <a class="reference external" href="https://creativecommons.org/licenses/by-sa/3.0/deed.en_US">https://creativecommons.org/licenses/by-sa/3.0/deed.en_US</a>
+If you call the constructor the first time the dataset gets automatically downloaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_path</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+to point to a different folder but typically this should not be necessary.</p></li>
+<li><p><strong>in_memory</strong> (<em>bool</em>) – If True, keeps dataset in memory giving speedups in training.</p></li>
+<li><p><strong>use_ids_and_check_existence</strong> (<em>bool</em>) – If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be ignored. This also means that one works with
+current wikipedia-arcticle names and possibly alter some of the out-dated ones in the original dataset</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_AQUAINT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">NEL_ENGLISH_AQUAINT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agreement_threshold=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter=&lt;flair.splitter.SegtokSentenceSplitter</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L83-L257"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_AQUAINT" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_AQUAINT.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agreement_threshold=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter=&lt;flair.splitter.SegtokSentenceSplitter</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L84-L257"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_AQUAINT.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize Aquaint Entity Linking corpus.</p>
+<p>introduced in: D. Milne and I. H. Witten. Learning to link with wikipedia
+<a class="reference external" href="https://www.cms.waikato.ac.nz/~ihw/papers/08-DNM-IHW-LearningToLinkWithWikipedia.pdf">https://www.cms.waikato.ac.nz/~ihw/papers/08-DNM-IHW-LearningToLinkWithWikipedia.pdf</a> . If you call the constructor the first
+time the dataset gets automatically downloaded and transformed in tab-separated column format (aquaint.txt).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_path</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+to point to a different folder but typically this should not be necessary.</p></li>
+<li><p><strong>in_memory</strong> (<em>bool</em>) – If True, keeps dataset in memory giving speedups in training.</p></li>
+<li><p><strong>agreement_threshold</strong> (<em>float</em>) – Some link annotations come with an agreement_score representing the agreement from the human annotators. The score ranges from lowest 0.2
+to highest 1.0. The lower the score, the less “important” is the entity because fewer annotators thought it was worth linking.
+Default is 0.5 which means the majority of annotators must have annoteted the respective entity mention.</p></li>
+<li><p><strong>sentence_splitter</strong> (<cite>SentenceSplitter</cite>) – The sentencesplitter that is used to split the articles into sentences.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_IITB">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">NEL_ENGLISH_IITB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_disagreements=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter=&lt;flair.splitter.SegtokSentenceSplitter</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L578-L716"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_IITB" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_IITB.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_disagreements=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter=&lt;flair.splitter.SegtokSentenceSplitter</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L579-L716"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_IITB.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize ITTB Entity Linking corpus.</p>
+<p>The corpus got introduced in “Collective Annotation of Wikipedia Entities in Web Text” Sayali Kulkarni, Amit Singh, Ganesh Ramakrishnan, and Soumen Chakrabarti.</p>
+<p>If you call the constructor the first time the dataset gets automatically downloaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_path</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+to point to a different folder but typically this should not be necessary.</p></li>
+<li><p><strong>in_memory</strong> (<em>bool</em>) – If True, keeps dataset in memory giving speedups in training.</p></li>
+<li><p><strong>ignore_disagreements</strong> (<em>bool</em>) – If True annotations with annotator disagreement will be ignored.</p></li>
+<li><p><strong>sentence_splitter</strong> (<cite>SentenceSplitter</cite>) – The sentencesplitter that is used to split the articles into sentences.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_REDDIT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">NEL_ENGLISH_REDDIT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L788-L1044"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_REDDIT.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L789-L938"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize the Reddit Entity Linking corpus containing gold annotations only.</p>
+<p>see <a class="reference external" href="https://arxiv.org/abs/2101.01228v2">https://arxiv.org/abs/2101.01228v2</a></p>
+<p>The first time you call this constructor it will automatically download the dataset.
+:type base_path: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]
+:param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+to point to a different folder but typically this should not be necessary.
+:type in_memory: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
+:param in_memory: If True, keeps dataset in memory giving speedups in training.
+:param document_as_sequence: If True, all sentences of a document are read into a single Sentence object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_annot_array">
+<span class="sig-name descname"><span class="pre">_fill_annot_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">annot_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_flag</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1002-L1022"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_annot_array" title="Permalink to this definition">#</a></dt>
+<dd><p>Fills the array containing information about the entity mention annotations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>annot_array</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>) – array to be filled</p></li>
+<li><p><strong>key</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – reddit id, on which the post title/comment thread is matched with its corresponding annotation</p></li>
+<li><p><strong>post_flag</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – flag indicating whether the annotations are collected for the post titles (=True)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+</dd>
+</dl>
+<p>or comment threads (=False)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_curr_comment">
+<span class="sig-name descname"><span class="pre">_fill_curr_comment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fix_flag</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1024-L1044"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_curr_comment" title="Permalink to this definition">#</a></dt>
+<dd><p>Extends the string containing the current comment thread, which is passed to _text_to_cols method, when the comments are parsed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fix_flag</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – flag indicating whether the method is called when the incorrectly imported rows are parsed (=True)</p>
+</dd>
+</dl>
+<p>or regular rows (=False)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._text_to_cols">
+<span class="sig-name descname"><span class="pre">_text_to_cols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">links</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L940-L1000"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._text_to_cols" title="Permalink to this definition">#</a></dt>
+<dd><p>Convert a tokenized sentence into column format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sentence</strong> (<a class="reference internal" href="../flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>) – Flair Sentence object containing a tokenized post title or comment thread</p></li>
+<li><p><strong>links</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>) – array containing information about the starting and ending position of an entity mention, as well</p></li>
+</ul>
+</dd>
+</dl>
+<p>as its corresponding wiki tag
+:type outfile: 
+:param outfile: file, to which the output is written</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_TWEEKI">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">NEL_ENGLISH_TWEEKI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L719-L785"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_TWEEKI" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_TWEEKI.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L720-L785"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_TWEEKI.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize Tweeki Entity Linking corpus.</p>
+<p>The dataset got introduced in “Tweeki:
+Linking Named Entities on Twitter to a Knowledge Graph” Harandizadeh,
+Singh. The data consits of tweets with manually annotated wikipedia
+links. If you call the constructor the first time the dataset gets
+automatically downloaded and transformed in tab-separated column
+format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_path</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+to point to a different folder but typically this should not be necessary.</p></li>
+<li><p><strong>in_memory</strong> (<em>bool</em>) – If True, keeps dataset in memory giving speedups in training.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_GERMAN_HIPE">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">NEL_GERMAN_HIPE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wiki_language</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dewiki'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L260-L425"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_GERMAN_HIPE" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_GERMAN_HIPE.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wiki_language</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dewiki'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L261-L372"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_GERMAN_HIPE.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize a sentence-segmented version of the HIPE entity linking corpus for historical German.</p>
+<p>see description of HIPE at <a class="reference external" href="https://impresso.github.io/CLEF-HIPE-2020/">https://impresso.github.io/CLEF-HIPE-2020/</a>.</p>
+<p>This version was segmented by &#64;stefan-it and is hosted at <a class="github reference external" href="https://github.com/stefan-it/clef-hipe">stefan-it/clef-hipe</a>.
+If you call the constructor the first time the dataset gets automatically downloaded and transformed in tab-separated column format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_path</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+to point to a different folder but typically this should not be necessary.</p></li>
+<li><p><strong>in_memory</strong> (<em>bool</em>) – If True, keeps dataset in memory giving speedups in training.</p></li>
+<li><p><strong>wiki_language</strong> (<em>str</em>) – specify the language of the names of the wikipedia pages, i.e. which language version of
+Wikipedia URLs to use. Since the text is in german the default language is German.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_MASC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">WSD_MASC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1547-L1620"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_MASC" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_MASC.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1548-L1620"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_MASC.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize MASC (Manually Annotated Sub-Corpus) provided in UFSAC.</p>
+<p>see <a class="github reference external" href="https://github.com/getalp/UFSAC">getalp/UFSAC</a>
+When first initializing the corpus the whole UFSAC data is downloaded.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_OMSTI">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">WSD_OMSTI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1623-L1697"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_OMSTI" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_OMSTI.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1624-L1697"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_OMSTI.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize OMSTI (One Million Sense-Tagged Instances) provided in UFSAC.</p>
+<p>see <a class="github reference external" href="https://github.com/getalp/UFSAC">getalp/UFSAC</a>
+When first initializing the corpus the whole UFSAC data is downloaded.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_RAGANATO_ALL">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">WSD_RAGANATO_ALL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1337-L1397"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_RAGANATO_ALL" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_RAGANATO_ALL.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1338-L1397"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_RAGANATO_ALL.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize ragnato_ALL (concatenation of all SensEval and SemEval all-words tasks) provided in UFSAC.</p>
+<p>see <a class="github reference external" href="https://github.com/getalp/UFSAC">getalp/UFSAC</a>
+When first initializing the corpus the whole UFSAC data is downloaded.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_SEMCOR">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">WSD_SEMCOR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1400-L1472"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_SEMCOR" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_SEMCOR.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1401-L1472"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_SEMCOR.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize SemCor provided in UFSAC.</p>
+<p>see <a class="github reference external" href="https://github.com/getalp/UFSAC">getalp/UFSAC</a>
+When first initializing the corpus the whole UFSAC data is downloaded.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_TRAINOMATIC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">WSD_TRAINOMATIC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1700-L1771"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_TRAINOMATIC" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_TRAINOMATIC.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1701-L1771"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_TRAINOMATIC.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize Train-O-Matic provided in UFSAC.</p>
+<p>see <a class="github reference external" href="https://github.com/getalp/UFSAC">getalp/UFSAC</a>
+When first initializing the corpus the whole UFSAC data is downloaded.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_UFSAC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">WSD_UFSAC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filenames</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['masc',</span> <span class="pre">'semcor']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits_in_multicorpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits_in_each_corpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'multicorpus'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1193-L1334"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_UFSAC" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../flair.data.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_UFSAC.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filenames</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['masc',</span> <span class="pre">'semcor']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits_in_multicorpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits_in_each_corpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'multicorpus'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1194-L1334"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_UFSAC.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize a custom corpus with any Word Sense Disambiguation (WSD) datasets in the UFSAC format.</p>
+<blockquote>
+<div><p>see <a class="github reference external" href="https://github.com/getalp/UFSAC">getalp/UFSAC</a>.</p>
+</div></blockquote>
+<p>If the constructor is called for the first time the data is automatically downloaded and transformed from xml to a tab separated column format.
+Since only the WordNet 3.0 version for senses is consistently available for all provided datasets we will only consider this version.
+Also we ignore the id annotation used in datasets that were originally created for evaluation tasks
+:type filenames: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]
+:param filenames: Here you can pass a single datasetname or a list of ddatasetnames. The available names are:</p>
+<blockquote>
+<div><p>‘masc’, ‘omsti’, ‘raganato_ALL’, ‘raganato_semeval2007’, ‘raganato_semeval2013’, ‘raganato_semeval2015’, ‘raganato_senseval2’, ‘raganato_senseval3’,
+‘semcor’, ‘semeval2007task17’, ‘semeval2007task7’, ‘semeval2013task12’, ‘semeval2015task13’, ‘senseval2’, ‘senseval2_lexical_sample_test’,
+‘senseval2_lexical_sample_train’, ‘senseval3task1’, ‘senseval3task6_test’, ‘senseval3task6_train’, ‘trainomatic’, ‘wngt’.
+So you can pass for example filenames = [‘masc’, ‘omsti’, ‘wngt’]. Default two mid-sized datasets ‘masc’ and ‘semcor’ are loaded.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – You can override this to point to a specific folder but typically this should not be necessary.</p></li>
+<li><p><strong>in_memory</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, keeps dataset in memory giving speedups in training.</p></li>
+<li><p><strong>document_as_sequence</strong> – If True, all sentences of a document are read into a single Sentence object</p></li>
+<li><p><strong>cut_multisense</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – Boolean that determines whether or not the wn30_key tag should be cut if it contains
+multiple possible senses. If True only the first listed sense will be used and the
+suffix ‘_cut’ will be added to the name of the CoNLL file. Otherwise the whole list of
+senses will be detected as one new sense. The default is True.</p></li>
+<li><p><strong>columns</strong> – Columns to consider when loading the dataset. You can add 1: “lemma” or 2: “pos” to the default dict {0: “text”, 3: “sense”}
+if you want to use additional pos and/or lemma for the words.</p></li>
+<li><p><strong>banned_sentences</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]) – Optionally remove sentences from the corpus. Works only if <cite>in_memory</cite> is true</p></li>
+<li><p><strong>sample_missing_splits_in_multicorpus</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Whether to sample missing splits when loading the multicorpus (this is redundant if
+sample_missing_splits_in_each_corpus is True)</p></li>
+<li><p><strong>sample_missing_splits_in_each_corpus</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Whether to sample missing splits when loading each single corpus given in filenames.</p></li>
+<li><p><strong>use_raganato_ALL_as_test_data</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, the raganato_ALL dataset (Raganato et al. “Word Sense Disambiguation: A unified evaluation framework and empirical compariso”)
+will be used as test data. Note that the sample_missing_splits parameters are set to ‘only_dev’ in this case if set to True.</p></li>
+<li><p><strong>name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Name of your (costum) corpus</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_WORDNET_GLOSS_TAGGED">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">WSD_WORDNET_GLOSS_TAGGED</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1475-L1544"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_WORDNET_GLOSS_TAGGED" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.WSD_WORDNET_GLOSS_TAGGED.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">3:</span> <span class="pre">'sense'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_raganato_ALL_as_test_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1476-L1544"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.WSD_WORDNET_GLOSS_TAGGED.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize Princeton WordNet Gloss Corpus provided in UFSAC.</p>
+<p>see <a class="github reference external" href="https://github.com/getalp/UFSAC">getalp/UFSAC</a>
+When first initializing the corpus the whole UFSAC data is downloaded.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.ZELDA">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">ZELDA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">2:</span> <span class="pre">'nel'}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L18-L80"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.ZELDA" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.MultiFileColumnCorpus" title="flair.datasets.sequence_labeling.MultiFileColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiFileColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.ZELDA.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{0:</span> <span class="pre">'text',</span> <span class="pre">2:</span> <span class="pre">'nel'}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L19-L80"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.ZELDA.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize ZELDA Entity Linking corpus.</p>
+<p>introduced in “ZELDA: A Comprehensive Benchmark for Supervised Entity Disambiguation” (Milich and Akbik, 2023).
+When calling the constructor for the first time, the dataset gets automatically downloaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_path</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+to point to a different folder but typically this should not be necessary.</p></li>
+<li><p><strong>in_memory</strong> (<em>bool</em>) – If True, keeps dataset in memory giving speedups in training.</p></li>
+<li><p><strong>column_format</strong> (<em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em>) – The column-format to specify which columns correspond to the text or label types.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.determine_tsv_file">
+<span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">determine_tsv_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1154-L1190"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.determine_tsv_file" title="Permalink to this definition">#</a></dt>
+<dd><p>Checks if the converted .tsv file already exists and if not, creates it.</p>
+<section id="returns-name-of-the-file">
+<h2>Returns name of the file.<a class="headerlink" href="#returns-name-of-the-file" title="Permalink to this heading">#</a></h2>
+<dl class="simple">
+<dt>string<span class="classifier">str</span></dt><dd><p>String that contains the name of the file.</p>
+</dd>
+<dt>data_folder<span class="classifier">str</span></dt><dd><p>String that contains the name of the folder in which the CoNLL file should reside.</p>
+</dd>
+<dt>cut_multisense<span class="classifier">bool, optional</span></dt><dd><p>Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
+If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
+as one new sense. The default is True.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.datasets.entity_linking.from_ufsac_to_tsv">
+<span class="sig-prename descclassname"><span class="pre">flair.datasets.entity_linking.</span></span><span class="sig-name descname"><span class="pre">from_ufsac_to_tsv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xml_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conll_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasetname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_multisense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/entity_linking.py#L1047-L1151"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.from_ufsac_to_tsv" title="Permalink to this definition">#</a></dt>
+<dd><p>Function that converts the UFSAC format into tab separated column format in a new file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xml_file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – Path to the xml file.</p></li>
+<li><p><strong>conll_file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – Path for the new conll file.</p></li>
+<li><p><strong>datasetname</strong> (<em>str</em>) – Name of the dataset from UFSAC, needed because of different handling of multi-word-spans in the datasets</p></li>
+<li><p><strong>encoding</strong> (<em>str</em><em>, </em><em>optional</em>) – Encoding used in open function. The default is “utf8”.</p></li>
+<li><p><strong>cut_multisense</strong> (<em>bool</em><em>, </em><em>optional</em>) – Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
+If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
+as one new sense. The default is True.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="document_classification.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">flair.datasets.document_classification</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="ocr.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">flair.datasets.ocr</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_AIDA"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_AIDA</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_AIDA.__init__"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_AIDA.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_AQUAINT"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_AQUAINT</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_AQUAINT.__init__"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_AQUAINT.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_IITB"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_IITB</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_IITB.__init__"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_IITB.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_REDDIT</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT.__init__"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_REDDIT.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_annot_array"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_REDDIT._fill_annot_array()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_curr_comment"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_REDDIT._fill_curr_comment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._text_to_cols"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_REDDIT._text_to_cols()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_TWEEKI"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_TWEEKI</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_ENGLISH_TWEEKI.__init__"><code class="docutils literal notranslate"><span class="pre">NEL_ENGLISH_TWEEKI.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_GERMAN_HIPE"><code class="docutils literal notranslate"><span class="pre">NEL_GERMAN_HIPE</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.NEL_GERMAN_HIPE.__init__"><code class="docutils literal notranslate"><span class="pre">NEL_GERMAN_HIPE.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_MASC"><code class="docutils literal notranslate"><span class="pre">WSD_MASC</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_MASC.__init__"><code class="docutils literal notranslate"><span class="pre">WSD_MASC.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_OMSTI"><code class="docutils literal notranslate"><span class="pre">WSD_OMSTI</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_OMSTI.__init__"><code class="docutils literal notranslate"><span class="pre">WSD_OMSTI.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_RAGANATO_ALL"><code class="docutils literal notranslate"><span class="pre">WSD_RAGANATO_ALL</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_RAGANATO_ALL.__init__"><code class="docutils literal notranslate"><span class="pre">WSD_RAGANATO_ALL.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_SEMCOR"><code class="docutils literal notranslate"><span class="pre">WSD_SEMCOR</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_SEMCOR.__init__"><code class="docutils literal notranslate"><span class="pre">WSD_SEMCOR.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_TRAINOMATIC"><code class="docutils literal notranslate"><span class="pre">WSD_TRAINOMATIC</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_TRAINOMATIC.__init__"><code class="docutils literal notranslate"><span class="pre">WSD_TRAINOMATIC.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_UFSAC"><code class="docutils literal notranslate"><span class="pre">WSD_UFSAC</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_UFSAC.__init__"><code class="docutils literal notranslate"><span class="pre">WSD_UFSAC.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_WORDNET_GLOSS_TAGGED"><code class="docutils literal notranslate"><span class="pre">WSD_WORDNET_GLOSS_TAGGED</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.WSD_WORDNET_GLOSS_TAGGED.__init__"><code class="docutils literal notranslate"><span class="pre">WSD_WORDNET_GLOSS_TAGGED.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.ZELDA"><code class="docutils literal notranslate"><span class="pre">ZELDA</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.ZELDA.__init__"><code class="docutils literal notranslate"><span class="pre">ZELDA.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.determine_tsv_file"><code class="docutils literal notranslate"><span class="pre">determine_tsv_file()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.entity_linking.from_ufsac_to_tsv"><code class="docutils literal notranslate"><span class="pre">from_ufsac_to_tsv()</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/api/datasets/entity_linking.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
