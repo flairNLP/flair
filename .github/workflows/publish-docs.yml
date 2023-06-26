@@ -1,7 +1,7 @@
 name: 'Run tests for ci cd'
 on:
   push:
-    branches: [ main ]
+    branches: [ main, doc-page ]
     tags:
       - "*"
 
