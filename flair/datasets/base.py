@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Generic, List, Optional, Union
 
 import torch.utils.data.dataloader
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 
 from flair.data import DT, FlairDataset, Sentence, Tokenizer
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer

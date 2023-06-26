@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 import torch
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 
 import flair
 from flair.data import Sentence, Token

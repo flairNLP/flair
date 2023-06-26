@@ -3,21 +3,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Union
 
 import torch
+from deprecated.sphinx import deprecated
 
 import flair.nn
 from flair.data import Dictionary, Sentence, Span, Token
 from flair.embeddings import TokenEmbeddings
 
 log = logging.getLogger("flair")
-
-
-def WordTagger(embeddings, tag_dictionary, tag_type, **classifierargs):
-    from warnings import warn
-
-    warn("The WordTagger class is deprecated and will be removed in Flair 1.0. Use TokenClassifier instead!")
-    return TokenClassifier(
-        embeddings=embeddings, label_dictionary=tag_dictionary, label_type=tag_type, **classifierargs
-    )
 
 
 class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
@@ -231,3 +223,8 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         from typing import cast
 
         return cast("TokenClassifier", super().load(model_path=model_path))
+
+
+@deprecated(reason="The WordTagger is deprecated in favour of :class:`flair.models.TokenClassifier`.", version="0.12.2")
+class WordTagger(TokenClassifier):
+    pass

@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, NamedTuple, Optional, Union, cast
 
 import torch
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 from torch.utils.data import Dataset, IterableDataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 

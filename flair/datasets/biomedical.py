@@ -22,7 +22,7 @@ from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from zipfile import BadZipFile, LargeZipFile
 
 import ftfy
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
