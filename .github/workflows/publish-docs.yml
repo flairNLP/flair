@@ -14,8 +14,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Install poetry
-        run: pipx install poetry
       - name: setup python ${{ env.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -28,8 +26,6 @@ jobs:
         run: pip install -r docs/requirements.txt
       - name: Fetch git tags
         run: git fetch --tags origin
-      - name: Install Dependencies
-        run: poetry install
       - name: Build docs
         run: |
           sphinx-multiversion docs doc_build/
