@@ -324,6 +324,7 @@ class CSVClassificationCorpus(Corpus):
         skip_header: bool = False,
         encoding: str = "utf-8",
         no_class_label=None,
+        sample_missing_splits: Union[bool, str] = True,
         **fmtparams,
     ) -> None:
         """Instantiates a Corpus for text classification from CSV column formatted data.
@@ -396,7 +397,7 @@ class CSVClassificationCorpus(Corpus):
             else None
         )
 
-        super().__init__(train, dev, test, name=name)
+        super().__init__(train, dev, test, name=name, sample_missing_splits=sample_missing_splits)
 
 
 class CSVClassificationDataset(FlairDataset):
@@ -1488,6 +1489,7 @@ class GLUE_SST2(CSVClassificationCorpus):
         tokenizer: Tokenizer = SegtokTokenizer(),
         in_memory: bool = False,
         encoding: str = "utf-8",
+        sample_missing_splits: bool = True,
         **datasetargs,
     ) -> None:
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
@@ -1514,6 +1516,7 @@ class GLUE_SST2(CSVClassificationCorpus):
             tokenizer=tokenizer,
             in_memory=in_memory,
             encoding=encoding,
+            sample_missing_splits=sample_missing_splits,
             skip_header=True,
             **datasetargs,
         )
