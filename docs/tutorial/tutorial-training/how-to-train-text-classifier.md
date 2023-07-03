@@ -8,8 +8,8 @@ could train your own sentiment analysis model, or offensive language detection m
 
 For text classification, you reach state-of-the-art scores by fine-tuning a transformer. 
 
-Training a model is easy: load the appropriate corpus, make a label dictionary, then fine-tune a `TextClassifier`
-model using the `fine_tune()` method of the `ModelTrainer`. See the example script below:
+Training a model is easy: load the appropriate corpus, make a label dictionary, then fine-tune a [`TextClassifier`](#flair.models.TextClassifier)
+model using the [`ModelTrainer.fine_tune()`](#flair.trainers.ModelTrainer.fine_tune) method. See the example script below:
 
 ```python
 from flair.data import Corpus
@@ -44,8 +44,7 @@ trainer.fine_tune('resources/taggers/question-classification-with-transformer',
                   )
 ```
 
-Once the model is trained you can load it to predict the class of new sentences. Just call the `predict` method of the
-model.
+Once the model is trained you can load it to predict the class of new sentences. Just call the [`predict`](#flair.nn.DefaultClassifier.predict) method of the model.
 
 ```python
 classifier = TextClassifier.load('resources/taggers/question-classification-with-transformer/final-model.pt')

@@ -116,6 +116,7 @@ extractor.predict(sentence)
 relations = sentence.get_labels('relation')
 for relation in relations:
     print(relation)
+print("")
 
 # Use the `get_labels()` method with parameter 'relation' to iterate over all relation predictions. 
 for label in sentence.get_labels('relation'):

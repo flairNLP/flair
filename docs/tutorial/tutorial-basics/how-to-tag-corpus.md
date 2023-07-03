@@ -1,9 +1,9 @@
 # How to tag a whole corpus
 
 Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a
-list of `Sentence` objects to the `.predict()` method.
+list of [`Sentence`](#flair.data.Sentence) objects to the [`Classifier.predict()`](#flair.nn.Classifier.predict) method.
 
-For instance, you can use the sentence splitter of segtok to split your text:
+For instance, you can use a [`SentenceSplitter`](#flair.splitter.SentenceSplitter) to split your text:
 
 ```python
 from flair.nn import Classifier
@@ -27,6 +27,6 @@ for sentence in sentences:
     print(sentence)
 ```
 
-Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
+Using the `mini_batch_size` parameter of the [`Classifier.predict()`](#flair.nn.Classifier.predict) method, you can set the size of mini batches passed to the
 tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
 

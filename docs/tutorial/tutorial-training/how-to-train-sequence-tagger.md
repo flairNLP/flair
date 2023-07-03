@@ -58,8 +58,8 @@ trainer.fine_tune('resources/taggers/sota-ner-flert',
                   )
 ```
 
-As you can see, we use 'xlm-roberta-large' embeddings, enable fine-tuning and set `use_context` to True. 
-We also deactivate the RNN, CRF and reprojection in the `SequenceTagger`. This is because the 
+As you can see, we use [`TransformerWordEmbeddings`](#flair.embeddings.token.TransformerWordEmbeddings) based on 'xlm-roberta-large' embeddings. We enable fine-tuning and set `use_context` to True. 
+We also deactivate the RNN, CRF and reprojection in the [`SequenceTagger`](#flair.models.SequenceTagger). This is because the 
 transformer is so powerful that it does not need these components. We then fine-tune the model with a very small
 learning rate on the corpus.
 
@@ -171,7 +171,7 @@ This script will give you the state-of-the-art accuracy reported in [Akbik et al
 ## Multi-dataset training
 
 Now, let us train a single model that can PoS tag text in both English and German. To do this, we load both the English
-and German UD corpora and create a MultiCorpus object. We also use the new multilingual Flair embeddings for this task.
+and German UD corpora and create a [`MultiCorpus`](#flair.data.MultiCorpus) object. We also use the new multilingual Flair embeddings for this task.
 
 All the rest is same as before, e.g.:
 

@@ -2,19 +2,19 @@
 
 Flair supports many other embedding types. This section introduces these embeddings.
 
-:::info
-We mostly train our models with either TransformerEmbeddings or FlairEmbeddings. The embeddings presented here might be useful 
+```{note}
+We mostly train our models with either [`TransformerEmbeddings`](#flair.embeddings.transformers.TransformerEmbeddings) or [`FlairEmbeddings`](#flair.embeddings.token.FlairEmbeddings). The embeddings presented here might be useful 
 for specific use cases or for comparison purposes. 
-:::
+```
 
 
 ## One-Hot Embeddings
 
-`OneHotEmbeddings` are embeddings that encode each word in a vocabulary as a one-hot vector, followed by an embedding
+[`OneHotEmbeddings`](#flair.embeddings.token.OneHotEmbeddings) are embeddings that encode each word in a vocabulary as a one-hot vector, followed by an embedding
 layer. These embeddings
 thus do not encode any prior knowledge as do most other embeddings. They also differ in that they
 require to see a vocabulary (`vocab_dictionary`) during instantiation. Such dictionary can be passed as an argument
-during class initialization or constructed directly from a corpus with a `from_corpus` method. The dictionary consists
+during class initialization or constructed directly from a corpus with a [`OneHotEmbeddings.from_corpus`](#flair.embeddings.token.OneHotEmbeddings.from_corpus) method. The dictionary consists
 of all unique tokens contained in the corpus plus an UNK token for all rare words.
 
 You initialize these embeddings like this:
@@ -83,7 +83,7 @@ This should print a vocabulary of size 18 consisting of universal part-of-speech
 
 ## Byte Pair Embeddings
 
-`BytePairEmbeddings` are word embeddings that are precomputed on the subword-level. This means that they are able to
+[`BytePairEmbeddings`](#flair.embeddings.token.BytePairEmbeddings) are word embeddings that are precomputed on the subword-level. This means that they are able to
 embed any word by splitting words into subwords and looking up their embeddings. `BytePairEmbeddings` were proposed
 and computed by [Heinzerling and Strube (2018)](https://www.aclweb.org/anthology/L18-1473) who found that they offer nearly the same accuracy as word embeddings, but at a fraction
 of the model size. So they are a great choice if you want to train small models.
@@ -108,7 +108,7 @@ embedding.embed(sentence)
 More information can be found
 on the [byte pair embeddings](https://nlp.h-its.org/bpemb/) web page.
 
-`BytePairEmbeddings` also have a multilingual model capable of embedding any word in any language.
+[`BytePairEmbeddings`](#flair.embeddings.token.BytePairEmbeddings) also have a multilingual model capable of embedding any word in any language.
  You can instantiate it with:
 
 ```python
@@ -116,65 +116,22 @@ on the [byte pair embeddings](https://nlp.h-its.org/bpemb/) web page.
 embedding = BytePairEmbeddings('multi')
 ```
 
-You can also load custom `BytePairEmbeddings` by specifying a path to model_file_path and embedding_file_path arguments. They correspond respectively to a SentencePiece model file and to an embedding file (Word2Vec plain text or GenSim binary). For example:
+You can also load custom [`BytePairEmbeddings`](#flair.embeddings.token.BytePairEmbeddings) by specifying a path to model_file_path and embedding_file_path arguments. They correspond respectively to a SentencePiece model file and to an embedding file (Word2Vec plain text or GenSim binary). For example:
 
 ```python
 # init custom embedding
 embedding = BytePairEmbeddings(model_file_path='your/path/m.model', embedding_file_path='your/path/w2v.txt')
 ```
 
-
-## ELMo Embeddings
-
-[ELMo embeddings](http://www.aclweb.org/anthology/N18-1202) were presented by Peters et al. in 2018. They are using
-a bidirectional recurrent neural network to predict the next word in a text.
-We are using the implementation of [AllenNLP](https://allennlp.org/elmo). As this implementation comes with a lot of
-sub-dependencies, which we don't want to include in Flair, you need to first install the library via
-`pip install allennlp==0.9.0` before you can use it in Flair.
-Using the embeddings is as simple as using any other embedding type:
-
-```python
-from flair.embeddings import ELMoEmbeddings
-
-# init embedding
-embedding = ELMoEmbeddings()
-
-# create a sentence
-sentence = Sentence('The grass is green .')
-
-# embed words in sentence
-embedding.embed(sentence)
-```
-
-ELMo word embeddings can be constructed by combining ELMo layers in different ways. The available combination strategies are:
-- `"all"`: Use the concatenation of the three ELMo layers.
-- `"top"`: Use the top ELMo layer.
-- `"average"`: Use the average of the three ELMo layers.
-
-By default, the top 3 layers are concatenated to form the word embedding.
-
-AllenNLP provides the following pre-trained models. To use any of the following models inside Flair
-simple specify the embedding id when initializing the `ELMoEmbeddings`.
-
-| ID | Language | Embedding |
-| ------------- | ------------- | ------------- |
-| 'small' | English | 1024-hidden, 1 layer, 14.6M parameters |
-| 'medium'   | English | 2048-hidden, 1 layer, 28.0M parameters |
-| 'original'    | English | 4096-hidden, 2 layers, 93.6M parameters |
-| 'large'    | English |  |
-| 'pt'   | Portuguese | |
-| 'pubmed' | English biomedical data | [more information](https://allennlp.org/elmo) |
-
-
 ## Document Pool Embeddings
 
-DocumentPoolEmbeddings calculate a pooling operation over all word embeddings in a document.
+[`DocumentPoolEmbeddings`](#flair.embeddings.document.DocumentPoolEmbeddings) calculate a pooling operation over all word embeddings in a document.
 The default operation is `mean` which gives us the mean of all words in the sentence.
 The resulting embedding is taken as document embedding.
 
-To create a mean document embedding simply create any number of `TokenEmbeddings` first and put them in a list.
-Afterwards, initiate the `DocumentPoolEmbeddings` with this list of `TokenEmbeddings`.
-So, if you want to create a document embedding using GloVe embeddings together with `FlairEmbeddings`,
+To create a mean document embedding simply create any number of [`TokenEmbeddings`](#flair.embeddings.base.TokenEmbeddings) first and put them in a list.
+Afterwards, initiate the [`DocumentPoolEmbeddings`](#flair.embeddings.document.DocumentPoolEmbeddings) with this list of [`TokenEmbeddings`](#flair.embeddings.base.TokenEmbeddings).
+So, if you want to create a document embedding using GloVe embeddings together with [`FlairEmbeddings`](#flair.embeddings.token.FlairEmbeddings),
 use the following code:
 
 ```python
@@ -187,7 +144,7 @@ glove_embedding = WordEmbeddings('glove')
 document_embeddings = DocumentPoolEmbeddings([glove_embedding])
 ```
 
-Now, create an example sentence and call the embedding's `embed()` method.
+Now, create an example sentence and call the embedding's [`embed()`](#flair.embeddings.base.Embeddings.embed) method.
 
 ```python
 # create an example sentence
@@ -244,11 +201,11 @@ document_embeddings = DocumentPoolEmbeddings([embeddings], fine_tune_mode='none'
 
 ## Document RNN Embeddings
 
-Besides simple pooling we also support a method based on an RNN to obtain a `DocumentEmbeddings`.
+Besides simple pooling we also support a method based on an RNN to obtain a [`DocumentEmbeddings`](#flair.embeddings.base.DocumentEmbeddings).
 The RNN takes the word embeddings of every token in the document as input and provides its last output state as document
 embedding. You can choose which type of RNN you wish to use.
 
-In order to use the `DocumentRNNEmbeddings` you need to initialize them by passing a list of token embeddings to it:
+In order to use the [`DocumentRNNEmbeddings`](#flair.embeddings.document.DocumentRNNEmbeddings) you need to initialize them by passing a list of token embeddings to it:
 
 ```python
 from flair.embeddings import WordEmbeddings, DocumentRNNEmbeddings
@@ -258,7 +215,7 @@ glove_embedding = WordEmbeddings('glove')
 document_embeddings = DocumentRNNEmbeddings([glove_embedding])
 ```
 
-By default, a GRU-type RNN is instantiated. Now, create an example sentence and call the embedding's `embed()` method.
+By default, a GRU-type RNN is instantiated. Now, create an example sentence and call the embedding's [`embed()`](#flair.embeddings.base.Embeddings.embed) method.
 
 ```python
 # create an example sentence
@@ -289,10 +246,10 @@ document_lstm_embeddings = DocumentRNNEmbeddings([glove_embedding], rnn_type='LS
 
 ### Need to be trained on a task
 
-Note that while `DocumentPoolEmbeddings` are immediately meaningful, `DocumentRNNEmbeddings` need to be tuned on the
+Note that while [`DocumentPoolEmbeddings`](#flair.embeddings.document.DocumentPoolEmbeddings) are immediately meaningful, [`DocumentRNNEmbeddings`](#flair.embeddings.document.DocumentRNNEmbeddings) need to be tuned on the
 downstream task. This happens automatically in Flair if you train a new model with these embeddings. 
 
-Once the model is trained, you can access the tuned `DocumentRNNEmbeddings` object directly from the classifier object and use it to embed sentences.
+Once the model is trained, you can access the tuned [`DocumentRNNEmbeddings`](#flair.embeddings.document.DocumentRNNEmbeddings) object directly from the classifier object and use it to embed sentences.
 
 ```python
 document_embeddings = classifier.document_embeddings
@@ -304,18 +261,4 @@ document_embeddings.embed(sentence)
 print(sentence.get_embedding())
 ```
 
-`DocumentRNNEmbeddings` have a number of hyper-parameters that can be tuned to improve learning:
-
-```text
-:param hidden_size: the number of hidden states in the rnn.
-:param rnn_layers: the number of layers for the rnn.
-:param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
-layer before putting them into the rnn or not.
-:param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
-dimension as before will be taken.
-:param bidirectional: boolean value, indicating whether to use a bidirectional rnn or not.
-:param dropout: the dropout value to be used.
-:param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used.
-:param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used.
-:param rnn_type: one of 'RNN' or 'LSTM'
-```
+[`DocumentRNNEmbeddings`](#flair.embeddings.document.DocumentRNNEmbeddings) have a number of hyperparameters that can be tuned, please take a look at their [API docs](#flair.embeddings.document.DocumentRNNEmbeddings) to find out more.

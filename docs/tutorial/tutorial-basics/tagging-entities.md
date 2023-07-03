@@ -56,9 +56,9 @@ print(sentence)
 As you can see, it's the same code, just with '**ner-large**' as model instead of '**ner**'. 
 This model also works with most languages. 
 
-:::hint
+```{note}
 If you want the fastest model we ship, you can also try 'ner-fast'.
-:::
+```
 
 ## Tagging entities in non-English text
 
@@ -196,7 +196,7 @@ We end this section with a list of all models we currently ship with Flair.
 | '[ner-ukrainian](https://huggingface.co/dchaplinsky/flair-uk-ner)' | NER (4-class) | Ukrainian |  [NER-UK dataset](https://github.com/lang-uk/ner-uk)  | **86.05** (F1)  | [dchaplinsky](https://github.com/dchaplinsky) |
 
 
-You choose which pre-trained model you load by passing the appropriate string to the `load()` method of the `Classifier` class.
+You choose which pre-trained model you load by passing the appropriate string to the [`Classifier.load()`](#flair.nn.Classifier.load) method.
 
 A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads).
 

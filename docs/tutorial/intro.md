@@ -24,7 +24,8 @@ Let's run **named entity recognition**  (NER) over the following example sentenc
 
 Our goal is to identify names in this sentence, and their types.
 
-To do this, all you need is to make a `Sentence` for this text, load a pre-trained model and use it to predict tags for the sentence:
+To do this, all you need is to make a [`Sentence`](#flair.data.Sentence) for this text, load a pre-trained model and use it to predict tags for the sentence:
+
 
 ```python
 from flair.data import Sentence

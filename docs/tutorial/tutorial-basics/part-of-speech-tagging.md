@@ -37,9 +37,9 @@ Sentence[6]: "Dirk went to the store." → ["Dirk"/NNP, "went"/VBD, "to"/IN, "th
 
 This printout tells us for instance that "_Dirk_" is a proper noun (tag: NNP), and "_went_" is a past tense verb (tag: VBD).
 
-:::info
+```{note}
 To better understand what each tag means, consult the [tag specification](https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html) of the Penn Treebank.
-:::
+```
 
 ### ... in German 
 
@@ -141,9 +141,6 @@ Sentence: "George Washington went to Washington . Dort kaufte er einen Hut ."
 
 However note that they were trained for a mix of European languages and therefore will not work for other languages.
 
-## Tagging Language-Specific Parts-of-Speech (POS) in English
-
-
 ## List of POS Models
 
 We end this section with a list of all models we currently ship with Flair. 
@@ -165,7 +162,7 @@ We end this section with a list of all models we currently ship with Flair.
 | 'pt-pos-clinical' | POS-tagging | Portuguese | [PUCPR](https://github.com/HAILab-PUCPR/portuguese-clinical-pos-tagger) | **92.39** | [LucasFerroHAILab](https://github.com/LucasFerroHAILab) for clinical texts |
 | '[pos-ukrainian](https://huggingface.co/dchaplinsky/flair-uk-pos)' | POS-tagging | Ukrainian |  [Ukrainian UD](https://universaldependencies.org/treebanks/uk_iu/index.html)  | **97.93** (F1)  | [dchaplinsky](https://github.com/dchaplinsky) |
 
-You choose which pre-trained model you load by passing the appropriate string to the `load()` method of the `Classifier` class.
+You choose which pre-trained model you load by passing the appropriate string to the [`Classifier.load()`](#flair.nn.Classifier.load) method.
 
 A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads).
 
