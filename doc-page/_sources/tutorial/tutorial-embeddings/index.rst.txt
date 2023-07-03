@@ -7,7 +7,7 @@ All Flair models are trained on top of embeddings, so if you want to train your 
 you should understand how embeddings work.
 
 .. toctree::
-   :glob:
+   :maxdepth: 1
 
    embeddings
    transformer-embeddings

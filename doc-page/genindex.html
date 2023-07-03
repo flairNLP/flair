@@ -44,6 +44,7 @@
     <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -781,9 +782,19 @@ document.write(`
 </li>
       <li><a href="api/datasets/entity_linking.html#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_curr_comment">_fill_curr_comment() (flair.datasets.entity_linking.NEL_ENGLISH_REDDIT method)</a>
 </li>
-      <li><a href="api/flair.models.html#flair.models.RelationClassifier._get_data_points_from_sentence">_get_data_points_from_sentence() (flair.models.RelationClassifier method)</a>
+      <li><a href="api/flair.nn.html#flair.nn.DefaultClassifier._filter_data_point">_filter_data_point() (flair.nn.DefaultClassifier method)</a>
 </li>
+      <li><a href="api/flair.nn.html#flair.nn.DefaultClassifier._get_data_points_for_batch">_get_data_points_for_batch() (flair.nn.DefaultClassifier method)</a>
+</li>
+      <li><a href="api/flair.models.html#flair.models.RelationClassifier._get_data_points_from_sentence">_get_data_points_from_sentence() (flair.models.RelationClassifier method)</a>
+
+      <ul>
+        <li><a href="api/flair.nn.html#flair.nn.DefaultClassifier._get_data_points_from_sentence">(flair.nn.DefaultClassifier method)</a>
+</li>
+      </ul></li>
       <li><a href="api/flair.models.html#flair.models.SequenceTagger._get_gold_labels">_get_gold_labels() (flair.models.SequenceTagger method)</a>
+</li>
+      <li><a href="api/flair.nn.html#flair.nn.DefaultClassifier._get_label_of_datapoint">_get_label_of_datapoint() (flair.nn.DefaultClassifier method)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.SequenceTagger._get_scores_from_features">_get_scores_from_features() (flair.models.SequenceTagger static method)</a>
 </li>
@@ -791,6 +802,8 @@ document.write(`
 
       <ul>
         <li><a href="api/flair.models.html#flair.models.SequenceTagger._get_state_dict">(flair.models.SequenceTagger method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.Model._get_state_dict">(flair.nn.Model method)</a>
 </li>
       </ul></li>
       <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy._get_transformer_sentence_embeddings">_get_transformer_sentence_embeddings() (in module flair.embeddings.legacy)</a>
@@ -800,7 +813,11 @@ document.write(`
       <li><a href="api/flair.models.html#flair.models.SequenceTagger._init_loss_weights">_init_loss_weights() (flair.models.SequenceTagger method)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.MultitaskModel._init_model_with_state_dict">_init_model_with_state_dict() (flair.models.MultitaskModel class method)</a>
+
+      <ul>
+        <li><a href="api/flair.nn.html#flair.nn.Model._init_model_with_state_dict">(flair.nn.Model class method)</a>
 </li>
+      </ul></li>
       <li><a href="api/flair.trainers.html#flair.trainers.ModelTrainer._initialize_model_card">_initialize_model_card() (flair.trainers.ModelTrainer method)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.RegexpTagger._label">_label() (flair.models.RegexpTagger method)</a>
@@ -1057,6 +1074,8 @@ document.write(`
 </li>
       <li><a href="api/datasets/document_classification.html#flair.datasets.document_classification.ClassificationDataset">ClassificationDataset (class in flair.datasets.document_classification)</a>
 </li>
+      <li><a href="api/flair.nn.html#flair.nn.Classifier">Classifier (class in flair.nn)</a>
+</li>
       <li><a href="api/flair.data.html#flair.data.DataPair.clear_embeddings">clear_embeddings() (flair.data.DataPair method)</a>
 
       <ul>
@@ -1165,6 +1184,8 @@ document.write(`
 </li>
       <li><a href="api/flair.models.html#flair.models.Lemmatizer.decode">decode() (flair.models.Lemmatizer method)</a>
 </li>
+      <li><a href="api/flair.nn.html#flair.nn.DefaultClassifier">DefaultClassifier (class in flair.nn)</a>
+</li>
       <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.AmpPlugin.detach">detach() (flair.trainers.plugins.AmpPlugin method)</a>
 
       <ul>
@@ -1219,10 +1240,10 @@ document.write(`
         <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.MIRNA.download_and_prepare_train">(flair.datasets.biomedical.MIRNA class method)</a>
 </li>
       </ul></li>
-      <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.KaewphanCorpusHelper.download_cll_dataset">download_cll_dataset() (flair.datasets.biomedical.KaewphanCorpusHelper static method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.KaewphanCorpusHelper.download_cll_dataset">download_cll_dataset() (flair.datasets.biomedical.KaewphanCorpusHelper static method)</a>
+</li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.BioBertHelper.download_corpora">download_corpora() (flair.datasets.biomedical.BioBertHelper static method)</a>
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.ANAT_EM.download_corpus">download_corpus() (flair.datasets.biomedical.ANAT_EM static method)</a>
@@ -1580,6 +1601,10 @@ document.write(`
 </li>
         <li><a href="api/flair.models.html#flair.models.TextRegressor.evaluate">(flair.models.TextRegressor method)</a>
 </li>
+        <li><a href="api/flair.nn.html#flair.nn.Classifier.evaluate">(flair.nn.Classifier method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.Model.evaluate">(flair.nn.Model method)</a>
+</li>
         <li><a href="api/flair.trainers.html#flair.trainers.LanguageModelTrainer.evaluate">(flair.trainers.LanguageModelTrainer method)</a>
 </li>
       </ul></li>
@@ -1605,6 +1630,10 @@ document.write(`
         <li><a href="api/embeddings/token.html#flair.embeddings.token.FastTextEmbeddings.extra_repr">(flair.embeddings.token.FastTextEmbeddings method)</a>
 </li>
         <li><a href="api/embeddings/token.html#flair.embeddings.token.WordEmbeddings.extra_repr">(flair.embeddings.token.WordEmbeddings method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.LockedDropout.extra_repr">(flair.nn.LockedDropout method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.WordDropout.extra_repr">(flair.nn.WordDropout method)</a>
 </li>
       </ul></li>
       <li><a href="api/datasets/relation_extraction.html#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.extract_and_convert_to_conllu">extract_and_convert_to_conllu() (flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT method)</a>
@@ -1786,8 +1815,13 @@ document.write(`
         <li><a href="api/flair.models.html#module-flair.models">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    flair.nn
+
+      <ul>
+        <li><a href="api/flair.nn.html#module-flair.nn">module</a>
+</li>
+      </ul></li>
       <li>
     flair.splitter
 
@@ -1795,6 +1829,8 @@ document.write(`
         <li><a href="api/flair.splitter.html#module-flair.splitter">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     flair.tokenization
 
@@ -1839,6 +1875,14 @@ document.write(`
 </li>
         <li><a href="api/flair.models.html#flair.models.TextRegressor.forward">(flair.models.TextRegressor method)</a>
 </li>
+        <li><a href="api/flair.nn.html#flair.nn.LabelVerbalizerDecoder.forward">(flair.nn.LabelVerbalizerDecoder method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.LockedDropout.forward">(flair.nn.LockedDropout method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.PrototypicalDecoder.forward">(flair.nn.PrototypicalDecoder method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.WordDropout.forward">(flair.nn.WordDropout method)</a>
+</li>
       </ul></li>
       <li><a href="api/flair.models.html#flair.models.TextRegressor.forward_labels_and_loss">forward_labels_and_loss() (flair.models.TextRegressor method)</a>
 </li>
@@ -1854,6 +1898,10 @@ document.write(`
         <li><a href="api/flair.models.html#flair.models.TextPairRegressor.forward_loss">(flair.models.TextPairRegressor method)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.TextRegressor.forward_loss">(flair.models.TextRegressor method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.DefaultClassifier.forward_loss">(flair.nn.DefaultClassifier method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.Model.forward_loss">(flair.nn.Model method)</a>
 </li>
       </ul></li>
       <li><a href="api/flair.models.html#flair.models.Lemmatizer.forward_pass">forward_pass() (flair.models.Lemmatizer method)</a>
@@ -2116,6 +2164,8 @@ document.write(`
         <li><a href="api/flair.models.html#flair.models.TextPairRegressor.get_used_tokens">(flair.models.TextPairRegressor method)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.TextRegressor.get_used_tokens">(flair.models.TextRegressor method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.Classifier.get_used_tokens">(flair.nn.Classifier method)</a>
 </li>
       </ul></li>
       <li><a href="api/embeddings/token.html#flair.embeddings.token.WordEmbeddings.get_vec">get_vec() (flair.embeddings.token.WordEmbeddings method)</a>
@@ -2454,6 +2504,10 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.data.html#flair.data.Label">Label (class in flair.data)</a>
 </li>
+      <li><a href="api/flair.nn.html#flair.nn.LabelVerbalizerDecoder.label_dictionary">label_dictionary (flair.nn.LabelVerbalizerDecoder attribute)</a>
+</li>
+      <li><a href="api/flair.nn.html#flair.nn.LabelVerbalizerDecoder.label_encoder">label_encoder (flair.nn.LabelVerbalizerDecoder attribute)</a>
+</li>
       <li><a href="api/datasets/document_classification.html#flair.datasets.document_classification.GLUE_SST2.label_map">label_map (flair.datasets.document_classification.GLUE_SST2 attribute)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.TARSClassifier.LABEL_MATCH">LABEL_MATCH (flair.models.TARSClassifier attribute)</a>
@@ -2485,10 +2539,14 @@ document.write(`
 </li>
         <li><a href="api/flair.models.html#flair.models.TokenClassifier.label_type">(flair.models.TokenClassifier property)</a>
 </li>
+        <li><a href="api/flair.nn.html#flair.nn.Model.label_type">(flair.nn.Model property)</a>
+</li>
       </ul></li>
       <li><a href="api/flair.data.html#flair.data.Label.labeled_identifier">labeled_identifier (flair.data.Label property)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.DataPoint.labels">labels (flair.data.DataPoint property)</a>
+</li>
+      <li><a href="api/flair.nn.html#flair.nn.LabelVerbalizerDecoder">LabelVerbalizerDecoder (class in flair.nn)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.LanguageModel">LanguageModel (class in flair.models)</a>
 </li>
@@ -2537,6 +2595,12 @@ document.write(`
 </li>
         <li><a href="api/flair.models.html#flair.models.TokenClassifier.load">(flair.models.TokenClassifier class method)</a>
 </li>
+        <li><a href="api/flair.nn.html#flair.nn.Classifier.load">(flair.nn.Classifier class method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.DefaultClassifier.load">(flair.nn.DefaultClassifier class method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.Model.load">(flair.nn.Model class method)</a>
+</li>
       </ul></li>
       <li><a href="api/flair.models.html#flair.models.LanguageModel.load_checkpoint">load_checkpoint() (flair.models.LanguageModel class method)</a>
 
@@ -2551,6 +2615,8 @@ document.write(`
       <li><a href="api/flair.data.html#flair.data.Dictionary.load_from_file">load_from_file() (flair.data.Dictionary class method)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.LanguageModel.load_language_model">load_language_model() (flair.models.LanguageModel class method)</a>
+</li>
+      <li><a href="api/flair.nn.html#flair.nn.LockedDropout">LockedDropout (class in flair.nn)</a>
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.LOCTEXT">LOCTEXT (class in flair.datasets.biomedical)</a>
 </li>
@@ -2592,7 +2658,11 @@ document.write(`
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.MIRNA">MIRNA (class in flair.datasets.biomedical)</a>
 </li>
+      <li><a href="api/flair.nn.html#flair.nn.Model">Model (class in flair.nn)</a>
+</li>
       <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.TrainerPlugin.model">model (flair.trainers.plugins.TrainerPlugin property)</a>
+</li>
+      <li><a href="api/flair.nn.html#flair.nn.Model.model_card">model_card (flair.nn.Model attribute)</a>
 </li>
       <li><a href="api/flair.trainers.html#flair.trainers.ModelTrainer">ModelTrainer (class in flair.trainers)</a>
 </li>
@@ -2638,6 +2708,8 @@ document.write(`
 </li>
         <li><a href="api/flair.models.html#module-flair.models">flair.models</a>
 </li>
+        <li><a href="api/flair.nn.html#module-flair.nn">flair.nn</a>
+</li>
         <li><a href="api/flair.splitter.html#module-flair.splitter">flair.splitter</a>
 </li>
         <li><a href="api/flair.tokenization.html#module-flair.tokenization">flair.tokenization</a>
@@ -2650,6 +2722,8 @@ document.write(`
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/datasets/base.html#flair.datasets.base.MongoDataset">MongoDataset (class in flair.datasets.base)</a>
+</li>
+      <li><a href="api/flair.nn.html#flair.nn.DefaultClassifier.multi_label_threshold">multi_label_threshold (flair.nn.DefaultClassifier property)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.MultiCorpus">MultiCorpus (class in flair.data)</a>
 </li>
@@ -2883,6 +2957,8 @@ document.write(`
 </li>
       <li><a href="api/embeddings/token.html#flair.embeddings.token.HashEmbeddings.num_embeddings">num_embeddings (flair.embeddings.token.HashEmbeddings property)</a>
 </li>
+      <li><a href="api/flair.nn.html#flair.nn.PrototypicalDecoder.num_prototypes">num_prototypes (flair.nn.PrototypicalDecoder property)</a>
+</li>
       <li><a href="api/datasets/base.html#flair.datasets.base.DataLoader.num_workers">num_workers (flair.datasets.base.DataLoader attribute)</a>
 </li>
   </ul></td>
@@ -2993,8 +3069,6 @@ document.write(`
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.NCBI_DISEASE.patch_training_file">patch_training_file() (flair.datasets.biomedical.NCBI_DISEASE static method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.PDR">PDR (class in flair.datasets.biomedical)</a>
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.SCAI_CHEMICALS.perform_corpus_download">perform_corpus_download() (flair.datasets.biomedical.SCAI_CHEMICALS static method)</a>
@@ -3003,6 +3077,8 @@ document.write(`
         <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.SCAI_DISEASE.perform_corpus_download">(flair.datasets.biomedical.SCAI_DISEASE static method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/datasets/base.html#flair.datasets.base.DataLoader.pin_memory">pin_memory (flair.datasets.base.DataLoader attribute)</a>
 </li>
       <li><a href="api/datasets/base.html#flair.datasets.base.DataLoader.pin_memory_device">pin_memory_device (flair.datasets.base.DataLoader attribute)</a>
@@ -3040,6 +3116,10 @@ document.write(`
 </li>
         <li><a href="api/flair.models.html#flair.models.TextRegressor.predict">(flair.models.TextRegressor method)</a>
 </li>
+        <li><a href="api/flair.nn.html#flair.nn.Classifier.predict">(flair.nn.Classifier method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.DefaultClassifier.predict">(flair.nn.DefaultClassifier method)</a>
+</li>
       </ul></li>
       <li><a href="api/flair.models.html#flair.models.FewshotClassifier.predict_zero_shot">predict_zero_shot() (flair.models.FewshotClassifier method)</a>
 </li>
@@ -3053,7 +3133,11 @@ document.write(`
 </li>
       <li><a href="api/flair.data.html#flair.data.Sentence.previous_sentence">previous_sentence() (flair.data.Sentence method)</a>
 </li>
+      <li><a href="api/flair.nn.html#flair.nn.Model.print_model_card">print_model_card() (flair.nn.Model method)</a>
+</li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.CoNLLWriter.process_dataset">process_dataset() (flair.datasets.biomedical.CoNLLWriter method)</a>
+</li>
+      <li><a href="api/flair.nn.html#flair.nn.PrototypicalDecoder">PrototypicalDecoder (class in flair.nn)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.SequenceTagger.push_to_hub">push_to_hub() (flair.models.SequenceTagger method)</a>
 </li>
@@ -3159,6 +3243,8 @@ document.write(`
         <li><a href="api/flair.models.html#flair.models.ClusteringModel.save">(flair.models.ClusteringModel method)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.LanguageModel.save">(flair.models.LanguageModel method)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.Model.save">(flair.nn.Model method)</a>
 </li>
       </ul></li>
       <li><a href="api/flair.models.html#flair.models.LanguageModel.save_checkpoint">save_checkpoint() (flair.models.LanguageModel method)</a>
@@ -3623,8 +3709,6 @@ document.write(`
 </li>
       <li><a href="api/flair.models.html#flair.models.TokenClassifier">TokenClassifier (class in flair.models)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/embeddings/base.html#flair.embeddings.base.TokenEmbeddings">TokenEmbeddings (class in flair.embeddings.base)</a>
 </li>
       <li><a href="api/flair.tokenization.html#flair.tokenization.JapaneseTokenizer.tokenize">tokenize() (flair.tokenization.JapaneseTokenizer method)</a>
@@ -3643,6 +3727,8 @@ document.write(`
         <li><a href="api/flair.tokenization.html#flair.tokenization.TokenizerWrapper.tokenize">(flair.tokenization.TokenizerWrapper method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.tokenization.html#flair.tokenization.Tokenizer">Tokenizer (class in flair.tokenization)</a>
 </li>
       <li><a href="api/embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings.tokenizer">tokenizer (flair.embeddings.transformer.TransformerJitEmbeddings attribute)</a>
@@ -3783,6 +3869,14 @@ document.write(`
         <li><a href="api/embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxWordEmbeddings.training">(flair.embeddings.transformer.TransformerOnnxWordEmbeddings attribute)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.LanguageModel.training">(flair.models.LanguageModel attribute)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.LabelVerbalizerDecoder.training">(flair.nn.LabelVerbalizerDecoder attribute)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.LockedDropout.training">(flair.nn.LockedDropout attribute)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.PrototypicalDecoder.training">(flair.nn.PrototypicalDecoder attribute)</a>
+</li>
+        <li><a href="api/flair.nn.html#flair.nn.WordDropout.training">(flair.nn.WordDropout attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.TrainingInterrupt">TrainingInterrupt</a>
@@ -4019,13 +4113,15 @@ document.write(`
         <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.Pluggable.valid_events">(flair.trainers.plugins.Pluggable attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.Pluggable.validate_event">validate_event() (flair.trainers.plugins.Pluggable method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.data.html#flair.data.Label.value">value (flair.data.Label property)</a>
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.VARIOME">VARIOME (class in flair.datasets.biomedical)</a>
+</li>
+      <li><a href="api/flair.nn.html#flair.nn.LabelVerbalizerDecoder.verbalize_labels">verbalize_labels() (flair.nn.LabelVerbalizerDecoder static method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -4044,6 +4140,8 @@ document.write(`
       <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.WeightExtractorPlugin">WeightExtractorPlugin (class in flair.trainers.plugins)</a>
 </li>
       <li><a href="api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.WNUT_17">WNUT_17 (class in flair.datasets.sequence_labeling)</a>
+</li>
+      <li><a href="api/flair.nn.html#flair.nn.WordDropout">WordDropout (class in flair.nn)</a>
 </li>
       <li><a href="api/embeddings/token.html#flair.embeddings.token.WordEmbeddings">WordEmbeddings (class in flair.embeddings.token)</a>
 </li>

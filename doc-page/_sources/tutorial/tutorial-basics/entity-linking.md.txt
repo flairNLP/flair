@@ -47,7 +47,7 @@ Entity linking typically works best when applied to a whole document instead of 
 
 To illustrate how this works, let's use the following short text: "_Bayern played against Barcelona. The match took place in Barcelona._"
 
-In this case, split the text into sentences and pass a list of Sentence objects to the .predict() method:
+In this case, split the text into sentences and pass a list of Sentence objects to the [`Classifier.predict()`](#flair.nn.Classifier.predict) method:
 
 ```python
 from flair.nn import Classifier

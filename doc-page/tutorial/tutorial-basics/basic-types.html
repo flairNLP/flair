@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/basic-types';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="How predictions work" href="how-predictions-work.html" />
@@ -374,15 +375,15 @@ document.write(`
 <h1>Basics<a class="headerlink" href="#basics" title="Permalink to this heading">#</a></h1>
 <p>This tutorial explains the basic concepts used in Flair:</p>
 <ul class="simple">
-<li><p>what is a <code class="docutils literal notranslate"><span class="pre">Sentence</span></code></p></li>
-<li><p>what is a <code class="docutils literal notranslate"><span class="pre">Label</span></code></p></li>
+<li><p>what is a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a></p></li>
+<li><p>what is a <a class="reference internal" href="../../api/flair.data.html#flair.data.Label" title="flair.data.Label"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Label</span></code></span></a></p></li>
 </ul>
 <p>You should be familiar with these two concepts in order to get the most out of Flair.</p>
 <section id="what-is-a-sentence">
 <h2>What is a Sentence<a class="headerlink" href="#what-is-a-sentence" title="Permalink to this heading">#</a></h2>
-<p>If you want to tag a sentence, you need to first make a <code class="docutils literal notranslate"><span class="pre">Sentence</span></code> object for it.</p>
+<p>If you want to tag a sentence, you need to first make a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> object for it.</p>
 <p>For example, say you want to tag the text “<em>The grass is green.</em>”.</p>
-<p>Let’s start by making a <code class="docutils literal notranslate"><span class="pre">Sentence</span></code> object for this sentence.</p>
+<p>Let’s start by making a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> object for this sentence.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The sentence objects holds a sentence that we may want to embed or tag</span>
 <span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
 
@@ -398,9 +399,10 @@ document.write(`
 </pre></div>
 </div>
 <p>The print-out tells us that the sentence consists of 5 tokens.</p>
-<p>:::info
-A token is an atomic unit of the text, often a word or punctuation. The printout is therefore telling us that the sentence “<em>The grass is green.</em>” consists of 5 such atomic units.
-:::</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A token is an atomic unit of the text, often a word or punctuation. The printout is therefore telling us that the sentence “<em>The grass is green.</em>” consists of 5 such atomic units.</p>
+</div>
 <section id="iterating-over-the-tokens-in-a-sentence">
 <h3>Iterating over the tokens in a Sentence<a class="headerlink" href="#iterating-over-the-tokens-in-a-sentence" title="Permalink to this heading">#</a></h3>
 <p>So what are the 5 tokens in this example sentence?</p>
@@ -436,10 +438,11 @@ A token is an atomic unit of the text, often a word or punctuation. The printout
 </section>
 <section id="tokenization">
 <h3>Tokenization<a class="headerlink" href="#tokenization" title="Permalink to this heading">#</a></h3>
-<p>When you create a <code class="docutils literal notranslate"><span class="pre">Sentence</span></code> as above, the text is automatically tokenized (segmented into words) using the <a class="reference external" href="https://pypi.org/project/segtok/">segtok</a> library.</p>
-<p>:::info
-You can also use a different tokenizer if you like. To learn more about this, check out our tokenization tutorial.
-:::</p>
+<p>When you create a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> as above, the text is automatically tokenized (segmented into words) using the <a class="reference external" href="https://pypi.org/project/segtok/">segtok</a> library.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can also use a different tokenizer if you like. To learn more about this, check out our tokenization tutorial.</p>
+</div>
 </section>
 </section>
 <section id="what-is-a-label">
@@ -479,13 +482,14 @@ iterate through each token and print it to see if it has labels:</p>
 </pre></div>
 </div>
 <p>This shows that there are 5 tokens in the sentence, one of which has a label.</p>
-<p>:::info
-The <code class="docutils literal notranslate"><span class="pre">add_label</span></code> method used here has two mandatory parameters.
-:::</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <a class="reference internal" href="../../api/flair.data.html#flair.data.DataPoint.add_label" title="flair.data.DataPoint.add_label"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">add_label</span></code></span></a> method used here has two mandatory parameters.</p>
+</div>
 </section>
 <section id="example-2-labeling-a-whole-sentence">
 <h3>Example 2: Labeling a whole sentence<a class="headerlink" href="#example-2-labeling-a-whole-sentence" title="Permalink to this heading">#</a></h3>
-<p>Sometimes you want to label an entire sentence instead of only a token. Do this by calling <code class="docutils literal notranslate"><span class="pre">add_label</span></code> for the whole sentence.</p>
+<p>Sometimes you want to label an entire sentence instead of only a token. Do this by calling <a class="reference internal" href="../../api/flair.data.html#flair.data.DataPoint.add_label" title="flair.data.DataPoint.add_label"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">add_label</span></code></span></a> for the whole sentence.</p>
 <p>For example, say we want to add a sentiment label to the sentence “<em>The grass is green.</em>”:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
 
@@ -525,7 +529,7 @@ The <code class="docutils literal notranslate"><span class="pre">add_label</span
 </section>
 <section id="accessing-labels">
 <h3>Accessing labels<a class="headerlink" href="#accessing-labels" title="Permalink to this heading">#</a></h3>
-<p>You can iterate through all labels of a sentence using the <code class="docutils literal notranslate"><span class="pre">.get_labels()</span></code> method:</p>
+<p>You can iterate through all labels of a sentence using the <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence.get_labels" title="flair.data.Sentence.get_labels"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">get_labels()</span></code></span></a> method:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># iterate over all labels and print</span>
 <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
@@ -551,14 +555,15 @@ Token[3]: &quot;green&quot; → color (1.0)
 </pre></div>
 </div>
 <p>This printout tells us that there are two labels: The first is for the whole sentence, tagged as POSITIVE. The second is only for the token “green”, tagged as “color”.</p>
-<p>:::info</p>
-<p>If you only want to iterate over labels of a specific type, add the label name as parameter to get_labels(). For instance, to only iterate over all NER labels, do:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you only want to iterate over labels of a specific type, add the label name as parameter to <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence.get_labels" title="flair.data.Sentence.get_labels"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">get_labels()</span></code></span></a>. For instance, to only iterate over all NER labels, do:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># iterate over all NER labels only</span>
 <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">(</span><span class="s1">&#39;ner&#39;</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>:::</p>
+</div>
 </section>
 <section id="information-for-each-label">
 <h3>Information for each label<a class="headerlink" href="#information-for-each-label" title="Permalink to this heading">#</a></h3>

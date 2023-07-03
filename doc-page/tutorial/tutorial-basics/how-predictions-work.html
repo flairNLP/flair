@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/how-predictions-work';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Tagging entities" href="tagging-entities.html" />
@@ -402,7 +403,7 @@ as LOC (location.)</p>
 <section id="getting-the-predictions">
 <h2>Getting the predictions<a class="headerlink" href="#getting-the-predictions" title="Permalink to this heading">#</a></h2>
 <p>A common question that gets asked is <strong>how to access these predictions directly</strong>. You can do this by using
-the <code class="docutils literal notranslate"><span class="pre">get_labels()</span></code> method to iterate over all predictions:</p>
+the <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence.get_labels" title="flair.data.Sentence.get_labels"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">get_labels()</span></code></span></a> method to iterate over all predictions:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
 </pre></div>
@@ -417,7 +418,7 @@ The confidence of the prediction is indicated as a score in brackets.</p>
 </section>
 <section id="values-for-each-prediction">
 <h2>Values for each prediction<a class="headerlink" href="#values-for-each-prediction" title="Permalink to this heading">#</a></h2>
-<p>For each prediction, you can even <strong>directly access</strong> the label value, it’s score and the entity text:</p>
+<p>For each prediction, you can even <strong>directly access</strong> the label value, and all other attributes of the <a class="reference internal" href="../../api/flair.data.html#flair.data.Label" title="flair.data.Label"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Label</span></code></span></a> class:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># iterate over all labels in the sentence</span>
 <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">():</span>
     <span class="c1"># print label value and score</span>

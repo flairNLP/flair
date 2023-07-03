@@ -5,7 +5,7 @@ This tutorial shows you in more detail how to tag your text and access predictio
 and showcases various models we ship with Flair.
 
 .. toctree::
-   :glob:
+   :maxdepth: 1
 
    basic-types
    how-predictions-work

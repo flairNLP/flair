@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/tagging-entities';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Tagging sentiment" href="tagging-sentiment.html" />
@@ -420,9 +421,10 @@ document.write(`
 </div>
 <p>As you can see, it’s the same code, just with ‘<strong>ner-large</strong>’ as model instead of ‘<strong>ner</strong>’.
 This model also works with most languages.</p>
-<p>:::hint
-If you want the fastest model we ship, you can also try ‘ner-fast’.
-:::</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you want the fastest model we ship, you can also try ‘ner-fast’.</p>
+</div>
 </section>
 <section id="tagging-entities-in-non-english-text">
 <h2>Tagging entities in non-English text<a class="headerlink" href="#tagging-entities-in-non-english-text" title="Permalink to this heading">#</a></h2>
@@ -670,7 +672,7 @@ to classify 18 different types of entities.</p>
 </tr>
 </tbody>
 </table>
-<p>You choose which pre-trained model you load by passing the appropriate string to the <code class="docutils literal notranslate"><span class="pre">load()</span></code> method of the <code class="docutils literal notranslate"><span class="pre">Classifier</span></code> class.</p>
+<p>You choose which pre-trained model you load by passing the appropriate string to the <a class="reference internal" href="../../api/flair.nn.html#flair.nn.Classifier.load" title="flair.nn.Classifier.load"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Classifier.load()</span></code></span></a> method.</p>
 <p>A full list of our current and community-contributed models can be browsed on the <a class="reference external" href="https://huggingface.co/models?library=flair&amp;amp;sort=downloads"><strong>model hub</strong></a>.</p>
 </section>
 </section>

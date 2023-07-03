@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-embeddings/classic-word-embeddings';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Other embeddings in Flair" href="other-embeddings.html" />
@@ -371,7 +372,7 @@ document.write(`
 <h1>Classic Word Embeddings<a class="headerlink" href="#classic-word-embeddings" title="Permalink to this heading">#</a></h1>
 <p>Classic word embeddings are static and word-level, meaning that each distinct word gets exactly one pre-computed
 embedding. Most embeddings fall under this class, including the popular GloVe or Komninos embeddings.</p>
-<p>Simply instantiate the <code class="docutils literal notranslate"><span class="pre">WordEmbeddings</span></code> class and pass a string identifier of the embedding you wish to load. So, if
+<p>Simply instantiate the <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.WordEmbeddings" title="flair.embeddings.token.WordEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings</span></code></span></a> class and pass a string identifier of the embedding you wish to load. So, if
 you want to use GloVe embeddings, pass the string ‘glove’ to the constructor:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span>
 
@@ -379,7 +380,7 @@ you want to use GloVe embeddings, pass the string ‘glove’ to the constructor
 <span class="n">glove_embedding</span> <span class="o">=</span> <span class="n">WordEmbeddings</span><span class="p">(</span><span class="s1">&#39;glove&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Now, create an example sentence and call the embedding’s <code class="docutils literal notranslate"><span class="pre">embed()</span></code> method. You can also pass a list of sentences to
+<p>Now, create an example sentence and call the embedding’s <a class="reference internal" href="../../api/embeddings/base.html#flair.embeddings.base.Embeddings.embed" title="flair.embeddings.base.Embeddings.embed"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">embed()</span></code></span></a> method. You can also pass a list of sentences to
 this method since some embedding types make use of batching to increase speed.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create sentence.</span>
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green .&#39;</span><span class="p">)</span>
@@ -395,7 +396,7 @@ this method since some embedding types make use of batching to increase speed.</
 </div>
 <p>This prints out the tokens and their embeddings. GloVe embeddings are Pytorch vectors of dimensionality 100.</p>
 <p>You choose which pre-trained embeddings you load by passing the appropriate
-id string to the constructor of the <code class="docutils literal notranslate"><span class="pre">WordEmbeddings</span></code> class. Typically, you use
+id string to the constructor of the <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.WordEmbeddings" title="flair.embeddings.token.WordEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings</span></code></span></a> class. Typically, you use
 the <strong>two-letter language code</strong> to init an embedding, so ‘en’ for English and
 ‘de’ for German and so on. By default, this will initialize FastText embeddings trained over Wikipedia.
 You can also always use FastText embeddings over Web crawls, by instantiating with ‘-crawl’. So ‘de-crawl’
@@ -580,7 +581,7 @@ following code snippet:</p>
 <span class="n">word_vectors</span><span class="o">.</span><span class="kp">save</span><span class="p">(</span><span class="s1">&#39;/path/to/converted&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>However, FastText embeddings have the functionality of returning vectors for out of vocabulary words using the sub-word information. If you want to use this then try <code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings</span></code> class.</p>
+<p>However, FastText embeddings have the functionality of returning vectors for out of vocabulary words using the sub-word information. If you want to use this then try <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FastTextEmbeddings" title="flair.embeddings.token.FastTextEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings</span></code></span></a> class.</p>
 </section>
 
 

@@ -8,7 +8,7 @@ top of embeddings, so if you want to train your own models, you should understan
 
 Let's use a standard BERT model (bert-base-uncased) to embed the sentence "the grass is green".
 
-Simply instantate `TransformerWordEmbeddings` and call `embed()` over an example sentence: 
+Simply instantiate [`TransformerWordEmbeddings`](#flair.embeddings.token.TransformerWordEmbeddings) and call [`embed()`](#flair.embeddings.base.Embeddings.embed) over an example sentence: 
 
 ```python
 from flair.embeddings import TransformerWordEmbeddings
@@ -80,14 +80,14 @@ Now, the whole sentence is embedded. Print the embedding like this:
 print(sentence.embedding)
 ```
 
-Transformer document embeddings are the most important concept in Flair. Check out more info in this dedicated chapter.
+[`TransformerDocumentEmbeddings`](#flair.embeddings.document.TransformerDocumentEmbeddings) are the most important concept in Flair. Check out more info in [this](project:transformer-embeddings.md) dedicated chapter.
 
 
 ## How to Stack Embeddings
 
 Flair allows you to combine embeddings into "embedding stacks". When not fine-tuning, using combinations of embeddings often gives best results!
 
-Use the `StackedEmbeddings` class and instantiate it by passing a list of embeddings that you wish to combine. For instance, lets combine classic GloVe embeddings with forward and backward Flair embeddings. 
+Use the [`StackedEmbeddings`](#flair.embeddings.token.StackedEmbeddings) class and instantiate it by passing a list of embeddings that you wish to combine. For instance, lets combine classic GloVe [`WordEmbeddings`](#flair.embeddings.token.WordEmbeddings) with forward and backward [`FlairEmbeddings`](#flair.embeddings.token.FlairEmbeddings). 
 
 First, instantiate the two embeddings you wish to combine:
 
@@ -102,7 +102,7 @@ flair_embedding_forward = FlairEmbeddings('news-forward')
 flair_embedding_backward = FlairEmbeddings('news-backward')
 ```
 
-Now instantiate the `StackedEmbeddings` class and pass it a list containing these two embeddings.
+Now instantiate the [`StackedEmbeddings`](#flair.embeddings.token.StackedEmbeddings) class and pass it a list containing these two embeddings.
 
 ```python
 from flair.embeddings import StackedEmbeddings
@@ -116,7 +116,7 @@ stacked_embeddings = StackedEmbeddings([
 ```
 
 
-That's it! Now just use this embedding like all the other embeddings, i.e. call the `embed()` method over your sentences.
+That's it! Now just use this embedding like all the other embeddings, i.e. call the [`embed()`](#flair.embeddings.base.Embeddings.embed) method over your sentences.
 
 ```python
 sentence = Sentence('The grass is green .')

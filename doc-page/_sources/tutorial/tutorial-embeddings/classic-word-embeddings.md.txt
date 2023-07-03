@@ -3,7 +3,7 @@
 Classic word embeddings are static and word-level, meaning that each distinct word gets exactly one pre-computed
 embedding. Most embeddings fall under this class, including the popular GloVe or Komninos embeddings.
 
-Simply instantiate the `WordEmbeddings` class and pass a string identifier of the embedding you wish to load. So, if
+Simply instantiate the [`WordEmbeddings`](#flair.embeddings.token.WordEmbeddings) class and pass a string identifier of the embedding you wish to load. So, if
 you want to use GloVe embeddings, pass the string 'glove' to the constructor:
 
 ```python
@@ -12,7 +12,7 @@ from flair.embeddings import WordEmbeddings
 # init embedding
 glove_embedding = WordEmbeddings('glove')
 ```
-Now, create an example sentence and call the embedding's `embed()` method. You can also pass a list of sentences to
+Now, create an example sentence and call the embedding's [`embed()`](#flair.embeddings.base.Embeddings.embed) method. You can also pass a list of sentences to
 this method since some embedding types make use of batching to increase speed.
 
 ```python
@@ -31,7 +31,7 @@ for token in sentence:
 This prints out the tokens and their embeddings. GloVe embeddings are Pytorch vectors of dimensionality 100.
 
 You choose which pre-trained embeddings you load by passing the appropriate
-id string to the constructor of the `WordEmbeddings` class. Typically, you use
+id string to the constructor of the [`WordEmbeddings`](#flair.embeddings.token.WordEmbeddings) class. Typically, you use
 the **two-letter language code** to init an embedding, so 'en' for English and
 'de' for German and so on. By default, this will initialize FastText embeddings trained over Wikipedia.
 You can also always use FastText embeddings over Web crawls, by instantiating with '-crawl'. So 'de-crawl'
@@ -111,5 +111,5 @@ word_vectors = gensim.models.KeyedVectors.load_word2vec_format('/path/to/fasttex
 word_vectors.save('/path/to/converted')
 ```
 
-However, FastText embeddings have the functionality of returning vectors for out of vocabulary words using the sub-word information. If you want to use this then try `FastTextEmbeddings` class.
+However, FastText embeddings have the functionality of returning vectors for out of vocabulary words using the sub-word information. If you want to use this then try [`FastTextEmbeddings`](#flair.embeddings.token.FastTextEmbeddings) class.
 

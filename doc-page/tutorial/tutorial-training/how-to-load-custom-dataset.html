@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/how-to-load-custom-dataset';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Train a sequence tagger" href="how-to-train-sequence-tagger.html" />
@@ -371,9 +372,9 @@ document.write(`
   <section id="how-to-load-a-custom-dataset">
 <h1>How to load a custom dataset<a class="headerlink" href="#how-to-load-a-custom-dataset" title="Permalink to this heading">#</a></h1>
 <p>This part of the tutorial shows how you can load a corpus for training a model.</p>
-<section id="reading-a-dataset-in-column-format">
-<h2>Reading a dataset in column format<a class="headerlink" href="#reading-a-dataset-in-column-format" title="Permalink to this heading">#</a></h2>
-<p>In cases you want to train over a sequence labeling dataset that is not in the above list, you can load them with the ColumnCorpus object.
+<section id="loading-a-columncorpus">
+<h2>loading a ColumnCorpus<a class="headerlink" href="#loading-a-columncorpus" title="Permalink to this heading">#</a></h2>
+<p>In cases you want to train over a sequence labeling dataset that is not in the above list, you can load them with the <a class="reference internal" href="../../api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></span></a> object.
 Most sequence labeling datasets in NLP use some sort of column format in which each line is a word and each column is
 one level of linguistic annotation. See for instance this sentence:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">George N B-PER</span>
@@ -389,7 +390,7 @@ one level of linguistic annotation. See for instance this sentence:</p>
 </pre></div>
 </div>
 <p>The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. Empty line separates sentences. To read such a
-dataset, define the column structure as a dictionary and instantiate a <code class="docutils literal notranslate"><span class="pre">ColumnCorpus</span></code>.</p>
+dataset, define the column structure as a dictionary and instantiate a <a class="reference internal" href="../../api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></span></a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Corpus</span>
 <span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">ColumnCorpus</span>
 
@@ -406,7 +407,7 @@ dataset, define the column structure as a dictionary and instantiate a <code cla
                               <span class="n">dev_file</span><span class="o">=</span><span class="s1">&#39;dev.txt&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This gives you a <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> object that contains the train, dev and test splits, each has a list of <code class="docutils literal notranslate"><span class="pre">Sentence</span></code>.
+<p>This gives you a <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> object that contains the train, dev and test splits, each has a list of <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a>.
 So, to check how many sentences there are in the training split, do</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">corpus</span><span class="o">.</span><span class="kp">train</span><span class="p">)</span>
 </pre></div>
@@ -433,7 +434,7 @@ load specified text and labels from a simple CSV file or format your data to the
 <h3>Load from simple CSV file<a class="headerlink" href="#load-from-simple-csv-file" title="Permalink to this heading">#</a></h3>
 <p>Many text classification datasets are distributed as simple CSV files in which each row corresponds to a data point and
 columns correspond to text, labels, and other metadata.  You can load a CSV format classification dataset using
-<code class="docutils literal notranslate"><span class="pre">CSVClassificationCorpus</span></code> by passing in a column format (like in <code class="docutils literal notranslate"><span class="pre">ColumnCorpus</span></code> above).  This column format indicates
+<a class="reference internal" href="../../api/datasets/document_classification.html#flair.datasets.document_classification.CSVClassificationCorpus" title="flair.datasets.document_classification.CSVClassificationCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">CSVClassificationCorpus</span></code></span></a> by passing in a column format (like in <a class="reference internal" href="../../api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></span></a> above).  This column format indicates
 which column(s) in the CSV holds the text and which field(s) the label(s). By default, Python’s CSV library assumes that
 your files are in Excel CSV format, but <a class="reference external" href="https://docs.python.org/3/library/csv.html#csv-fmt-params">you can specify additional parameters</a>
 if you use custom delimiters or quote characters.</p>
@@ -460,22 +461,24 @@ dev, test splits in a folder.</p>
 </section>
 <section id="fasttext-format">
 <h3>FastText format<a class="headerlink" href="#fasttext-format" title="Permalink to this heading">#</a></h3>
-<p>If using <code class="docutils literal notranslate"><span class="pre">CSVClassificationCorpus</span></code> is not practical, you may format your data to the FastText format, in which each line in the file represents a text document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix <code class="docutils literal notranslate"><span class="pre">__label__</span></code>. This looks like this:</p>
+<p>If using <a class="reference internal" href="../../api/datasets/document_classification.html#flair.datasets.document_classification.CSVClassificationCorpus" title="flair.datasets.document_classification.CSVClassificationCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">CSVClassificationCorpus</span></code></span></a> is not practical, you may format your data to the FastText format, in which each line in the file represents a text document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix <code class="docutils literal notranslate"><span class="pre">__label__</span></code>. This looks like this:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>__label__&lt;label_1&gt;<span class="w"> </span>&lt;text&gt;
 __label__&lt;label_1&gt;<span class="w"> </span>__label__&lt;label_2&gt;<span class="w"> </span>&lt;text&gt;
 </pre></div>
 </div>
-<p>As previously mentioned, to create a <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> for a text classification task, you need to have three files (train, dev, and test) in the
+<p>As previously mentioned, to create a <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> for a text classification task, you need to have three files (train, dev, and test) in the
 above format located in one folder. This data folder structure could, for example, look like this for the IMDB task:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/resources/tasks/imdb/train.txt
 /resources/tasks/imdb/dev.txt
 /resources/tasks/imdb/test.txt
 </pre></div>
 </div>
-<p>Now create a <code class="docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code> by pointing to this folder (<code class="docutils literal notranslate"><span class="pre">/resources/tasks/imdb</span></code>).
-Thereby, each line in a file is converted to a <code class="docutils literal notranslate"><span class="pre">Sentence</span></code> object annotated with the labels.</p>
-<p>Attention: A text in a line can have multiple sentences. Thus, a <code class="docutils literal notranslate"><span class="pre">Sentence</span></code> object can actually consist of multiple
-sentences.</p>
+<p>Now create a <a class="reference internal" href="../../api/datasets/document_classification.html#flair.datasets.document_classification.CSVClassificationCorpus" title="flair.datasets.document_classification.CSVClassificationCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">CSVClassificationCorpus</span></code></span></a> by pointing to this folder (<code class="docutils literal notranslate"><span class="pre">/resources/tasks/imdb</span></code>).
+Thereby, each line in a file is converted to a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> object annotated with the labels.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>A text in a line can have multiple sentences. Thus, a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> object can actually consist of multiple sentences.</p>
+</div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Corpus</span>
 <span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">ClassificationCorpus</span>
 
@@ -556,7 +559,7 @@ example we chose <code class="docutils literal notranslate"><span class="pre">la
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-a-dataset-in-column-format">Reading a dataset in column format</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-a-columncorpus">loading a ColumnCorpus</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-a-text-classification-dataset">Reading a text classification dataset</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-from-simple-csv-file">Load from simple CSV file</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttext-format">FastText format</a></li>

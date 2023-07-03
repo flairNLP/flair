@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/entity-linking';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Tagging parts-of-speech" href="part-of-speech-tagging.html" />
@@ -412,7 +413,7 @@ tag entities, but also attempts to link each entity to the corresponding Wikiped
 <h2>Example 2: Entity linking on a text document (multiple sentences)<a class="headerlink" href="#example-2-entity-linking-on-a-text-document-multiple-sentences" title="Permalink to this heading">#</a></h2>
 <p>Entity linking typically works best when applied to a whole document instead of only a single sentence.</p>
 <p>To illustrate how this works, let’s use the following short text: “<em>Bayern played against Barcelona. The match took place in Barcelona.</em>”</p>
-<p>In this case, split the text into sentences and pass a list of Sentence objects to the .predict() method:</p>
+<p>In this case, split the text into sentences and pass a list of Sentence objects to the <a class="reference internal" href="../../api/flair.nn.html#flair.nn.Classifier.predict" title="flair.nn.Classifier.predict"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Classifier.predict()</span></code></span></a> method:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
 <span class="kn">from</span> <span class="nn">flair.splitter</span> <span class="kn">import</span> <span class="n">SegtokSentenceSplitter</span>
 

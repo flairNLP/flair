@@ -2,6 +2,7 @@ Contributing
 ============
 
 .. toctree::
+   :maxdepth: 1
 
    writing_a_good_issue
    local_development

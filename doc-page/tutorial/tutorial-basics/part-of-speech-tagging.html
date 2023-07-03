@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/part-of-speech-tagging';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Tagging other things" href="other-models.html" />
@@ -401,9 +402,10 @@ document.write(`
 </pre></div>
 </div>
 <p>This printout tells us for instance that “<em>Dirk</em>” is a proper noun (tag: NNP), and “<em>went</em>” is a past tense verb (tag: VBD).</p>
-<p>:::info
-To better understand what each tag means, consult the <a class="reference external" href="https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html">tag specification</a> of the Penn Treebank.
-:::</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To better understand what each tag means, consult the <a class="reference external" href="https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html">tag specification</a> of the Penn Treebank.</p>
+</div>
 </section>
 <section id="in-german">
 <h3>… in German<a class="headerlink" href="#in-german" title="Permalink to this heading">#</a></h3>
@@ -497,9 +499,6 @@ will have VERBs or NOUNs.</p>
 </pre></div>
 </div>
 <p>However note that they were trained for a mix of European languages and therefore will not work for other languages.</p>
-</section>
-<section id="tagging-language-specific-parts-of-speech-pos-in-english">
-<h2>Tagging Language-Specific Parts-of-Speech (POS) in English<a class="headerlink" href="#tagging-language-specific-parts-of-speech-pos-in-english" title="Permalink to this heading">#</a></h2>
 </section>
 <section id="list-of-pos-models">
 <h2>List of POS Models<a class="headerlink" href="#list-of-pos-models" title="Permalink to this heading">#</a></h2>
@@ -615,7 +614,7 @@ will have VERBs or NOUNs.</p>
 </tr>
 </tbody>
 </table>
-<p>You choose which pre-trained model you load by passing the appropriate string to the <code class="docutils literal notranslate"><span class="pre">load()</span></code> method of the <code class="docutils literal notranslate"><span class="pre">Classifier</span></code> class.</p>
+<p>You choose which pre-trained model you load by passing the appropriate string to the <a class="reference internal" href="../../api/flair.nn.html#flair.nn.Classifier.load" title="flair.nn.Classifier.load"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Classifier.load()</span></code></span></a> method.</p>
 <p>A full list of our current and community-contributed models can be browsed on the <a class="reference external" href="https://huggingface.co/models?library=flair&amp;amp;sort=downloads"><strong>model hub</strong></a>.</p>
 </section>
 </section>
@@ -676,7 +675,6 @@ will have VERBs or NOUNs.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tagging-universal-parts-of-speech-upos">Tagging universal parts-of-speech (uPoS)​</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tagging-language-specific-parts-of-speech-pos-in-english">Tagging Language-Specific Parts-of-Speech (POS) in English</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-pos-models">List of POS Models</a></li>
 </ul>
   </nav></div>

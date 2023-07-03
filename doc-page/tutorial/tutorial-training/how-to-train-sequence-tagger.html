@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/how-to-train-sequence-tagger';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Train a text classifier" href="how-to-train-text-classifier.html" />
@@ -423,8 +424,8 @@ part-of-speech (PoS) tagging.</p>
                   <span class="p">)</span>
 </pre></div>
 </div>
-<p>As you can see, we use ‘xlm-roberta-large’ embeddings, enable fine-tuning and set <code class="docutils literal notranslate"><span class="pre">use_context</span></code> to True.
-We also deactivate the RNN, CRF and reprojection in the <code class="docutils literal notranslate"><span class="pre">SequenceTagger</span></code>. This is because the
+<p>As you can see, we use <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings" title="flair.embeddings.token.TransformerWordEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></span></a> based on ‘xlm-roberta-large’ embeddings. We enable fine-tuning and set <code class="docutils literal notranslate"><span class="pre">use_context</span></code> to True.
+We also deactivate the RNN, CRF and reprojection in the <a class="reference internal" href="../../api/flair.models.html#flair.models.SequenceTagger" title="flair.models.SequenceTagger"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">SequenceTagger</span></code></span></a>. This is because the
 transformer is so powerful that it does not need these components. We then fine-tune the model with a very small
 learning rate on the corpus.</p>
 <p>This will give you state-of-the-art numbers similar to the ones reported
@@ -529,7 +530,7 @@ setup may run faster in the end.</p>
 <section id="multi-dataset-training">
 <h2>Multi-dataset training<a class="headerlink" href="#multi-dataset-training" title="Permalink to this heading">#</a></h2>
 <p>Now, let us train a single model that can PoS tag text in both English and German. To do this, we load both the English
-and German UD corpora and create a MultiCorpus object. We also use the new multilingual Flair embeddings for this task.</p>
+and German UD corpora and create a <a class="reference internal" href="../../api/flair.data.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> object. We also use the new multilingual Flair embeddings for this task.</p>
 <p>All the rest is same as before, e.g.:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">MultiCorpus</span>
 <span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">UD_ENGLISH</span><span class="p">,</span> <span class="n">UD_GERMAN</span>

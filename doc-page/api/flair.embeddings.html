@@ -45,6 +45,7 @@
     <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/flair.embeddings';</script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="flair.embeddings.base" href="embeddings/base.html" />
@@ -290,6 +291,7 @@ document.write(`
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="flair.models.html">flair.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.nn.html">flair.nn</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flair.splitter.html">flair.splitter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flair.tokenization.html">flair.tokenization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flair.trainers.html">flair.trainers</a></li>
@@ -375,279 +377,46 @@ document.write(`
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="embeddings/base.html">flair.embeddings.base</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.DocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.DocumentEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings.embedding_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.DocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings.embeddings_name</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings"><code class="docutils literal notranslate"><span class="pre">Embeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.__init__"><code class="docutils literal notranslate"><span class="pre">Embeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings._add_embeddings_internal"><code class="docutils literal notranslate"><span class="pre">Embeddings._add_embeddings_internal()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.embed"><code class="docutils literal notranslate"><span class="pre">Embeddings.embed()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">Embeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">Embeddings.embedding_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">Embeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.from_params"><code class="docutils literal notranslate"><span class="pre">Embeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.get_instance_parameters"><code class="docutils literal notranslate"><span class="pre">Embeddings.get_instance_parameters()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.get_named_embeddings_dict"><code class="docutils literal notranslate"><span class="pre">Embeddings.get_named_embeddings_dict()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.get_names"><code class="docutils literal notranslate"><span class="pre">Embeddings.get_names()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.load_embedding"><code class="docutils literal notranslate"><span class="pre">Embeddings.load_embedding()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.save_embeddings"><code class="docutils literal notranslate"><span class="pre">Embeddings.save_embeddings()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings.to_params"><code class="docutils literal notranslate"><span class="pre">Embeddings.to_params()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.ScalarMix"><code class="docutils literal notranslate"><span class="pre">ScalarMix</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.ScalarMix.__init__"><code class="docutils literal notranslate"><span class="pre">ScalarMix.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.ScalarMix.forward"><code class="docutils literal notranslate"><span class="pre">ScalarMix.forward()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.ScalarMix.training"><code class="docutils literal notranslate"><span class="pre">ScalarMix.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.TokenEmbeddings"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.TokenEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings.embedding_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.TokenEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.TokenEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.TokenEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings.training</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.DocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings"><code class="docutils literal notranslate"><span class="pre">Embeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.ScalarMix"><code class="docutils literal notranslate"><span class="pre">ScalarMix</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.TokenEmbeddings"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.load_embeddings"><code class="docutils literal notranslate"><span class="pre">load_embeddings()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.register_embeddings"><code class="docutils literal notranslate"><span class="pre">register_embeddings()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="embeddings/document.html">flair.embeddings.document</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentCNNEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentCNNEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentCNNEmbeddings._add_embeddings_internal"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings._add_embeddings_internal()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentCNNEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentCNNEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentCNNEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentCNNEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentCNNEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentCNNEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentLMEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentLMEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentLMEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentLMEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentLMEmbeddings.get_names"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.get_names()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentLMEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentLMEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentLMEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings.embed"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.embed()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings.extra_repr"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.extra_repr()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings._add_embeddings_internal"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings._add_embeddings_internal()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentTFIDFEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentTFIDFEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentTFIDFEmbeddings.embed"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.embed()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentTFIDFEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentTFIDFEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentTFIDFEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentTFIDFEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentTFIDFEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentTFIDFEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.SentenceTransformerDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings.create_from_state"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.create_from_state()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings.onnx_cls"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.onnx_cls</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.training</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentCNNEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentLMEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentTFIDFEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.SentenceTransformerDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="embeddings/image.html">flair.embeddings.image</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ConvTransformNetworkImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.forward"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.forward()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.IdentityImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.IdentityImageEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.IdentityImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.IdentityImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.IdentityImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ImageEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.embedding_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ImageEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ImageEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.NetworkImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.NetworkImageEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.NetworkImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.NetworkImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.NetworkImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings.training</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ConvTransformNetworkImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.IdentityImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.NetworkImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="embeddings/legacy.html">flair.embeddings.legacy</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings"><code class="docutils literal notranslate"><span class="pre">BertEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.BertInputFeatures"><code class="docutils literal notranslate"><span class="pre">BertEmbeddings.BertInputFeatures</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">BertEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings._add_embeddings_internal"><code class="docutils literal notranslate"><span class="pre">BertEmbeddings._add_embeddings_internal()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">BertEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">BertEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">BertEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">BertEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings"><code class="docutils literal notranslate"><span class="pre">CamembertEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">CamembertEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">CamembertEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">CamembertEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">CamembertEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">CamembertEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings"><code class="docutils literal notranslate"><span class="pre">CharLMEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">CharLMEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">CharLMEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">CharLMEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">CharLMEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings.train"><code class="docutils literal notranslate"><span class="pre">CharLMEmbeddings.train()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">CharLMEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentLSTMEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentLSTMEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings.embed"><code class="docutils literal notranslate"><span class="pre">DocumentLSTMEmbeddings.embed()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentLSTMEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentLSTMEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentLSTMEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentLSTMEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentMeanEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentMeanEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings.embed"><code class="docutils literal notranslate"><span class="pre">DocumentMeanEmbeddings.embed()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentMeanEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentMeanEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentMeanEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentMeanEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings"><code class="docutils literal notranslate"><span class="pre">ELMoEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">ELMoEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">ELMoEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.extra_repr"><code class="docutils literal notranslate"><span class="pre">ELMoEmbeddings.extra_repr()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">ELMoEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">ELMoEmbeddings.training</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.use_layers_all"><code class="docutils literal notranslate"><span class="pre">ELMoEmbeddings.use_layers_all()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.use_layers_average"><code class="docutils literal notranslate"><span class="pre">ELMoEmbeddings.use_layers_average()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.use_layers_top"><code class="docutils literal notranslate"><span class="pre">ELMoEmbeddings.use_layers_top()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings"><code class="docutils literal notranslate"><span class="pre">ELMoTransformerEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">ELMoTransformerEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">ELMoTransformerEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">ELMoTransformerEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.extra_repr"><code class="docutils literal notranslate"><span class="pre">ELMoTransformerEmbeddings.extra_repr()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">ELMoTransformerEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">ELMoTransformerEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings"><code class="docutils literal notranslate"><span class="pre">OpenAIGPT2Embeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings.__init__"><code class="docutils literal notranslate"><span class="pre">OpenAIGPT2Embeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">OpenAIGPT2Embeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">OpenAIGPT2Embeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings.name"><code class="docutils literal notranslate"><span class="pre">OpenAIGPT2Embeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings.training"><code class="docutils literal notranslate"><span class="pre">OpenAIGPT2Embeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings"><code class="docutils literal notranslate"><span class="pre">OpenAIGPTEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">OpenAIGPTEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">OpenAIGPTEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">OpenAIGPTEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.extra_repr"><code class="docutils literal notranslate"><span class="pre">OpenAIGPTEmbeddings.extra_repr()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">OpenAIGPTEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">OpenAIGPTEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings"><code class="docutils literal notranslate"><span class="pre">RoBERTaEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">RoBERTaEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">RoBERTaEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">RoBERTaEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">RoBERTaEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">RoBERTaEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings"><code class="docutils literal notranslate"><span class="pre">XLMEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">XLMEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">XLMEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">XLMEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.extra_repr"><code class="docutils literal notranslate"><span class="pre">XLMEmbeddings.extra_repr()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">XLMEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">XLMEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings"><code class="docutils literal notranslate"><span class="pre">XLMRobertaEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">XLMRobertaEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">XLMRobertaEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">XLMRobertaEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">XLMRobertaEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">XLMRobertaEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings"><code class="docutils literal notranslate"><span class="pre">XLNetEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">XLNetEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">XLNetEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">XLNetEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.extra_repr"><code class="docutils literal notranslate"><span class="pre">XLNetEmbeddings.extra_repr()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">XLNetEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">XLNetEmbeddings.training</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings"><code class="docutils literal notranslate"><span class="pre">BertEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings"><code class="docutils literal notranslate"><span class="pre">CamembertEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings"><code class="docutils literal notranslate"><span class="pre">CharLMEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentLSTMEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentMeanEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings"><code class="docutils literal notranslate"><span class="pre">ELMoEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings"><code class="docutils literal notranslate"><span class="pre">ELMoTransformerEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings"><code class="docutils literal notranslate"><span class="pre">OpenAIGPT2Embeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings"><code class="docutils literal notranslate"><span class="pre">OpenAIGPTEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings"><code class="docutils literal notranslate"><span class="pre">RoBERTaEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings"><code class="docutils literal notranslate"><span class="pre">XLMEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings"><code class="docutils literal notranslate"><span class="pre">XLMRobertaEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings"><code class="docutils literal notranslate"><span class="pre">XLNetEmbeddings</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy._build_token_subwords_mapping"><code class="docutils literal notranslate"><span class="pre">_build_token_subwords_mapping()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy._build_token_subwords_mapping_gpt2"><code class="docutils literal notranslate"><span class="pre">_build_token_subwords_mapping_gpt2()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy._extract_embeddings"><code class="docutils literal notranslate"><span class="pre">_extract_embeddings()</span></code></a></li>
@@ -655,217 +424,29 @@ document.write(`
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="embeddings/token.html">flair.embeddings.token</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.BytePairEmbeddings"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.extra_repr"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings.extra_repr()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.CharacterEmbeddings"><code class="docutils literal notranslate"><span class="pre">CharacterEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.CharacterEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">CharacterEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.CharacterEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">CharacterEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.CharacterEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">CharacterEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.CharacterEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">CharacterEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.CharacterEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">CharacterEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.CharacterEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">CharacterEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.CharacterEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">CharacterEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings.extra_repr"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings.extra_repr()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings.get_cached_vec"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings.get_cached_vec()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FlairEmbeddings"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FlairEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FlairEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FlairEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FlairEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FlairEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FlairEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FlairEmbeddings.train"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings.train()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FlairEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.HashEmbeddings"><code class="docutils literal notranslate"><span class="pre">HashEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.HashEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">HashEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.HashEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">HashEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.HashEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">HashEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.HashEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">HashEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.HashEmbeddings.num_embeddings"><code class="docutils literal notranslate"><span class="pre">HashEmbeddings.num_embeddings</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.HashEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">HashEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.HashEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">HashEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.MuseCrosslingualEmbeddings"><code class="docutils literal notranslate"><span class="pre">MuseCrosslingualEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.MuseCrosslingualEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">MuseCrosslingualEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.MuseCrosslingualEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">MuseCrosslingualEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.MuseCrosslingualEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">MuseCrosslingualEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.MuseCrosslingualEmbeddings.get_cached_vec"><code class="docutils literal notranslate"><span class="pre">MuseCrosslingualEmbeddings.get_cached_vec()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.MuseCrosslingualEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">MuseCrosslingualEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.MuseCrosslingualEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">MuseCrosslingualEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.MuseCrosslingualEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">MuseCrosslingualEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.NILCEmbeddings"><code class="docutils literal notranslate"><span class="pre">NILCEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.NILCEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">NILCEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.NILCEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">NILCEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.NILCEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">NILCEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.NILCEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">NILCEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.NILCEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">NILCEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.OneHotEmbeddings"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.OneHotEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.OneHotEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.OneHotEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.OneHotEmbeddings.from_corpus"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings.from_corpus()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.OneHotEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.OneHotEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.OneHotEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.OneHotEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings.get_names"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings.get_names()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings.train"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings.train()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings.embed"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings.embed()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings.embedding_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings.get_named_embeddings_dict"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings.get_named_embeddings_dict()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings.get_names"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings.get_names()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings.create_from_state"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings.create_from_state()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings.onnx_cls"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings.onnx_cls</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.extra_repr"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.extra_repr()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.get_cached_token_index"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.get_cached_token_index()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.get_vec"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.get_vec()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.resolve_precomputed_path"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.resolve_precomputed_path()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.state_dict"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.state_dict()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.to"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.to()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.train"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.train()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings.training</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.BytePairEmbeddings"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.CharacterEmbeddings"><code class="docutils literal notranslate"><span class="pre">CharacterEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FlairEmbeddings"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.HashEmbeddings"><code class="docutils literal notranslate"><span class="pre">HashEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.MuseCrosslingualEmbeddings"><code class="docutils literal notranslate"><span class="pre">MuseCrosslingualEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.NILCEmbeddings"><code class="docutils literal notranslate"><span class="pre">NILCEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.OneHotEmbeddings"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="embeddings/transformer.html">flair.embeddings.transformer</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings.create_from_state"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.create_from_state()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.embedding_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings.prepare_tensors"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.prepare_tensors()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings.to_args"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.to_args()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.embedding_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.embedding_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings.export_onnx"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.export_onnx()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings.forward"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.forward()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings.onnx_cls"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.onnx_cls</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.to_params()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings.create_from_embedding"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.create_from_embedding()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings.parameter_to_list"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.parameter_to_list()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings.tokenizer"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.tokenizer</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitWordEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitWordEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitWordEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerJitWordEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitWordEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerJitWordEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitWordEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerJitWordEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.collect_dynamic_axes"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.collect_dynamic_axes()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.create_session"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.create_session()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.export_from_embedding"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.export_from_embedding()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.from_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.optimize_model"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.optimize_model()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.quantize_model"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.quantize_model()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.remove_session"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.remove_session()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.to_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.tokenizer"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.tokenizer</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxWordEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxWordEmbeddings</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxWordEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxWordEmbeddings.embeddings_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxWordEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxWordEmbeddings.name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxWordEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxWordEmbeddings.training</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitWordEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitWordEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxWordEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxWordEmbeddings</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.combine_strided_tensors"><code class="docutils literal notranslate"><span class="pre">combine_strided_tensors()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.document_max_pooling"><code class="docutils literal notranslate"><span class="pre">document_max_pooling()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.document_mean_pooling"><code class="docutils literal notranslate"><span class="pre">document_mean_pooling()</span></code></a></li>

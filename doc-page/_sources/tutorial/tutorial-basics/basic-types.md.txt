@@ -2,18 +2,18 @@
 
 This tutorial explains the basic concepts used in Flair:
 
--    what is a `Sentence`
--    what is a `Label`
+-    what is a [`Sentence`](#flair.data.Sentence)
+-    what is a [`Label`](#flair.data.Label)
 
 You should be familiar with these two concepts in order to get the most out of Flair.
 
 ## What is a Sentence
 
-If you want to tag a sentence, you need to first make a `Sentence` object for it.
+If you want to tag a sentence, you need to first make a [`Sentence`](#flair.data.Sentence) object for it.
 
 For example, say you want to tag the text "_The grass is green._".
 
-Let's start by making a `Sentence` object for this sentence.
+Let's start by making a [`Sentence`](#flair.data.Sentence) object for this sentence.
 
 
 ```python
@@ -35,9 +35,9 @@ Sentence[5]: "The grass is green."
 
 The print-out tells us that the sentence consists of 5 tokens.
 
-:::info
+```{note}
 A token is an atomic unit of the text, often a word or punctuation. The printout is therefore telling us that the sentence "_The grass is green._" consists of 5 such atomic units. 
-:::
+```
 
 ### Iterating over the tokens in a Sentence
 
@@ -84,12 +84,11 @@ This print-out includes the token index (3) and the lexical value of the token (
 
 ### Tokenization
 
-When you create a `Sentence` as above, the text is automatically tokenized (segmented into words) using the [segtok](https://pypi.org/project/segtok/) library.
+When you create a [`Sentence`](#flair.data.Sentence) as above, the text is automatically tokenized (segmented into words) using the [segtok](https://pypi.org/project/segtok/) library.
 
-
-:::info
+```{note}
 You can also use a different tokenizer if you like. To learn more about this, check out our tokenization tutorial.
-:::
+```
 
 
 ## What is a Label
@@ -141,13 +140,13 @@ Token[4]: "."
 
 This shows that there are 5 tokens in the sentence, one of which has a label.
 
-:::info
-The `add_label` method used here has two mandatory parameters.
-:::
+```{note}
+The [`add_label`](#flair.data.DataPoint.add_label) method used here has two mandatory parameters.
+```
 
 ### Example 2: Labeling a whole sentence
 
-Sometimes you want to label an entire sentence instead of only a token. Do this by calling `add_label` for the whole sentence.
+Sometimes you want to label an entire sentence instead of only a token. Do this by calling [`add_label`](#flair.data.DataPoint.add_label) for the whole sentence.
 
 For example, say we want to add a sentiment label to the sentence "_The grass is green._":
 
@@ -197,7 +196,7 @@ Indicating that the sentence is now labeled with two different types of informat
 
 ### Accessing labels
 
-You can iterate through all labels of a sentence using the `.get_labels()` method:
+You can iterate through all labels of a sentence using the [`get_labels()`](#flair.data.Sentence.get_labels) method:
 
 ```python
 # iterate over all labels and print
@@ -230,16 +229,16 @@ Token[3]: "green" → color (1.0)
 
 This printout tells us that there are two labels: The first is for the whole sentence, tagged as POSITIVE. The second is only for the token "green", tagged as "color".
 
-:::info
+````{note}
 
-If you only want to iterate over labels of a specific type, add the label name as parameter to get_labels(). For instance, to only iterate over all NER labels, do:
+If you only want to iterate over labels of a specific type, add the label name as parameter to [`get_labels()`](#flair.data.Sentence.get_labels). For instance, to only iterate over all NER labels, do:
 
 ```python
 # iterate over all NER labels only
 for label in sentence.get_labels('ner'):
     print(label)
 ```
-:::
+````
 
 ### Information for each label
 

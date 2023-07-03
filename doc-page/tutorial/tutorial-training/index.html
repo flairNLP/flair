@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/index';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="How model training works in Flair" href="how-model-training-works.html" />
@@ -370,74 +371,12 @@ document.write(`
 <p>This tutorial illustrates how you can train your own state-of-the-art NLP models with Flair.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="how-model-training-works.html">How model training works in Flair</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how-model-training-works.html#example-training-a-part-of-speech-tagger">Example: Training a Part-of-Speech Tagger</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-model-training-works.html#step-by-step-walkthrough">Step-by-step walkthrough</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="how-model-training-works.html#step-1-load-a-corpus">Step 1: Load a Corpus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-model-training-works.html#step-2-choose-the-label-type">Step 2: Choose the label type</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-model-training-works.html#step-3-creating-a-label-dictionary">Step 3: Creating a label dictionary</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-model-training-works.html#step-4-initialize-embeddings">Step 4: Initialize embeddings</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-model-training-works.html#step-5-initialize-the-model">Step 5: Initialize the Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-model-training-works.html#step-6-initialize-the-trainer">Step 6: Initialize the Trainer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-model-training-works.html#step-7-train">Step 7: Train</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-model-training-works.html#step-8-predict">Step 8: Predict</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="how-model-training-works.html#summary">Summary</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="train-vs-fine-tune.html">Training vs fine-tuning</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="train-vs-fine-tune.html#fine-tuning">Fine-Tuning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="train-vs-fine-tune.html#training">Training</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="how-to-load-prepared-dataset.html">How to load a prepared dataset</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how-to-load-prepared-dataset.html#the-corpus-object">The Corpus Object</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#helper-functions">Helper functions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#creating-label-dictionaries">Creating label dictionaries</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="how-to-load-prepared-dataset.html#dictionaries-for-other-label-types">Dictionaries for other label types</a></li>
-<li class="toctree-l4"><a class="reference internal" href="how-to-load-prepared-dataset.html#dictionaries-for-other-corpora-types">Dictionaries for other corpora types</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#the-multicorpus-object">The MultiCorpus Object</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="how-to-load-prepared-dataset.html#datasets-included-in-flair">Datasets included in Flair</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#named-entity-recognition">Named Entity Recognition</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#biomedical-named-entity-recognition">Biomedical Named Entity Recognition</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#entity-linking">Entity Linking</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#relation-extraction">Relation Extraction</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#glue-benchmark">GLUE Benchmark</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#universal-proposition-banks">Universal Proposition Banks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#universal-dependency-treebanks">Universal Dependency Treebanks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#text-classification">Text Classification</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#text-regression">Text Regression</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#other-sequence-labeling">Other Sequence Labeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html#experimental-similarity-learning">Experimental: Similarity Learning</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="how-to-load-custom-dataset.html">How to load a custom dataset</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how-to-load-custom-dataset.html#reading-a-dataset-in-column-format">Reading a dataset in column format</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-to-load-custom-dataset.html#reading-a-text-classification-dataset">Reading a text classification dataset</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-custom-dataset.html#load-from-simple-csv-file">Load from simple CSV file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="how-to-load-custom-dataset.html#fasttext-format">FastText format</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="how-to-train-sequence-tagger.html">Train a sequence tagger</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how-to-train-sequence-tagger.html#training-a-named-entity-recognition-ner-model-with-transformers">Training a named entity recognition (NER) model with transformers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-to-train-sequence-tagger.html#training-a-named-entity-recognition-ner-model-with-flair-embeddings">Training a named entity recognition (NER) model with Flair embeddings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-to-train-sequence-tagger.html#training-a-part-of-speech-tagger">Training a part-of-speech tagger</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-to-train-sequence-tagger.html#multi-dataset-training">Multi-dataset training</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="how-to-train-text-classifier.html">Train a text classifier</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how-to-train-text-classifier.html#training-a-text-classification-model-with-transformers">Training a text classification model with transformers</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="how-model-training-works.html">How model training works in Flair</a></li>
+<li class="toctree-l1"><a class="reference internal" href="train-vs-fine-tune.html">Training vs fine-tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-load-prepared-dataset.html">How to load a prepared dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-load-custom-dataset.html">How to load a custom dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-train-sequence-tagger.html">Train a sequence tagger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-train-text-classifier.html">Train a text classifier</a></li>
 </ul>
 </div>
 </section>

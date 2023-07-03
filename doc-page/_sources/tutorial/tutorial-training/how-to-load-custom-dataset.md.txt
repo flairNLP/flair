@@ -2,9 +2,9 @@
 
 This part of the tutorial shows how you can load a corpus for training a model. 
 
-## Reading a dataset in column format
+## loading a ColumnCorpus
 
-In cases you want to train over a sequence labeling dataset that is not in the above list, you can load them with the ColumnCorpus object.
+In cases you want to train over a sequence labeling dataset that is not in the above list, you can load them with the [`ColumnCorpus`](#flair.datasets.sequence_labeling.ColumnCorpus) object.
 Most sequence labeling datasets in NLP use some sort of column format in which each line is a word and each column is
 one level of linguistic annotation. See for instance this sentence:
 
@@ -22,7 +22,7 @@ home N O
 ```
 
 The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. Empty line separates sentences. To read such a
-dataset, define the column structure as a dictionary and instantiate a `ColumnCorpus`.
+dataset, define the column structure as a dictionary and instantiate a [`ColumnCorpus`](#flair.datasets.sequence_labeling.ColumnCorpus).
 
 ```python
 from flair.data import Corpus
@@ -42,7 +42,7 @@ corpus: Corpus = ColumnCorpus(data_folder, columns,
 
 ```
 
-This gives you a `Corpus` object that contains the train, dev and test splits, each has a list of `Sentence`.
+This gives you a [`Corpus`](#flair.data.Corpus) object that contains the train, dev and test splits, each has a list of [`Sentence`](#flair.data.Sentence).
 So, to check how many sentences there are in the training split, do
 
 ```python
@@ -75,7 +75,7 @@ load specified text and labels from a simple CSV file or format your data to the
 
 Many text classification datasets are distributed as simple CSV files in which each row corresponds to a data point and
 columns correspond to text, labels, and other metadata.  You can load a CSV format classification dataset using
-`CSVClassificationCorpus` by passing in a column format (like in `ColumnCorpus` above).  This column format indicates
+[`CSVClassificationCorpus`](#flair.datasets.document_classification.CSVClassificationCorpus) by passing in a column format (like in [`ColumnCorpus`](#flair.datasets.sequence_labeling.ColumnCorpus) above).  This column format indicates
 which column(s) in the CSV holds the text and which field(s) the label(s). By default, Python's CSV library assumes that
 your files are in Excel CSV format, but [you can specify additional parameters](https://docs.python.org/3/library/csv.html#csv-fmt-params)
 if you use custom delimiters or quote characters.
@@ -104,25 +104,26 @@ corpus: Corpus = CSVClassificationCorpus(data_folder,
 
 
 ### FastText format
-If using `CSVClassificationCorpus` is not practical, you may format your data to the FastText format, in which each line in the file represents a text document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix `__label__`. This looks like this:
+If using [`CSVClassificationCorpus`](#flair.datasets.document_classification.CSVClassificationCorpus) is not practical, you may format your data to the FastText format, in which each line in the file represents a text document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix `__label__`. This looks like this:
 
 ```bash
 __label__<label_1> <text>
 __label__<label_1> __label__<label_2> <text>
 ```
 
-As previously mentioned, to create a `Corpus` for a text classification task, you need to have three files (train, dev, and test) in the
+As previously mentioned, to create a [`Corpus`](#flair.data.Corpus) for a text classification task, you need to have three files (train, dev, and test) in the
 above format located in one folder. This data folder structure could, for example, look like this for the IMDB task:
 ```text
 /resources/tasks/imdb/train.txt
 /resources/tasks/imdb/dev.txt
 /resources/tasks/imdb/test.txt
 ```
-Now create a `ClassificationCorpus` by pointing to this folder (`/resources/tasks/imdb`).
-Thereby, each line in a file is converted to a `Sentence` object annotated with the labels.
+Now create a [`CSVClassificationCorpus`](#flair.datasets.document_classification.CSVClassificationCorpus) by pointing to this folder (`/resources/tasks/imdb`).
+Thereby, each line in a file is converted to a [`Sentence`](#flair.data.Sentence) object annotated with the labels.
 
-Attention: A text in a line can have multiple sentences. Thus, a `Sentence` object can actually consist of multiple
-sentences.
+```{important}
+A text in a line can have multiple sentences. Thus, a [`Sentence`](#flair.data.Sentence) object can actually consist of multiple sentences.
+```
 
 ```python
 from flair.data import Corpus

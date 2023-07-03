@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/how-model-training-works';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Training vs fine-tuning" href="train-vs-fine-tune.html" />
@@ -371,7 +372,7 @@ document.write(`
   <section id="how-model-training-works-in-flair">
 <h1>How model training works in Flair<a class="headerlink" href="#how-model-training-works-in-flair" title="Permalink to this heading">#</a></h1>
 <p>In this section, we explain the main ideas of model training in Flair.</p>
-<p>In particular, we give an introduction to the <code class="docutils literal notranslate"><span class="pre">ModelTrainer</span></code> class, and discuss what decisions you have to make to train good models.</p>
+<p>In particular, we give an introduction to the <a class="reference internal" href="../../api/flair.trainers.html#flair.trainers.ModelTrainer" title="flair.trainers.ModelTrainer"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ModelTrainer</span></code></span></a> class, and discuss what decisions you have to make to train good models.</p>
 <section id="example-training-a-part-of-speech-tagger">
 <h2>Example: Training a Part-of-Speech Tagger<a class="headerlink" href="#example-training-a-part-of-speech-tagger" title="Permalink to this heading">#</a></h2>
 <p>As example in this chapter, we train a simple part-of-speech tagger for English. To make the example run fast</p>
@@ -483,12 +484,15 @@ document.write(`
 <section id="step-1-load-a-corpus">
 <h3>Step 1: Load a Corpus<a class="headerlink" href="#step-1-load-a-corpus" title="Permalink to this heading">#</a></h3>
 <p>The first thing you need is data to train and evaluate your model on.</p>
-<p>In Flair, training is done using the <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> object that holds three “splits”: a <code class="docutils literal notranslate"><span class="pre">train</span></code>, a <code class="docutils literal notranslate"><span class="pre">dev</span></code> and a <code class="docutils literal notranslate"><span class="pre">test</span></code> split.</p>
-<p>:::info</p>
-<p>Splitting your data into three splits is standard procedure in machine learning: the <code class="docutils literal notranslate"><span class="pre">train</span></code> split is used to train the model while the <code class="docutils literal notranslate"><span class="pre">dev</span></code> split is used for model selection and early stopping. The <code class="docutils literal notranslate"><span class="pre">test</span></code> split is used only for the final evaluation.
-:::</p>
-<p>In this example, we use the <a href="https://universaldependencies.org/treebanks/en_ewt/index.html">English Universal Dependencies</a> dataset to train on. It contains many sentences fully annotated with both universal and language-specific part-of-speech tags. Running these lines will load and print the corpus:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1. load the corpus</span>
+<p>In Flair, training is done using the <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> object that holds three “splits”: a <code class="docutils literal notranslate"><span class="pre">train</span></code>, a <code class="docutils literal notranslate"><span class="pre">dev</span></code> and a <code class="docutils literal notranslate"><span class="pre">test</span></code> split.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Splitting your data into three splits is standard procedure in machine learning: the <code class="docutils literal notranslate"><span class="pre">train</span></code> split is used to train the model while the <code class="docutils literal notranslate"><span class="pre">dev</span></code> split is used for model selection and early stopping. The <code class="docutils literal notranslate"><span class="pre">test</span></code> split is used only for the final evaluation.</p>
+</div>
+<p>In this example, we use the <a class="reference external" href="https://universaldependencies.org/treebanks/en_ewt/index.html">English Universal Dependencies</a> dataset to train on. It contains many sentences fully annotated with both universal and language-specific part-of-speech tags. Running these lines will load and print the corpus:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">UD_ENGLISH</span>
+
+<span class="c1"># 1. load the corpus</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">UD_ENGLISH</span><span class="p">()</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
 </pre></div>
@@ -498,9 +502,10 @@ document.write(`
 </pre></div>
 </div>
 <p>Showing us that our downsampled training data has three splits: a training split of 1254 sentences, a dev split of 200 sentences, and a test split of 208 sentences.</p>
-<p>:::tip
-The <code class="docutils literal notranslate"><span class="pre">Corpus</span></code> object has a number of very handy helper functions that let you manipulate the data and compute statistics. For instance, in the code above we called <code class="docutils literal notranslate"><span class="pre">.downsample(0.1)</span></code> to downsample the corpus to 10% of its original size. To learn about more helper functions, check out the corpus tutorial.
-:::</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> object has a number of very handy helper functions that let you manipulate the data and compute statistics. For instance, in the code above we called <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus.downsample" title="flair.data.Corpus.downsample"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.downsample(0.1)</span></code></span></a> to downsample the corpus to 10% of its original size. To learn about more helper functions, check out the <a class="reference internal" href="how-to-load-prepared-dataset.html"><span class="std std-doc">corpus tutorial</span></a>.</p>
+</div>
 </section>
 <section id="step-2-choose-the-label-type">
 <h3>Step 2: Choose the label type<a class="headerlink" href="#step-2-choose-the-label-type" title="Permalink to this heading">#</a></h3>
@@ -510,14 +515,15 @@ The <code class="docutils literal notranslate"><span class="pre">Corpus</span></
 <span class="n">label_type</span> <span class="o">=</span> <span class="s1">&#39;upos&#39;</span>
 </pre></div>
 </div>
-<p>:::info</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>You might ask: why is specifying the <code class="docutils literal notranslate"><span class="pre">label_type</span></code> even necessary? Well, some corpora have more than one label type. The English UD treebank for instance has both universal PoS tags (‘upos’) and regular PoS tags (‘pos’), plus many other layers of annotation. A tagger is normally trained to predict just type of annotation.</p>
-<p>This means that you need to know which label types a specific corpus has labels for, and choose one of them.
-:::</p>
+<p>This means that you need to know which label types a specific corpus has labels for, and choose one of them.</p>
+</div>
 </section>
 <section id="step-3-creating-a-label-dictionary">
 <h3>Step 3: Creating a label dictionary<a class="headerlink" href="#step-3-creating-a-label-dictionary" title="Permalink to this heading">#</a></h3>
-<p>Our model needs to predict a set of labels. To determine the label set, run <code class="docutils literal notranslate"><span class="pre">make_label_dictionary</span></code> on the corpus and pass the label type you want to predict. In this example, we pass <strong>‘upos’</strong> since we want to predict universal part-of-speech tags.</p>
+<p>Our model needs to predict a set of labels. To determine the label set, run <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary()</span></code></span></a> on the corpus and pass the label type you want to predict. In this example, we pass <strong>‘upos’</strong> since we want to predict universal part-of-speech tags.</p>
 <p>Running these lines will compute and print the label dictionary from the corpus:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 3. make the label dictionary from the corpus</span>
 <span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
@@ -543,7 +549,7 @@ The <code class="docutils literal notranslate"><span class="pre">Corpus</span></
 <section id="step-5-initialize-the-model">
 <h3>Step 5: Initialize the Model<a class="headerlink" href="#step-5-initialize-the-model" title="Permalink to this heading">#</a></h3>
 <p>Depending on what you want to do, you need to initialize the appropriate model type.</p>
-<p>For this example, we use the <code class="docutils literal notranslate"><span class="pre">SequenceLabeler</span></code> since we do part-of-speech tagging:</p>
+<p>For this example, we use the <a class="reference internal" href="../../api/flair.models.html#flair.models.SequenceTagger" title="flair.models.SequenceTagger"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">SequenceTagger</span></code></span></a> since we do part-of-speech tagging:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 5. initialize sequence tagger</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="p">(</span><span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
                        <span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
@@ -552,14 +558,15 @@ The <code class="docutils literal notranslate"><span class="pre">Corpus</span></
 </pre></div>
 </div>
 <p>Printing it will give you the PyTorch model that is initialized.</p>
-<p>:::info</p>
-<p>Depending on the task, you need a different model type: For sequence labeling (NER, part-of-speech tagging) you need the <code class="docutils literal notranslate"><span class="pre">SequenceLabeler</span></code>. For text classification you need the <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code>.</p>
-<p>For each model type, we are creating dedicated tutorials to better explain what they do.
-:::</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Depending on the task, you need a different model type: For sequence labeling (NER, part-of-speech tagging) you need the <a class="reference internal" href="../../api/flair.models.html#flair.models.SequenceTagger" title="flair.models.SequenceTagger"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">SequenceTagger</span></code></span></a>. For text classification you need the <a class="reference internal" href="../../api/flair.models.html#flair.models.TextClassifier" title="flair.models.TextClassifier"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code></span></a>.</p>
+<p>For each model type, we are creating dedicated tutorials to better explain what they do.</p>
+</div>
 </section>
 <section id="step-6-initialize-the-trainer">
 <h3>Step 6: Initialize the Trainer<a class="headerlink" href="#step-6-initialize-the-trainer" title="Permalink to this heading">#</a></h3>
-<p>The ModelTrainer is initialized simply by passing the model and the corpus because that is all it needs.</p>
+<p>The <a class="reference internal" href="../../api/flair.trainers.html#flair.trainers.ModelTrainer" title="flair.trainers.ModelTrainer"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ModelTrainer</span></code></span></a> is initialized simply by passing the model and the corpus because that is all it needs.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 6. initialize trainer</span>
 <span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
@@ -567,7 +574,7 @@ The <code class="docutils literal notranslate"><span class="pre">Corpus</span></
 </section>
 <section id="step-7-train">
 <h3>Step 7: Train<a class="headerlink" href="#step-7-train" title="Permalink to this heading">#</a></h3>
-<p>Once the trainer is initialized, you can call <code class="docutils literal notranslate"><span class="pre">train</span></code> to launch a standard training run.</p>
+<p>Once the trainer is initialized, you can call <a class="reference internal" href="../../api/flair.trainers.html#flair.trainers.ModelTrainer.train" title="flair.trainers.ModelTrainer.train"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">ModelTrainer.train()</span></code></span></a> to launch a standard training run.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 7. start training</span>
 <span class="n">trainer</span><span class="o">.</span><span class="kp">train</span><span class="p">(</span><span class="s1">&#39;resources/taggers/example-upos&#39;</span><span class="p">,</span>
               <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
@@ -577,13 +584,14 @@ The <code class="docutils literal notranslate"><span class="pre">Corpus</span></
 </div>
 <p>This will launch a “standard training run” with SGD as optimizer. By default, the learning rate is annealed against the development score: if fo 3 epochs there is no improvement on the dev split, the learning rate is halved. If this happens too often, the learning rate will fall below a minimal threshold and training stops early.</p>
 <p>The max_epochs parameter is set to a small number in this script to make it run fast, but normally you should use a much higher value (150 or 200).</p>
-<p>:::info</p>
-<p>There are two main mechanisms to train a model in Flair. (1) The “classic” workflow (SGD with annealing) is invoked as above using the <code class="docutils literal notranslate"><span class="pre">train()</span></code> method. (2) The current state-of-the-art based on fine-tuning (AdamW with One-Cycle) is invoked using the <code class="docutils literal notranslate"><span class="pre">fine_tune()</span></code> method. In most cases, you will want to use the latter.
-:::</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There are two main mechanisms to train a model in Flair. (1) The “classic” workflow (SGD with annealing) is invoked as above using the <a class="reference internal" href="../../api/flair.trainers.html#flair.trainers.ModelTrainer.train" title="flair.trainers.ModelTrainer.train"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">ModelTrainer.train()</span></code></span></a> method. (2) The current state-of-the-art based on fine-tuning (AdamW with Linear Learning Rate Schedulle) is invoked using the <a class="reference internal" href="../../api/flair.trainers.html#flair.trainers.ModelTrainer.fine_tune" title="flair.trainers.ModelTrainer.fine_tune"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">ModelTrainer.fine_tune()</span></code></span></a> method. In most cases, you will want to use the latter.</p>
+</div>
 </section>
 <section id="step-8-predict">
 <h3>Step 8: Predict<a class="headerlink" href="#step-8-predict" title="Permalink to this heading">#</a></h3>
-<p>Once the model is trained you can use it to predict tags for new sentences. Just call the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method of the model.</p>
+<p>Once the model is trained you can use it to predict tags for new sentences. Just call the <a class="reference internal" href="../../api/flair.nn.html#flair.nn.Classifier.predict" title="flair.nn.Classifier.predict"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">.predict()</span></code></span></a> method of the model.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># load the model you trained</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s1">&#39;resources/taggers/example-upos/final-model.pt&#39;</span><span class="p">)</span>
 

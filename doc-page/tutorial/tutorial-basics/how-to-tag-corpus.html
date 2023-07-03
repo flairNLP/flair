@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/how-to-tag-corpus';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Tutorial 2: Training models" href="../tutorial-training/index.html" />
@@ -373,8 +374,8 @@ document.write(`
   <section id="how-to-tag-a-whole-corpus">
 <h1>How to tag a whole corpus<a class="headerlink" href="#how-to-tag-a-whole-corpus" title="Permalink to this heading">#</a></h1>
 <p>Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a
-list of <code class="docutils literal notranslate"><span class="pre">Sentence</span></code> objects to the <code class="docutils literal notranslate"><span class="pre">.predict()</span></code> method.</p>
-<p>For instance, you can use the sentence splitter of segtok to split your text:</p>
+list of <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> objects to the <a class="reference internal" href="../../api/flair.nn.html#flair.nn.Classifier.predict" title="flair.nn.Classifier.predict"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Classifier.predict()</span></code></span></a> method.</p>
+<p>For instance, you can use a <a class="reference internal" href="../../api/flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></span></a> to split your text:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
 <span class="kn">from</span> <span class="nn">flair.splitter</span> <span class="kn">import</span> <span class="n">SegtokSentenceSplitter</span>
 
@@ -396,7 +397,7 @@ list of <code class="docutils literal notranslate"><span class="pre">Sentence</s
     <span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Using the <code class="docutils literal notranslate"><span class="pre">mini_batch_size</span></code> parameter of the <code class="docutils literal notranslate"><span class="pre">.predict()</span></code> method, you can set the size of mini batches passed to the
+<p>Using the <code class="docutils literal notranslate"><span class="pre">mini_batch_size</span></code> parameter of the <a class="reference internal" href="../../api/flair.nn.html#flair.nn.Classifier.predict" title="flair.nn.Classifier.predict"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Classifier.predict()</span></code></span></a> method, you can set the size of mini batches passed to the
 tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.</p>
 </section>
 

@@ -34,7 +34,7 @@ as LOC (location.)
 ## Getting the predictions
 
 A common question that gets asked is **how to access these predictions directly**. You can do this by using
-the `get_labels()` method to iterate over all predictions:
+the [`get_labels()`](#flair.data.Sentence.get_labels) method to iterate over all predictions:
 
 ```python
 for label in sentence.get_labels():
@@ -52,7 +52,7 @@ The confidence of the prediction is indicated as a score in brackets.
 
 ## Values for each prediction
 
-For each prediction, you can even **directly access** the label value, it's score and the entity text:  
+For each prediction, you can even **directly access** the label value, and all other attributes of the [`Label`](#flair.data.Label) class:  
 
 ```python
 # iterate over all labels in the sentence

@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/index';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Basics" href="basic-types.html" />
@@ -373,75 +374,13 @@ document.write(`
 and showcases various models we ship with Flair.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="basic-types.html">Basics</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="basic-types.html#what-is-a-sentence">What is a Sentence</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="basic-types.html#iterating-over-the-tokens-in-a-sentence">Iterating over the tokens in a Sentence</a></li>
-<li class="toctree-l3"><a class="reference internal" href="basic-types.html#directly-accessing-a-token">Directly accessing a token</a></li>
-<li class="toctree-l3"><a class="reference internal" href="basic-types.html#tokenization">Tokenization</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="basic-types.html#what-is-a-label">What is a Label</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="basic-types.html#example-1-labeling-a-token-in-a-sentence">Example 1: Labeling a token in a sentence</a></li>
-<li class="toctree-l3"><a class="reference internal" href="basic-types.html#example-2-labeling-a-whole-sentence">Example 2: Labeling a whole sentence</a></li>
-<li class="toctree-l3"><a class="reference internal" href="basic-types.html#multiple-labels">Multiple labels</a></li>
-<li class="toctree-l3"><a class="reference internal" href="basic-types.html#accessing-labels">Accessing labels</a></li>
-<li class="toctree-l3"><a class="reference internal" href="basic-types.html#information-for-each-label">Information for each label</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="how-predictions-work.html">How predictions work</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how-predictions-work.html#running-example">Running example</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-predictions-work.html#getting-the-predictions">Getting the predictions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-predictions-work.html#values-for-each-prediction">Values for each prediction</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tagging-entities.html">Tagging entities</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tagging-entities.html#tagging-entities-with-our-standard-model">Tagging entities with our standard model​</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tagging-entities.html#tagging-entities-with-our-best-model">Tagging entities with our best model​</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tagging-entities.html#tagging-entities-in-non-english-text">Tagging entities in non-English text</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tagging-entities.html#tagging-a-german-sentence">Tagging a German sentence</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tagging-entities.html#tagging-an-arabic-sentence">Tagging an Arabic sentence</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="tagging-entities.html#tagging-entities-with-18-classes">Tagging Entities with 18 Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tagging-entities.html#biomedical-data">Biomedical Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tagging-entities.html#list-of-ner-models">List of NER Models</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tagging-sentiment.html">Tagging sentiment</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tagging-sentiment.html#tagging-sentiment-with-our-standard-model">Tagging sentiment with our standard model​</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tagging-sentiment.html#tagging-sentiment-with-our-fast-model">Tagging sentiment with our fast model</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tagging-sentiment.html#list-of-sentiment-models">List of Sentiment Models</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="entity-linking.html">Tagging and linking entities</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="entity-linking.html#example-1-entity-linking-on-a-single-sentence">Example 1: Entity linking on a single sentence​</a></li>
-<li class="toctree-l2"><a class="reference internal" href="entity-linking.html#example-2-entity-linking-on-a-text-document-multiple-sentences">Example 2: Entity linking on a text document (multiple sentences)</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="part-of-speech-tagging.html">Tagging parts-of-speech</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="part-of-speech-tagging.html#language-specific-parts-of-speech-pos">Language-specific parts-of-speech (PoS)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="part-of-speech-tagging.html#in-english">… in English</a></li>
-<li class="toctree-l3"><a class="reference internal" href="part-of-speech-tagging.html#in-german">… in German</a></li>
-<li class="toctree-l3"><a class="reference internal" href="part-of-speech-tagging.html#in-ukrainian">… in Ukrainian</a></li>
-<li class="toctree-l3"><a class="reference internal" href="part-of-speech-tagging.html#in-arabic">… in Arabic</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="part-of-speech-tagging.html#tagging-universal-parts-of-speech-upos">Tagging universal parts-of-speech (uPoS)​</a></li>
-<li class="toctree-l2"><a class="reference internal" href="part-of-speech-tagging.html#tagging-language-specific-parts-of-speech-pos-in-english">Tagging Language-Specific Parts-of-Speech (POS) in English</a></li>
-<li class="toctree-l2"><a class="reference internal" href="part-of-speech-tagging.html#list-of-pos-models">List of POS Models</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="other-models.html">Tagging other things</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="other-models.html#semantic-frame-detection">Semantic Frame Detection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="other-models.html#syntactic-chunking">Syntactic Chunking</a></li>
-<li class="toctree-l2"><a class="reference internal" href="other-models.html#tagging-relations">Tagging Relations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="other-models.html#list-of-other-models">List of Other Models</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="basic-types.html">Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-predictions-work.html">How predictions work</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tagging-entities.html">Tagging entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tagging-sentiment.html">Tagging sentiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="entity-linking.html">Tagging and linking entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="part-of-speech-tagging.html">Tagging parts-of-speech</a></li>
+<li class="toctree-l1"><a class="reference internal" href="other-models.html">Tagging other things</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to-tag-corpus.html">How to tag a whole corpus</a></li>
 </ul>
 </div>

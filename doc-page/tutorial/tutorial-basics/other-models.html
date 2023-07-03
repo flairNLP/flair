@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/other-models';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="How to tag a whole corpus" href="how-to-tag-corpus.html" />
@@ -478,6 +479,7 @@ You must use this model together with an entity tagger. Here is an example:</p>
 <span class="n">relations</span> <span class="o">=</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">(</span><span class="s1">&#39;relation&#39;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">relations</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">relation</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
 <span class="c1"># Use the `get_labels()` method with parameter &#39;relation&#39; to iterate over all relation predictions. </span>
 <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">(</span><span class="s1">&#39;relation&#39;</span><span class="p">):</span>

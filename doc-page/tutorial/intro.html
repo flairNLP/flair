@@ -45,6 +45,7 @@
     <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/intro';</script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Tutorial 1: Basic Tagging" href="tutorial-basics/index.html" />
@@ -378,7 +379,7 @@ document.write(`
 <h2>Example 1: Tag Entities in Text<a class="headerlink" href="#example-1-tag-entities-in-text" title="Permalink to this heading">#</a></h2>
 <p>Let’s run <strong>named entity recognition</strong>  (NER) over the following example sentence: “<em>I love Berlin and New York.</em>”</p>
 <p>Our goal is to identify names in this sentence, and their types.</p>
-<p>To do this, all you need is to make a <code class="docutils literal notranslate"><span class="pre">Sentence</span></code> for this text, load a pre-trained model and use it to predict tags for the sentence:</p>
+<p>To do this, all you need is to make a <a class="reference internal" href="../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> for this text, load a pre-trained model and use it to predict tags for the sentence:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
 <span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
 

@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/how-to-train-text-classifier';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Tutorial 3: Embeddings" href="../tutorial-embeddings/index.html" />
@@ -375,8 +376,8 @@ could train your own sentiment analysis model, or offensive language detection m
 <section id="training-a-text-classification-model-with-transformers">
 <h2>Training a text classification model with transformers<a class="headerlink" href="#training-a-text-classification-model-with-transformers" title="Permalink to this heading">#</a></h2>
 <p>For text classification, you reach state-of-the-art scores by fine-tuning a transformer.</p>
-<p>Training a model is easy: load the appropriate corpus, make a label dictionary, then fine-tune a <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code>
-model using the <code class="docutils literal notranslate"><span class="pre">fine_tune()</span></code> method of the <code class="docutils literal notranslate"><span class="pre">ModelTrainer</span></code>. See the example script below:</p>
+<p>Training a model is easy: load the appropriate corpus, make a label dictionary, then fine-tune a <a class="reference internal" href="../../api/flair.models.html#flair.models.TextClassifier" title="flair.models.TextClassifier"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code></span></a>
+model using the <a class="reference internal" href="../../api/flair.trainers.html#flair.trainers.ModelTrainer.fine_tune" title="flair.trainers.ModelTrainer.fine_tune"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">ModelTrainer.fine_tune()</span></code></span></a> method. See the example script below:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Corpus</span>
 <span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">TREC_6</span>
 <span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerDocumentEmbeddings</span>
@@ -409,8 +410,7 @@ model using the <code class="docutils literal notranslate"><span class="pre">fin
                   <span class="p">)</span>
 </pre></div>
 </div>
-<p>Once the model is trained you can load it to predict the class of new sentences. Just call the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method of the
-model.</p>
+<p>Once the model is trained you can load it to predict the class of new sentences. Just call the <a class="reference internal" href="../../api/flair.nn.html#flair.nn.DefaultClassifier.predict" title="flair.nn.DefaultClassifier.predict"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">predict</span></code></span></a> method of the model.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">classifier</span> <span class="o">=</span> <span class="n">TextClassifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s1">&#39;resources/taggers/question-classification-with-transformer/final-model.pt&#39;</span><span class="p">)</span>
 
 <span class="c1"># create example sentence</span>

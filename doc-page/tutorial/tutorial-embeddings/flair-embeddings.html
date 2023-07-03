@@ -45,6 +45,7 @@
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-embeddings/flair-embeddings';</script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Classic Word Embeddings" href="classic-word-embeddings.html" />
@@ -371,10 +372,11 @@ document.write(`
 <h1>Flair embeddings<a class="headerlink" href="#flair-embeddings" title="Permalink to this heading">#</a></h1>
 <p>Contextual string embeddings are <a class="reference external" href="https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing">powerful embeddings</a>
 that capture latent syntactic-semantic information that goes beyond
-standard word embeddings. Key differences are: (1) they are trained without any explicit notion of words and
-thus fundamentally model words as sequences of characters. And (2) they are <strong>contextualized</strong> by their
-surrounding text, meaning that the <em>same word will have different embeddings depending on its
-contextual use</em>.</p>
+standard word embeddings. Key differences are:</p>
+<ol class="arabic simple">
+<li><p>they are trained without any explicit notion of words and thus fundamentally model words as sequences of characters.</p></li>
+<li><p>they are <strong>contextualized</strong> by their surrounding text, meaning that the <em>same word will have different embeddings depending on its contextual use</em>.</p></li>
+</ol>
 <p>With Flair, you can use these embeddings simply by instantiating the appropriate embedding class, same as standard word embeddings:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">FlairEmbeddings</span>
 
@@ -388,7 +390,7 @@ contextual use</em>.</p>
 <span class="n">flair_embedding_forward</span><span class="o">.</span><span class="kp">embed</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>You choose which embeddings you load by passing the appropriate string to the constructor of the <code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code> class.
+<p>You choose which embeddings you load by passing the appropriate string to the constructor of the <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a> class.
 Currently, the following contextual string embeddings are provided (note: replace ‘<em>X</em>’ with either ‘<em>forward</em>’ or ‘<em>backward</em>’):</p>
 <table class="table">
 <thead>
@@ -590,7 +592,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 </div>
 <section id="recommended-flair-usage">
 <h2>Recommended Flair usage<a class="headerlink" href="#recommended-flair-usage" title="Permalink to this heading">#</a></h2>
-<p>We recommend combining both forward and backward Flair embeddings. Depending on the task, we also recommend adding standard word embeddings into the mix. So, our recommended <code class="docutils literal notranslate"><span class="pre">StackedEmbedding</span></code> for most English tasks is:</p>
+<p>We recommend combining both forward and backward Flair embeddings. Depending on the task, we also recommend adding standard <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.WordEmbeddings" title="flair.embeddings.token.WordEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings</span></code></span></a> into the mix. So, our recommended <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.StackedEmbeddings" title="flair.embeddings.token.StackedEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings</span></code></span></a> for most English tasks is:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">FlairEmbeddings</span><span class="p">,</span> <span class="n">StackedEmbeddings</span>
 
 <span class="c1"># create a StackedEmbedding object that combines glove and forward/backward flair embeddings</span>
@@ -601,7 +603,7 @@ Currently, the following contextual string embeddings are provided (note: replac
                                        <span class="p">])</span>
 </pre></div>
 </div>
-<p>That’s it! Now just use this embedding like all the other embeddings, i.e. call the <code class="docutils literal notranslate"><span class="pre">embed()</span></code> method over your sentences.</p>
+<p>That’s it! Now just use this embedding like all the other embeddings, i.e. call the <a class="reference internal" href="../../api/embeddings/base.html#flair.embeddings.base.Embeddings.embed" title="flair.embeddings.base.Embeddings.embed"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">embed()</span></code></span></a> method over your sentences.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green .&#39;</span><span class="p">)</span>
 
 <span class="c1"># just embed a sentence using the StackedEmbedding as you would with any single embedding.</span>
@@ -617,9 +619,9 @@ Currently, the following contextual string embeddings are provided (note: replac
 </section>
 <section id="pooled-flair-embeddings">
 <h2>Pooled Flair embeddings<a class="headerlink" href="#pooled-flair-embeddings" title="Permalink to this heading">#</a></h2>
-<p>We also developed a pooled variant of the <code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code>. These embeddings differ in that they <em>constantly evolve over time</em>, even at prediction time (i.e. after training is complete). This means that the same words in the same sentence at two different points in time may have different embeddings.</p>
-<p><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code> manage a ‘global’ representation of each distinct word by using a pooling operation of all past occurences. More details on how this works may be found in <a class="reference external" href="https://www.aclweb.org/anthology/N19-1078/">Akbik et al. (2019)</a>.</p>
-<p>You can instantiate and use <code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code> like any other embedding:</p>
+<p>We also developed a pooled variant of the <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>. These embeddings differ in that they <em>constantly evolve over time</em>, even at prediction time (i.e. after training is complete). This means that the same words in the same sentence at two different points in time may have different embeddings.</p>
+<p><a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings" title="flair.embeddings.token.PooledFlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></span></a> manage a ‘global’ representation of each distinct word by using a pooling operation of all past occurences. More details on how this works may be found in <a class="reference external" href="https://www.aclweb.org/anthology/N19-1078/">Akbik et al. (2019)</a>.</p>
+<p>You can instantiate and use <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings" title="flair.embeddings.token.PooledFlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></span></a> like <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">PooledFlairEmbeddings</span>
 
 <span class="c1"># init embedding</span>
@@ -632,7 +634,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 <span class="n">flair_embedding_forward</span><span class="o">.</span><span class="kp">embed</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that while we get some of our best results with <code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code> they are very ineffective memory-wise since they keep past embeddings of all words in memory. In many cases, regular <code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code> will be nearly as good but with much lower memory requirements.</p>
+<p>Note that while we get some of our best results with <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings" title="flair.embeddings.token.PooledFlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></span></a> they are very ineffective memory-wise since they keep past embeddings of all words in memory. In many cases, regular <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a> will be nearly as good but with much lower memory requirements.</p>
 </section>
 </section>
 
