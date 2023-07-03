@@ -77,11 +77,11 @@ class StringDataset(FlairDataset):
     ) -> None:
         """Instantiate StringDataset.
 
-        :param texts: a string or List of string that make up StringDataset
-        :param use_tokenizer: Custom tokenizer to use (default is SpaceTokenizer,
-        more advanced options are SegTokTokenizer to use segtok or SpacyTokenizer to use Spacy library models
-        if available). Check the code of subclasses of Tokenizer to implement your own (if you need it).
-        If instead of providing a function, this parameter is just set to True, SegTokTokenizer will be used.
+        Args:
+            texts: a string or List of string that make up StringDataset
+            use_tokenizer:
+                Custom tokenizer to use. If instead of providing a function, this parameter is just set to True,
+                :class:`flair.tokenization.SegTokTokenizer` will be used.
         """
         # cast to list if necessary
         if isinstance(texts, str):

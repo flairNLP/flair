@@ -48,27 +48,25 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         """Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
 
         In case of multitask learning, pass shared embeddings or shared rnn into respective attributes.
-        :param embeddings: Embeddings to use during training and prediction
-        :param tag_dictionary: Dictionary containing all tags from corpus which can be predicted
-        :param tag_type: type of tag which is going to be predicted in case a corpus has multiple annotations
-        :param use_rnn: If true, use a RNN, else Linear layer.
-        :param rnn: (Optional) Takes a torch.nn.Module as parameter by which you can pass a shared RNN between
-            different tasks.
-        :param rnn_type: Specifies the RNN type to use, default is 'LSTM', can choose between 'GRU' and 'RNN' as well.
-        :param hidden_size: Hidden size of RNN layer
-        :param rnn_layers: number of RNN layers
-        :param bidirectional: If True, RNN becomes bidirectional
-        :param use_crf: If True, use a Conditional Random Field for prediction, else linear map to tag space.
-        :param reproject_embeddings: If True, add a linear layer on top of embeddings, if you want to imitate
-            fine tune non-trainable embeddings.
-        :param dropout: If > 0, then use dropout.
-        :param word_dropout: If > 0, then use word dropout.
-        :param locked_dropout: If > 0, then use locked dropout.
-        :param train_initial_hidden_state: if True, trains initial hidden state of RNN
-        :param loss_weights: Dictionary of weights for labels for the loss function
-            (if any label's weight is unspecified it will default to 1.0)
-        :param init_from_state_dict: Indicator whether we are loading a model from state dict
-            since we need to transform previous models' weights into CRF instance weights
+
+        Args:
+            embeddings: Embeddings to use during training and prediction
+            tag_dictionary: Dictionary containing all tags from corpus which can be predicted
+            tag_type: type of tag which is going to be predicted in case a corpus has multiple annotations
+            use_rnn: If true, use a RNN, else Linear layer.
+            rnn: Takes a torch.nn.Module as parameter by which you can pass a shared RNN between different tasks.
+            rnn_type: Specifies the RNN type to use, default is 'LSTM', can choose between 'GRU' and 'RNN' as well.
+            hidden_size: Hidden size of RNN layer
+            rnn_layers: number of RNN layers
+            bidirectional: If True, RNN becomes bidirectional
+            use_crf: If True, use a Conditional Random Field for prediction, else linear map to tag space.
+            reproject_embeddings: If True, add a linear layer on top of embeddings, if you want to imitate fine tune non-trainable embeddings.
+            dropout: If > 0, then use dropout.
+            word_dropout: If > 0, then use word dropout.
+            locked_dropout: If > 0, then use locked dropout.
+            train_initial_hidden_state: if True, trains initial hidden state of RNN
+            loss_weights: Dictionary of weights for labels for the loss function. If any label's weight is unspecified it will default to 1.0.
+            init_from_state_dict: Indicator whether we are loading a model from state dict since we need to transform previous models' weights into CRF instance weights
         """
         super().__init__()
 

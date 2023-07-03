@@ -44,22 +44,20 @@ class ClassificationCorpus(Corpus):
     ) -> None:
         """Instantiates a Corpus from text classification-formatted task data.
 
-        :param data_folder: base folder with the task data
-        :param label_type: name of the label
-        :param train_file: the name of the train file
-        :param test_file: the name of the test file
-        :param dev_file: the name of the dev file, if None, dev data is sampled from train
-        :param truncate_to_max_tokens: If set, truncates each Sentence to a maximum number of tokens
-        :param truncate_to_max_chars: If set, truncates each Sentence to a maximum number of chars
-        :param filter_if_longer_than: If set, filters documents that are longer that the specified number of tokens.
-        :param tokenizer: Tokenizer for dataset, default is SegtokTokenizer
-        :param memory_mode: Set to what degree to keep corpus in memory ('full', 'partial' or 'disk'). Use 'full'
-        if full corpus and all embeddings fits into memory for speedups during training. Otherwise use 'partial' and if
-        even this is too much for your memory, use 'disk'.
-        :param label_name_map: Optionally map label names to different schema.
-        :param allow_examples_without_labels: set to True to allow Sentences without label in the corpus.
-        :param encoding: Default is 'utf-8' but some datasets are in 'latin-1
-        :return: a Corpus with annotated train, dev and test data
+        Args:
+            data_folder: base folder with the task data
+            label_type: name of the label
+            train_file: the name of the train file
+            test_file: the name of the test file
+            dev_file: the name of the dev file, if None, dev data is sampled from train
+            truncate_to_max_tokens: If set, truncates each Sentence to a maximum number of tokens
+            truncate_to_max_chars: If set, truncates each Sentence to a maximum number of chars
+            filter_if_longer_than: If set, filters documents that are longer that the specified number of tokens.
+            tokenizer: Tokenizer for dataset, default is SegtokTokenizer
+            memory_mode: Set to what degree to keep corpus in memory ('full', 'partial' or 'disk'). Use 'full' if full corpus and all embeddings fits into memory for speedups during training. Otherwise use 'partial' and if even this is too much for your memory, use 'disk'.
+            label_name_map: Optionally map label names to different schema.
+            allow_examples_without_labels: set to True to allow Sentences without label in the corpus.
+            encoding: Default is 'utf-8' but some datasets are in 'latin-1
         """
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
@@ -759,14 +757,13 @@ class IMDB(ClassificationCorpus):
     ) -> None:
         """Initialize the IMDB move review sentiment corpus.
 
-        :param base_path: Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.
-        :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
-        :param rebalance_corpus: Default splits for this corpus have a strange 50/50 train/test split that are impractical.
-        With rebalance_corpus=True (default setting), corpus is rebalanced to a 80/10/10 train/dev/test split. If you
-        want to use original splits, set this to False.
-        :param memory_mode: Set to 'partial' because this is a huge corpus, but you can also set to 'full' for faster
+        Args:
+            base_path: Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.
+            tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
+            rebalance_corpus: Weather to use a 80/10/10 data split instead of the original 50/0/50 split.
+            memory_mode: Set to 'partial' because this is a huge corpus, but you can also set to 'full' for faster
          processing or 'none' for less memory.
-        :param corpusargs: Other args for ClassificationCorpus.
+            corpusargs: Other args for ClassificationCorpus.
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 

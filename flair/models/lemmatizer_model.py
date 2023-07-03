@@ -40,22 +40,24 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         that predicts the lemma of the given token one letter at a time.
         Note that one can use data in which only those words are annotated that differ from their lemma or data
         in which all words are annotated with a (maybe equal) lemma.
-        :param embeddings: Embedding used to encode sentence
-        :param rnn_input_size: Input size of the RNN('s). Each letter of a token is represented by a hot-one-vector
-            over the given character dictionary. This vector is transformed to a input_size vector with a linear layer.
-        :param rnn_hidden_size: size of the hidden state of the RNN('s).
-        :param rnn_layers: Number of stacked RNN cells
-        :param beam_size: Number of hypothesis used when decoding the output of the RNN. Only used in prediction.
-        :param char_dict: Dictionary of characters the model is able to process. The dictionary must contain <unk> for
-            the handling of unknown characters. If None, a standard dictionary will be loaded. One can either hand
-            over a path to a dictionary or the dictionary itself.
-        :param label_type: Name of the gold labels to use.
-        :param max_sequence_length_dependent_on_input: If set to True, the maximum length of a decoded sequence in
-            the prediction depends on the sentences you want to lemmatize. To be precise the maximum length is
-            computed as the length of the longest token in the sentences plus one.
-        :param max_sequence_length: If set to True and max_sequence_length_dependend_on_input is False a fixed
-            maximum length for the decoding will be used for all sentences.
-        :param use_attention: whether to use attention. Only sensible if encoding via RNN
+
+        Args:
+            embeddings: Embedding used to encode sentence
+            rnn_input_size: Input size of the RNN('s). Each letter of a token is represented by a hot-one-vector over
+                the given character dictionary. This vector is transformed to a input_size vector with a linear layer.
+            rnn_hidden_size: size of the hidden state of the RNN('s).
+            rnn_layers: Number of stacked RNN cells
+            beam_size: Number of hypothesis used when decoding the output of the RNN. Only used in prediction.
+            char_dict: Dictionary of characters the model is able to process. The dictionary must contain <unk> for
+                the handling of unknown characters. If None, a standard dictionary will be loaded. One can either hand
+                over a path to a dictionary or the dictionary itself.
+            label_type: Name of the gold labels to use.
+            max_sequence_length_dependent_on_input: If set to True, the maximum length of a decoded sequence in
+                the prediction depends on the sentences you want to lemmatize. To be precise the maximum length is
+                computed as the length of the longest token in the sentences plus one.
+            max_sequence_length: If set to True and max_sequence_length_dependend_on_input is False a fixed
+                maximum length for the decoding will be used for all sentences.
+            use_attention: whether to use attention. Only sensible if encoding via RNN
         """
         super().__init__()
 

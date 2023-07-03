@@ -219,18 +219,20 @@ class _Entity(NamedTuple):
 class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSentence]):
     """Relation Classifier to predict the relation between two entities.
 
-    ---- Task ----
+    Task
+    ----
     Relation Classification (RC) is the task of identifying the semantic relation between two entities in a text.
     In contrast to (end-to-end) Relation Extraction (RE), RC requires pre-labelled entities.
 
     Example:
-    -------
+    --------
     For the `founded_by` relation from `ORG` (head) to `PER` (tail) and the sentence
     "Larry Page and Sergey Brin founded Google .", we extract the relations
     - founded_by(head='Google', tail='Larry Page') and
     - founded_by(head='Google', tail='Sergey Brin').
 
-    ---- Architecture ----
+    Architecture
+    ------------
     The Relation Classifier Model builds upon a text classifier.
     The model generates an encoded sentence for each entity pair
     in the cross product of all entities in the original sentence.
@@ -241,7 +243,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
     The implemented encoding strategies are taken from this paper by Zhou et al.: https://arxiv.org/abs/2102.01373
 
-    Note: Currently, the model has no multi-label support.
+    .. warning::
+        Currently, the model has no multi-label support.
+
     """
 
     def __init__(
@@ -369,11 +373,14 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         If the passed sentence contains relation annotations,
         the relation gold label will be yielded along with the participating entities.
         The permutations are constructed by a filtered cross-product
-        under the specification of `self.entity_label_types` and `self.entity_pair_labels`.
+        under the specification of :py:meth:~`flair.models.RelationClassifier.entity_label_types`
+        and :py:meth:~`flair.models.RelationClassifier.entity_pair_labels`.
 
-        :param sentence: A flair `Sentence` object with entity annotations
-        :yields: Tuples of (HEAD, TAIL, gold_label).
-                 The head and tail `_Entity`s have span references to the passed sentence.
+        Args:
+            sentence: A Sentence with entity annotations
+
+        Yields:
+            Tuples of (HEAD, TAIL, gold_label): The head and tail `_Entity`s` have span references to the passed sentence.
         """
         valid_entities: List[_Entity] = list(self._valid_entities(sentence))
 

@@ -37,12 +37,12 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
     ) -> None:
         """Bidirectional transformer embeddings of words from various transformer architectures.
 
-        :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
-        options)
-        :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
-        :param cls_pooling: Pooling strategy for combining token level embeddings. options are 'cls', 'max', 'mean'.
-        :param layer_mean: If True, uses a scalar mix of layers as embedding
-        :param fine_tune: If True, allows transformers to be fine-tuned during training
+        Args:
+            model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for options)
+            layers: string indicating which layers to take for embedding (-1 is topmost layer)
+            cls_pooling: Pooling strategy for combining token level embeddings. options are 'cls', 'max', 'mean'.
+            layer_mean: If True, uses a scalar mix of layers as embedding
+            fine_tune: If True, allows transformers to be fine-tuned during training
         """
         TransformerEmbeddings.__init__(
             self,
@@ -71,10 +71,10 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
     ) -> None:
         """The constructor takes a list of embeddings to be combined.
 
-        :param embeddings: a list of token embeddings
-        :param fine_tune_mode: if set to "linear" a trainable layer is added, if set to
-        "nonlinear", a nonlinearity is added as well. Set this to make the pooling trainable.
-        :param pooling: a string which can any value from ['mean', 'max', 'min']
+        Args:
+            embeddings: a list of token embeddings
+            fine_tune_mode: if set to "linear" a trainable layer is added, if set to "nonlinear", a nonlinearity is added as well. Set this to make the pooling trainable.
+            pooling: a string which can any value from ['mean', 'max', 'min']
         """
         super().__init__()
 
@@ -173,8 +173,9 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
     ) -> None:
         """The constructor for DocumentTFIDFEmbeddings.
 
-        :param train_dataset: the train dataset which will be used to construct a vectorizer
-        :param vectorizer_params: parameters given to Scikit-learn's TfidfVectorizer constructor
+        Args:
+            train_dataset: the train dataset which will be used to construct a vectorizer
+            vectorizer_params: parameters given to Scikit-learn's TfidfVectorizer constructor
         """
         super().__init__()
 
@@ -237,23 +238,22 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         dropout: float = 0.5,
         word_dropout: float = 0.0,
         locked_dropout: float = 0.0,
-        rnn_type="GRU",
+        rnn_type: str="GRU",
         fine_tune: bool = True,
     ) -> None:
         """Instantiates an RNN that works upon some token embeddings.
 
-        :param embeddings: a list of token embeddings
-        :param hidden_size: the number of hidden states in the rnn
-        :param rnn_layers: the number of layers for the rnn
-        :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
-        layer before putting them into the rnn or not
-        :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
-        dimension as before will be taken.
-        :param bidirectional: boolean value, indicating whether to use a bidirectional rnn or not
-        :param dropout: the dropout value to be used
-        :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
-        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
-        :param rnn_type: 'GRU' or 'LSTM'
+        Args:
+            embeddings: a list of token embeddings
+            hidden_size: the number of hidden states in the rnn
+            rnn_layers: the number of layers for the rnn
+            reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the rnn or not
+            reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.
+            bidirectional: boolean value, indicating whether to use a bidirectional rnn or not
+            dropout: the dropout value to be used
+            word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
+            locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
+            rnn_type: 'GRU' or 'LSTM'
         """
         super().__init__()
 
@@ -539,9 +539,9 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
     ) -> None:
         """Instantiates a document embedding using the SentenceTransformer Embeddings.
 
-        :param model: string name of models from SentencesTransformer Class
-        :param name: string name of embedding type which will be set to Sentence object
-        :param batch_size: int number of sentences to processed in one batch
+        Args:
+            model: string name of models from SentencesTransformer Class
+            batch_size: int number of sentences to processed in one batch
         """
         super().__init__()
 
@@ -611,17 +611,16 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         locked_dropout: float = 0.0,
         fine_tune: bool = True,
     ) -> None:
-        """Instantiates a CNN that works uppons some token embeddings.
+        """Instantiates a CNN that works upon some token embeddings.
 
-        :param embeddings: a list of token embeddings
-        :param kernels: list of (number of kernels, kernel size)
-        :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
-        layer before putting them into the rnn or not
-        :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
-        dimension as before will be taken.
-        :param dropout: the dropout value to be used
-        :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
-        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
+        Args:
+            embeddings: a list of token embeddings
+            kernels: list of (number of kernels, kernel size)
+            reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the rnn or not
+            reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.
+            dropout: the dropout value to be used
+            word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
+            locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
         """
         super().__init__()
 

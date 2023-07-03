@@ -41,13 +41,13 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
     ) -> None:
         """Bidirectional transformer embeddings of words from various transformer architectures.
 
-        :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
-        options)
-        :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
-        :param subtoken_pooling: how to get from token piece embeddings to token embedding. Either take the first
-        subtoken ('first'), the last subtoken ('last'), both first and last ('first_last') or a mean over all ('mean')
-        :param layer_mean: If True, uses a scalar mix of layers as embedding
-        :param fine_tune: If True, allows transformers to be fine-tuned during training
+        Args:
+            model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for options)
+            layers: string indicating which layers to take for embedding (-1 is topmost layer)
+            subtoken_pooling: how to get from token piece embeddings to token embedding. Either take the first
+                subtoken ('first'), the last subtoken ('last'), both first and last ('first_last') or a mean over all ('mean')
+            layer_mean: If True, uses a scalar mix of layers as embedding
+            fine_tune: If True, allows transformers to be fine-tuned during training
         """
         TransformerEmbeddings.__init__(
             self,
@@ -166,9 +166,10 @@ class WordEmbeddings(TokenEmbeddings):
         """Initializes classic word embeddings.
 
         Constructor downloads required files if not there.
-        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
-        If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
-        set stable=True to use the stable embeddings as described in https://arxiv.org/abs/2110.02861
+
+        Args:
+            embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or a path to a custom embedding
+            stable: if True, use the stable embeddings as described in https://arxiv.org/abs/2110.02861
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
@@ -570,18 +571,12 @@ class FlairEmbeddings(TokenEmbeddings):
     ) -> None:
         """Initializes contextual string embeddings using a character-level language model.
 
-        :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
-                'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward',
-                etc (see https://github.com/flairNLP/flair/blob/master/resources/docs/embeddings/FLAIR_EMBEDDINGS.md)
-                depending on which character language model is desired.
-        :param fine_tune: if set to True, the gradient will propagate into the language model. This dramatically slows
-                down training and often leads to overfitting, so use with caution.
-        :param chars_per_chunk: max number of chars per rnn pass to control speed/memory tradeoff. Higher means faster
-                but requires more memory. Lower means slower but less memory.
-        :param with_whitespace: If True, use hidden state after whitespace after word. If False, use hidden
-                 state at last character of word.
-        :param tokenized_lm: Whether this lm is tokenized. Default is True, but for LMs trained over unprocessed text
-                False might be better.
+        Args:
+            model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast', 'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward' depending on which character language model is desired.
+            fine_tune: if set to True, the gradient will propagate into the language model. This dramatically slows down training and often leads to overfitting, so use with caution.
+            chars_per_chunk: max number of chars per rnn pass to control speed/memory tradeoff. Higher means faster but requires more memory. Lower means slower but less memory.
+            with_whitespace: If True, use hidden state after whitespace after word. If False, use hidden state at last character of word.
+            tokenized_lm: Whether this lm is tokenized. Default is True, but for LMs trained over unprocessed text False might be better.
         """
         super().__init__()
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -1016,8 +1011,9 @@ class FastTextEmbeddings(TokenEmbeddings):
 
         Constructor downloads required embedding file and stores in cache if use_local is False.
 
-        :param embeddings: path to your embeddings '.bin' file
-        :param use_local: set this to False if you are using embeddings from a remote source
+        Args:
+            embeddings: path to your embeddings '.bin' file
+            use_local: set this to False if you are using embeddings from a remote source
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
@@ -1104,10 +1100,11 @@ class OneHotEmbeddings(TokenEmbeddings):
     ) -> None:
         """Initializes one-hot encoded word embeddings and a trainable embedding layer.
 
-        :param vocab_dictionary: the vocabulary that will be encoded
-        :param field: by default, the 'text' of tokens is embedded, but you can also embed tags such as 'pos'
-        :param embedding_length: dimensionality of the trainable embedding layer
-        :param stable: set stable=True to use the stable embeddings as described in https://arxiv.org/abs/2110.02861
+        Args:
+            vocab_dictionary: the vocabulary that will be encoded
+            field: by default, the 'text' of tokens is embedded, but you can also embed tags such as 'pos'
+            embedding_length: dimensionality of the trainable embedding layer
+            stable: if True, use the stable embeddings as described in https://arxiv.org/abs/2110.02861
         """
         super().__init__()
         self.name = f"one-hot-{field}"
@@ -1498,9 +1495,10 @@ class NILCEmbeddings(WordEmbeddings):
         See: http://www.nilc.icmc.usp.br/embeddings
         Constructor downloads required files if not there.
 
-        :param embeddings: one of: 'fasttext', 'glove', 'wang2vec' or 'word2vec'
-        :param model: one of: 'skip' or 'cbow'. This is not applicable to glove.
-        :param size: one of: 50, 100, 300, 600 or 1000.
+        Args:
+            embeddings: one of: 'fasttext', 'glove', 'wang2vec' or 'word2vec'
+            model: one of: 'skip' or 'cbow'. This is not applicable to glove.
+            size: one of: 50, 100, 300, 600 or 1000.
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 

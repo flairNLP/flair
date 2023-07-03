@@ -281,20 +281,19 @@ class MultiFileColumnCorpus(Corpus):
     ) -> None:
         r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
 
-        :param data_folder: base folder with the task data
-        :param column_format: a map specifying the column format
-        :param train_files: the name of the train files
-        :param test_files: the name of the test files
-        :param dev_files: the name of the dev files, if empty, dev data is sampled from train
-        :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
-        to split only on tabs
-        :param comment_symbol: if set, lines that begin with this symbol are treated as comments
-        :param document_separator_token: If provided, sentences that function as document boundaries are so marked
-        :param skip_first_line: set to True if your dataset has a header line
-        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
-        :param label_name_map: Optionally map tag names to different schema.
-        :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
-        :return: a Corpus with annotated train, dev and test data
+        Args:
+            data_folder: base folder with the task data
+            column_format: a map specifying the column format
+            train_files: the name of the train files
+            test_files: the name of the test files
+            dev_files: the name of the dev files, if empty, dev data is sampled from train
+            column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t" to split only on tabs
+            comment_symbol: if set, lines that begin with this symbol are treated as comments
+            document_separator_token: If provided, sentences that function as document boundaries are so marked
+            skip_first_line: set to True if your dataset has a header line
+            in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
+            label_name_map: Optionally map tag names to different schema.
+            banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
         """
         # get train data
         train: Optional[Dataset] = (
@@ -386,20 +385,19 @@ class ColumnCorpus(MultiFileColumnCorpus):
     ) -> None:
         r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
 
-        :param data_folder: base folder with the task data
-        :param column_format: a map specifying the column format
-        :param train_file: the name of the train file
-        :param test_file: the name of the test file
-        :param dev_file: the name of the dev file, if None, dev data is sampled from train
-        :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
-        to split only on tabs
-        :param comment_symbol: if set, lines that begin with this symbol are treated as comments
-        :param document_separator_token: If provided, sentences that function as document boundaries are so marked
-        :param skip_first_line: set to True if your dataset has a header line
-        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
-        :param label_name_map: Optionally map tag names to different schema.
-        :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
-        :return: a Corpus with annotated train, dev and test data
+        Args:
+            data_folder: base folder with the task data
+            column_format: a map specifying the column format
+            train_file: the name of the train file
+            test_file: the name of the test file
+            dev_file: the name of the dev file, if None, dev data is sampled from train
+            column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t" to split only on tabs
+            comment_symbol: if set, lines that begin with this symbol are treated as comments
+            document_separator_token: If provided, sentences that function as document boundaries are so marked
+            skip_first_line: set to True if your dataset has a header line
+            in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
+            label_name_map: Optionally map tag names to different schema.
+            banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
         """
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(
@@ -440,17 +438,16 @@ class ColumnDataset(FlairDataset):
     ) -> None:
         r"""Instantiates a column dataset.
 
-        :param path_to_column_file: path to the file with the column-formatted data
-        :param column_name_map: a map specifying the column format
-        :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
-        to split only on tabs
-        :param comment_symbol: if set, lines that begin with this symbol are treated as comments
-        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
-        :param document_separator_token: If provided, sentences that function as document boundaries are so marked
-        :param skip_first_line: set to True if your dataset has a header line
-        :param label_name_map: Optionally map tag names to different schema.
-        :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
-        :return: a dataset with annotated data
+        Args:
+            path_to_column_file: path to the file with the column-formatted data
+            column_name_map: a map specifying the column format
+            column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t" to split only on tabs
+            comment_symbol: if set, lines that begin with this symbol are treated as comments
+            in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
+            document_separator_token: If provided, sentences that function as document boundaries are so marked
+            skip_first_line: set to True if your dataset has a header line
+            label_name_map: Optionally map tag names to different schema.
+            banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
         """
         path_to_column_file = Path(path_to_column_file)
         assert path_to_column_file.exists()
@@ -969,19 +966,11 @@ class ONTONOTES(MultiFileColumnCorpus):
 
         This method mutates the clusters and coref_stacks dictionaries.
 
-        # Parameters
-        label : `str`
-            The coref label for this word.
-        word_index : `int`
-            The word index into the sentence.
-        clusters : `DefaultDict[int, List[Tuple[int, int]]]`
-            A dictionary mapping cluster ids to lists of inclusive spans into the
-            sentence.
-        coref_stacks : `DefaultDict[int, List[int]]`
-            Stacks for each cluster id to hold the start indices of active spans (spans
-            which we are inside of when processing a given word). Spans with the same id
-            can be nested, which is why we collect these opening spans on a stack, e.g:
-            [Greg, the baker who referred to [himself]_ID1 as 'the bread man']_ID1
+        Args:
+            label: The coref label for this word.
+            word_index : The word index into the sentence.
+            clusters : A dictionary mapping cluster ids to lists of inclusive spans into the sentence.
+            coref_stacks : Stacks for each cluster id to hold the start indices of open spans. Spans with the same id can be nested, which is why we collect these opening spans on a stack, e.g: [Greg, the baker who referred to [himself]_ID1 as 'the bread man']_ID1
         """
         if label != "-":
             for segment in label.split("|"):
@@ -1013,17 +1002,6 @@ class ONTONOTES(MultiFileColumnCorpus):
         span_labels: List[List[str]],
         current_span_labels: List[Optional[str]],
     ) -> None:
-        """Given a sequence of different label types for a single word and the current span label we are inside, compute the BIO tag for each label and append to a list.
-
-        # Parameters
-        annotations : `List[str]`
-            A list of labels to compute BIO tags for.
-        span_labels : `List[List[str]]`
-            A list of lists, one for each annotation, to incrementally collect
-            the BIO tags for a sequence.
-        current_span_labels : `List[Optional[str]]`
-            The currently open span per annotation type, or `None` if there is no open span.
-        """
         for annotation_index, annotation in enumerate(annotations):
             # strip all bracketing information to
             # get the actual propbank label.
@@ -1306,11 +1284,9 @@ class CONLL_03_DUTCH(ColumnCorpus):
 
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -1371,10 +1347,9 @@ class CONLL_03_SPANISH(ColumnCorpus):
 
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -1602,10 +1577,10 @@ class NER_ARABIC_ANER(ColumnCorpus):
         Column order is swapped
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -1746,11 +1721,10 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
 
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -1853,10 +1827,9 @@ class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
 
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
         """
         # column format
         columns = {0: "ner", 1: "text"}
@@ -1896,10 +1869,9 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
 
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
         """
         # column format
         columns = {0: "ner", 1: "text"}
@@ -1929,22 +1901,20 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
 
 
 class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
-    """Initialize corpus of SEC-fillings annotated with English NER tags.
-
-    See paper "Domain Adaption of Named Entity Recognition to Support Credit Risk Assessment" by Alvarado et al, 2015: https://aclanthology.org/U15-1010/
-
-    :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
-    POS tags or chunks respectively
-    :param in_memory: If True, keeps dataset in memory giving speedups in training.
-    :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-    """
-
     def __init__(
         self,
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
     ) -> None:
+        """Initialize corpus of SEC-fillings annotated with English NER tags.
+
+        See paper "Domain Adaption of Named Entity Recognition to Support Credit Risk Assessment" by Alvarado et al, 2015: https://aclanthology.org/U15-1010/
+
+        Args:
+            base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
@@ -2024,11 +1994,10 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
 
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -2118,10 +2087,10 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
         The corpus will be downoaded from https://raw.githubusercontent.com/aritter/twitter_nlp/master/data/annotated/ner.txt.
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -2160,10 +2129,9 @@ class NER_ENGLISH_PERSON(ColumnCorpus):
 
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -2212,11 +2180,11 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
 
         The corpus was introduced in the paper "Design Challenges and Misconceptions in Named Entity Recognition" by Ratinov and Roth (2009): https://aclanthology.org/W09-1119/.
         The first time you call this constructor it will automatically download the dataset.
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-            to point to a different folder but typically this should not be necessary.
-            POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -2279,10 +2247,10 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
 
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -2340,10 +2308,10 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
 
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -2457,10 +2425,10 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
 
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object.
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -2891,9 +2859,9 @@ class NER_JAPANESE(ColumnCorpus):
 
         The first time you call this constructor it will automatically download the dataset.
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -3088,10 +3056,10 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
     ) -> None:
         """Download and Initialize the MultiCoNer corpus.
 
-        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
-        :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
-        POS tags or chunks respectively
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        Args:
+            task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
+            base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine POS tags or chunks respectively
+            in_memory: If True, keeps dataset in memory giving speedups in training.
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -4148,10 +4116,10 @@ class UP_CHINESE(ColumnCorpus):
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -4195,10 +4163,10 @@ class UP_ENGLISH(ColumnCorpus):
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -4243,10 +4211,10 @@ class UP_FRENCH(ColumnCorpus):
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -4290,10 +4258,10 @@ class UP_FINNISH(ColumnCorpus):
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -4337,10 +4305,10 @@ class UP_GERMAN(ColumnCorpus):
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -4384,10 +4352,10 @@ class UP_ITALIAN(ColumnCorpus):
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -4431,10 +4399,10 @@ class UP_SPANISH(ColumnCorpus):
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -4478,10 +4446,10 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
 
         The dataset is downloaded from https://github.com/System-T/UniversalPropositions
 
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -4741,10 +4709,10 @@ class NER_NERMUD(MultiCorpus):
         - Domain-specific classification (DSC). Participants will be asked to deploy a different model for each of the above types,
           trying to increase the accuracy for each considered type.
 
-        :param domains: Domains to be used. Supported are "WN" (Wikinews), "FIC" (fiction), "ADG" (De Gasperi subset) and "all".
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
+        Args:
+            domains: Domains to be used. Supported are "WN" (Wikinews), "FIC" (fiction), "ADG" (De Gasperi subset) and "all".
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
         """
         supported_domains = ["WN", "FIC", "ADG"]
 

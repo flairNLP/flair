@@ -1387,7 +1387,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     ) -> TransformerOnnxEmbeddings:
         """Export TransformerEmbeddings to OnnxFormat.
 
-        :param example_sentences: a list of sentences that will be used for tracing. It is recommended to take 2-4
-        sentences with some variation.
+        Args:
+            example_sentences: a list of sentences that will be used for tracing. It is recommended to take 2-4
+                sentences with some variation.
         """
         return self.onnx_cls.export_from_embedding(path, self, example_sentences, **kwargs)

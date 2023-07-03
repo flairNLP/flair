@@ -331,20 +331,19 @@ class TARSTagger(FewshotClassifier):
         label_dictionary: Optional[Dictionary] = None,
         label_type: Optional[str] = None,
         embeddings: Union[TransformerWordEmbeddings, str] = "bert-base-uncased",
-        num_negative_labels_to_sample: int = 2,
+        num_negative_labels_to_sample: Optional[int] = 2,
         prefix: bool = True,
         **tagger_args,
     ) -> None:
         """Initializes a TarsTagger.
 
-        :param task_name: a string depicting the name of the task
-        :param label_dictionary: dictionary of labels you want to predict
-        :param embeddings: name of the pre-trained transformer model e.g.,
-        'bert-base-uncased' etc
-        :param num_negative_labels_to_sample: number of negative labels to sample for each
-        positive labels against a sentence during training. Defaults to 2 negative
-        labels for each positive label. The model would sample all the negative labels
-        if None is passed. That slows down the training considerably.
+        Args:
+            task_name: a string depicting the name of the task
+            label_dictionary: dictionary of labels you want to predict
+            embeddings: name of the pre-trained transformer model e.g., 'bert-base-uncased'
+            num_negative_labels_to_sample: number of negative labels to sample for each positive labels against a
+                sentence during training. Defaults to 2 negative labels for each positive label. The model would sample
+                all the negative labels if None is passed. That slows down the training considerably.
         """
         super().__init__()
 
@@ -664,24 +663,24 @@ class TARSClassifier(FewshotClassifier):
         label_dictionary: Optional[Dictionary] = None,
         label_type: Optional[str] = None,
         embeddings: Union[TransformerDocumentEmbeddings, str] = "bert-base-uncased",
-        num_negative_labels_to_sample: int = 2,
+        num_negative_labels_to_sample: Optional[int] = 2,
         prefix: bool = True,
         **tagger_args,
     ) -> None:
         """Initializes a TarsClassifier.
 
-        :param task_name: a string depicting the name of the task
-        :param label_dictionary: dictionary of labels you want to predict
-        :param embeddings: name of the pre-trained transformer model e.g.,
-        'bert-base-uncased' etc
-        :param num_negative_labels_to_sample: number of negative labels to sample for each
-        positive labels against a sentence during training. Defaults to 2 negative
-        labels for each positive label. The model would sample all the negative labels
-        if None is passed. That slows down the training considerably.
-        :param multi_label: auto-detected by default, but you can set this to True
-        to force multi-label predictionor False to force single-label prediction
-        :param multi_label_threshold: If multi-label you can set the threshold to make predictions
-        :param beta: Parameter for F-beta score for evaluation and training annealing
+        Args:
+            task_name: a string depicting the name of the task.
+            label_dictionary: dictionary of labels you want to predict.
+            embeddings: name of the pre-trained transformer model e.g., 'bert-base-uncased'.
+            num_negative_labels_to_sample: number of negative labels to sample for each positive labels against a
+                sentence during training. Defaults to 2 negative labels for each positive label.
+                The model would sample all the negative labels if None is passed.
+                That slows down the training considerably.
+            multi_label: auto-detected by default, but you can set this to True to force multi-label predictions
+                or False to force single-label predictions.
+            multi_label_threshold: If multi-label you can set the threshold to make predictions.
+            beta: Parameter for F-beta score for evaluation and training annealing.
         """
         super().__init__()
 
