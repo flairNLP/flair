@@ -70,6 +70,7 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
 
 .. toctree::
    :maxdepth: 3
+   :hidden:
 
    Tutorials <tutorial/index>
    API reference <api/index>
