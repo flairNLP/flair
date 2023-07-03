@@ -3,7 +3,7 @@
 Flair supports many other embedding types. This section introduces these embeddings.
 
 ```{note}
-We mostly train our models with either [`TransformerEmbeddings`](#flair.embeddings.transformers.TransformerEmbeddings) or [`FlairEmbeddings`](#flair.embeddings.token.FlairEmbeddings). The embeddings presented here might be useful 
+We mostly train our models with either [`TransformerEmbeddings`](#flair.embeddings.transformer.TransformerEmbeddings) or [`FlairEmbeddings`](#flair.embeddings.token.FlairEmbeddings). The embeddings presented here might be useful 
 for specific use cases or for comparison purposes. 
 ```
 
