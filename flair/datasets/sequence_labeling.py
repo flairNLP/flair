@@ -560,9 +560,11 @@ class ColumnDataset(FlairDataset):
             # check the first 5 sentences
             probe = []
             for _i in range(5):
-                sentence = self._convert_lines_to_sentence(
-                    self._read_next_sentence(file), word_level_tag_columns=column_name_map
-                )
+                next_sentence = self._read_next_sentence(file)
+                if len(next_sentence) == 0:
+                    break
+
+                sentence = self._convert_lines_to_sentence(next_sentence, word_level_tag_columns=column_name_map)
                 if sentence:
                     probe.append(sentence)
                 else:

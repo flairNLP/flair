@@ -177,7 +177,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                 self.k = len(result[0]) - 1
                 return
             except sqlite3.Error as err:
-                logger.exception(f"Fail to open sqlite database {self.store_path!s}: {str(err)}")
+                logger.exception(f"Fail to open sqlite database {self.store_path!s}: {err!s}")
         # otherwise, push embedding to database
         if hasattr(embedding, "precomputed_word_embeddings"):
             self.db = sqlite3.connect(str(self.store_path))
@@ -239,7 +239,7 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                             cursor.close()
                         return
                 except lmdb.Error as err:
-                    logger.exception(f"Fail to open lmdb database {self.store_path!s}: {str(err)}")
+                    logger.exception(f"Fail to open lmdb database {self.store_path!s}: {err!s}")
             # create and load the database in write mode
             if hasattr(embedding, "precomputed_word_embeddings"):
                 pwe = embedding.precomputed_word_embeddings
