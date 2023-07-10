@@ -385,21 +385,13 @@ document.write(`
 <span id="flair-trainers-plugins"></span><h1>flair.trainers.plugins<a class="headerlink" href="#module-flair.trainers.plugins" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.AmpPlugin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">AmpPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opt_level</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/amp.py#L4-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AmpPlugin" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">AmpPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opt_level</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/amp.py#L4-L52"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AmpPlugin" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
 <p>Simple plugin for AMP.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.AmpPlugin.after_setup">
-<span class="sig-name descname"><span class="pre">after_setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/amp.py#L40-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AmpPlugin.after_setup" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">after_setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/amp.py#L40-L52"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AmpPlugin.after_setup" title="Permalink to this definition">#</a></dt>
 <dd><p>Wraps with AMP.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>kw</strong> – </p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -417,43 +409,19 @@ document.write(`
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.AnnealingPlugin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">AnnealingPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anneal_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_extra_patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anneal_with_restarts</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/anneal_on_plateau.py#L11-L120"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AnnealingPlugin" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">AnnealingPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anneal_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_extra_patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anneal_with_restarts</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/anneal_on_plateau.py#L11-L108"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AnnealingPlugin" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
 <p>Plugin for annealing logic in Flair.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.AnnealingPlugin.after_evaluation">
-<span class="sig-name descname"><span class="pre">after_evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_model_is_best</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_scores</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/anneal_on_plateau.py#L76-L112"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AnnealingPlugin.after_evaluation" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">after_evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_model_is_best</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_scores</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/anneal_on_plateau.py#L70-L100"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AnnealingPlugin.after_evaluation" title="Permalink to this definition">#</a></dt>
 <dd><p>Scheduler step of AnnealOnPlateau.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>current_model_is_best</strong> – </p></li>
-<li><p><strong>validation_scores</strong> – </p></li>
-<li><p><strong>kw</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.AnnealingPlugin.after_setup">
-<span class="sig-name descname"><span class="pre">after_setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_with_dev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/anneal_on_plateau.py#L47-L74"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AnnealingPlugin.after_setup" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">after_setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_with_dev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/anneal_on_plateau.py#L47-L68"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AnnealingPlugin.after_setup" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>train_with_dev</strong> – </p></li>
-<li><p><strong>optimizer</strong> – </p></li>
-<li><p><strong>kw</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -465,30 +433,30 @@ document.write(`
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">BasePlugin</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L176-L258"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">BasePlugin</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L178-L260"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Base class for all plugins.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L179-L182"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L181-L184"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize the base plugin.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.attach_to">
-<span class="sig-name descname"><span class="pre">attach_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pluggable</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L184-L206"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.attach_to" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">attach_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pluggable</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L186-L208"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.attach_to" title="Permalink to this definition">#</a></dt>
 <dd><p>Attach this plugin to a <cite>Pluggable</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.detach">
-<span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L208-L216"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.detach" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L210-L218"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.detach" title="Permalink to this definition">#</a></dt>
 <dd><p>Detach a plugin from the <cite>Pluggable</cite> it is attached to.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.hook">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">other_args</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L226-L251"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.hook" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">other_args</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L228-L253"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.hook" title="Permalink to this definition">#</a></dt>
 <dd><p>Convience function for <cite>BasePlugin.mark_func_as_hook</cite>).</p>
 <p>Enables using the <cite>&#64;BasePlugin.hook</cite> syntax.</p>
 <p>Can also be used as:
@@ -502,7 +470,7 @@ document.write(`
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.mark_func_as_hook">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mark_func_as_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">events</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L218-L224"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.mark_func_as_hook" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mark_func_as_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">events</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L220-L226"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.mark_func_as_hook" title="Permalink to this definition">#</a></dt>
 <dd><p>Mark method as a hook triggered by the <cite>Pluggable</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -520,77 +488,37 @@ document.write(`
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.CheckpointPlugin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">CheckpointPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_model_each_k_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_optimizer_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/checkpoints.py#L8-L34"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.CheckpointPlugin" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">CheckpointPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_model_each_k_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_optimizer_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/checkpoints.py#L8-L29"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.CheckpointPlugin" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.CheckpointPlugin.after_training_epoch">
-<span class="sig-name descname"><span class="pre">after_training_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/checkpoints.py#L20-L34"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.CheckpointPlugin.after_training_epoch" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">after_training_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/checkpoints.py#L20-L29"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.CheckpointPlugin.after_training_epoch" title="Permalink to this definition">#</a></dt>
 <dd><p>Saves the model each k epochs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>epoch</strong> – </p></li>
-<li><p><strong>kw</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.LinearSchedulerPlugin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">LinearSchedulerPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warmup_fraction</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/linear_scheduler.py#L9-L74"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">LinearSchedulerPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warmup_fraction</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/linear_scheduler.py#L9-L59"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
 <p>Plugin for LinearSchedulerWithWarmup.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.LinearSchedulerPlugin.after_setup">
-<span class="sig-name descname"><span class="pre">after_setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini_batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/linear_scheduler.py#L26-L51"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin.after_setup" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">after_setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini_batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/linear_scheduler.py#L26-L44"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin.after_setup" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset_size</strong> – </p></li>
-<li><p><strong>mini_batch_size</strong> – </p></li>
-<li><p><strong>max_epochs</strong> – </p></li>
-<li><p><strong>kw</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.LinearSchedulerPlugin.after_training_batch">
-<span class="sig-name descname"><span class="pre">after_training_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/linear_scheduler.py#L63-L71"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin.after_training_batch" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">after_training_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/linear_scheduler.py#L52-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin.after_training_batch" title="Permalink to this definition">#</a></dt>
 <dd><p>Do the scheduler step if one-cycle or linear decay.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>kw</strong> – </p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.LinearSchedulerPlugin.before_training_epoch">
-<span class="sig-name descname"><span class="pre">before_training_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/linear_scheduler.py#L53-L61"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin.before_training_epoch" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">before_training_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/linear_scheduler.py#L46-L50"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin.before_training_epoch" title="Permalink to this definition">#</a></dt>
 <dd><p>Load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>kw</strong> – </p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -614,75 +542,37 @@ document.write(`
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.LossFilePlugin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">LossFilePlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_to_collect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/loss_file.py#L9-L122"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">LossFilePlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_to_collect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/loss_file.py#L9-L108"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
 <p>Plugin that manages the loss.tsv file output.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.LossFilePlugin.after_evaluation">
-<span class="sig-name descname"><span class="pre">after_evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/loss_file.py#L91-L122"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin.after_evaluation" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">after_evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/loss_file.py#L82-L108"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin.after_evaluation" title="Permalink to this definition">#</a></dt>
 <dd><p>This prints all relevant metrics.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>epoch</strong> – </p></li>
-<li><p><strong>kw</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.LossFilePlugin.before_training_epoch">
-<span class="sig-name descname"><span class="pre">before_training_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/loss_file.py#L61-L69"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin.before_training_epoch" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">before_training_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/loss_file.py#L61-L64"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin.before_training_epoch" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the current epoch for loss file logging.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>epoch</strong> – </p></li>
-<li><p><strong>kw</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.LossFilePlugin.metric_recorded">
-<span class="sig-name descname"><span class="pre">metric_recorded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/loss_file.py#L71-L89"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin.metric_recorded" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">metric_recorded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/loss_file.py#L66-L80"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin.metric_recorded" title="Permalink to this definition">#</a></dt>
 <dd><p>Add the metric of a record to the current row.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record</strong> – </p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.MetricHistoryPlugin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">MetricHistoryPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics_to_collect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{('dev',</span> <span class="pre">'loss'):</span> <span class="pre">'dev_loss_history',</span> <span class="pre">('dev',</span> <span class="pre">'score'):</span> <span class="pre">'dev_score_history',</span> <span class="pre">('train',</span> <span class="pre">'loss'):</span> <span class="pre">'train_loss_history'}</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/metric_history.py#L16-L38"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricHistoryPlugin" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">MetricHistoryPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics_to_collect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{('dev',</span> <span class="pre">'loss'):</span> <span class="pre">'dev_loss_history',</span> <span class="pre">('dev',</span> <span class="pre">'score'):</span> <span class="pre">'dev_score_history',</span> <span class="pre">('train',</span> <span class="pre">'loss'):</span> <span class="pre">'train_loss_history'}</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/metric_history.py#L16-L34"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricHistoryPlugin" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.MetricHistoryPlugin.after_training">
-<span class="sig-name descname"><span class="pre">after_training</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/metric_history.py#L31-L38"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricHistoryPlugin.after_training" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">after_training</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/metric_history.py#L31-L34"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricHistoryPlugin.after_training" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns metric history.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>kw</strong> – </p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -712,8 +602,7 @@ document.write(`
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Name of the metric.</p></li>
 <li><p><strong>typ</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">RecordType</span></code>) – Type of metric.</p></li>
-<li><p><strong>value</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – Value of the metric (can be anything: scalar, tensor,
-image, etc.).</p></li>
+<li><p><strong>value</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – Value of the metric (can be anything: scalar, tensor, image, etc.).</p></li>
 <li><p><strong>walltime</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – Time of recording this metric.</p></li>
 </ul>
 </dd>
@@ -774,12 +663,12 @@ image, etc.).</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">Pluggable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L33-L116"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">Pluggable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L33-L117"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Dispatches events which attached plugins can react to.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L38-L59"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L38-L60"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize a <cite>Pluggable</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -790,12 +679,12 @@ image, etc.).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.append_plugin">
-<span class="sig-name descname"><span class="pre">append_plugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plugin</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L65-L66"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.append_plugin" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">append_plugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plugin</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L66-L67"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.append_plugin" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.dispatch">
-<span class="sig-name descname"><span class="pre">dispatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L94-L111"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.dispatch" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">dispatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L95-L112"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.dispatch" title="Permalink to this definition">#</a></dt>
 <dd><p>Call all functions hooked to a certain event.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -811,7 +700,7 @@ image, etc.).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.register_hook">
-<span class="sig-name descname"><span class="pre">register_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">events</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L77-L92"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.register_hook" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">register_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">events</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L78-L93"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.register_hook" title="Permalink to this definition">#</a></dt>
 <dd><p>Register a hook.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -825,7 +714,7 @@ image, etc.).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.remove_hook">
-<span class="sig-name descname"><span class="pre">remove_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handle</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L113-L116"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.remove_hook" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">remove_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handle</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L114-L117"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.remove_hook" title="Permalink to this definition">#</a></dt>
 <dd><p>Remove a hook handle from this instance.</p>
 </dd></dl>
 
@@ -836,25 +725,25 @@ image, etc.).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.validate_event">
-<span class="sig-name descname"><span class="pre">validate_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">events</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L68-L75"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.validate_event" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">validate_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">events</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L69-L76"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.validate_event" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.TensorboardLogger">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">TensorboardLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/tensorboard.py#L10-L59"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">TensorboardLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/tensorboard.py#L10-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
 <p>Plugin that takes care of tensorboard logging.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.TensorboardLogger.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/tensorboard.py#L13-L38"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/tensorboard.py#L13-L39"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Initializes the TensorboardLogger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>log_dir</strong> – Directory into which tensorboard log files will be written  # noqa: E501</p></li>
-<li><p><strong>tracked_metrics</strong> – List of tuples that specify which metrics (in addition to the main_score) shall be plotted in tensorboard, could be [(“macro avg”, ‘f1-score’), (“macro avg”, ‘precision’)] for example  # noqa: E501</p></li>
+<li><p><strong>log_dir</strong> – Directory into which tensorboard log files will be written</p></li>
+<li><p><strong>tracked_metrics</strong> – List of tuples that specify which metrics (in addition to the main_score) shall be plotted in tensorboard, could be [(“macro avg”, ‘f1-score’), (“macro avg”, ‘precision’)] for example</p></li>
 </ul>
 </dd>
 </dl>
@@ -862,28 +751,20 @@ image, etc.).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.TensorboardLogger._training_finally">
-<span class="sig-name descname"><span class="pre">_training_finally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/tensorboard.py#L51-L59"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger._training_finally" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">_training_finally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/tensorboard.py#L52-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger._training_finally" title="Permalink to this definition">#</a></dt>
 <dd><p>Closes the writer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>kw</strong> – </p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.TensorboardLogger.metric_recorded">
-<span class="sig-name descname"><span class="pre">metric_recorded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/tensorboard.py#L40-L49"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger.metric_recorded" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">metric_recorded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/loggers/tensorboard.py#L41-L50"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger.metric_recorded" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.TrainerPlugin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">TrainerPlugin</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L261-L272"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TrainerPlugin" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">TrainerPlugin</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/base.py#L263-L274"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TrainerPlugin" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.BasePlugin" title="flair.trainers.plugins.base.BasePlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasePlugin</span></code></a></p>
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.trainers.plugins.TrainerPlugin.corpus">
@@ -911,26 +792,13 @@ image, etc.).</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.WeightExtractorPlugin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">WeightExtractorPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/weight_extractor.py#L5-L26"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.WeightExtractorPlugin" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">WeightExtractorPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/weight_extractor.py#L5-L19"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.WeightExtractorPlugin" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
 <p>Simple Plugin for weight extraction.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.WeightExtractorPlugin.after_training_batch">
-<span class="sig-name descname"><span class="pre">after_training_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_no</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_number_of_batches</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/weight_extractor.py#L12-L26"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.WeightExtractorPlugin.after_training_batch" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">after_training_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_no</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_number_of_batches</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/trainers/plugins/functional/weight_extractor.py#L12-L19"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.WeightExtractorPlugin.after_training_batch" title="Permalink to this definition">#</a></dt>
 <dd><p>Extracts weights.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>batch_no</strong> – </p></li>
-<li><p><strong>epoch</strong> – </p></li>
-<li><p><strong>total_number_of_batches</strong> – </p></li>
-<li><p><strong>kw</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>

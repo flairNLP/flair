@@ -371,7 +371,7 @@ document.write(`
   <section id="transformer-embeddings">
 <h1>Transformer embeddings<a class="headerlink" href="#transformer-embeddings" title="Permalink to this heading">#</a></h1>
 <p>Flair supports various Transformer-based architectures like BERT or XLNet from <a class="reference external" href="https://github.com/huggingface">HuggingFace</a>,
-with two classes <code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code> (to embed words) and <code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code> (to embed documents).</p>
+with two classes <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings" title="flair.embeddings.token.TransformerWordEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></span></a> (to embed words) and <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings" title="flair.embeddings.document.TransformerDocumentEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></span></a> (to embed documents).</p>
 <section id="embeddings-words">
 <h2>Embeddings words<a class="headerlink" href="#embeddings-words" title="Permalink to this heading">#</a></h2>
 <p>For instance, to load a standard BERT transformer model, do:</p>
@@ -400,11 +400,11 @@ with two classes <code class="docutils literal notranslate"><span class="pre">Tr
 <span class="n">embedding</span><span class="o">.</span><span class="kp">embed</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><a class="reference external" href="https://huggingface.co/transformers/pretrained_models.html">Here</a> is a full list of all models (BERT, RoBERTa, XLM, XLNet etc.). You can use any of these models with this class.</p>
+<p>Use the <a class="reference external" href="https://huggingface.co/models">Huggingface Model hub</a> to find any open source text embedding model to use.</p>
 </section>
 <section id="embeddings-sentences">
 <h2>Embeddings sentences<a class="headerlink" href="#embeddings-sentences" title="Permalink to this heading">#</a></h2>
-<p>To embed a whole sentence as one (instead of each word in the sentence), simply use the TransformerDocumentEmbeddings
+<p>To embed a whole sentence as one (instead of each word in the sentence), simply use the <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings" title="flair.embeddings.document.TransformerDocumentEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></span></a>
 instead:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerDocumentEmbeddings</span>
 
@@ -421,8 +421,8 @@ instead:</p>
 </section>
 <section id="arguments">
 <h2>Arguments<a class="headerlink" href="#arguments" title="Permalink to this heading">#</a></h2>
-<p>There are several options that you can set when you init the TransformerWordEmbeddings
-and TransformerDocumentEmbeddings classes:</p>
+<p>There are several options that you can set when you init the <a class="reference internal" href="#flair.embeddings.document.TransformerWordEmbeddings"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></span></a>
+and <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings" title="flair.embeddings.document.TransformerDocumentEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></span></a> classes:</p>
 <table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Argument</p></th>
@@ -553,8 +553,7 @@ When fine-tuning, you should also only use the topmost layer, so best set <code 
 </section>
 <section id="models">
 <h3>Models<a class="headerlink" href="#models" title="Permalink to this heading">#</a></h3>
-<p>Please have a look at the awesome Hugging Face <a class="reference external" href="https://huggingface.co/transformers/v2.3.0/pretrained_models.html">documentation</a>
-for all supported pretrained models!</p>
+<p>Please have a look at the awesome <a class="reference external" href="https://huggingface.co/models">Huggingface Model hub</a> to find any open source text embedding model to use.</p>
 </section>
 </section>
 </section>
