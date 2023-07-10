@@ -76,11 +76,11 @@ class MetricRecord:
     ) -> None:
         """Create a metric record.
 
-        :param name: Name of the metric.
-        :param typ: Type of metric.
-        :param value: Value of the metric (can be anything: scalar, tensor,
-            image, etc.).
-        :param walltime: Time of recording this metric.
+        Args:
+            name: Name of the metric.
+            typ: Type of metric.
+            value: Value of the metric (can be anything: scalar, tensor, image, etc.).
+            walltime: Time of recording this metric.
         """
         self.name: MetricName = MetricName(name)
         self.typ: RecordType = typ

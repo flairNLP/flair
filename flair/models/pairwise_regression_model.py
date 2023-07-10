@@ -37,8 +37,8 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
     ) -> None:
         """Initialize the Text Pair Regression Model.
 
-        :param embeddings: embeddings used to embed each data point
-        :param label_name:
+        Args:
+            embeddings: embeddings used to embed each data point
         """
         super().__init__()
 

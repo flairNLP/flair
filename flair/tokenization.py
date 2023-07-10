@@ -31,9 +31,8 @@ class Tokenizer(ABC):
 class SpacyTokenizer(Tokenizer):
     """Tokenizer using spacy under the hood.
 
-    Implementation of :class:`Tokenizer`, using models from Spacy.
-
-    :param model a Spacy V2 model or the name of the model to load.
+    Args:
+        model: a Spacy V2 model or the name of the model to load.
     """
 
     def __init__(self, model) -> None:

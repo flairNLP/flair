@@ -206,7 +206,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def _init_loss_weights(self, loss_weights: Dict[str, float]) -> torch.Tensor:
         """Initializes the loss weights based on given dictionary.
 
-        :param loss_weights: dictionary - contains loss weights
+        Args:
+            loss_weights: dictionary - contains loss weights
         """
         n_classes = len(self.label_dictionary)
         weight_list = [1.0 for _ in range(n_classes)]
@@ -219,7 +220,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def _init_initial_hidden_state(self, num_directions: int):
         """Initializes hidden states given the number of directions in RNN.
 
-        :param num_directions: Number of directions in RNN.
+        Args:
+            num_directions: Number of directions in RNN.
         """
         hs_initializer = torch.nn.init.xavier_normal_
         lstm_init_h = torch.nn.Parameter(
@@ -243,11 +245,12 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     ) -> torch.nn.RNN:
         """Static wrapper function returning an RNN instance from PyTorch.
 
-        :param rnn_type: Type of RNN from torch.nn
-        :param rnn_layers: number of layers to include
-        :param hidden_size: hidden size of RNN cell
-        :param bidirectional: If True, RNN cell is bidirectional
-        :param rnn_input_dim: Input dimension to RNN cell
+        Args:
+            rnn_type: Type of RNN from torch.nn
+            rnn_layers: number of layers to include
+            hidden_size: hidden size of RNN cell
+            bidirectional: If True, RNN cell is bidirectional
+            rnn_input_dim: Input dimension to RNN cell
         """
         if rnn_type in ["LSTM", "GRU", "RNN"]:
             RNN = getattr(torch.nn, rnn_type)(
@@ -289,8 +292,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def forward(self, sentence_tensor: torch.Tensor, lengths: torch.LongTensor):
         """Forward propagation through network.
 
-        :param sentence_tensor: A tensor representing the batch of sentences.
-        :param lengths: A IntTensor representing the lengths of the respective sentences.
+        Args:
+            sentence_tensor: A tensor representing the batch of sentences.
+            lengths: A IntTensor representing the lengths of the respective sentences.
         """
         if self.use_dropout:
             sentence_tensor = self.dropout(sentence_tensor)
@@ -365,8 +369,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         Trims current batch tensor in shape (batch size, sequence length, tagset size)
         in such a way that all pads are going to be removed.
-        :param features: torch.tensor containing all features from forward propagation
-        :param lengths: length from each sentence in batch in order to trim padding tokens
+
+        Args:
+            features: all features from forward propagation
+            lengths: length from each sentence in batch in order to trim padding tokens
         """
         features_formatted = []
         for feat, length in zip(features, lengths):
@@ -378,7 +384,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def _get_gold_labels(self, sentences: List[Sentence]) -> List[str]:
         """Extracts gold labels from each sentence.
 
-        :param sentences: List of sentences in batch
+        Args:
+            sentences: List of sentences in batch
         """
         # spans need to be encoded as token-level predictions
         if self.predict_spans:
@@ -430,13 +437,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     ):
         """Predicts labels for current batch with CRF or Softmax.
 
-        :param sentences: List of sentences in batch
-        :param mini_batch_size: batch size for test data
-        :param return_probabilities_for_all_classes: Whether to return probabilities for all classes
-        :param verbose: whether to use progress bar
-        :param label_name: which label to predict
-        :param return_loss: whether to return loss value
-        :param embedding_storage_mode: determines where to store embeddings - can be "gpu", "cpu" or None.
+        Args:
+            sentences: List of sentences in batch
+            mini_batch_size: batch size for test data
+            return_probabilities_for_all_classes: Whether to return probabilities for all classes
+            verbose: whether to use progress bar
+            label_name: which label to predict
+            return_loss: whether to return loss value
+            embedding_storage_mode: determines where to store embeddings - can be "gpu", "cpu" or None.
         """
         if label_name is None:
             label_name = self.tag_type
@@ -532,9 +540,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def _standard_inference(self, features: torch.Tensor, batch: List[Sentence], probabilities_for_all_classes: bool):
         """Softmax over emission scores from forward propagation.
 
-        :param features: sentence tensor from forward propagation
-        :param batch: list of sentence
-        :param probabilities_for_all_classes: whether to return score for each tag in tag dictionary
+        Args:
+            features: sentence tensor from forward propagation
+            batch: sentences
+            probabilities_for_all_classes: whether to return score for each tag in tag dictionary
         """
         softmax_batch = F.softmax(features, dim=1).cpu()
         scores_batch, prediction_batch = torch.max(softmax_batch, dim=1)
@@ -562,7 +571,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def _all_scores_for_token(self, sentences: List[Sentence], scores: torch.Tensor, lengths: List[int]):
         """Returns all scores for each tag in tag dictionary.
 
-        :param scores: Scores for current sentence.
+        Args:
+            scores: Scores for current sentence.
         """
         scores = scores.numpy()
         tokens = [token for sentence in sentences for token in sentence]
@@ -916,11 +926,13 @@ for entity in sentence.get_spans('ner'):
     ):
         """Uploads the Sequence Tagger model to a Hugging Face Hub repository.
 
-        :param repo_id: A namespace (user or an organization) and a repo name separated by a `/`.
-        :param token: An authentication token (See https://huggingface.co/settings/token).
-        :param private: Whether the repository is private.
-        :param commit_message: Message to commit while pushing.
-        :return: The url of the repository.
+        Args:
+            repo_id: A namespace (user or an organization) and a repo name separated by a `/`.
+            token: An authentication token (See https://huggingface.co/settings/token).
+            private: Whether the repository is private.
+            commit_message: Message to commit while pushing.
+
+        Returns: The url of the repository.
         """
         # Lazy import
         from huggingface_hub import create_repo, model_info, upload_folder

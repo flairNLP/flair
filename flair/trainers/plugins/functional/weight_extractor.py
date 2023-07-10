@@ -11,14 +11,7 @@ class WeightExtractorPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_training_batch(self, batch_no, epoch, total_number_of_batches, **kw):
-        """Extracts weights.
-
-        :param batch_no:
-        :param epoch:
-        :param total_number_of_batches:
-        :param kw:
-        :return:
-        """
+        """Extracts weights."""
         modulo = max(1, int(total_number_of_batches / 10))
         iteration = epoch * total_number_of_batches + batch_no
 

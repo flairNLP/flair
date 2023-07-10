@@ -60,21 +60,12 @@ class LossFilePlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def before_training_epoch(self, epoch, **kw):
-        """Get the current epoch for loss file logging.
-
-        :param epoch:
-        :param kw:
-        :return:
-        """
+        """Get the current epoch for loss file logging."""
         self.current_row = {MetricName("epoch"): epoch}
 
     @TrainerPlugin.hook
     def metric_recorded(self, record):
-        """Add the metric of a record to the current row.
-
-        :param record:
-        :return:
-        """
+        """Add the metric of a record to the current row."""
         if record.name in self.headers and self.current_row is not None:
             if record.name == "learning_rate" and not record.is_scalar:
                 # record is a list of scalars
@@ -90,12 +81,7 @@ class LossFilePlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_evaluation(self, epoch, **kw):
-        """This prints all relevant metrics.
-
-        :param epoch:
-        :param kw:
-        :return:
-        """
+        """This prints all relevant metrics."""
         if self.loss_txt is not None:
             self.current_row[MetricName("timestamp")] = f"{datetime.now():%H:%M:%S}"
 

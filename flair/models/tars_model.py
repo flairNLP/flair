@@ -183,11 +183,13 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         Sets necessary attributes and finally 'switches' to the new task. Parameters are similar to the constructor
         except for model choice, batch size and negative sampling. This method does not store the resultant model onto
         disk.
-        :param task_name: a string depicting the name of the task
-        :param label_dictionary: dictionary of the labels you want to predict
-        :param label_type: string to identify the label type ('ner', 'sentiment', etc.)
-        :param multi_label: whether this task is a multi-label prediction problem
-        :param force_switch: if True, will overwrite existing task with same name
+
+        Args:
+            task_name: a string depicting the name of the task
+            label_dictionary: dictionary of the labels you want to predict
+            label_type: string to identify the label type ('ner', 'sentiment', etc.)
+            multi_label: whether this task is a multi-label prediction problem
+            force_switch: if True, will overwrite existing task with same name
         """
         if task_name in self._task_specific_attributes and not force_switch:
             log.warning(f"Task `{task_name}` already exists in TARS model. Switching to it.")
@@ -262,9 +264,10 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
     ):
         """Make zero shot predictions from the TARS model.
 
-        :param sentences: input sentence objects to classify
-        :param candidate_label_set: set of candidate labels
-        :param multi_label: indicates whether multi-label or single class prediction. Defaults to True.
+        Args:
+            sentences: input sentence objects to classify
+            candidate_label_set: set of candidate labels
+            multi_label: indicates whether multi-label or single class prediction. Defaults to True.
         """
         # check if candidate_label_set is empty
         if candidate_label_set is None or len(candidate_label_set) == 0:

@@ -55,8 +55,9 @@ class ModelTrainer(Pluggable):
     def __init__(self, model: flair.nn.Model, corpus: Corpus) -> None:
         """Initialize a model trainer.
 
-        :param model: The model that you want to train. The model should inherit from flair.nn.Model  # noqa: E501
-        :param corpus: The dataset used to train the model, should be of type Corpus
+        Args:
+            model: The model that you want to train. The model should inherit from flair.nn.Model  # noqa: E501
+            corpus: The dataset used to train the model, should be of type Corpus
         """
         super().__init__()
         self.model: flair.nn.Model = model
@@ -837,11 +838,7 @@ class ModelTrainer(Pluggable):
         )
 
     def _initialize_model_card(self, **training_parameters):
-        """Initializes model card with library versions and parameters.
-
-        :param training_parameters:
-        :return:
-        """
+        """Initializes model card with library versions and parameters."""
         # create a model card for this model with Flair and PyTorch version
         model_card = {
             "flair_version": flair.__version__,

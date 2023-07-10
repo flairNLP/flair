@@ -264,34 +264,18 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     ) -> None:
         """Initializes a `RelationClassifier`.
 
-        :param embeddings: The document embeddings used to embed each sentence
-        :param label_dictionary: A Dictionary containing all predictable labels from the corpus
-        :param label_type: The label type which is going to be predicted, in case a corpus has multiple annotations
-        :param entity_label_types: A label type or sequence of label types of the required relation entities.
-                                   You can also specify a label filter in a dictionary with the label type as key and
-                                   the valid entity labels as values in a set.
-                                   E.g. to use only 'PER' and 'ORG' labels from a NER-tagger: `{'ner': {'PER', 'ORG'}}`.
-                                   To use all labels from 'ner', pass 'ner'.
-        :param entity_pair_labels: A set of valid relation entity pair combinations, used as relation candidates.
-                                   Specify valid entity pairs in a set of tuples of labels (<HEAD>, <TAIL>).
-                                   E.g. for the `born_in` relation, only relations from 'PER' to 'LOC' make sense.
-                                   Here, relations from 'PER' to 'PER' are not meaningful, so
-                                   it is advised to specify the `entity_pair_labels` as `{('PER', 'ORG')}`.
-                                   This setting may help to reduce the number of relation candidates.
-                                   Leaving this parameter as `None` (default) disables the relation-candidate-filter,
-                                   i.e. the model classifies the relation for each entity pair
-                                   in the cross product of *all* entity pairs (inefficient).
-        :param entity_threshold: Only pre-labelled entities above this threshold are taken into account by the model.
-        :param cross_augmentation: If `True`, use cross augmentation to transform `Sentence`s into `EncodedSentenece`s.
-                                   When cross augmentation is enabled, the transformation functions,
-                                   e.g. `transform_corpus`, generate an encoded sentence for each entity pair
-                                   in the cross product of all entities in the original sentence.
-                                   When disabling cross augmentation, the transform functions only generate
-                                   encoded sentences for each gold relation annotation in the original sentence.
-        :param encoding_strategy: An instance of a class conforming the :class:`EncodingStrategy` protocol
-        :param zero_tag_value: The label to use for out-of-class relations
-        :param allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
-        :param classifierargs: The remaining parameters passed to the underlying `DefaultClassifier`
+        Args:
+            embeddings: The document embeddings used to embed each sentence
+            label_dictionary: A Dictionary containing all predictable labels from the corpus
+            label_type: The label type which is going to be predicted, in case a corpus has multiple annotations
+            entity_label_types: A label type or sequence of label types of the required relation entities. You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set. E.g. to use only 'PER' and 'ORG' labels from a NER-tagger: `{'ner': {'PER', 'ORG'}}`. To use all labels from 'ner', pass 'ner'.
+            entity_pair_labels: A set of valid relation entity pair combinations, used as relation candidates. Specify valid entity pairs in a set of tuples of labels (<HEAD>, <TAIL>). E.g. for the `born_in` relation, only relations from 'PER' to 'LOC' make sense. Here, relations from 'PER' to 'PER' are not meaningful, so it is advised to specify the `entity_pair_labels` as `{('PER', 'ORG')}`. This setting may help to reduce the number of relation candidates. Leaving this parameter as `None` (default) disables the relation-candidate-filter, i.e. the model classifies the relation for each entity pair in the cross product of *all* entity pairs (inefficient).
+            entity_threshold: Only pre-labelled entities above this threshold are taken into account by the model.
+            cross_augmentation: If `True`, use cross augmentation to transform `Sentence`s into `EncodedSentenece`s. When cross augmentation is enabled, the transformation functions, e.g. `transform_corpus`, generate an encoded sentence for each entity pair in the cross product of all entities in the original sentence. When disabling cross augmentation, the transform functions only generate  encoded sentences for each gold relation annotation in the original sentence.
+            encoding_strategy: An instance of a class conforming the :class:`EncodingStrategy` protocol
+            zero_tag_value: The label to use for out-of-class relations
+            allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
+            classifierargs: The remaining parameters passed to the underlying :class:`flair.models.DefaultClassifier`
         """
         # Set label type and prepare label dictionary
         self._label_type = label_type
@@ -345,10 +329,13 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         self.to(flair.device)
 
     def _valid_entities(self, sentence: Sentence) -> Iterator[_Entity]:
-        """Yields all valid entities, filtered under the specification of `self.entity_label_types`.
+        """Yields all valid entities, filtered under the specification of :attr:`~entity_label_types`.
 
-        :param sentence: A flair `Sentence` object with entity annotations
-        :return: Valid entities as `_Entity`
+        Args:
+            sentence: A Sentence object with entity annotations
+
+        Yields:
+            Valid entities as `_Entity`
         """
         for label_type, valid_labels in self.entity_label_types.items():
             for entity_span in sentence.get_spans(label_type=label_type):
@@ -416,14 +403,16 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         tail: _Entity,
         gold_label: Optional[str] = None,
     ) -> EncodedSentence:
-        """Returns a new `Sentence` object with masked/marked head and tail spans according to the encoding strategy.
+        """Returns a new Sentence object with masked/marked head and tail spans according to the encoding strategy.
 
-        If provided, the encoded sentence also has the corresponding gold label annotation from `self.label_type`.
+        If provided, the encoded sentence also has the corresponding gold label annotation from :attr:`~label_type`.
 
-        :param head: The head `_Entity`
-        :param tail: The tail `_Entity`
-        :param gold_label: An optional gold label of the induced relation by the head and tail entity
-        :return: The `EncodedSentence` (with gold annotations)
+        Args:
+            head: The head Entity
+            tail: The tail Entity
+            gold_label: An optional gold label of the induced relation by the head and tail entity
+
+        Returns: The EncodedSentence with Gold Annotations
         """
         # Some sanity checks
         original_sentence: Sentence = head.span.sentence
@@ -478,9 +467,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
               **exactly** one induced relation annotation, the gold annotation or `self.zero_tag_value`.
             - The created relations have head and tail spans from the original passed sentence.
 
-        :param sentence: A flair `Sentence` object with entity annotations
-        :return: Encoded sentences annotated with their gold relation and
-                 the corresponding relation in the original sentence
+        Args:
+            sentence: A flair `Sentence` object with entity annotations
+
+        Returns: Encoded sentences annotated with their gold relation and the corresponding relation in the original sentence
         """
         for head, tail, gold_label in self._entity_pair_permutations(sentence):
             masked_sentence: EncodedSentence = self._encode_sentence(
@@ -518,11 +508,14 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         """Transforms sentences into encoded sentences specific to the `RelationClassifier`.
 
         For more information on the internal sentence transformation procedure,
-        see the :class:`RelationClassifier` architecture and
-        the different :class:`EncodingStrategy` variants docstrings.
+        see the :class:`flair.models.RelationClassifier` architecture and
+        the different :class:`flair.models.relation_classifier_model.EncodingStrategy` variants docstrings.
 
-        :param sentences: A (list) of sentence(s) to transform
-        :return: A list of encoded sentences specific to the `RelationClassifier`
+        Args:
+            sentences: sentences to transform
+
+        Returns:
+            A list of encoded sentences specific to the `RelationClassifier`
         """
         if not isinstance(sentences, list):
             sentences = [sentences]
@@ -541,8 +534,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         see the :class:`RelationClassifier` architecture and
         the different :class:`EncodingStrategy` variants docstrings.
 
-        :param dataset: A dataset of sentences to transform
-        :return: A dataset of encoded sentences specific to the `RelationClassifier`
+        Args:
+            dataset: A dataset of sentences to transform
+
+        Returns: A dataset of encoded sentences specific to the `RelationClassifier`
         """
         data_loader: DataLoader = DataLoader(dataset, batch_size=1)
         original_sentences: List[Sentence] = [batch[0] for batch in iter(data_loader)]
@@ -556,8 +551,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         see the :class:`RelationClassifier` architecture and
         the different :class:`EncodingStrategy` variants docstrings.
 
-        :param corpus: A corpus of sentences to transform
-        :return: A corpus of encoded sentences specific to the `RelationClassifier`
+        Args:
+            corpus: A corpus of sentences to transform
+
+        Returns: A corpus of encoded sentences specific to the `RelationClassifier`
         """
         return Corpus(
             train=self.transform_dataset(corpus.train) if corpus.train is not None else None,
@@ -612,16 +609,16 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         Standard `Sentence` objects and `EncodedSentences` specific to the `RelationClassifier` are allowed as input.
         The (relation) labels are directly added to the sentences.
 
-        :param sentences: A list of (encoded) sentences.
-        :param mini_batch_size: The mini batch size to use
-        :param return_probabilities_for_all_classes: Return probabilities for all classes instead of only best predicted
-        :param verbose: Set to display a progress bar
-        :param return_loss: Set to return loss
-        :param label_name: Set to change the predicted label type name
-        :param embedding_storage_mode: The default is 'none', which is always best.
-                                       Only set to 'cpu' or 'gpu' if you wish to predict
-                                       and keep the generated embeddings in CPU or GPU memory, respectively.
-        :return: The loss and the total number of classes, if `return_loss` is set
+        Args:
+            sentences: A list of (encoded) sentences.
+            mini_batch_size: The mini batch size to use
+            return_probabilities_for_all_classes: Return probabilities for all classes instead of only best predicted
+            verbose: Set to display a progress bar
+            return_loss: Set to return loss
+            label_name: Set to change the predicted label type name
+            embedding_storage_mode: The default is 'none', which is always best. Only set to 'cpu' or 'gpu' if you wish to predict and keep the generated embeddings in CPU or GPU memory, respectively.
+
+        Returns: The loss and the total number of classes, if `return_loss` is set
         """
         prediction_label_type: str = self.label_type if label_name is None else label_name
 

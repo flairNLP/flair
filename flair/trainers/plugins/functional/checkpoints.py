@@ -19,12 +19,7 @@ class CheckpointPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_training_epoch(self, epoch, **kw):
-        """Saves the model each k epochs.
-
-        :param epoch:
-        :param kw:
-        :return:
-        """
+        """Saves the model each k epochs."""
         if self.save_model_each_k_epochs > 0 and epoch % self.save_model_each_k_epochs == 0:
             log.info(
                 f"Saving model at current epoch since 'save_model_each_k_epochs={self.save_model_each_k_epochs}' "

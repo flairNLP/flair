@@ -38,7 +38,8 @@ class Pluggable:
     def __init__(self, *, plugins: Sequence[PluginArgument] = []) -> None:
         """Initialize a `Pluggable`.
 
-        :param plugins: Plugins which should be attached to this `Pluggable`.
+        Args:
+            plugins: Plugins which should be attached to this `Pluggable`.
         """
         self._hook_handles: Dict[EventIdenifier, Dict[HookHandleId, HookHandle]] = defaultdict(dict)
 
@@ -124,10 +125,11 @@ class HookHandle:
     ) -> None:
         """Intitialize `HookHandle`.
 
-        :param _id: Id, the callback is stored as in the `Pluggable`.
-        :param *events: List of events, the callback is registered for.
-        :param func: The callback function.
-        :param pluggable: The `Pluggable` where the callback is registered.
+        Args:
+            _id: Id, the callback is stored as in the `Pluggable`.
+            events: List of events, the callback is registered for.
+            func: The callback function.
+            pluggable: The `Pluggable` where the callback is registered.
         """
         pluggable.validate_event(*events)
 

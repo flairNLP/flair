@@ -167,9 +167,11 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         indices representing characters in self.char_dict.
         One can manually set the vector length with the parameter seq_length, though the vector length is always
         at least maximum string length in the list.
-        :param end_symbol: add self.end_index at the end of each representation
-        :param start_symbol: add self.start_index in front of of each representation
-        :param padding_in_front: whether to fill up with self.dummy_index in front or in back of strings
+
+        Args:
+            end_symbol: add self.end_index at the end of each representation
+            start_symbol: add self.start_index in front of each representation
+            padding_in_front: whether to fill up with self.dummy_index in front or in back of strings
         """
         # add additional columns for special symbols if necessary
         c = int(end_symbol) + int(start_symbol)
@@ -405,15 +407,13 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
     ):
         """Predict lemmas of words for a given (list of) sentence(s).
 
-        :param sentences: sentences to predict
-        :param label_name: label name used for predicted lemmas
-        :param mini_batch_size: number of tokens that are send through the RNN simultaneously, assuming batching_in_rnn
-            is set to True
-        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
-            you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
-        :param return_loss: whether or not to compute and return loss. Setting it to True only makes sense if labels
-            are provided
-        :param verbose: If True, lemmatized sentences will be printed in the console.
+        Args:
+            sentences: sentences to predict
+            label_name: label name used for predicted lemmas
+            mini_batch_size: number of tokens that are send through the RNN simultaneously, assuming batching_in_rnn is set to True
+            embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+            return_loss: whether to compute and return loss. Setting it to True only makes sense if labels are provided
+            verbose: If True, lemmatized sentences will be printed in the console.
         """
         if isinstance(sentences, Sentence):
             sentences = [sentences]

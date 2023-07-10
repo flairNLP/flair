@@ -25,9 +25,10 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
     ) -> None:
         """Initializes a TokenClassifier.
 
-        :param embeddings: word embeddings used in tagger
-        :param tag_dictionary: dictionary of tags you want to predict
-        :param tag_type: string identifier for tag type
+        Args:
+            embeddings: word embeddings used in tagger
+            tag_dictionary: dictionary of tags you want to predict
+            tag_type: string identifier for tag type
         """
         # if the classifier predicts BIO/BIOES span labels, the internal label dictionary must be computed
         if label_dictionary.span_labels:
