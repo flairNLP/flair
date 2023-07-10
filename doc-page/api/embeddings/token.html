@@ -1001,15 +1001,16 @@ Then, the list contains the names of all embeddings in the stack.</p>
 <dd><p>Bidirectional transformer embeddings of words from various transformer architectures.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of transformer model (see <a class="reference external" href="https://huggingface.co/transformers/pretrained_models.html">https://huggingface.co/transformers/pretrained_models.html</a> for</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of transformer model (see <a class="reference external" href="https://huggingface.co/transformers/pretrained_models.html">https://huggingface.co/transformers/pretrained_models.html</a> for options)</p></li>
+<li><p><strong>layers</strong> – string indicating which layers to take for embedding (-1 is topmost layer)</p></li>
+<li><p><strong>subtoken_pooling</strong> – how to get from token piece embeddings to token embedding. Either take the first
+subtoken (‘first’), the last subtoken (‘last’), both first and last (‘first_last’) or a mean over all (‘mean’)</p></li>
+<li><p><strong>layer_mean</strong> – If True, uses a scalar mix of layers as embedding</p></li>
+<li><p><strong>fine_tune</strong> – If True, allows transformers to be fine-tuned during training</p></li>
+</ul>
 </dd>
 </dl>
-<p>options)
-:param layers: string indicating which layers to take for embedding (-1 is topmost layer)
-:param subtoken_pooling: how to get from token piece embeddings to token embedding. Either take the first
-subtoken (‘first’), the last subtoken (‘last’), both first and last (‘first_last’) or a mean over all (‘mean’)
-:param layer_mean: If True, uses a scalar mix of layers as embedding
-:param fine_tune: If True, allows transformers to be fine-tuned during training</p>
 </dd></dl>
 
 <dl class="py method">

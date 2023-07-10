@@ -436,29 +436,19 @@ For each data pair we create a flair.data.DataPair object.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path_to_data</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]) – path to the data file</p></li>
-<li><p><strong>columns</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – list of integers that indicate the respective columns. The first entry is the column</p></li>
+<li><p><strong>columns</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – list of integers that indicate the respective columns. The first entry is the column for the first sentence, the second for the second sentence and the third for the label. Default [0,1,2]</p></li>
+<li><p><strong>max_tokens_per_doc</strong> – If set, shortens sentences to this maximum number of tokens</p></li>
+<li><p><strong>max_chars_per_doc</strong> – If set, shortens sentences to this maximum number of characters</p></li>
+<li><p><strong>use_tokenizer</strong> – Whether to use in-built tokenizer</p></li>
+<li><p><strong>in_memory</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, data will be saved in list of flair.data.DataPair objects, otherwise we use lists with simple strings which needs less space</p></li>
+<li><p><strong>label_type</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Name of the label of the data pairs</p></li>
+<li><p><strong>skip_first_line</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, first line of data file will be ignored</p></li>
+<li><p><strong>separator</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Separator between columns in the data file</p></li>
+<li><p><strong>encoding</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Encoding of the data file</p></li>
+<li><p><strong>label</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If False, the dataset expects unlabeled data</p></li>
 </ul>
 </dd>
 </dl>
-<p>for the first sentence, the second for the second sentence and the third for the label. Default [0,1,2]
-:type max_tokens_per_doc: 
-:param max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
-:type max_chars_per_doc: 
-:param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
-:type use_tokenizer: 
-:param use_tokenizer: Whether or not to use in-built tokenizer
-:type in_memory: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
-:param in_memory: If True, data will be saved in list of flair.data.DataPair objects, other wise we use lists with simple strings which needs less space
-:type label_type: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]
-:param label_type: Name of the label of the data pairs
-:type skip_first_line: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
-:param skip_first_line: If True, first line of data file will be ignored
-:type separator: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param separator: Separator between columns in the data file
-:type encoding: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param encoding: Encoding of the data file
-:type label: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
-:param label: If False, the dataset expects unlabeled data</p>
 </dd></dl>
 
 <dl class="py method">

@@ -540,13 +540,11 @@ document.write(`
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>texts</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]) – a string or List of string that make up StringDataset</p></li>
-<li><p><strong>use_tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SpaceTokenizer,</p></li>
+<li><p><strong>use_tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use. If instead of providing a function, this parameter is just set to True,
+<code class="xref py py-class docutils literal notranslate"><span class="pre">flair.tokenization.SegTokTokenizer</span></code> will be used.</p></li>
 </ul>
 </dd>
 </dl>
-<p>more advanced options are SegTokTokenizer to use segtok or SpacyTokenizer to use Spacy library models
-if available). Check the code of subclasses of Tokenizer to implement your own (if you need it).
-If instead of providing a function, this parameter is just set to True, SegTokTokenizer will be used.</p>
 </dd></dl>
 
 <dl class="py method">
