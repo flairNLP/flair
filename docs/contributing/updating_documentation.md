@@ -20,7 +20,7 @@ A tutorial should always be easy to understand, and reference api documentation 
 
 ```{note}
   You can reference symbols by defining links
-  e.g.: `[`flair.set_seed`](#flair.set_seed)` for a function
+  e.g.: ``[`flair.set_seed`](#flair.set_seed)`` for a function
   e.g.: `[entity-linking](project:../tutorial/tutorial-basics/entity-linking.md)` for another tutorial
 ```
 
