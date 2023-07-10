@@ -1,7 +1,7 @@
 # Transformer embeddings
 
 Flair supports various Transformer-based architectures like BERT or XLNet from [HuggingFace](https://github.com/huggingface), 
-with two classes `TransformerWordEmbeddings` (to embed words) and `TransformerDocumentEmbeddings` (to embed documents).
+with two classes [`TransformerWordEmbeddings`](#flair.embeddings.token.TransformerWordEmbeddings) (to embed words) and [`TransformerDocumentEmbeddings`](#flair.embeddings.document.TransformerDocumentEmbeddings) (to embed documents).
 
 ## Embeddings words 
 
@@ -35,12 +35,12 @@ sentence = Sentence('The grass is green .')
 embedding.embed(sentence)
 ```
 
-[Here](https://huggingface.co/transformers/pretrained_models.html) is a full list of all models (BERT, RoBERTa, XLM, XLNet etc.). You can use any of these models with this class.
+Use the [Huggingface Model hub](https://huggingface.co/models) to find any open source text embedding model to use.
 
 
 ## Embeddings sentences
 
-To embed a whole sentence as one (instead of each word in the sentence), simply use the TransformerDocumentEmbeddings 
+To embed a whole sentence as one (instead of each word in the sentence), simply use the [`TransformerDocumentEmbeddings`](#flair.embeddings.document.TransformerDocumentEmbeddings) 
 instead:
 
 ```python
@@ -58,18 +58,18 @@ embedding.embed(sentence)
 
 ## Arguments
 
-There are several options that you can set when you init the TransformerWordEmbeddings 
-and TransformerDocumentEmbeddings classes:
+There are several options that you can set when you init the [`TransformerWordEmbeddings`](#flair.embeddings.document.TransformerWordEmbeddings) 
+and [`TransformerDocumentEmbeddings`](#flair.embeddings.document.TransformerDocumentEmbeddings) classes:
 
-| Argument             | Default             | Description
-| -------------------- | ------------------- | ------------------------------------------------------------------------------
-| `model` | `bert-base-uncased` | The string identifier of the transformer model you want to use (see above)
-| `layers`             | `all`       | Defines the layers of the Transformer-based model that produce the embedding
-| `subtoken_pooling`  | `first`             | See [Pooling operation section](#pooling).
-| `layer_mean`     | `True`             | See [Layer mean section](#layer-mean).
-| `fine_tune`     | `False`             | Whether or not embeddings are fine-tuneable.
-| `allow_long_sentences`     | `True`             | Whether or not texts longer than maximal sequence length are supported.
-| `use_context` | `False`             | Set to True to include context outside of sentences. This can greatly increase accuracy on some tasks, but slows down embedding generation
+| Argument               | Default             | Description                                                                                                                                
+|------------------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------
+| `model`                | `bert-base-uncased` | The string identifier of the transformer model you want to use (see above)                                                                 |
+| `layers`               | `all`               | Defines the layers of the Transformer-based model that produce the embedding                                                               |
+| `subtoken_pooling`     | `first`             | See [Pooling operation section](#pooling).                                                                                                 |
+| `layer_mean`           | `True`              | See [Layer mean section](#layer-mean).                                                                                                     |
+| `fine_tune`            | `False`             | Whether or not embeddings are fine-tuneable.                                                                                               |
+| `allow_long_sentences` | `True`              | Whether or not texts longer than maximal sequence length are supported.                                                                    |
+| `use_context`          | `False`             | Set to True to include context outside of sentences. This can greatly increase accuracy on some tasks, but slows down embedding generation |
 
 
 ### Layers
@@ -176,6 +176,5 @@ tensor([-0.0323, -0.3904, -1.1946,  ...,  0.1305, -0.1365, -0.4323],
 
 ### Models
 
-Please have a look at the awesome Hugging Face [documentation](https://huggingface.co/transformers/v2.3.0/pretrained_models.html)
-for all supported pretrained models!
+Please have a look at the awesome [Huggingface Model hub](https://huggingface.co/models) to find any open source text embedding model to use.
 
