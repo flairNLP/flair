@@ -61,8 +61,12 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
         """
         final_embedding_size = 0
         if embeddings:
-            final_embedding_size += embeddings.embedding_length * 2 \
-                if pooling_operation == "first_last" else embeddings.embedding_length
+            if pooling_operation == "first_last":
+                final_embedding_size += embeddings.embedding_length * 2
+            elif pooling_operation == "first_last_mean":
+                final_embedding_size += embeddings.embedding_length * 3
+            else:
+                final_embedding_size += embeddings.embedding_length
         if gazetteer_embeddings:
             final_embedding_size += gazetteer_embeddings.embedding_length
         if concat_span_length_to_embedding:
@@ -95,7 +99,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
             "average": self.emb_mean,
             "first": self.emb_first,
             "last": self.emb_last,
-            "first_last": self.emb_firstAndLast
+            "first_last": self.emb_firstAndLast,
+            "first_last_mean": self.emb_firstAndLastMean,
         }
 
         if pooling_operation not in cases:
@@ -121,7 +126,16 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
         )
 
     def emb_mean(self, span, embedding_names):
-        return torch.mean(torch.cat([token.get_embedding(embedding_names) for token in span], 0), 0)
+        return torch.mean(torch.cat([token.get_embedding(embedding_names).unsqueeze(0) for token in span], 0), 0)
+
+    def emb_firstAndLastMean(self, span, embedding_names):
+        emb = torch.cat(
+            (span.tokens[0].get_embedding(embedding_names),
+             span.tokens[-1].get_embedding(embedding_names),
+             torch.mean(torch.cat([token.get_embedding(embedding_names).unsqueeze(0) for token in span], 0), 0)),
+            0
+        )
+        return emb
 
     def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Span]:
 
@@ -274,28 +288,72 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
 
     def _print_predictions(self, batch, gold_label_type):
         lines = []
-        for datapoint in batch:
-            printed = []
 
-            eval_line = f"\n{datapoint.to_original_text()}\n"
-            for span in datapoint.get_spans(gold_label_type):
-                symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
-                eval_line += (
-                    f' - "{span.text}" / {span.get_label(gold_label_type).value}'
-                    f' --> {span.get_label("predicted").value} ({symbol})\n'
-                )
-                printed.append(span)
+        if self.multi_label:
+            for datapoint in batch:
+                printed = []
+                eval_line = f"\n{datapoint.to_original_text()}\n"
 
-            # print out also the wrongly predicted (no gold label)
-            for span in datapoint.get_spans("predicted"):
-                if span.get_label("predicted").value != span.get_label(gold_label_type).value and span not in printed:
+                # the gold spans and all of their labels:
+                for span in datapoint.get_spans(gold_label_type):
+                    gold_labels = [lg.value for lg in span.get_labels(gold_label_type)]
+                    gold_print = "|".join(gold_labels) if len(gold_labels) >0 else "O"
+                    pred_labels = [lp.value for lp in span.get_labels("predicted")]
+                    pred_print = "|".join(pred_labels) if len(pred_labels) >0 else "O"
+                    nr_labels = len(set(gold_labels).union(pred_labels))
+                    nr_good_labels = len(set(gold_labels).intersection(set(pred_labels)))
+                    nr_bad_labels = nr_labels - nr_good_labels
+                    symbol_print = "(✓)"*nr_good_labels + "(❌)"*nr_bad_labels
                     eval_line += (
-                        f' - "{span.text}" / {span.get_label(gold_label_type).value}'
-                        f' --> {span.get_label("predicted").value} ("❌")\n'
+                        f' - "{span.text}" / {gold_print}'
+                        f' --> {pred_print} {symbol_print}\n'
                     )
                     printed.append(span)
 
-            lines.append(eval_line)
+                # print out also the wrongly predicted spans (gold is "O"), consider each label
+                for span in datapoint.get_spans("predicted"):
+                    if span not in printed:
+                        gold_labels = [lg.value for lg in span.get_labels(gold_label_type)]
+                        gold_print = "|".join(gold_labels) if len(gold_labels) > 0 else "O"
+                        pred_labels = [lp.value for lp in span.get_labels("predicted")]
+                        pred_print = "|".join(pred_labels) if len(pred_labels) > 0 else "O"
+                        nr_labels = len(set(gold_labels).union(pred_labels))
+                        nr_good_labels = len(set(gold_labels).intersection(set(pred_labels)))
+                        nr_bad_labels = nr_labels - nr_good_labels
+                        symbol_print = "(✓)" * nr_good_labels + "(❌)" * nr_bad_labels
+                        eval_line += (
+                            f' - "{span.text}" / {gold_print}'
+                            f' --> {pred_print} {symbol_print}\n'
+                        )
+                        printed.append(span)
+
+                lines.append(eval_line)
+
+
+        else:
+
+            for datapoint in batch:
+                printed = []
+
+                eval_line = f"\n{datapoint.to_original_text()}\n"
+                for span in datapoint.get_spans(gold_label_type):
+                    symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
+                    eval_line += (
+                        f' - "{span.text}" / {span.get_label(gold_label_type).value}'
+                        f' --> {span.get_label("predicted").value} ({symbol})\n'
+                    )
+                    printed.append(span)
+
+                # print out also the wrongly predicted (no gold label)
+                for span in datapoint.get_spans("predicted"):
+                    if span.get_label("predicted").value != span.get_label(gold_label_type).value and span not in printed:
+                        eval_line += (
+                            f' - "{span.text}" / {span.get_label(gold_label_type).value}'
+                            f' --> {span.get_label("predicted").value} ("❌")\n'
+                        )
+                        printed.append(span)
+
+                lines.append(eval_line)
 
         return lines
 
