@@ -12,10 +12,8 @@ from operator import attrgetter
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, NamedTuple, Optional, Tuple, Union
 from warnings import warn
-from zipfile import BadZipFile, LargeZipFile
 
 import ftfy
-import numpy as np
 from deprecated import deprecated
 from lxml import etree
 from lxml.etree import XMLSyntaxError
@@ -365,9 +363,9 @@ class CoNLLWriter:
 
                     for flair_token in sentence.tokens:
                         token = flair_token.text.strip()
-                        assert sentence.start_pos is not None
-                        assert flair_token.start_pos is not None
-                        offset = sentence.start_pos + flair_token.start_pos
+                        assert sentence.start_position is not None
+                        assert flair_token.start_position is not None
+                        offset = sentence.start_position + flair_token.start_position
 
                         if current_entity and offset >= current_entity.char_span.stop:
                             in_entity = False
@@ -506,8 +504,8 @@ class HunerDataset(ColumnCorpus, ABC):
 
 
 class AbstractBiomedicalEntityLinkingDictionary(ABC):
-    """
-    Base class for downloading and reading of dictionaries for named entity linking.
+    """Base class for downloading and reading of dictionaries for named entity linking.
+
     A dictionary represents all entities of a knowledge base and their associated ids.
     """
 
@@ -515,10 +513,7 @@ class AbstractBiomedicalEntityLinkingDictionary(ABC):
         self,
         base_path: Union[str, Path] = None,
     ):
-        """
-        :param base_path: Path to the corpus on your machine
-        """
-
+        """:param base_path: Path to the corpus on your machine"""
         if base_path is None:
             base_path = flair.cache_root / "datasets"
         else:
@@ -788,8 +783,8 @@ class NCBI_GENE_HUMAN_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
         )
 
         with open(original_file, mode="r", encoding="utf-8") as f:
-            header = f.readline()
-            header = header.strip().split("\t")
+            line = f.readline()
+            header = line.strip().split("\t")
             for line in f:
                 if line.startswith("#"):
                     continue
@@ -887,7 +882,7 @@ class NCBI_TAXONOMY_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
                     continue
 
                 if parsed_line["field"] not in NCBI_TAXONOMY_SYNSET:
-                    raise ValueError(f"Field {parsed_line.field} unknown!")
+                    raise ValueError(f"Field {parsed_line['field']} unknown!")
 
                 if curr_identifier is None:
                     curr_identifier = parsed_line["identifier"]
