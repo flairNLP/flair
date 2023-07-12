@@ -23,7 +23,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
         label_type: str,
         embed_separately: bool = False,
         **classifierargs,
-    ):
+    ) -> None:
         """Initializes a TextPairClassifier.
 
         :param embeddings: embeddings used to embed each data point

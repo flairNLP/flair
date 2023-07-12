@@ -20,8 +20,8 @@ class OcrJsonDataset(FlairDataset):
         encoding: str = "utf-8",
         load_images: bool = False,
         normalize_coords_to_thousands: bool = True,
-        label_name_map: Dict[str, str] = None,
-    ):
+        label_name_map: Optional[Dict[str, str]] = None,
+    ) -> None:
         """Instantiates a Dataset from a OCR-Json format.
 
         The folder is structured with a "images" folder and a "tagged" folder.
@@ -49,8 +49,7 @@ class OcrJsonDataset(FlairDataset):
         assert tagged_dir.exists()
         assert image_dir.exists()
         self.file_names = sorted(
-            set([p.stem for p in image_dir.iterdir() if p.is_file()])
-            & set([p.stem for p in tagged_dir.iterdir() if p.is_file()])
+            {p.stem for p in image_dir.iterdir() if p.is_file()} & {p.stem for p in tagged_dir.iterdir() if p.is_file()}
         )
 
         self.total_sentence_count: int = len(self.file_names)
@@ -133,9 +132,9 @@ class OcrCorpus(Corpus):
         in_memory: bool = True,
         load_images: bool = False,
         normalize_coords_to_thousands: bool = True,
-        label_name_map: Dict[str, str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
         **corpusargs,
-    ):
+    ) -> None:
         """Instantiates a Corpus from a OCR-Json format.
 
         :param train_path: the folder for the training data
@@ -200,15 +199,15 @@ class OcrCorpus(Corpus):
 class SROIE(OcrCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         encoding: str = "utf-8",
         label_type: str = "ner",
         in_memory: bool = True,
         load_images: bool = False,
         normalize_coords_to_thousands: bool = True,
-        label_name_map: Dict[str, str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
         **corpusargs,
-    ):
+    ) -> None:
         """Instantiates the SROIE corpus with perfect ocr boxes.
 
         :param base_path: the path to store the dataset or load it from
@@ -220,10 +219,7 @@ class SROIE(OcrCorpus):
         :param label_name_map: Optionally map tag names to different schema.
         :return: a Corpus with Sentences that contain OCR information
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         dataset_name = self.__class__.__name__.lower()
         data_folder = base_path / dataset_name

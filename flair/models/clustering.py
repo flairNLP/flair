@@ -2,7 +2,7 @@ import logging
 import pickle
 from collections import OrderedDict
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import joblib
 from sklearn.base import BaseEstimator, ClusterMixin
@@ -19,7 +19,7 @@ log = logging.getLogger("flair")
 class ClusteringModel:
     """A wrapper class to apply sklearn clustering models on DocumentEmbeddings."""
 
-    def __init__(self, model: Union[ClusterMixin, BaseEstimator], embeddings: DocumentEmbeddings):
+    def __init__(self, model: Union[ClusterMixin, BaseEstimator], embeddings: DocumentEmbeddings) -> None:
         """Instantiate the ClusteringModel.
 
         :param model: the clustering algorithm from sklearn this wrapper will use.
@@ -72,7 +72,9 @@ class ClusteringModel:
         log.info("Loading model from: " + str(model_file))
         return pickle.loads(joblib.load(str(model_file)))
 
-    def _convert_dataset(self, corpus, label_type: str = None, batch_size: int = 32, return_label_dict: bool = False):
+    def _convert_dataset(
+        self, corpus, label_type: Optional[str] = None, batch_size: int = 32, return_label_dict: bool = False
+    ):
         """Makes a flair-corpus sklearn compatible.
 
         Turns the corpora into X, y datasets as required for most sklearn clustering models.

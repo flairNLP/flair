@@ -27,7 +27,7 @@ def _iter_dataset(dataset: Optional[Dataset]) -> typing.Iterable:
         return []
     from flair.datasets import DataLoader
 
-    return map(lambda x: x[0], DataLoader(dataset, batch_size=1))
+    return (x[0] for x in DataLoader(dataset, batch_size=1))
 
 
 def _len_dataset(dataset: Optional[Dataset]) -> int:
@@ -45,7 +45,7 @@ BoundingBox = namedtuple("BoundingBox", ["left", "top", "right", "bottom"])
 class Dictionary:
     """This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings."""
 
-    def __init__(self, add_unk=True):
+    def __init__(self, add_unk=True) -> None:
         # init dictionaries
         self.item2idx: Dict[bytes, int] = {}
         self.idx2item: List[bytes] = []
@@ -81,7 +81,7 @@ class Dictionary:
         :return: ID of string, otherwise 0
         """
         item_encoded = item.encode("utf-8")
-        if item_encoded in self.item2idx.keys():
+        if item_encoded in self.item2idx:
             return self.item2idx[item_encoded]
         elif self.add_unk:
             return 0
@@ -99,7 +99,7 @@ class Dictionary:
         :return: List of ID of strings
         """
         if not hasattr(self, "item2idx_not_encoded"):
-            d = dict([(key.decode("UTF-8"), value) for key, value in self.item2idx.items()])
+            d = {key.decode("UTF-8"): value for key, value in self.item2idx.items()}
             self.item2idx_not_encoded = defaultdict(int, d)
 
         if not items:
@@ -128,16 +128,10 @@ class Dictionary:
     def is_span_prediction_problem(self) -> bool:
         if self.span_labels:
             return True
-        for item in self.get_items():
-            if item.startswith("B-") or item.startswith("S-") or item.startswith("I-"):
-                return True
-        return False
+        return any(item.startswith(("B-", "S-", "I-")) for item in self.get_items())
 
-    def start_stop_tags_are_set(self):
-        if {"<START>".encode(), "<STOP>".encode()}.issubset(self.item2idx.keys()):
-            return True
-        else:
-            return False
+    def start_stop_tags_are_set(self) -> bool:
+        return {b"<START>", b"<STOP>"}.issubset(self.item2idx.keys())
 
     def save(self, savefile):
         import pickle
@@ -150,20 +144,19 @@ class Dictionary:
         self.__dict__ = d
         # set 'add_unk' if the dictionary was created with a version of Flair older than 0.9
         if "add_unk" not in self.__dict__.keys():
-            self.__dict__["add_unk"] = True if b"<unk>" in self.__dict__["idx2item"] else False
+            self.__dict__["add_unk"] = b"<unk>" in self.__dict__["idx2item"]
 
     @classmethod
     def load_from_file(cls, filename: Union[str, Path]):
         import pickle
 
-        f = open(filename, "rb")
-        mappings = pickle.load(f, encoding="latin1")
-        idx2item = mappings["idx2item"]
-        item2idx = mappings["item2idx"]
-        f.close()
+        with Path(filename).open("rb") as f:
+            mappings = pickle.load(f, encoding="latin1")
+            idx2item = mappings["idx2item"]
+            item2idx = mappings["item2idx"]
 
         # set 'add_unk' depending on whether <unk> is a key
-        add_unk = True if b"<unk>" in idx2item else False
+        add_unk = b"<unk>" in idx2item
 
         dictionary: Dictionary = Dictionary(add_unk=add_unk)
         dictionary.item2idx = item2idx
@@ -198,7 +191,7 @@ class Dictionary:
             return False
         return self.item2idx == o.item2idx and self.idx2item == o.idx2item and self.add_unk == o.add_unk
 
-    def __str__(self):
+    def __str__(self) -> str:
         tags = ", ".join(self.get_item_for_index(i) for i in range(min(len(self), 50)))
         return f"Dictionary with {len(self)} tags: {tags}"
 
@@ -210,7 +203,7 @@ class Label:
     Default value for the score is 1.0.
     """
 
-    def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0):
+    def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0) -> None:
         self._value = value
         self._score = score
         self.data_point: DataPoint = data_point
@@ -231,14 +224,14 @@ class Label:
     def to_dict(self):
         return {"value": self.value, "confidence": self.score}
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.data_point.unlabeled_identifier}{flair._arrow}{self._value} ({round(self._score, 4)})"
 
     @property
     def shortstring(self):
         return f'"{self.data_point.text}"/{self._value}'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"'{self.data_point.unlabeled_identifier}'/'{self._value}' ({round(self._score, 4)})"
 
     def __eq__(self, other):
@@ -268,8 +261,8 @@ class DataPoint:
     and the property 'label')
     """
 
-    def __init__(self):
-        self.annotation_layers = {}
+    def __init__(self) -> None:
+        self.annotation_layers: Dict[str, List[Label]] = {}
         self._embeddings: Dict[str, torch.Tensor] = {}
         self._metadata: Dict[str, typing.Any] = {}
 
@@ -313,19 +306,16 @@ class DataPoint:
                 else:
                     self._embeddings[name] = vector.to(device, non_blocking=True)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
+    def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
         if embedding_names is None:
             self._embeddings = {}
         else:
             for name in embedding_names:
-                if name in self._embeddings.keys():
+                if name in self._embeddings:
                     del self._embeddings[name]
 
     def has_label(self, type) -> bool:
-        if type in self.annotation_layers:
-            return True
-        else:
-            return False
+        return type in self.annotation_layers
 
     def add_metadata(self, key: str, value: typing.Any) -> None:
         self._metadata[key] = value
@@ -351,15 +341,15 @@ class DataPoint:
         return self
 
     def remove_labels(self, typename: str):
-        if typename in self.annotation_layers.keys():
+        if typename in self.annotation_layers:
             del self.annotation_layers[typename]
 
-    def get_label(self, label_type: str = None, zero_tag_value="O"):
+    def get_label(self, label_type: Optional[str] = None, zero_tag_value="O"):
         if len(self.get_labels(label_type)) == 0:
             return Label(self, zero_tag_value)
         return self.get_labels(label_type)[0]
 
-    def get_labels(self, typename: str = None):
+    def get_labels(self, typename: Optional[str] = None):
         if typename is None:
             return self.labels
 
@@ -368,7 +358,7 @@ class DataPoint:
     @property
     def labels(self) -> List[Label]:
         all_labels = []
-        for key in self.annotation_layers.keys():
+        for key in self.annotation_layers:
             all_labels.extend(self.annotation_layers[key])
         return all_labels
 
@@ -429,7 +419,7 @@ class DataPoint:
     def __lt__(self, other):
         return self.start_position < other.start_position
 
-    def __len__(self):
+    def __len__(self) -> int:
         raise NotImplementedError
 
 
@@ -532,7 +522,7 @@ DT2 = typing.TypeVar("DT2", bound=DataPoint)
 
 
 class _PartOfSentence(DataPoint, ABC):
-    def __init__(self, sentence):
+    def __init__(self, sentence) -> None:
         super().__init__()
         self.sentence: Sentence = sentence
 
@@ -556,7 +546,7 @@ class _PartOfSentence(DataPoint, ABC):
             self.sentence.annotation_layers[typename].remove(label)
 
         # delete labels at object itself
-        super(_PartOfSentence, self).remove_labels(typename)
+        super().remove_labels(typename)
 
 
 class Token(_PartOfSentence):
@@ -568,11 +558,11 @@ class Token(_PartOfSentence):
     def __init__(
         self,
         text: str,
-        head_id: int = None,
+        head_id: Optional[int] = None,
         whitespace_after: int = 1,
         start_position: int = 0,
         sentence=None,
-    ):
+    ) -> None:
         super().__init__(sentence=sentence)
 
         self.form: str = text
@@ -627,10 +617,10 @@ class Token(_PartOfSentence):
     def embedding(self):
         return self.get_embedding()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return 1
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
     def add_label(self, typename: str, value: str, score: float = 1.0):
@@ -662,12 +652,12 @@ class Span(_PartOfSentence):
 
         # else make a new span
         else:
-            span = super(Span, self).__new__(self)
+            span = super().__new__(self)
             span.initialized = False
             tokens[0].sentence._known_spans[unlabeled_identifier] = span
             return span
 
-    def __init__(self, tokens: List[Token]):
+    def __init__(self, tokens: List[Token]) -> None:
         if not self.initialized:
             super().__init__(tokens[0].sentence)
             self.tokens = tokens
@@ -694,7 +684,7 @@ class Span(_PartOfSentence):
     def unlabeled_identifier(self) -> str:
         return self._make_unlabeled_identifier(self.tokens)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
     def __getitem__(self, idx: int) -> Token:
@@ -721,19 +711,19 @@ class Relation(_PartOfSentence):
 
         # else make a new relation
         else:
-            span = super(Relation, self).__new__(self)
+            span = super().__new__(self)
             span.initialized = False
             first.sentence._known_spans[unlabeled_identifier] = span
             return span
 
-    def __init__(self, first: Span, second: Span):
+    def __init__(self, first: Span, second: Span) -> None:
         if not self.initialized:
             super().__init__(sentence=first.sentence)
             self.first: Span = first
             self.second: Span = second
             self.initialized: bool = True
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
     @property
@@ -778,9 +768,9 @@ class Sentence(DataPoint):
         self,
         text: Union[str, List[str], List[Token]],
         use_tokenizer: Union[bool, Tokenizer] = True,
-        language_code: str = None,
+        language_code: Optional[str] = None,
         start_position: int = 0,
-    ):
+    ) -> None:
         """Class to hold all metadata related to a text.
 
         Metadata can be tokens, predictions, language code, ...
@@ -908,7 +898,7 @@ class Sentence(DataPoint):
         self.tokens.append(token)
 
         # register token annotations on sentence
-        for typename in token.annotation_layers.keys():
+        for typename in token.annotation_layers:
             for label in token.get_labels(typename):
                 if typename not in token.sentence.annotation_layers:
                     token.sentence.annotation_layers[typename] = [Label(token, label.value, label.score)]
@@ -927,7 +917,7 @@ class Sentence(DataPoint):
         for token in self:
             token.to(device, pin_memory)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
+    def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
         super().clear_embeddings(embedding_names)
 
         # clear token embeddings
@@ -961,7 +951,7 @@ class Sentence(DataPoint):
             right_context += sentence.tokens
         return right_context[:context_length]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.to_tagged_string()
 
     def to_tagged_string(self, main_label=None) -> str:
@@ -1042,7 +1032,7 @@ class Sentence(DataPoint):
             [t.text + t.whitespace_after * " " for t in self.tokens]
         ).strip()
 
-    def to_dict(self, tag_type: str = None):
+    def to_dict(self, tag_type: Optional[str] = None):
         labels = []
 
         if tag_type:
@@ -1078,7 +1068,7 @@ class Sentence(DataPoint):
     def __len__(self) -> int:
         return len(self.tokens)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
     @property
@@ -1196,7 +1186,7 @@ class Sentence(DataPoint):
                 previous_sentence._next_sentence = sentence
             previous_sentence = sentence
 
-    def get_labels(self, label_type: str = None):
+    def get_labels(self, label_type: Optional[str] = None):
         # if no label if specified, return all labels
         if label_type is None:
             return sorted(self.labels)
@@ -1225,7 +1215,7 @@ class Sentence(DataPoint):
 
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):
-    def __init__(self, first: DT, second: DT2):
+    def __init__(self, first: DT, second: DT2) -> None:
         super().__init__()
         self.first = first
         self.second = second
@@ -1234,7 +1224,7 @@ class DataPair(DataPoint, typing.Generic[DT, DT2]):
         self.first.to(device, pin_memory)
         self.second.to(device, pin_memory)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
+    def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
         self.first.clear_embeddings(embedding_names)
         self.second.clear_embeddings(embedding_names)
 
@@ -1242,7 +1232,7 @@ class DataPair(DataPoint, typing.Generic[DT, DT2]):
     def embedding(self):
         return torch.cat([self.first.embedding, self.second.embedding])
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.first) + len(self.second)
 
     @property
@@ -1266,7 +1256,7 @@ TextPair = DataPair[Sentence, Sentence]
 
 
 class Image(DataPoint):
-    def __init__(self, data=None, imageURL=None):
+    def __init__(self, data=None, imageURL=None) -> None:
         super().__init__()
 
         self.data = data
@@ -1277,7 +1267,7 @@ class Image(DataPoint):
     def embedding(self):
         return self.get_embedding()
 
-    def __str__(self):
+    def __str__(self) -> str:
         image_repr = self.data.size() if self.data else ""
         image_url = self.imageURL if self.imageURL else ""
 
@@ -1285,19 +1275,19 @@ class Image(DataPoint):
 
     @property
     def start_position(self) -> int:
-        pass
+        raise NotImplementedError
 
     @property
     def end_position(self) -> int:
-        pass
+        raise NotImplementedError
 
     @property
-    def text(self):
-        pass
+    def text(self) -> str:
+        raise NotImplementedError
 
     @property
-    def unlabeled_identifier(self):
-        pass
+    def unlabeled_identifier(self) -> str:
+        raise NotImplementedError
 
 
 class Corpus(typing.Generic[T_co]):
@@ -1308,7 +1298,7 @@ class Corpus(typing.Generic[T_co]):
         test: Optional[Dataset[T_co]] = None,
         name: str = "corpus",
         sample_missing_splits: Union[bool, str] = True,
-    ):
+    ) -> None:
         # set name
         self.name: str = name
 
@@ -1317,13 +1307,13 @@ class Corpus(typing.Generic[T_co]):
             raise RuntimeError("No data provided when initializing corpus object.")
 
         # sample test data from train if none is provided
-        if test is None and sample_missing_splits and train and not sample_missing_splits == "only_dev":
+        if test is None and sample_missing_splits and train and sample_missing_splits != "only_dev":
             train_length = _len_dataset(train)
             test_size: int = round(train_length / 10)
             test, train = randomly_split_into_two_datasets(train, test_size)
 
         # sample dev data from train if none is provided
-        if dev is None and sample_missing_splits and train and not sample_missing_splits == "only_test":
+        if dev is None and sample_missing_splits and train and sample_missing_splits != "only_test":
             train_length = _len_dataset(train)
             dev_size: int = round(train_length / 10)
             dev, train = randomly_split_into_two_datasets(train, dev_size)
@@ -1448,9 +1438,9 @@ class Corpus(typing.Generic[T_co]):
 
     def _get_all_tokens(self) -> List[str]:
         assert self.train
-        tokens = list(map((lambda s: s.tokens), _iter_dataset(self.train)))
+        tokens = [s.tokens for s in _iter_dataset(self.train)]
         tokens = [token for sublist in tokens for token in sublist]
-        return list(map((lambda t: t.text), tokens))
+        return [t.text for t in tokens]
 
     @staticmethod
     def _downsample_to_proportion(dataset: Dataset, proportion: float):
@@ -1458,7 +1448,7 @@ class Corpus(typing.Generic[T_co]):
         splits = randomly_split_into_two_datasets(dataset, sampled_size)
         return splits[0]
 
-    def obtain_statistics(self, label_type: str = None, pretty_print: bool = True) -> Union[dict, str]:
+    def obtain_statistics(self, label_type: Optional[str] = None, pretty_print: bool = True) -> Union[dict, str]:
         """Print statistics about the class distribution and sentence sizes.
 
         only labels of sentences are taken into account
@@ -1506,7 +1496,7 @@ class Corpus(typing.Generic[T_co]):
 
     @staticmethod
     def _get_tokens_per_sentence(sentences):
-        return list(map(lambda x: len(x.tokens), sentences))
+        return [len(x.tokens) for x in sentences]
 
     @staticmethod
     def _count_sentence_labels(sentences):
@@ -1521,7 +1511,7 @@ class Corpus(typing.Generic[T_co]):
         label_count = defaultdict(lambda: 0)
         for sent in sentences:
             for token in sent.tokens:
-                if label_type in token.annotation_layers.keys():
+                if label_type in token.annotation_layers:
                     label = token.get_label(label_type)
                     label_count[label.value] += 1
         return label_count
@@ -1588,9 +1578,8 @@ class Corpus(typing.Generic[T_co]):
             if datapoint_type == Token and len(sentence) > len(labels):
                 label_value_counter["O"] += len(sentence) - len(labels)
 
-            if not label_dictionary.multi_label:
-                if len(labels) > 1:
-                    label_dictionary.multi_label = True
+            if not label_dictionary.multi_label and len(labels) > 1:
+                label_dictionary.multi_label = True
 
         # if an unk threshold is set, UNK all label values below this threshold
         total_count = 0
@@ -1673,7 +1662,10 @@ class Corpus(typing.Generic[T_co]):
                     total_label_count += 1
                     orig_label = label.value
                     # sample randomly from a label distribution according to the probabilities defined by the noise transition matrix
-                    new_label = np.random.choice(a=list(ntm_labels), p=noise_transition_matrix[orig_label])
+                    new_label = np.random.default_rng().choice(
+                        a=list(ntm_labels),
+                        p=noise_transition_matrix[orig_label],
+                    )
                     # replace the old label with the new one
                     label.data_point.set_label(label_type, new_label)
                     # keep track of the old (clean) label using another label type category
@@ -1698,7 +1690,7 @@ class Corpus(typing.Generic[T_co]):
                     prob_dist = [other_label_p] * len(labels)
                     prob_dist[labels.index(orig_label)] = orig_label_p
                     # sample randomly from a label distribution according to the probabilities defined by the desired noise share
-                    new_label = np.random.choice(a=labels, p=prob_dist)
+                    new_label = np.random.default_rng().choice(a=labels, p=prob_dist)
                     # replace the old label with the new one
                     label.data_point.set_label(label_type, new_label)
                     # keep track of the old (clean) label using another label type category
@@ -1748,7 +1740,7 @@ class MultiCorpus(Corpus):
         task_ids: Optional[List[str]] = None,
         name: str = "multicorpus",
         **corpusargs,
-    ):
+    ) -> None:
         self.corpora: List[Corpus] = corpora
 
         ids = task_ids if task_ids else [f"Task_{i}" for i in range(len(corpora))]
@@ -1764,7 +1756,7 @@ class MultiCorpus(Corpus):
             if corpus.test:
                 test_parts.append(corpus.test)
 
-        super(MultiCorpus, self).__init__(
+        super().__init__(
             ConcatFlairDataset(train_parts, ids) if len(train_parts) > 0 else None,
             ConcatFlairDataset(dev_parts, ids) if len(dev_parts) > 0 else None,
             ConcatFlairDataset(test_parts, ids) if len(test_parts) > 0 else None,
@@ -1772,14 +1764,14 @@ class MultiCorpus(Corpus):
             **corpusargs,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         output = (
-            f"MultiCorpus: "
+            f"MultiCorpus: "  # type: ignore[arg-type]
             f"{len(self.train) if self.train else 0} train + "
             f"{len(self.dev) if self.dev else 0} dev + "
             f"{len(self.test) if self.test else 0} test sentences\n - "
         )
-        output += "\n - ".join([f"{type(corpus).__name__} {str(corpus)} - {corpus.name}" for corpus in self.corpora])
+        output += "\n - ".join([f"{type(corpus).__name__} {corpus!s} - {corpus.name}" for corpus in self.corpora])
         return output
 
 
@@ -1795,8 +1787,10 @@ class ConcatFlairDataset(Dataset):
     This class is useful to assemble different existing datasets.
 
     Args:
+    ----
         datasets (sequence): List of datasets to be concatenated
     """
+
     datasets: List[Dataset]
     cumulative_sizes: List[int]
 
@@ -1810,15 +1804,15 @@ class ConcatFlairDataset(Dataset):
         return r
 
     def __init__(self, datasets: Iterable[Dataset], ids: Iterable[str]) -> None:
-        super(ConcatFlairDataset, self).__init__()
+        super().__init__()
         self.datasets = list(datasets)
         self.ids = list(ids)
-        assert len(self.datasets) > 0, "datasets should not be an empty iterable"  # type: ignore[arg-type]
+        assert len(self.datasets) > 0, "datasets should not be an empty iterable"
         for d in self.datasets:
             assert not isinstance(d, IterableDataset), "ConcatSentenceDataset does not support IterableDataset"
         self.cumulative_sizes = self.cumsum(self.datasets)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.cumulative_sizes[-1]
 
     def __getitem__(self, idx):
@@ -1827,10 +1821,7 @@ class ConcatFlairDataset(Dataset):
                 raise ValueError("absolute value of index should not exceed dataset length")
             idx = len(self) + idx
         dataset_idx = bisect.bisect_right(self.cumulative_sizes, idx)
-        if dataset_idx == 0:
-            sample_idx = idx
-        else:
-            sample_idx = idx - self.cumulative_sizes[dataset_idx - 1]
+        sample_idx = idx if dataset_idx == 0 else idx - self.cumulative_sizes[dataset_idx - 1]
         sentence = self.datasets[dataset_idx][sample_idx]
         sentence.set_label("multitask_id", self.ids[dataset_idx])
         return sentence
@@ -1866,7 +1857,7 @@ def iob2(tags):
 def randomly_split_into_two_datasets(dataset, length_of_first):
     import random
 
-    indices = [i for i in range(len(dataset))]
+    indices = list(range(len(dataset)))
     random.shuffle(indices)
 
     first_dataset = indices[:length_of_first]
@@ -1898,13 +1889,13 @@ def get_spans_from_bio(bioes_tags: List[str], bioes_scores=None) -> List[typing.
         # does this prediction start a new span?
         starts_new_span = False
 
-        # begin and single tags start new spans
-        if bioes_tag[:2] in {"B-", "S-"}:
+        if bioes_tag[:2] in {"B-", "S-"} or (
+            in_span and previous_tag[2:] != bioes_tag[2:] and (bioes_tag[:2] == "I-" or previous_tag[2:] == "S-")
+        ):
+            # B- and S- always start new spans
+            # if the predicted class changes, I- starts a new span
+            # if the predicted class changes and S- was previous tag, start a new span
             starts_new_span = True
-        elif in_span and previous_tag[2:] != bioes_tag[2:]:  # predicted class changed
-            # If the current tag is I- or the previous tag was S-, we start a new span
-            if bioes_tag[:2] == "I-" or previous_tag[2:] == "S-":
-                starts_new_span = True
 
         # if an existing span is ended (either by reaching O or starting a new span)
         if (starts_new_span or not in_span) and len(current_span) > 0:

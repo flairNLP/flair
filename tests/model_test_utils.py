@@ -20,35 +20,35 @@ class BaseModelTest:
     training_args: Dict[str, Any] = {}
     finetune_instead_of_train: bool = False
 
-    @pytest.fixture
+    @pytest.fixture()
     def embeddings(self):
         pytest.skip("This test requires the `embeddings` fixture to be defined")
 
-    @pytest.fixture
+    @pytest.fixture()
     def corpus(self, tasks_base_path):
         pytest.skip("This test requires the `corpus` fixture to be defined")
 
-    @pytest.fixture
+    @pytest.fixture()
     def multi_class_corpus(self, tasks_base_path):
         pytest.skip("This test requires the `multi_class_corpus` fixture to be defined")
 
-    @pytest.fixture
+    @pytest.fixture()
     def multi_corpus(self, tasks_base_path):
         pytest.skip("This test requires the `multi_corpus` fixture to be defined")
 
-    @pytest.fixture
+    @pytest.fixture()
     def example_sentence(self):
-        yield Sentence("I love Berlin")
+        return Sentence("I love Berlin")
 
-    @pytest.fixture
+    @pytest.fixture()
     def train_test_sentence(self):
-        yield Sentence("Berlin is a really nice city.")
+        return Sentence("Berlin is a really nice city.")
 
-    @pytest.fixture
+    @pytest.fixture()
     def labeled_sentence(self):
         pytest.skip("This test requires the `labeled_sentence` fixture to be defined")
 
-    @pytest.fixture
+    @pytest.fixture()
     def multiclass_train_test_sentence(self):
         pytest.skip("This test requires the `multiclass_train_test_sentence` fixture to be defined")
 
@@ -60,7 +60,7 @@ class BaseModelTest:
 
     def build_model(self, embeddings, label_dict, **kwargs):
         model_args = dict(self.model_args)
-        for k in kwargs.keys():
+        for k in kwargs:
             if k in model_args:
                 del model_args[k]
         return self.model_cls(
@@ -74,13 +74,13 @@ class BaseModelTest:
     def has_embedding(self, sentence):
         return sentence.get_embedding().cpu().numpy().size > 0
 
-    @pytest.fixture
+    @pytest.fixture()
     def loaded_pretrained_model(self):
         if self.pretrained_model is None:
             pytest.skip("For this test `pretrained_model` needs to be set.")
-        yield self.model_cls.load(self.pretrained_model)
+        return self.model_cls.load(self.pretrained_model)
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_load_use_model(self, example_sentence, loaded_pretrained_model):
         loaded_pretrained_model.predict(example_sentence)
         loaded_pretrained_model.predict([example_sentence, self.empty_sentence])
@@ -90,7 +90,7 @@ class BaseModelTest:
         example_sentence.clear_embeddings()
         self.empty_sentence.clear_embeddings()
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_train_load_use_model(self, results_base_path, corpus, embeddings, example_sentence, train_test_sentence):
         flair.set_seed(123)
         label_dict = corpus.make_label_dictionary(label_type=self.train_label_type)
@@ -122,7 +122,7 @@ class BaseModelTest:
         loaded_model.predict([self.empty_sentence])
         del loaded_model
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_train_load_use_model_multi_corpus(
         self, results_base_path, multi_corpus, embeddings, example_sentence, train_test_sentence
     ):

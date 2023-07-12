@@ -18,7 +18,7 @@ log = logging.getLogger("flair")
 class CandidateGenerator:
     """Given a string, the CandidateGenerator returns possible target classes as candidates."""
 
-    def __init__(self, candidates: Union[str, Dict], backoff: bool = True):
+    def __init__(self, candidates: Union[str, Dict], backoff: bool = True) -> None:
         # internal candidate lists of generator
         self.mention_to_candidates_map: Dict = {}
 
@@ -91,7 +91,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         label_type: str = "nel",
         candidates: Optional[CandidateGenerator] = None,
         **classifierargs,
-    ):
+    ) -> None:
         """Initializes an EntityLinker.
 
         :param embeddings: embeddings used to embed the words/sentences
@@ -101,7 +101,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         the embedding of the first and the embedding of the last word.
         :param label_type: name of the label you use.
         """
-        super(EntityLinker, self).__init__(
+        super().__init__(
             embeddings=embeddings,
             label_dictionary=label_dictionary,
             final_embedding_size=embeddings.embedding_length * 2

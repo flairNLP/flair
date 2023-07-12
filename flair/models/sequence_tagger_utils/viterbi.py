@@ -16,12 +16,12 @@ STOP_TAG: str = "<STOP>"
 class ViterbiLoss(torch.nn.Module):
     """Calculates the loss for each sequence up to its length t."""
 
-    def __init__(self, tag_dictionary: Dictionary):
+    def __init__(self, tag_dictionary: Dictionary) -> None:
         """Create an instance of the Viterbi loss.
 
         :param tag_dictionary: tag_dictionary of task
         """
-        super(ViterbiLoss, self).__init__()
+        super().__init__()
         self.tag_dictionary = tag_dictionary
         self.tagset_size = len(tag_dictionary)
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
@@ -112,13 +112,11 @@ class ViterbiLoss(torch.nn.Module):
         for t in targets_per_sentence:
             t += [self.tag_dictionary.get_idx_for_item(STOP_TAG)] * (int(lengths.max().item()) - len(t))
 
-        matrix_indices = list(
-            map(
-                lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)]
-                + [s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)],
-                targets_per_sentence,
-            )
-        )
+        matrix_indices = [
+            [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)]
+            + [s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)]
+            for s in targets_per_sentence
+        ]
 
         return targets_per_sentence, matrix_indices
 
@@ -126,7 +124,7 @@ class ViterbiLoss(torch.nn.Module):
 class ViterbiDecoder:
     """Decodes a given sequence using the Viterbi algorithm."""
 
-    def __init__(self, tag_dictionary: Dictionary):
+    def __init__(self, tag_dictionary: Dictionary) -> None:
         """Initialize the Viterbi Decoder.
 
         :param tag_dictionary: Dictionary of tags for sequence labeling task

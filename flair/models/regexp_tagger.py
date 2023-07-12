@@ -42,7 +42,7 @@ class TokenCollection:
 
 
 class RegexpTagger:
-    def __init__(self, mapping: Union[List[Tuple[str, str]], Tuple[str, str]]):
+    def __init__(self, mapping: Union[List[Tuple[str, str]], Tuple[str, str]]) -> None:
         r"""This tagger is capable of tagging sentence objects with given regexp -> label mappings.
 
         I.e: The tuple (r'(["\'])(?:(?=(\\?))\2.)*?\1', 'QUOTE') maps every match of the regexp to

@@ -9,21 +9,21 @@ from tests.model_test_utils import BaseModelTest
 class TestWordTagger(BaseModelTest):
     model_cls = TokenClassifier
     train_label_type = "pos"
-    training_args = dict(
-        max_epochs=2,
-        learning_rate=0.1,
-        mini_batch_size=2,
-    )
+    training_args = {
+        "max_epochs": 2,
+        "learning_rate": 0.1,
+        "mini_batch_size": 2,
+    }
 
     def has_embedding(self, sentence):
         for token in sentence:
             if token.get_embedding().cpu().numpy().size == 0:
                 return False
-        return
+        return None
 
     def build_model(self, embeddings, label_dict, **kwargs):
         model_args = dict(self.model_args)
-        for k in kwargs.keys():
+        for k in kwargs:
             if k in model_args:
                 del model_args[k]
         return self.model_cls(
@@ -34,10 +34,10 @@ class TestWordTagger(BaseModelTest):
             **kwargs,
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def corpus(self, tasks_base_path):
-        yield flair.datasets.UD_ENGLISH(tasks_base_path)
+        return flair.datasets.UD_ENGLISH(tasks_base_path)
 
-    @pytest.fixture
+    @pytest.fixture()
     def embeddings(self):
-        yield TransformerWordEmbeddings("distilbert-base-uncased")
+        return TransformerWordEmbeddings("distilbert-base-uncased")

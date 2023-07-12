@@ -35,7 +35,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
     @abstractmethod
     def label_type(self):
         """Each model predicts labels of a certain type."""
-        # TODO: can we find a better name for this?
         raise NotImplementedError
 
     @abstractmethod
@@ -51,7 +50,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         self,
         data_points: Union[List[DT], Dataset],
         gold_label_type: str,
-        out_path: Union[str, Path] = None,
+        out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
@@ -187,7 +186,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             param_out += f"-- Flair version {self.model_card['flair_version']}\n"
             param_out += f"-- PyTorch version {self.model_card['pytorch_version']}\n"
             if "transformers_version" in self.model_card:
-                param_out += "-- Transformers version " f"{self.model_card['transformers_version']}\n"
+                param_out += f"-- Transformers version {self.model_card['transformers_version']}\n"
             param_out += "------------------------------------\n"
 
             param_out += "------- Training Parameters: -------\n"
@@ -224,7 +223,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         self,
         data_points: Union[List[DT], Dataset],
         gold_label_type: str,
-        out_path: Union[str, Path] = None,
+        out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
@@ -393,7 +392,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         counter = Counter(itertools.chain.from_iterable(all_true_values.values()))
         counter.update(list(itertools.chain.from_iterable(all_predicted_values.values())))
 
-        for label_name, count in counter.most_common():
+        for label_name, _count in counter.most_common():
             if label_name == "O":
                 continue
             target_names.append(label_name)
@@ -557,12 +556,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         word_dropout: float = 0.0,
         multi_label: bool = False,
         multi_label_threshold: float = 0.5,
-        loss_weights: Dict[str, float] = None,
+        loss_weights: Optional[Dict[str, float]] = None,
         decoder: Optional[torch.nn.Module] = None,
         inverse_model: bool = False,
         train_on_gold_pairs_only: bool = False,
         should_embed_sentence: bool = True,
-    ):
+    ) -> None:
         super().__init__()
 
         # set the embeddings
@@ -599,7 +598,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             n_classes = len(self.label_dictionary)
             weight_list = [1.0 for i in range(n_classes)]
             for i, tag in enumerate(self.label_dictionary.get_items()):
-                if tag in loss_weights.keys():
+                if tag in loss_weights:
                     weight_list[i] = loss_weights[tag]
             self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(weight_list).to(flair.device)
         else:
@@ -624,11 +623,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         will be removed.
         Return true if the data point should be kept and false if it should be removed.
         """
-        return True if len(data_point) > 0 else False
+        return len(data_point) > 0
 
     @abstractmethod
     def _get_embedding_for_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def _get_data_points_from_sentence(self, sentence: DT) -> List[DT2]:
@@ -896,6 +895,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                         "Evaluation loss is computed without them."
                     )
                 return overall_loss, label_count
+            return None
 
     def _post_process_batch_after_prediction(self, batch, label_name):
         pass
@@ -907,7 +907,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
         return label_threshold
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             super(flair.nn.Model, self).__str__().rstrip(")")
             + f"  (weights): {self.weight_dict}\n"

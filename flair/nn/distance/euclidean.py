@@ -19,14 +19,13 @@ Source: https://github.com/asappresearch/dynamic-classification/blob/55beb5a4840
 
 
 import torch
-import torch.nn as nn
-from torch import Tensor
+from torch import Tensor, nn
 
 
 class EuclideanDistance(nn.Module):
     """Implement a EuclideanDistance object."""
 
-    def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:  # type: ignore
+    def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:
         """Returns the squared euclidean distance between each element in mat_1 and each element in mat_2.
 
         Parameters
@@ -36,7 +35,7 @@ class EuclideanDistance(nn.Module):
         mat_2: torch.Tensor
             matrix of shape (n_2, n_features)
 
-        Returns
+        Returns:
         -------
         dist: torch.Tensor
             distance matrix of shape (n_1, n_2)
@@ -50,7 +49,7 @@ class EuclideanDistance(nn.Module):
 class EuclideanMean(nn.Module):
     """Implement a EuclideanMean object."""
 
-    def forward(self, data: Tensor) -> Tensor:  # type: ignore
+    def forward(self, data: Tensor) -> Tensor:
         """Performs a forward pass through the network.
 
         Parameters
@@ -58,7 +57,7 @@ class EuclideanMean(nn.Module):
         data : torch.Tensor
             The input data, as a float tensor
 
-        Returns
+        Returns:
         -------
         torch.Tensor
             The encoded output, as a float tensor

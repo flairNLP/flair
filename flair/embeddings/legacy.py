@@ -2,7 +2,7 @@ import logging
 import re
 from abc import abstractmethod
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 from deprecated import deprecated
@@ -43,15 +43,16 @@ log = logging.getLogger("flair")
 class ELMoEmbeddings(TokenEmbeddings):
     """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018.
     ELMo word vectors can be constructed by combining layers in different ways.
-    Default is to concatene the top 3 layers in the LM."""
+    Default is to concatene the top 3 layers in the LM.
+    """
 
     def __init__(
         self,
         model: str = "original",
-        options_file: str = None,
-        weight_file: str = None,
+        options_file: Optional[str] = None,
+        weight_file: Optional[str] = None,
         embedding_mode: str = "all",
-    ):
+    ) -> None:
         super().__init__()
 
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -160,9 +161,9 @@ class ELMoEmbeddings(TokenEmbeddings):
         return sentences
 
     def extra_repr(self):
-        return "model={}".format(self.name)
+        return f"model={self.name}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     def __setstate__(self, state):
@@ -192,10 +193,9 @@ class CharLMEmbeddings(TokenEmbeddings):
         model: str,
         detach: bool = True,
         use_cache: bool = False,
-        cache_directory: Path = None,
-    ):
-        """
-        initializes contextual string embeddings using a character-level language model.
+        cache_directory: Optional[Path] = None,
+    ) -> None:
+        """Initializes contextual string embeddings using a character-level language model.
         :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
                 'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward'
                 depending on which character language model is desired.
@@ -457,10 +457,7 @@ class CharLMEmbeddings(TokenEmbeddings):
             for token in sentence.tokens:
                 offset_forward += len(token.text)
 
-                if self.is_forward_lm:
-                    offset = offset_forward
-                else:
-                    offset = offset_backward
+                offset = offset_forward if self.is_forward_lm else offset_backward
 
                 embedding = all_hidden_states_in_lm[offset, i, :]
 
@@ -480,7 +477,7 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         return sentences
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -495,12 +492,12 @@ class XLNetEmbeddings(TokenEmbeddings):
         layers: str = "1",
         pooling_operation: str = "first_last",
         use_scalar_mix: bool = False,
-    ):
+    ) -> None:
         """XLNet embeddings, as proposed in Yang et al., 2019.
         :param pretrained_model_name_or_path: name or path of XLNet model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s).
         """
         super().__init__()
 
@@ -542,9 +539,9 @@ class XLNetEmbeddings(TokenEmbeddings):
         return sentences
 
     def extra_repr(self):
-        return "model={}".format(self.name)
+        return f"model={self.name}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -559,13 +556,12 @@ class XLMEmbeddings(TokenEmbeddings):
         layers: str = "1",
         pooling_operation: str = "first_last",
         use_scalar_mix: bool = False,
-    ):
-        """
-        XLM embeddings, as proposed in Guillaume et al., 2019.
+    ) -> None:
+        """XLM embeddings, as proposed in Guillaume et al., 2019.
         :param pretrained_model_name_or_path: name or path of XLM model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s).
         """
         super().__init__()
 
@@ -607,9 +603,9 @@ class XLMEmbeddings(TokenEmbeddings):
         return sentences
 
     def extra_repr(self):
-        return "model={}".format(self.name)
+        return f"model={self.name}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -624,12 +620,12 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
         layers: str = "1",
         pooling_operation: str = "first_last",
         use_scalar_mix: bool = False,
-    ):
+    ) -> None:
         """OpenAI GPT embeddings, as proposed in Radford et al. 2018.
         :param pretrained_model_name_or_path: name or path of OpenAI GPT model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s).
         """
         super().__init__()
 
@@ -669,9 +665,9 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
         return sentences
 
     def extra_repr(self):
-        return "model={}".format(self.name)
+        return f"model={self.name}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -686,12 +682,12 @@ class OpenAIGPT2Embeddings(TokenEmbeddings):
         layers: str = "1",
         pooling_operation: str = "first_last",
         use_scalar_mix: bool = False,
-    ):
+    ) -> None:
         """OpenAI GPT-2 embeddings, as proposed in Radford et al. 2019.
         :param pretrained_model_name_or_path: name or path of OpenAI GPT-2 model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s).
         """
         super().__init__()
 
@@ -744,12 +740,12 @@ class RoBERTaEmbeddings(TokenEmbeddings):
         layers: str = "-1",
         pooling_operation: str = "first",
         use_scalar_mix: bool = False,
-    ):
+    ) -> None:
         """RoBERTa, as proposed by Liu et al. 2019.
         :param pretrained_model_name_or_path: name or path of RoBERTa model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s).
         """
         super().__init__()
 
@@ -802,12 +798,12 @@ class CamembertEmbeddings(TokenEmbeddings):
         layers: str = "-1",
         pooling_operation: str = "first",
         use_scalar_mix: bool = False,
-    ):
+    ) -> None:
         """CamemBERT, a Tasty French Language Model, as proposed by Martin et al. 2019.
         :param pretrained_model_name_or_path: name or path of RoBERTa model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s).
         """
         super().__init__()
 
@@ -874,12 +870,12 @@ class XLMRobertaEmbeddings(TokenEmbeddings):
         layers: str = "-1",
         pooling_operation: str = "first",
         use_scalar_mix: bool = False,
-    ):
+    ) -> None:
         """XLM-RoBERTa as proposed by Conneau et al. 2019.
         :param pretrained_model_name_or_path: name or path of XLM-R model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s).
         """
         super().__init__()
 
@@ -940,15 +936,14 @@ def _extract_embeddings(
     subword_end_idx: int,
     use_scalar_mix: bool = False,
 ) -> List[torch.FloatTensor]:
-    """
-    Extracts subword embeddings from specified layers from hidden states.
+    """Extracts subword embeddings from specified layers from hidden states.
     :param hidden_states: list of hidden states from model
     :param layers: list of layers
     :param pooling_operation: pooling operation for subword embeddings (supported: first, last, first_last and mean)
     :param subword_start_idx: defines start index for subword
     :param subword_end_idx: defines end index for subword
     :param use_scalar_mix: determines, if scalar mix should be used
-    :return: list of extracted subword embeddings
+    :return: list of extracted subword embeddings.
     """
     subtoken_embeddings: List[torch.FloatTensor] = []
 
@@ -1041,11 +1036,10 @@ def _get_transformer_sentence_embeddings(
     layers: List[int],
     pooling_operation: str,
     use_scalar_mix: bool,
-    bos_token: str = None,
-    eos_token: str = None,
+    bos_token: Optional[str] = None,
+    eos_token: Optional[str] = None,
 ) -> List[Sentence]:
-    """
-    Builds sentence embeddings for Transformer-based architectures.
+    """Builds sentence embeddings for Transformer-based architectures.
     :param sentences: input sentences
     :param tokenizer: tokenization object
     :param model: model object
@@ -1055,7 +1049,7 @@ def _get_transformer_sentence_embeddings(
     :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
     :param bos_token: defines begin of sentence token (used for left padding)
     :param eos_token: defines end of sentence token (used for right padding)
-    :return: list of sentences (each token of a sentence is now embedded)
+    :return: list of sentences (each token of a sentence is now embedded).
     """
     with torch.no_grad():
         for sentence in sentences:
@@ -1077,11 +1071,11 @@ def _get_transformer_sentence_embeddings(
             offset = 0
 
             if bos_token:
-                subwords = [bos_token] + subwords
+                subwords = [bos_token, *subwords]
                 offset = 1
 
             if eos_token:
-                subwords = subwords + [eos_token]
+                subwords = [*subwords, eos_token]
 
             indexed_tokens = tokenizer.convert_tokens_to_ids(subwords)
             tokens_tensor = torch.tensor([indexed_tokens])
@@ -1120,14 +1114,13 @@ class BertEmbeddings(TokenEmbeddings):
         layers: str = "-1,-2,-3,-4",
         pooling_operation: str = "first",
         use_scalar_mix: bool = False,
-    ):
-        """
-        Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
+    ) -> None:
+        """Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
         :param bert_model_or_path: name of BERT model ('') or directory path containing custom model, configuration file
         and vocab file (names of three files should be - config.json, pytorch_model.bin/model.chkpt, vocab.txt)
         :param layers: string indicating which layers to take for embedding
         :param pooling_operation: how to get from token piece embeddings to token embedding. Either pool them and take
-        the average ('mean') or use first word piece embedding as token embedding ('first)
+        the average ('mean') or use first word piece embedding as token embedding ('first).
         """
         super().__init__()
 
@@ -1163,8 +1156,8 @@ class BertEmbeddings(TokenEmbeddings):
         self.name = str(bert_model_or_path)
         self.static_embeddings = True
 
-    class BertInputFeatures(object):
-        """Private helper class for holding BERT-formatted features"""
+    class BertInputFeatures:
+        """Private helper class for holding BERT-formatted features."""
 
         def __init__(
             self,
@@ -1174,7 +1167,7 @@ class BertEmbeddings(TokenEmbeddings):
             input_mask,
             input_type_ids,
             token_subtoken_count,
-        ):
+        ) -> None:
             self.unique_id = unique_id
             self.tokens = tokens
             self.input_ids = input_ids
@@ -1234,8 +1227,8 @@ class BertEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         """Add embeddings to all words in a list of sentences. If embeddings are already added,
-        updates only if embeddings are non-static."""
-
+        updates only if embeddings are non-static.
+        """
         # first, find longest sentence in batch
         longest_sentence_in_batch: int = len(
             max(
@@ -1311,7 +1304,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
         version="0.3.1",
         reason="The functionality of this class is moved to 'DocumentPoolEmbeddings'",
     )
-    def __init__(self, token_embeddings: List[TokenEmbeddings]):
+    def __init__(self, token_embeddings: List[TokenEmbeddings]) -> None:
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -1328,8 +1321,8 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
     def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
-        only if embeddings are non-static."""
-
+        only if embeddings are non-static.
+        """
         everything_embedded: bool = True
 
         # if only one sentence is passed, convert to list of sentence
@@ -1369,12 +1362,12 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         hidden_size=128,
         rnn_layers=1,
         reproject_words: bool = True,
-        reproject_words_dimension: int = None,
+        reproject_words_dimension: Optional[int] = None,
         bidirectional: bool = False,
         dropout: float = 0.5,
         word_dropout: float = 0.0,
         locked_dropout: float = 0.0,
-    ):
+    ) -> None:
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
         :param hidden_size: the number of hidden states in the lstm
@@ -1386,7 +1379,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
         :param dropout: the dropout value to be used
         :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
-        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
+        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used.
         """
         super().__init__()
 
@@ -1437,8 +1430,8 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
-        only if embeddings are non-static."""
-
+        only if embeddings are non-static.
+        """
         if type(sentences) is Sentence:
             sentences = [sentences]
 
@@ -1455,16 +1448,16 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         lengths: List[int] = []
 
         # go through each sentence in batch
-        for i, sentence in enumerate(sentences):
+        for _i, sentence in enumerate(sentences):
             lengths.append(len(sentence.tokens))
 
             word_embeddings = []
 
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+            for token, _token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
                 word_embeddings.append(token.get_embedding().unsqueeze(0))
 
             # PADDING: pad shorter sentences out
-            for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
+            for _add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
                 word_embeddings.append(
                     torch.zeros(self.length_of_all_token_embeddings, dtype=torch.float).unsqueeze(0).to(flair.device)
                 )
@@ -1528,7 +1521,7 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
         version="0.4.2",
         reason="Not possible to load or save ELMo Transformer models. @stefan-it is working on it.",
     )
-    def __init__(self, model_file: str):
+    def __init__(self, model_file: str) -> None:
         super().__init__()
 
         try:
@@ -1593,7 +1586,7 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
         return sentences
 
     def extra_repr(self):
-        return "model={}".format(self.name)
+        return f"model={self.name}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name

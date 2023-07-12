@@ -1,13 +1,14 @@
+from pathlib import Path
+
 from setuptools import find_packages, setup
 
-with open("requirements.txt") as f:
-    required = f.read().splitlines()
+required = Path("requirements.txt").read_text(encoding="utf-8").split("\n")
 
 setup(
     name="flair",
     version="0.12.2",
     description="A very simple framework for state-of-the-art NLP",
-    long_description=open("README.md", encoding="utf-8").read(),
+    long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
     author="Alan Akbik",
     author_email="alan.akbik@gmail.com",

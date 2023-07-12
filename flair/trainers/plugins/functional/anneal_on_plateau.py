@@ -19,7 +19,7 @@ class AnnealingPlugin(TrainerPlugin):
         patience,
         initial_extra_patience,
         anneal_with_restarts,
-    ):
+    ) -> None:
         super().__init__()
 
         # path to store the model
@@ -111,7 +111,7 @@ class AnnealingPlugin(TrainerPlugin):
             log.info("resetting to best model")
             self.model.load_state_dict(self.model.load(self.base_path / "best-model.pt").state_dict())
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"AnnealOnPlateau | "
             f"patience: '{self.patience}', "

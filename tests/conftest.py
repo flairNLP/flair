@@ -16,7 +16,7 @@ def tasks_base_path(resources_path):
     return resources_path / "tasks"
 
 
-@pytest.fixture
+@pytest.fixture()
 def results_base_path(resources_path):
     path = resources_path / "results"
     try:

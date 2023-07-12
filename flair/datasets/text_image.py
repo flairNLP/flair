@@ -17,7 +17,7 @@ log = logging.getLogger("flair")
 
 
 class FeideggerCorpus(Corpus):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         dataset = "feidegger"
 
         # cache Feidegger config file
@@ -25,7 +25,8 @@ class FeideggerCorpus(Corpus):
         json_local_path = cached_path(json_link, Path("datasets") / dataset)
 
         # cache Feidegger images
-        dataset_info = json.load(open(json_local_path, "r"))
+        with json_local_path.open(encoding="utf-8") as fin:
+            dataset_info = json.load(fin)
         images_cache_folder = os.path.join(os.path.dirname(json_local_path), "images")
         if not os.path.isdir(images_cache_folder):
             os.mkdir(images_cache_folder)
@@ -39,21 +40,21 @@ class FeideggerCorpus(Corpus):
 
         feidegger_dataset: Dataset = FeideggerDataset(dataset_info, **kwargs)
 
-        train_indices = list(np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0])
+        train_indices = list(np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0])  # type: ignore[attr-defined]
         train = torch.utils.data.dataset.Subset(feidegger_dataset, train_indices)
 
-        dev_indices = list(np.where(np.in1d(feidegger_dataset.split, [8]))[0])
+        dev_indices = list(np.where(np.in1d(feidegger_dataset.split, [8]))[0])  # type: ignore[attr-defined]
         dev = torch.utils.data.dataset.Subset(feidegger_dataset, dev_indices)
 
-        test_indices = list(np.where(np.in1d(feidegger_dataset.split, [9]))[0])
+        test_indices = list(np.where(np.in1d(feidegger_dataset.split, [9]))[0])  # type: ignore[attr-defined]
         test = torch.utils.data.dataset.Subset(feidegger_dataset, test_indices)
 
-        super(FeideggerCorpus, self).__init__(train, dev, test, name="feidegger")
+        super().__init__(train, dev, test, name="feidegger")
 
 
 class FeideggerDataset(FlairDataset):
-    def __init__(self, dataset_info, in_memory: bool = True, **kwargs):
-        super(FeideggerDataset, self).__init__()
+    def __init__(self, dataset_info, **kwargs) -> None:
+        super().__init__()
 
         self.data_points: List[DataPair] = []
         self.split: List[int] = []
@@ -72,8 +73,11 @@ class FeideggerDataset(FlairDataset):
                 self.data_points.append(DataPair(Sentence(preprocessor(caption), use_tokenizer=True), image))
                 self.split.append(int(image_info["split"]))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data_points)
 
     def __getitem__(self, index: int = 0) -> DataPair:
         return self.data_points[index]
+
+    def is_in_memory(self) -> bool:
+        return True

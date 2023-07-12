@@ -17,7 +17,7 @@ log = logging.getLogger("flair")
 class Lemmatizer(flair.nn.Classifier[Sentence]):
     def __init__(
         self,
-        embeddings: flair.embeddings.TokenEmbeddings = None,
+        embeddings: Optional[flair.embeddings.TokenEmbeddings] = None,
         label_type: str = "lemma",
         rnn_input_size: int = 50,
         rnn_hidden_size: int = 256,
@@ -31,7 +31,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         start_symbol_for_encoding: bool = True,
         end_symbol_for_encoding: bool = True,
         bidirectional_encoding: bool = True,
-    ):
+    ) -> None:
         """Initializes a Lemmatizer model.
 
         The model consists of a decoder and an encoder. The encoder is either a RNN-cell (torch.nn.GRU)
@@ -173,10 +173,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         c = int(end_symbol) + int(start_symbol)
 
         max_length = max(len(token) for token in tokens) + c
-        if not seq_length:
-            sequence_length = max_length
-        else:
-            sequence_length = max(seq_length, max_length)
+        sequence_length = max_length if not seq_length else max(seq_length, max_length)
 
         # initialize with dummy symbols
         tensor = self.dummy_index * torch.ones(len(tokens), sequence_length, dtype=torch.long).to(flair.device)
@@ -240,9 +237,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         output_vectors = self.character_decoder(output)
         return output_vectors, hidden
 
-    def _prepare_tensors(  # type: ignore[override]
-        self, sentences: List[Sentence]
-    ) -> Tuple[Optional[torch.Tensor], ...]:
+    def _prepare_tensors(self, sentences: List[Sentence]) -> Tuple[Optional[torch.Tensor], ...]:
         # get all tokens
         tokens = [token for sentence in sentences for token in sentence]
 
@@ -280,7 +275,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
         return encoder_input_indices, lengths, token_embedding_hidden
 
-    def forward(  # type: ignore[override]
+    def forward(
         self,
         encoder_input_indices: Optional[torch.Tensor],
         lengths: Optional[torch.Tensor],
@@ -472,7 +467,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                     # predictions
                     predicted: List[List[int]] = [[] for _ in range(number_tokens)]
 
-                    for decode_step in range(max_length):
+                    for _decode_step in range(max_length):
                         # decode next character
                         output_vectors, hidden = self.decode(input_indices, hidden, all_encoder_outputs)
 
@@ -532,7 +527,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                         else None
                     )
 
-                    for j in range(1, max_length):
+                    for _j in range(1, max_length):
                         output_vectors, hidden_states_beam = self.decode(
                             leading_indices, hidden_states_beam, batched_encoding_output
                         )
@@ -651,6 +646,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
             if return_loss:
                 return overall_loss, number_tokens_in_total
+            return None
 
     def _get_state_dict(self):
         model_state = {

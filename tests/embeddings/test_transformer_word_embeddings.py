@@ -16,18 +16,18 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
     embedding_cls = TransformerWordEmbeddings
     is_token_embedding = True
     is_document_embedding = False
-    default_args = dict(model="distilbert-base-uncased", allow_long_sentences=False)
+    default_args = {"model": "distilbert-base-uncased", "allow_long_sentences": False}
     valid_args = [
-        dict(layers="-1,-2,-3,-4", layer_mean=False),
-        dict(layers="all", layer_mean=True),
-        dict(layers="all", layer_mean=False),
-        dict(layers="all", layer_mean=True, subtoken_pooling="mean"),
+        {"layers": "-1,-2,-3,-4", "layer_mean": False},
+        {"layers": "all", "layer_mean": True},
+        {"layers": "all", "layer_mean": False},
+        {"layers": "all", "layer_mean": True, "subtoken_pooling": "mean"},
     ]
 
     name_field = "embeddings"
     invalid_names = ["other", "not/existing/path/to/embeddings"]
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_transformer_jit_embeddings(self, results_base_path):
         base_embeddings = TransformerWordEmbeddings(
             "distilbert-base-uncased", layers="-1,-2,-3,-4", layer_mean=False, allow_long_sentences=True
@@ -35,7 +35,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         sentence: Sentence = Sentence("I love Berlin, but Vienna is where my hearth is.")
 
         class JitWrapper(torch.nn.Module):
-            def __init__(self, embedding: TransformerWordEmbeddings):
+            def __init__(self, embedding: TransformerWordEmbeddings) -> None:
                 super().__init__()
                 self.embedding = embedding
 
@@ -140,7 +140,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
         assert " ".join([token.text for token in expanded]) == "I am here ."
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_layoutlm_embeddings(self):
         sentence = Sentence(["I", "love", "Berlin"])
         sentence[0].add_metadata("bbox", BoundingBox(0, 0, 10, 10))
@@ -150,7 +150,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         emb.eval()
         emb.embed(sentence)
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     @pytest.mark.skipif(
         condition=not is_detectron2_available(), reason="layoutlmV2 requires detectron2 to be installed manually."
     )
@@ -168,7 +168,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         emb.eval()
         emb.embed(sentence)
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_layoutlmv3_embeddings(self, tasks_base_path):
         with Image.open(tasks_base_path / "example_images" / "i_love_berlin.png") as img:
             img.load()
@@ -183,7 +183,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         emb.eval()
         emb.embed(sentence)
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_layoutlmv3_embeddings_with_long_context(self, tasks_base_path):
         with Image.open(tasks_base_path / "example_images" / "i_love_berlin.png") as img:
             img.load()
@@ -199,7 +199,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         emb.eval()
         emb.embed(sentence)
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_ocr_embeddings_fails_when_no_bbox(self):
         sentence = Sentence(["I", "love", "Berlin"])
         emb = TransformerWordEmbeddings("microsoft/layoutlm-base-uncased", layers="-1,-2,-3,-4", layer_mean=True)
@@ -207,7 +207,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         with pytest.raises(ValueError):
             emb.embed(sentence)
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_layoutlm_embeddings_with_context_warns_user(self):
         sentence = Sentence(["I", "love", "Berlin"])
         sentence[0].add_metadata("bbox", BoundingBox(0, 0, 10, 10))
@@ -218,7 +218,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         assert len(record) == 1
         assert "microsoft/layoutlm" in record[0].message.args[0]
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_layoutlmv3_without_image_embeddings_fails(self):
         sentence = Sentence(["I", "love", "Berlin"])
         sentence[0].add_metadata("bbox", BoundingBox(0, 0, 10, 10))

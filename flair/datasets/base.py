@@ -1,7 +1,7 @@
 import logging
 from abc import abstractmethod
 from pathlib import Path
-from typing import Generic, List, Union
+from typing import Generic, List, Optional, Union
 
 import torch.utils.data.dataloader
 from deprecated import deprecated
@@ -23,8 +23,8 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         drop_last=False,
         timeout=0,
         worker_init_fn=None,
-    ):
-        super(DataLoader, self).__init__(
+    ) -> None:
+        super().__init__(
             dataset,
             batch_size=batch_size,
             shuffle=shuffle,
@@ -41,7 +41,7 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
 class FlairDatapointDataset(FlairDataset, Generic[DT]):
     """A simple Dataset object to wrap a List of Datapoints, for example Sentences."""
 
-    def __init__(self, datapoints: Union[DT, List[DT]]):
+    def __init__(self, datapoints: Union[DT, List[DT]]) -> None:
         """Instantiate FlairDatapointDataset.
 
         :param sentences: DT or List of DT that make up FlairDatapointDataset
@@ -54,7 +54,7 @@ class FlairDatapointDataset(FlairDataset, Generic[DT]):
     def is_in_memory(self) -> bool:
         return True
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.datapoints)
 
     def __getitem__(self, index: int = 0) -> DT:
@@ -63,7 +63,7 @@ class FlairDatapointDataset(FlairDataset, Generic[DT]):
 
 class SentenceDataset(FlairDatapointDataset):
     @deprecated(version="0.11", reason="The 'SentenceDataset' class was renamed to 'FlairDatapointDataset'")
-    def __init__(self, sentences: Union[Sentence, List[Sentence]]):
+    def __init__(self, sentences: Union[Sentence, List[Sentence]]) -> None:
         super().__init__(sentences)
 
 
@@ -74,7 +74,7 @@ class StringDataset(FlairDataset):
         self,
         texts: Union[str, List[str]],
         use_tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
-    ):
+    ) -> None:
         """Instantiate StringDataset.
 
         :param texts: a string or List of string that make up StringDataset
@@ -93,7 +93,7 @@ class StringDataset(FlairDataset):
     def is_in_memory(self) -> bool:
         return True
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.texts)
 
     def __getitem__(self, index: int = 0) -> Sentence:
@@ -110,13 +110,13 @@ class MongoDataset(FlairDataset):
         database: str,
         collection: str,
         text_field: str,
-        categories_field: List[str] = None,
+        categories_field: Optional[List[str]] = None,
         max_tokens_per_doc: int = -1,
         max_chars_per_doc: int = -1,
         tokenizer: Tokenizer = SegtokTokenizer(),
         in_memory: bool = True,
         tag_type: str = "class",
-    ):
+    ) -> None:
         """Reads Mongo collections.
 
         Each collection should contain one document/text per item.
@@ -212,7 +212,7 @@ class MongoDataset(FlairDataset):
     def is_in_memory(self) -> bool:
         return self.in_memory
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.total_sentence_count
 
     def __getitem__(self, index: int = 0) -> Sentence:
@@ -265,9 +265,9 @@ def find_train_dev_test_files(data_folder, dev_file, test_file, train_file, auto
                 if "test" in file_name:
                     test_file = file
 
-    log.info("Reading data from {}".format(data_folder))
-    log.info("Train: {}".format(train_file))
-    log.info("Dev: {}".format(dev_file))
-    log.info("Test: {}".format(test_file))
+    log.info(f"Reading data from {data_folder}")
+    log.info(f"Train: {train_file}")
+    log.info(f"Dev: {dev_file}")
+    log.info(f"Test: {test_file}")
 
     return dev_file, test_file, train_file

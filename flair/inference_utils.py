@@ -61,7 +61,7 @@ class WordEmbeddingsStore:
     >>> print(sentence.get_spans('ner'))
     """
 
-    def __init__(self, embedding: WordEmbeddings, backend="sqlite", verbose=True):
+    def __init__(self, embedding: WordEmbeddings, backend="sqlite", verbose=True) -> None:
         """Instantiates the WordEmbeddingsStore.
 
         :param embedding: Flair WordEmbeddings instance.
@@ -75,7 +75,7 @@ class WordEmbeddingsStore:
         self.name = embedding.name
         self.store_path: Path = WordEmbeddingsStore._get_store_path(embedding, backend)
         if verbose:
-            logger.info(f"store filename: {str(self.store_path)}")
+            logger.info(f"store filename: {self.store_path!s}")
         self.backend: Union[WordEmbeddings, WordEmbeddingsStoreBackend]
         if backend == "sqlite":
             self.backend = SqliteWordEmbeddingsStoreBackend(embedding, verbose)
@@ -143,7 +143,7 @@ class WordEmbeddingsStore:
         """Deletes the db versions of all word embeddings."""
         for embedding in WordEmbeddingsStore._word_embeddings(model):
             store_path: Path = WordEmbeddingsStore._get_store_path(embedding)
-            logger.info(f"delete store: {str(store_path)}")
+            logger.info(f"delete store: {store_path!s}")
             if store_path.is_file():
                 store_path.unlink()
             elif store_path.is_dir():
@@ -151,7 +151,7 @@ class WordEmbeddingsStore:
 
 
 class WordEmbeddingsStoreBackend:
-    def __init__(self, embedding, backend, verbose=True):
+    def __init__(self, embedding, backend, verbose=True) -> None:
         # get db filename from embedding name
         self.name = embedding.name
         self.store_path: Path = WordEmbeddingsStore._get_store_path(embedding, backend)
@@ -165,7 +165,7 @@ class WordEmbeddingsStoreBackend:
 
 
 class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
-    def __init__(self, embedding, verbose):
+    def __init__(self, embedding, verbose) -> None:
         super().__init__(embedding, "sqlite", verbose)
         # if embedding database already exists
         if self.store_path.exists() and self.store_path.is_file():
@@ -177,7 +177,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                 self.k = len(result[0]) - 1
                 return
             except sqlite3.Error as err:
-                logger.exception(f"Fail to open sqlite database {str(self.store_path)}: {str(err)}")
+                logger.exception(f"Fail to open sqlite database {self.store_path!s}: {err!s}")
         # otherwise, push embedding to database
         if hasattr(embedding, "precomputed_word_embeddings"):
             self.db = sqlite3.connect(str(self.store_path))
@@ -187,7 +187,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
             self.db.execute(
                 f"CREATE TABLE embedding(word text,{','.join('v' + str(i) + ' float' for i in range(self.k))});"
             )
-            vectors_it = ([word] + pwe.get_vector(word).tolist() for word in pwe.vocab.keys())
+            vectors_it = ([word, *pwe.get_vector(word).tolist()] for word in pwe.vocab)
             if verbose:
                 logger.info("load vectors to store")
             self.db.executemany(
@@ -213,7 +213,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
 
 
 class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
-    def __init__(self, embedding, verbose):
+    def __init__(self, embedding, verbose) -> None:
         super().__init__(embedding, "lmdb", verbose)
         try:
             import lmdb
@@ -232,14 +232,14 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                         # we need to set self.k
                         with self.env.begin() as txn:
                             cursor = txn.cursor()
-                            for key, value in cursor:
+                            for _key, value in cursor:
                                 vector = pickle.loads(value)
                                 self.k = vector.shape[0]
                                 break
                             cursor.close()
                         return
                 except lmdb.Error as err:
-                    logger.exception(f"Fail to open lmdb database {str(self.store_path)}: {str(err)}")
+                    logger.exception(f"Fail to open lmdb database {self.store_path!s}: {err!s}")
             # create and load the database in write mode
             if hasattr(embedding, "precomputed_word_embeddings"):
                 pwe = embedding.precomputed_word_embeddings

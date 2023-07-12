@@ -50,7 +50,7 @@ class MultiFileJsonlCorpus(Corpus):
         label_column_name: str = "label",
         label_type: str = "ner",
         **corpusargs,
-    ):
+    ) -> None:
         """Instantiates a MuliFileJsonlCorpus as, e.g., created with doccanos JSONL export.
 
         Note that at least one of train_files, test_files, and dev_files must contain one path.
@@ -132,7 +132,7 @@ class JsonlCorpus(MultiFileJsonlCorpus):
         autofind_splits: bool = True,
         name: Optional[str] = None,
         **corpusargs,
-    ):
+    ) -> None:
         """Instantiates a JsonlCorpus with one file per Dataset (train, dev, and test).
 
         :param data_folder: Path to the folder containing the JSONL corpus
@@ -169,7 +169,7 @@ class JsonlDataset(FlairDataset):
         text_column_name: str = "data",
         label_column_name: str = "label",
         label_type: str = "ner",
-    ):
+    ) -> None:
         """Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.
 
         The expected file format is:
@@ -252,7 +252,7 @@ class JsonlDataset(FlairDataset):
         # Currently all Jsonl Datasets are stored in Memory
         return True
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Number of sentences in the Dataset."""
         return len(self.sentences)
 
@@ -269,16 +269,16 @@ class MultiFileColumnCorpus(Corpus):
         test_files=None,
         dev_files=None,
         column_delimiter: str = r"\s+",
-        comment_symbol: str = None,
+        comment_symbol: Optional[str] = None,
         encoding: str = "utf-8",
-        document_separator_token: str = None,
+        document_separator_token: Optional[str] = None,
         skip_first_line: bool = False,
         in_memory: bool = True,
-        label_name_map: Dict[str, str] = None,
-        banned_sentences: List[str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
+        banned_sentences: Optional[List[str]] = None,
         default_whitespace_after: int = 1,
         **corpusargs,
-    ):
+    ) -> None:
         r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
 
         :param data_folder: base folder with the task data
@@ -368,7 +368,7 @@ class MultiFileColumnCorpus(Corpus):
             else None
         )
 
-        super(MultiFileColumnCorpus, self).__init__(train, dev, test, **corpusargs)
+        super().__init__(train, dev, test, **corpusargs)
 
 
 class ColumnCorpus(MultiFileColumnCorpus):
@@ -383,7 +383,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
         name: Optional[str] = None,
         comment_symbol="# ",
         **corpusargs,
-    ):
+    ) -> None:
         r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
 
         :param data_folder: base folder with the task data
@@ -405,7 +405,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
         dev_file, test_file, train_file = find_train_dev_test_files(
             data_folder, dev_file, test_file, train_file, autofind_splits
         )
-        super(ColumnCorpus, self).__init__(
+        super().__init__(
             column_format,
             dev_files=[dev_file] if dev_file else [],
             train_files=[train_file] if train_file else [],
@@ -429,15 +429,15 @@ class ColumnDataset(FlairDataset):
         path_to_column_file: Union[str, Path],
         column_name_map: Dict[int, str],
         column_delimiter: str = r"\s+",
-        comment_symbol: str = None,
-        banned_sentences: List[str] = None,
+        comment_symbol: Optional[str] = None,
+        banned_sentences: Optional[List[str]] = None,
         in_memory: bool = True,
-        document_separator_token: str = None,
+        document_separator_token: Optional[str] = None,
         encoding: str = "utf-8",
         skip_first_line: bool = False,
-        label_name_map: Dict[str, str] = None,
+        label_name_map: Optional[Dict[str, str]] = None,
         default_whitespace_after: int = 1,
-    ):
+    ) -> None:
         r"""Instantiates a column dataset.
 
         :param path_to_column_file: path to the file with the column-formatted data
@@ -513,7 +513,7 @@ class ColumnDataset(FlairDataset):
 
                     # skip banned sentences
                     if self.banned_sentences is not None and any(
-                        [d in sentence.to_plain_string() for d in self.banned_sentences]
+                        d in sentence.to_plain_string() for d in self.banned_sentences
                     ):
                         continue
 
@@ -559,10 +559,12 @@ class ColumnDataset(FlairDataset):
 
             # check the first 5 sentences
             probe = []
-            for i in range(5):
-                sentence = self._convert_lines_to_sentence(
-                    self._read_next_sentence(file), word_level_tag_columns=column_name_map
-                )
+            for _i in range(5):
+                next_sentence = self._read_next_sentence(file)
+                if len(next_sentence) == 0:
+                    break
+
+                sentence = self._convert_lines_to_sentence(next_sentence, word_level_tag_columns=column_name_map)
                 if sentence:
                     probe.append(sentence)
                 else:
@@ -698,6 +700,7 @@ class ColumnDataset(FlairDataset):
 
         if len(sentence) > 0:
             return sentence
+        return None
 
     def _parse_token(self, line: str, column_name_map: Dict[int, str], last_token: Optional[Token] = None) -> Token:
         # get fields from line
@@ -763,7 +766,7 @@ class ColumnDataset(FlairDataset):
 
     def _remap_label(self, tag):
         # remap regular tag names
-        if self.label_name_map and tag in self.label_name_map.keys():
+        if self.label_name_map and tag in self.label_name_map:
             tag = self.label_name_map[tag]  # for example, transforming 'PER' to 'person'
         return tag
 
@@ -774,7 +777,7 @@ class ColumnDataset(FlairDataset):
     def is_in_memory(self) -> bool:
         return self.in_memory
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.total_sentence_count
 
     def __getitem__(self, index: int = 0) -> Sentence:
@@ -802,13 +805,13 @@ class ONTONOTES(MultiFileColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         version: str = "v4",
         language: str = "english",
         domain: Union[None, str, List[str], Dict[str, Union[None, str, List[str]]]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         assert version in ["v4", "v12"]
         if version == "v12":
             assert language == "english"
@@ -819,13 +822,13 @@ class ONTONOTES(MultiFileColumnCorpus):
 
         processed_data_path = self._ensure_data_processed(base_path, language, version)
 
-        kw = dict(version=version, language=language, domain=domain, processed_data_path=processed_data_path)
+        kw = {"version": version, "language": language, "domain": domain, "processed_data_path": processed_data_path}
 
         dev_files = list(self._get_processed_file_paths(split="development", **kw))
         train_files = list(self._get_processed_file_paths(split="train", **kw))
         test_files = list(self._get_processed_file_paths(split="test", **kw))
 
-        super(ONTONOTES, self).__init__(
+        super().__init__(
             dev_files=dev_files,
             train_files=train_files,
             test_files=test_files,
@@ -839,7 +842,7 @@ class ONTONOTES(MultiFileColumnCorpus):
     @classmethod
     def get_available_domains(
         cls,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         version: str = "v4",
         language: str = "english",
         split: str = "train",
@@ -857,7 +860,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         split: str = "train",
         version: str = "v4",
         language: str = "english",
-        domain: Union[str, List[str], Dict[str, Union[None, str, List[str]]]] = None,
+        domain: Optional[Union[str, List[str], Dict[str, Union[None, str, List[str]]]]] = None,
     ) -> Iterable[Path]:
         processed_split_path = processed_data_path / "splits" / version / language / split
 
@@ -905,10 +908,7 @@ class ONTONOTES(MultiFileColumnCorpus):
     def _ensure_data_processed(cls, base_path, language: str, version: str):
         raw_data_path = cls._ensure_data_downloaded(base_path)
 
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         dataset_name = cls.__name__.lower()
 
@@ -947,11 +947,8 @@ class ONTONOTES(MultiFileColumnCorpus):
         return processed_data_path
 
     @classmethod
-    def _ensure_data_downloaded(cls, base_path: Union[str, Path] = None) -> Path:
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    def _ensure_data_downloaded(cls, base_path: Optional[Union[str, Path]] = None) -> Path:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         data_folder = base_path / "conll-2012"
 
@@ -1152,11 +1149,9 @@ class ONTONOTES(MultiFileColumnCorpus):
         named_entities = span_labels[0]
         srl_frames = [(predicate, labels) for predicate, labels in zip(verbal_predicates, span_labels[1:])]
 
-        if all(parse_pieces):
-            # this would not be reached if parse_pieces contained None, hence the cast
-            parse_tree = "".join(cast(List[str], parse_pieces))
-        else:
-            parse_tree = None
+        # this would not be reached if parse_pieces contained None, hence the cast
+        parse_tree = "".join(cast(List[str], parse_pieces)) if all(parse_pieces) else None
+
         coref_span_tuples = {(cluster_id, span) for cluster_id, span_list in clusters.items() for span in span_list}
         return {
             "document_id": document_id,
@@ -1181,7 +1176,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         as the preprocessing which takes place for the 2012 CONLL
         Coreference Resolution task.
         """
-        with open(file_path, "r", encoding="utf8") as open_file:
+        with open(file_path, encoding="utf8") as open_file:
             conll_rows = []
             document: List = []
             for line in open_file:
@@ -1212,11 +1207,11 @@ class ONTONOTES(MultiFileColumnCorpus):
 class CONLL_03(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         column_format={0: "text", 1: "pos", 3: "ner"},
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the CoNLL-03 corpus.
 
         This is only possible if you've manually downloaded it to your machine.
@@ -1229,10 +1224,7 @@ class CONLL_03(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1248,7 +1240,7 @@ class CONLL_03(ColumnCorpus):
             )
             log.warning("-" * 100)
 
-        super(CONLL_03, self).__init__(
+        super().__init__(
             data_folder,
             column_format=column_format,
             in_memory=in_memory,
@@ -1260,10 +1252,10 @@ class CONLL_03(ColumnCorpus):
 class CONLL_03_GERMAN(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the CoNLL-03 corpus for German.
 
         This is only possible if you've manually downloaded it to your machine.
@@ -1275,10 +1267,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "lemma", 2: "pos", 3: "np", 4: "ner"}
@@ -1297,7 +1286,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
             )
             log.warning("-" * 100)
 
-        super(CONLL_03_GERMAN, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -1309,10 +1298,10 @@ class CONLL_03_GERMAN(ColumnCorpus):
 class CONLL_03_DUTCH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the CoNLL-03 corpus for Dutch.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -1323,10 +1312,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -1351,7 +1337,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
             self.__offset_docstarts(data_folder / "raw" / "ned.testa", data_folder / "dev.txt")
             self.__offset_docstarts(data_folder / "raw" / "ned.testb", data_folder / "test.txt")
 
-        super(CONLL_03_DUTCH, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             train_file="train.txt",
@@ -1365,7 +1351,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
 
     @staticmethod
     def __offset_docstarts(file_in: Union[str, Path], file_out: Union[str, Path]):
-        with open(file_in, "r", encoding="latin-1") as f:
+        with open(file_in, encoding="latin-1") as f:
             lines = f.readlines()
         with open(file_out, "w", encoding="latin-1") as f:
             for line in lines:
@@ -1377,10 +1363,10 @@ class CONLL_03_DUTCH(ColumnCorpus):
 class CONLL_03_SPANISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the CoNLL-03 corpus for Spanish.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -1390,10 +1376,7 @@ class CONLL_03_SPANISH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1409,7 +1392,7 @@ class CONLL_03_SPANISH(ColumnCorpus):
         cached_path(f"{conll_02_path}esp.testb", Path("datasets") / dataset_name)
         cached_path(f"{conll_02_path}esp.train", Path("datasets") / dataset_name)
 
-        super(CONLL_03_SPANISH, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="latin-1",
@@ -1421,10 +1404,10 @@ class CONLL_03_SPANISH(ColumnCorpus):
 class CONLL_2000(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the CoNLL-2000 corpus for English chunking.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -1432,10 +1415,7 @@ class CONLL_2000(ColumnCorpus):
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "pos", 2: "np"}
@@ -1454,23 +1434,18 @@ class CONLL_2000(ColumnCorpus):
             import gzip
             import shutil
 
-            with gzip.open(
-                flair.cache_root / "datasets" / dataset_name / "train.txt.gz",
-                "rb",
-            ) as f_in:
-                with open(
-                    flair.cache_root / "datasets" / dataset_name / "train.txt",
-                    "wb",
-                ) as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            with gzip.open(flair.cache_root / "datasets" / dataset_name / "test.txt.gz", "rb") as f_in:
-                with open(
-                    flair.cache_root / "datasets" / dataset_name / "test.txt",
-                    "wb",
-                ) as f_out:
-                    shutil.copyfileobj(f_in, f_out)
+            with gzip.open(flair.cache_root / "datasets" / dataset_name / "train.txt.gz", "rb") as f_in, open(
+                flair.cache_root / "datasets" / dataset_name / "train.txt",
+                "wb",
+            ) as f_out:
+                shutil.copyfileobj(f_in, f_out)
+            with gzip.open(flair.cache_root / "datasets" / dataset_name / "test.txt.gz", "rb") as f_in, open(
+                flair.cache_root / "datasets" / dataset_name / "test.txt",
+                "wb",
+            ) as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
-        super(CONLL_2000, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -1481,14 +1456,11 @@ class CONLL_2000(ColumnCorpus):
 class WNUT_17(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    ) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1504,7 +1476,7 @@ class WNUT_17(ColumnCorpus):
         cached_path(f"{wnut_path}emerging.dev.conll", Path("datasets") / dataset_name)
         cached_path(f"{wnut_path}emerging.test.annotated", Path("datasets") / dataset_name)
 
-        super(WNUT_17, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -1517,7 +1489,7 @@ class FEWNERD(ColumnCorpus):
         self,
         setting: str = "supervised",
         **corpusargs,
-    ):
+    ) -> None:
         assert setting in ["supervised", "inter", "intra"]
 
         base_path = flair.cache_root / "datasets"
@@ -1531,7 +1503,7 @@ class FEWNERD(ColumnCorpus):
         if not self.bio_format_data.exists():
             self._generate_splits(setting)
 
-        super(FEWNERD, self).__init__(
+        super().__init__(
             self.bio_format_data,
             column_format={0: "text", 1: "ner"},
             **corpusargs,
@@ -1567,35 +1539,31 @@ class FEWNERD(ColumnCorpus):
         )
         os.mkdir(self.bio_format_data)
         for split in os.listdir(self.data_folder / setting):
-            with open(self.data_folder / setting / split, "r") as source:
-                with open(self.bio_format_data / split, "w") as target:
-                    previous_tag = None
-                    for line in source:
-                        if line == "" or line == "\n":
-                            target.write("\n")
-                        else:
-                            token, tag = line.split("\t")
-                            tag = tag.replace("\n", "")
-                            if tag == "O":
-                                target.write(token + "\t" + tag + "\n")
-                            elif previous_tag != tag and tag != "O":
-                                target.write(token + "\t" + "B-" + tag + "\n")
-                            elif previous_tag == tag and tag != "O":
-                                target.write(token + "\t" + "I-" + tag + "\n")
-                            previous_tag = tag
+            with open(self.data_folder / setting / split) as source, open(self.bio_format_data / split, "w") as target:
+                previous_tag = None
+                for line in source:
+                    if line == "" or line == "\n":
+                        target.write("\n")
+                    else:
+                        token, tag = line.split("\t")
+                        tag = tag.replace("\n", "")
+                        if tag == "O":
+                            target.write(token + "\t" + tag + "\n")
+                        elif previous_tag != tag and tag != "O":
+                            target.write(token + "\t" + "B-" + tag + "\n")
+                        elif previous_tag == tag and tag != "O":
+                            target.write(token + "\t" + "I-" + tag + "\n")
+                        previous_tag = tag
 
 
 class BIOSCOPE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    ) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "tag"}
@@ -1611,7 +1579,7 @@ class BIOSCOPE(ColumnCorpus):
         )
         cached_path(f"{bioscope_path}output.txt", Path("datasets") / dataset_name)
 
-        super(BIOSCOPE, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -1623,11 +1591,11 @@ class BIOSCOPE(ColumnCorpus):
 class NER_ARABIC_ANER(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize a preprocessed version of the Arabic Named Entity Recognition Corpus (ANERCorp).
 
         The dataset is downloaded from http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp
@@ -1639,10 +1607,7 @@ class NER_ARABIC_ANER(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1660,7 +1625,7 @@ class NER_ARABIC_ANER(ColumnCorpus):
         # cached_path(f"{anercorp_path}test.txt", Path("datasets") / dataset_name)
         cached_path(f"{anercorp_path}train.txt", Path("datasets") / dataset_name)
 
-        super(NER_ARABIC_ANER, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -1673,11 +1638,11 @@ class NER_ARABIC_ANER(ColumnCorpus):
 class NER_ARABIC_AQMAR(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize a preprocessed and modified version of the American and Qatari Modeling of Arabic (AQMAR) dataset.
 
         The dataset is downloaded from  http://www.cs.cmu.edu/~ark/AQMAR/
@@ -1695,10 +1660,7 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1716,7 +1678,7 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
         # cached_path(f"{anercorp_path}test.txt", Path("datasets") / dataset_name)
         cached_path(f"{aqmar_path}train.txt", Path("datasets") / dataset_name)
 
-        super(NER_ARABIC_AQMAR, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -1729,14 +1691,11 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
 class NER_BASQUE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    ) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1767,7 +1726,7 @@ class NER_BASQUE(ColumnCorpus):
                     f_in.extract(corpus_file, data_path)
                     shutil.move(f"{data_path}/{corpus_file}", data_path)
 
-        super(NER_BASQUE, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -1778,11 +1737,11 @@ class NER_BASQUE(ColumnCorpus):
 class NER_CHINESE_WEIBO(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the WEIBO_NER corpus.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -1793,10 +1752,7 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1821,7 +1777,7 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
             Path("datasets") / dataset_name,
         )
 
-        super(NER_CHINESE_WEIBO, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -1837,14 +1793,11 @@ class NER_CHINESE_WEIBO(ColumnCorpus):
 class NER_DANISH_DANE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    ) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {1: "text", 3: "pos", 9: "ner"}
@@ -1870,8 +1823,8 @@ class NER_DANISH_DANE(ColumnCorpus):
             # Remove CoNLL-U meta information in the last column
             for part in ["train", "dev", "test"]:
                 lines = []
-                data_file = "ddt.{}.conllu".format(part)
-                with open(data_path / data_file, "r") as file:
+                data_file = f"ddt.{part}.conllu"
+                with open(data_path / data_file) as file:
                     for line in file:
                         if line.startswith("#") or line == "\n":
                             lines.append(line)
@@ -1880,7 +1833,7 @@ class NER_DANISH_DANE(ColumnCorpus):
                 with open(data_path / data_file, "w") as file:
                     file.writelines(lines)
 
-        super(NER_DANISH_DANE, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -1892,10 +1845,10 @@ class NER_DANISH_DANE(ColumnCorpus):
 class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the eng corpus of the MIT Movie Corpus.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -1912,10 +1865,7 @@ class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # data folder: default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1925,7 +1875,7 @@ class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
         cached_path(f"{mit_movie_path}{train_file}", Path("datasets") / dataset_name)
         cached_path(f"{mit_movie_path}{test_file}", Path("datasets") / dataset_name)
 
-        super(NER_ENGLISH_MOVIE_SIMPLE, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             train_file=train_file,
@@ -1938,10 +1888,10 @@ class NER_ENGLISH_MOVIE_SIMPLE(ColumnCorpus):
 class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the trivia10k13 corpus of the MIT Movie Corpus.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -1958,10 +1908,7 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # data folder: default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1971,7 +1918,7 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
         cached_path(f"{mit_movie_path}{train_file}", Path("datasets") / dataset_name)
         cached_path(f"{mit_movie_path}{test_file}", Path("datasets") / dataset_name)
 
-        super(NER_ENGLISH_MOVIE_COMPLEX, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             train_file=train_file,
@@ -1994,14 +1941,11 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    ) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "pos", 3: "ner"}
@@ -2016,7 +1960,7 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
         cached_path(f"{SEC_FILLINGS_Path}test/FIN3.txt", Path("datasets") / dataset_name)
         cached_path(f"{SEC_FILLINGS_Path}train/FIN5.txt", Path("datasets") / dataset_name)
 
-        super(NER_ENGLISH_SEC_FILLINGS, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -2031,10 +1975,10 @@ class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
 class NER_ENGLISH_RESTAURANT(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the MIT Restaurant corpus.
 
         The corpus will be downloaded from https://groups.csail.mit.edu/sls/downloads/restaurant/.
@@ -2045,10 +1989,7 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2063,7 +2004,7 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
         cached_path(f"{mit_restaurants_path}test.txt", Path("datasets") / dataset_name)
         cached_path(f"{mit_restaurants_path}train.txt", Path("datasets") / dataset_name)
 
-        super(NER_ENGLISH_RESTAURANT, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="latin-1",
@@ -2075,10 +2016,10 @@ class NER_ENGLISH_RESTAURANT(ColumnCorpus):
 class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the STACKOVERFLOW_NER corpus.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -2089,10 +2030,7 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         """
         The Datasets are represented in the Conll format.
@@ -2145,15 +2083,16 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
             answers = 0
 
             cached_path(f"{STACKOVERFLOW_NER_path}{file}.txt", Path("datasets") / dataset_name)
-            for line in open(data_folder / (file + ".txt"), mode="r", encoding="utf-8"):
-                if line.startswith("Question_ID"):
-                    questions += 1
+            with (data_folder / (file + ".txt")).open(encoding="utf-8") as fin:
+                for line in fin:
+                    if line.startswith("Question_ID"):
+                        questions += 1
 
-                if line.startswith("Answer_to_Question_ID"):
-                    answers += 1
+                    if line.startswith("Answer_to_Question_ID"):
+                        answers += 1
             log.info(f"File {file} has {questions} questions and {answers} answers.")
 
-        super(NER_ENGLISH_STACKOVERFLOW, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             train_file="train.txt",
@@ -2170,10 +2109,10 @@ class NER_ENGLISH_STACKOVERFLOW(ColumnCorpus):
 class NER_ENGLISH_TWITTER(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the twitter_ner corpus.
 
         The corpus will be downoaded from https://raw.githubusercontent.com/aritter/twitter_nlp/master/data/annotated/ner.txt.
@@ -2184,10 +2123,7 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2204,7 +2140,7 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
         twitter_ner_path = "https://raw.githubusercontent.com/aritter/twitter_nlp/master/data/annotated/"
         cached_path(f"{twitter_ner_path}ner.txt", Path("datasets") / dataset_name)
 
-        super(NER_ENGLISH_TWITTER, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="latin-1",
@@ -2217,9 +2153,9 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
 class NER_ENGLISH_PERSON(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-    ):
+    ) -> None:
         """Initialize the PERSON_NER corpus for person names.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -2229,10 +2165,7 @@ class NER_ENGLISH_PERSON(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2256,7 +2189,7 @@ class NER_ENGLISH_PERSON(ColumnCorpus):
 
         self.__concatAllFiles(data_folder)
 
-        super(NER_ENGLISH_PERSON, self).__init__(data_folder, columns, in_memory=in_memory, train_file="bigFile.conll")
+        super().__init__(data_folder, columns, in_memory=in_memory, train_file="bigFile.conll")
 
     @staticmethod
     def __concatAllFiles(data_folder):
@@ -2271,10 +2204,10 @@ class NER_ENGLISH_PERSON(ColumnCorpus):
 class NER_ENGLISH_WEBPAGES(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the WEBPAGES_NER corpus.
 
         The corpus was introduced in the paper "Design Challenges and Misconceptions in Named Entity Recognition" by Ratinov and Roth (2009): https://aclanthology.org/W09-1119/.
@@ -2285,10 +2218,7 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "ner", 5: "text"}
@@ -2317,7 +2247,7 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
             for files in os.walk(outputfile):
                 f = files[1]
                 ff = os.listdir(outputfile / data_folder / f[-1])
-                for i, file in enumerate(ff):
+                for _i, file in enumerate(ff):
                     if file.endswith(".gold"):
                         with open(
                             outputfile / data_folder / f[-1] / file,
@@ -2328,7 +2258,7 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
                         outfile.write(content)
                 break
 
-        super(NER_ENGLISH_WEBPAGES, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             train_file="webpages_ner.txt",
@@ -2340,11 +2270,11 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
 class NER_ENGLISH_WNUT_2020(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the WNUT_2020_NER corpus.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -2354,10 +2284,7 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2391,7 +2318,7 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
 
                 shutil.rmtree(str(data_folder / "WNUT_2020_NER-master"))  # clean up when done
 
-        super(NER_ENGLISH_WNUT_2020, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -2404,11 +2331,11 @@ class NER_ENGLISH_WNUT_2020(ColumnCorpus):
 class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the wikigold corpus.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -2418,10 +2345,7 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2435,7 +2359,7 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
         wikigold_ner_path = "https://raw.githubusercontent.com/juand-r/entity-recognition-datasets/master/data/wikigold/CONLL-format/data/"
         cached_path(f"{wikigold_ner_path}wikigold.conll.txt", Path("datasets") / dataset_name)
 
-        super(NER_ENGLISH_WIKIGOLD, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -2449,14 +2373,11 @@ class NER_ENGLISH_WIKIGOLD(ColumnCorpus):
 class NER_FINNISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    ) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2477,7 +2398,7 @@ class NER_FINNISH(ColumnCorpus):
 
         self._remove_lines_without_annotations(data_file=Path(data_folder / "digitoday.2015.test.csv"))
 
-        super(NER_FINNISH, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -2486,7 +2407,7 @@ class NER_FINNISH(ColumnCorpus):
         )
 
     def _remove_lines_without_annotations(self, data_file: Union[str, Path]):
-        with open(data_file, "r") as f:
+        with open(data_file) as f:
             lines = f.readlines()
         with open(data_file, "w") as f:
             for line in lines:
@@ -2497,14 +2418,11 @@ class NER_FINNISH(ColumnCorpus):
 class NER_GERMAN_BIOFID(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    ) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "lemma", 2: "pos", 3: "ner"}
@@ -2520,7 +2438,7 @@ class NER_GERMAN_BIOFID(ColumnCorpus):
         cached_path(f"{biofid_path}dev.conll", Path("datasets") / dataset_name)
         cached_path(f"{biofid_path}test.conll", Path("datasets") / dataset_name)
 
-        super(NER_GERMAN_BIOFID, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -2531,10 +2449,10 @@ class NER_GERMAN_BIOFID(ColumnCorpus):
 class NER_GERMAN_EUROPARL(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the EUROPARL_NER_GERMAN corpus.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -2544,10 +2462,7 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "lemma", 2: "pos", 3: "np", 4: "ner"}
@@ -2579,7 +2494,7 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
             ner_column=4,
         )
 
-        super(NER_GERMAN_EUROPARL, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="latin-1",
@@ -2616,7 +2531,7 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
                     f.write(" " + current_line[i])
             f.write("\n")
 
-        with open(file=data_file, mode="r", encoding=encoding) as f:
+        with open(file=data_file, encoding=encoding) as f:
             lines = f.readlines()
         with open(file=data_file, mode="w", encoding=encoding) as f:
             pred = "O"  # remembers ner tag of predecessing line
@@ -2652,10 +2567,10 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
 class NER_GERMAN_LEGAL(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the LER_GERMAN (Legal Entity Recognition) corpus.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -2664,10 +2579,7 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2681,7 +2593,7 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
         ler_path = "https://raw.githubusercontent.com/elenanereiss/Legal-Entity-Recognition/master/data/"
         cached_path(f"{ler_path}ler.conll", Path("datasets") / dataset_name)
 
-        super(NER_GERMAN_LEGAL, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -2693,10 +2605,10 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
 class NER_GERMAN_GERMEVAL(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the GermEval NER corpus for German.
 
         This is only possible if you've manually downloaded it to your machine.
@@ -2705,10 +2617,7 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
         :param base_path: Path to the GermEval corpus on your machine
         :param in_memory:If True, keeps dataset in memory giving speedups in training.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {1: "text", 2: "ner"}
@@ -2739,7 +2648,7 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
                 output=str(data_folder / "dev.tsv"),
             )
 
-        super(NER_GERMAN_GERMEVAL, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             comment_symbol="#",
@@ -2751,11 +2660,11 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
 class NER_GERMAN_POLITICS(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         column_delimiter: str = r"\s+",
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize corpus with Named Entity Model for German Politics (NEMGP).
 
         data from https://www.thomas-zastrow.de/nlp/.
@@ -2768,10 +2677,7 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2796,7 +2702,7 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
         if not train_dataset.exists():
             self._create_datasets(parsed_dataset, data_folder)
 
-        super(NER_GERMAN_POLITICS, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             column_delimiter=column_delimiter,
@@ -2809,7 +2715,7 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
         )
 
     def _convert_to_column_corpus(self, data_file: Union[str, Path]):
-        with open(data_file, "r", encoding="utf-8") as f:
+        with open(data_file, encoding="utf-8") as f:
             lines = f.readlines()
         with open(data_file, "w", encoding="utf-8") as f:
             tag_bool = False
@@ -2846,36 +2752,35 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
                             f.write(substr.strip(" ") + " " + "O" + "\n")
 
     def _create_datasets(self, data_file: Union[str, Path], data_folder: Path):
-        with open(data_file, "r") as file:
+        with open(data_file) as file:
             num_lines = len(file.readlines())
             file.seek(0)
 
             train_len = round(num_lines * 0.8)
             test_len = round(num_lines * 0.1)
 
-            train = open(data_folder / "train.txt", "w")
-            test = open(data_folder / "test.txt", "w")
-            dev = open(data_folder / "dev.txt", "w")
-
-            k = 0
-            for line in file.readlines():
-                k += 1
-                if k <= train_len:
-                    train.write(line)
-                elif k > train_len and k <= (train_len + test_len):
-                    test.write(line)
-                elif k > (train_len + test_len) and k <= num_lines:
-                    dev.write(line)
+            with (data_folder / "train.txt").open("w", encoding="utf-8") as train, (data_folder / "test.txt").open(
+                "w", encoding="utf-8"
+            ) as test, (data_folder / "dev.txt").open("w", encoding="utf-8") as dev:
+                k = 0
+                for line in file.readlines():
+                    k += 1
+                    if k <= train_len:
+                        train.write(line)
+                    elif k > train_len and k <= (train_len + test_len):
+                        test.write(line)
+                    elif k > (train_len + test_len) and k <= num_lines:
+                        dev.write(line)
 
 
 class NER_HUNGARIAN(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the NER Business corpus for Hungarian.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -2885,10 +2790,7 @@ class NER_HUNGARIAN(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2906,7 +2808,7 @@ class NER_HUNGARIAN(ColumnCorpus):
             # extracted corpus is not present , so unpacking it.
             unpack_file(path_to_zipped_corpus, data_folder, mode="zip", keep=True)
 
-        super(NER_HUNGARIAN, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             train_file="hun_ner_corpus.txt",
@@ -2922,10 +2824,10 @@ class NER_HUNGARIAN(ColumnCorpus):
 class NER_ICELANDIC(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the ICELANDIC_NER corpus.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -2935,10 +2837,7 @@ class NER_ICELANDIC(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2969,7 +2868,7 @@ class NER_ICELANDIC(ColumnCorpus):
                             contents = infile.read()
                         outfile.write(contents)
 
-        super(NER_ICELANDIC, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             train_file="icelandic_ner.txt",
@@ -2981,10 +2880,10 @@ class NER_ICELANDIC(ColumnCorpus):
 class NER_JAPANESE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the Hironsan/IOB2 corpus for Japanese.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -2993,10 +2892,7 @@ class NER_JAPANESE(ColumnCorpus):
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -3019,7 +2915,7 @@ class NER_JAPANESE(ColumnCorpus):
             self.__prepare_jap_wikinews_corpus(data_folder / "raw" / "hironsan.txt", data_folder / "train.txt")
             self.__prepare_jap_wikipedia_corpus(data_folder / "raw" / "ja.wikipedia.conll", data_folder / "train.txt")
 
-        super(NER_JAPANESE, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             train_file="train.txt",
@@ -3030,7 +2926,7 @@ class NER_JAPANESE(ColumnCorpus):
 
     @staticmethod
     def __prepare_jap_wikipedia_corpus(file_in: Union[str, Path], file_out: Union[str, Path]):
-        with open(file_in, "r") as f:
+        with open(file_in) as f:
             lines = f.readlines()
         with open(file_out, "a") as f:
             for line in lines:
@@ -3044,7 +2940,7 @@ class NER_JAPANESE(ColumnCorpus):
 
     @staticmethod
     def __prepare_jap_wikinews_corpus(file_in: Union[str, Path], file_out: Union[str, Path]):
-        with open(file_in, "r") as f:
+        with open(file_in) as f:
             lines = f.readlines()
         with open(file_out, "a") as f:
             for line in lines:
@@ -3060,10 +2956,10 @@ class NER_MASAKHANE(MultiCorpus):
         self,
         languages: Union[str, List[str]] = "luo",
         version: str = "v2",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the Masakhane corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data.
 
         It consists of ten African languages. Pass a language code or a list of language codes to initialize the corpus
@@ -3074,10 +2970,7 @@ class NER_MASAKHANE(MultiCorpus):
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # if only one language is given
         if type(languages) == str:
@@ -3147,14 +3040,14 @@ class NER_MASAKHANE(MultiCorpus):
 
         corpora: List[Corpus] = []
         for language in languages:
-            if language in language_to_code.keys():
+            if language in language_to_code:
                 language = language_to_code[language]
 
             if language not in language_to_code.values():
                 log.error(f"Language '{language}' is not in list of supported languages!")
                 log.error(f"Supported are '{language_to_code.values()}'!")
                 log.error("Instantiate this Corpus for instance like so 'corpus = NER_MASAKHANE(languages='luo')'")
-                raise Exception()
+                raise Exception
 
             language_folder = data_folder / language
 
@@ -3176,7 +3069,7 @@ class NER_MASAKHANE(MultiCorpus):
             )
             corpora.append(corp)
 
-        super(NER_MASAKHANE, self).__init__(
+        super().__init__(
             corpora,
             name="masakhane-" + "-".join(languages),
         )
@@ -3186,10 +3079,10 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
     def __init__(
         self,
         task: str = "multi",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Download and Initialize the MultiCoNer corpus.
 
         :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
@@ -3197,10 +3090,7 @@ class NER_MULTI_CONER(MultiFileColumnCorpus):
         POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         folders = {
             "bn": "BN-Bangla",
@@ -3251,11 +3141,11 @@ class NER_MULTI_CONER_V2(MultiFileColumnCorpus):
     def __init__(
         self,
         task: str = "multi",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         use_dev_as_test: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the MultiCoNer V2 corpus for the Semeval2023 workshop.
 
         This is only possible if you've applied and downloaded it to your machine.
@@ -3269,10 +3159,7 @@ class NER_MULTI_CONER_V2(MultiFileColumnCorpus):
         :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
         :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         folders = {
             "bn": "BN-Bangla",
@@ -3289,7 +3176,7 @@ class NER_MULTI_CONER_V2(MultiFileColumnCorpus):
             "zh": "ZH-Chinese",
         }
 
-        possible_tasks = list(folders.keys()) + ["multi"]
+        possible_tasks = [*list(folders.keys()), "multi"]
         task = task.lower()
 
         if task not in possible_tasks:
@@ -3335,10 +3222,10 @@ class NER_MULTI_WIKIANN(MultiCorpus):
     def __init__(
         self,
         languages: Union[str, List[str]] = "en",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the WkiAnn corpus for cross-lingual NER consisting of datasets from 282 languages that exist in Wikipedia.
 
         See https://elisa-ie.github.io/wikiann/ for details and for the languages and their
@@ -3362,10 +3249,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         if type(languages) == str:
             languages = [languages]
 
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -3434,13 +3318,13 @@ class NER_MULTI_WIKIANN(MultiCorpus):
             corpora.append(corp)
             log.info("...done.")
 
-        super(NER_MULTI_WIKIANN, self).__init__(
+        super().__init__(
             corpora,
             name="wikiann",
         )
 
     def _silver_standard_to_simple_ner_annotation(self, data_file: Union[str, Path]):
-        with open(data_file, "r", encoding="utf-8") as f_read, open(
+        with open(data_file, encoding="utf-8") as f_read, open(
             str(data_file) + "_new", "w+", encoding="utf-8"
         ) as f_write:
             while True:
@@ -3759,10 +3643,10 @@ class NER_MULTI_XTREME(MultiCorpus):
     def __init__(
         self,
         languages: Union[str, List[str]] = "en",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Xtreme corpus for cross-lingual NER consisting of datasets of a total of 40 languages.
 
         The data comes from the google research work XTREME https://github.com/google-research/xtreme.
@@ -3826,10 +3710,7 @@ class NER_MULTI_XTREME(MultiCorpus):
         if type(languages) == str:
             languages = [languages]
 
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -3890,13 +3771,13 @@ class NER_MULTI_XTREME(MultiCorpus):
             )
             corpora.append(corp)
 
-        super(NER_MULTI_XTREME, self).__init__(
+        super().__init__(
             corpora,
             name="xtreme",
         )
 
     def _xtreme_to_simple_ner_annotation(self, data_file: Union[str, Path]):
-        with open(data_file, "r", encoding="utf-8") as f:
+        with open(data_file, encoding="utf-8") as f:
             lines = f.readlines()
         with open(data_file, "w", encoding="utf-8") as f:
             for line in lines:
@@ -3911,14 +3792,11 @@ class NER_MULTI_WIKINER(MultiCorpus):
     def __init__(
         self,
         languages: Union[str, List[str]] = "en",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
-    ):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    ) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # if only one language is given
         if type(languages) == str:
@@ -3949,7 +3827,7 @@ class NER_MULTI_WIKINER(MultiCorpus):
             )
             corpora.append(corp)
 
-        super(NER_MULTI_WIKINER, self).__init__(
+        super().__init__(
             corpora,
             name="wikiner",
         )
@@ -3987,10 +3865,10 @@ class NER_MULTI_WIKINER(MultiCorpus):
 class NER_SWEDISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the NER_SWEDISH corpus for Swedish.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -3999,10 +3877,7 @@ class NER_SWEDISH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -4021,7 +3896,7 @@ class NER_SWEDISH(ColumnCorpus):
         self._add_IOB2_tags(data_file=Path(data_folder / "test_corpus.txt"))
         self._add_IOB2_tags(data_file=Path(data_folder / "train_corpus.txt"))
 
-        super(NER_SWEDISH, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -4042,7 +3917,7 @@ class NER_SWEDISH(ColumnCorpus):
         encoding : str, optional
             Encoding used in open function. The default is "utf8".
         """
-        with open(file=data_file, mode="r", encoding=encoding) as f:
+        with open(file=data_file, encoding=encoding) as f:
             lines = f.readlines()
         with open(file=data_file, mode="w", encoding=encoding) as f:
             pred = "O"  # remembers tag of predecessing line
@@ -4075,10 +3950,10 @@ class NER_SWEDISH(ColumnCorpus):
 class NER_TURKU(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the Finnish TurkuNER corpus.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -4088,10 +3963,7 @@ class NER_TURKU(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -4110,7 +3982,7 @@ class NER_TURKU(ColumnCorpus):
         cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
         cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
 
-        super(NER_TURKU, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             dev_file=dev_file,
@@ -4127,10 +3999,10 @@ class NER_TURKU(ColumnCorpus):
 class NER_UKRAINIAN(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the Ukrainian NER corpus from lang-uk project.
 
         The first time you call this constructor it will automatically download the dataset.
@@ -4140,10 +4012,7 @@ class NER_UKRAINIAN(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -4160,7 +4029,7 @@ class NER_UKRAINIAN(ColumnCorpus):
         cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
         cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
 
-        super(NER_UKRAINIAN, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             test_file=test_file,
@@ -4175,14 +4044,11 @@ class NER_UKRAINIAN(ColumnCorpus):
 class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    ) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "keyword"}
@@ -4197,7 +4063,7 @@ class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
         cached_path(f"{semeval2017_path}/test.txt", Path("datasets") / dataset_name)
         cached_path(f"{semeval2017_path}/dev.txt", Path("datasets") / dataset_name)
 
-        super(KEYPHRASE_SEMEVAL2017, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -4208,14 +4074,11 @@ class KEYPHRASE_SEMEVAL2017(ColumnCorpus):
 class KEYPHRASE_INSPEC(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    ) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "keyword"}
@@ -4233,7 +4096,7 @@ class KEYPHRASE_INSPEC(ColumnCorpus):
             # rename according to train - test - dev - convention
             os.rename(data_folder / "valid.txt", data_folder / "dev.txt")
 
-        super(KEYPHRASE_INSPEC, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -4244,14 +4107,11 @@ class KEYPHRASE_INSPEC(ColumnCorpus):
 class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+    ) -> None:
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "keyword"}
@@ -4265,7 +4125,7 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
         cached_path(f"{semeval2010_path}/train.txt", Path("datasets") / dataset_name)
         cached_path(f"{semeval2010_path}/test.txt", Path("datasets") / dataset_name)
 
-        super(KEYPHRASE_SEMEVAL2010, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -4276,11 +4136,11 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
 class UP_CHINESE(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the Chinese dataset from the Universal Propositions Bank.
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
@@ -4290,10 +4150,7 @@ class UP_CHINESE(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -4309,7 +4166,7 @@ class UP_CHINESE(ColumnCorpus):
         cached_path(f"{up_zh_path}zh-up-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_zh_path}zh-up-test.conllu", Path("datasets") / dataset_name)
 
-        super(UP_CHINESE, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -4326,11 +4183,11 @@ class UP_CHINESE(ColumnCorpus):
 class UP_ENGLISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the English dataset from the Universal Propositions Bank.
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
@@ -4340,10 +4197,7 @@ class UP_ENGLISH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {1: "text", 10: "frame"}
@@ -4359,7 +4213,7 @@ class UP_ENGLISH(ColumnCorpus):
         cached_path(f"{up_en_path}en_ewt-up-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_en_path}en_ewt-up-test.conllu", Path("datasets") / dataset_name)
 
-        super(UP_ENGLISH, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -4377,11 +4231,11 @@ class UP_ENGLISH(ColumnCorpus):
 class UP_FRENCH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the French dataset from the Universal Propositions Bank.
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
@@ -4391,10 +4245,7 @@ class UP_FRENCH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -4410,7 +4261,7 @@ class UP_FRENCH(ColumnCorpus):
         cached_path(f"{up_fr_path}fr-up-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_fr_path}fr-up-test.conllu", Path("datasets") / dataset_name)
 
-        super(UP_FRENCH, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -4427,11 +4278,11 @@ class UP_FRENCH(ColumnCorpus):
 class UP_FINNISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the Finnish dataset from the Universal Propositions Bank.
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
@@ -4441,10 +4292,7 @@ class UP_FINNISH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -4460,7 +4308,7 @@ class UP_FINNISH(ColumnCorpus):
         cached_path(f"{up_fi_path}fi-up-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_fi_path}fi-up-test.conllu", Path("datasets") / dataset_name)
 
-        super(UP_FINNISH, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -4477,11 +4325,11 @@ class UP_FINNISH(ColumnCorpus):
 class UP_GERMAN(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the German dataset from the Universal Propositions Bank.
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
@@ -4491,10 +4339,7 @@ class UP_GERMAN(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -4510,7 +4355,7 @@ class UP_GERMAN(ColumnCorpus):
         cached_path(f"{up_de_path}de-up-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_de_path}de-up-test.conllu", Path("datasets") / dataset_name)
 
-        super(UP_GERMAN, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -4527,11 +4372,11 @@ class UP_GERMAN(ColumnCorpus):
 class UP_ITALIAN(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the Italian dataset from the Universal Propositions Bank.
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
@@ -4541,10 +4386,7 @@ class UP_ITALIAN(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -4560,7 +4402,7 @@ class UP_ITALIAN(ColumnCorpus):
         cached_path(f"{up_it_path}it-up-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_it_path}it-up-test.conllu", Path("datasets") / dataset_name)
 
-        super(UP_ITALIAN, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -4577,11 +4419,11 @@ class UP_ITALIAN(ColumnCorpus):
 class UP_SPANISH(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the Spanish dataset from the Universal Propositions Bank.
 
         The dataset is downloaded from  https://github.com/System-T/UniversalPropositions
@@ -4591,10 +4433,7 @@ class UP_SPANISH(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -4610,7 +4449,7 @@ class UP_SPANISH(ColumnCorpus):
         cached_path(f"{up_es_path}es-up-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_es_path}es-up-test.conllu", Path("datasets") / dataset_name)
 
-        super(UP_SPANISH, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -4627,11 +4466,11 @@ class UP_SPANISH(ColumnCorpus):
 class UP_SPANISH_ANCORA(ColumnCorpus):
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         document_as_sequence: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the Spanish AnCora dataset from the Universal Propositions Bank.
 
         The dataset is downloaded from https://github.com/System-T/UniversalPropositions
@@ -4641,10 +4480,7 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {1: "text", 9: "frame"}
@@ -4660,7 +4496,7 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
         cached_path(f"{up_es_path}es_ancora-up-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_es_path}es_ancora-up-test.conllu", Path("datasets") / dataset_name)
 
-        super(UP_SPANISH_ANCORA, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             encoding="utf-8",
@@ -4679,10 +4515,10 @@ class NER_HIPE_2022(ColumnCorpus):
     def _prepare_corpus(
         file_in: Path, file_out: Path, eos_marker: str, document_separator: str, add_document_separator: bool
     ):
-        with open(file_in, "rt", encoding="utf-8") as f_p:
+        with open(file_in, encoding="utf-8") as f_p:
             lines = f_p.readlines()
 
-        with open(file_out, "wt", encoding="utf-8") as f_out:
+        with open(file_out, "w", encoding="utf-8") as f_out:
             # Add missing newline after header
             f_out.write(lines[0] + "\n")
 
@@ -4706,7 +4542,7 @@ class NER_HIPE_2022(ColumnCorpus):
         self,
         dataset_name: str,
         language: str,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         version: str = "v2.1",
         branch_name: str = "main",
@@ -4715,7 +4551,7 @@ class NER_HIPE_2022(ColumnCorpus):
         sample_missing_splits=False,
         preproc_fn=None,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the CLEF-HIPE 2022 NER dataset.
 
         The first time you call this constructor it will automatically
@@ -4734,10 +4570,7 @@ class NER_HIPE_2022(ColumnCorpus):
         :sample_missing_splits: If True, data is automatically sampled when certain data splits are None.
         :preproc_fn: Function that is used for dataset preprocessing. If None, default preprocessing will be performed.
         """
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # Dataset split mapping
         hipe_available_splits = {
@@ -4798,7 +4631,7 @@ class NER_HIPE_2022(ColumnCorpus):
             new_data_folder = new_data_folder / "with_doc_seperator"
             new_data_folder.mkdir(parents=True, exist_ok=True)
 
-        self.preproc_fn = self._prepare_corpus if not preproc_fn else preproc_fn
+        self.preproc_fn = preproc_fn if preproc_fn else self._prepare_corpus
 
         if not all(  # Only reprocess if some files are not there yet
             split_path.exists()
@@ -4814,7 +4647,7 @@ class NER_HIPE_2022(ColumnCorpus):
                     add_document_separator,
                 )
 
-        super(NER_HIPE_2022, self).__init__(
+        super().__init__(
             new_data_folder,
             columns,
             train_file=train_file,
@@ -4834,10 +4667,10 @@ class NER_ICDAR_EUROPEANA(ColumnCorpus):
     def __init__(
         self,
         language: str,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         **corpusargs,
-    ):
+    ) -> None:
         """Initialize the ICDAR Europeana NER dataset.
 
         The dataset is based on the French and Dutch Europeana NER corpora
@@ -4855,12 +4688,9 @@ class NER_ICDAR_EUROPEANA(ColumnCorpus):
         if language not in supported_languages:
             log.error(f"Language '{language}' is not in list of supported languages!")
             log.error(f"Supported are '{supported_languages}'!")
-            raise Exception()
+            raise Exception
 
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -4876,7 +4706,7 @@ class NER_ICDAR_EUROPEANA(ColumnCorpus):
         for split in ["train", "dev", "test"]:
             cached_path(f"{github_path}/{language}/{split}.txt", data_folder)
 
-        super(NER_ICDAR_EUROPEANA, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -4893,10 +4723,10 @@ class NER_NERMUD(MultiCorpus):
     def __init__(
         self,
         domains: Union[str, List[str]] = "all",
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
-    ):
+    ) -> None:
         """Initilize the NERMuD 2023 dataset.
 
         NERMuD is a task presented at EVALITA 2023 consisting in the extraction and classification
@@ -4921,10 +4751,7 @@ class NER_NERMUD(MultiCorpus):
         if type(domains) == str:
             domains = [domains]
 
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -4942,7 +4769,7 @@ class NER_NERMUD(MultiCorpus):
             if domain not in supported_domains:
                 log.error(f"Domain '{domain}' is not in list of supported domains!")
                 log.error(f"Supported are '{supported_domains}'!")
-                raise Exception()
+                raise Exception
 
             domain_folder = data_folder / domain.lower()
 
@@ -4960,7 +4787,7 @@ class NER_NERMUD(MultiCorpus):
                 **corpusargs,
             )
             corpora.append(corpus)
-        super(NER_NERMUD, self).__init__(
+        super().__init__(
             corpora,
             sample_missing_splits=False,
             name="nermud",

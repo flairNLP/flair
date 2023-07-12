@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
@@ -24,7 +24,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_name: str = "label",
-    ):
+    ) -> None:
         super().__init__()
 
         self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
@@ -133,7 +133,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         self,
         data_points: Union[List[Sentence], Dataset],
         gold_label_type: str,
-        out_path: Union[str, Path] = None,
+        out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
@@ -174,7 +174,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
                 metric.pred.extend(results)
 
                 for sentence, prediction, true_value in zip(batch, results, true_values):
-                    eval_line = "{}\t{}\t{}\n".format(sentence.to_original_text(), true_value, prediction)
+                    eval_line = f"{sentence.to_original_text()}\t{true_value}\t{prediction}\n"
                     lines.append(eval_line)
 
                 store_embeddings(batch, embedding_storage_mode)
@@ -228,7 +228,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
-            log.warning("Ignore {} sentence(s) with no tokens.".format(len(sentences) - len(filtered_sentences)))
+            log.warning(f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens.")
         return filtered_sentences
 
     @classmethod

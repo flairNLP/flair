@@ -8,7 +8,7 @@ TAGGED_ENTITY = """
     {entity}
     <span style="font-size: 0.8em; font-weight: bold; line-height: 3; border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; margin-left: 0.5rem">{label}</span>
 </mark>
-"""  # noqa: E501
+"""
 
 PARAGRAPH = """<p>{sentence}</p>"""
 
@@ -21,7 +21,7 @@ HTML_PAGE = """
 
     <body style="font-size: 16px; font-family: 'Segoe UI'; padding: 4rem 2rem">{text}</body>
 </html>
-"""  # noqa: E501
+"""
 
 
 def split_to_spans(s: Sentence, label_name="ner"):
@@ -68,7 +68,7 @@ def render_ner_html(
     sentences_html = []
     for s in sentences:
         spans = split_to_spans(s, label_name=label_name)
-        spans_html = list()
+        spans_html = []
         for fragment, tag in spans:
             escaped_fragment = html.escape(fragment).replace("\n", "<br/>")
             if tag:

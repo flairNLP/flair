@@ -5,7 +5,7 @@ rnn_layers = {"lstm": (nn.LSTM, 2), "gru": (nn.GRU, 1)}
 
 def create_recurrent_layer(layer_type, initial_size, hidden_size, nlayers, dropout=0, **kwargs):
     layer_type = layer_type.lower()
-    assert layer_type in rnn_layers.keys()
+    assert layer_type in rnn_layers
     module, hidden_count = rnn_layers[layer_type]
 
     if nlayers == 1:

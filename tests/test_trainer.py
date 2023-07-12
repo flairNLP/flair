@@ -11,7 +11,7 @@ from flair.trainers import ModelTrainer
 turian_embeddings = WordEmbeddings("turian")
 
 
-@pytest.mark.integration
+@pytest.mark.integration()
 def test_text_classifier_multi(results_base_path, tasks_base_path):
     flair.set_seed(123)
 
@@ -50,7 +50,7 @@ def test_text_classifier_multi(results_base_path, tasks_base_path):
         assert any(expected_substring in line for line in lines), expected_substring
 
 
-@pytest.mark.integration
+@pytest.mark.integration()
 def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
     corpus = flair.datasets.UD_ENGLISH().downsample(0.01)
     tag_dictionary = corpus.make_label_dictionary("pos")
@@ -87,7 +87,7 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
     del loaded_model
 
 
-@pytest.mark.integration
+@pytest.mark.integration()
 def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
     tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)

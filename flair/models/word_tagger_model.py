@@ -30,7 +30,7 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         label_type: str,
         span_encoding: str = "BIOES",
         **classifierargs,
-    ):
+    ) -> None:
         """Initializes a TokenClassifier.
 
         :param embeddings: word embeddings used in tagger
@@ -60,7 +60,8 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         # all parameters will be pushed internally to the specified device
         self.to(flair.device)
 
-    def _create_internal_label_dictionary(self, label_dictionary, span_encoding):
+    @staticmethod
+    def _create_internal_label_dictionary(label_dictionary, span_encoding):
         internal_label_dictionary = Dictionary(add_unk=False)
         for label in label_dictionary.get_items():
             if label == "<unk>":
@@ -78,10 +79,7 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         return internal_label_dictionary
 
     def _determine_if_span_prediction_problem(self, dictionary: Dictionary) -> bool:
-        for item in dictionary.get_items():
-            if item.startswith("B-") or item.startswith("S-") or item.startswith("I-"):
-                return True
-        return False
+        return any(item.startswith(("B-", "S-", "I-")) for item in dictionary.get_items())
 
     def _get_state_dict(self):
         model_state = {
@@ -111,15 +109,19 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         if self.training and self.span_prediction_problem:
             for token in sentence.tokens:
                 token.set_label(self.label_type, "O")
-            for span in sentence.get_spans(self.label_type):
-                span_label = span.get_label(self.label_type).value
-                if len(span) == 1:
-                    span.tokens[0].set_label(self.label_type, "S-" + span_label)
-                else:
-                    for token in span.tokens:
-                        token.set_label(self.label_type, "I-" + span_label)
-                    span.tokens[0].set_label(self.label_type, "B-" + span_label)
-                    span.tokens[-1].set_label(self.label_type, "E-" + span_label)
+                for span in sentence.get_spans(self.label_type):
+                    span_label = span.get_label(self.label_type).value
+                    if len(span) == 1:
+                        if self.span_encoding == "BIOES":
+                            span.tokens[0].set_label(self.label_type, "S-" + span_label)
+                        elif self.span_encoding == "BIO":
+                            span.tokens[0].set_label(self.label_type, "B-" + span_label)
+                    else:
+                        for token in span.tokens:
+                            token.set_label(self.label_type, "I-" + span_label)
+                        span.tokens[0].set_label(self.label_type, "B-" + span_label)
+                        if self.span_encoding == "BIOES":
+                            span.tokens[-1].set_label(self.label_type, "E-" + span_label)
 
         return sentence.tokens
 
@@ -143,13 +145,15 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
                     # does this prediction start a new span?
                     starts_new_span = False
 
-                    # begin and single tags start new spans
-                    if bioes_tag[:2] in {"B-", "S-"}:
+                    if bioes_tag[:2] in {"B-", "S-"} or (
+                        in_span
+                        and previous_tag[2:] != bioes_tag[2:]
+                        and (bioes_tag[:2] == "I-" or previous_tag[2:] == "S-")
+                    ):
+                        # B- and S- always start new spans
+                        # if the predicted class changes, I- starts a new span
+                        # if the predicted class changes and S- was previous tag, start a new span
                         starts_new_span = True
-                    elif in_span and previous_tag[2:] != bioes_tag[2:]:  # predicted class changed
-                        # If the current tag is I- or the previous tag was S-, we start a new span
-                        if bioes_tag[:2] == "I-" or previous_tag[2:] == "S-":
-                            starts_new_span = True
 
                     # if an existing span is ended (either by reaching O or starting a new span)
                     if (starts_new_span or not in_span) and len(current_span) > 0:
