@@ -142,8 +142,7 @@ class SimilarityMetric(Enum):
 
 def timeit(func):
     """
-    # This function shows the execution time of
-    # the function object passed
+    This function shows the execution time of the function object passed
     """
 
     def wrap_func(*args, **kwargs):
@@ -206,6 +205,9 @@ class EntityPreprocessor(AbstractEntityPreprocessor):
     Entity preprocessor adapted from:
         Sung et al. 2020, Biomedical Entity Representations with Synonym Marginalization
         https://github.com/dmis-lab/BioSyn/blob/master/src/biosyn/preprocesser.py#L5
+
+    The preprocessor provides basic string transformation options including lower-casing,
+    removal of punctuations symbols, etc.
     """
 
     def __init__(self, lowercase: bool = True, remove_punctuation: bool = True):
@@ -221,7 +223,6 @@ class EntityPreprocessor(AbstractEntityPreprocessor):
 
     @property
     def name(self):
-
         return "biosyn"
 
     def initialize(self, sentences):
@@ -243,7 +244,7 @@ class EntityPreprocessor(AbstractEntityPreprocessor):
 
 class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
     """
-    Entity preprocessor which uses Ab3P, an (biomedical)abbreviation definition detector:
+    Entity preprocessor which uses Ab3P, an (biomedical) abbreviation definition detector:
         Abbreviation definition identification based on automatic precision estimates.
         Sohn S, Comeau DC, Kim W, Wilbur WJ. BMC Bioinformatics. 2008 Sep 25;9:402.
         PubMed ID: 18817555
@@ -267,7 +268,6 @@ class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
 
     @property
     def name(self):
-
         return f"ab3p_{self.preprocessor.name}"
 
     def initialize(self, sentences: List[Sentence]) -> None:
@@ -347,6 +347,7 @@ class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
         # Download Ab3P executable
         ab3p_path = cached_path("https://github.com/dmis-lab/BioSyn/raw/master/Ab3P/identify_abbr", data_dir)
 
+        # Make Ab3P executable
         ab3p_path.chmod(ab3p_path.stat().st_mode | stat.S_IXUSR)
         return ab3p_path
 
@@ -362,12 +363,12 @@ class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
                 {"RSV": "Rous sarcoma virus"}
         }
 
-        :param sentences: list of senternces
+        :param sentences: list of sentences
         :result abbreviation_dict: abbreviations and their resolution detected in each input sentence
         """
         abbreviation_dict = defaultdict(dict)
 
-        # Create a temp file which holds the sentences we want to process with ab3p
+        # Create a temp file which holds the sentences we want to process with Ab3P
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as temp_file:
             for sentence in sentences:
                 temp_file.write(sentence.to_tokenized_string() + "\n")
@@ -377,7 +378,7 @@ class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
             with open(os.path.join(os.getcwd(), "path_Ab3P"), "w") as path_file:
                 path_file.write(str(self.word_data_dir) + "/\n")
 
-            # Run ab3p with the temp file containing the dataset
+            # Run Ab3P with the temp file containing the dataset
             # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/subprocess-run-check.html
             try:
                 result = subprocess.run(
@@ -432,10 +433,14 @@ class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
 
 class BiomedicalEntityLinkingDictionary:
     """
-    Load dictionary: either pre-definded or from path
-    Every line in the file must be formatted as follows: concept_id||concept_name
-    If multiple concept ids are associated to a given name
-    they must be separated by a `|`.
+    Class to load named entity dictionaries: either pre-defined or from a path on disk.
+    For the latter, every line in the file must be formatted as follows:
+
+        concept_id||concept_name
+
+    If multiple concept ids are associated to a given name they must be separated by a `|`, e.g.
+
+        7157||TP53|tumor protein p53
     """
 
     def __init__(
@@ -490,17 +495,18 @@ class BiomedicalEntityLinkingDictionary:
 
 class AbstractCandidateGenerator(ABC):
     """
-    Base class for a candidate genertor
+    Base class for a candidate generator, i.e. given a mention of an entity, find matching
+    entries from the dictionary.
     """
 
     @abstractmethod
     def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
         """
-        Returns the top-k entity / concept identifiers for the each entity mention.
+        Returns the top-k entity / concept identifiers for each entity mention.
 
         :param entity_mentions: Entity mentions
         :param top_k: Number of best-matching entities from the knowledge base to return
-        :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
+        :result: List containing a list of entity linking candidates per entity mention from the input
         """
 
     def build_candidate(self, candidate: Tuple[str, str, float], database_name: str) -> EntityLinkingCandidate:
@@ -542,14 +548,6 @@ class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
         return cls(BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path))
 
     def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
-        """
-        Returns the top-k entity / concept identifiers for the each entity mention.
-
-        :param entity_mentions: Entity mentions
-        :param top_k: Number of best-matching entities from the knowledge base to return
-        :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
-        """
-
         return [
             [
                 self.build_candidate(
@@ -564,6 +562,7 @@ class BigramTfIDFVectorizer:
     """
     Wrapper for sklearn TfIDFVectorizer w/ fixed ngram range at the character level
     Implementation adapted from:
+
         Sung et al.: Biomedical Entity Representations with Synonym Marginalization, 2020
         https://github.com/dmis-lab/BioSyn/tree/master/src/biosyn/sparse_encoder.py#L8
     """
@@ -605,8 +604,7 @@ class BigramTfIDFVectorizer:
 
 class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
     """
-    Candidate generator using both dense (transformer-based)
-    and (optionally) sparse vector representations,
+    Candidate generator using both dense (transformer-based) and (optionally) sparse vector representations,
     to search candidates in a knowledge base / dictionary.
     """
 
@@ -629,13 +627,13 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         :param model_name_or_path: Name of or path to the transformer model to be used.
         :param dictionary_name_or_path: Name of or path to the transformer model to be used.
         :param similarity_metric: which metric to use to compute similarity
-        :param preprocessor: Preprocessing for entity mentions and names
+        :param preprocessor: Preprocessing strategy for entity mentions and names
         :param max_length: Maximum number of input tokens to transformer model
-        :param batch_size: how many entity mentions/names to embed in one forward pass
+        :param batch_size: Number of entity mentions/names to embed in one forward pass
         :param hybrid_search: Indicates whether to use sparse embeddings or not
-        :param sparse_weight: default sparse weight
+        :param sparse_weight: Weight to balance sparse and dense similarity scores (default sparse weight)
         :param force_hybrid_search: if pre-trained model is not hybrid (dense+sparse) fit a sparse encoder
-        :param dictionary: optionally pass a dictionary
+        :param dictionary: optionally pass a custom dictionary
         """
         self.model_name_or_path = model_name_or_path
         self.dictionary_name_or_path = dictionary_name_or_path
@@ -706,7 +704,9 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return sparse_encoder
 
-    def _handle_sparse_encoder(self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]):
+    def _handle_sparse_encoder(
+        self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]
+    ) -> BigramTfIDFVectorizer:
         """If necessary fit and cache sparse encoder"""
 
         if isinstance(model_name_or_path, str):
@@ -729,13 +729,11 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
     def _get_sparse_encoder_and_weight(
         self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]
     ) -> Tuple[BigramTfIDFVectorizer, float]:
-
         sparse_encoder_path = os.path.join(model_name_or_path, "sparse_encoder.pk")
         sparse_weight_path = os.path.join(model_name_or_path, "sparse_weight.pt")
 
         if isinstance(model_name_or_path, str) and model_name_or_path in PRETRAINED_HYBRID_MODELS:
             if not os.path.exists(sparse_encoder_path):
-
                 sparse_encoder_path = hf_hub_download(
                     repo_id=model_name_or_path,
                     filename="sparse_encoder.pk",
@@ -745,7 +743,6 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
                 sparse_encoder = BigramTfIDFVectorizer.load(path=sparse_encoder_path)
 
             if not os.path.exists(sparse_weight_path):
-
                 sparse_weight_path = hf_hub_download(
                     repo_id=model_name_or_path,
                     filename="sparse_weight.pt",
@@ -760,19 +757,18 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return sparse_encoder, sparse_weight
 
-    def embed_sparse(self, inputs: np.ndarray) -> csr_matrix:
+    def embed_sparse(self, inputs: np.ndarray) -> np.ndarray:
         """
         Create sparse embeddings from array of entity mentions/names.
 
-        :param entity_names: An array of entity / concept names
-        :returns sparse_embeds csr_matrix: Scipy sparse CSR matrix
+        :param inputs: Numpy array of entity / concept names
+        :returns Numpy array containing the sparse embeddings of the names
         """
 
         return self.sparse_encoder(inputs)
 
     def embed_dense(self, inputs: np.ndarray, batch_size: int = 1024, show_progress: bool = False) -> np.ndarray:
         """
-
         Create dense embeddings from array of entity mentions/names.
 
         :param names: Numpy array of entity / concept names
@@ -815,11 +811,9 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         """Load or create dense index and save it to disk"""
 
         if path.exists():
-
             index = faiss.read_index(str(path))
 
         else:
-
             embeddings = self.embed_dense(inputs=names, batch_size=self.batch_size, show_progress=True)
 
             index = faiss.IndexFlatIP(embeddings.shape[1])
@@ -854,7 +848,6 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         )
 
         cache_folder = flair.cache_root / "datasets" / cache_name
-
         cache_folder.mkdir(parents=True, exist_ok=True)
 
         indices = {}
@@ -866,7 +859,6 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         )
 
         for index_type in ["sparse", "dense"]:
-
             if index_type == "sparse" and not self.hybrid_search:
                 continue
 
@@ -877,13 +869,11 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
             index_cache_file = cache_folder / file_name
 
             if index_type == "dense":
-
                 indices[index_type] = self.get_dense_index(
                     names=[n for n, _ in self.dictionary_data], path=index_cache_file
                 )
 
             else:
-
                 indices[index_type] = self.get_sparse_index(
                     names=[n for n, _ in self.dictionary_data], path=index_cache_file
                 )
@@ -895,9 +885,8 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         """
         Find candidates with sparse representations
 
-        :param entity_mentions: list of entity mentions (queries)
-        :param top_k: number of candidates to retrieve
-        :param normalise: normalise scores
+        :param entity_mentions: list of entity mentions (~ queries)
+        :param top_k: number of candidates to retrieve per mention
         """
         assert (
             self.sparse_encoder is not None
@@ -929,7 +918,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         """
         Find candidates with dense representations (FAISS)
 
-        :param entity_mentions: list of entity mentions (queries)
+        :param entity_mentions: list of entity mentions (~ queries)
         :param top_k: number of candidates to retrieve
         """
 
@@ -953,14 +942,13 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
         top_k: int = 1,
     ):
         """
-        Expand dense resutls with sparse ones (that are not already in the dense)
-        and re-weight the score as: dense_score + sparse_weight * sparse_scores
+        Expand dense results with sparse ones (that are not already in the dense) and re-weight the
+        score as: dense_score + sparse_weight * sparse_scores
         """
 
         hybrid_ids = []
         hybrid_scores = []
         for i in range(dense_ids.shape[0]):
-
             mention_ids = dense_ids[i]
             mention_scores = dense_scores[i]
 
@@ -985,17 +973,16 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
     def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
         """
-        Returns the top-k entity / concept identifiers for the each entity mention.
+        Returns the top-k entity / concept identifiers for each entity mention.
 
         :param entity_mentions: Entity mentions
         :param top_k: Number of best-matching entities from the knowledge base to return
-        :result: list of tuples in the form: (entity / concept name, concept ids, similarity score).
+        :result: List containing a list of entity linking candidates per entity mention from the input
         """
 
         ids, scores = self.search_dense(entity_mentions=entity_mentions, top_k=top_k)
 
         if self.hybrid_search and self.sparse_encoder is not None:
-
             sparse_ids, sparse_scores = self.search_sparse(entity_mentions=entity_mentions, top_k=top_k)
 
             scores, ids = self.combine_dense_and_sparse_results(
@@ -1035,7 +1022,7 @@ class BiomedicalEntityLinker:
         self,
         sentences: List[Sentence],
         annotation_layers: Optional[List[str]] = None,
-    ) -> Tuple[List[int], List[Span], List[str]]:
+    ) -> Tuple[List[int], List[Span], List[str], List[str]]:
         """Unpack all mentions in sentences for batch search."""
 
         source = []
@@ -1069,11 +1056,11 @@ class BiomedicalEntityLinker:
         top_k: int = 1,
     ) -> None:
         """
-        Predicts the best matching top-k entity / concept identifiers of all named entites annotated
+        Predicts the best matching top-k entity / concept identifiers of all named entities annotated
         with tag input_entity_annotation_layer.
 
         :param sentences: One or more sentences to run the prediction on
-        :param annotation_layers: list of annotation layers to extract entity mentions
+        :param annotation_layers: List of annotation layers to extract entity mentions
         :param top_k: Number of best-matching entity / concept identifiers
         """
         # make sure sentences is a list of sentences
@@ -1096,7 +1083,6 @@ class BiomedicalEntityLinker:
             for i, data_point, mention_candidates, mentions_annotation_layer in zip(
                 source, data_points, candidates, mentions_annotation_layers
             ):
-
                 sentences[i].add_label(
                     typename=mentions_annotation_layer,
                     value_or_label=EntityLinkingLabel(data_point=data_point, candidates=mention_candidates),
@@ -1251,31 +1237,3 @@ class BiomedicalEntityLinker:
                 )
 
         return dictionary_name_or_path
-
-    # @timeit
-    # def build_sparse_index(self, embeddings: csr_matrix) -> csr_matrix:
-    #     """Initialize sparse index"""
-
-    #     index = embeddings
-
-    #     ######################################
-    #     # ANNOY
-    #     ######################################
-    #     # metric = ANNOY_METRIC[self.similarity_metric]
-    #     # index = annoy.AnnoyIndex(embeddings.shape[1], metric)
-    #     # # See https://github.com/spotify/annoy#tradeoffs
-    #     # n_trees = int(embeddings.shape[0] / 100)
-    #     # for i, v in enumerate(embeddings.tolist()):
-    #     #     index.add_item(i, v)
-    #     # index.build(n_trees, n_jobs=min(mp.cpu_count(), 8))
-
-    #     ######################################
-    #     # HNSWLIB
-    #     ######################################
-    #     # metric = HNSWLIB_METRIC[self.similarity_metric]
-    #     # index = hnswlib.Index(space=metric, dim=embeddings.shape[1])
-    #     # index.init_index(max_elements=embeddings.shape[0], ef_construction=200, M=16)
-    #     # index.add_items(embeddings, np.arange(embeddings.shape[0]))
-    #     # index.set_ef(50)  # ef should always be > k
-
-    #     return index
