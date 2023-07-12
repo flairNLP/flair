@@ -182,7 +182,7 @@ def assert_conll_writer_output(
     assert contents == expected_output
 
 
-def test_filter_nested_entities(caplog):
+def test_filter_nested_entities(recwarn):
     entities_per_document = {
         "d0": [Entity((0, 1), "t0"), Entity((2, 3), "t1")],
         "d1": [Entity((0, 6), "t0"), Entity((2, 3), "t1"), Entity((4, 5), "t2")],
@@ -204,9 +204,11 @@ def test_filter_nested_entities(caplog):
     }
 
     dataset = InternalBioNerDataset(documents={}, entities_per_document=entities_per_document)
-    caplog.set_level(logging.WARNING)
     filter_nested_entities(dataset)
-    assert "WARNING: Corpus modified by filtering nested entities." in caplog.text
+
+    assert len(recwarn.list) == 1
+    assert isinstance(recwarn.list[0].message, UserWarning)
+    assert "Corpus modified by filtering nested entities." in recwarn.list[0].message.args[0]
 
     for key, entities in dataset.entities_per_document.items():
         assert key in target
