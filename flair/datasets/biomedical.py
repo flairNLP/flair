@@ -10,8 +10,10 @@ from collections import defaultdict, deque
 from copy import copy
 from operator import attrgetter
 from pathlib import Path
+from tarfile import CompressionError, ExtractError, HeaderError, ReadError, StreamError, TarError
 from typing import Dict, Iterable, Iterator, List, NamedTuple, Optional, Tuple, Union
 from warnings import warn
+from zipfile import BadZipFile, LargeZipFile
 
 import ftfy
 from deprecated import deprecated
@@ -5119,11 +5121,7 @@ class AZDZ(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-<<<<<<< HEAD
-        super(AZDZ, self).__init__(data_folder, columns, tag_to_bioes="ner", in_memory=in_memory)
-=======
         super().__init__(data_folder, columns, in_memory=in_memory)
-
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
