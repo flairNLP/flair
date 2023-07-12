@@ -507,8 +507,8 @@ class HunerDataset(ColumnCorpus, ABC):
 
 class AbstractBiomedicalEntityLinkingDictionary(ABC):
     """
-    Base class for dictionaries for named entity linking.
-    Dictionary contains all entities in the corpus and their associated ids.
+    Base class for downloading and reading of dictionaries for named entity linking.
+    A dictionary represents all entities of a knowledge base and their associated ids.
     """
 
     def __init__(
@@ -516,7 +516,8 @@ class AbstractBiomedicalEntityLinkingDictionary(ABC):
         base_path: Union[str, Path] = None,
     ):
         """
-        :param base_path: Path to the corpus on your machine"""
+        :param base_path: Path to the corpus on your machine
+        """
 
         if base_path is None:
             base_path = flair.cache_root / "datasets"
@@ -534,9 +535,8 @@ class AbstractBiomedicalEntityLinkingDictionary(ABC):
             data_file = self.download_dictionary(data_folder)
 
             with open(self.dataset_file, "w", encoding="utf-8") as f:
-                for cui, name in  self.parse_dictionary(data_file):
+                for cui, name in self.parse_dictionary(data_file):
                     f.write(f"{cui}||{name}\n")
-
 
     @property
     @abstractmethod
@@ -567,13 +567,17 @@ class AbstractBiomedicalEntityLinkingDictionary(ABC):
 
 class ParsedBiomedicalEntityLinkingDictionary(AbstractBiomedicalEntityLinkingDictionary):
     """
-    Base dictionary with data already in preprocessed format.
-    Every line in the file must be formatted as follows: concept_id||concept_name
-    If multiple concept ids are associated to a given name
-    they must be separated by a `|`
+    Base dictionary with data already in preprocessed format, i.e. every line in the file must
+    be formatted as follows:
+
+        concept_id||concept_name
+
+    If multiple concept ids are associated to a given name they have to be separated by a `|`, e.g.
+
+        7157||TP53|tumor protein p53
     """
 
-    def __init__(self,path: Path, database_name :str):
+    def __init__(self, path: Path, database_name: str):
         self.dataset_file = path
         self._database_name = database_name
 
@@ -587,9 +591,13 @@ class ParsedBiomedicalEntityLinkingDictionary(AbstractBiomedicalEntityLinkingDic
     def parse_dictionary(self):
         pass
 
+
 class CTD_DISEASES_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     """
-    Dictionary for Named Entity Linking on Diseases
+    Dictionary for named entity linking on diseases using the Comparative
+    Toxicogenomics Database (CTD).
+
+    Fur further information can be found at https://ctdbase.org/
     """
 
     def __init__(
@@ -658,7 +666,10 @@ class CTD_DISEASES_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
 
 class CTD_CHEMICALS_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     """
-    Dictionary for Named Entity Linking on Chemicals
+    Dictionary for named entity linking on chemicals using the Comparative
+    Toxicogenomics Database (CTD).
+
+    Fur further information can be found at https://ctdbase.org/
     """
 
     def __init__(
@@ -671,7 +682,7 @@ class CTD_CHEMICALS_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
 
     @property
     def database_name(self):
-        return "CTD-CHEMICALS" 
+        return "CTD-CHEMICALS"
 
     def download_dictionary(self, data_dir: Path) -> Path:
         data_url = "https://ctdbase.org/reports/CTD_chemicals.tsv.gz"
@@ -693,7 +704,6 @@ class CTD_CHEMICALS_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
         ]
 
         with open(original_file, mode="r", encoding="utf-8") as f:
-            data = []
             for line in f:
                 if line.startswith("#"):
                     continue
@@ -722,10 +732,14 @@ class CTD_CHEMICALS_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
                     yield e
 
 
-
 class NCBI_GENE_HUMAN_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     """
-    Dictionary for Named Entity Linking on Genes
+    Dictionary for named entity linking on diseases using the NCBI Gene ontology.
+
+    Note that this dictionary only represents human genes - gene from different species
+    aren't included!
+
+    Fur further information can be found at https://www.ncbi.nlm.nih.gov/gene/
     """
 
     def __init__(
@@ -753,7 +767,7 @@ class NCBI_GENE_HUMAN_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
 
     @property
     def database_name(self):
-        return "NCBI-GENE-HUMAN" 
+        return "NCBI-GENE-HUMAN"
 
     def download_dictionary(self, data_dir: Path) -> Path:
         data_url = "https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz"
@@ -814,7 +828,9 @@ class NCBI_GENE_HUMAN_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
 
 class NCBI_TAXONOMY_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
     """
-    Dictionary for Named Entity Linking on Organisms
+    Dictionary for named entity linking on organisms / species using the NCBI taxonomy ontology.
+
+    Further information about the ontology can be found at https://www.ncbi.nlm.nih.gov/taxonomy
     """
 
     def __init__(
@@ -827,7 +843,7 @@ class NCBI_TAXONOMY_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
 
     @property
     def database_name(self):
-        return "NCBI-TAXONOMY" 
+        return "NCBI-TAXONOMY"
 
     def download_dictionary(self, data_dir: Path) -> Path:
         data_url = "https://ftp.ncbi.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
@@ -888,7 +904,6 @@ class NCBI_TAXONOMY_DICTIONARY(AbstractBiomedicalEntityLinkingDictionary):
                     names = []
                     synonym = parsed_line["name"]
                     names.append(synonym)
-
 
 
 class BIO_INFER(ColumnCorpus):
