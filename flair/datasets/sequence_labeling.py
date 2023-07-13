@@ -4845,13 +4845,11 @@ class MASAKHA_POS(MultiCorpus):
             "ibo",
             "kin",
             "lug",
-            #"luo",
             "mos",
             "pcm",
             "nya",
             "sna",
             "swa",
-            #"tsn",
             "twi",
             "wol",
             "xho",
@@ -4872,7 +4870,7 @@ class MASAKHA_POS(MultiCorpus):
             if language not in supported_languages:
                 log.error(f"Language '{language}' is not in list of supported languages!")
                 log.error(f"Supported are '{supported_languages}'!")
-                log.error("Instantiate this Corpus for instance like so 'corpus = MASAKHA_POS(languages='luo')'")
+                log.error("Instantiate this Corpus for instance like so 'corpus = MASAKHA_POS(languages='bam')'")
                 raise Exception
 
             language_folder = data_folder / language
@@ -4880,7 +4878,7 @@ class MASAKHA_POS(MultiCorpus):
             # download data if necessary
             data_path = f"{data_paths[version]}/{language}"
             cached_path(f"{data_path}/dev.txt", language_folder)
-            #cached_path(f"{data_path}/test.txt", language_folder)
+            cached_path(f"{data_path}/test.txt", language_folder)
             cached_path(f"{data_path}/train.txt", language_folder)
 
             # initialize comlumncorpus and add it to list
@@ -4891,7 +4889,6 @@ class MASAKHA_POS(MultiCorpus):
                 encoding="utf-8",
                 in_memory=in_memory,
                 name=language,
-                test_file=None,
                 **corpusargs,
             )
             corpora.append(corp)
