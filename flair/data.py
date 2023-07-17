@@ -967,7 +967,7 @@ class Sentence(DataPoint):
             "labels": [label.to_dict() for label in self.get_labels(tag_type) if label.data_point is self],
             "entities": [span.to_dict(tag_type) for span in self.get_spans(tag_type)],
             "relations": [relation.to_dict(tag_type) for relation in self.get_relations(tag_type)],
-            "tokens": [token.to_dict(tag_type) for token in self.tokens]
+            "tokens": [token.to_dict(tag_type) for token in self.tokens],
         }
 
     def get_span(self, start: int, stop: int):
