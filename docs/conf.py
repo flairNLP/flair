@@ -26,6 +26,19 @@ html_context = {
     "conf_py_path": "/docs/",
 }  # dummy value that sphinx-github-style won't crash when run in temp folder.
 
+html_js_files = ["custom-icon.js"]
+
+html_theme_options = {
+    "navbar_end": ["theme-switcher", "version-switcher", "navbar-icon-links"],
+    "github_url": linkcode_url,
+    "icon_links": [
+            {
+                "name": "PyPI",
+                "url": "https://pypi.org/project/flair",
+                "icon": "fa-custom fa-pypi",
+            },
+        ],
+}
 
 def linkcode_resolve(*args):
     # use smv_current_version as the git url

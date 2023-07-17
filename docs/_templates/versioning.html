@@ -9,10 +9,7 @@
       (stable)
       {% endif %}
     {% else %}
-    latest (dev)
-    {% endif %}
-    {% if item == current_version %}
-    [x]
+    latest ({{ item.name }})
     {% endif %}
   </a></li>
   {%- endfor %}
