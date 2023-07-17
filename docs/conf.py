@@ -26,8 +26,6 @@ html_context = {
     "conf_py_path": "/docs/",
 }  # dummy value that sphinx-github-style won't crash when run in temp folder.
 
-html_js_files = ["custom-icon.js"]
-
 html_theme_options = {
     "navbar_end": ["theme-switcher", "version-switcher", "navbar-icon-links"],
     "github_url": linkcode_url,
@@ -35,7 +33,7 @@ html_theme_options = {
             {
                 "name": "PyPI",
                 "url": "https://pypi.org/project/flair",
-                "icon": "fa-custom fa-pypi",
+                "icon": "fas fa-box",
             },
         ],
 }
@@ -82,7 +80,7 @@ html_theme = "pydata_sphinx_theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ["_static"]
+html_static_path = ["_static"]
 
 # Napoleon settings
 napoleon_include_init_with_doc = True
