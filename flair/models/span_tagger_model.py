@@ -306,8 +306,17 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                     symbol_print = "(✓)"*nr_good_labels + "(❌)"*nr_bad_labels
                     eval_line += (
                         f' - "{span.text}" / {gold_print}'
-                        f' --> {pred_print} {symbol_print}\n'
+                        f' --> {pred_print} {symbol_print}'
                     )
+                    if self.gazetteer_embeddings:
+                        self.gazetteer_embeddings.embed(span)
+                        span_gazetteer_embedding = span.get_embedding(self.gazetteer_embeddings.get_names())
+                        span_gazetteer_embedding_print = "\t[" + " ".join([str(e.item()) for e in span_gazetteer_embedding]) + "]"
+                        eval_line += span_gazetteer_embedding_print + '\n'
+
+                    else:
+                        eval_line += '\n'
+
                     printed.append(span)
 
                 # print out also the wrongly predicted spans (gold is "O"), consider each label
@@ -323,8 +332,18 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
                         symbol_print = "(✓)" * nr_good_labels + "(❌)" * nr_bad_labels
                         eval_line += (
                             f' - "{span.text}" / {gold_print}'
-                            f' --> {pred_print} {symbol_print}\n'
+                            f' --> {pred_print} {symbol_print}'
                         )
+
+                        if self.gazetteer_embeddings:
+                            self.gazetteer_embeddings.embed(span)
+                            span_gazetteer_embedding = span.get_embedding(self.gazetteer_embeddings.get_names())
+                            span_gazetteer_embedding_print = "\t[" + " ".join(
+                                [str(e.item()) for e in span_gazetteer_embedding]) + "]"
+                            eval_line += span_gazetteer_embedding_print + '\n'
+                        else:
+                            eval_line += '\n'
+
                         printed.append(span)
 
                 lines.append(eval_line)
