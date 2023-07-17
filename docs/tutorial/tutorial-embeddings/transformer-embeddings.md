@@ -58,7 +58,7 @@ embedding.embed(sentence)
 
 ## Arguments
 
-There are several options that you can set when you init the [`TransformerWordEmbeddings`](#flair.embeddings.document.TransformerWordEmbeddings) 
+There are several options that you can set when you init the [`TransformerWordEmbeddings`](#flair.embeddings.token.TransformerWordEmbeddings) 
 and [`TransformerDocumentEmbeddings`](#flair.embeddings.document.TransformerDocumentEmbeddings) classes:
 
 | Argument               | Default             | Description                                                                                                                                
