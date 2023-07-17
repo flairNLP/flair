@@ -85,7 +85,8 @@ html_sidebars = {
         "globaltoc.html",
         "searchbox.html",
         "versioning.html",
-    ]
+    ],
+    "index": []
 }
 
 smv_latest_version = importlib_metadata.version(project)
