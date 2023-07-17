@@ -1,4 +1,4 @@
-name: 'Run tests for ci cd'
+name: 'Build doc page'
 on:
   push:
     branches: [ main, doc-page ]
