@@ -543,6 +543,14 @@ class Token(_PartOfSentence):
         else:
             DataPoint.set_label(self, typename=typename, value=value, score=score)
 
+    def to_dict(self, tag_type: Optional[str] = None):
+        return {
+            "text": self.text,
+            "start_pos": self.start_position,
+            "end_pos": self.end_position,
+            "labels": [label.to_dict() for label in self.get_labels(tag_type)],
+        }
+
 
 class Span(_PartOfSentence):
     """This class represents one textual span consisting of Tokens."""
@@ -957,8 +965,9 @@ class Sentence(DataPoint):
         return {
             "text": self.to_original_text(),
             "labels": [label.to_dict() for label in self.get_labels(tag_type) if label.data_point is self],
-            "entities": [span.to_dict() for span in self.get_spans(tag_type)],
-            "relations": [relation.to_dict() for relation in self.get_relations(tag_type)],
+            "entities": [span.to_dict(tag_type) for span in self.get_spans(tag_type)],
+            "relations": [relation.to_dict(tag_type) for relation in self.get_relations(tag_type)],
+            "tokens": [token.to_dict(tag_type) for token in self.tokens]
         }
 
     def get_span(self, start: int, stop: int):
