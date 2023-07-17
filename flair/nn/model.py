@@ -729,7 +729,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         data_point_tensor = self._encode_data_points(sentences, data_points)
 
         # decode
-        scores = self.decoder(data_point_tensor)
+        if self._custom_decoder:
+            scores = self.decoder(data_point_tensor,
+                                  labels = label_tensor,
+                                  data_points = data_points) # quick fix Susanna for LabelVerbalizerDecoder
+        else:
+            scores = self.decoder(data_point_tensor)
 
         # an optional masking step (no masking in most cases)
         scores = self._mask_scores(scores, data_points)
@@ -809,6 +814,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
             overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
+            has_unknown_label = False
+
             for batch in batches:
                 # filter data points in batch
                 batch = [dp for dp in batch if self._filter_data_point(dp)]
@@ -824,7 +831,13 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
                 # pass data points through network and decode
                 data_point_tensor = self._encode_data_points(batch, data_points)
-                scores = self.decoder(data_point_tensor)
+                if self._custom_decoder:
+                    scores = self.decoder(data_point_tensor,
+                                          labels=None,
+                                          data_points=data_points)  # quick fix Susanna for LabelVerbalizerDecoder
+                else:
+                    scores = self.decoder(data_point_tensor)
+
                 scores = self._mask_scores(scores, data_points)
 
                 # if anything could possibly be predicted
@@ -889,11 +902,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 self._post_process_batch_after_prediction(batch, label_name)
 
             if return_loss:
-                if has_unknown_label:
-                    log.info(
-                        "During evaluation, encountered labels that are not in the label_dictionary:"
-                        "Evaluation loss is computed without them."
-                    )
+                #if has_unknown_label:
+                #    log.info(
+                #        "During evaluation, encountered labels that are not in the label_dictionary:"
+                #        "Evaluation loss is computed without them."
+                #    )
                 return overall_loss, label_count
             return None
 

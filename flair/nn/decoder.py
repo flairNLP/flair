@@ -1,7 +1,8 @@
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import torch
+import random
 
 import flair
 from flair.data import Dictionary, Sentence
@@ -14,6 +15,8 @@ from flair.nn.distance import (
     NegativeScaledDotProduct,
 )
 from flair.training_utils import store_embeddings
+
+import wikidata_NER_mapping
 
 logger = logging.getLogger("flair")
 
@@ -211,3 +214,191 @@ class LabelVerbalizerDecoder(torch.nn.Module):
         scores = torch.mm(inputs, label_tensor.T)
 
         return scores
+
+
+class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
+    """A class for appending Wikidata descriptions to Wikipedia URL target labels in Named Entity Linking tasks.
+    Embedding all, then simple matrix multiplication.
+
+    Args:
+        label_encoder (flair.embeddings.TokenEmbeddings):
+            The label encoder used to encode the labels into an embedding.
+        label_dictionary:
+            The label dictionary, so the Wikipedia Labels
+        verbalizations (Optional):
+            A dictionary that already includes the (or some of the) verbalizations of labels. Labels as keys, verbalizations as values.
+            E.g. {"United_States": "United States democracy state republic country nation",
+                  "Netherlands": "Netherlands country constituent state territory country of the Kingdom of the Netherlands
+        ...
+
+    Attributes:
+        ...
+
+    Methods:
+        forward(self, label_embeddings: torch.Tensor, context_embeddings: torch.Tensor) -> torch.Tensor:
+            ...
+
+    Examples:
+        ...
+    """
+
+    def __init__(self, label_embedding: Embeddings,
+                 label_dictionary: Dictionary,
+                 requires_masking: bool,
+                 decoder_hidden_size: int = 768,
+                 inputs_size: int = 768,
+                 num_negatives: int = 128,
+                 verbalizations: Optional[Dict[str, str]] = None,
+                 candidates = None):
+
+        super().__init__()
+        self.label_embedding = label_embedding
+        if verbalizations:
+            self.verbalizations = verbalizations
+        else:
+            self.verbalizations = {}
+        self.label_dictionary = label_dictionary
+        self.verbalized_labels: List[Sentence] = self.verbalize_labels(self, label_dictionary=self.label_dictionary)
+        self.candidates = candidates
+
+        self.requires_masking = requires_masking
+        self.num_negatives = num_negatives
+
+        # if text encoding end label encoding do not have the same size (e.g. because EntityLinker uses first-last-concatenation):
+        if inputs_size != label_embedding.embedding_length:
+            self.labels_hidden = torch.nn.Linear(self.label_embedding.embedding_length, decoder_hidden_size)
+            self.inputs_hidden = torch.nn.Linear(inputs_size, decoder_hidden_size)
+            torch.nn.init.xavier_uniform_(self.labels_hidden.weight)
+            torch.nn.init.xavier_uniform_(self.inputs_hidden.weight)
+        else:
+            self.labels_hidden = None
+            self.inputs_hidden = None
+
+
+        self.to(flair.device)
+
+    @staticmethod
+    def verbalize_labels(self, label_dictionary: Dictionary) -> List[Sentence]:
+
+        verbalized_labels = []
+        for byte_label, idx in label_dictionary.item2idx.items():
+            print("Verbalizing", idx, byte_label, "...")
+            str_label = byte_label.decode("utf-8")
+
+            if label_dictionary.span_labels:
+                if str_label not in ["O", "<unk>"]:
+                    bio = str_label.split("-")[0]
+                    entity = str_label[2:]
+                    if bio == "B":
+                        bio_verbalized = "begin "
+                    elif bio == "I":
+                        bio_verbalized = "inside "
+                    elif bio == "E":
+                        bio_verbalized = "ending "
+                    elif bio == "S":
+                        bio_verbalized = "single"
+                else:
+                    bio_verbalized = ""
+                    entity = str_label
+
+            else:
+                entity = str_label
+
+            if entity == "O":
+                verbalized = "outside"
+            elif entity == "<unk>":
+                verbalized = "unknown"
+            else:
+                verbalized = self.verbalizations.get(entity, None)
+                if not verbalized:
+                    wikipedia_label = entity
+                    #print(wikipedia_label)
+                    wikidata_info = wikidata_NER_mapping.pipeline(wikipedia_label, method ="strict")
+                    wikidata_classes = wikidata_info["class_names"]
+                    wikidata_title = wikidata_info["wikidata_title"]
+                    verbalized = wikidata_title + ", " + ", ".join(wikidata_classes)
+                    self.verbalizations[entity] = verbalized
+
+            if label_dictionary.span_labels:
+                verbalized = bio_verbalized + verbalized
+
+            verbalized_labels.append(verbalized)
+
+        print(f"--- Created verbalized labels for {len(verbalized_labels)} labels")
+        return list(map(Sentence, verbalized_labels))
+
+    def return_verbalizations_dict(self):
+        return self.verbalizations
+
+    def remove_verbalizations_from_memory(self):
+        del self.verbalizations
+
+    def embedding_sublist(self, labels) -> List[Sentence]:
+        unique_entries = set(labels)
+
+        # Randomly sample entries from the larger list
+        while len(unique_entries) < self.num_negatives:
+            entry = random.choice(range(len(self.verbalized_labels)))
+            unique_entries.add(entry)
+
+        return [self.verbalized_labels[idx] for idx in unique_entries], unique_entries
+
+    def get_candidates_of_batch(self, data_points) -> List[Sentence]:
+        unique_entries = set()
+        unique_entries.add(self.label_dictionary.item2idx.get("<unk>".encode("utf-8")))
+
+        for d in data_points:
+            candidates = self.candidates.get_candidates(d.text)
+            for c in candidates:
+                idx = self.label_dictionary.item2idx.get(c.encode("utf-8"), None)
+                if idx:
+                    unique_entries.add(idx)
+        #print(data_points)
+        #print([self.verbalized_labels[idx] for idx in unique_entries])
+
+        return [self.verbalized_labels[idx] for idx in unique_entries], unique_entries
+
+    def forward(self, inputs: torch.Tensor, labels: torch.Tensor = None, data_points = None) -> torch.Tensor:
+
+        if self.training:
+            if self.requires_masking:  # requires_masking ist vllt irreführend - es wird nie wirklich benötigt, vielmehr werden einfach während dem training nur die verbalized labels embedded welche auch wirklich in Batch vorhanden sind. die embedding_sublist() checkt dann noch ob die unique anzahl der labels im batch kleiner ist als die anzahl der num_negatives. Wenn ja werden noch negatives gesamplet. num_negatives = 128 heißt also nicht es kommen 128 negative labels on top sondern insgesamt hat der batch das 128 labels wovon 128 - unique anzahl positiver labels = anzahl negatives sind.
+                labels_to_include = labels.cpu().numpy().tolist()
+                used_labels, indices = self.embedding_sublist(labels_to_include)
+
+            else:
+                used_labels = self.verbalized_labels
+
+        #if using candidates, only the candidates in the batch need embedding, even in prediction. The rest gets masked in decoding anyway
+        else:
+            if self.candidates:
+                used_labels, indices = self.get_candidates_of_batch(data_points=data_points)
+            else:
+                used_labels = self.verbalized_labels
+
+        #print(f"About to embed {len(used_labels)} labels...")
+        self.label_embedding.embed(used_labels) # todo this runs into CUDA out of memory quickly
+
+        label_tensor = torch.stack([label.get_embedding() for label in used_labels])
+        if self.labels_hidden:
+            label_tensor = self.labels_hidden(label_tensor)
+
+        if self.inputs_hidden:
+            inputs = self.inputs_hidden(inputs)
+
+        if self.training:
+            store_embeddings(self.verbalized_labels, "none")
+
+        else:
+            store_embeddings(self.verbalized_labels, "none") # todo is that a problem?
+
+        scores = torch.mm(inputs, label_tensor.T)
+
+        if (self.training and self.requires_masking) or (not self.training and self.candidates):
+            all_scores = torch.zeros(scores.shape[0], len(self.verbalized_labels), device=flair.device)
+            all_scores[:, torch.LongTensor(list(indices))] = scores
+
+        elif not self.training or not self.requires_masking:
+            all_scores = scores
+
+        return all_scores
+
