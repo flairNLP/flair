@@ -249,6 +249,7 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
                  requires_masking: bool,
                  fast_inference: bool = True,
                  fast_inference_save_path: str = None,
+                 max_label_len: int= 32,
                  decoder_hidden_size: int = 768,
                  inputs_size: int = 768,
                  num_negatives: int = 128,
@@ -272,6 +273,14 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
         self.fast_inference_save_path = fast_inference_save_path
         if self.fast_inference_save_path and not Path(self.fast_inference_save_path).exists():
             Path(self.fast_inference_save_path).mkdir(parents=True, exist_ok=True)
+
+        self.max_label_len = max_label_len
+        if self.max_label_len:
+            verbalized_labels_truncated = []
+            for s in self.verbalized_labels:
+                s.tokens = s.tokens[:self.max_label_len]
+                verbalized_labels_truncated.append(s)
+            self.verbalized_labels = verbalized_labels_truncated
 
         if self.fast_inference:
             assert self.fast_inference_save_path, "Need a path to save label embeddings!"
