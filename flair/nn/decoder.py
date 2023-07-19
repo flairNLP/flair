@@ -4,6 +4,7 @@ from typing import List, Optional, Dict
 import torch
 import random
 import numpy as np
+from pathlib import Path
 
 import flair
 from flair.data import Dictionary, Sentence
@@ -247,7 +248,7 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
                  label_dictionary: Dictionary,
                  requires_masking: bool,
                  fast_inference: bool = True,
-                 fast_inference_save_path: str = "../DecoderLabelEmbeddings",
+                 fast_inference_save_path: str = None,
                  decoder_hidden_size: int = 768,
                  inputs_size: int = 768,
                  num_negatives: int = 128,
@@ -269,6 +270,9 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
 
         self.fast_inference = fast_inference
         self.fast_inference_save_path = fast_inference_save_path
+        if self.fast_inference_save_path and not Path(self.fast_inference_save_path).exists():
+            Path(self.fast_inference_save_path).mkdir(parents=True, exist_ok=True)
+
         if self.fast_inference:
             assert self.fast_inference_save_path, "Need a path to save label embeddings!"
 
