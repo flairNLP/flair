@@ -3,6 +3,7 @@ from typing import List, Optional, Dict
 
 import torch
 import random
+import numpy as np
 
 import flair
 from flair.data import Dictionary, Sentence
@@ -245,6 +246,8 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
     def __init__(self, label_embedding: Embeddings,
                  label_dictionary: Dictionary,
                  requires_masking: bool,
+                 fast_inference: bool = True,
+                 fast_inference_save_path: str = "../DecoderLabelEmbeddings",
                  decoder_hidden_size: int = 768,
                  inputs_size: int = 768,
                  num_negatives: int = 128,
@@ -263,6 +266,13 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
 
         self.requires_masking = requires_masking
         self.num_negatives = num_negatives
+
+        self.fast_inference = fast_inference
+        self.fast_inference_save_path = fast_inference_save_path
+        if self.fast_inference:
+            assert self.fast_inference_save_path, "Need a path to save label embeddings!"
+
+        self.is_first_batch_in_evaluation = True
 
         # if text encoding end label encoding do not have the same size (e.g. because EntityLinker uses first-last-concatenation):
         if inputs_size != label_embedding.embedding_length:
@@ -333,6 +343,48 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
     def remove_verbalizations_from_memory(self):
         del self.verbalizations
 
+    def embed_labels_batchwise_and_save(self, batch_size = 128, mode= "embed"):
+        assert mode in ["embed", "load_from_file"], "mode should be either `embed` or `load_from_file"
+
+        if mode == "embed":
+            label_embeddings = []
+            indices = [idx for idx in range(len(self.verbalized_labels))]
+            label_names = [byte_label.decode("utf-8") for byte_label, idx in self.label_dictionary.item2idx.items() ]
+
+            for i in range(0, len(indices), batch_size):
+                #indices_batch = indices[i:i+batch_size]
+                labels_batch = self.verbalized_labels[i:i+batch_size]
+
+                self.label_embedding.embed(labels_batch)
+                label_embeddings.extend([label.get_embedding() for label in labels_batch])
+
+                for s in labels_batch:
+                    s.clear_embeddings()
+
+            label_embeddings_tensor = torch.stack(label_embeddings)
+
+            if self.fast_inference_save_path:
+                label_tensor_path = self.fast_inference_save_path + "/label_embeddings.npy"
+                np.save(label_tensor_path, label_embeddings_tensor.cpu().numpy())
+
+                # save as tsv as well, for enabling visualizations
+                label_tensor_tsv_path = self.fast_inference_save_path + "/label_embeddings.tsv"
+                np.savetxt(label_tensor_tsv_path, label_embeddings_tensor.cpu().numpy(), delimiter='\t', fmt='%.8f')
+
+                with open(self.fast_inference_save_path + "/label_embeddings_names.txt", 'w') as file:
+                    for item in label_names:
+                        file.write(item + '\n')
+
+
+        elif mode == "load_from_file":
+            label_tensor_path = self.fast_inference_save_path + "/label_embeddings.npy"
+            label_embeddings_tensor = torch.from_numpy(np.load(label_tensor_path)).to(flair.device)
+
+        else:
+            raise ValueError
+
+        return label_embeddings_tensor
+
     def embedding_sublist(self, labels) -> List[Sentence]:
         unique_entries = set(labels)
 
@@ -353,51 +405,70 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
                 idx = self.label_dictionary.item2idx.get(c.encode("utf-8"), None)
                 if idx:
                     unique_entries.add(idx)
-        #print(data_points)
-        #print([self.verbalized_labels[idx] for idx in unique_entries])
 
         return [self.verbalized_labels[idx] for idx in unique_entries], unique_entries
 
     def forward(self, inputs: torch.Tensor, labels: torch.Tensor = None, data_points = None) -> torch.Tensor:
 
         if self.training:
-            if self.requires_masking:  # requires_masking ist vllt irreführend - es wird nie wirklich benötigt, vielmehr werden einfach während dem training nur die verbalized labels embedded welche auch wirklich in Batch vorhanden sind. die embedding_sublist() checkt dann noch ob die unique anzahl der labels im batch kleiner ist als die anzahl der num_negatives. Wenn ja werden noch negatives gesamplet. num_negatives = 128 heißt also nicht es kommen 128 negative labels on top sondern insgesamt hat der batch das 128 labels wovon 128 - unique anzahl positiver labels = anzahl negatives sind.
+            self.is_first_batch_in_evaluation = True # set this to assure new embedding of labels in the following evaluation phase
+
+            if self.requires_masking:  # during training, only embed the labels that are in the batch (optionally also some additional negatives)
                 labels_to_include = labels.cpu().numpy().tolist()
-                used_labels, indices = self.embedding_sublist(labels_to_include)
+                reduced_labels, reduced_indices = self.embedding_sublist(labels_to_include)
 
             else:
-                used_labels = self.verbalized_labels
+                reduced_labels = self.verbalized_labels
+                reduced_indices = [idx for idx in range(len(self.verbalized_labels))]
 
-        #if using candidates, only the candidates in the batch need embedding, even in prediction. The rest gets masked in decoding anyway
         else:
+            # if using candidates, only the candidates in the batch need embedding, even in prediction. The rest gets masked in decoding anyway
             if self.candidates:
-                used_labels, indices = self.get_candidates_of_batch(data_points=data_points)
+                reduced_labels, reduced_indices = self.get_candidates_of_batch(data_points=data_points)
+
+            # embeds everything, but only once and batch_wise, saves as numpy array, reads in all following batches of same eval phase
+            elif self.fast_inference:
+                # if it's the first batch right after training, embed all and save!
+                if self.is_first_batch_in_evaluation:
+                    label_tensor = self.embed_labels_batchwise_and_save(mode = "embed")
+                    self.is_first_batch_in_evaluation = False
+                # else: read in the embeddings
+                else:
+                    try:
+                        label_tensor = self.embed_labels_batchwise_and_save(mode = "load_from_file")
+                    except:
+                        label_tensor = self.embed_labels_batchwise_and_save(mode = "embed") # fallback, just in case
+
+                reduced_labels = None
+                reduced_indices = None
+
             else:
-                used_labels = self.verbalized_labels
+                reduced_labels = self.verbalized_labels
+                reduced_indices = [idx for idx in range(len(self.verbalized_labels))]
 
-        #print(f"About to embed {len(used_labels)} labels...")
-        self.label_embedding.embed(used_labels) # todo this runs into CUDA out of memory quickly
+        if reduced_labels and reduced_indices:
+            self.label_embedding.embed(reduced_labels)
+            label_tensor = torch.stack([label.get_embedding() for label in reduced_labels])
 
-        label_tensor = torch.stack([label.get_embedding() for label in used_labels])
         if self.labels_hidden:
             label_tensor = self.labels_hidden(label_tensor)
 
         if self.inputs_hidden:
             inputs = self.inputs_hidden(inputs)
 
-        if self.training:
-            store_embeddings(self.verbalized_labels, "none")
-
-        else:
-            store_embeddings(self.verbalized_labels, "none") # todo is that a problem?
+        store_embeddings(self.verbalized_labels, "none")
+        # if self.training:
+        #     store_embeddings(self.verbalized_labels, "none")
+        # else:
+        #     store_embeddings(self.verbalized_labels, "none") # todo is that a problem?
 
         scores = torch.mm(inputs, label_tensor.T)
 
-        if (self.training and self.requires_masking) or (not self.training and self.candidates):
+        if reduced_labels and reduced_indices:
             all_scores = torch.zeros(scores.shape[0], len(self.verbalized_labels), device=flair.device)
-            all_scores[:, torch.LongTensor(list(indices))] = scores
+            all_scores[:, torch.LongTensor(list(reduced_indices))] = scores
 
-        elif not self.training or not self.requires_masking:
+        else:
             all_scores = scores
 
         return all_scores
