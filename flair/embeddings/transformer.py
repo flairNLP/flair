@@ -183,6 +183,7 @@ def document_mean_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths
 
     for i in torch.arange(sentence_hidden_states.shape[0]):
         result[i] = sentence_hidden_states[i, : sentence_lengths[i]].mean(dim=0)
+    return result
 
 
 @torch.jit.script_if_tracing
@@ -191,6 +192,7 @@ def document_max_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths:
 
     for i in torch.arange(sentence_hidden_states.shape[0]):
         result[i], _ = sentence_hidden_states[i, : sentence_lengths[i]].max(dim=0)
+    return result
 
 
 def _legacy_reconstruct_word_ids(
