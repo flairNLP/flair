@@ -199,10 +199,7 @@ class ModelTrainer:
         local_variables = locals()
         training_parameters = {}
         for parameter in signature(self.train).parameters:
-            if isinstance(local_variables[parameter], Path):
-                training_parameters[parameter] = str(local_variables[parameter])
-            else:
-                training_parameters[parameter] = local_variables[parameter]
+            training_parameters[parameter] = local_variables[parameter]
         model_card["training_parameters"] = training_parameters
 
         if epoch >= max_epochs:
@@ -258,8 +255,7 @@ class ModelTrainer:
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)
 
-        if epoch == 0:
-            self.check_for_and_delete_previous_best_models(base_path)
+        self.check_for_and_delete_previous_best_models(base_path)
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
@@ -308,7 +304,7 @@ class ModelTrainer:
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
-        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else -1.0
+        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.0
 
         dataset_size = _len_dataset(self.corpus.train)
         if train_with_dev:
@@ -364,6 +360,7 @@ class ModelTrainer:
 
         # if training also uses dev/train data, include in training set
         if train_with_dev or train_with_test:
+
             parts = [self.corpus.train]
             if train_with_dev and self.corpus.dev:
                 parts.append(self.corpus.dev)
@@ -479,7 +476,6 @@ class ModelTrainer:
 
                 start_time = time.time()
 
-                # if shuffle_first_epoch==False, the first epoch is not shuffled
                 shuffle_data_this_epoch = shuffle
                 if not shuffle_first_epoch and epoch == 1:
                     shuffle_data_this_epoch = False
@@ -487,9 +483,10 @@ class ModelTrainer:
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
-                    shuffle=shuffle_data_this_epoch,
+                    shuffle=shuffle_data_this_epoch,  
                     num_workers=0 if num_workers is None else num_workers,
                     sampler=sampler,
+                    drop_last=True
                 )
 
                 self.model.train()
@@ -504,6 +501,7 @@ class ModelTrainer:
                 # process mini-batches
                 average_over = 0
                 for batch_no, batch in enumerate(batch_loader):
+
                     # zero the gradients on the model and optimizer
                     self.model.zero_grad()
                     optimizer.zero_grad()
@@ -515,9 +513,11 @@ class ModelTrainer:
 
                     # forward and backward for batch
                     for batch_step in batch_steps:
+
                         # forward pass
                         loss, datapoint_count = self.model.forward_loss(batch_step)
                         average_over += datapoint_count
+
                         # Backward
                         if use_amp:
                             with amp.scale_loss(loss, optimizer) as scaled_loss:
@@ -527,9 +527,8 @@ class ModelTrainer:
                         train_loss += loss.item()
 
                         # identify dynamic embeddings (always deleted) on first sentence
-
-                        if dynamic_embeddings is None:
-                            dynamic_embeddings = identify_dynamic_embeddings(batch)
+                        if not dynamic_embeddings:
+                            dynamic_embeddings = identify_dynamic_embeddings(batch[0])
 
                         # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                         store_embeddings(batch, embeddings_storage_mode, dynamic_embeddings)
@@ -559,13 +558,13 @@ class ModelTrainer:
                         lr_info = ",".join([f"{lr:.6f}" for lr in current_learning_rate])
 
                         intermittent_loss = train_loss / average_over if average_over > 0 else train_loss / seen_batches
-                        end_time = time.time()
+
                         log.info(
                             f"epoch {epoch}"
                             f" - iter {seen_batches}/{total_number_of_batches}"
                             f" - loss {intermittent_loss:.8f}"
-                            f" - time (sec): {end_time - start_time:.2f}"
-                            f" - samples/sec: {average_over / (end_time - start_time):.2f}"
+                            f" - time (sec): {(time.time() - start_time):.2f}"
+                            f" - samples/sec: {average_over / (time.time() - start_time):.2f}"
                             f" - lr: {lr_info}{momentum_info}"
                         )
                         iteration = epoch * total_number_of_batches + batch_no
@@ -609,6 +608,7 @@ class ModelTrainer:
                         f" ({main_evaluation_metric[0]}) "
                         f" {round(train_eval_result.main_score, 4)}"
                     )
+
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.train, embeddings_storage_mode, dynamic_embeddings)
 
@@ -624,6 +624,7 @@ class ModelTrainer:
                         exclude_labels=exclude_labels,
                     )
                     result_line += f"\t{train_part_eval_result.loss}" f"\t{train_part_eval_result.log_line}"
+
                     log.info(
                         f"TRAIN_SPLIT : loss {train_part_eval_result.loss}"
                         f" - {main_evaluation_metric[1]}"
@@ -631,7 +632,7 @@ class ModelTrainer:
                         f" {round(train_part_eval_result.main_score, 4)}"
                     )
                     if use_tensorboard:
-                        for metric_class_avg_type, metric_type in metrics_for_tensorboard:
+                        for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
                             writer.add_scalar(
                                 f"train_{metric_class_avg_type}_{metric_type}",
                                 train_part_eval_result.classification_report[metric_class_avg_type][metric_type],
@@ -721,7 +722,7 @@ class ModelTrainer:
                 # determine if this is the best model or if we need to anneal
                 current_epoch_has_best_model_so_far = False
                 # default mode: anneal against dev score
-                if not train_with_dev and not anneal_against_dev_loss and self.corpus.dev is not None:
+                if not train_with_dev and not anneal_against_dev_loss:
                     if dev_score > best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_score
@@ -730,7 +731,7 @@ class ModelTrainer:
                         scheduler.step(dev_score, dev_eval_result.loss)
 
                 # alternative: anneal against dev loss
-                if not train_with_dev and anneal_against_dev_loss and self.corpus.dev is not None:
+                if not train_with_dev and anneal_against_dev_loss:
                     if dev_eval_result.loss < best_validation_score:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_eval_result.loss
@@ -776,6 +777,7 @@ class ModelTrainer:
                 if loss_txt is not None:
                     # output log file
                     with open(loss_txt, "a") as f:
+
                         # make headers on first epoch
                         if epoch == 1:
                             bad_epoch_header = "BAD_EPOCHS\t" if log_bad_epochs else ""
@@ -851,8 +853,6 @@ class ModelTrainer:
         finally:
             if use_tensorboard:
                 writer.close()
-        optimizer.zero_grad(set_to_none=True)
-        del optimizer
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
@@ -885,6 +885,7 @@ class ModelTrainer:
         additional_epochs: Optional[int] = None,
         **trainer_args,
     ):
+
         assert model.model_card is not None
         self.model = model
         # recover all arguments that were used to train this model
@@ -904,7 +905,7 @@ class ModelTrainer:
 
         if additional_epochs is not None:
             args_used_to_train_model["max_epochs"] = (
-                args_used_to_train_model.get("epoch", kwargs.get("epoch", 0)) + additional_epochs
+                args_used_to_train_model.pop("epoch", kwargs.pop("epoch", 0)) + additional_epochs
             )
 
         # resume training with these parameters
@@ -921,27 +922,56 @@ class ModelTrainer:
         mini_batch_size: int = 4,
         embeddings_storage_mode: str = "none",
         use_final_model_for_eval: bool = True,
-        decoder_lr_factor: float = 1.0,
+        decoder_lr: Union[int, float] = None,
+        decoder_batchnorm_lr: Union[int, float] = None,
         **trainer_args,
     ):
-        # If set, add a factor to the learning rate of all parameters with 'embeddings' not in name
-        if decoder_lr_factor != 1.0:
-            optimizer = optimizer(
-                [
-                    {
-                        "params": [param for name, param in self.model.named_parameters() if "embeddings" not in name],
-                        "lr": learning_rate * decoder_lr_factor,
-                    },
-                    {
-                        "params": [param for name, param in self.model.named_parameters() if "embeddings" in name],
-                        "lr": learning_rate,
-                    },
-                ]
-            )
+
+        param_groups = []
+        manually_set_parameters = set()
+
+        if decoder_batchnorm_lr:
+
+            if isinstance(decoder_batchnorm_lr, int):
+                manually_set_lr = learning_rate * decoder_batchnorm_lr
+            elif isinstance(decoder_batchnorm_lr, float):
+                manually_set_lr = decoder_batchnorm_lr
+            else:
+                manually_set_lr = learning_rate
+
+            param_groups.append({"params": [p for p in self.model.decoder.BN.parameters() if p not in manually_set_parameters],
+                                  "lr": manually_set_lr})
             log.info(
-                f"Modifying learning rate to {learning_rate * decoder_lr_factor} for the following "
-                f"parameters: {[name for name, param in self.model.named_parameters() if 'embeddings' not in name]}"
+                     f"Setting batch norm learning rate to {manually_set_lr} for the following "
+                     f"parameters: {[name for name, param in self.model.decoder.BN.named_parameters() if param not in manually_set_parameters]}"
+                 )
+
+            manually_set_parameters.update(self.model.decoder.BN.parameters())
+
+        if decoder_lr:
+
+            if isinstance(decoder_lr, int):
+                manually_set_lr = learning_rate * decoder_lr
+            elif isinstance(decoder_lr, float):
+                manually_set_lr = decoder_lr
+            else:
+                manually_set_lr = learning_rate
+
+
+            param_groups.append({"params": [p for p in self.model.decoder.parameters() if p not in manually_set_parameters],
+                                  "lr": manually_set_lr})
+            log.info(
+                f"Setting learning rate to {manually_set_lr} for the following "
+                f"parameters: {[name for name, param in self.model.decoder.named_parameters() if param not in manually_set_parameters]}"
             )
+
+            manually_set_parameters.update(self.model.decoder.parameters())
+
+        # make a param group out of remaining params
+        param_groups.append({"params": [p for p in self.model.parameters() if p not in manually_set_parameters],
+                             "lr": learning_rate})
+
+        optimizer = optimizer(param_groups, lr = learning_rate)
 
         return self.train(
             base_path=base_path,
@@ -1035,7 +1065,7 @@ class ModelTrainer:
 
         step = 0
         while step < iterations:
-            batch_loader = DataLoader(train_data, batch_size=mini_batch_size, shuffle=True)
+            batch_loader = DataLoader(train_data, batch_size=mini_batch_size, shuffle=True, drop_last=True)
             for batch in batch_loader:
                 step += 1
 

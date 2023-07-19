@@ -115,9 +115,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         super(EntityLinker, self).__init__(
             embeddings=embeddings,
             label_dictionary=label_dictionary,
-            final_embedding_size=embeddings.embedding_length * 2
-            if pooling_operation == "first_last"
-            else embeddings.embedding_length,
+            final_embedding_size=final_embedding_size,
             **classifierargs,
         )
 
@@ -180,7 +178,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "word_embeddings": self.embeddings.save_embeddings(use_state_dict=False),
+            "word_embeddings": self.embeddings,
             "span_embeddings": self.span_embeddings,
             "label_type": self.label_type,
             "label_dictionary": self.label_dictionary,
@@ -198,13 +196,16 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
 
             for span in datapoint.get_spans(gold_label_type):
                 span_string = ""
-                if self.span_embeddings:
-                    self.span_embeddings.embed(span)
-                    embedding = span.get_embedding().tolist()
-                    span_string = f'('
-                    for i in range(len(embedding)):
-                        span_string+=f'{round(embedding[i], 2)}, '
-                    span_string += f')'
+                # if self.span_embeddings:
+                #     # self.span_embeddings.embed(span)
+                #     embedding = span.get_embedding().tolist()
+                #     span_string = f'(' \
+                #                   f'MISC: {round(embedding[0], 2)}, ' \
+                #                   f'ORG: {round(embedding[1], 2)}, ' \
+                #                   f'PER: {round(embedding[2], 2)}, ' \
+                #                   f'LOC: {round(embedding[3], 2)},' \
+                #                   f'total: {round(embedding[4], 2)}' \
+                #                   f')'
 
                 symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
                 eval_line += (
@@ -228,7 +229,7 @@ class EntityLinker(flair.nn.DefaultClassifier[Sentence, Span]):
         return super()._init_model_with_state_dict(
             state,
             embeddings=state.get("word_embeddings"),
-            span_embeddings=state.get("span_embeddings"),
+            span_embeddings=state.get("span_embeddings", None),
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type"),
             pooling_operation=state.get("pooling_operation"),
