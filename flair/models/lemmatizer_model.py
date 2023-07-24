@@ -42,6 +42,10 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         in which all words are annotated with a (maybe equal) lemma.
 
         Args:
+            encode_characters: If True, use a character embedding to additionally encode tokens per character.
+            start_symbol_for_encoding: If True, use a start symbol for encoding characters.
+            end_symbol_for_encoding: If True, use an end symbol for encoding characters.
+            bidirectional_encoding: If True, the character encoding is bidirectional.
             embeddings: Embedding used to encode sentence
             rnn_input_size: Input size of the RNN('s). Each letter of a token is represented by a hot-one-vector over
                 the given character dictionary. This vector is transformed to a input_size vector with a linear layer.
@@ -163,12 +167,14 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
     ):
         """For a given list of strings this function creates index vectors that represent the characters of the strings.
 
-        Each string is represented by sequence_length (maximum string length + entries for special symbold) many
+        Each string is represented by sequence_length (maximum string length + entries for special symbol) many
         indices representing characters in self.char_dict.
         One can manually set the vector length with the parameter seq_length, though the vector length is always
         at least maximum string length in the list.
 
         Args:
+            seq_length: the maximum sequence length to use, if None the maximum is taken..
+            tokens: the texts of the toekens to encode
             end_symbol: add self.end_index at the end of each representation
             start_symbol: add self.start_index in front of each representation
             padding_in_front: whether to fill up with self.dummy_index in front or in back of strings
@@ -414,6 +420,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
             embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
             return_loss: whether to compute and return loss. Setting it to True only makes sense if labels are provided
             verbose: If True, lemmatized sentences will be printed in the console.
+            return_probabilities_for_all_classes: unused parameter.
         """
         if isinstance(sentences, Sentence):
             sentences = [sentences]

@@ -148,6 +148,7 @@ class ViterbiDecoder:
         Args:
             features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size), lengths of sentence in batch, transitions of CRF
             probabilities_for_all_classes: whether to return probabilities for all tags
+            sentences: list of the respective sentences with extracted features.
 
         Returns: decoded sequences
         """
@@ -225,11 +226,7 @@ class ViterbiDecoder:
         return tags, all_tags
 
     def _all_scores_for_token(self, scores: torch.Tensor, lengths: torch.IntTensor, sentences: List[Sentence]):
-        """Returns all scores for each tag in tag dictionary.
-
-        Args:
-            scores: Scores for current sentence.
-        """
+        """Returns all scores for each tag in tag dictionary."""
         scores = scores.numpy()
         prob_tags_per_sentence = []
         for scores_sentence, length, sentence in zip(scores, lengths, sentences):

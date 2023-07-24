@@ -62,6 +62,7 @@ def render_ner_html(
         colors: dict where keys are tags and values are color HTML codes
         default_color: color to use if colors parameter is missing a tag
         wrap_page: if True method returns result of processing sentences wrapped by &lt;html&gt; and &lt;body&gt; tags, otherwise - without these tags
+        label_name: the label name to specify which labels of the sentence are visualized.
 
     Returns: HTML as a string
     """

@@ -343,10 +343,14 @@ class TARSTagger(FewshotClassifier):
         Args:
             task_name: a string depicting the name of the task
             label_dictionary: dictionary of labels you want to predict
+            label_type: label_type: name of the label
             embeddings: name of the pre-trained transformer model e.g., 'bert-base-uncased'
             num_negative_labels_to_sample: number of negative labels to sample for each positive labels against a
                 sentence during training. Defaults to 2 negative labels for each positive label. The model would sample
                 all the negative labels if None is passed. That slows down the training considerably.
+            prefix: if True, the label will be concatenated at the start, else on the end.
+            **tagger_args: The arguments propagated to :met:`FewshotClassifier.__init__`
+
         """
         super().__init__()
 
@@ -675,6 +679,7 @@ class TARSClassifier(FewshotClassifier):
         Args:
             task_name: a string depicting the name of the task.
             label_dictionary: dictionary of labels you want to predict.
+            label_type: label_type: name of the label
             embeddings: name of the pre-trained transformer model e.g., 'bert-base-uncased'.
             num_negative_labels_to_sample: number of negative labels to sample for each positive labels against a
                 sentence during training. Defaults to 2 negative labels for each positive label.
@@ -684,6 +689,8 @@ class TARSClassifier(FewshotClassifier):
                 or False to force single-label predictions.
             multi_label_threshold: If multi-label you can set the threshold to make predictions.
             beta: Parameter for F-beta score for evaluation and training annealing.
+            prefix: if True, the label will be concatenated at the start, else on the end.
+            **tagger_args: The arguments propagated to :met:`FewshotClassifier.__init__`
         """
         super().__init__()
 

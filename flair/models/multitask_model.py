@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import torch
 
 import flair.nn
-from flair.data import DT, Dictionary, Sentence
+from flair.data import DT, Sentence
 from flair.file_utils import cached_path
 from flair.nn import Classifier
 from flair.training_utils import Result
@@ -121,22 +121,19 @@ class MultitaskModel(flair.nn.Classifier):
         data_points,
         gold_label_type: str,
         out_path: Optional[Union[str, Path]] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
-        gold_label_dictionary: Optional[Dictionary] = None,
-        return_loss: bool = True,
         evaluate_all: bool = True,
         **evalargs,
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation results and a loss value.
 
         Args:
-            sentences: batch of sentences
-            embeddings_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed), 'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
-            mini_batch_size: size of batches
+            data_points: batch of sentences
+            gold_label_type: if evaluate_all is False, specify the task to evaluate by the task_id.
+            out_path: if not None, predictions will be created and saved at the respective file.
+            main_evaluation_metric: Specify which metric to highlight as main_score
             evaluate_all: choose if all tasks should be evaluated, or a single one, depending on gold_label_type
+            **evalargs: arguments propagated to :meth:`flair.nn.Model.evaluate`
 
         Returns: Tuple of Result object and loss value (float)
         """
@@ -154,12 +151,7 @@ class MultitaskModel(flair.nn.Classifier):
                 data,
                 gold_label_type=self.tasks[gold_label_type].label_type,
                 out_path=out_path,
-                embedding_storage_mode=embedding_storage_mode,
-                mini_batch_size=mini_batch_size,
                 main_evaluation_metric=main_evaluation_metric,
-                exclude_labels=exclude_labels,
-                gold_label_dictionary=gold_label_dictionary,
-                return_loss=return_loss,
                 **evalargs,
             )
 
@@ -175,12 +167,7 @@ class MultitaskModel(flair.nn.Classifier):
                 data_points=[data_points[i] for i in split],
                 gold_label_type=self.tasks[task_id].label_type,
                 out_path=f"{out_path}_{task_id}.txt" if out_path is not None else None,
-                embedding_storage_mode=embedding_storage_mode,
-                mini_batch_size=mini_batch_size,
                 main_evaluation_metric=main_evaluation_metric,
-                exclude_labels=exclude_labels,
-                gold_label_dictionary=gold_label_dictionary,
-                return_loss=return_loss,
                 **evalargs,
             )
 

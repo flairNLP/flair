@@ -67,6 +67,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             train_initial_hidden_state: if True, trains initial hidden state of RNN
             loss_weights: Dictionary of weights for labels for the loss function. If any label's weight is unspecified it will default to 1.0.
             init_from_state_dict: Indicator whether we are loading a model from state dict since we need to transform previous models' weights into CRF instance weights
+            allow_unk_predictions: If True, allows spans to predict <unk> too.
+            tag_format: the format to encode spans as tags, either "BIO" or "BIOES"
         """
         super().__init__()
 
@@ -445,6 +447,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             label_name: which label to predict
             return_loss: whether to return loss value
             embedding_storage_mode: determines where to store embeddings - can be "gpu", "cpu" or None.
+            force_token_predictions: add labels per token instead of span labels, even if `self.predict_spans` is True
         """
         if label_name is None:
             label_name = self.tag_type
@@ -569,11 +572,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return predictions, all_tags
 
     def _all_scores_for_token(self, sentences: List[Sentence], scores: torch.Tensor, lengths: List[int]):
-        """Returns all scores for each tag in tag dictionary.
-
-        Args:
-            scores: Scores for current sentence.
-        """
+        """Returns all scores for each tag in tag dictionary."""
         scores = scores.numpy()
         tokens = [token for sentence in sentences for token in sentence]
         prob_all_tags = [

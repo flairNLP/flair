@@ -126,6 +126,7 @@ class ScalarMix(torch.nn.Module):
 
         Args:
             mixture_size: size of mixtures (usually the number of layers)
+            trainable: weather or not the weights should be learnable.
         """
         super().__init__()
         self.mixture_size = mixture_size

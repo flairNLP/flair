@@ -1388,7 +1388,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         """Export TransformerEmbeddings to OnnxFormat.
 
         Args:
+            path: the path to save the embeddings. Notice that the embeddings are stored as external file,
+              hence it matters if the path is an absolue path or a relative one.
             example_sentences: a list of sentences that will be used for tracing. It is recommended to take 2-4
                 sentences with some variation.
+            **kwargs: the parameters passed to :met:`TransformerOnnxEmbeddings.export_from_embedding`
         """
         return self.onnx_cls.export_from_embedding(path, self, example_sentences, **kwargs)

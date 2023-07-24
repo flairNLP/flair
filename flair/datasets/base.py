@@ -144,6 +144,7 @@ class MongoDataset(FlairDataset):
             max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
             tokenizer: Custom tokenizer to use (default SegtokTokenizer)
             in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
+            tag_type: The tag type to assign labels to.
 
         Returns: list of sentences
         """

@@ -34,6 +34,7 @@ class ClusteringModel:
 
         Args:
             corpus: the flair corpus this wrapper will use for fitting the model.
+            **kwargs: parameters propagated to the models `.fit()` method.
         """
         X = self._convert_dataset(corpus)
 
@@ -84,9 +85,6 @@ class ClusteringModel:
 
         Turns the corpora into X, y datasets as required for most sklearn clustering models.
         Ref.: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.cluster
-
-        Args:
-            label_type: the label from sentences will be extracted. If the value is none this will be skipped.
         """
         log.info("Embed sentences...")
         sentences = []

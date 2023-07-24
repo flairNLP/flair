@@ -43,11 +43,9 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
 
         Args:
             model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for options)
-            layers: string indicating which layers to take for embedding (-1 is topmost layer)
-            subtoken_pooling: how to get from token piece embeddings to token embedding. Either take the first
-                subtoken ('first'), the last subtoken ('last'), both first and last ('first_last') or a mean over all ('mean')
-            layer_mean: If True, uses a scalar mix of layers as embedding
-            fine_tune: If True, allows transformers to be fine-tuned during training
+            is_document_embedding: If True, the embedding can be used as DocumentEmbedding too.
+            allow_long_sentences: If True, too long sentences will be patched and strided and afterwards combined.
+            **kwargs: Arguments propagated to :met:`flair.embeddings.transformer.TransformerEmbeddings.__init__`
         """
         TransformerEmbeddings.__init__(
             self,
@@ -169,7 +167,14 @@ class WordEmbeddings(TokenEmbeddings):
 
         Args:
             embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or a path to a custom embedding
+            field: if given, the word-embeddings embed the data for the specific label-type instead of the plain text.
+            fine_tune: If True, allows word-embeddings to be fine-tuned during training
+            force_cpu: If True, stores the large embedding matrix not on the gpu to save memory. `force_cpu` can only be used if `fine_tune` is False
             stable: if True, use the stable embeddings as described in https://arxiv.org/abs/2110.02861
+            no_header: only for reading plain word2vec text files. If true, the reader assumes the first line to not contain embedding length and vocab size.
+            vocab: If the embeddings are already loaded in memory, provide the vocab here.
+            embedding_length: If the embeddings are already loaded in memory, provide the embedding_length here.
+            name: The name of the embeddings.
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
@@ -572,11 +577,20 @@ class FlairEmbeddings(TokenEmbeddings):
         """Initializes contextual string embeddings using a character-level language model.
 
         Args:
-            model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast', 'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward' depending on which character language model is desired.
-            fine_tune: if set to True, the gradient will propagate into the language model. This dramatically slows down training and often leads to overfitting, so use with caution.
-            chars_per_chunk: max number of chars per rnn pass to control speed/memory tradeoff. Higher means faster but requires more memory. Lower means slower but less memory.
-            with_whitespace: If True, use hidden state after whitespace after word. If False, use hidden state at last character of word.
-            tokenized_lm: Whether this lm is tokenized. Default is True, but for LMs trained over unprocessed text False might be better.
+            model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
+              'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward' depending on which character language model is desired.
+            fine_tune: if set to True, the gradient will propagate into the language model.
+              This dramatically slows down training and often leads to overfitting, so use with caution.
+            chars_per_chunk: max number of chars per rnn pass to control speed/memory tradeoff.
+              Higher means faster but requires more memory. Lower means slower but less memory.
+            with_whitespace: If True, use hidden state after whitespace after word.
+              If False, use hidden state at last character of word.
+            tokenized_lm: Whether this lm is tokenized. Default is True,
+              but for LMs trained over unprocessed text False might be better.
+            has_decoder: Weather to load the decoder-head of the LanguageModel. This should only be true, if you intend
+              to generate text.
+            is_lower: Whether this lm is trained on lower-cased data.
+            name: The name of the embeddings
         """
         super().__init__()
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -1014,6 +1028,8 @@ class FastTextEmbeddings(TokenEmbeddings):
         Args:
             embeddings: path to your embeddings '.bin' file
             use_local: set this to False if you are using embeddings from a remote source
+            field: if given, the word-embeddings embed the data for the specific label-type instead of the plain text.
+            name: The name of the embeddings.
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 

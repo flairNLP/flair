@@ -32,12 +32,14 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         Args:
             embeddings: embeddings used to embed each data point
             label_dictionary: dictionary of labels you want to predict
+            label_type: string identifier for tag type
             multi_label: auto-detected by default, but you can set this to True to force multi-label predictions
                 or False to force single-label predictions.
             multi_label_threshold: If multi-label you can set the threshold to make predictions
             beta: Parameter for F-beta score for evaluation and training annealing
             loss_weights: Dictionary of weights for labels for the loss function. If any label's weight is
                 unspecified it will default to 1.0
+            **classifierargs: The arguments propagated to :met:`flair.nn.DefaultClassifier.__init__`
         """
         super().__init__(
             **classifierargs,

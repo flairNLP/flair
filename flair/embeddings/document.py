@@ -43,6 +43,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
             cls_pooling: Pooling strategy for combining token level embeddings. options are 'cls', 'max', 'mean'.
             layer_mean: If True, uses a scalar mix of layers as embedding
             fine_tune: If True, allows transformers to be fine-tuned during training
+            is_token_embedding: If True, the embedding can be used as TokenEmbedding too.
+            **kwargs: Arguments propagated to :met:`flair.embeddings.transformer.TransformerEmbeddings.__init__`
         """
         TransformerEmbeddings.__init__(
             self,
@@ -175,6 +177,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
 
         Args:
             train_dataset: the train dataset which will be used to construct a vectorizer
+            vectorizer: a precalculated vectorizer. If provided, requires the train_dataset to be an empty list.
             vectorizer_params: parameters given to Scikit-learn's TfidfVectorizer constructor
         """
         super().__init__()
@@ -254,6 +257,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
             locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
             rnn_type: 'GRU' or 'LSTM'
+            fine_tune: if True, allow to finetune the embeddings.
         """
         super().__init__()
 
@@ -621,6 +625,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
             dropout: the dropout value to be used
             word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
             locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
+            fine_tune: if True, allow to finetune the embeddings.
         """
         super().__init__()
 

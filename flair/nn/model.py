@@ -64,9 +64,17 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         Implement this to enable evaluation.
 
         Args:
-            data_loader: DataLoader that iterates over dataset to be evaluated
+            data_points: The labeled data_points to evaluate.
+            gold_label_type: The label type indicating the gold labels
             out_path: Optional output path to store predictions
-            embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
+            embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and freshly
+              recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
+            mini_batch_size: The batch_size to use for predictions
+            main_evaluation_metric: Specify which metric to highlight as main_score
+            exclude_labels: Specify classes that won't be considered in evaluation
+            gold_label_dictionary: Specify which classes should be considered, all other classes will be taken as <unk>.
+            return_loss: Weather to additionally compute the loss on the data-points.
+            **kwargs: Arguments that will be ignored.
 
         Returns:
             The evaluation results.
@@ -106,6 +114,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
         Args:
             model_file: the model file
+            checkpoint: currently unused.
         """
         model_state = self._get_state_dict()
 

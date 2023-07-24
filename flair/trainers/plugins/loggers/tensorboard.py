@@ -15,6 +15,8 @@ class TensorboardLogger(TrainerPlugin):
 
         Args:
             log_dir: Directory into which tensorboard log files will be written
+            comment: The comment to specify Comment log_dir suffix appended to the default
+              ``log_dir``. If ``log_dir`` is assigned, this argument has no effect.
             tracked_metrics: List of tuples that specify which metrics (in addition to the main_score) shall be plotted in tensorboard, could be [("macro avg", 'f1-score'), ("macro avg", 'precision')] for example
         """
         super().__init__()

@@ -30,11 +30,7 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
         super().__init__(None)
 
     def set_dataset(self, data_source):
-        """Initialize the dataset used for sampling.
-
-        Args:
-            data_source:
-        """
+        """Initialize the dataset used for sampling."""
         self.data_source = data_source
         self.num_samples = len(self.data_source)
         self.indices = list(range(len(data_source)))
