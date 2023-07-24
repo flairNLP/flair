@@ -238,7 +238,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         dropout: float = 0.5,
         word_dropout: float = 0.0,
         locked_dropout: float = 0.0,
-        rnn_type: str="GRU",
+        rnn_type: str = "GRU",
         fine_tune: bool = True,
     ) -> None:
         """Instantiates an RNN that works upon some token embeddings.

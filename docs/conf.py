@@ -30,13 +30,14 @@ html_theme_options = {
     "navbar_end": ["theme-switcher", "version-switcher", "navbar-icon-links"],
     "github_url": linkcode_url,
     "icon_links": [
-            {
-                "name": "PyPI",
-                "url": "https://pypi.org/project/flair",
-                "icon": "fas fa-box",
-            },
-        ],
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/flair",
+            "icon": "fas fa-box",
+        },
+    ],
 }
+
 
 def linkcode_resolve(*args):
     # use smv_current_version as the git url
@@ -86,6 +87,15 @@ html_static_path = ["_static"]
 napoleon_include_init_with_doc = True
 napoleon_include_private_with_doc = True
 
+autodoc_default_options = {
+    "member-order": "bysource",
+    "undoc-members": True,
+    "members": True,
+    "show-inheritance": True,
+    "private-members": False,
+    "inherited": True,
+}
+
 source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
@@ -97,7 +107,7 @@ html_sidebars = {
         "searchbox.html",
         "versioning.html",
     ],
-    "index": []
+    "index": [],
 }
 
 smv_latest_version = importlib_metadata.version(project)
