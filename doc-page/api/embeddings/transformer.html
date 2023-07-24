@@ -476,6 +476,71 @@ document.write(`
 
   <section id="module-flair.embeddings.transformer">
 <span id="flair-embeddings-transformer"></span><h1>flair.embeddings.transformer<a class="headerlink" href="#module-flair.embeddings.transformer" title="Permalink to this heading">#</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.pad_sequence_embeddings">
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">pad_sequence_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_hidden_states</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L43-L61"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.pad_sequence_embeddings" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.truncate_hidden_states">
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">truncate_hidden_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ids</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L64-L66"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.truncate_hidden_states" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.combine_strided_tensors">
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">combine_strided_tensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overflow_to_sample_mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L69-L105"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.combine_strided_tensors" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.fill_masked_elements">
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">fill_masked_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_token_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L108-L119"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.fill_masked_elements" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.insert_missing_embeddings">
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">insert_missing_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L122-L162"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.insert_missing_embeddings" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.fill_mean_token_embeddings">
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">fill_mean_token_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_token_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L165-L177"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.fill_mean_token_embeddings" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.document_mean_pooling">
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">document_mean_pooling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence_hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L180-L185"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.document_mean_pooling" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.document_max_pooling">
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">document_max_pooling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence_hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L188-L193"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.document_max_pooling" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.remove_special_markup">
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">remove_special_markup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L227-L233"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.remove_special_markup" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">TransformerBaseEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_dropout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">respect_document_boundaries</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_long_sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_lang_emb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_document_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_token_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_extractor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">needs_manual_ocr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_context_separator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L300-L694"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings" title="Permalink to this definition">#</a></dt>
@@ -483,6 +548,26 @@ document.write(`
 <p>Base class for all TransformerEmbeddings.</p>
 <p>This base class handles the tokenizer and the input preparation, however it won’t implement the actual model.
 This can be further extended to implement the model in either a pytorch, jit or onnx way of working.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.to_args">
+<span class="sig-name descname"><span class="pre">to_args</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L361-L382"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.to_args" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.from_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L389-L394"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.to_params">
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L396-L404"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.create_from_state">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_from_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L450-L452"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.create_from_state" title="Permalink to this definition">#</a></dt>
@@ -499,34 +584,14 @@ This can be further extended to implement the model in either a pytorch, jit or 
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.embedding_type" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.from_params">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L389-L394"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.prepare_tensors">
 <span class="sig-name descname"><span class="pre">prepare_tensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L467-L491"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.prepare_tensors" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.to_args">
-<span class="sig-name descname"><span class="pre">to_args</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L361-L382"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.to_args" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.to_params">
-<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L396-L404"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerBaseEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -537,89 +602,73 @@ This can be further extended to implement the model in either a pytorch, jit or 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">TransformerEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bert-base-uncased'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'-1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtoken_pooling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cls_pooling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cls'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_token_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_document_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_long_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">respect_document_boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saved_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_extractor_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">needs_manual_ocr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_context_separator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L947-L1372"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">TransformerOnnxEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">onnx_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">providers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L698-L848"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.embeddings.transformer.TransformerBaseEmbeddings" title="flair.embeddings.transformer.TransformerBaseEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings</span></code></a></p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.embedding_length">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
-<dd><p>Returns the length of the embedding vector.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.embedding_type">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.embedding_type" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TransformerEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.to_params">
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L707-L711"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.export_onnx">
-<span class="sig-name descname"><span class="pre">export_onnx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">example_sentences</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L1363-L1372"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.export_onnx" title="Permalink to this definition">#</a></dt>
-<dd><p>Export TransformerEmbeddings to OnnxFormat.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>example_sentences</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="../flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]) – a list of sentences that will be used for tracing. It is recommended to take 2-4
-sentences with some variation.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings" title="flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a></p>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.from_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L713-L717"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings" title="flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_token_lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overflow_to_sample_mapping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">langs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L1244-L1358"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.forward" title="Permalink to this definition">#</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.create_session">
+<span class="sig-name descname"><span class="pre">create_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L719-L735"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.create_session" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.remove_session">
+<span class="sig-name descname"><span class="pre">remove_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L737-L741"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.remove_session" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.optimize_model">
+<span class="sig-name descname"><span class="pre">optimize_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimize_model_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_external_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L743-L751"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.optimize_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Wrapper for <cite>onnxruntime.transformers.optimizer.optimize_model</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.from_params">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L1196-L1210"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.quantize_model">
+<span class="sig-name descname"><span class="pre">quantize_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantize_model_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_external_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L753-L761"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.quantize_model" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.onnx_cls">
-<span class="sig-name descname"><span class="pre">onnx_cls</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L698-L848"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.onnx_cls" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <a class="reference internal" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings" title="flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a></p>
-</dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.to_params">
-<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L1212-L1233"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.collect_dynamic_axes">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">collect_dynamic_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensors</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L775-L798"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.collect_dynamic_axes" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitDocumentEmbeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">TransformerJitDocumentEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L920-L925"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a>, <a class="reference internal" href="#flair.embeddings.transformer.TransformerJitEmbeddings" title="flair.embeddings.transformer.TransformerJitEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerJitEmbeddings</span></code></a></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitDocumentEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TransformerJitDocumentEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.export_from_embedding">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">export_from_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">example_sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opset_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">providers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L800-L848"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.export_from_embedding" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitDocumentEmbeddings.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TransformerOnnxEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitDocumentEmbeddings.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.tokenizer">
+<span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PreTrainedTokenizer</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.tokenizer" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -629,13 +678,8 @@ registered hooks while the latter silently ignores them.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">TransformerJitEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jit_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_names</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L852-L907"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.embeddings.transformer.TransformerBaseEmbeddings" title="flair.embeddings.transformer.TransformerBaseEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings</span></code></a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitEmbeddings.create_from_embedding">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_from_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_names</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L894-L896"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings.create_from_embedding" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TransformerJitEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitEmbeddings.to_params">
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L866-L872"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -648,9 +692,9 @@ registered hooks while the latter silently ignores them.</p>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitEmbeddings.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitEmbeddings.create_from_embedding">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_from_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_names</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L894-L896"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings.create_from_embedding" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -663,19 +707,24 @@ registered hooks while the latter silently ignores them.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitEmbeddings.to_params">
-<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L866-L872"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TransformerJitEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitEmbeddings.tokenizer">
-<span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PreTrainedTokenizer</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings.tokenizer" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings.name" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitEmbeddings.training">
 <span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitEmbeddings.tokenizer">
+<span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PreTrainedTokenizer</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitEmbeddings.tokenizer" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -702,94 +751,22 @@ registered hooks while the latter silently ignores them.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">TransformerOnnxDocumentEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L938-L943"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a>, <a class="reference internal" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings" title="flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a></p>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitDocumentEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">TransformerJitDocumentEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L920-L925"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a>, <a class="reference internal" href="#flair.embeddings.transformer.TransformerJitEmbeddings" title="flair.embeddings.transformer.TransformerJitEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerJitEmbeddings</span></code></a></p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TransformerOnnxDocumentEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitDocumentEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TransformerJitDocumentEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">TransformerOnnxEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">onnx_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">providers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L698-L848"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.embeddings.transformer.TransformerBaseEmbeddings" title="flair.embeddings.transformer.TransformerBaseEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.collect_dynamic_axes">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">collect_dynamic_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensors</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L775-L798"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.collect_dynamic_axes" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.create_session">
-<span class="sig-name descname"><span class="pre">create_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L719-L735"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.create_session" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitDocumentEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.name" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TransformerOnnxEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.export_from_embedding">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">export_from_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">example_sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opset_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">providers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L800-L848"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.export_from_embedding" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.from_params">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L713-L717"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings" title="flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.optimize_model">
-<span class="sig-name descname"><span class="pre">optimize_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimize_model_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_external_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L743-L751"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.optimize_model" title="Permalink to this definition">#</a></dt>
-<dd><p>Wrapper for <cite>onnxruntime.transformers.optimizer.optimize_model</cite>.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.quantize_model">
-<span class="sig-name descname"><span class="pre">quantize_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantize_model_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_external_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L753-L761"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.quantize_model" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.remove_session">
-<span class="sig-name descname"><span class="pre">remove_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L737-L741"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.remove_session" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.to_params">
-<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L707-L711"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.tokenizer">
-<span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PreTrainedTokenizer</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.tokenizer" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxEmbeddings.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerJitDocumentEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.training" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -815,69 +792,97 @@ registered hooks while the latter silently ignores them.</p>
 
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.combine_strided_tensors">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">combine_strided_tensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overflow_to_sample_mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L69-L105"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.combine_strided_tensors" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">TransformerOnnxDocumentEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L938-L943"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a>, <a class="reference internal" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings" title="flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TransformerOnnxDocumentEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">TransformerEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bert-base-uncased'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'-1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtoken_pooling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cls_pooling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cls'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_token_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_document_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_long_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">respect_document_boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saved_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_extractor_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">needs_manual_ocr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_context_separator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L947-L1375"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.embeddings.transformer.TransformerBaseEmbeddings" title="flair.embeddings.transformer.TransformerBaseEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.onnx_cls">
+<span class="sig-name descname"><span class="pre">onnx_cls</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L698-L848"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.onnx_cls" title="Permalink to this definition">#</a></dt>
+<dd><p>alias of <a class="reference internal" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings" title="flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TransformerEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.embedding_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the length of the embedding vector.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.embedding_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.embedding_type" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.from_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L1196-L1210"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.to_params">
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L1212-L1233"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_token_lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overflow_to_sample_mapping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">langs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L1244-L1358"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.forward" title="Permalink to this definition">#</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.transformer.TransformerEmbeddings.export_onnx">
+<span class="sig-name descname"><span class="pre">export_onnx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">example_sentences</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L1363-L1375"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.TransformerEmbeddings.export_onnx" title="Permalink to this definition">#</a></dt>
+<dd><p>Export TransformerEmbeddings to OnnxFormat.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]) – the path to save the embeddings. Notice that the embeddings are stored as external file,
+hence it matters if the path is an absolue path or a relative one.</p></li>
+<li><p><strong>example_sentences</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="../flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]) – a list of sentences that will be used for tracing. It is recommended to take 2-4
+sentences with some variation.</p></li>
+<li><p><strong>**kwargs</strong> – the parameters passed to <a href="#id1"><span class="problematic" id="id2">:met:`TransformerOnnxEmbeddings.export_from_embedding`</span></a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings" title="flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.document_max_pooling">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">document_max_pooling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence_hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L188-L193"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.document_max_pooling" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.document_mean_pooling">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">document_mean_pooling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence_hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L180-L185"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.document_mean_pooling" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.fill_masked_elements">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">fill_masked_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_token_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L108-L119"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.fill_masked_elements" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.fill_mean_token_embeddings">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">fill_mean_token_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_token_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L165-L177"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.fill_mean_token_embeddings" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.insert_missing_embeddings">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">insert_missing_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L122-L162"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.insert_missing_embeddings" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.pad_sequence_embeddings">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">pad_sequence_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_hidden_states</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L43-L61"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.pad_sequence_embeddings" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.remove_special_markup">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">remove_special_markup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/transformer.py#L227-L233"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.remove_special_markup" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="flair.embeddings.transformer.truncate_hidden_states">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">truncate_hidden_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ids</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/y#L64-L66"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.truncate_hidden_states" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 </section>
@@ -930,45 +935,52 @@ registered hooks while the latter silently ignores them.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.pad_sequence_embeddings"><code class="docutils literal notranslate"><span class="pre">pad_sequence_embeddings()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.truncate_hidden_states"><code class="docutils literal notranslate"><span class="pre">truncate_hidden_states()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.combine_strided_tensors"><code class="docutils literal notranslate"><span class="pre">combine_strided_tensors()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.fill_masked_elements"><code class="docutils literal notranslate"><span class="pre">fill_masked_elements()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.insert_missing_embeddings"><code class="docutils literal notranslate"><span class="pre">insert_missing_embeddings()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.fill_mean_token_embeddings"><code class="docutils literal notranslate"><span class="pre">fill_mean_token_embeddings()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.document_mean_pooling"><code class="docutils literal notranslate"><span class="pre">document_mean_pooling()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.document_max_pooling"><code class="docutils literal notranslate"><span class="pre">document_max_pooling()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.remove_special_markup"><code class="docutils literal notranslate"><span class="pre">remove_special_markup()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.to_args"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.to_args()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.from_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.to_params()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.create_from_state"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.create_from_state()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.embedding_length</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.embedding_type</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.from_params()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.prepare_tensors"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.prepare_tensors()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.to_args"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.to_args()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.to_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.embeddings_name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerBaseEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings.training</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.embedding_length</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.embedding_type</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.export_onnx"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.export_onnx()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.forward"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.forward()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.from_params()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.onnx_cls"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.onnx_cls</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.to_params()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings.training</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.to_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.from_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.create_session"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.create_session()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.remove_session"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.remove_session()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.optimize_model"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.optimize_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.quantize_model"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.quantize_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.collect_dynamic_axes"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.collect_dynamic_axes()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.export_from_embedding"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.export_from_embedding()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.training</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.tokenizer"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.tokenizer</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.create_from_embedding"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.create_from_embedding()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.from_params()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.parameter_to_list"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.parameter_to_list()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.to_params()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.tokenizer"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.tokenizer</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.from_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.create_from_embedding"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.create_from_embedding()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.parameter_to_list"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.parameter_to_list()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.training</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitEmbeddings.tokenizer"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings.tokenizer</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitWordEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitWordEmbeddings</span></code></a><ul class="nav section-nav flex-column">
@@ -977,25 +989,10 @@ registered hooks while the latter silently ignores them.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitWordEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerJitWordEmbeddings.training</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.collect_dynamic_axes"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.collect_dynamic_axes()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.create_session"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.create_session()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.export_from_embedding"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.export_from_embedding()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.from_params()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.optimize_model"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.optimize_model()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.quantize_model"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.quantize_model()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.remove_session"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.remove_session()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.to_params()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.tokenizer"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.tokenizer</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings.training</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerJitDocumentEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings.training</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxWordEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxWordEmbeddings</span></code></a><ul class="nav section-nav flex-column">
@@ -1004,15 +1001,23 @@ registered hooks while the latter silently ignores them.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxWordEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxWordEmbeddings.training</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.combine_strided_tensors"><code class="docutils literal notranslate"><span class="pre">combine_strided_tensors()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.document_max_pooling"><code class="docutils literal notranslate"><span class="pre">document_max_pooling()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.document_mean_pooling"><code class="docutils literal notranslate"><span class="pre">document_mean_pooling()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.fill_masked_elements"><code class="docutils literal notranslate"><span class="pre">fill_masked_elements()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.fill_mean_token_embeddings"><code class="docutils literal notranslate"><span class="pre">fill_mean_token_embeddings()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.insert_missing_embeddings"><code class="docutils literal notranslate"><span class="pre">insert_missing_embeddings()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.pad_sequence_embeddings"><code class="docutils literal notranslate"><span class="pre">pad_sequence_embeddings()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.remove_special_markup"><code class="docutils literal notranslate"><span class="pre">remove_special_markup()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.truncate_hidden_states"><code class="docutils literal notranslate"><span class="pre">truncate_hidden_states()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings.training</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.onnx_cls"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.onnx_cls</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.embedding_length</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.embedding_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.from_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.to_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.forward"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.transformer.TransformerEmbeddings.export_onnx"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings.export_onnx()</span></code></a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

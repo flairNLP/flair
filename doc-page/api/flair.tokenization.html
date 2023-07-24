@@ -388,13 +388,13 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="flair.nn.html">flair.nn</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flair.splitter.html">flair.splitter</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">flair.tokenization</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#flair.tokenization.JapaneseTokenizer"><code class="docutils literal notranslate"><span class="pre">JapaneseTokenizer</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flair.tokenization.SciSpacyTokenizer"><code class="docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.tokenization.Tokenizer"><code class="docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.tokenization.SpacyTokenizer"><code class="docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.tokenization.SegtokTokenizer"><code class="docutils literal notranslate"><span class="pre">SegtokTokenizer</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.tokenization.SpaceTokenizer"><code class="docutils literal notranslate"><span class="pre">SpaceTokenizer</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flair.tokenization.SpacyTokenizer"><code class="docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flair.tokenization.Tokenizer"><code class="docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.tokenization.JapaneseTokenizer"><code class="docutils literal notranslate"><span class="pre">JapaneseTokenizer</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.tokenization.TokenizerWrapper"><code class="docutils literal notranslate"><span class="pre">TokenizerWrapper</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.tokenization.SciSpacyTokenizer"><code class="docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="flair.trainers.html">flair.trainers</a></li>
@@ -475,58 +475,56 @@ document.write(`
   <section id="module-flair.tokenization">
 <span id="flair-tokenization"></span><h1>flair.tokenization<a class="headerlink" href="#module-flair.tokenization" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="flair.tokenization.JapaneseTokenizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">JapaneseTokenizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sudachi_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'A'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L132-L182"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.JapaneseTokenizer" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></p>
-<p>Tokenizer using konoha to support popular japanese tokenizers.</p>
-<p>Tokenizer using konoha, a third party library which supports
-multiple Japanese tokenizer such as MeCab, Janome and SudachiPy.</p>
-<dl class="simple">
-<dt>For further details see:</dt><dd><p><a class="github reference external" href="https://github.com/himkt/konoha">himkt/konoha</a></p>
-</dd>
-</dl>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.tokenization.JapaneseTokenizer.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.tokenization.JapaneseTokenizer.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="flair.tokenization.Tokenizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">Tokenizer</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L12-L28"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.Tokenizer" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>An abstract class representing a <a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>.</p>
+<p>Tokenizers are used to represent algorithms and models to split plain text into
+individual tokens / words. All subclasses should overwrite <a class="reference internal" href="#flair.tokenization.Tokenizer.tokenize" title="flair.tokenization.Tokenizer.tokenize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tokenize()</span></code></a>, which
+splits the given plain text into tokens. Moreover, subclasses may overwrite
+<a class="reference internal" href="#flair.tokenization.Tokenizer.name" title="flair.tokenization.Tokenizer.name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">name()</span></code></a>, returning a unique identifier representing the tokenizer’s
+configuration.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.tokenization.JapaneseTokenizer.tokenize">
-<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L170-L178"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.JapaneseTokenizer.tokenize" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.tokenization.Tokenizer.tokenize">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L22-L24"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.Tokenizer.tokenize" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.tokenization.Tokenizer.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.tokenization.Tokenizer.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="flair.tokenization.SciSpacyTokenizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">SciSpacyTokenizer</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L200-L283"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SciSpacyTokenizer" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.tokenization.SpacyTokenizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">SpacyTokenizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L31-L73"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SpacyTokenizer" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></p>
-<p>Tokenizer that uses the en_core_sci_sm Spacy model and some special heuristics.</p>
-<p>Implementation of <a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a> which uses the en_core_sci_sm Spacy model
-extended by special heuristics to consider characters such as “(”, “)” “-” as
-additional token separators. The latter distinguishes this implementation from
-<a class="reference internal" href="#flair.tokenization.SpacyTokenizer" title="flair.tokenization.SpacyTokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code></a>.</p>
-<p>Note, you if you want to use the “normal” SciSpacy tokenization just use
-<a class="reference internal" href="#flair.tokenization.SpacyTokenizer" title="flair.tokenization.SpacyTokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code></a>.</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.tokenization.SciSpacyTokenizer.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.tokenization.SciSpacyTokenizer.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
+<p>Tokenizer using spacy under the hood.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> – a Spacy V2 model or the name of the model to load.</p>
+</dd>
+</dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.tokenization.SciSpacyTokenizer.tokenize">
-<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L274-L279"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SciSpacyTokenizer.tokenize" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.tokenization.SpacyTokenizer.tokenize">
+<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L60-L69"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SpacyTokenizer.tokenize" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.tokenization.SpacyTokenizer.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.tokenization.SpacyTokenizer.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -537,8 +535,8 @@ additional token separators. The latter distinguishes this implementation from
 <p>Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.</p>
 <p>For further details see: <a class="github reference external" href="https://github.com/fnl/segtok">fnl/segtok</a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.tokenization.SegtokTokenizer.run_tokenize">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L88-L99"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer.run_tokenize" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.tokenization.SegtokTokenizer.tokenize">
+<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L85-L86"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer.tokenize" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
@@ -547,8 +545,8 @@ additional token separators. The latter distinguishes this implementation from
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.tokenization.SegtokTokenizer.tokenize">
-<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L85-L86"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer.tokenize" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.tokenization.SegtokTokenizer.run_tokenize">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L88-L99"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer.run_tokenize" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
@@ -564,16 +562,6 @@ additional token separators. The latter distinguishes this implementation from
 <dd><p>Bases: <a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></p>
 <p>Tokenizer based on space character only.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.tokenization.SpaceTokenizer.run_tokenize">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L111-L129"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SpaceTokenizer.run_tokenize" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.tokenization.SpaceTokenizer.tokenize">
 <span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L108-L109"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SpaceTokenizer.tokenize" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -583,26 +571,32 @@ additional token separators. The latter distinguishes this implementation from
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.tokenization.SpaceTokenizer.run_tokenize">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L111-L129"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SpaceTokenizer.run_tokenize" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="flair.tokenization.SpacyTokenizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">SpacyTokenizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L31-L73"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SpacyTokenizer" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.tokenization.JapaneseTokenizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">JapaneseTokenizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sudachi_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'A'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L132-L182"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.JapaneseTokenizer" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></p>
-<p>Tokenizer using spacy under the hood.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> – a Spacy V2 model or the name of the model to load.</p>
+<p>Tokenizer using konoha to support popular japanese tokenizers.</p>
+<p>Tokenizer using konoha, a third party library which supports
+multiple Japanese tokenizer such as MeCab, Janome and SudachiPy.</p>
+<dl class="simple">
+<dt>For further details see:</dt><dd><p><a class="github reference external" href="https://github.com/himkt/konoha">himkt/konoha</a></p>
 </dd>
 </dl>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.tokenization.SpacyTokenizer.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.tokenization.SpacyTokenizer.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.tokenization.SpacyTokenizer.tokenize">
-<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L60-L69"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SpacyTokenizer.tokenize" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.tokenization.JapaneseTokenizer.tokenize">
+<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L170-L178"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.JapaneseTokenizer.tokenize" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
@@ -610,32 +604,10 @@ additional token separators. The latter distinguishes this implementation from
 </dl>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.tokenization.Tokenizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">Tokenizer</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L12-L28"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.Tokenizer" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>An abstract class representing a <a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>.</p>
-<p>Tokenizers are used to represent algorithms and models to split plain text into
-individual tokens / words. All subclasses should overwrite <a class="reference internal" href="#flair.tokenization.Tokenizer.tokenize" title="flair.tokenization.Tokenizer.tokenize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tokenize()</span></code></a>, which
-splits the given plain text into tokens. Moreover, subclasses may overwrite
-<a class="reference internal" href="#flair.tokenization.Tokenizer.name" title="flair.tokenization.Tokenizer.name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">name()</span></code></a>, returning a unique identifier representing the tokenizer’s
-configuration.</p>
 <dl class="py property">
-<dt class="sig sig-object py" id="flair.tokenization.Tokenizer.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.tokenization.Tokenizer.name" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.tokenization.JapaneseTokenizer.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.tokenization.JapaneseTokenizer.name" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.tokenization.Tokenizer.tokenize">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L22-L24"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.Tokenizer.tokenize" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
-</dd>
-</dl>
-</dd></dl>
 
 </dd></dl>
 
@@ -644,11 +616,6 @@ configuration.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">TokenizerWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer_func</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L185-L197"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.TokenizerWrapper" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></p>
 <p>Helper class to wrap tokenizer functions to the class-based tokenizer interface.</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.tokenization.TokenizerWrapper.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.tokenization.TokenizerWrapper.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.tokenization.TokenizerWrapper.tokenize">
 <span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L192-L193"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.TokenizerWrapper.tokenize" title="Permalink to this definition">#</a></dt>
@@ -658,6 +625,39 @@ configuration.</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.tokenization.TokenizerWrapper.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.tokenization.TokenizerWrapper.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.tokenization.SciSpacyTokenizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">SciSpacyTokenizer</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L200-L283"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SciSpacyTokenizer" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></p>
+<p>Tokenizer that uses the en_core_sci_sm Spacy model and some special heuristics.</p>
+<p>Implementation of <a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a> which uses the en_core_sci_sm Spacy model
+extended by special heuristics to consider characters such as “(”, “)” “-” as
+additional token separators. The latter distinguishes this implementation from
+<a class="reference internal" href="#flair.tokenization.SpacyTokenizer" title="flair.tokenization.SpacyTokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code></a>.</p>
+<p>Note, you if you want to use the “normal” SciSpacy tokenization just use
+<a class="reference internal" href="#flair.tokenization.SpacyTokenizer" title="flair.tokenization.SpacyTokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.tokenization.SciSpacyTokenizer.tokenize">
+<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/tokenization.py#L274-L279"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SciSpacyTokenizer.tokenize" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.tokenization.SciSpacyTokenizer.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.tokenization.SciSpacyTokenizer.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -711,39 +711,39 @@ configuration.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.JapaneseTokenizer"><code class="docutils literal notranslate"><span class="pre">JapaneseTokenizer</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.JapaneseTokenizer.name"><code class="docutils literal notranslate"><span class="pre">JapaneseTokenizer.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.JapaneseTokenizer.tokenize"><code class="docutils literal notranslate"><span class="pre">JapaneseTokenizer.tokenize()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SciSpacyTokenizer"><code class="docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SciSpacyTokenizer.name"><code class="docutils literal notranslate"><span class="pre">SciSpacyTokenizer.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SciSpacyTokenizer.tokenize"><code class="docutils literal notranslate"><span class="pre">SciSpacyTokenizer.tokenize()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SegtokTokenizer"><code class="docutils literal notranslate"><span class="pre">SegtokTokenizer</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SegtokTokenizer.run_tokenize"><code class="docutils literal notranslate"><span class="pre">SegtokTokenizer.run_tokenize()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SegtokTokenizer.tokenize"><code class="docutils literal notranslate"><span class="pre">SegtokTokenizer.tokenize()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SpaceTokenizer"><code class="docutils literal notranslate"><span class="pre">SpaceTokenizer</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SpaceTokenizer.run_tokenize"><code class="docutils literal notranslate"><span class="pre">SpaceTokenizer.run_tokenize()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SpaceTokenizer.tokenize"><code class="docutils literal notranslate"><span class="pre">SpaceTokenizer.tokenize()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.Tokenizer"><code class="docutils literal notranslate"><span class="pre">Tokenizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.Tokenizer.tokenize"><code class="docutils literal notranslate"><span class="pre">Tokenizer.tokenize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.Tokenizer.name"><code class="docutils literal notranslate"><span class="pre">Tokenizer.name</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SpacyTokenizer"><code class="docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SpacyTokenizer.name"><code class="docutils literal notranslate"><span class="pre">SpacyTokenizer.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SpacyTokenizer.tokenize"><code class="docutils literal notranslate"><span class="pre">SpacyTokenizer.tokenize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SpacyTokenizer.name"><code class="docutils literal notranslate"><span class="pre">SpacyTokenizer.name</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.Tokenizer"><code class="docutils literal notranslate"><span class="pre">Tokenizer</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.Tokenizer.name"><code class="docutils literal notranslate"><span class="pre">Tokenizer.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.Tokenizer.tokenize"><code class="docutils literal notranslate"><span class="pre">Tokenizer.tokenize()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SegtokTokenizer"><code class="docutils literal notranslate"><span class="pre">SegtokTokenizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SegtokTokenizer.tokenize"><code class="docutils literal notranslate"><span class="pre">SegtokTokenizer.tokenize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SegtokTokenizer.run_tokenize"><code class="docutils literal notranslate"><span class="pre">SegtokTokenizer.run_tokenize()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SpaceTokenizer"><code class="docutils literal notranslate"><span class="pre">SpaceTokenizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SpaceTokenizer.tokenize"><code class="docutils literal notranslate"><span class="pre">SpaceTokenizer.tokenize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SpaceTokenizer.run_tokenize"><code class="docutils literal notranslate"><span class="pre">SpaceTokenizer.run_tokenize()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.JapaneseTokenizer"><code class="docutils literal notranslate"><span class="pre">JapaneseTokenizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.JapaneseTokenizer.tokenize"><code class="docutils literal notranslate"><span class="pre">JapaneseTokenizer.tokenize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.JapaneseTokenizer.name"><code class="docutils literal notranslate"><span class="pre">JapaneseTokenizer.name</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.TokenizerWrapper"><code class="docutils literal notranslate"><span class="pre">TokenizerWrapper</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.TokenizerWrapper.name"><code class="docutils literal notranslate"><span class="pre">TokenizerWrapper.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.TokenizerWrapper.tokenize"><code class="docutils literal notranslate"><span class="pre">TokenizerWrapper.tokenize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.TokenizerWrapper.name"><code class="docutils literal notranslate"><span class="pre">TokenizerWrapper.name</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SciSpacyTokenizer"><code class="docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SciSpacyTokenizer.tokenize"><code class="docutils literal notranslate"><span class="pre">SciSpacyTokenizer.tokenize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.tokenization.SciSpacyTokenizer.name"><code class="docutils literal notranslate"><span class="pre">SciSpacyTokenizer.name</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -480,54 +480,15 @@ document.write(`
 
   <section id="module-flair.datasets.relation_extraction">
 <span id="flair-datasets-relation-extraction"></span><h1>flair.datasets.relation_extraction<a class="headerlink" href="#module-flair.datasets.relation_extraction" title="Permalink to this heading">#</a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_CONLL04">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.relation_extraction.</span></span><span class="sig-name descname"><span class="pre">RE_ENGLISH_CONLL04</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L339-L514"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_CONLL04" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_CONLL04.convert_to_conllu">
-<span class="sig-name descname"><span class="pre">convert_to_conllu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L406-L427"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_CONLL04.convert_to_conllu" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.relation_extraction.</span></span><span class="sig-name descname"><span class="pre">RE_ENGLISH_DRUGPROT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter=&lt;flair.splitter.SegtokSentenceSplitter</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L517-L770"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter=&lt;flair.splitter.SegtokSentenceSplitter</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L518-L557"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.__init__" title="Permalink to this definition">#</a></dt>
-<dd><p>Initialize the DrugProt corpus.</p>
-<p>Biocreative VII Track 1 from <a class="reference external" href="https://zenodo.org/record/5119892#.YSdSaVuxU5k/">https://zenodo.org/record/5119892#.YSdSaVuxU5k/</a> on drug and chemical-protein
-interactions.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.char_spans_to_token_spans">
-<span class="sig-name descname"><span class="pre">char_spans_to_token_spans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">char_spans</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_offsets</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L634-L644"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.char_spans_to_token_spans" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.drugprot_document_to_tokenlists">
-<span class="sig-name descname"><span class="pre">drugprot_document_to_tokenlists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pmid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abstract_sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abstract_offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L652-L770"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.drugprot_document_to_tokenlists" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dl class="py function">
+<dt class="sig sig-object py" id="flair.datasets.relation_extraction.convert_ptb_token">
+<span class="sig-prename descclassname"><span class="pre">flair.datasets.relation_extraction.</span></span><span class="sig-name descname"><span class="pre">convert_ptb_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L24-L33"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.convert_ptb_token" title="Permalink to this definition">#</a></dt>
+<dd><p>Convert PTB tokens to normal tokens.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TokenList</span></code>]</p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.extract_and_convert_to_conllu">
-<span class="sig-name descname"><span class="pre">extract_and_convert_to_conllu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L559-L620"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.extract_and_convert_to_conllu" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.has_overlap">
-<span class="sig-name descname"><span class="pre">has_overlap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L646-L650"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.has_overlap" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -567,15 +528,54 @@ Manual download is required for this dataset.</p>
 
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="flair.datasets.relation_extraction.convert_ptb_token">
-<span class="sig-prename descclassname"><span class="pre">flair.datasets.relation_extraction.</span></span><span class="sig-name descname"><span class="pre">convert_ptb_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L24-L33"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.convert_ptb_token" title="Permalink to this definition">#</a></dt>
-<dd><p>Convert PTB tokens to normal tokens.</p>
-<dl class="field-list simple">
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_CONLL04">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.relation_extraction.</span></span><span class="sig-name descname"><span class="pre">RE_ENGLISH_CONLL04</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L339-L514"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_CONLL04" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_CONLL04.convert_to_conllu">
+<span class="sig-name descname"><span class="pre">convert_to_conllu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L406-L427"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_CONLL04.convert_to_conllu" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.relation_extraction.</span></span><span class="sig-name descname"><span class="pre">RE_ENGLISH_DRUGPROT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter=&lt;flair.splitter.SegtokSentenceSplitter</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L517-L770"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter=&lt;flair.splitter.SegtokSentenceSplitter</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L518-L557"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize the DrugProt corpus.</p>
+<p>Biocreative VII Track 1 from <a class="reference external" href="https://zenodo.org/record/5119892#.YSdSaVuxU5k/">https://zenodo.org/record/5119892#.YSdSaVuxU5k/</a> on drug and chemical-protein
+interactions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.extract_and_convert_to_conllu">
+<span class="sig-name descname"><span class="pre">extract_and_convert_to_conllu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L559-L620"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.extract_and_convert_to_conllu" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.char_spans_to_token_spans">
+<span class="sig-name descname"><span class="pre">char_spans_to_token_spans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">char_spans</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_offsets</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L634-L644"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.char_spans_to_token_spans" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.has_overlap">
+<span class="sig-name descname"><span class="pre">has_overlap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L646-L650"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.has_overlap" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.drugprot_document_to_tokenlists">
+<span class="sig-name descname"><span class="pre">drugprot_document_to_tokenlists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pmid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abstract_sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abstract_offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/datasets/relation_extraction.py#L652-L770"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.drugprot_document_to_tokenlists" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TokenList</span></code>]</p>
 </dd>
 </dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -628,18 +628,7 @@ Manual download is required for this dataset.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_CONLL04"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_CONLL04</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_CONLL04.convert_to_conllu"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_CONLL04.convert_to_conllu()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.__init__"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.char_spans_to_token_spans"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT.char_spans_to_token_spans()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.drugprot_document_to_tokenlists"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT.drugprot_document_to_tokenlists()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.extract_and_convert_to_conllu"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT.extract_and_convert_to_conllu()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.has_overlap"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT.has_overlap()</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.convert_ptb_token"><code class="docutils literal notranslate"><span class="pre">convert_ptb_token()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_SEMEVAL2010"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_SEMEVAL2010</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_SEMEVAL2010.__init__"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_SEMEVAL2010.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_SEMEVAL2010.extract_and_convert_to_conllu"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_SEMEVAL2010.extract_and_convert_to_conllu()</span></code></a></li>
@@ -650,7 +639,18 @@ Manual download is required for this dataset.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_TACRED.extract_and_convert_to_conllu"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_TACRED.extract_and_convert_to_conllu()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.convert_ptb_token"><code class="docutils literal notranslate"><span class="pre">convert_ptb_token()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_CONLL04"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_CONLL04</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_CONLL04.convert_to_conllu"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_CONLL04.convert_to_conllu()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.__init__"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.extract_and_convert_to_conllu"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT.extract_and_convert_to_conllu()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.char_spans_to_token_spans"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT.char_spans_to_token_spans()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.has_overlap"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT.has_overlap()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.drugprot_document_to_tokenlists"><code class="docutils literal notranslate"><span class="pre">RE_ENGLISH_DRUGPROT.drugprot_document_to_tokenlists()</span></code></a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

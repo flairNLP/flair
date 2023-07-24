@@ -384,8 +384,8 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="#flair.cache_root"><code class="docutils literal notranslate"><span class="pre">cache_root</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.device"><code class="docutils literal notranslate"><span class="pre">device</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.logger"><code class="docutils literal notranslate"><span class="pre">logger</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flair.set_proxies"><code class="docutils literal notranslate"><span class="pre">set_proxies()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.set_seed"><code class="docutils literal notranslate"><span class="pre">set_seed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.set_proxies"><code class="docutils literal notranslate"><span class="pre">set_proxies()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="flair.data.html">flair.data</a></li>
@@ -496,6 +496,18 @@ You can choose a specific GPU, by setting the <cite>FLAIR_DEVICE</cite> environm
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="flair.set_seed">
+<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">set_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/__init__.py#L74-L83"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.set_seed" title="Permalink to this definition">#</a></dt>
+<dd><p>Set the seed for all random generators used in training.</p>
+<p>Use this method to guarantee reproducibility of experiments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>seed</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – any value you want</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="flair.set_proxies">
 <span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">set_proxies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">proxies</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/file_utils.py#L32-L41"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.set_proxies" title="Permalink to this definition">#</a></dt>
 <dd><p>Allows for data downloaded from urls to be forwarded to a proxy.</p>
@@ -506,18 +518,6 @@ You can choose a specific GPU, by setting the <cite>FLAIR_DEVICE</cite> environm
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="flair.set_seed">
-<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">set_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/__init__.py#L74-L83"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.set_seed" title="Permalink to this definition">#</a></dt>
-<dd><p>Set the seed for all random generators used in training.</p>
-<p>Use this method to guarantee reproducibility of experiments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>seed</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – any value you want</p>
 </dd>
 </dl>
 </dd></dl>
@@ -575,8 +575,8 @@ You can choose a specific GPU, by setting the <cite>FLAIR_DEVICE</cite> environm
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.cache_root"><code class="docutils literal notranslate"><span class="pre">cache_root</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.device"><code class="docutils literal notranslate"><span class="pre">device</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.logger"><code class="docutils literal notranslate"><span class="pre">logger</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.set_proxies"><code class="docutils literal notranslate"><span class="pre">set_proxies()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.set_seed"><code class="docutils literal notranslate"><span class="pre">set_seed()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.set_proxies"><code class="docutils literal notranslate"><span class="pre">set_proxies()</span></code></a></li>
 </ul>
   </nav></div>
 

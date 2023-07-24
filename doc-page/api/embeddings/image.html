@@ -477,20 +477,136 @@ document.write(`
   <section id="module-flair.embeddings.image">
 <span id="flair-embeddings-image"></span><h1>flair.embeddings.image<a class="headerlink" href="#module-flair.embeddings.image" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="flair.embeddings.image.ConvTransformNetworkImageEmbeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.image.</span></span><span class="sig-name descname"><span class="pre">ConvTransformNetworkImageEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feats_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convnet_parms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">posnet_parms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer_parms</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L161-L281"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.embeddings.image.ImageEmbeddings" title="flair.embeddings.image.ImageEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a></p>
+<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.image.</span></span><span class="sig-name descname"><span class="pre">ImageEmbeddings</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L27-L41"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.Embeddings" title="flair.embeddings.base.Embeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">Embeddings</span></code></a>[<a class="reference internal" href="../flair.data.html#flair.data.Image" title="flair.data.Image"><code class="xref py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>]</p>
 <dl class="py property">
-<dt class="sig sig-object py" id="flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embedding_length">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><a class="headerlink" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.embedding_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.embedding_type" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.to_params">
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L32-L34"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.from_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L36-L41"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="base.html#flair.embeddings.base.Embeddings" title="flair.embeddings.base.Embeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">Embeddings</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.image.IdentityImageEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.image.</span></span><span class="sig-name descname"><span class="pre">IdentityImageEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transforms</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L45-L68"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.IdentityImageEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.embeddings.image.ImageEmbeddings" title="flair.embeddings.image.ImageEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.IdentityImageEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.image.IdentityImageEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.image.IdentityImageEmbeddings.embedding_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.image.IdentityImageEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the length of the embedding vector.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ConvTransformNetworkImageEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.embeddings.image.IdentityImageEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'IdentityImageEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.image.IdentityImageEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.IdentityImageEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.image.IdentityImageEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.image.PrecomputedImageEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.image.</span></span><span class="sig-name descname"><span class="pre">PrecomputedImageEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url2tensor_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L72-L92"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.PrecomputedImageEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.embeddings.image.ImageEmbeddings" title="flair.embeddings.image.ImageEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.PrecomputedImageEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.image.PrecomputedImageEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.image.PrecomputedImageEmbeddings.embedding_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.image.PrecomputedImageEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the length of the embedding vector.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.PrecomputedImageEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PrecomputedImageEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.image.PrecomputedImageEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.PrecomputedImageEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.image.PrecomputedImageEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.image.NetworkImageEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.image.</span></span><span class="sig-name descname"><span class="pre">NetworkImageEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transforms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L96-L157"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.NetworkImageEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.embeddings.image.ImageEmbeddings" title="flair.embeddings.image.ImageEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.NetworkImageEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.image.NetworkImageEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.image.NetworkImageEmbeddings.embedding_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.image.NetworkImageEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the length of the embedding vector.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.NetworkImageEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NetworkImageEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.image.NetworkImageEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.NetworkImageEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.image.NetworkImageEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.image.ConvTransformNetworkImageEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.image.</span></span><span class="sig-name descname"><span class="pre">ConvTransformNetworkImageEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feats_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convnet_parms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">posnet_parms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer_parms</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L161-L281"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.embeddings.image.ImageEmbeddings" title="flair.embeddings.image.ImageEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.image.ConvTransformNetworkImageEmbeddings.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L235-L268"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.forward" title="Permalink to this definition">#</a></dt>
@@ -505,6 +621,17 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embedding_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><a class="headerlink" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the length of the embedding vector.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ConvTransformNetworkImageEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="flair.embeddings.image.ConvTransformNetworkImageEmbeddings.name">
 <span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.name" title="Permalink to this definition">#</a></dt>
@@ -513,133 +640,6 @@ registered hooks while the latter silently ignores them.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="flair.embeddings.image.ConvTransformNetworkImageEmbeddings.training">
 <span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.embeddings.image.IdentityImageEmbeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.image.</span></span><span class="sig-name descname"><span class="pre">IdentityImageEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transforms</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L45-L68"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.IdentityImageEmbeddings" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.embeddings.image.ImageEmbeddings" title="flair.embeddings.image.ImageEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a></p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.embeddings.image.IdentityImageEmbeddings.embedding_length">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.image.IdentityImageEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
-<dd><p>Returns the length of the embedding vector.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.IdentityImageEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'IdentityImageEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.image.IdentityImageEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.IdentityImageEmbeddings.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.image.IdentityImageEmbeddings.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.IdentityImageEmbeddings.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.image.IdentityImageEmbeddings.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.image.</span></span><span class="sig-name descname"><span class="pre">ImageEmbeddings</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L27-L41"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.Embeddings" title="flair.embeddings.base.Embeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">Embeddings</span></code></a>[<a class="reference internal" href="../flair.data.html#flair.data.Image" title="flair.data.Image"><code class="xref py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>]</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.embedding_type">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.embedding_type" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.from_params">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L36-L41"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="base.html#flair.embeddings.base.Embeddings" title="flair.embeddings.base.Embeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">Embeddings</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.to_params">
-<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L32-L34"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.ImageEmbeddings.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.image.ImageEmbeddings.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.embeddings.image.NetworkImageEmbeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.image.</span></span><span class="sig-name descname"><span class="pre">NetworkImageEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transforms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L96-L157"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.NetworkImageEmbeddings" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.embeddings.image.ImageEmbeddings" title="flair.embeddings.image.ImageEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a></p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.embeddings.image.NetworkImageEmbeddings.embedding_length">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.image.NetworkImageEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
-<dd><p>Returns the length of the embedding vector.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.NetworkImageEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NetworkImageEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.image.NetworkImageEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.NetworkImageEmbeddings.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.image.NetworkImageEmbeddings.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.NetworkImageEmbeddings.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.image.NetworkImageEmbeddings.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.embeddings.image.PrecomputedImageEmbeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.image.</span></span><span class="sig-name descname"><span class="pre">PrecomputedImageEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url2tensor_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/embeddings/image.py#L72-L92"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.image.PrecomputedImageEmbeddings" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.embeddings.image.ImageEmbeddings" title="flair.embeddings.image.ImageEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a></p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.embeddings.image.PrecomputedImageEmbeddings.embedding_length">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.image.PrecomputedImageEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
-<dd><p>Returns the length of the embedding vector.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.PrecomputedImageEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PrecomputedImageEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.image.PrecomputedImageEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.PrecomputedImageEmbeddings.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.image.PrecomputedImageEmbeddings.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.image.PrecomputedImageEmbeddings.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.image.PrecomputedImageEmbeddings.training" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -694,42 +694,42 @@ registered hooks while the latter silently ignores them.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.embedding_length</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.forward"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.forward()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.training</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.IdentityImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.IdentityImageEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.embedding_length</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.IdentityImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.IdentityImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.IdentityImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.training</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ImageEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.embedding_type</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ImageEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.from_params()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ImageEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.to_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ImageEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.from_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings.training</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.NetworkImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.NetworkImageEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.embedding_length</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.NetworkImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.NetworkImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.NetworkImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.training</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.IdentityImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.IdentityImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.IdentityImageEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.embedding_length</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.IdentityImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.IdentityImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings.training</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.PrecomputedImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.PrecomputedImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.PrecomputedImageEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings.embedding_length</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.PrecomputedImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.PrecomputedImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.PrecomputedImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings.training</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.NetworkImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.NetworkImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.NetworkImageEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.embedding_length</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.NetworkImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.NetworkImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings.training</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.forward"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.embedding_length</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.image.ConvTransformNetworkImageEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings.training</span></code></a></li>
 </ul>
 </li>
 </ul>

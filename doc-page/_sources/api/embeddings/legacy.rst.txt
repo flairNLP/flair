@@ -6,6 +6,3 @@ flair.embeddings.legacy
    there is no guarantee that they are still working and we recommend using different embeddings instead.
 
 .. automodule:: flair.embeddings.legacy
-   :members:
-   :undoc-members:
-   :show-inheritance:
