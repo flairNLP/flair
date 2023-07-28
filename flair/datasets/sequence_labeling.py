@@ -2592,7 +2592,7 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
         ler_path = "https://raw.githubusercontent.com/elenanereiss/Legal-Entity-Recognition/master/data/"
 
         for split in ["train", "dev", "test"]:
-          cached_path(f"{ler_path}ler_{split}.conll", Path("datasets") / dataset_name)
+            cached_path(f"{ler_path}ler_{split}.conll", Path("datasets") / dataset_name)
 
         super().__init__(
             data_folder,
