@@ -461,7 +461,7 @@ class ModelTrainer(Pluggable):
             if inspect.isclass(sampler):
                 sampler = sampler()
             # set dataset to sample from
-            sampler.set_dataset(train_data)
+            sampler.set_dataset(train_data)  # type: ignore[union-attr]
             shuffle = False
 
         # this field stores the names of all dynamic embeddings in the model (determined after first forward pass)

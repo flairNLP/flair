@@ -116,7 +116,7 @@ class MultitaskModel(flair.nn.Classifier):
                     batch_to_task_mapping[multitask_id.value] = [sentence_id]
         return batch_to_task_mapping
 
-    def evaluate(
+    def evaluate(  # type: ignore[override]
         self,
         data_points,
         gold_label_type: str,
