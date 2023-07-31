@@ -85,6 +85,7 @@ ignore = [
   "D105",
   "D107",
   "E501",   # Ignore line too long
+  "RUF012",
 ]
 
 unfixable = [
@@ -96,6 +97,8 @@ unfixable = [
 
 [tool.ruff.per-file-ignores]
 "flair/embeddings/legacy.py" = ["D205"]
+"scripts/*" = ["INP001"]  #  no need for __ini__ for scripts
+"flair/datasets/*" = ["D417"]  # need to fix datasets in a unified way later.
 
 [tool.ruff.pydocstyle]
 convention = "google"
