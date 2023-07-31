@@ -1435,7 +1435,7 @@ class BytePairEmbeddings(TokenEmbeddings):
             ), "Need to specify model_file_path and embedding_file_path if no language is given in BytePairEmbeddings(...)"
             dim = None  # type: ignore[assignment]
 
-        self.embedder = BPEmbSerializable(
+        self.embedder = BPEmb(
             lang=language,
             vs=syllables,
             dim=dim,
