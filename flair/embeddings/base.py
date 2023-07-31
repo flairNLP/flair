@@ -194,7 +194,7 @@ class TokenEmbeddings(Embeddings[Sentence]):
     def _everything_embedded(self, data_points: Sequence[Sentence]) -> bool:
         for sentence in data_points:
             for token in sentence.tokens:
-                if self.name not in token._embeddings.keys():
+                if self.name not in token._embeddings:
                     return False
         return True
 

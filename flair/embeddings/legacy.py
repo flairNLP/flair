@@ -1330,7 +1330,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
             sentences = [sentences]
 
         for sentence in sentences:
-            if self.name not in sentence._embeddings.keys():
+            if self.name not in sentence._embeddings:
                 everything_embedded = False
 
         if not everything_embedded:
