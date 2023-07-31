@@ -748,7 +748,7 @@ def test_masakhane_corpus(tasks_base_path):
             "bam": {"train": 4462, "dev": 638, "test": 1274},
             "bbj": {"train": 3384, "dev": 483, "test": 966},
             "ewe": {"train": 3505, "dev": 501, "test": 1001},
-            "fon": {"train": 4343, "dev": 621, "test": 1240},
+            "fon": {"train": 4343, "dev": 623, "test": 1228},
             "hau": {"train": 5716, "dev": 816, "test": 1633},
             "ibo": {"train": 7634, "dev": 1090, "test": 2181},
             "kin": {"train": 7825, "dev": 1118, "test": 2235},
