@@ -8,11 +8,11 @@ import zipfile
 from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
-from semver import Version
-from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast, Mapping
+from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import torch
 import transformers
+from semver import Version
 from torch.jit import ScriptModule
 from transformers import (
     CONFIG_MAPPING,
@@ -1113,7 +1113,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if transformers.__version__ >= Version(4, 31, 0):
             assert isinstance(state_dict, dict)
             state_dict.pop(f"{prefix}model.embeddings.position_ids", None)
-        super(TransformerEmbeddings, self)._load_from_state_dict(state_dict, prefix, local_metadata, strict,
+        super()._load_from_state_dict(state_dict, prefix, local_metadata, strict,
                               missing_keys, unexpected_keys, error_msgs)
 
     def _has_initial_cls_token(self) -> bool:
