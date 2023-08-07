@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import torch
+import transformers
+from semver import Version
 from torch.jit import ScriptModule
 from transformers import (
     CONFIG_MAPPING,
@@ -1105,6 +1107,16 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
         return self.embedding_length_internal
 
+    def _load_from_state_dict(
+        self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
+    ):
+        if transformers.__version__ >= Version(4, 31, 0):
+            assert isinstance(state_dict, dict)
+            state_dict.pop(f"{prefix}model.embeddings.position_ids", None)
+        super()._load_from_state_dict(
+            state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
+        )
+
     def _has_initial_cls_token(self) -> bool:
         # most models have CLS token as last token (GPT-1, GPT-2, TransfoXL, XLNet, XLM), but BERT is initial
         if self.tokenizer_needs_ocr_boxes:
@@ -1191,6 +1203,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             self.__dict__[key] = embedding.__dict__[key]
 
         if model_state_dict:
+            if transformers.__version__ >= Version(4, 31, 0):
+                model_state_dict.pop("embeddings.position_ids", None)
             self.model.load_state_dict(model_state_dict)
 
     @classmethod
