@@ -1086,7 +1086,7 @@ class FastTextEmbeddings(TokenEmbeddings):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             out_path = temp_path / "fasttext.model"
-            self.precomputed_word_embeddings.save(str(out_path))
+            self.precomputed_word_embeddings.save(str(out_path), separately=[])
             return {"name": self.name, "field": self.field, "fasttext_binary": out_path.read_bytes()}
 
 
