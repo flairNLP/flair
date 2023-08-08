@@ -3,12 +3,12 @@ import pytest
 from flair.data import Sentence
 from flair.datasets import NEL_ENGLISH_AIDA
 from flair.embeddings import TransformerWordEmbeddings
-from flair.models import EntityLinker
+from flair.models import SpanClassifier
 from tests.model_test_utils import BaseModelTest
 
 
 class TestEntityLinker(BaseModelTest):
-    model_cls = EntityLinker
+    model_cls = SpanClassifier
     train_label_type = "nel"
     training_args = {"max_epochs": 2}
 
