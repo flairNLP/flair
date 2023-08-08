@@ -77,8 +77,8 @@ class StackedEmbeddings(TokenEmbeddings):
         # IMPORTANT: add embeddings as torch modules
         for i, embedding in enumerate(embeddings):
             if overwrite_names:
-                embedding.name = f"{str(i)}-{embedding.name}"
-            self.add_module(f"list_embedding_{str(i)}", embedding)
+                embedding.name = f"{i!s}-{embedding.name}"
+            self.add_module(f"list_embedding_{i!s}", embedding)
 
         self.name: str = "Stack"
         self.__names = [name for embedding in self.embeddings for name in embedding.get_names()]
@@ -428,14 +428,14 @@ class WordEmbeddings(TokenEmbeddings):
             "embedding_length": self.__embedding_length,
         }
 
-    def state_dict(self, *args, destination=None, prefix="", keep_vars=False):
+    def state_dict(self, *args, **kwargs):
         # when loading the old versions from pickle, the embeddings might not be added as pytorch module.
         # we do this delayed, when the weights are collected (e.g. for saving), as doing this earlier might
         # lead to issues while loading (trying to load weights that weren't stored as python weights and therefore
         # not finding them)
         if list(self.modules()) == [self]:
             self.embedding = self.embedding
-        return super().state_dict(*args, destination=destination, prefix=prefix, keep_vars=keep_vars)
+        return super().state_dict(*args, **kwargs)
 
 
 @register_embeddings
@@ -525,7 +525,7 @@ class CharacterEmbeddings(TokenEmbeddings):
             outputs = outputs.transpose(0, 1)
             chars_embeds_temp = torch.zeros(
                 (outputs.size(0), outputs.size(2)),
-                dtype=torch.float,
+                dtype=outputs.dtype,
                 device=flair.device,
             )
             for i, index in enumerate(output_lengths):
@@ -1086,7 +1086,7 @@ class FastTextEmbeddings(TokenEmbeddings):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             out_path = temp_path / "fasttext.model"
-            self.precomputed_word_embeddings.save(str(out_path))
+            self.precomputed_word_embeddings.save(str(out_path), separately=[])
             return {"name": self.name, "field": self.field, "fasttext_binary": out_path.read_bytes()}
 
 

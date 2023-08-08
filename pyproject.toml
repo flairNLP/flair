@@ -1,68 +1,3 @@
-[tool.poetry]
-name = "flair"
-version = "0.12.2"
-description = "A very simple framework for state-of-the-art NLP"
-readme = "README.md"
-authors = ["Alan Akbik <alan.akbik@gmail.com>"]
-maintainers = ["Alan Akbik <alan.akbik@gmail.com>"]
-repository = "https://github.com/flairNLP/flair"
-license = "MIT"
-
-[tool.poetry.dependencies]
-python = ">=3.7,<4.0"
-
-boto3 = ">=1.20.27"
-bpemb = ">=0.3.2"
-conllu = ">=4.0"
-deprecated = ">=1.2.13"
-ftfy = ">=6.1.0"
-gdown = ">=4.4.0"
-gensim = ">=4.2.0"
-huggingface-hub = ">=0.10.0"
-janome = ">=0.4.2"
-langdetect = ">=1.0.9"
-lxml = ">=4.8.0"
-matplotlib = ">=2.2.3"
-more-itertools = ">=8.13.0"
-mpld3 = "==0.3"
-numpy = [
-    {version = "~1.21.6", python = "<3.8.0"},
-    {version = ">=1.22.3", python = ">=3.8.0"},
-]
-pptree = ">=3.1"
-python-dateutil = ">=2.8.2"
-pytorch_revgrad = ">=0.2.0"
-regex = ">=2022.1.18"
-scikit-learn = ">=1.0.2"
-segtok = ">=1.5.11"
-sqlitedict = ">=2.0.0"
-tabulate = ">=0.8.10"
-torch = ">=1.5.0,!=1.8"
-tqdm = ">=4.63.0"
-transformer-smaller-training-vocab = ">=0.2.3"
-transformers = { extras = ["sentencepiece"], version =">=4.18.0" }
-wikipedia-api = ">=0.5.7"
-
-
-[tool.poetry.group.dev.dependencies]
-black = { extras = ["jupyter"], version = ">=23.3.0" }
-konoha = ">=4.6.5,<5.0.0"
-mypy = ">=1.2.0"
-pytest = ">=7.3.1"
-pytest-black-ng = ">=0.4.1"
-pytest-github-actions-annotate-failures = ">=0.1.8"
-pytest-mypy = ">=0.10.3"
-pytest-ruff = ">=0.0.5"
-types-dataclasses = ">=0.6.6"
-types-Deprecated = ">=1.2.9.2"
-types-requests = ">=2.28.11.17"
-types-tabulate = ">=0.9.0.2"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-
 [tool.black]
 line-length = 120
 target-version = ['py37']
@@ -91,6 +26,8 @@ filterwarnings = [
     "ignore:the imp module is deprecated:DeprecationWarning:past",  # ignore DeprecationWarning from hyperopt dependency
     "ignore:.*imp module.*:DeprecationWarning",  # ignore DeprecationWarnings that involve imp module
     "ignore:The class LayoutLMv3FeatureExtractor is deprecated and will be removed in version 5 of Transformers. Please use LayoutLMv3ImageProcessor instead.",  # huggingface layoutlmv3 has deprecated calls.
+    "ignore:pkg_resources",  # huggingface has deprecated calls.
+    'ignore:Deprecated call to `pkg_resources',  # huggingface has deprecated calls.
 ]
 markers = [
     "integration",
@@ -148,6 +85,7 @@ ignore = [
   "D105",
   "D107",
   "E501",   # Ignore line too long
+  "RUF012",
 ]
 
 unfixable = [
@@ -159,6 +97,8 @@ unfixable = [
 
 [tool.ruff.per-file-ignores]
 "flair/embeddings/legacy.py" = ["D205"]
+"scripts/*" = ["INP001"]  #  no need for __ini__ for scripts
+"flair/datasets/*" = ["D417"]  # need to fix datasets in a unified way later.
 
 [tool.ruff.pydocstyle]
 convention = "google"

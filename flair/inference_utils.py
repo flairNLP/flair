@@ -75,7 +75,7 @@ class WordEmbeddingsStore:
         self.name = embedding.name
         self.store_path: Path = WordEmbeddingsStore._get_store_path(embedding, backend)
         if verbose:
-            logger.info(f"store filename: {str(self.store_path)}")
+            logger.info(f"store filename: {self.store_path!s}")
         self.backend: Union[WordEmbeddings, WordEmbeddingsStoreBackend]
         if backend == "sqlite":
             self.backend = SqliteWordEmbeddingsStoreBackend(embedding, verbose)
@@ -143,7 +143,7 @@ class WordEmbeddingsStore:
         """Deletes the db versions of all word embeddings."""
         for embedding in WordEmbeddingsStore._word_embeddings(model):
             store_path: Path = WordEmbeddingsStore._get_store_path(embedding)
-            logger.info(f"delete store: {str(store_path)}")
+            logger.info(f"delete store: {store_path!s}")
             if store_path.is_file():
                 store_path.unlink()
             elif store_path.is_dir():
@@ -177,7 +177,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                 self.k = len(result[0]) - 1
                 return
             except sqlite3.Error as err:
-                logger.exception(f"Fail to open sqlite database {str(self.store_path)}: {str(err)}")
+                logger.exception(f"Fail to open sqlite database {self.store_path!s}: {err!s}")
         # otherwise, push embedding to database
         if hasattr(embedding, "precomputed_word_embeddings"):
             self.db = sqlite3.connect(str(self.store_path))
@@ -239,7 +239,7 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                             cursor.close()
                         return
                 except lmdb.Error as err:
-                    logger.exception(f"Fail to open lmdb database {str(self.store_path)}: {str(err)}")
+                    logger.exception(f"Fail to open lmdb database {self.store_path!s}: {err!s}")
             # create and load the database in write mode
             if hasattr(embedding, "precomputed_word_embeddings"):
                 pwe = embedding.precomputed_word_embeddings

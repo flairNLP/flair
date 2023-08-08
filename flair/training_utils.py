@@ -39,7 +39,7 @@ class Result:
         return self.scores["loss"]
 
     def __str__(self) -> str:
-        return f"{str(self.detailed_results)}\nLoss: {self.loss}'"
+        return f"{self.detailed_results!s}\nLoss: {self.loss}'"
 
 
 class MetricRegression:
@@ -66,12 +66,7 @@ class MetricRegression:
         return self.mean_squared_error()
 
     def to_tsv(self):
-        return "{}\t{}\t{}\t{}".format(
-            self.mean_squared_error(),
-            self.mean_absolute_error(),
-            self.pearsonr(),
-            self.spearmanr(),
-        )
+        return f"{self.mean_squared_error()}\t{self.mean_absolute_error()}\t{self.pearsonr()}\t{self.spearmanr()}"
 
     @staticmethod
     def tsv_header(prefix=None):
