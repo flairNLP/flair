@@ -808,8 +808,8 @@ def test_german_ler_corpus(tasks_base_path):
     assert len(corpus.test) == 6673, "Mismatch in number of sentences for test split"
 
 
-def test_afri_pos_corpus(tasks_base_path):
-    # This test covers the complete AfricaPOS dataset.
+def test_masakha_pos_corpus(tasks_base_path):
+    # This test covers the complete MasakhaPOS dataset.
     supported_versions = ["v1"]
 
     supported_languages = {
@@ -867,7 +867,7 @@ def test_afri_pos_corpus(tasks_base_path):
 
     for version in supported_versions:
         for language in supported_languages[version]:
-            corpus = flair.datasets.AFRICA_POS(languages=language, version=version)
+            corpus = flair.datasets.MASAKHA_POS(languages=language, version=version)
 
             gold_stats = africa_pos_stats[version][language]
 
