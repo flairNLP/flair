@@ -333,7 +333,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         pre_allocated_zero_tensor = torch.zeros(
             self.embeddings.embedding_length * longest_token_sequence_in_batch,
-            dtype=torch.float,
+            dtype=self.rnn.all_weights[0][0].dtype,
             device=flair.device,
         )
 
@@ -691,7 +691,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
 
         pre_allocated_zero_tensor = torch.zeros(
             self.embeddings.embedding_length * padding_length,
-            dtype=torch.float,
+            dtype=self.convs[0].weight.dtype,
             device=flair.device,
         )
 

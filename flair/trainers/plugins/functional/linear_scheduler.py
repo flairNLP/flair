@@ -61,12 +61,15 @@ class LinearSchedulerPlugin(TrainerPlugin):
         self.previous_learning_rate = self.current_learning_rate
 
     @TrainerPlugin.hook
-    def after_training_batch(self, **kw):
+    def after_training_batch(self, optimizer_was_run: bool, **kw):
         """Do the scheduler step if one-cycle or linear decay.
 
         :param kw:
         :return:
         """
+        # skip if no optimization has happened.
+        if not optimizer_was_run:
+            return
         self.scheduler.step()
         self.store_learning_rate()
 

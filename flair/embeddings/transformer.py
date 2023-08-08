@@ -51,7 +51,7 @@ def pad_sequence_embeddings(all_hidden_states: List[torch.Tensor]) -> torch.Tens
             longest_token_sequence_in_batch = hidden_states.shape[0]
     pre_allocated_zero_tensor = torch.zeros(
         embedding_length * longest_token_sequence_in_batch,
-        dtype=torch.float,
+        dtype=all_hidden_states[0].dtype,
         device=flair.device,
     )
     all_embs = []
@@ -181,7 +181,9 @@ def fill_mean_token_embeddings(
 
 @torch.jit.script_if_tracing
 def document_mean_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor):
-    result = torch.zeros(sentence_hidden_states.shape[0], sentence_hidden_states.shape[2])
+    result = torch.zeros(
+        sentence_hidden_states.shape[0], sentence_hidden_states.shape[2], dtype=sentence_hidden_states.dtype
+    )
 
     for i in torch.arange(sentence_hidden_states.shape[0]):
         result[i] = sentence_hidden_states[i, : sentence_lengths[i]].mean(dim=0)
@@ -189,7 +191,9 @@ def document_mean_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths
 
 @torch.jit.script_if_tracing
 def document_max_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor):
-    result = torch.zeros(sentence_hidden_states.shape[0], sentence_hidden_states.shape[2])
+    result = torch.zeros(
+        sentence_hidden_states.shape[0], sentence_hidden_states.shape[2], dtype=sentence_hidden_states.dtype
+    )
 
     for i in torch.arange(sentence_hidden_states.shape[0]):
         result[i], _ = sentence_hidden_states[i, : sentence_lengths[i]].max(dim=0)
@@ -1328,7 +1332,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             assert word_ids is not None
             assert token_lengths is not None
             all_token_embeddings = torch.zeros(  # type: ignore[call-overload]
-                word_ids.shape[0], token_lengths.max(), self.embedding_length_internal, device=flair.device
+                word_ids.shape[0],
+                token_lengths.max(),
+                self.embedding_length_internal,
+                device=flair.device,
+                dtype=sentence_hidden_states.dtype,
             )
             true_tensor = torch.ones_like(word_ids[:, :1], dtype=torch.bool)
             if self.subtoken_pooling == "first":
