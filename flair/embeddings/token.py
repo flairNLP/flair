@@ -428,14 +428,14 @@ class WordEmbeddings(TokenEmbeddings):
             "embedding_length": self.__embedding_length,
         }
 
-    def state_dict(self, *args, destination=None, prefix="", keep_vars=False):
+    def state_dict(self, *args, **kwargs):
         # when loading the old versions from pickle, the embeddings might not be added as pytorch module.
         # we do this delayed, when the weights are collected (e.g. for saving), as doing this earlier might
         # lead to issues while loading (trying to load weights that weren't stored as python weights and therefore
         # not finding them)
         if list(self.modules()) == [self]:
             self.embedding = self.embedding
-        return super().state_dict(*args, destination=destination, prefix=prefix, keep_vars=keep_vars)
+        return super().state_dict(*args, **kwargs)
 
 
 @register_embeddings
