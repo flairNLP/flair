@@ -298,6 +298,7 @@ class ModelTrainer(Pluggable):
         optimizer: Type[torch.optim.Optimizer] = SGD,
         train_with_dev: bool = False,
         train_with_test: bool = False,
+        max_grad_norm: Optional[float] = 5.0,
         # evaluation and monitoring
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         monitor_test: bool = False,
@@ -345,6 +346,8 @@ class ModelTrainer(Pluggable):
             monitor_train_sample: Set this to evaluate on a sample of the train data at the end of each epoch.
                 If you set an int, it will sample this many sentences to evaluate on. If you set a float, it will sample
                 a percentage of data points from train.
+            max_grad_norm (Optional[float]): If not None, gradients are clipped to this value before an optimizer.step is
+                called.
             use_final_model_for_eval (bool): If True, the final model is used for the final evaluation. If False, the
                 model from the best epoch as determined by main_evaluation_metric is used for the final evaluation.
             gold_label_dictionary_for_eval: Set to force evaluation to use a particular label dictionary
@@ -594,7 +597,8 @@ class ModelTrainer(Pluggable):
 
                     # do the optimizer step
                     scaler.unscale_(self.optimizer)
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
+                    if max_grad_norm is not None:
+                        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)
                     scale_before = scaler.get_scale()
                     scaler.step(self.optimizer)
                     scaler.update()
