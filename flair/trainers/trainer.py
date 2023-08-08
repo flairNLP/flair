@@ -717,8 +717,9 @@ class ModelTrainer(Pluggable):
 
             self.dispatch("training_interrupt")  # TODO: no plugin calls this event
 
-            log.info("Saving model ...")
-            self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+            if save_final_model:
+                log.info("Saving model ...")
+                self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
             log.info("Done.")
 
         except TrainingInterrupt as exc:
@@ -727,8 +728,9 @@ class ModelTrainer(Pluggable):
             log_line(log)
             self.dispatch("training_interrupt")  # TODO: no plugin calls this event
 
-            log.info("Saving model ...")
-            self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+            if save_final_model:
+                log.info("Saving model ...")
+                self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
             log.info("Done.")
 
         except Exception:
