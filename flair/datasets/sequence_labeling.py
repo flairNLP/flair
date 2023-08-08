@@ -2577,7 +2577,6 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -2591,13 +2590,17 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
 
         # download data if necessary
         ler_path = "https://raw.githubusercontent.com/elenanereiss/Legal-Entity-Recognition/master/data/"
-        cached_path(f"{ler_path}ler.conll", Path("datasets") / dataset_name)
+
+        for split in ["train", "dev", "test"]:
+            cached_path(f"{ler_path}ler_{split}.conll", Path("datasets") / dataset_name)
 
         super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
-            train_file="ler.conll",
+            train_file="ler_train.conll",
+            dev_file="ler_dev.conll",
+            test_file="ler_test.conll",
             **corpusargs,
         )
 

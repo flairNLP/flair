@@ -799,6 +799,15 @@ def test_nermud_corpus(tasks_base_path):
         check_number_sentences(len(corpus.dev), stats["dev"], "dev")
 
 
+def test_german_ler_corpus(tasks_base_path):
+    corpus = flair.datasets.NER_GERMAN_LEGAL()
+
+    # Number of instances per dataset split are taken from https://huggingface.co/datasets/elenanereiss/german-ler
+    assert len(corpus.train) == 53384, "Mismatch in number of sentences for train split"
+    assert len(corpus.dev) == 6666, "Mismatch in number of sentences for dev split"
+    assert len(corpus.test) == 6673, "Mismatch in number of sentences for test split"
+
+
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
     corpus = MultiFileJsonlCorpus(
         train_files=[tasks_base_path / "jsonl/train.jsonl"],
