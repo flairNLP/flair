@@ -345,9 +345,9 @@ class ModelTrainer(Pluggable):
             monitor_test (bool): If True, test data is evaluated at end of each epoch
             monitor_train_sample: Set this to evaluate on a sample of the train data at the end of each epoch.
                 If you set an int, it will sample this many sentences to evaluate on. If you set a float, it will sample
-                a percentage of data points from train.                
+                a percentage of data points from train.
             max_grad_norm (Optional[float]): If not None, gradients are clipped to this value before an optimizer.step is
-                called.    
+                called.
             use_final_model_for_eval (bool): If True, the final model is used for the final evaluation. If False, the
                 model from the best epoch as determined by main_evaluation_metric is used for the final evaluation.
             gold_label_dictionary_for_eval: Set to force evaluation to use a particular label dictionary
@@ -596,7 +596,7 @@ class ModelTrainer(Pluggable):
                     self.dispatch("before_training_optimizer_step", **batch_kw)
 
                     # do the optimizer step
-                    scaler.unscale_(self.optimizer)                    
+                    scaler.unscale_(self.optimizer)
                     if max_grad_norm is not None:
                         torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)
                     scale_before = scaler.get_scale()
