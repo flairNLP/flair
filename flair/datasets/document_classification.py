@@ -1516,7 +1516,6 @@ class GLUE_SST2(CSVClassificationCorpus):
             tokenizer=tokenizer,
             in_memory=in_memory,
             encoding=encoding,
-            sample_missing_splits=sample_missing_splits,
             skip_header=True,
             **datasetargs,
         )
@@ -1528,6 +1527,7 @@ class GLUE_SST2(CSVClassificationCorpus):
             column_name_map={0: "text", 1: "label"},
             train_file=train_file,
             dev_file=data_folder / "dev.tsv",
+            sample_missing_splits=sample_missing_splits,
             **kwargs,
         )
 
