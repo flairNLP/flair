@@ -204,7 +204,7 @@ class BaseModelTest:
             print(label)
             assert label.value is not None
             assert 0.0 <= label.score <= 1.0
-            assert type(label.score) is float
+            assert isinstance(label.score, float)
 
         del trainer, model, multi_class_corpus
         loaded_model = self.model_cls.load(results_base_path / "final-model.pt")

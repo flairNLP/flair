@@ -2976,7 +2976,7 @@ class NER_MASAKHANE(MultiCorpus):
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # if only one language is given
-        if type(languages) == str:
+        if isinstance(languages, str):
             languages = [languages]
 
         # column format
@@ -3249,7 +3249,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         in_memory : bool, optional
             Specify that the dataset should be loaded in memory, which speeds up the training process but takes increases the RAM usage significantly.
         """
-        if type(languages) == str:
+        if isinstance(languages, str):
             languages = [languages]
 
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
@@ -3710,7 +3710,7 @@ class NER_MULTI_XTREME(MultiCorpus):
             ]
 
         # if only one language is given
-        if type(languages) == str:
+        if isinstance(languages, str):
             languages = [languages]
 
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
@@ -3802,7 +3802,7 @@ class NER_MULTI_WIKINER(MultiCorpus):
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # if only one language is given
-        if type(languages) == str:
+        if isinstance(languages, str):
             languages = [languages]
 
         # column format
@@ -4748,10 +4748,10 @@ class NER_NERMUD(MultiCorpus):
         """
         supported_domains = ["WN", "FIC", "ADG"]
 
-        if type(domains) == str and domains == "all":
+        if isinstance(domains, str) and domains == "all":
             domains = supported_domains
 
-        if type(domains) == str:
+        if isinstance(domains, str):
             domains = [domains]
 
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)

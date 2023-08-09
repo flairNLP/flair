@@ -67,7 +67,7 @@ class Plotter:
 
     @staticmethod
     def _extract_weight_data(file_name: Union[str, Path]) -> dict:
-        if type(file_name) is str:
+        if isinstance(file_name, str):
             file_name = Path(file_name)
 
         weights: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
@@ -86,7 +86,7 @@ class Plotter:
 
     @staticmethod
     def _extract_learning_rate(file_name: Union[str, Path]):
-        if type(file_name) is str:
+        if isinstance(file_name, str):
             file_name = Path(file_name)
 
         lrs = []

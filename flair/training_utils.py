@@ -71,7 +71,7 @@ class MetricRegression:
     @staticmethod
     def tsv_header(prefix=None):
         if prefix:
-            return "{0}_MEAN_SQUARED_ERROR\t{0}_MEAN_ABSOLUTE_ERROR\t{0}_PEARSON\t{0}_SPEARMAN".format(prefix)
+            return f"{prefix}_MEAN_SQUARED_ERROR\t{prefix}_MEAN_ABSOLUTE_ERROR\t{prefix}_PEARSON\t{prefix}_SPEARMAN"
 
         return "MEAN_SQUARED_ERROR\tMEAN_ABSOLUTE_ERROR\tPEARSON\tSPEARMAN"
 
@@ -99,7 +99,7 @@ class EvaluationMetric(Enum):
 
 class WeightExtractor:
     def __init__(self, directory: Union[str, Path], number_of_weights: int = 10) -> None:
-        if type(directory) is str:
+        if isinstance(directory, str):
             directory = Path(directory)
         self.weights_file = init_output_file(directory, "weights.txt")
         self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(lambda: defaultdict(list))

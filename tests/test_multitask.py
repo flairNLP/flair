@@ -63,5 +63,5 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     for label in sentence.labels:
         assert label.value is not None
         assert 0.0 <= label.score <= 1.0
-        assert type(label.score) is float
+        assert isinstance(label.score, float)
     del loaded_model

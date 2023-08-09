@@ -56,7 +56,7 @@ class TextDataset(Dataset):
 
     def __getitem__(self, index=0) -> torch.Tensor:
         """Tokenizes a text file on character basis."""
-        if type(self.files[index]) is str:
+        if isinstance(self.files[index], str):
             self.files[index] = Path(self.files[index])
         assert self.files[index].exists()
 
@@ -444,7 +444,7 @@ class LanguageModelTrainer:
         corpus: TextCorpus,
         optimizer: Type[Optimizer] = SGD,
     ):
-        if type(checkpoint_file) is str:
+        if isinstance(checkpoint_file, str):
             checkpoint_file = Path(checkpoint_file)
 
         checkpoint = LanguageModel.load_checkpoint(checkpoint_file)

@@ -256,9 +256,9 @@ class SciSpacyTokenizer(Tokenizer):
                 r"/",  # want to split at every slash
                 r"(?<=[0-9])[+\-\*^](?=[0-9-])",
                 rf"(?<=[{char_classes.ALPHA_LOWER}])\.(?=[{char_classes.ALPHA_UPPER}])",
-                r"(?<=[{a}]),(?=[{a}])".format(a=char_classes.ALPHA),
-                r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=char_classes.ALPHA, h=char_classes.HYPHENS),
-                r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=char_classes.ALPHA),
+                rf"(?<=[{char_classes.ALPHA}]),(?=[{char_classes.ALPHA}])",
+                rf'(?<=[{char_classes.ALPHA}])[?";:=,.]*(?:{char_classes.HYPHENS})(?=[{char_classes.ALPHA}])',
+                rf"(?<=[{char_classes.ALPHA}0-9])[:<>=/](?=[{char_classes.ALPHA}])",
             ]
         )
 

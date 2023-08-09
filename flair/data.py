@@ -3,10 +3,10 @@ import logging
 import re
 import typing
 from abc import ABC, abstractmethod
-from collections import Counter, defaultdict, namedtuple
+from collections import Counter, defaultdict
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Union, cast
+from typing import Dict, Iterable, List, NamedTuple, Optional, Union, cast
 
 import torch
 from deprecated import deprecated
@@ -39,7 +39,11 @@ def _len_dataset(dataset: Optional[Dataset]) -> int:
     return len(loader)
 
 
-BoundingBox = namedtuple("BoundingBox", ["left", "top", "right", "bottom"])
+class BoundingBox(NamedTuple):
+    left: str
+    top: int
+    right: int
+    bottom: int
 
 
 class Dictionary:
@@ -727,7 +731,7 @@ class Sentence(DataPoint):
         if isinstance(use_tokenizer, Tokenizer):
             tokenizer = use_tokenizer
 
-        elif type(use_tokenizer) == bool:
+        elif isinstance(use_tokenizer, bool):
             tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
 
         else:
@@ -809,7 +813,7 @@ class Sentence(DataPoint):
         if isinstance(token, Token):
             assert token.sentence is None
 
-        if type(token) is str:
+        if isinstance(token, str):
             token = Token(token)
         token = cast(Token, token)
 

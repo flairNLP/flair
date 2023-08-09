@@ -139,7 +139,7 @@ class ModelTrainer(Pluggable):
         # evaluation and monitoring
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         monitor_test: bool = False,
-        monitor_train_sample: Union[float, int] = 0.0,
+        monitor_train_sample: float = 0.0,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
         exclude_labels: List[str] = [],
@@ -211,7 +211,7 @@ class ModelTrainer(Pluggable):
         # evaluation and monitoring
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         monitor_test: bool = False,
-        monitor_train_sample: Union[float, int] = 0.0,
+        monitor_train_sample: float = 0.0,
         use_final_model_for_eval: bool = True,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
         exclude_labels: List[str] = [],
@@ -302,7 +302,7 @@ class ModelTrainer(Pluggable):
         # evaluation and monitoring
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         monitor_test: bool = False,
-        monitor_train_sample: Union[float, int] = 0.0,
+        monitor_train_sample: float = 0.0,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
         exclude_labels: List[str] = [],

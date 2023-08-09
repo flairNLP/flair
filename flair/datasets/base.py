@@ -229,7 +229,7 @@ class MongoDataset(FlairDataset):
 
 
 def find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits=True):
-    if type(data_folder) == str:
+    if isinstance(data_folder, str):
         data_folder: Path = Path(data_folder)
 
     if train_file is not None:
