@@ -66,17 +66,12 @@ class MetricRegression:
         return self.mean_squared_error()
 
     def to_tsv(self):
-        return "{}\t{}\t{}\t{}".format(
-            self.mean_squared_error(),
-            self.mean_absolute_error(),
-            self.pearsonr(),
-            self.spearmanr(),
-        )
+        return f"{self.mean_squared_error()}\t{self.mean_absolute_error()}\t{self.pearsonr()}\t{self.spearmanr()}"
 
     @staticmethod
     def tsv_header(prefix=None):
         if prefix:
-            return "{0}_MEAN_SQUARED_ERROR\t{0}_MEAN_ABSOLUTE_ERROR\t{0}_PEARSON\t{0}_SPEARMAN".format(prefix)
+            return f"{prefix}_MEAN_SQUARED_ERROR\t{prefix}_MEAN_ABSOLUTE_ERROR\t{prefix}_PEARSON\t{prefix}_SPEARMAN"
 
         return "MEAN_SQUARED_ERROR\tMEAN_ABSOLUTE_ERROR\tPEARSON\tSPEARMAN"
 

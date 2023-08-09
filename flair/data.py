@@ -143,7 +143,7 @@ class Dictionary:
     def __setstate__(self, d):
         self.__dict__ = d
         # set 'add_unk' if the dictionary was created with a version of Flair older than 0.9
-        if "add_unk" not in self.__dict__.keys():
+        if "add_unk" not in self.__dict__:
             self.__dict__["add_unk"] = b"<unk>" in self.__dict__["idx2item"]
 
     @classmethod
@@ -1687,7 +1687,7 @@ class MultiCorpus(Corpus):
             f"{len(self.dev) if self.dev else 0} dev + "
             f"{len(self.test) if self.test else 0} test sentences\n - "
         )
-        output += "\n - ".join([f"{type(corpus).__name__} {str(corpus)} - {corpus.name}" for corpus in self.corpora])
+        output += "\n - ".join([f"{type(corpus).__name__} {corpus!s} - {corpus.name}" for corpus in self.corpora])
         return output
 
 

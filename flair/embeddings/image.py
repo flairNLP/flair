@@ -73,7 +73,7 @@ class PrecomputedImageEmbeddings(ImageEmbeddings):
     def __init__(self, url2tensor_dict, name) -> None:
         self.url2tensor_dict = url2tensor_dict
         self.name = name
-        self.__embedding_length = len(list(self.url2tensor_dict.values())[0])
+        self.__embedding_length = len(next(iter(self.url2tensor_dict.values())))
         self.static_embeddings = True
         super().__init__()
 
