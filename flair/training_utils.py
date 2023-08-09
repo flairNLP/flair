@@ -99,7 +99,7 @@ class EvaluationMetric(Enum):
 
 class WeightExtractor:
     def __init__(self, directory: Union[str, Path], number_of_weights: int = 10) -> None:
-        if type(directory) is str:
+        if isinstance(directory, str):
             directory = Path(directory)
         self.weights_file = init_output_file(directory, "weights.txt")
         self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(lambda: defaultdict(list))

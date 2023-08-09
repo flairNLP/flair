@@ -748,7 +748,7 @@ def test_masakhane_corpus(tasks_base_path):
             "bam": {"train": 4462, "dev": 638, "test": 1274},
             "bbj": {"train": 3384, "dev": 483, "test": 966},
             "ewe": {"train": 3505, "dev": 501, "test": 1001},
-            "fon": {"train": 4343, "dev": 621, "test": 1240},
+            "fon": {"train": 4343, "dev": 623, "test": 1228},
             "hau": {"train": 5716, "dev": 816, "test": 1633},
             "ibo": {"train": 7634, "dev": 1090, "test": 2181},
             "kin": {"train": 7825, "dev": 1118, "test": 2235},
@@ -797,6 +797,15 @@ def test_nermud_corpus(tasks_base_path):
         corpus = flair.datasets.NER_NERMUD(domains=domain)
         check_number_sentences(len(corpus.train), stats["train"], "train")
         check_number_sentences(len(corpus.dev), stats["dev"], "dev")
+
+
+def test_german_ler_corpus(tasks_base_path):
+    corpus = flair.datasets.NER_GERMAN_LEGAL()
+
+    # Number of instances per dataset split are taken from https://huggingface.co/datasets/elenanereiss/german-ler
+    assert len(corpus.train) == 53384, "Mismatch in number of sentences for train split"
+    assert len(corpus.dev) == 6666, "Mismatch in number of sentences for dev split"
+    assert len(corpus.test) == 6673, "Mismatch in number of sentences for test split"
 
 
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):

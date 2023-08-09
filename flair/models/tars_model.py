@@ -195,7 +195,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
             # make label dictionary if no Dictionary object is passed
             if isinstance(label_dictionary, Dictionary):
                 label_dictionary = label_dictionary.get_items()
-            if type(label_dictionary) == str:
+            if isinstance(label_dictionary, str):
                 label_dictionary = [label_dictionary]
 
             # prepare dictionary of tags (without B- I- prefixes and without UNK)

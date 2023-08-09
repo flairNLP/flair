@@ -347,7 +347,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         :return: Valid entities as `_Entity`
         """
         for label_type, valid_labels in self.entity_label_types.items():
-            for entity_span in sentence.get_spans(type=label_type):
+            for entity_span in sentence.get_spans(label_type=label_type):
                 entity_label: Label = entity_span.get_label(label_type=label_type)
 
                 # Only use entities labelled with the specified labels for each label type

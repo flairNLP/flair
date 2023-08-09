@@ -3,10 +3,10 @@ import logging
 import re
 import typing
 from abc import ABC, abstractmethod
-from collections import Counter, defaultdict, namedtuple
+from collections import Counter, defaultdict
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Union, cast
+from typing import Dict, Iterable, List, NamedTuple, Optional, Union, cast
 
 import torch
 from deprecated import deprecated
@@ -39,7 +39,11 @@ def _len_dataset(dataset: Optional[Dataset]) -> int:
     return len(loader)
 
 
-BoundingBox = namedtuple("BoundingBox", ["left", "top", "right", "bottom"])
+class BoundingBox(NamedTuple):
+    left: str
+    top: int
+    right: int
+    bottom: int
 
 
 class Dictionary:
@@ -543,6 +547,14 @@ class Token(_PartOfSentence):
         else:
             DataPoint.set_label(self, typename=typename, value=value, score=score)
 
+    def to_dict(self, tag_type: Optional[str] = None):
+        return {
+            "text": self.text,
+            "start_pos": self.start_position,
+            "end_pos": self.end_position,
+            "labels": [label.to_dict() for label in self.get_labels(tag_type)],
+        }
+
 
 class Span(_PartOfSentence):
     """This class represents one textual span consisting of Tokens."""
@@ -604,6 +616,14 @@ class Span(_PartOfSentence):
     def embedding(self):
         return self.get_embedding()
 
+    def to_dict(self, tag_type: Optional[str] = None):
+        return {
+            "text": self.text,
+            "start_pos": self.start_position,
+            "end_pos": self.end_position,
+            "labels": [label.to_dict() for label in self.get_labels(tag_type)],
+        }
+
 
 class Relation(_PartOfSentence):
     def __new__(self, first: Span, second: Span):
@@ -664,6 +684,15 @@ class Relation(_PartOfSentence):
     def embedding(self):
         pass
 
+    def to_dict(self, tag_type: Optional[str] = None):
+        return {
+            "from_text": self.first.text,
+            "to_text": self.second.text,
+            "from_idx": self.first.tokens[0].idx - 1,
+            "to_idx": self.second.tokens[0].idx - 1,
+            "labels": [label.to_dict() for label in self.get_labels(tag_type)],
+        }
+
 
 class Sentence(DataPoint):
     """A Sentence is a list of tokens and is used to represent a sentence or text fragment."""
@@ -702,7 +731,7 @@ class Sentence(DataPoint):
         if isinstance(use_tokenizer, Tokenizer):
             tokenizer = use_tokenizer
 
-        elif type(use_tokenizer) == bool:
+        elif isinstance(use_tokenizer, bool):
             tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
 
         else:
@@ -760,17 +789,17 @@ class Sentence(DataPoint):
     def unlabeled_identifier(self):
         return f'Sentence[{len(self)}]: "{self.text}"'
 
-    def get_relations(self, type: str) -> List[Relation]:
+    def get_relations(self, label_type: Optional[str] = None) -> List[Relation]:
         relations: List[Relation] = []
-        for label in self.get_labels(type):
+        for label in self.get_labels(label_type):
             if isinstance(label.data_point, Relation):
                 relations.append(label.data_point)
         return relations
 
-    def get_spans(self, type: str) -> List[Span]:
+    def get_spans(self, label_type: Optional[str] = None) -> List[Span]:
         spans: List[Span] = []
         for potential_span in self._known_spans.values():
-            if isinstance(potential_span, Span) and potential_span.has_label(type):
+            if isinstance(potential_span, Span) and (label_type is None or potential_span.has_label(label_type)):
                 spans.append(potential_span)
         return sorted(spans)
 
@@ -784,7 +813,7 @@ class Sentence(DataPoint):
         if isinstance(token, Token):
             assert token.sentence is None
 
-        if type(token) is str:
+        if isinstance(token, str):
             token = Token(token)
         token = cast(Token, token)
 
@@ -937,16 +966,13 @@ class Sentence(DataPoint):
         ).strip()
 
     def to_dict(self, tag_type: Optional[str] = None):
-        labels = []
-
-        if tag_type:
-            labels = [label.to_dict() for label in self.get_labels(tag_type)]
-            return {"text": self.to_original_text(), tag_type: labels}
-
-        if self.labels:
-            labels = [label.to_dict() for label in self.labels]
-
-        return {"text": self.to_original_text(), "all labels": labels}
+        return {
+            "text": self.to_original_text(),
+            "labels": [label.to_dict() for label in self.get_labels(tag_type) if label.data_point is self],
+            "entities": [span.to_dict(tag_type) for span in self.get_spans(tag_type)],
+            "relations": [relation.to_dict(tag_type) for relation in self.get_relations(tag_type)],
+            "tokens": [token.to_dict(tag_type) for token in self.tokens],
+        }
 
     def get_span(self, start: int, stop: int):
         span_slice = slice(start, stop)

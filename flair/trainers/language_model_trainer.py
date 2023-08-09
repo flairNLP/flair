@@ -4,7 +4,7 @@ import math
 import random
 import time
 from pathlib import Path
-from typing import Iterable, Optional, Type, Union
+from typing import Any, Dict, Iterable, Optional, Type, Union
 
 import torch
 from torch import cuda
@@ -13,16 +13,10 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 from torch.utils.data import DataLoader, Dataset
 
-from flair.optim import SGDW, ReduceLRWDOnPlateau
-
-try:
-    from apex import amp
-except ImportError:
-    amp = None
-
 import flair
 from flair.data import Dictionary
 from flair.models import LanguageModel
+from flair.optim import SGDW, ReduceLRWDOnPlateau
 from flair.training_utils import add_file_handler
 
 log = logging.getLogger("flair")
@@ -62,7 +56,7 @@ class TextDataset(Dataset):
 
     def __getitem__(self, index=0) -> torch.Tensor:
         """Tokenizes a text file on character basis."""
-        if type(self.files[index]) is str:
+        if isinstance(self.files[index], str):
             self.files[index] = Path(self.files[index])
         assert self.files[index].exists()
 
@@ -166,7 +160,8 @@ class LanguageModelTrainer:
         epoch: int = 0,
         split: int = 0,
         loss: float = 10000,
-        optimizer_state: Optional[dict] = None,
+        optimizer_state: Optional[Dict[str, Any]] = None,
+        scaler_state: Optional[Dict[str, Any]] = None,
     ) -> None:
         self.model: LanguageModel = model
         self.optimizer: Type[Optimizer] = optimizer
@@ -179,6 +174,7 @@ class LanguageModelTrainer:
         self.split = split
         self.loss = loss
         self.optimizer_state = optimizer_state
+        self.scaler_state = scaler_state
 
     def train(
         self,
@@ -194,16 +190,8 @@ class LanguageModelTrainer:
         grow_to_sequence_length: int = 0,
         num_workers: int = 2,
         use_amp: bool = False,
-        amp_opt_level: str = "O1",
         **kwargs,
     ):
-        if use_amp and amp is None:
-            raise RuntimeError(
-                "Failed to import apex. Please install apex from "
-                "https://www.github.com/nvidia/apex "
-                "to enable mixed-precision training."
-            )
-
         # cast string to Path
         base_path = Path(base_path)
 
@@ -229,6 +217,12 @@ class LanguageModelTrainer:
             best_val_loss = self.loss
             kwargs["lr"] = learning_rate
             optimizer = self.optimizer(self.model.parameters(), **kwargs)
+
+            scaler = torch.cuda.amp.GradScaler(enabled=use_amp and flair.device.type != "cpu")
+
+            if self.scaler_state:
+                scaler.load_state_dict(self.scaler_state)
+
             if self.optimizer_state is not None:
                 optimizer.load_state_dict(self.optimizer_state)
 
@@ -238,9 +232,6 @@ class LanguageModelTrainer:
                 )
             else:
                 scheduler = ReduceLROnPlateau(optimizer, verbose=True, factor=anneal_factor, patience=patience)
-
-            if use_amp:
-                self.model, optimizer = amp.initialize(self.model, optimizer, opt_level=amp_opt_level)
 
             training_generator = DataLoader(self.corpus.train, shuffle=False, num_workers=num_workers)
 
@@ -296,24 +287,22 @@ class LanguageModelTrainer:
 
                         self.model.zero_grad()
                         optimizer.zero_grad()
+                        with torch.autocast(device_type=flair.device.type, enabled=use_amp):
+                            # do the forward pass in the model
+                            output, rnn_output, hidden = self.model.forward(data, hidden)
 
-                        # do the forward pass in the model
-                        output, rnn_output, hidden = self.model.forward(data, hidden)
-
-                        # try to predict the targets
-                        loss = self.loss_function(output.view(-1, ntokens), targets)
+                            # try to predict the targets
+                            loss = self.loss_function(output.view(-1, ntokens), targets)
                         # Backward
-                        if use_amp:
-                            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                                scaled_loss.backward()
-                        else:
-                            loss.backward()
+                        scaler.scale(loss).backward()
+
+                        scaler.unscale_(optimizer)
 
                         # `clip_grad_norm` helps prevent the exploding gradient
                         # problem in RNNs / LSTMs.
                         torch.nn.utils.clip_grad_norm_(self.model.parameters(), clip)
-
-                        optimizer.step()
+                        scaler.step(optimizer)
+                        scaler.update()
 
                         total_loss += loss.data
 
@@ -455,7 +444,7 @@ class LanguageModelTrainer:
         corpus: TextCorpus,
         optimizer: Type[Optimizer] = SGD,
     ):
-        if type(checkpoint_file) is str:
+        if isinstance(checkpoint_file, str):
             checkpoint_file = Path(checkpoint_file)
 
         checkpoint = LanguageModel.load_checkpoint(checkpoint_file)
@@ -467,4 +456,5 @@ class LanguageModelTrainer:
             split=checkpoint["split"],
             loss=checkpoint["loss"],
             optimizer_state=checkpoint["optimizer_state_dict"],
+            scaler_state=checkpoint.get("scaler_state_dict"),
         )

@@ -53,7 +53,7 @@ class ViterbiLoss(torch.nn.Module):
         ]
         gold_score = scores_at_targets.sum() + transitions_to_stop.sum()
 
-        scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device)
+        scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device, dtype=features.dtype)
 
         for t in range(max(lengths)):
             batch_size_t = sum(
@@ -151,7 +151,7 @@ class ViterbiDecoder:
         seq_len = features.size(1)
 
         # Create a tensor to hold accumulated sequence scores at each current tag
-        scores_upto_t = torch.zeros(batch_size, seq_len + 1, self.tagset_size).to(flair.device)
+        scores_upto_t = torch.zeros(batch_size, seq_len + 1, self.tagset_size, dtype=features.dtype).to(flair.device)
         # Create a tensor to hold back-pointers
         # i.e., indices of the previous_tag that corresponds to maximum accumulated score at current tag
         # Let pads be the <end> tag index, since that was the last tag in the decoded sequence
