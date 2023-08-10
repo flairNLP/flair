@@ -1238,15 +1238,27 @@ class Corpus(typing.Generic[T_co]):
 
         # sample test data from train if none is provided
         if test is None and sample_missing_splits and train and sample_missing_splits != "only_dev":
+            test_portion = 0.1
             train_length = _len_dataset(train)
-            test_size: int = round(train_length / 10)
+            test_size: int = round(train_length * test_portion)
             test, train = randomly_split_into_two_datasets(train, test_size)
+            log.warning(
+                "No test split found. Using %.0f%% (i.e. %d samples) of the train split as test data",
+                test_portion,
+                test_size,
+            )
 
         # sample dev data from train if none is provided
         if dev is None and sample_missing_splits and train and sample_missing_splits != "only_test":
+            dev_portion = 0.1
             train_length = _len_dataset(train)
-            dev_size: int = round(train_length / 10)
+            dev_size: int = round(train_length * dev_portion)
             dev, train = randomly_split_into_two_datasets(train, dev_size)
+            log.warning(
+                "No dev split found. Using %.0f%% (i.e. %d samples) of the train split as dev data",
+                dev_portion,
+                dev_size,
+            )
 
         # set train dev and test data
         self._train: Optional[Dataset[T_co]] = train
