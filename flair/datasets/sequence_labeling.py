@@ -4818,7 +4818,7 @@ class MASAKHA_POS(MultiCorpus):
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
         # if only one language is given
-        if type(languages) == str:
+        if isinstance(languages, str):
             languages = [languages]
 
         # column format
