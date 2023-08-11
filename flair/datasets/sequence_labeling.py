@@ -4795,3 +4795,104 @@ class NER_NERMUD(MultiCorpus):
             sample_missing_splits=False,
             name="nermud",
         )
+
+
+class MASAKHA_POS(MultiCorpus):
+    def __init__(
+        self,
+        languages: Union[str, List[str]] = "bam",
+        version: str = "v1",
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ) -> None:
+        """Initialize the MasakhaPOS corpus available on https://github.com/masakhane-io/masakhane-pos.
+
+        It consists of 20 African languages. Pass a language code or a list of language codes to initialize the corpus
+        with the languages you require. If you pass "all", all languages will be initialized.
+        :version: Specifies version of the dataset. Currently, only "v1" is supported.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
+
+        # if only one language is given
+        if isinstance(languages, str):
+            languages = [languages]
+
+        # column format
+        columns = {0: "text", 1: "pos"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        supported_versions = ["v1"]
+
+        if version not in supported_versions:
+            log.error(f"The specified version '{version}' is not in the list of supported version!")
+            log.error(f"Supported versions are '{supported_versions}'!")
+            raise Exception
+
+        data_folder = base_path / dataset_name / version
+
+        supported_languages = [
+            "bam",
+            "bbj",
+            "ewe",
+            "fon",
+            "hau",
+            "ibo",
+            "kin",
+            "lug",
+            "mos",
+            "pcm",
+            "nya",
+            "sna",
+            "swa",
+            "twi",
+            "wol",
+            "xho",
+            "yor",
+            "zul",
+        ]
+
+        data_paths = {
+            "v1": "https://raw.githubusercontent.com/masakhane-io/masakhane-pos/main/data",
+        }
+
+        # use all languages if explicitly set to "all"
+        if languages == ["all"]:
+            languages = supported_languages
+
+        corpora: List[Corpus] = []
+        for language in languages:
+            if language not in supported_languages:
+                log.error(f"Language '{language}' is not in list of supported languages!")
+                log.error(f"Supported are '{supported_languages}'!")
+                log.error("Instantiate this Corpus for instance like so 'corpus = MASAKHA_POS(languages='bam')'")
+                raise Exception
+
+            language_folder = data_folder / language
+
+            # download data if necessary
+            data_path = f"{data_paths[version]}/{language}"
+            cached_path(f"{data_path}/dev.txt", language_folder)
+            cached_path(f"{data_path}/test.txt", language_folder)
+            cached_path(f"{data_path}/train.txt", language_folder)
+
+            # initialize comlumncorpus and add it to list
+            log.info(f"Reading data for language {language}@{version}")
+            corp = ColumnCorpus(
+                data_folder=language_folder,
+                column_format=columns,
+                encoding="utf-8",
+                in_memory=in_memory,
+                name=language,
+                **corpusargs,
+            )
+            corpora.append(corp)
+        super().__init__(
+            corpora,
+            name="africa-pos-" + "-".join(languages),
+        )
