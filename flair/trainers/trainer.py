@@ -595,10 +595,11 @@ class ModelTrainer(Pluggable):
 
                     self.dispatch("before_training_optimizer_step", **batch_kw)
 
-                    # do the optimizer step
-                    scaler.unscale_(self.optimizer)
                     if max_grad_norm is not None:
                         torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)
+                        
+                    # do the optimizer step
+                    scaler.unscale_(self.optimizer)
                     scale_before = scaler.get_scale()
                     scaler.step(self.optimizer)
                     scaler.update()
