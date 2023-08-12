@@ -178,13 +178,13 @@ class LabelVerbalizerDecoder(torch.nn.Module):
                 if str_label == "O":
                     verbalized_labels.append("outside")
                 elif str_label.startswith("B-"):
-                    verbalized_labels.append("begin " + str_label.split("-")[1])
+                    verbalized_labels.append("first token of a " + str_label.split("-")[1])
                 elif str_label.startswith("I-"):
-                    verbalized_labels.append("inside " + str_label.split("-")[1])
+                    verbalized_labels.append("middle token of a " + str_label.split("-")[1])
                 elif str_label.startswith("E-"):
-                    verbalized_labels.append("ending " + str_label.split("-")[1])
+                    verbalized_labels.append("last token of a " + str_label.split("-")[1])
                 elif str_label.startswith("S-"):
-                    verbalized_labels.append("single " + str_label.split("-")[1])
+                    verbalized_labels.append("a single token " + str_label.split("-")[1])
                 # if label is not BIOES, use label itself
                 else:
                     verbalized_labels.append(str_label)
