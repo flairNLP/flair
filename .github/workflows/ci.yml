@@ -12,11 +12,11 @@ jobs:
       FLAIR_CACHE_ROOT: ./cache/flair
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.7
+      - name: Set up Python 3.8
         id: setup-python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
       - name: Install Flair dependencies
         run: pip install -e .
       - name: Install unittest dependencies
