@@ -63,6 +63,8 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
         del state["is_token_embedding"]
         return cls(**state)
 
+
+@register_embeddings
 class WeightedSumReadoutLayer(TokenEmbeddings):
 
     def __init__(self,
@@ -148,92 +150,17 @@ class WeightedSumReadoutLayer(TokenEmbeddings):
 
         return named_embeddings_dict
 
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "WeightedSumReadoutLayer":
+        embeddings = load_embeddings(params["embeddings"])
+        params.pop("embeddings")
+        return cls(embeddings=embeddings, **params)
 
-class WeightedSumReadoutLayer(TokenEmbeddings):
-
-    def __init__(self,
-                 embeddings: TransformerWordEmbeddings,
-                 encode_positions: bool = False
-                 ):
-        """The constructor takes a list of embeddings to be combined."""
-        super().__init__()
-
-        self.embeddings = embeddings
-
-        self.name: str = "WeightedSumReadout"
-        self.static_embeddings: bool = False
-        self.__embedding_type: str = embeddings.embedding_type
-
-        # encode a test sentence to get the number of layers
-        test_sentence = Sentence("test")
-        self.embeddings.embed(test_sentence)
-        self.number_of_layers = test_sentence[0].embedding.size(0) # exclude embedding layer
-
-        self.encode_positions = encode_positions
-        if self.encode_positions:
-            self.__embedding_length: int = embeddings.embedding_length + self.number_of_layers
-        else:
-            self.__embedding_length: int = embeddings.embedding_length
-
-        weights = torch.ones(self.number_of_layers) / self.number_of_layers
-        self.weights = torch.nn.Parameter(data=weights.unsqueeze(0))
-
-        output_size = self.embedding_length
-        if output_size != self.embedding_length:
-            self.__embedding_length = output_size
-
-        self.to(flair.device)
-
-    def embed(self, sentences: Union[Sentence, List[Sentence]], static_embeddings: bool = True):
-        # if only one sentence is passed, convert to list of sentence
-        if type(sentences) is Sentence:
-            sentences = [sentences]
-
-        self.embeddings.embed(sentences)
-
-        tokens: List[Token] = []
-        for sentence in sentences:
-            tokens.extend(sentence)
-
-        all_token_embeddings = [token.get_embedding(self.embeddings.get_names()) for token in tokens]
-        stacked_token_embeddings = torch.stack(all_token_embeddings)
-
-        if self.encode_positions:
-            eye = torch.eye(self.number_of_layers, dtype=torch.float, device=flair.device)
-            eye_stack = torch.stack([eye for _ in all_token_embeddings])
-            stacked_token_embeddings = torch.cat([stacked_token_embeddings, eye_stack], dim=2)
-
-        outputs = torch.matmul(self.weights, stacked_token_embeddings)
-
-        for token_no, token in enumerate(tokens):
-            token.set_embedding(self.name, outputs[token_no, -1, :])
-
-    @property
-    def embedding_type(self) -> str:
-        return self.__embedding_type
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
-        for embedding in self.embeddings:
-            embedding._add_embeddings_internal(sentences)
-
-        return sentences
-
-    def __str__(self):
-        return f'Weighted Sum readout [{",".join([str(e) for e in self.embeddings])}]'
-
-    def get_named_embeddings_dict(self) -> Dict:
-
-        named_embeddings_dict = {}
-        for embedding in self.embeddings:
-            named_embeddings_dict.update(embedding.get_named_embeddings_dict())
-
-        return named_embeddings_dict
-
+    def to_params(self) -> Dict[str, Any]:
+        return {
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
+            "encode_positions": self.encode_positions,
+        }
 
 @register_embeddings
 class StackedEmbeddings(TokenEmbeddings):
