@@ -6505,8 +6505,7 @@ class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
         super(HUNER_GENE_TMVAR_V3, self).__init__(
             *args,
-            dataset_name="/vol/fob-wbib-vol3/wbi_stud/wangxida/Studienprojekt/biomedical/bigbio/hub/hub_repos/tmvar_v3/tmvar_v3.py",
-            # dataset_name="tmvar_v3",
+            dataset_name="tmvar_v3",
             **kwargs,
         )
 
