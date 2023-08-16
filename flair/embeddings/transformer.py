@@ -327,6 +327,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         is_token_embedding: bool = False,
         force_device: Optional[torch.device] = None,
         force_max_length: bool = False,
+        store_all_layers: bool = False,
         feature_extractor: Optional[FeatureExtractionMixin] = None,
         needs_manual_ocr: Optional[bool] = None,
         use_context_separator: bool = True,
@@ -347,6 +348,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         self.force_device = force_device
         self.fine_tune = fine_tune
         self.force_max_length = force_max_length
+        self.store_all_layers = store_all_layers
         self.feature_extractor = feature_extractor
         self.use_context_separator = use_context_separator
 
@@ -380,6 +382,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             "fine_tune": self.fine_tune,
             "use_lang_emb": self.use_lang_emb,
             "force_max_length": self.force_max_length,
+            "store_all_layers": self.store_all_layers,
             "feature_extractor": self.feature_extractor,
             "use_context_separator": self.use_context_separator,
         }
@@ -683,7 +686,10 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
     def __extract_token_embeddings(self, sentence_embeddings, sentences):
         for token_embeddings, sentence in zip(sentence_embeddings, sentences):
             for token_embedding, token in zip(token_embeddings, sentence):
-                token.set_embedding(self.name, token_embedding)
+                if self.store_all_layers:
+                    token.set_embedding(self.name, token_embedding.view(-1, self.model.config.hidden_size))
+                else:
+                    token.set_embedding(self.name, token_embedding)
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         tensors = self.prepare_tensors(sentences, device=self.force_device)
@@ -972,6 +978,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         feature_extractor_data: Optional[BytesIO] = None,
         name: Optional[str] = None,
         force_max_length: bool = False,
+        store_all_layers: bool = False,
         needs_manual_ocr: Optional[bool] = None,
         use_context_separator: bool = True,
         **kwargs,
@@ -1076,6 +1083,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         else:
             self.layer_indexes = list(map(int, layers.split(",")))
 
+        self.store_all_layers = store_all_layers
+        if self.store_all_layers:
+            layer_mean = False
+
         self.cls_pooling = cls_pooling
         self.subtoken_pooling = subtoken_pooling
         self.layer_mean = layer_mean
@@ -1131,6 +1142,9 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
     def _calculate_embedding_length(self, model) -> int:
         length = len(self.layer_indexes) * model.config.hidden_size if not self.layer_mean else model.config.hidden_size
+
+        if self.store_all_layers:
+            length = model.config.hidden_size
 
         # in case of doubt: token embedding has higher priority than document embedding
         if self.token_embedding and self.subtoken_pooling == "first_last":
@@ -1331,10 +1345,14 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if self.token_embedding:
             assert word_ids is not None
             assert token_lengths is not None
+            embedding_length = self.embedding_length_internal
+            if self.store_all_layers: # FIXME: This is terrible
+                embedding_length *= len(self.layer_indexes)
+
             all_token_embeddings = torch.zeros(  # type: ignore[call-overload]
                 word_ids.shape[0],
                 token_lengths.max(),
-                self.embedding_length_internal,
+                embedding_length,
                 device=flair.device,
                 dtype=sentence_hidden_states.dtype,
             )
