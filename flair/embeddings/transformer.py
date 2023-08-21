@@ -715,11 +715,12 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
 @register_embeddings
 class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
-    def __init__(self, onnx_model: str, providers: List = [], **kwargs) -> None:
+    def __init__(self, onnx_model: str, providers: List = [], session_options: Optional[Dict] = None, **kwargs) -> None:
         # onnx prepares numpy arrays, no mather if it runs on gpu or cpu, the input is on cpu first.
         super().__init__(**kwargs, force_device=torch.device("cpu"))
         self.onnx_model = onnx_model
         self.providers = providers
+        self.session_options = session_options
         self.create_session()
         self.eval()
 
@@ -727,6 +728,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         params = super().to_params()
         params["providers"] = self.providers
         params["onnx_model"] = self.onnx_model
+        params["session_options"] = self.session_options
         return params
 
     @classmethod
@@ -745,7 +747,14 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
             )
             raise
         if os.path.isfile(self.onnx_model):
-            self.session = onnxruntime.InferenceSession(self.onnx_model, providers=self.providers)
+            session_options = onnxruntime.SessionOptions()
+            if self.session_options is not None:
+                for k, v in self.session_options.items():
+                    setattr(session_options, k, v)
+
+            self.session = onnxruntime.InferenceSession(
+                self.onnx_model, providers=self.providers, sess_options=session_options
+            )
         else:
             log.warning(
                 f"Could not find file '{self.onnx_model}' used in {self.__class__.name}({self.name})."
@@ -824,6 +833,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         example_sentences: List[Sentence],
         opset_version: int = 14,
         providers: Optional[List] = None,
+        session_options: Optional[dict] = None,
     ):
         path = str(path)
         example_tensors = embedding.prepare_tensors(example_sentences)
@@ -864,7 +874,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
             dynamic_axes=dynamic_axes,
             opset_version=opset_version,
         )
-        return cls(onnx_model=path, providers=providers, **embedding.to_args())
+        return cls(onnx_model=path, providers=providers, session_options=session_options, **embedding.to_args())
 
 
 @register_embeddings

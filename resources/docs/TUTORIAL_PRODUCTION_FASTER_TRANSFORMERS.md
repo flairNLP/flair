@@ -28,10 +28,11 @@ which can be done via `pip install onnxruntime`
 
 To export the OnnxEmbeddings there is only one line to run:
 ```python
-model.embeddings = model.embeddings.export_onnx("flert-embeddings.onnx", sentences, providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+model.embeddings = model.embeddings.export_onnx("flert-embeddings.onnx", sentences, providers=["CUDAExecutionProvider", "CPUExecutionProvider"], session_options={})
 ```
 This creates a file `flert-embeddings.onnx` which stores the exported Onnx Model. Besides that, the embeddings are replaced by `TransformerOnnxEmbeddings` which ensure, that the created Onnx model is used for predictions.
 The providers referenced are part of your production environment and are documented [here](https://onnxruntime.ai/docs/execution-providers/)
+You can provide SessionOptions documented [here](https://onnxruntime.ai/docs/api/python/api_summary.html#sessionoptions), by passing each property you want to set as key in the `session_options` dictionary
 
 The usage for predictions is the same as before:
 ```python
