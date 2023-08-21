@@ -660,7 +660,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
     @multi_label_threshold.setter
     def multi_label_threshold(self, x):  # setter method
-        if type(x) is dict:
+        if isinstance(x, dict):
             if "default" in x:
                 self._multi_label_threshold = x
             else:
