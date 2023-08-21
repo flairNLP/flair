@@ -323,6 +323,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         fine_tune: bool,
         truncate: bool,
         use_lang_emb: bool,
+        cls_pooling: str,
         is_document_embedding: bool = False,
         is_token_embedding: bool = False,
         force_device: Optional[torch.device] = None,
@@ -349,9 +350,11 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         self.force_max_length = force_max_length
         self.feature_extractor = feature_extractor
         self.use_context_separator = use_context_separator
+        self.cls_pooling = cls_pooling
 
         tokenizer_params = list(inspect.signature(self.tokenizer.__call__).parameters.keys())
         self.tokenizer_needs_ocr_boxes = "boxes" in tokenizer_params
+        self.initial_cls_token = self._has_initial_cls_token()
 
         # The layoutlm tokenizer doesn't handle ocr themselves
         self.needs_manual_ocr = isinstance(self.tokenizer, (LayoutLMTokenizer, LayoutLMTokenizerFast))
@@ -363,6 +366,14 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         if not self.token_embedding and not self.document_embedding:
             raise ValueError("either 'is_token_embedding' or 'is_document_embedding' needs to be set.")
+
+    def _has_initial_cls_token(self) -> bool:
+        # most models have CLS token as last token (GPT-1, GPT-2, TransfoXL, XLNet, XLM), but BERT is initial
+        if self.tokenizer_needs_ocr_boxes:
+            # cannot run `.encode` if ocr boxes are required, assume
+            return True
+        tokens = self.tokenizer.encode("a")
+        return tokens[0] == self.tokenizer.cls_token_id
 
     def to_args(self):
         args = {
@@ -382,6 +393,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             "force_max_length": self.force_max_length,
             "feature_extractor": self.feature_extractor,
             "use_context_separator": self.use_context_separator,
+            "cls_pooling": self.cls_pooling,
         }
         if hasattr(self, "needs_manual_ocr"):
             args["needs_manual_ocr"] = self.needs_manual_ocr
@@ -396,6 +408,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
     def from_params(cls, params):
         tokenizer = cls._tokenizer_from_bytes(params.pop("tokenizer_data"))
         feature_extractor = cls._feature_extractor_from_bytes(params.pop("feature_extractor_data", None))
+        params.setdefault("cls_pooling", "cls")
         embedding = cls.create_from_state(tokenizer=tokenizer, feature_extractor=feature_extractor, **params)
         return embedding
 
@@ -1120,14 +1133,6 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         super()._load_from_state_dict(
             state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
         )
-
-    def _has_initial_cls_token(self) -> bool:
-        # most models have CLS token as last token (GPT-1, GPT-2, TransfoXL, XLNet, XLM), but BERT is initial
-        if self.tokenizer_needs_ocr_boxes:
-            # cannot run `.encode` if ocr boxes are required, assume
-            return True
-        tokens = self.tokenizer.encode("a")
-        return tokens[0] == self.tokenizer.cls_token_id
 
     def _calculate_embedding_length(self, model) -> int:
         length = len(self.layer_indexes) * model.config.hidden_size if not self.layer_mean else model.config.hidden_size
