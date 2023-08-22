@@ -1,13 +1,13 @@
-from typing import List, Tuple
 import logging
+from typing import List, Tuple
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 
 import flair
-from flair.data import Sentence, Dictionary, DT, Span, Union, Optional
-from flair.embeddings import TokenEmbeddings, DocumentEmbeddings
+from flair.data import DT, Dictionary, Optional, Sentence, Span, Union
+from flair.embeddings import DocumentEmbeddings, TokenEmbeddings
 from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")
@@ -31,7 +31,7 @@ def contrastive_loss(
         log_probs = masked_log_softmax(scores, mask)
         batch_indices = list(range(batch_size))
         log_probs = log_probs[batch_indices, positions]
-    return - log_probs.mean()
+    return -log_probs.mean()
 
 
 def masked_log_softmax(vector: torch.Tensor, mask: torch.BoolTensor, dim: int = -1) -> torch.Tensor:
@@ -55,9 +55,11 @@ def tiny_value_of_dtype(dtype: torch.dtype) -> float:
     else:
         raise TypeError("Does not support dtype " + str(dtype))
 
+
 class BinderModel(flair.nn.Classifier[Sentence]):
     """This model implements the BINDER architecture for token classification using contrastive learning and a bi-encoder.
-    Paper: https://openreview.net/forum?id=9EAQVEINuum
+
+    Paper: https://openreview.net/forum?id=9EAQVEINuum.
     """
 
     def __init__(
@@ -81,7 +83,7 @@ class BinderModel(flair.nn.Classifier[Sentence]):
         if not token_encoder.subtoken_pooling == "first_last":
             raise RuntimeError("The token encoder must use first_last subtoken pooling when using BINDER model.")
 
-        if not token_encoder.document_embedding == True:
+        if token_encoder.document_embedding is not True:
             raise RuntimeError("The token encoder must include the CLS token when using BINDER model.")
 
         self.token_encoder = token_encoder
@@ -100,13 +102,14 @@ class BinderModel(flair.nn.Classifier[Sentence]):
 
         self.max_span_width = max_span_width
         if use_span_width_embeddings:
-            self.token_span_linear = torch.nn.Linear(
-                self.token_encoder.embedding_length + linear_size, linear_size
-            )
-            assert (self.token_encoder.model.config.max_position_embeddings ==
-                    self.label_encoder.model.config.max_position_embeddings), \
-                "The maximum position embeddings for the token encoder and label encoder must be the same when using " \
+            self.token_span_linear = torch.nn.Linear(self.token_encoder.embedding_length + linear_size, linear_size)
+            assert (
+                self.token_encoder.model.config.max_position_embeddings
+                == self.label_encoder.model.config.max_position_embeddings
+            ), (
+                "The maximum position embeddings for the token encoder and label encoder must be the same when using "
                 "span width embeddings."
+            )
             span_width = self.token_encoder.model.config.max_position_embeddings
             self.width_embeddings = torch.nn.Embedding(span_width, linear_size, padding_idx=0)
         else:
@@ -144,10 +147,7 @@ class BinderModel(flair.nn.Classifier[Sentence]):
         assert span_scores.shape[2] == span_scores.shape[3], "Span scores must be square."
 
         # Get spans
-        start_mask, end_mask, span_mask = self._get_masks(
-            start_scores.size(),
-            lengths
-        )
+        start_mask, end_mask, span_mask = self._get_masks(start_scores.size(), lengths)
 
         # Calculate loss
         total_loss, num_spans = self._calculate_loss(
@@ -199,7 +199,9 @@ class BinderModel(flair.nn.Classifier[Sentence]):
         num_types, _ = label_hidden_states.size()
         hidden_size = self.token_encoder.embedding_length // 2
 
-        token_hidden_states = token_hidden_states.view(batch_size, org_seq_length, 2, hidden_size).view(batch_size, 2 * org_seq_length, hidden_size)
+        token_hidden_states = token_hidden_states.view(batch_size, org_seq_length, 2, hidden_size).view(
+            batch_size, 2 * org_seq_length, hidden_size
+        )
         cls_hidden_state = torch.stack([sentence.get_embedding() for sentence in sentences])
         # Shape: batch_size x seq_length * 2 (start + end hidden state per token) + 1 (CLS token embedding) x
         # hidden_size // 2 (split the concatenated hidden state in half)
@@ -213,7 +215,9 @@ class BinderModel(flair.nn.Classifier[Sentence]):
         token_end_output = F.normalize(self.dropout(self.token_end_linear(token_hidden_states)), dim=-1)
 
         # obtain start scores for threshold loss - shape: batch_size x num_types x seq_length
-        start_scores = self.start_logit_scale.exp() * label_start_output.unsqueeze(0) @ token_start_output.transpose(1, 2)
+        start_scores = (
+            self.start_logit_scale.exp() * label_start_output.unsqueeze(0) @ token_start_output.transpose(1, 2)
+        )
         end_scores = self.end_logit_scale.exp() * label_end_output.unsqueeze(0) @ token_end_output.transpose(1, 2)
 
         # get span outputs by concat - shape: batch_size x seq_length x seq_length x hidden_size*2
@@ -222,7 +226,7 @@ class BinderModel(flair.nn.Classifier[Sentence]):
                 token_hidden_states.unsqueeze(2).expand(-1, -1, seq_length, -1),
                 token_hidden_states.unsqueeze(1).expand(-1, seq_length, -1, -1),
             ],
-            dim=3
+            dim=3,
         )
 
         # If using width_embeddings, add them to the span_output
@@ -231,20 +235,25 @@ class BinderModel(flair.nn.Classifier[Sentence]):
             span_width = range_vector.unsqueeze(0) - range_vector.unsqueeze(1) + 1
             # seq_length x seq_length x hidden_size
             span_width_embeddings = self.width_embeddings(span_width * (span_width > 0))
-            token_span_output = torch.cat([
-                token_span_output, span_width_embeddings.unsqueeze(0).expand(batch_size, -1, -1, -1)], dim=3)
+            token_span_output = torch.cat(
+                [token_span_output, span_width_embeddings.unsqueeze(0).expand(batch_size, -1, -1, -1)], dim=3
+            )
 
         # Reproject span outputs - shape: batch_size x seq_length x seq_length x hidden_size
         token_span_linear_output = F.normalize(
             self.dropout(self.token_span_linear(token_span_output)).view(batch_size, seq_length * seq_length, -1),
-            dim=-1
+            dim=-1,
         )
 
         # Reproject label embeddings with span linear - shape: num_types x hidden_size
         label_span_linear_output = F.normalize(self.dropout(self.label_span_linear(label_hidden_states)), dim=-1)
 
         # Obtain the span scores - shape: batch_size x num_types x seq_length x seq_length
-        span_scores = self.span_logit_scale.exp() * label_span_linear_output.unsqueeze(0) @ token_span_linear_output.transpose(1, 2)
+        span_scores = (
+            self.span_logit_scale.exp()
+            * label_span_linear_output.unsqueeze(0)
+            @ token_span_linear_output.transpose(1, 2)
+        )
         span_scores = span_scores.view(batch_size, num_types, seq_length, seq_length)
 
         return start_scores, end_scores, span_scores, lengths
@@ -281,7 +290,9 @@ class BinderModel(flair.nn.Classifier[Sentence]):
         flat_span_scores = span_scores.view(batch_size * num_types, seq_length, seq_length)
 
         # Extract all spans from data points. Sequence IDS indicate the index of the sentence in the batch.
-        sequence_ids, spans = zip(*[(idx, span) for idx, sentence in enumerate(sentences) for span in sentence.get_spans(self._label_type)])
+        sequence_ids, spans = zip(
+            *[(idx, span) for idx, sentence in enumerate(sentences) for span in sentence.get_spans(self._label_type)]
+        )
         # Since we use start and end embeddings seperately, we need to adjust the index of the start and end token
         span_start_positions = [span.tokens[0].idx * 2 - 1 for span in spans]
         span_end_positions = [span.tokens[-1].idx * 2 for span in spans]
@@ -302,9 +313,9 @@ class BinderModel(flair.nn.Classifier[Sentence]):
         span_threshold_loss = contrastive_loss(flat_span_scores, [0, 0], span_mask)
 
         threshold_loss = (
-                self.start_loss_weight * start_threshold_loss +
-                self.end_loss_weight * end_threshold_loss +
-                self.span_loss_weight * span_threshold_loss
+            self.start_loss_weight * start_threshold_loss
+            + self.end_loss_weight * end_threshold_loss
+            + self.span_loss_weight * span_threshold_loss
         )
 
         start_mask = start_mask.view(batch_size, num_types, seq_length)
@@ -315,18 +326,20 @@ class BinderModel(flair.nn.Classifier[Sentence]):
         end_mask[sequence_ids, span_types_id, span_end_positions] = 1
         span_mask[sequence_ids, span_types_id, span_start_positions, span_end_positions] = 1
 
-        start_loss = contrastive_loss(start_scores[sequence_ids, span_types_id], span_start_positions, start_mask[sequence_ids, span_types_id])
-        end_loss = contrastive_loss(end_scores[sequence_ids, span_types_id], span_end_positions, end_mask[sequence_ids, span_types_id])
+        start_loss = contrastive_loss(
+            start_scores[sequence_ids, span_types_id], span_start_positions, start_mask[sequence_ids, span_types_id]
+        )
+        end_loss = contrastive_loss(
+            end_scores[sequence_ids, span_types_id], span_end_positions, end_mask[sequence_ids, span_types_id]
+        )
         span_loss = contrastive_loss(
             span_scores[sequence_ids, span_types_id],
             (span_start_positions, span_end_positions),
-            span_mask[sequence_ids, span_types_id]
+            span_mask[sequence_ids, span_types_id],
         )
 
         total_loss = (
-                self.start_loss_weight * start_loss +
-                self.end_loss_weight * end_loss +
-                self.span_loss_weight * span_loss
+            self.start_loss_weight * start_loss + self.end_loss_weight * end_loss + self.span_loss_weight * span_loss
         )
 
         total_loss = self.ner_loss_weight * total_loss + self.threshold_loss_weight * threshold_loss
@@ -346,10 +359,7 @@ class BinderModel(flair.nn.Classifier[Sentence]):
         with torch.no_grad():
             start_scores, end_scores, span_scores, lengths = self._encode_data_points(sentences)
 
-            start_mask, end_mask, span_mask = self._get_masks(
-                start_scores.size(),
-                lengths
-            )
+            start_mask, end_mask, span_mask = self._get_masks(start_scores.size(), lengths)
 
             span_preds = torch.triu(span_scores > span_scores[:, :, 0:1, 0:1])
             # Perform the element-wise logical operations
@@ -381,15 +391,23 @@ class BinderModel(flair.nn.Classifier[Sentence]):
                     preds_for_sentence = preds[spans_for_sentence]
 
                     for sentence_start_index, sentence_end_index, score_start_index, score_end_index, pred in zip(
-                            start_indexes_for_flair_sentence, end_indexes_for_flair_sentence, start_indexes_for_scores, end_indexes_for_scores, preds_for_sentence
+                        start_indexes_for_flair_sentence,
+                        end_indexes_for_flair_sentence,
+                        start_indexes_for_scores,
+                        end_indexes_for_scores,
+                        preds_for_sentence,
                     ):
-                        predictions.append({
-                            "span": Span(tokens[sentence_start_index:sentence_end_index]),
-                            "start": sentence_start_index,
-                            "end": sentence_end_index,
-                            "confidence": torch.nn.functional.softmax(span_scores[idx, :, score_start_index, score_end_index], dim=0)[pred].item(),
-                            "type": self.label_dictionary.get_item_for_index(pred),
-                        })
+                        predictions.append(
+                            {
+                                "span": Span(tokens[sentence_start_index:sentence_end_index]),
+                                "start": sentence_start_index,
+                                "end": sentence_end_index,
+                                "confidence": torch.nn.functional.softmax(
+                                    span_scores[idx, :, score_start_index, score_end_index], dim=0
+                                )[pred].item(),
+                                "type": self.label_dictionary.get_item_for_index(pred),
+                            }
+                        )
 
                     # remove overlaps
                     predictions = self._remove_overlaps(predictions)
@@ -414,7 +432,7 @@ class BinderModel(flair.nn.Classifier[Sentence]):
     @staticmethod
     def _remove_overlaps(predictions):
         # Sort the predictions based on the start values
-        sorted_predictions = sorted(predictions, key=lambda x: x['start'])
+        sorted_predictions = sorted(predictions, key=lambda x: x["start"])
 
         # Initialize a list to store non-overlapping predictions
         non_overlapping = []
@@ -425,11 +443,11 @@ class BinderModel(flair.nn.Classifier[Sentence]):
             else:
                 # Check for overlap with the last prediction in the non-overlapping list
                 last_prediction = non_overlapping[-1]
-                if prediction['start'] > last_prediction['end']:
+                if prediction["start"] > last_prediction["end"]:
                     non_overlapping.append(prediction)
                 else:
                     # Handle the overlap, e.g., by choosing the one with higher confidence
-                    if prediction['confidence'] > last_prediction['confidence']:
+                    if prediction["confidence"] > last_prediction["confidence"]:
                         non_overlapping[-1] = prediction  # Replace the last prediction
 
         return non_overlapping
