@@ -1,10 +1,12 @@
 import logging
+import os.path
 from typing import List, Optional, Dict
 
 import torch
 import random
 import numpy as np
 from pathlib import Path
+import json
 
 import flair
 from flair.data import Dictionary, Sentence
@@ -18,7 +20,7 @@ from flair.nn.distance import (
 )
 from flair.training_utils import store_embeddings
 
-import wikidata_NER_mapping
+from flair.nn.wikidata_utils import get_wikidata_categories
 
 logger = logging.getLogger("flair")
 
@@ -229,11 +231,18 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
             The label dictionary, so the Wikipedia Labels
         verbalizations (Optional):
             A dictionary that already includes the (or some of the) verbalizations of labels. Labels as keys, verbalizations as values.
-            E.g. {"United_States": "United States democracy state republic country nation",
-                  "Netherlands": "Netherlands country constituent state territory country of the Kingdom of the Netherlands
-        ...
-
-    Attributes:
+            E.g. {"United_States": "United States, democracy, state, republic, country, nation",
+                  "Netherlands": "Netherlands, country, constituent, state, territory, country of the Kingdom of the Netherlands"}
+        fast_inference:
+            if set to True labels get encoded only once per evaluation, to prevent memory issues
+        max_label_len:
+            max length of labels before truncation
+        requires_masking:
+            during training, only embed the labels that are in the batch (optionally also some additional negatives)
+        num_negatives:
+            how many negative datapoints are sampled (num_negatives is the sum of both positive and negative samples per batch, so 128 means negative sampling up to total 128)
+        verbalizations_path:
+            path to a json file where optional some/full verbalizations already exist that get extended, or where they are saved for later
         ...
 
     Methods:
@@ -253,15 +262,18 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
                  decoder_hidden_size: int = 768,
                  inputs_size: int = 768,
                  num_negatives: int = 128,
-                 verbalizations: Optional[Dict[str, str]] = None,
+                 verbalizations_path: [str, Path] = Path(os.getcwd() + "/user_outputs/wikidata_verbalizations.json"),
+                 use_wikidata_classes: bool = True,
+                 use_wikidata_description: bool = False,
                  candidates = None):
 
         super().__init__()
         self.label_embedding = label_embedding
-        if verbalizations:
-            self.verbalizations = verbalizations
-        else:
-            self.verbalizations = {}
+        self.verbalizations_path = verbalizations_path
+
+        self.use_wikidata_description = use_wikidata_description
+        self.use_wikidata_classes = use_wikidata_classes
+
         self.label_dictionary = label_dictionary
         self.verbalized_labels: List[Sentence] = self.verbalize_labels(self, label_dictionary=self.label_dictionary)
         self.candidates = candidates
@@ -303,9 +315,19 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
     @staticmethod
     def verbalize_labels(self, label_dictionary: Dictionary) -> List[Sentence]:
 
+        if os.path.exists(self.verbalizations_path):
+            with open(self.verbalizations_path, 'r') as f:
+                self.verbalizations = json.load(f)
+                print(f"Found verbalizations for {len(self.verbalizations)} labels at  {self.verbalizations_path}")
+        else:
+            with open(self.verbalizations_path, 'w') as file:
+                json.dump({}, file)
+                self.verbalizations = {}
+                print(f"Created empty verbalization dictionary at {self.verbalizations_path}")
+
+        counter_newly_verbalized = 0
         verbalized_labels = []
         for byte_label, idx in label_dictionary.item2idx.items():
-            print("Verbalizing", idx, byte_label, "...")
             str_label = byte_label.decode("utf-8")
 
             if label_dictionary.span_labels:
@@ -332,22 +354,41 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
             elif entity == "<unk>":
                 verbalized = "unknown"
             else:
-                verbalized = self.verbalizations.get(entity, None)
+                if self.verbalizations:
+                    verbalized = self.verbalizations.get(entity, None)
                 if not verbalized:
                     wikipedia_label = entity
-                    #print(wikipedia_label)
-                    wikidata_info = wikidata_NER_mapping.pipeline(wikipedia_label, method ="strict")
+                    wikidata_info = get_wikidata_categories(wikipedia_label, method ="strict")
                     wikidata_classes = wikidata_info["class_names"]
                     wikidata_title = wikidata_info["wikidata_title"]
-                    verbalized = wikidata_title + ", " + ", ".join(wikidata_classes)
-                    self.verbalizations[entity] = verbalized
+                    wikidata_description = wikidata_info["wikibase_description"]
+                    verbalized = wikidata_title
+                    if self.use_wikidata_description:
+                        verbalized += ", " + wikidata_description
+                    if self.use_wikidata_classes:
+                        verbalized += ", " + ", ".join(wikidata_classes)
+                    #self.verbalizations[entity] = verbalized
+                    counter_newly_verbalized +=1
 
             if label_dictionary.span_labels:
                 verbalized = bio_verbalized + verbalized
 
             verbalized_labels.append(verbalized)
+            self.verbalizations[entity] = verbalized
+            print("Verbalized id", idx, ":", str_label, "->", verbalized)
+
+
+            # save every n entities and final
+            if idx % 100 == 0 or idx >= len(label_dictionary.item2idx.items()) -1:
+                if self.verbalizations_path:
+                    verbalizations_dict = self.return_verbalizations_dict()
+                    with open(self.verbalizations_path, "w") as file:
+                        json.dump(verbalizations_dict, file)
 
         print(f"--- Created verbalized labels for {len(verbalized_labels)} labels")
+        print(f"--- Thereof newly verbalized:", counter_newly_verbalized)
+
+
         return list(map(Sentence, verbalized_labels))
 
     def return_verbalizations_dict(self):
@@ -470,10 +511,6 @@ class WikipediaLabelVerbalizerDecoder(torch.nn.Module):
             inputs = self.inputs_hidden(inputs)
 
         store_embeddings(self.verbalized_labels, "none")
-        # if self.training:
-        #     store_embeddings(self.verbalized_labels, "none")
-        # else:
-        #     store_embeddings(self.verbalized_labels, "none") # todo is that a problem?
 
         scores = torch.mm(inputs, label_tensor.T)
 
