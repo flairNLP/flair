@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union, cast
+from typing import Dict, Iterable, List, NamedTuple, Optional, Union, cast
 
 import torch
 from deprecated.sphinx import deprecated
@@ -434,7 +434,7 @@ class DataPoint:
 
 
 class EntityLinkingCandidate:
-    """Represent a single candidate returned by a CandidateGenerator"""
+    """Represent a single candidate returned by a CandidateGenerator."""
 
     def __init__(
         self,
@@ -444,12 +444,14 @@ class EntityLinkingCandidate:
         score: float = 1.0,
         additional_ids: Optional[Union[List[str], str]] = None,
     ):
-        """
-        :param concept_id: Identifier of the entity / concept from the knowledge base / ontology
-        :param concept_name: (Canonical) name of the entity / concept from the knowledge base / ontology
-        :param score: Matching score of the entity / concept according to the entity mention
-        :param additional_ids: List of additional identifiers for the concept / entity in the KB / ontology
-        :param database_name: Name of the knowlege base / ontology
+        """Represent a single candidate returned by a CandidateGenerator.
+
+        Args:
+            concept_id: Identifier of the entity / concept from the knowledge base / ontology
+            concept_name: (Canonical) name of the entity / concept from the knowledge base / ontology
+            score: Matching score of the entity / concept according to the entity mention
+            additional_ids: List of additional identifiers for the concept / entity in the KB / ontology
+            database_name: Name of the knowlege base / ontology
         """
         self.concept_id = concept_id
         self.concept_name = concept_name
@@ -468,24 +470,23 @@ class EntityLinkingCandidate:
 
 
 class EntityLinkingLabel(Label):
-    """
-    Label class models entity linking annotations. Each entity linking label has a data point it refers
+    """Label class models entity linking annotations.
+
+    Each entity linking label has a data point it refers
     to as well as the identifier and name of the concept / entity from a knowledge base or ontology.
     Optionally, additional concepts identifier and the database name can be provided.
     """
 
     def __init__(self, data_point: DataPoint, candidates: List[EntityLinkingCandidate]):
-        """
-        Initializes the label instance.
-        :param data_point: Data point / span the label refers to
-        :param candidates: **sorted** list of candidates from candidate generator
+        """Initializes the label instance.
+
+        Args:
+            data_point: Data point / span the label refers to
+            candidates: **sorted** list of candidates from candidate generator.
         """
 
         def is_sorted(lst, key=lambda x: x, comparison=lambda x, y: x >= y):
-            for i, el in enumerate(lst[1:]):
-                if comparison(key(el), key(lst[i])):
-                    return False
-            return True
+            return all(not comparison(key(el), key(lst[i])) for i, el in enumerate(lst[1:]))
 
         # candidates must be sorted, regardless if higher is better or not
         assert is_sorted(candidates, key=lambda x: x.score) or is_sorted(

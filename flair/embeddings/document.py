@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, cast
 
 import torch
@@ -30,7 +29,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
 
     def __init__(
         self,
-        model: Union[str, Path] = "bert-base-uncased",  # set parameters with different default values
+        model: str = "bert-base-uncased",  # set parameters with different default values
         layers: str = "-1",
         layer_mean: bool = False,
         is_token_embedding: bool = False,
