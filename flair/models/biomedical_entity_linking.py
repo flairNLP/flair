@@ -24,7 +24,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 
 import flair
-from flair.data import EntityLinkingCandidate, EntityLinkingLabel, Label, Sentence, Span
+from flair.data import EntityLinkingCandidate, Label, Sentence, Span
 from flair.datasets import (
     CTD_CHEMICALS_DICTIONARY,
     CTD_DISEASES_DICTIONARY,
@@ -47,9 +47,7 @@ except ImportError as error:
         f"You need to install faiss to run the biomedical entity linking: `pip install faiss-cpu=={FAISS_VERSION}`"
     ) from error
 
-
 logger = logging.getLogger("flair")
-
 
 PRETRAINED_DENSE_MODELS = [
     "cambridgeltl/SapBERT-from-PubMedBERT-fulltext",
@@ -74,19 +72,12 @@ STRING_MATCHING_MODELS = ["exact-string-match"]
 
 MODELS = PRETRAINED_MODELS + STRING_MATCHING_MODELS
 
-ENTITY_TYPES = ["disease", "chemical", "gene", "species"]
-
-ENTITY_TYPE_TO_LABELS = {
-    "disease": "diseases",
-    "gene": "genes",
-    "species": "species",
-    "chemical": "chemical",
-}
+ENTITY_TYPES = ["diseases", "chemical", "genes", "species"]
 
 ENTITY_TYPE_TO_HYBRID_MODEL = {
-    "disease": "dmis-lab/biosyn-sapbert-bc5cdr-disease",
+    "diseases": "dmis-lab/biosyn-sapbert-bc5cdr-disease",
     "chemical": "dmis-lab/biosyn-sapbert-bc5cdr-chemical",
-    "gene": "dmis-lab/biosyn-sapbert-bc2gn",
+    "genes": "dmis-lab/biosyn-sapbert-bc2gn",
 }
 
 # for now we always fall back to SapBERT,
@@ -95,19 +86,11 @@ ENTITY_TYPE_TO_DENSE_MODEL = {
     entity_type: "cambridgeltl/SapBERT-from-PubMedBERT-fulltext" for entity_type in ENTITY_TYPES
 }
 
-
 ENTITY_TYPE_TO_DICTIONARY = {
-    "gene": "ncbi-gene",
+    "genes": "ncbi-gene",
     "species": "ncbi-taxonomy",
-    "disease": "ctd-diseases",
+    "diseases": "ctd-diseases",
     "chemical": "ctd-chemicals",
-}
-
-ENTITY_TYPE_TO_ANNOTATION_LAYER = {
-    "disease": "diseases",
-    "gene": "genes",
-    "chemical": "chemicals",
-    "species": "species",
 }
 
 BIOMEDICAL_DICTIONARIES: Dict[str, Type] = {
@@ -127,7 +110,6 @@ MODEL_NAME_TO_DICTIONARY = {
     "dmis-lab/biosyn-biobert-bc2gn": "ncbi-gene",
     "dmis-lab/biosyn-sapbert-bc2gn": "ncbi-gene",
 }
-
 
 DEFAULT_SPARSE_WEIGHT = 0.5
 
@@ -433,7 +415,7 @@ class BiomedicalEntityLinkingDictionary:
     """
 
     def __init__(
-        self, reader: Union[AbstractBiomedicalEntityLinkingDictionary, ParsedBiomedicalEntityLinkingDictionary]
+        self, reader: AbstractBiomedicalEntityLinkingDictionary
     ):
         self.reader = reader
 
@@ -478,6 +460,9 @@ class BiomedicalEntityLinkingDictionary:
         """Stream entries from preprocessed dictionary."""
         yield from self.reader.stream()
 
+    def __getitem__(self, item: str) -> EntityLinkingCandidate:
+        return self.reader[item]
+
 
 class AbstractCandidateGenerator(ABC):
     """Base class for a candidate generator.
@@ -486,7 +471,7 @@ class AbstractCandidateGenerator(ABC):
     """
 
     @abstractmethod
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, float]]]:
         """Returns the top-k entity / concept identifiers for each entity mention.
 
         :param entity_mentions: Entity mentions
@@ -498,7 +483,6 @@ class AbstractCandidateGenerator(ABC):
         """Get nice container with all info about entity linking candidate."""
         concept_name = candidate[0]
         concept_id = candidate[1]
-        score = candidate[2]
 
         if "|" in concept_id:
             labels = concept_id.split("|")
@@ -510,7 +494,6 @@ class AbstractCandidateGenerator(ABC):
         return EntityLinkingCandidate(
             concept_id=concept_id,
             concept_name=concept_name,
-            score=score,
             additional_ids=additional_labels,
             database_name=database_name,
         )
@@ -529,23 +512,16 @@ class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
         """Compatibility function."""
         return cls(BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path))
 
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
-        candidates: List[List[EntityLinkingCandidate]] = []
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, float]]]:
+        results: List[List[Tuple[str, float]]] = []
         for mention in entity_mentions:
             dict_entry = self.name_to_id_index.get(mention)
-            if not dict_entry:
-                candidates.append([])
+            if dict_entry is None:
+                results.append([])
                 continue
+            results.append([(dict_entry, 1.0)])
 
-            candidates.append(
-                [
-                    self.build_candidate(
-                        candidate=(mention, dict_entry, 1.0), database_name=self.dictionary.database_name
-                    )
-                ]
-            )
-
-        return candidates
+        return results
 
 
 class BigramTfIDFVectorizer:
@@ -943,7 +919,7 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
 
         return hybrid_scores, hybrid_ids
 
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[EntityLinkingCandidate]]:
+    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, float]]]:
         """Returns the top-k entity / concept identifiers for each entity mention.
 
         :param entity_mentions: Entity mentions
@@ -962,12 +938,9 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
                 sparse_ids=sparse_ids,
                 top_k=top_k,
             )
-
         return [
             [
-                self.build_candidate(
-                    candidate=self.dictionary_data[i] + (score,), database_name=self.dictionary.database_name
-                )
+                (self.dictionary_data[i][1].split("|")[0], score)
                 for i, score in zip(mention_ids, mention_scores)
             ]
             for mention_ids, mention_scores in zip(ids, scores)
@@ -982,19 +955,24 @@ class BiomedicalEntityLinker:
         candidate_generator: AbstractCandidateGenerator,
         preprocessor: AbstractEntityPreprocessor,
         entity_type: str,
+        label_type: str,
     ):
         self.preprocessor = preprocessor
         self.candidate_generator = candidate_generator
         self.entity_type = entity_type
-        self.annotation_layers = [ENTITY_TYPE_TO_ANNOTATION_LAYER.get(self.entity_type, "ner")]
+        self.annotation_layers = [self.entity_type]
+        self._label_type = label_type
+
+    @property
+    def label_type(self):
+        return self._label_type
 
     def extract_mentions(
         self,
         sentences: List[Sentence],
         annotation_layers: Optional[List[str]] = None,
-    ) -> Tuple[List[int], List[Span], List[str], List[str]]:
+    ) -> Tuple[List[Span], List[str], List[str]]:
         """Unpack all mentions in sentences for batch search."""
-        source = []
         data_points = []
         mentions = []
         mention_annotation_layers = []
@@ -1002,10 +980,9 @@ class BiomedicalEntityLinker:
         # use default annotation layers only if are not provided
         annotation_layers = annotation_layers if annotation_layers is not None else self.annotation_layers
 
-        for i, sentence in enumerate(sentences):
+        for sentence in sentences:
             for annotation_layer in annotation_layers:
                 for entity in sentence.get_labels(annotation_layer):
-                    source.append(i)
                     data_points.append(entity.data_point)
                     mentions.append(
                         self.preprocessor.process_mention(entity, sentence)
@@ -1016,7 +993,7 @@ class BiomedicalEntityLinker:
 
         # assert len(mentions) > 0, f"There are no entity mentions of type `{self.entity_type}`"
 
-        return source, data_points, mentions, mention_annotation_layers
+        return data_points, mentions, mention_annotation_layers
 
     def predict(
         self,
@@ -1037,7 +1014,7 @@ class BiomedicalEntityLinker:
         if self.preprocessor is not None:
             self.preprocessor.initialize(sentences)
 
-        source, data_points, mentions, mentions_annotation_layers = self.extract_mentions(
+        data_points, mentions, mentions_annotation_layers = self.extract_mentions(
             sentences=sentences, annotation_layers=annotation_layers
         )
 
@@ -1047,24 +1024,23 @@ class BiomedicalEntityLinker:
             candidates = self.candidate_generator.search(entity_mentions=mentions, top_k=top_k)
 
             # Add a label annotation for each candidate
-            for i, data_point, mention_candidates, mentions_annotation_layer in zip(
-                source, data_points, candidates, mentions_annotation_layers
+            for data_point, mention_candidates, mentions_annotation_layer in zip(
+                data_points, candidates, mentions_annotation_layers
             ):
-                sentences[i].add_label(
-                    typename=mentions_annotation_layer,
-                    value_or_label=EntityLinkingLabel(data_point=data_point, candidates=mention_candidates),
-                )
+                for (candidate_id, confidence) in mention_candidates:
+                    data_point.add_label(self.label_type, candidate_id, confidence)
 
     @classmethod
     def load(
         cls,
         model_name_or_path: Union[str, Path],
+        label_type: str,
         dictionary_name_or_path: Optional[Union[str, Path]] = None,
         hybrid_search: bool = True,
         max_length: int = 25,
         batch_size: int = 1024,
         similarity_metric: SimilarityMetric = SimilarityMetric.COSINE,
-        preprocessor: AbstractEntityPreprocessor = Ab3PEntityPreprocessor.load(preprocessor=EntityPreprocessor()),
+        preprocessor: AbstractEntityPreprocessor = EntityPreprocessor(),
         force_hybrid_search: bool = False,
         sparse_weight: float = DEFAULT_SPARSE_WEIGHT,
         entity_type: Optional[str] = None,
@@ -1114,7 +1090,12 @@ class BiomedicalEntityLinker:
             "BiomedicalEntityLinker predicts: Dictionary `%s` (entity type: %s)", dictionary_name_or_path, entity_type
         )
 
-        return cls(candidate_generator=candidate_generator, preprocessor=preprocessor, entity_type=entity_type)
+        return cls(
+            candidate_generator=candidate_generator,
+            preprocessor=preprocessor,
+            entity_type=entity_type,
+            label_type=label_type,
+        )
 
     @staticmethod
     def __get_model_path_and_entity_type(

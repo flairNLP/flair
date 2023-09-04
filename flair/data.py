@@ -336,8 +336,8 @@ class DataPoint:
     def has_metadata(self, key: str) -> bool:
         return key in self._metadata
 
-    def add_label(self, typename: str, value_or_label: Union[str, Label], score: float = 1.0):
-        label = value_or_label if isinstance(value_or_label, Label) else Label(self, value_or_label, score)
+    def add_label(self, typename: str, value: str, score: float = 1.0):
+        label = Label(self, value, score)
 
         if typename not in self.annotation_layers:
             self.annotation_layers[typename] = [label]
@@ -441,7 +441,6 @@ class EntityLinkingCandidate:
         concept_id: str,
         concept_name: str,
         database_name: str,
-        score: float = 1.0,
         additional_ids: Optional[Union[List[str], str]] = None,
     ):
         """Represent a single candidate returned by a CandidateGenerator.
@@ -456,76 +455,16 @@ class EntityLinkingCandidate:
         self.concept_id = concept_id
         self.concept_name = concept_name
         self.database_name = database_name
-        self.score = score
         self.additional_ids = additional_ids
 
     def __str__(self) -> str:
-        string = f"EntityLinkingCandidate: {self.database_name}:{self.concept_id} - {self.concept_name} - {self.score}"
+        string = f"EntityLinkingCandidate: {self.database_name}:{self.concept_id} - {self.concept_name}"
         if self.additional_ids is not None:
             string += f" - {self.additional_ids}"
         return string
 
     def __repr__(self) -> str:
         return str(self)
-
-
-class EntityLinkingLabel(Label):
-    """Label class models entity linking annotations.
-
-    Each entity linking label has a data point it refers
-    to as well as the identifier and name of the concept / entity from a knowledge base or ontology.
-    Optionally, additional concepts identifier and the database name can be provided.
-    """
-
-    def __init__(self, data_point: DataPoint, candidates: List[EntityLinkingCandidate]):
-        """Initializes the label instance.
-
-        Args:
-            data_point: Data point / span the label refers to
-            candidates: **sorted** list of candidates from candidate generator.
-        """
-
-        def is_sorted(lst, key=lambda x: x, comparison=lambda x, y: x >= y):
-            return all(not comparison(key(el), key(lst[i])) for i, el in enumerate(lst[1:]))
-
-        # candidates must be sorted, regardless if higher is better or not
-        assert is_sorted(candidates, key=lambda x: x.score) or is_sorted(
-            candidates, key=lambda x: x.score, comparison=lambda x, y: x <= y
-        ), "List of candidates must be sorted!"
-
-        super().__init__(data_point, candidates[0].concept_id, candidates[0].score)
-        self.candidates = candidates
-        self.concept_name = self.candidates[0].concept_name
-        self.database_name = self.candidates[0].database_name
-
-    def __str__(self):
-        return (
-            f"{self.data_point.unlabeled_identifier}{flair._arrow} "
-            f"{self.concept_name} - {self.database_name}:{self._value} ({round(self._score, 4)})"
-        )
-
-    def __repr__(self):
-        return (
-            f"{self.data_point.unlabeled_identifier}{flair._arrow} "
-            f"{self.concept_name} - {self.database_name}:{self._value} ({round(self._score, 4)})"
-        )
-
-    def __len__(self):
-        return len(self.data_point)
-
-    def __eq__(self, other):
-        return (
-            self.value == other.value
-            and self.data_point == other.data_point
-            and self.concept_name == other.concept_name
-            and self.identifier == other.identifier
-            and self.database_name == other.database_name
-            and self.score == other.score
-        )
-
-    @property
-    def identifier(self):
-        return f"{self.value}"
 
 
 DT = typing.TypeVar("DT", bound=DataPoint)
