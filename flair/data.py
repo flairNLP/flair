@@ -433,34 +433,45 @@ class DataPoint:
         raise NotImplementedError
 
 
-class EntityLinkingCandidate:
-    """Represent a single candidate returned by a CandidateGenerator."""
+class Concept:
+    """A Concept as part of a knowledgebase or ontology."""
 
     def __init__(
         self,
         concept_id: str,
         concept_name: str,
         database_name: str,
-        additional_ids: Optional[Union[List[str], str]] = None,
+        additional_ids: Optional[List[str]] = None,
+        synonyms: Optional[List[str]] = None,
+        description: Optional[str] = None,
     ):
-        """Represent a single candidate returned by a CandidateGenerator.
+        """A Concept as part of a knowledgebase or ontology.
 
         Args:
-            concept_id: Identifier of the entity / concept from the knowledge base / ontology
-            concept_name: (Canonical) name of the entity / concept from the knowledge base / ontology
-            score: Matching score of the entity / concept according to the entity mention
+            concept_id: Identifier of the concept from the knowledgebase / ontology
+            concept_name: (Canonical) name of the concept from the knowledgebase / ontology
             additional_ids: List of additional identifiers for the concept / entity in the KB / ontology
-            database_name: Name of the knowlege base / ontology
+            database_name: Name of the knowledgebase / ontology
+            synonyms: A list of synonyms for this entry
+            description: A description about the Concept to describe
         """
         self.concept_id = concept_id
         self.concept_name = concept_name
         self.database_name = database_name
-        self.additional_ids = additional_ids
+        self.description = description
+        if additional_ids is None:
+            self.additional_ids = []
+        else:
+            self.additional_ids = additional_ids
+        if synonyms is None:
+            self.synonyms = []
+        else:
+            self.synonyms = synonyms
 
     def __str__(self) -> str:
         string = f"EntityLinkingCandidate: {self.database_name}:{self.concept_id} - {self.concept_name}"
-        if self.additional_ids is not None:
-            string += f" - {self.additional_ids}"
+        if self.additional_ids:
+            string += f" - {'|'.join(self.additional_ids)}"
         return string
 
     def __repr__(self) -> str:

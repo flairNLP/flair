@@ -24,7 +24,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 
 import flair
-from flair.data import EntityLinkingCandidate, Label, Sentence, Span
+from flair.data import Concept, Label, Sentence, Span
 from flair.datasets import (
     CTD_CHEMICALS_DICTIONARY,
     CTD_DISEASES_DICTIONARY,
@@ -32,7 +32,7 @@ from flair.datasets import (
     NCBI_TAXONOMY_DICTIONARY,
 )
 from flair.datasets.biomedical import (
-    AbstractBiomedicalEntityLinkingDictionary,
+    KnowledgebaseLinkingDictionary,
     ParsedBiomedicalEntityLinkingDictionary,
 )
 from flair.embeddings import TransformerDocumentEmbeddings
@@ -414,9 +414,7 @@ class BiomedicalEntityLinkingDictionary:
         7157||TP53|tumor protein p53
     """
 
-    def __init__(
-        self, reader: AbstractBiomedicalEntityLinkingDictionary
-    ):
+    def __init__(self, reader: KnowledgebaseLinkingDictionary):
         self.reader = reader
 
     @classmethod
@@ -460,7 +458,7 @@ class BiomedicalEntityLinkingDictionary:
         """Stream entries from preprocessed dictionary."""
         yield from self.reader.stream()
 
-    def __getitem__(self, item: str) -> EntityLinkingCandidate:
+    def __getitem__(self, item: str) -> Concept:
         return self.reader[item]
 
 
@@ -479,7 +477,7 @@ class AbstractCandidateGenerator(ABC):
         :result: List containing a list of entity linking candidates per entity mention from the input
         """
 
-    def build_candidate(self, candidate: Tuple[str, str, float], database_name: str) -> EntityLinkingCandidate:
+    def build_candidate(self, candidate: Tuple[str, str, float], database_name: str) -> Concept:
         """Get nice container with all info about entity linking candidate."""
         concept_name = candidate[0]
         concept_id = candidate[1]
@@ -491,7 +489,7 @@ class AbstractCandidateGenerator(ABC):
         else:
             additional_labels = None
 
-        return EntityLinkingCandidate(
+        return Concept(
             concept_id=concept_id,
             concept_name=concept_name,
             additional_ids=additional_labels,
@@ -939,15 +937,12 @@ class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
                 top_k=top_k,
             )
         return [
-            [
-                (self.dictionary_data[i][1].split("|")[0], score)
-                for i, score in zip(mention_ids, mention_scores)
-            ]
+            [(self.dictionary_data[i][1].split("|")[0], score) for i, score in zip(mention_ids, mention_scores)]
             for mention_ids, mention_scores in zip(ids, scores)
         ]
 
 
-class BiomedicalEntityLinker:
+class EntityMentionLinker:
     """Entity linking model for the biomedical domain."""
 
     def __init__(
@@ -966,6 +961,10 @@ class BiomedicalEntityLinker:
     @property
     def label_type(self):
         return self._label_type
+
+    @property
+    def dictionary(self) -> KnowledgebaseLinkingDictionary:
+        return self.candidate_generator.dictionary
 
     def extract_mentions(
         self,
@@ -1027,7 +1026,7 @@ class BiomedicalEntityLinker:
             for data_point, mention_candidates, mentions_annotation_layer in zip(
                 data_points, candidates, mentions_annotation_layers
             ):
-                for (candidate_id, confidence) in mention_candidates:
+                for candidate_id, confidence in mention_candidates:
                     data_point.add_label(self.label_type, candidate_id, confidence)
 
     @classmethod
@@ -1045,7 +1044,7 @@ class BiomedicalEntityLinker:
         sparse_weight: float = DEFAULT_SPARSE_WEIGHT,
         entity_type: Optional[str] = None,
         dictionary: Optional[BiomedicalEntityLinkingDictionary] = None,
-    ) -> "BiomedicalEntityLinker":
+    ) -> "EntityMentionLinker":
         """Loads a model for biomedical named entity normalization.
 
         See __init__ method for detailed docstring on arguments.

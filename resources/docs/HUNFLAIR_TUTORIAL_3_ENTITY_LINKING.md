@@ -1,8 +1,9 @@
 # HunFlair Tutorial 3: Entity Linking
 
-After adding named entity recognition tags to your sentence, you can run named entity linking on these annotations. 
+After adding named entity recognition tags to your sentence, you can run named entity linking on these annotations.
+
 ```python
-from flair.models.biomedical_entity_linking import BiomedicalEntityLinker
+from flair.models.biomedical_entity_linking import EntityMentionLinker
 from flair.nn import Classifier
 from flair.tokenization import SciSpacyTokenizer
 from flair.data import Sentence
@@ -17,16 +18,16 @@ sentence = Sentence(
 ner_tagger = Classifier.load("hunflair")
 ner_tagger.predict(sentence)
 
-nen_tagger = BiomedicalEntityLinker.load("disease")
+nen_tagger = EntityMentionLinker.load("disease")
 nen_tagger.predict(sentence)
 
-nen_tagger = BiomedicalEntityLinker.load("gene")
+nen_tagger = EntityMentionLinker.load("gene")
 nen_tagger.predict(sentence)
 
-nen_tagger = BiomedicalEntityLinker.load("chemical")
+nen_tagger = EntityMentionLinker.load("chemical")
 nen_tagger.predict(sentence)
 
-nen_tagger = BiomedicalEntityLinker.load("species", entity_type="species")
+nen_tagger = EntityMentionLinker.load("species", entity_type="species")
 nen_tagger.predict(sentence)
 
 for tag in sentence.get_labels():
@@ -50,10 +51,12 @@ a knowledge base or ontology. We have pre-configured combinations of models and 
 "disease", "chemical" and "gene". 
 
 You can also provide your own model and dictionary:
-```python
-from flair.models.biomedical_entity_linking import BiomedicalEntityLinker
 
-nen_tagger = BiomedicalEntityLinker.load("name_or_path_to_your_model", dictionary_names_or_path="name_or_path_to_your_dictionary")
-nen_tagger = BiomedicalEntityLinker.load("path_to_custom_disease_model", dictionary_names_or_path="disease")
+```python
+from flair.models.biomedical_entity_linking import EntityMentionLinker
+
+nen_tagger = EntityMentionLinker.load("name_or_path_to_your_model",
+                                      dictionary_names_or_path="name_or_path_to_your_dictionary")
+nen_tagger = EntityMentionLinker.load("path_to_custom_disease_model", dictionary_names_or_path="disease")
 ````
 You can use any combination of provided models, provided dictionaries and your own.

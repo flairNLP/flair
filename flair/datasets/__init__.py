@@ -7,6 +7,14 @@ from .base import (
     StringDataset,
 )
 
+from .knowledgebase import (
+    CTD_CHEMICALS_DICTIONARY,
+    CTD_DISEASES_DICTIONARY,
+    NCBI_GENE_HUMAN_DICTIONARY,
+    NCBI_TAXONOMY_DICTIONARY,
+)
+
+
 # Expose all biomedical data sets used for the evaluation of BioBERT
 # -
 # -
@@ -37,8 +45,6 @@ from .biomedical import (
     CLL,
     CRAFT,
     CRAFT_V4,
-    CTD_CHEMICALS_DICTIONARY,
-    CTD_DISEASES_DICTIONARY,
     DECA,
     FSU,
     GELLUS,
@@ -92,8 +98,6 @@ from .biomedical import (
     LOCTEXT,
     MIRNA,
     NCBI_DISEASE,
-    NCBI_GENE_HUMAN_DICTIONARY,
-    NCBI_TAXONOMY_DICTIONARY,
     OSIRIS,
     PDR,
     S800,
