@@ -13,36 +13,36 @@ def test_bel_dictionary():
     i.e. they can change over time.
     """
     dictionary = BiomedicalEntityLinkingDictionary.load("diseases")
-    _, identifier = next(dictionary.stream())
-    assert identifier.startswith(("MESH:", "OMIM:", "DO:DOID"))
+    candidate = dictionary.candidates[0]
+    assert candidate.concept_id.startswith(("MESH:", "OMIM:", "DO:DOID"))
 
     dictionary = BiomedicalEntityLinkingDictionary.load("ctd-diseases")
-    _, identifier = next(dictionary.stream())
-    assert identifier.startswith("MESH:")
+    candidate = dictionary.candidates[0]
+    assert candidate.concept_id.startswith("MESH:")
 
     dictionary = BiomedicalEntityLinkingDictionary.load("ctd-chemicals")
-    _, identifier = next(dictionary.stream())
-    assert identifier.startswith("MESH:")
+    candidate = dictionary.candidates[0]
+    assert candidate.concept_id.startswith("MESH:")
 
     dictionary = BiomedicalEntityLinkingDictionary.load("chemical")
-    _, identifier = next(dictionary.stream())
-    assert identifier.startswith("MESH:")
+    candidate = dictionary.candidates[0]
+    assert candidate.concept_id.startswith("MESH:")
 
     dictionary = BiomedicalEntityLinkingDictionary.load("ncbi-taxonomy")
-    _, identifier = next(dictionary.stream())
-    assert identifier.isdigit()
+    candidate = dictionary.candidates[0]
+    assert candidate.concept_id.isdigit()
 
     dictionary = BiomedicalEntityLinkingDictionary.load("species")
-    _, identifier = next(dictionary.stream())
-    assert identifier.isdigit()
+    candidate = dictionary.candidates[0]
+    assert candidate.concept_id.isdigit()
 
     dictionary = BiomedicalEntityLinkingDictionary.load("ncbi-gene")
-    _, identifier = next(dictionary.stream())
-    assert identifier.isdigit()
+    candidate = dictionary.candidates[0]
+    assert candidate.concept_id.isdigit()
 
     dictionary = BiomedicalEntityLinkingDictionary.load("genes")
-    _, identifier = next(dictionary.stream())
-    assert identifier.isdigit()
+    candidate = dictionary.candidates[0]
+    assert candidate.concept_id.isdigit()
 
 
 def test_biomedical_entity_linking():
@@ -52,11 +52,11 @@ def test_biomedical_entity_linking():
     tagger.predict(sentence)
 
     disease_linker = EntityMentionLinker.load("diseases", "diseases-nel", hybrid_search=True)
-    disease_dictionary = disease_linker.candidate_generator.dictionary
+    disease_dictionary = disease_linker.dictionary
     disease_linker.predict(sentence)
 
     gene_linker = EntityMentionLinker.load("genes", "genes-nel", hybrid_search=False, entity_type="genes")
-    gene_dictionary = gene_linker.candidate_generator.dictionary
+    gene_dictionary = gene_linker.dictionary
 
     gene_linker.predict(sentence)
 

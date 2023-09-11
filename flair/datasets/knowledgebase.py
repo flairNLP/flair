@@ -1,6 +1,6 @@
 import csv
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, Optional, Tuple, Union
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union
 
 import flair
 from flair.data import Concept
@@ -45,6 +45,10 @@ class KnowledgebaseLinkingDictionary:
     @property
     def text_to_index(self) -> Dict[str, str]:
         return self._text_to_index
+
+    @property
+    def candidates(self) -> List[Concept]:
+        return list(self._idx_to_candidates.values())
 
     def __getitem__(self, item: str) -> Concept:
         return self._idx_to_candidates[item]
@@ -97,6 +101,7 @@ class CTD_DISEASES_DICTIONARY(KnowledgebaseLinkingDictionary):
     ):
         if base_path is None:
             base_path = flair.cache_root / "datasets"
+        base_path = Path(base_path)
 
         dataset_name = self.__class__.__name__.lower()
 
@@ -166,6 +171,7 @@ class CTD_CHEMICALS_DICTIONARY(KnowledgebaseLinkingDictionary):
     ):
         if base_path is None:
             base_path = flair.cache_root / "datasets"
+        base_path = Path(base_path)
 
         dataset_name = self.__class__.__name__.lower()
 
@@ -238,6 +244,7 @@ class NCBI_GENE_HUMAN_DICTIONARY(KnowledgebaseLinkingDictionary):
     ):
         if base_path is None:
             base_path = flair.cache_root / "datasets"
+        base_path = Path(base_path)
 
         dataset_name = self.__class__.__name__.lower()
 
@@ -251,6 +258,7 @@ class NCBI_GENE_HUMAN_DICTIONARY(KnowledgebaseLinkingDictionary):
         """Determine if a name should be skipped."""
         if name is None:
             return False
+        name = name.strip()
         EMPTY_ENTRY_TEXT = [
             "when different from all specified ones in Gene.",
             "Record to support submission of GeneRIFs for a gene not in Gene",
@@ -258,9 +266,10 @@ class NCBI_GENE_HUMAN_DICTIONARY(KnowledgebaseLinkingDictionary):
 
         newentry = name == "NEWENTRY"
         empty = name == ""
+        minus = name == "-"
         text_comment = any(e in name for e in EMPTY_ENTRY_TEXT)
 
-        return any([newentry, empty, text_comment])
+        return any([newentry, empty, minus, text_comment])
 
     def download_dictionary(self, data_dir: Path) -> Path:
         result_file = data_dir / "Homo_sapiens.gene_info"
@@ -272,7 +281,7 @@ class NCBI_GENE_HUMAN_DICTIONARY(KnowledgebaseLinkingDictionary):
 
         return result_file
 
-    def parse_dictionary(self, original_file: Path) -> Iterator[Tuple[str, str]]:
+    def parse_dictionary(self, original_file: Path) -> Iterator[Concept]:
         synonym_fields = (
             "Symbol_from_nomenclature_authority",
             "Full_name_from_nomenclature_authority",
@@ -318,6 +327,8 @@ class NCBI_GENE_HUMAN_DICTIONARY(KnowledgebaseLinkingDictionary):
                 for synonym_field in synonym_fields:
                     synonyms.extend([name.replace("'", "") for name in row.get(synonym_field, "").split("|")])
                 synonyms = sorted([sym for sym in set(synonyms) if not self._is_invalid_name(sym)])
+                if symbol in synonyms:
+                    synonyms.remove(symbol)
 
                 yield Concept(
                     concept_id=identifier,
@@ -340,7 +351,7 @@ class NCBI_TAXONOMY_DICTIONARY(KnowledgebaseLinkingDictionary):
     ):
         if base_path is None:
             base_path = flair.cache_root / "datasets"
-
+        base_path = Path(base_path)
         dataset_name = self.__class__.__name__.lower()
 
         data_folder = base_path / dataset_name
@@ -359,7 +370,7 @@ class NCBI_TAXONOMY_DICTIONARY(KnowledgebaseLinkingDictionary):
 
         return result_file
 
-    def parse_dictionary(self, original_file: Path) -> Iterator[Tuple[str, str]]:
+    def parse_dictionary(self, original_file: Path) -> Iterator[Concept]:
         ncbi_taxonomy_synset = [
             "genbank common name",
             "common name",

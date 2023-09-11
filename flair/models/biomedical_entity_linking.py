@@ -28,14 +28,12 @@ from flair.data import Concept, Label, Sentence, Span
 from flair.datasets import (
     CTD_CHEMICALS_DICTIONARY,
     CTD_DISEASES_DICTIONARY,
+    HunerEntityLinkingDictionary,
     NCBI_GENE_HUMAN_DICTIONARY,
     NCBI_TAXONOMY_DICTIONARY,
-)
-from flair.datasets.biomedical import (
     KnowledgebaseLinkingDictionary,
-    ParsedBiomedicalEntityLinkingDictionary,
 )
-from flair.embeddings import TransformerDocumentEmbeddings
+from flair.embeddings import TransformerDocumentEmbeddings, DocumentTFIDFEmbeddings, DocumentEmbeddings
 from flair.file_utils import cached_path
 
 FAISS_VERSION = "1.7.4"
@@ -117,8 +115,7 @@ DEFAULT_SPARSE_WEIGHT = 0.5
 class SimilarityMetric(Enum):
     """Similarity metrics."""
 
-    INNER_PRODUCT = faiss.METRIC_INNER_PRODUCT
-    # L2 = faiss.METRIC_L2
+    INNER_PRODUCT = auto()
     COSINE = auto()
 
 
@@ -136,7 +133,7 @@ def timeit(func):
     return wrap_func
 
 
-class AbstractEntityPreprocessor(ABC):
+class EntityPreprocessor(ABC):
     """A pre-processor used to transform / clean both entity mentions and entity names.
 
     This class provides the basic interface for such transformations
@@ -178,7 +175,7 @@ class AbstractEntityPreprocessor(ABC):
         """
 
 
-class EntityPreprocessor(AbstractEntityPreprocessor):
+class BioSynEntityPreprocessor(EntityPreprocessor):
     """Entity preprocessor using Synonym Marginalization.
 
     Adapted from:
@@ -220,7 +217,7 @@ class EntityPreprocessor(AbstractEntityPreprocessor):
         return self.process_entity_name(entity_mention.data_point.text)
 
 
-class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
+class Ab3PEntityPreprocessor(EntityPreprocessor):
     """Entity preprocessor which uses Ab3P, an (biomedical) abbreviation definition detector.
 
     Abbreviation definition identification based on automatic precision estimates.
@@ -229,9 +226,7 @@ class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
     https://github.com/ncbi-nlp/Ab3P.
     """
 
-    def __init__(
-        self, ab3p_path: Path, word_data_dir: Path, preprocessor: Optional[AbstractEntityPreprocessor] = None
-    ) -> None:
+    def __init__(self, ab3p_path: Path, word_data_dir: Path, preprocessor: Optional[EntityPreprocessor] = None) -> None:
         """Creates the mention pre-processor.
 
         :param ab3p_path: Path to the folder containing the Ab3P implementation
@@ -277,7 +272,7 @@ class Ab3PEntityPreprocessor(AbstractEntityPreprocessor):
         return entity_name
 
     @classmethod
-    def load(cls, ab3p_path: Optional[Path] = None, preprocessor: Optional[AbstractEntityPreprocessor] = None):
+    def load(cls, ab3p_path: Optional[Path] = None, preprocessor: Optional[EntityPreprocessor] = None):
         data_dir = flair.cache_root / "ab3p"
         if not data_dir.exists():
             data_dir.mkdir(parents=True)
@@ -419,9 +414,9 @@ class BiomedicalEntityLinkingDictionary:
 
     @classmethod
     def load(
-        cls, dictionary_name_or_path: Union[Path, str], database_name: Optional[str] = None
-    ) -> "BiomedicalEntityLinkingDictionary":
-        """Load dictionary: either pre-definded or from path."""
+        cls, dictionary_name_or_path: Union[Path, str], dataset_name: Optional[str] = None
+    ) -> "KnowledgebaseLinkingDictionary":
+        """Load dictionary: either pre-defined or from path."""
         if isinstance(dictionary_name_or_path, str):
             dictionary_name_or_path = cast(str, dictionary_name_or_path)
 
@@ -430,7 +425,7 @@ class BiomedicalEntityLinkingDictionary:
                 and dictionary_name_or_path not in BIOMEDICAL_DICTIONARIES
             ):
                 raise ValueError(
-                    f"Unkwnon dictionary `{dictionary_name_or_path}`!"
+                    f"Unknown dictionary `{dictionary_name_or_path}`!"
                     f" Available dictionaries are: {tuple(BIOMEDICAL_DICTIONARIES)}"
                     " If you want to pass a local path please use the `Path` class, "
                     "i.e. `model_name_or_path=Path(my_path)`"
@@ -443,72 +438,67 @@ class BiomedicalEntityLinkingDictionary:
         else:
             # use custom dictionary file
             assert (
-                database_name is not None
-            ), "When providing a path to a custom dictionary you must specify the `database_name`!"
-            reader = ParsedBiomedicalEntityLinkingDictionary(path=dictionary_name_or_path, database_name=database_name)
+                dataset_name is not None
+            ), "When providing a path to a custom dictionary you must specify the `dataset_name`!"
+            reader = HunerEntityLinkingDictionary(path=dictionary_name_or_path, dataset_name=dataset_name)
 
-        return cls(reader=reader)
+        return reader
 
     @property
     def database_name(self) -> str:
         """Database name of the dictionary."""
         return self.reader.database_name
 
-    def stream(self) -> Iterator[Tuple[str, str]]:
-        """Stream entries from preprocessed dictionary."""
-        yield from self.reader.stream()
-
     def __getitem__(self, item: str) -> Concept:
         return self.reader[item]
 
 
-class AbstractCandidateGenerator(ABC):
+class CandidateSearchIndex(ABC):
     """Base class for a candidate generator.
 
     Given a mention of an entity, find matching entries from the dictionary.
     """
 
     @abstractmethod
+    def index(
+        self, dictionary: KnowledgebaseLinkingDictionary, preprocessor: Optional[EntityPreprocessor] = None
+    ) -> None:
+        """Index a dictionary to prepare for search.
+
+        Args:
+            dictionary: The data to index.
+            preprocessor: If given, preprocess the concept name and synonyms before indexing.
+        """
+
+    @abstractmethod
     def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, float]]]:
         """Returns the top-k entity / concept identifiers for each entity mention.
 
-        :param entity_mentions: Entity mentions
-        :param top_k: Number of best-matching entities from the knowledge base to return
-        :result: List containing a list of entity linking candidates per entity mention from the input
+        Args:
+            entity_mentions: Entity mentions
+            top_k: Number of best-matching entities from the knowledge base to return
+
+        Returns:
+            List containing a list of entity linking candidates per entity mention from the input
         """
 
-    def build_candidate(self, candidate: Tuple[str, str, float], database_name: str) -> Concept:
-        """Get nice container with all info about entity linking candidate."""
-        concept_name = candidate[0]
-        concept_id = candidate[1]
 
-        if "|" in concept_id:
-            labels = concept_id.split("|")
-            concept_id = labels[0]
-            additional_labels = labels[1:]
-        else:
-            additional_labels = None
-
-        return Concept(
-            concept_id=concept_id,
-            concept_name=concept_name,
-            additional_ids=additional_labels,
-            database_name=database_name,
-        )
-
-
-class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
+class ExactMatchCandidateSearchIndex(CandidateSearchIndex):
     """Candidate generator using exact string matching as search criterion."""
 
-    def __init__(self, dictionary: BiomedicalEntityLinkingDictionary):
-        # Build index which maps concept / entity names to concept / entity ids
-        self.dictionary = dictionary
-        self.name_to_id_index = dict(list(dictionary.stream()))
+    def __init__(self):
+        self.name_to_id_index: Dict[str, str] = {}
 
-    @classmethod
-    def load(cls, dictionary_name_or_path: Union[str, Path]) -> "ExactMatchCandidateGenerator":
-        """Compatibility function."""
-        return cls(BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path))
+    def index(
+        self, dictionary: KnowledgebaseLinkingDictionary, preprocessor: Optional[EntityPreprocessor] = None
+    ) -> None:
+        def p(text: str) -> str:
+            return preprocessor.process_entity_name(text) if preprocessor is not None else text
+
+        for candidate in dictionary.candidates:
+            self.name_to_id_index[p(candidate.concept_name)] = candidate.concept_id
+            for synonym in candidate.synonyms:
+                self.name_to_id_index[p(synonym)] = candidate.concept_id
 
     def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, float]]]:
         results: List[List[Tuple[str, float]]] = []
@@ -522,424 +512,180 @@ class ExactMatchCandidateGenerator(AbstractCandidateGenerator):
         return results
 
 
-class BigramTfIDFVectorizer:
-    """Wrapper for sklearn TfIDFVectorizer w/ fixed ngram range at the character level.
-
-    Implementation adapted from:
-
-        Sung et al.: Biomedical Entity Representations with Synonym Marginalization, 2020
-        https://github.com/dmis-lab/BioSyn/tree/master/src/biosyn/sparse_encoder.py#L8
-    """
-
-    def __init__(self):
-        self.encoder = TfidfVectorizer(analyzer="char", ngram_range=(1, 2))
-
-    def fit(self, names: List[str]):
-        """Learn vocabulary."""
-        self.encoder.fit(names)
-        return self
-
-    def transform(self, names: Union[List[str], np.ndarray]) -> csr_matrix:
-        """Convert strings to sparse vectors."""
-        embeddings = self.encoder.transform(names)
-        return embeddings
-
-    def __call__(self, mentions: Union[List[str], np.ndarray]) -> np.ndarray:
-        """Short for `transform`."""
-        return self.transform(mentions)
-
-    def save(self, path: Path):
-        """Save vectorizer to disk."""
-        joblib.dump(self.encoder, str(path))
-
-    @classmethod
-    def load(cls, path: Union[Path, str]) -> "BigramTfIDFVectorizer":
-        """Instantiate from path."""
-        newVectorizer = cls()
-
-        # with open(path, "rb") as fin:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            newVectorizer.encoder = joblib.load(str(path))
-            # logger.info("Sparse encoder loaded from %s", path)
-
-        return newVectorizer
-
-
-class BiEncoderCandidateGenerator(AbstractCandidateGenerator):
+class SemanticCandidateSearchIndex(CandidateSearchIndex):
     """Candidate generator using both dense and (optionally) sparse vector representations, to search candidates."""
 
     def __init__(
         self,
-        model_name_or_path: Union[str, Path],
-        dictionary_name_or_path: Union[str, Path],
+        embeddings: List[DocumentEmbeddings],
         similarity_metric: SimilarityMetric = SimilarityMetric.COSINE,
-        preprocessor: AbstractEntityPreprocessor = Ab3PEntityPreprocessor.load(preprocessor=EntityPreprocessor()),
-        max_length: int = 25,
-        batch_size: int = 1024,
-        hybrid_search: bool = False,
-        sparse_weight: Optional[float] = None,
-        force_hybrid_search: bool = False,
-        dictionary: Optional[BiomedicalEntityLinkingDictionary] = None,
+        weights: Optional[List[float]] = None,
+        batch_size: int = 128,
+        show_progress: bool = True,
     ):
-        """Initializes the BiEncoderEntityRetrieverModel.
+        """Initializes the EncoderCandidateSearchIndex.
 
-        :param model_name_or_path: Name of or path to the transformer model to be used.
-        :param dictionary_name_or_path: Name of or path to the transformer model to be used.
-        :param similarity_metric: which metric to use to compute similarity
-        :param preprocessor: Preprocessing strategy for entity mentions and names
-        :param max_length: Maximum number of input tokens to transformer model
-        :param batch_size: Number of entity mentions/names to embed in one forward pass
-        :param hybrid_search: Indicates whether to use sparse embeddings or not
-        :param sparse_weight: Weight to balance sparse and dense similarity scores (default sparse weight)
-        :param force_hybrid_search: if pre-trained model is not hybrid (dense+sparse) fit a sparse encoder
-        :param dictionary: optionally pass a custom dictionary
+        Args:
+            embeddings: A list of embeddings used for search.
+            weights: Weight the embedding's importance.
+            similarity_metric: The metric used to define similarity.
+            batch_size: The batch size used for indexing embeddings.
+            show_progress: show the progress while indexing.
         """
-        self.model_name_or_path = model_name_or_path
-        self.dictionary_name_or_path = dictionary_name_or_path
-        self.preprocessor = preprocessor
+        if weights is None:
+            weights = [1.0 for _ in embeddings]
+        if len(weights) != len(embeddings):
+            raise ValueError("Weights have to be of the same length as embeddings")
+
+        self.embeddings = embeddings
+        self.weights = weights
         self.similarity_metric = similarity_metric
-        self.max_length = max_length
+        self.show_progress = show_progress
         self.batch_size = batch_size
-        self.hybrid_search = hybrid_search
-        self.sparse_weight = sparse_weight
-        self.force_hybrid_search = force_hybrid_search
-        if self.force_hybrid_search:
-            self.hybrid_search = True
 
-        # allow to pass custom dictionary
-        if dictionary is not None:
-            self.dictionary = dictionary
-        else:
-            self.dictionary = BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path)
+        self.ids: List[str] = []
+        self._precomputed_embeddings: np.ndarray = np.array([])
 
-        self.dictionary_data: List[Tuple[str, str]] = [
-            (self.preprocessor.process_entity_name(name), cui) for name, cui in self.dictionary.stream()
-        ]
+    @classmethod
+    def bi_encoder(
+        cls,
+        model_name_or_path: str,
+        hybrid_search: bool,
+        similarity_metric: SimilarityMetric,
+        batch_size: int = 128,
+        show_progress: bool = True,
+        sparse_weight: float = 0.5,
+        preprocessor: Optional[EntityPreprocessor] = None,
+        dictionary: Optional[KnowledgebaseLinkingDictionary] = None,
+    ) -> "SemanticCandidateSearchIndex":
+        embeddings: List[DocumentEmbeddings] = [TransformerDocumentEmbeddings(model_name_or_path)]
+        weights = [1.0]
+        if hybrid_search:
+            if dictionary is None:
+                raise ValueError("Require dictionary to be set on hybrid search.")
 
-        # Load encoders
-        self.dense_encoder = TransformerDocumentEmbeddings(model=str(model_name_or_path), is_token_embedding=False)
-        self.sparse_encoder: Optional[BigramTfIDFVectorizer] = None
+            texts = []
 
-        if self.hybrid_search:
-            self.sparse_encoder, self.sparse_weight = self._get_sparse_encoder_and_weight(
-                model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
+            for candidate in dictionary.candidates:
+                texts.append(candidate.concept_name)
+                texts.extend(candidate.synonyms)
+
+            if preprocessor is not None:
+                texts = [preprocessor.process_entity_name(t) for t in texts]
+
+            embeddings.append(
+                DocumentTFIDFEmbeddings(
+                    [Sentence(t) for t in texts],
+                    analyzer="char",
+                    ngram_range=(1, 2),
+                )
             )
-
-        self.indices = self._load_indices(
-            model_name_or_path=model_name_or_path,
-            dictionary_name_or_path=dictionary_name_or_path,
+            weights = [1.0, sparse_weight]
+        return cls(
+            embeddings,
+            similarity_metric=similarity_metric,
+            weights=weights,
+            batch_size=batch_size,
+            show_progress=show_progress,
         )
 
-    @property
-    def higher_is_better(self):
-        """Determine if similarity is proportional to score.
+    def index(
+        self, dictionary: KnowledgebaseLinkingDictionary, preprocessor: Optional[EntityPreprocessor] = None
+    ) -> None:
+        def p(text: str) -> str:
+            return preprocessor.process_entity_name(text) if preprocessor is not None else text
 
-        E.g. for L2 lower is better, while INNER_PRODUCT higher is better.
-        """
-        return self.similarity_metric in [SimilarityMetric.COSINE, SimilarityMetric.INNER_PRODUCT]
+        texts: List[str] = []
+        self.ids = []
+        for candidate in dictionary.candidates:
+            texts.append(p(candidate.concept_name))
+            self.ids.append(candidate.concept_id)
+            for synonym in candidate.synonyms:
+                texts.append(p(synonym))
+                self.ids.append(candidate.concept_id)
 
-    def _get_cache_name(self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]) -> str:
-        """Fixed name for caching."""
-        # Check for embedded dictionary in cache
-        dictionary_name = os.path.splitext(os.path.basename(dictionary_name_or_path))[0]
-        file_name = f"{str(model_name_or_path).split('/')[-1]}_{dictionary_name}"
-        pp_name = self.preprocessor.name if self.preprocessor is not None else "null"
-
-        return f"{file_name}-{pp_name}"
-
-    @timeit
-    def fit_sparse_encoder(self) -> BigramTfIDFVectorizer:
-        """Fit sparse encoder to current dictionary."""
-        logger.info(
-            "BiEncoderCandidateGenerator: hybrid model has no pretrained sparse encoder. Fit to dictionary `%s`",
-            self.dictionary_name_or_path,
-        )
-        sparse_encoder = BigramTfIDFVectorizer().fit([name for name, cui in self.dictionary_data])
-        # sparse_encoder.save(Path(sparse_encoder_path))
-        # torch.save(torch.FloatTensor(self.sparse_weight), sparse_weight_path)
-
-        return sparse_encoder
-
-    def _handle_sparse_encoder(
-        self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]
-    ) -> BigramTfIDFVectorizer:
-        """If necessary fit and cache sparse encoder."""
-        if isinstance(model_name_or_path, str):
-            cache_name = self._get_cache_name(
-                model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
-            )
-            path = flair.cache_root / "models" / f"{cache_name}-sparse-encoder.pk"
-        else:
-            path = model_name_or_path / "sparse_encoder.pk"
-
-        if path.exists():
-            sparse_encoder = BigramTfIDFVectorizer.load(path)
-        else:
-            sparse_encoder = self.fit_sparse_encoder()
-            # logger.info("Save fitted sparse encoder to %s", path)
-            sparse_encoder.save(path)
-
-        return sparse_encoder
-
-    def _get_sparse_encoder_and_weight(
-        self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]
-    ) -> Tuple[BigramTfIDFVectorizer, float]:
-        sparse_encoder_path = os.path.join(model_name_or_path, "sparse_encoder.pk")
-        sparse_weight_path = os.path.join(model_name_or_path, "sparse_weight.pt")
-
-        if isinstance(model_name_or_path, str) and model_name_or_path in PRETRAINED_HYBRID_MODELS:
-            model_name_or_path = cast(str, model_name_or_path)
-
-            if not os.path.exists(sparse_encoder_path):
-                sparse_encoder_path = hf_hub_download(
-                    repo_id=model_name_or_path,
-                    filename="sparse_encoder.pk",
-                    cache_dir=flair.cache_root / "models" / model_name_or_path,
-                )
-
-                sparse_encoder = BigramTfIDFVectorizer.load(path=sparse_encoder_path)
-
-            if not os.path.exists(sparse_weight_path):
-                sparse_weight_path = hf_hub_download(
-                    repo_id=model_name_or_path,
-                    filename="sparse_weight.pt",
-                    cache_dir=flair.cache_root / "models" / model_name_or_path,
-                )
-                sparse_weight = torch.load(sparse_weight_path, map_location="cpu").item()
-        else:
-            sparse_weight = self.sparse_weight if self.sparse_weight is not None else DEFAULT_SPARSE_WEIGHT
-            sparse_encoder = self._handle_sparse_encoder(
-                model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
-            )
-
-        return sparse_encoder, sparse_weight
-
-    def embed_sparse(self, inputs: np.ndarray) -> np.ndarray:
-        """Create sparse embeddings from array of entity mentions/names.
-
-        :param inputs: Numpy array of entity / concept names
-        :returns Numpy array containing the sparse embeddings of the names
-        """
-        if self.sparse_encoder is None:
-            raise AssertionError("Error while using the model")
-
-        return self.sparse_encoder(inputs)
-
-    def embed_dense(self, inputs: np.ndarray, batch_size: int = 1024, show_progress: bool = False) -> np.ndarray:
-        """Create dense embeddings from array of entity mentions/names.
-
-        :param names: Numpy array of entity / concept names
-        :param batch_size: Batch size used while embedding the name
-        :param show_progress: bool to toggle progress bar
-        :return: Numpy array containing the dense embeddings of the names
-        """
-        self.dense_encoder.eval()  # prevent dropout
-
-        dense_embeds = []
+        precomputed_embeddings = []
 
         with torch.no_grad():
-            if show_progress:
+            if self.show_progress:
                 iterations = tqdm(
-                    range(0, len(inputs), batch_size),
-                    desc=f"Embedding `{self.dictionary.database_name}`",
+                    range(0, len(texts), self.batch_size),
+                    desc=f"Embedding `{dictionary.database_name}`",
                 )
             else:
-                iterations = range(0, len(inputs), batch_size)
+                iterations = range(0, len(texts), self.batch_size)
 
             for start in iterations:
-                # Create batch
-                end = min(start + batch_size, len(inputs))
-                batch = [Sentence(name) for name in inputs[start:end]]
+                end = min(start + self.batch_size, len(texts))
+                batch = [Sentence(name) for name in texts[start:end]]
 
-                # embed batch
-                self.dense_encoder.embed(batch)
+                for embedding in self.embeddings:
+                    embedding.embed(batch)
 
-                dense_embeds += [name.embedding.cpu().detach().numpy() for name in batch]
+                for sent in batch:
+                    embs = []
+                    for embedding, weight in zip(self.embeddings, self.weights):
+                        emb = sent.get_embedding(embedding.get_names())
+                        if self.similarity_metric == SimilarityMetric.COSINE:
+                            emb = emb / torch.norm(emb)
+                        embs.append(emb * weight)
 
+                    precomputed_embeddings.append(torch.cat(embs, dim=0).cpu().numpy())
+                    sent.clear_embeddings()
                 if flair.device.type == "cuda":
                     torch.cuda.empty_cache()
 
-        return np.array(dense_embeds)
+        self._precomputed_embeddings = np.stack(precomputed_embeddings, axis=0)
 
-    # separate method to allow more sophisticated logic in the future, e.g.: ANN with HNSW, PQ...
-    def get_dense_index(self, names: np.ndarray, path: Path) -> faiss.Index:
-        """Load or create dense index and save it to disk."""
-        if path.exists():
-            index = faiss.read_index(str(path))
+    def emb_search(self, entity_mentions: List[str]) -> np.ndarray:
+        embeddings = []
 
-        else:
-            embeddings = self.embed_dense(inputs=np.array(names), batch_size=self.batch_size, show_progress=True)
+        with torch.no_grad():
+            for start in range(0, len(entity_mentions), self.batch_size):
+                end = min(start + self.batch_size, len(entity_mentions))
+                batch = [Sentence(name) for name in entity_mentions[start:end]]
 
-            index = faiss.IndexFlatIP(embeddings.shape[1])
-            index.add(embeddings)
+                for embedding in self.embeddings:
+                    embedding.embed(batch)
 
-            if self.similarity_metric == SimilarityMetric.COSINE:
-                faiss.normalize_L2(embeddings)
+                for sent in batch:
+                    embs = []
+                    for embedding in self.embeddings:
+                        emb = sent.get_embedding(embedding.get_names())
+                        if self.similarity_metric == SimilarityMetric.COSINE:
+                            emb = emb / torch.norm(emb)
+                        embs.append(emb)
 
-            faiss.write_index(index, str(path))
+                    embeddings.append(torch.cat(embs, dim=0).cpu().numpy())
+                    sent.clear_embeddings()
+                if flair.device.type == "cuda":
+                    torch.cuda.empty_cache()
 
-        return index
-
-    def get_sparse_index(self, names: np.ndarray, path: Path) -> csr_matrix:
-        """Load or create sparse index and save it to disk."""
-        if path.exists():
-            index = scipy.sparse.load_npz(str(path))
-        else:
-            index = self.embed_sparse(inputs=names)
-
-            scipy.sparse.save_npz(str(path), index)
-            # index.save_index # HNSWLIB
-            # index.save # ANNOY
-
-        return index
-
-    def _load_indices(self, model_name_or_path: Union[str, Path], dictionary_name_or_path: Union[str, Path]) -> Dict:
-        """Load cached indices if available, otherwise compute embeddings, build index and cache."""
-        cache_name = self._get_cache_name(
-            model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
-        )
-
-        cache_folder = flair.cache_root / "datasets" / cache_name
-        cache_folder.mkdir(parents=True, exist_ok=True)
-
-        indices = {}
-
-        logger.info(
-            "BiEncoderCandidateGenerator: initialize %s %s",
-            self.dictionary.database_name,
-            "indices" if self.hybrid_search else "index",
-        )
-
-        for index_type in ["sparse", "dense"]:
-            if index_type == "sparse" and not self.hybrid_search:
-                continue
-
-            extension = "bin" if index_type == "dense" else "npz"
-            file_name = f"index-{index_type}.{extension}"
-
-            index_cache_file = cache_folder / file_name
-
-            names = np.array([n for n, _ in self.dictionary_data])
-
-            if index_type == "dense":
-                indices[index_type] = self.get_dense_index(names=names, path=index_cache_file)
-
-            else:
-                indices[index_type] = self.get_sparse_index(names=names, path=index_cache_file)
-
-        return indices
-
-    @timeit
-    def search_sparse(self, entity_mentions: List[str], top_k: int = 1) -> Tuple[np.ndarray, np.ndarray]:
-        """Find candidates with sparse representations.
-
-        :param entity_mentions: list of entity mentions (~ queries)
-        :param top_k: number of candidates to retrieve per mention
-        """
-        assert (
-            self.sparse_encoder is not None
-        ), "BiEncoderCandidateGenerator has no `sparse_encoder`! Pass `force_hybrid_search=True` at initialization"
-
-        mention_embeddings = self.sparse_encoder(entity_mentions)
-
-        if self.similarity_metric == SimilarityMetric.COSINE:
-            score_matrix = cosine_similarity(mention_embeddings, self.indices["sparse"], dense_output=False)
-        elif self.similarity_metric == SimilarityMetric.INNER_PRODUCT:
-            score_matrix = mention_embeddings.dot(self.indices["sparse"].T)
-
-        score_matrix = score_matrix.toarray()
-
-        num_mentions = score_matrix.shape[0]
-
-        unsorted_indices = np.argpartition(score_matrix, -top_k)[:, -top_k:]
-        unsorted_scores = score_matrix[np.arange(num_mentions)[:, None], unsorted_indices]
-
-        sorted_score_matrix_indices = np.argsort(-unsorted_scores)
-
-        idxs = unsorted_indices[np.arange(num_mentions)[:, None], sorted_score_matrix_indices]
-        dists = unsorted_scores[np.arange(num_mentions)[:, None], sorted_score_matrix_indices]
-
-        return idxs, dists
-
-    @timeit
-    def search_dense(self, entity_mentions: List[str], top_k: int = 1) -> Tuple[np.ndarray, np.ndarray]:
-        """Find candidates with dense representations (FAISS).
-
-        :param entity_mentions: list of entity mentions (~ queries)
-        :param top_k: number of candidates to retrieve
-        """
-        # Compute dense embedding for the given entity mention
-        mention_dense_embeds = self.embed_dense(inputs=np.array(entity_mentions), batch_size=self.batch_size)
-
-        if self.similarity_metric == SimilarityMetric.COSINE:
-            faiss.normalize_L2(mention_dense_embeds)
-
-        # Get candidates from dense embeddings
-        dists, ids = self.indices["dense"].search(mention_dense_embeds, top_k)
-
-        return ids, dists
-
-    def combine_dense_and_sparse_results(
-        self,
-        dense_ids: np.ndarray,
-        dense_scores: np.ndarray,
-        sparse_ids: np.ndarray,
-        sparse_scores: np.ndarray,
-        top_k: int = 1,
-    ):
-        """Expand dense results with sparse ones ans re-weight them.
-
-        Re-weight the score as: dense_score + sparse_weight * sparse_scores.
-        """
-        hybrid_ids = []
-        hybrid_scores = []
-        for i in range(dense_ids.shape[0]):
-            mention_ids = dense_ids[i]
-            mention_scores = dense_scores[i]
-
-            mention_spare_ids = sparse_ids[i]
-            mention_sparse_scores = sparse_scores[i]
-
-            for sparse_id, sparse_score in zip(mention_spare_ids, mention_sparse_scores):
-                if sparse_id not in mention_ids:
-                    mention_ids = np.append(mention_ids, sparse_id)
-                    mention_scores = np.append(mention_scores, self.sparse_weight * sparse_score)
-                else:
-                    index = np.where(mention_ids == sparse_id)[0][0]
-                    mention_scores[index] += self.sparse_weight * sparse_score
-
-            rerank_indices = np.argsort(-mention_scores if self.higher_is_better else mention_scores)
-            mention_ids = mention_ids[rerank_indices][:top_k]
-            mention_scores = mention_scores[rerank_indices][:top_k]
-            hybrid_ids.append(mention_ids.tolist())
-            hybrid_scores.append(mention_scores.tolist())
-
-        return hybrid_scores, hybrid_ids
+        return np.stack(embeddings, axis=0)
 
     def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, float]]]:
         """Returns the top-k entity / concept identifiers for each entity mention.
 
-        :param entity_mentions: Entity mentions
-        :param top_k: Number of best-matching entities from the knowledge base to return
-        :result: List containing a list of entity linking candidates per entity mention from the input
+        Args:
+            entity_mentions: Entity mentions
+            top_k: Number of best-matching entities from the knowledge base to return
+
+        Returns:
+            List containing a list of entity linking candidates per entity mention from the input
         """
-        ids, scores = self.search_dense(entity_mentions=entity_mentions, top_k=top_k)
 
-        if self.hybrid_search and self.sparse_encoder is not None:
-            sparse_ids, sparse_scores = self.search_sparse(entity_mentions=entity_mentions, top_k=top_k)
+        mention_embs = self.emb_search(entity_mentions)
+        all_scores = mention_embs @ self._precomputed_embeddings.T
+        selected_indices = np.argsort(all_scores, axis=1)[:, :top_k]
+        scores = np.take_along_axis(all_scores, selected_indices, axis=1)
 
-            scores, ids = self.combine_dense_and_sparse_results(
-                dense_ids=ids,
-                dense_scores=scores,
-                sparse_scores=sparse_scores,
-                sparse_ids=sparse_ids,
-                top_k=top_k,
+        results = []
+        for i in range(selected_indices.shape[0]):
+            results.append(
+                [(self.ids[selected_indices[i, j]], float(scores[i, j])) for j in range(selected_indices.shape[1])]
             )
-        return [
-            [(self.dictionary_data[i][1].split("|")[0], score) for i, score in zip(mention_ids, mention_scores)]
-            for mention_ids, mention_scores in zip(ids, scores)
-        ]
+
+        return results
 
 
 class EntityMentionLinker:
@@ -947,16 +693,18 @@ class EntityMentionLinker:
 
     def __init__(
         self,
-        candidate_generator: AbstractCandidateGenerator,
-        preprocessor: AbstractEntityPreprocessor,
+        candidate_generator: CandidateSearchIndex,
+        preprocessor: EntityPreprocessor,
         entity_type: str,
         label_type: str,
+        dictionary: KnowledgebaseLinkingDictionary,
     ):
         self.preprocessor = preprocessor
         self.candidate_generator = candidate_generator
         self.entity_type = entity_type
         self.annotation_layers = [self.entity_type]
         self._label_type = label_type
+        self._dictionary = dictionary
 
     @property
     def label_type(self):
@@ -964,7 +712,7 @@ class EntityMentionLinker:
 
     @property
     def dictionary(self) -> KnowledgebaseLinkingDictionary:
-        return self.candidate_generator.dictionary
+        return self._dictionary
 
     def extract_mentions(
         self,
@@ -1036,14 +784,14 @@ class EntityMentionLinker:
         label_type: str,
         dictionary_name_or_path: Optional[Union[str, Path]] = None,
         hybrid_search: bool = True,
-        max_length: int = 25,
-        batch_size: int = 1024,
+        batch_size: int = 128,
         similarity_metric: SimilarityMetric = SimilarityMetric.COSINE,
-        preprocessor: AbstractEntityPreprocessor = EntityPreprocessor(),
+        preprocessor: EntityPreprocessor = BioSynEntityPreprocessor(),
         force_hybrid_search: bool = False,
         sparse_weight: float = DEFAULT_SPARSE_WEIGHT,
         entity_type: Optional[str] = None,
-        dictionary: Optional[BiomedicalEntityLinkingDictionary] = None,
+        dictionary: Optional[KnowledgebaseLinkingDictionary] = None,
+        dataset_name: Optional[str] = None,
     ) -> "EntityMentionLinker":
         """Loads a model for biomedical named entity normalization.
 
@@ -1053,10 +801,12 @@ class EntityMentionLinker:
             raise AssertionError(f"String matching model name has to be an string (and not {type(model_name_or_path)}")
         model_name_or_path = cast(str, model_name_or_path)
 
-        if dictionary_name_or_path is None or isinstance(dictionary_name_or_path, str):
-            dictionary_name_or_path = cls.__get_dictionary_path(
-                model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
-            )
+        if dictionary is None:
+            if dictionary_name_or_path is None or isinstance(dictionary_name_or_path, str):
+                dictionary_name_or_path = cls.__get_dictionary_path(
+                    model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
+                )
+            dictionary = BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path, dataset_name=dataset_name)
 
         if isinstance(model_name_or_path, str):
             model_name_or_path, entity_type = cls.__get_model_path_and_entity_type(
@@ -1070,20 +820,19 @@ class EntityMentionLinker:
             assert entity_type in ENTITY_TYPES, f"Invalid entity type `{entity_type}! Must be one of: {ENTITY_TYPES}"
 
         if model_name_or_path == "exact-string-match":
-            candidate_generator: AbstractCandidateGenerator = ExactMatchCandidateGenerator.load(dictionary_name_or_path)
+            candidate_generator: CandidateSearchIndex = ExactMatchCandidateSearchIndex()
         else:
-            candidate_generator = BiEncoderCandidateGenerator(
-                model_name_or_path=model_name_or_path,
-                dictionary_name_or_path=dictionary_name_or_path,
+            candidate_generator = SemanticCandidateSearchIndex.bi_encoder(
+                model_name_or_path=str(model_name_or_path),
                 hybrid_search=hybrid_search,
                 similarity_metric=similarity_metric,
-                max_length=max_length,
                 batch_size=batch_size,
                 sparse_weight=sparse_weight,
                 preprocessor=preprocessor,
-                force_hybrid_search=force_hybrid_search,
                 dictionary=dictionary,
             )
+
+        candidate_generator.index(dictionary, preprocessor)
 
         logger.info(
             "BiomedicalEntityLinker predicts: Dictionary `%s` (entity type: %s)", dictionary_name_or_path, entity_type
@@ -1094,6 +843,7 @@ class EntityMentionLinker:
             preprocessor=preprocessor,
             entity_type=entity_type,
             label_type=label_type,
+            dictionary=dictionary,
         )
 
     @staticmethod
