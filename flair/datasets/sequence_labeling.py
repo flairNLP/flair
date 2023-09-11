@@ -1178,8 +1178,7 @@ class ONTONOTES(MultiFileColumnCorpus):
     def sentence_iterator(cls, file_path: Union[Path, str]) -> Iterator:
         """An iterator over the sentences in an individual CONLL formatted file."""
         for document in cls.dataset_document_iterator(file_path):
-            for sentence in document:
-                yield sentence
+            yield from document
 
 
 class CONLL_03(ColumnCorpus):
@@ -2490,7 +2489,7 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
         """
 
         def add_I_prefix(current_line: List[str], ner: int, tag: str):
-            for i in range(0, len(current_line)):
+            for i in range(len(current_line)):
                 if i == 0:
                     f.write(line_list[i])
                 elif i == ner:
@@ -2508,7 +2507,7 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
                 if len(line_list) > 2:  # word with tags
                     ner_tag = line_list[ner_column]
                     if ner_tag in ["0", "O"]:  # no chunk
-                        for i in range(0, len(line_list)):
+                        for i in range(len(line_list)):
                             if i == 0:
                                 f.write(line_list[i])
                             elif i == ner_column:

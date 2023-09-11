@@ -52,7 +52,6 @@ class LinearSchedulerPlugin(TrainerPlugin):
     @TrainerPlugin.hook
     def after_training_batch(self, optimizer_was_run: bool, **kw):
         """Do the scheduler step if one-cycle or linear decay."""
-
         # skip if no optimization has happened.
         if not optimizer_was_run:
             return

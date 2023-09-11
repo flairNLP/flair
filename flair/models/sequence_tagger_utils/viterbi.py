@@ -119,7 +119,7 @@ class ViterbiLoss(torch.nn.Module):
 
         matrix_indices = [
             [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)]
-            + [s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)]
+            + [s[i] + (s[i + 1] * self.tagset_size) for i in range(len(s) - 1)]
             for s in targets_per_sentence
         ]
 

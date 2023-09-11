@@ -946,7 +946,7 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
             links: array containing information about the starting and ending position of an entity mention, as well as its corresponding wiki tag
             outfile: file, to which the output is written
         """
-        for i in range(0, len(sentence)):
+        for i in range(len(sentence)):
             # If there are annotated entity mentions for given post title or a comment thread
             if links:
                 # Keep track which is the correct corresponding entity link, in cases where there is >1 link in a sentence
