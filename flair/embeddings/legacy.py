@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 import torch
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 
 import flair
 from flair.data import Sentence, Token
@@ -172,14 +172,16 @@ class CharLMEmbeddings(TokenEmbeddings):
         cache_directory: Optional[Path] = None,
     ) -> None:
         """Initializes contextual string embeddings using a character-level language model.
-        :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
+
+        Args:
+            model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
                 'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward'
                 depending on which character language model is desired.
-        :param detach: if set to False, the gradient will propagate into the language model. this dramatically slows down
+            detach: if set to False, the gradient will propagate into the language model. this dramatically slows down
                 training and often leads to worse results, so not recommended.
-        :param use_cache: if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
+            use_cache: if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
                 not allow re-use of once computed embeddings that do not fit into memory
-        :param cache_directory: if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
+            cache_directory: if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
                 is written to the provided directory.
         """
         super().__init__()
@@ -527,17 +529,17 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         locked_dropout: float = 0.0,
     ) -> None:
         """The constructor takes a list of embeddings to be combined.
-        :param embeddings: a list of token embeddings
-        :param hidden_size: the number of hidden states in the lstm
-        :param rnn_layers: the number of layers for the lstm
-        :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
-        layer before putting them into the lstm or not
-        :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
-        dimension as before will be taken.
-        :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
-        :param dropout: the dropout value to be used
-        :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
-        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used.
+
+        Args:
+            embeddings: a list of token embeddings
+            hidden_size: the number of hidden states in the lstm
+            rnn_layers: the number of layers for the lstm
+            reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the lstm or not.
+            reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.
+            bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
+            dropout: the dropout value to be used
+            word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
+            locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used.
         """
         super().__init__()
 

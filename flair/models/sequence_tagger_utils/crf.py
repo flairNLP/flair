@@ -17,9 +17,10 @@ class CRF(torch.nn.Module):
     def __init__(self, tag_dictionary, tagset_size: int, init_from_state_dict: bool) -> None:
         """Initialize the Conditional Random Field.
 
-        :param tag_dictionary: tag dictionary in order to find ID for start and stop tags
-        :param tagset_size: number of tag from tag dictionary
-        :param init_from_state_dict: whether we load pretrained model from state dict
+        Args:
+            tag_dictionary: tag dictionary in order to find ID for start and stop tags
+            tagset_size: number of tag from tag dictionary
+            init_from_state_dict: whether we load pretrained model from state dict
         """
         super().__init__()
 
@@ -37,9 +38,10 @@ class CRF(torch.nn.Module):
     def forward(self, features: torch.Tensor) -> torch.Tensor:
         """Forward propagation of Conditional Random Field.
 
-        :param features: output from RNN / Linear layer in shape (batch size, seq len, hidden size)
-        :return: CRF scores (emission scores for each token + transitions prob from previous state) in
-        shape (batch_size, seq len, tagset size, tagset size)
+        Args:
+            features: output from RNN / Linear layer in shape (batch size, seq len, hidden size)
+
+        Returns: CRF scores (emission scores for each token + transitions prob from previous state) in shape (batch_size, seq len, tagset size, tagset size)
         """
         batch_size, seq_len = features.size()[:2]
 

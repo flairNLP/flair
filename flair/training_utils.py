@@ -328,9 +328,11 @@ class AnnealOnPlateau:
 def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
     """Creates a local file which can be appended to.
 
-    :param base_path: the path to the directory
-    :param file_name: the file name
-    :return: the created file
+    Args:
+        base_path: the path to the directory
+        file_name: the file name
+
+    Returns: the created file
     """
     base_path = Path(base_path)
     base_path.mkdir(parents=True, exist_ok=True)
@@ -343,9 +345,11 @@ def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
 def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionary) -> List[List[int]]:
     """Convert list of labels to a one hot list.
 
-    :param label_list: list of labels
-    :param label_dict: label dictionary
-    :return: converted label list
+    Args:
+        label_list: list of labels
+        label_dict: label dictionary
+
+    Returns: converted label list
     """
     return [[1 if label in labels else 0 for label in label_dict.get_items()] for labels in label_list]
 

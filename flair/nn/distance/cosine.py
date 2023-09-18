@@ -6,8 +6,12 @@ import torch
 def dot_product(a: torch.Tensor, b: torch.Tensor, normalize=False):
     """Computes dot product for pairs of vectors.
 
-    :param normalize: Vectors are normalized (leads to cosine similarity)
-    :return: Matrix with res[i][j]  = dot_product(a[i], b[j])
+    Args:
+        a: the left tensor
+        b: the right tensor
+        normalize: Vectors are normalized (leads to cosine similarity)
+
+    Returns: Matrix with res[i][j] = dot_product(a[i], b[j])
     """
     if len(a.shape) == 1:
         a = a.unsqueeze(0)

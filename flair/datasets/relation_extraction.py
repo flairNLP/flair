@@ -44,9 +44,6 @@ class RE_ENGLISH_SEMEVAL2010(ColumnCorpus):
         """SemEval-2010 Task 8 on Multi-Way Classification of Semantic Relations Between Pairs of Nominals.
 
         see https://aclanthology.org/S10-1006.pdf
-        :param base_path:
-        :param in_memory:
-        :param augment_train:
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -229,8 +226,6 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
 
         with 41 relations from https://nlp.stanford.edu/projects/tacred/.
         Manual download is required for this dataset.
-        :param base_path:
-        :param in_memory:
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 

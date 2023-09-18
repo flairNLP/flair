@@ -33,12 +33,19 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         locked_dropout: float = 0.0,
         word_dropout: float = 0.0,
         decoder: Optional[torch.nn.Module] = None,
-        **classifierargs,
     ) -> None:
         """Initialize the Text Pair Regression Model.
 
-        :param embeddings: embeddings used to embed each data point
-        :param label_name:
+        Args:
+            label_type: name of the label
+            embed_separately: if True, the sentence embeddings will be concatenated,
+              if False both sentences will be combined and newly embedded.
+            dropout: dropout
+            locked_dropout: locked_dropout
+            word_dropout:  word_dropout
+            decoder: if provided, a that specific layer will be used as decoder,
+              otherwise a linear layer with random parameters will be created.
+            embeddings: embeddings used to embed each data point
         """
         super().__init__()
 

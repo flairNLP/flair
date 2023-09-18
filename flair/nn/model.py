@@ -62,10 +62,22 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         """Evaluates the model. Returns a Result object containing evaluation results and a loss value.
 
         Implement this to enable evaluation.
-        :param data_loader: DataLoader that iterates over dataset to be evaluated
-        :param out_path: Optional output path to store predictions
-        :param embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU  # noqa: E501
-        :return: Returns a Tuple consisting of a Result object and a loss float value
+
+        Args:
+            data_points: The labeled data_points to evaluate.
+            gold_label_type: The label type indicating the gold labels
+            out_path: Optional output path to store predictions
+            embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and freshly
+              recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
+            mini_batch_size: The batch_size to use for predictions
+            main_evaluation_metric: Specify which metric to highlight as main_score
+            exclude_labels: Specify classes that won't be considered in evaluation
+            gold_label_dictionary: Specify which classes should be considered, all other classes will be taken as <unk>.
+            return_loss: Weather to additionally compute the loss on the data-points.
+            **kwargs: Arguments that will be ignored.
+
+        Returns:
+            The evaluation results.
         """
         raise NotImplementedError
 
@@ -100,7 +112,9 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
     def save(self, model_file: Union[str, Path], checkpoint: bool = False):
         """Saves the current model to the provided file.
 
-        :param model_file: the model file
+        Args:
+            model_file: the model file
+            checkpoint: currently unused.
         """
         model_state = self._get_state_dict()
 
@@ -115,8 +129,10 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
     def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Model":
         """Loads the model from the given file.
 
-        :param model_path: the model file or the already loaded state dict
-        :return: the loaded text classifier model
+        Args:
+            model_path: the model file or the already loaded state dict
+
+        Returns: the loaded text classifier model
         """
         # if this class is abstract, go through all inheriting classes and try to fetch and load the model
         if inspect.isabstract(cls):
@@ -498,13 +514,15 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         """Predicts the class labels for the given sentences.
 
         The labels are directly added to the sentences.
-        :param sentences: list of sentences
-        :param mini_batch_size: mini batch size to use
-        :param return_probabilities_for_all_classes : return probabilities for all classes instead of only best predicted  # noqa: E501
-        :param verbose: set to True to display a progress bar
-        :param return_loss: set to True to return loss
-        :param label_name: set this to change the name of the label type that is predicted  # noqa: E501
-        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively. 'gpu' to store embeddings in GPU memory.  # noqa: E501
+
+        Args:
+            sentences: list of sentences
+            mini_batch_size: mini batch size to use
+            return_probabilities_for_all_classes: return probabilities for all classes instead of only best predicted
+            verbose: set to True to display a progress bar
+            return_loss: set to True to return loss
+            label_name: set this to change the name of the label type that is predicted  # noqa: E501
+            embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively. 'gpu' to store embeddings in GPU memory.  # noqa: E501
         """
         raise NotImplementedError
 
@@ -767,14 +785,15 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
     ):
         """Predicts the class labels for the given sentences. The labels are directly added to the sentences.
 
-        :param sentences: list of sentences
-        :param mini_batch_size: mini batch size to use
-        :param return_probabilities_for_all_classes : return probabilities for all classes instead of only best predicted  # noqa: E501
-        :param verbose: set to True to display a progress bar
-        :param return_loss: set to True to return loss
-        :param label_name: set this to change the name of the label type that is predicted
-        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.  # noqa: E501
-        'gpu' to store embeddings in GPU memory.
+        Args:
+            sentences: list of sentences to predict
+            mini_batch_size: the amount of sentences that will be predicted within one batch
+            return_probabilities_for_all_classes: return probabilities for all classes instead of only best predicted
+            verbose: set to True to display a progress bar
+            return_loss: set to True to return loss
+            label_name: set this to change the name of the label type that is predicted
+            embedding_storage_mode: default is 'none' which is the best is most cases.
+                Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively. 'gpu' to store embeddings in GPU memory.
         """
         if label_name is None:
             label_name = self.label_type if self.label_type is not None else "label"

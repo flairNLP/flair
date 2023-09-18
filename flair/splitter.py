@@ -97,8 +97,9 @@ class SpacySentenceSplitter(SentenceSplitter):
 
     Implementation of :class:`SentenceSplitter`, using models from Spacy.
 
-    :param model Spacy V2 model or the name of the model to load.
-    :param tokenizer Custom tokenizer to use (default :class:`SpacyTokenizer`)
+    Args:
+        model: Spacy V2 model or the name of the model to load.
+        tokenizer: Custom tokenizer to use (default :class:`SpacyTokenizer`)
     """
 
     def __init__(self, model: Union[Any, str], tokenizer: Optional[Tokenizer] = None) -> None:

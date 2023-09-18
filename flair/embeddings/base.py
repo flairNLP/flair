@@ -123,7 +123,10 @@ class ScalarMix(torch.nn.Module):
         """Inits scalar mix implementation.
 
         ``mixture = gamma * sum(s_k * tensor_k)`` where ``s = softmax(w)``, with ``w`` and ``gamma`` scalar parameters.
-        :param mixture_size: size of mixtures (usually the number of layers)
+
+        Args:
+            mixture_size: size of mixtures (usually the number of layers)
+            trainable: weather or not the weights should be learnable.
         """
         super().__init__()
         self.mixture_size = mixture_size
@@ -157,8 +160,11 @@ class ScalarMix(torch.nn.Module):
 
         Computes a weighted average of the ``tensors``.  The input tensors an be any shape
         with at least two dimensions, but must all be the same shape.
-        :param tensors: list of input tensors
-        :return: computed weighted average of input tensors
+
+        Args:
+            tensors: list of input tensors
+
+        Returns: computed weighted average of input tensors
         """
         if len(tensors) != self.mixture_size:
             log.error(

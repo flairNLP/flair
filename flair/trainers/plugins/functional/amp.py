@@ -39,11 +39,7 @@ class AmpPlugin(TrainerPlugin):
 
     @TrainerPlugin.hook
     def after_setup(self, **kw):
-        """Wraps with AMP.
-
-        :param kw:
-        :return:
-        """
+        """Wraps with AMP."""
         optimizer = self.trainer.optimizer
 
         self.trainer.model, self.trainer.optimizer = self.amp.initialize(

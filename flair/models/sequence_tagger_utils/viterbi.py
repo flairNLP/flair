@@ -19,7 +19,8 @@ class ViterbiLoss(torch.nn.Module):
     def __init__(self, tag_dictionary: Dictionary) -> None:
         """Create an instance of the Viterbi loss.
 
-        :param tag_dictionary: tag_dictionary of task
+        Args:
+            tag_dictionary: tag_dictionary of task
         """
         super().__init__()
         self.tag_dictionary = tag_dictionary
@@ -30,10 +31,11 @@ class ViterbiLoss(torch.nn.Module):
     def forward(self, features_tuple: tuple, targets: torch.Tensor) -> torch.Tensor:
         """Forward propagation of Viterbi Loss.
 
-        :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
-            lengths of sentences in batch, transitions from CRF
-        :param targets: true tags for sentences which will be converted to matrix indices.
-        :return: summed Viterbi Loss over all data points
+        Args:
+            features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size), lengths of sentences in batch, transitions from CRF
+            targets: true tags for sentences which will be converted to matrix indices.
+
+        Returns: summed Viterbi Loss over all data points
         """
         features, lengths, transitions = features_tuple
 
@@ -82,9 +84,11 @@ class ViterbiLoss(torch.nn.Module):
     def _log_sum_exp(tensor, dim):
         """Calculates the log-sum-exponent of a tensor's dimension in a numerically stable way.
 
-        :param tensor: tensor
-        :param dim: dimension to calculate log-sum-exp of
-        :return: log-sum-exp
+        Args:
+            tensor: tensor
+            dim: dimension to calculate log-sum-exp of
+
+        Returns: log-sum-exp
         """
         m, _ = torch.max(tensor, dim)
         m_expanded = m.unsqueeze(dim).expand_as(tensor)
@@ -99,8 +103,9 @@ class ViterbiLoss(torch.nn.Module):
         from previous tag 5 and could directly be addressed through the 1-dim indices (10 + tagset_size * 5) = 70,
         if our tagset consists of 12 tags.
 
-        :param targets: targets as in tag dictionary
-        :param lengths: lengths of sentences in batch
+        Args:
+            targets: targets as in tag dictionary
+            lengths: lengths of sentences in batch
         """
         targets_per_sentence = []
 
@@ -114,7 +119,7 @@ class ViterbiLoss(torch.nn.Module):
 
         matrix_indices = [
             [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)]
-            + [s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)]
+            + [s[i] + (s[i + 1] * self.tagset_size) for i in range(len(s) - 1)]
             for s in targets_per_sentence
         ]
 
@@ -127,7 +132,8 @@ class ViterbiDecoder:
     def __init__(self, tag_dictionary: Dictionary) -> None:
         """Initialize the Viterbi Decoder.
 
-        :param tag_dictionary: Dictionary of tags for sequence labeling task
+        Args:
+            tag_dictionary: Dictionary of tags for sequence labeling task
         """
         self.tag_dictionary = tag_dictionary
         self.tagset_size = len(tag_dictionary)
@@ -139,10 +145,12 @@ class ViterbiDecoder:
     ) -> Tuple[List, List]:
         """Decoding function returning the most likely sequence of tags.
 
-        :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
-            lengths of sentence in batch, transitions of CRF
-        :param probabilities_for_all_classes: whether to return probabilities for all tags
-        :return: decoded sequences
+        Args:
+            features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size), lengths of sentence in batch, transitions of CRF
+            probabilities_for_all_classes: whether to return probabilities for all tags
+            sentences: list of the respective sentences with extracted features.
+
+        Returns: decoded sequences
         """
         features, lengths, transitions = features_tuple
         all_tags = []
@@ -218,10 +226,7 @@ class ViterbiDecoder:
         return tags, all_tags
 
     def _all_scores_for_token(self, scores: torch.Tensor, lengths: torch.IntTensor, sentences: List[Sentence]):
-        """Returns all scores for each tag in tag dictionary.
-
-        :param scores: Scores for current sentence.
-        """
+        """Returns all scores for each tag in tag dictionary."""
         scores = scores.numpy()
         prob_tags_per_sentence = []
         for scores_sentence, length, sentence in zip(scores, lengths, sentences):

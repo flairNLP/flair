@@ -13,7 +13,8 @@ class FlairSampler(Sampler):
     def set_dataset(self, data_source):
         """Initialize the data source for the FlairSampler.
 
-        :param data_source: dataset to sample from.
+        Args:
+            data_source: dataset to sample from.
         """
         self.data_source = data_source
         self.num_samples = len(self.data_source)
@@ -29,10 +30,7 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
         super().__init__(None)
 
     def set_dataset(self, data_source):
-        """Initialize the dataset used for sampling.
-
-        :param data_source:
-        """
+        """Initialize the dataset used for sampling."""
         self.data_source = data_source
         self.num_samples = len(self.data_source)
         self.indices = list(range(len(data_source)))
@@ -91,7 +89,8 @@ class ExpandingChunkSampler(FlairSampler):
     def __init__(self, step=3) -> None:
         """Initialize the ExpandingChunkSampler.
 
-        :param step: every *step* epochs the block size increments by one.
+        Args:
+            step: every *step* epochs the block size increments by one.
         """
         super().__init__(None)
         self.block_size = 1

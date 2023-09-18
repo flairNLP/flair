@@ -327,18 +327,18 @@ class DataPairDataset(FlairDataset):
         seperated by e.g. '\t' (just like in the glue RTE-dataset https://gluebenchmark.com/tasks) .
         For each data pair we create a flair.data.DataPair object.
 
-        :param path_to_data: path to the data file
-        :param columns: list of integers that indicate the respective columns. The first entry is the column
-        for the first sentence, the second for the second sentence and the third for the label. Default [0,1,2]
-        :param max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
-        :param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
-        :param use_tokenizer: Whether or not to use in-built tokenizer
-        :param in_memory: If True, data will be saved in list of flair.data.DataPair objects, other wise we use lists with simple strings which needs less space
-        :param label_type: Name of the label of the data pairs
-        :param skip_first_line: If True, first line of data file will be ignored
-        :param separator: Separator between columns in the data file
-        :param encoding: Encoding of the data file
-        :param label: If False, the dataset expects unlabeled data
+        Args:
+            path_to_data: path to the data file
+            columns: list of integers that indicate the respective columns. The first entry is the column for the first sentence, the second for the second sentence and the third for the label. Default [0,1,2]
+            max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
+            max_chars_per_doc: If set, shortens sentences to this maximum number of characters
+            use_tokenizer: Whether to use in-built tokenizer
+            in_memory: If True, data will be saved in list of flair.data.DataPair objects, otherwise we use lists with simple strings which needs less space
+            label_type: Name of the label of the data pairs
+            skip_first_line: If True, first line of data file will be ignored
+            separator: Separator between columns in the data file
+            encoding: Encoding of the data file
+            label: If False, the dataset expects unlabeled data
         """
         path_to_data = Path(path_to_data)
 

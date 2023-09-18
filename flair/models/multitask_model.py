@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import torch
 
 import flair.nn
-from flair.data import DT, Dictionary, Sentence
+from flair.data import DT, Sentence
 from flair.file_utils import cached_path
 from flair.nn import Classifier
 from flair.training_utils import Result
@@ -33,7 +33,11 @@ class MultitaskModel(flair.nn.Classifier):
     ) -> None:
         """Instantiates the MultiTaskModel.
 
-        :param models: Key (Task ID) - Value (flair.nn.Model) Pairs to stack model
+        Args:
+            models: The child models used during multitask training.
+            task_ids: If given, add each corresponding model a specified task id. Otherwise, tasks get the ids 'Task_0', 'Task_1', ...
+            loss_factors: If given, weight the losses of teh corresponding models during training.
+            use_all_tasks: If True, each sentence will be trained on all tasks parallel, otherwise each epoch 1 task will be sampled to train the sentence on.
         """
         super().__init__()
 
@@ -64,8 +68,10 @@ class MultitaskModel(flair.nn.Classifier):
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
         """Calls the respective forward loss of each model and sums them weighted by their loss factors.
 
-        :param sentences: batch of sentences
-        :return: loss
+        Args:
+            sentences: batch of sentences
+
+        Returns: loss and sample count
         """
         batch_split = self.split_batch_to_task_ids(sentences, all_tasks=self.use_all_tasks)
         loss = torch.tensor(0.0, device=flair.device)
@@ -90,9 +96,12 @@ class MultitaskModel(flair.nn.Classifier):
 
         If single sentence is assigned to several tasks (i.e. same corpus but different tasks), then the model
         assignment for this batch is randomly chosen.
-        :param sentences: batch of sentences
-        :param all_tasks: use all tasks of each sentence. If deactivated, a random task will be sampled
-        :return: Key-value pairs as (task_id, list of sentences ids in batch)
+
+        Args:
+            sentences: batch of sentences
+            all_tasks: use all tasks of each sentence. If deactivated, a random task will be sampled
+
+        Returns: Key-value pairs as (task_id, list of sentences ids in batch)
         """
         batch_to_task_mapping: Dict[str, List[int]] = {}
         for sentence_id, sentence in enumerate(sentences):
@@ -107,28 +116,26 @@ class MultitaskModel(flair.nn.Classifier):
                     batch_to_task_mapping[multitask_id.value] = [sentence_id]
         return batch_to_task_mapping
 
-    def evaluate(
+    def evaluate(  # type: ignore[override]
         self,
         data_points,
         gold_label_type: str,
         out_path: Optional[Union[str, Path]] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
-        gold_label_dictionary: Optional[Dictionary] = None,
-        return_loss: bool = True,
         evaluate_all: bool = True,
         **evalargs,
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation results and a loss value.
 
-        :param sentences: batch of sentences
-        :param embeddings_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),
-            'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
-        :param mini_batch_size: size of batches
-        :param evaluate_all: choose if all tasks should be evaluated, or a single one, depending on gold_label_type
-        :return: Tuple of Result object and loss value (float)
+        Args:
+            data_points: batch of sentences
+            gold_label_type: if evaluate_all is False, specify the task to evaluate by the task_id.
+            out_path: if not None, predictions will be created and saved at the respective file.
+            main_evaluation_metric: Specify which metric to highlight as main_score
+            evaluate_all: choose if all tasks should be evaluated, or a single one, depending on gold_label_type
+            **evalargs: arguments propagated to :meth:`flair.nn.Model.evaluate`
+
+        Returns: Tuple of Result object and loss value (float)
         """
         if not evaluate_all:
             if gold_label_type not in self.tasks:
@@ -144,12 +151,7 @@ class MultitaskModel(flair.nn.Classifier):
                 data,
                 gold_label_type=self.tasks[gold_label_type].label_type,
                 out_path=out_path,
-                embedding_storage_mode=embedding_storage_mode,
-                mini_batch_size=mini_batch_size,
                 main_evaluation_metric=main_evaluation_metric,
-                exclude_labels=exclude_labels,
-                gold_label_dictionary=gold_label_dictionary,
-                return_loss=return_loss,
                 **evalargs,
             )
 
@@ -165,12 +167,7 @@ class MultitaskModel(flair.nn.Classifier):
                 data_points=[data_points[i] for i in split],
                 gold_label_type=self.tasks[task_id].label_type,
                 out_path=f"{out_path}_{task_id}.txt" if out_path is not None else None,
-                embedding_storage_mode=embedding_storage_mode,
-                mini_batch_size=mini_batch_size,
                 main_evaluation_metric=main_evaluation_metric,
-                exclude_labels=exclude_labels,
-                gold_label_dictionary=gold_label_dictionary,
-                return_loss=return_loss,
                 **evalargs,
             )
 
@@ -204,10 +201,7 @@ class MultitaskModel(flair.nn.Classifier):
         )
 
     def _get_state_dict(self):
-        """Returns the state dict of the multitask model which has multiple models underneath.
-
-        :return model_state: model state for the multitask model
-        """
+        """Returns the state dict of the multitask model which has multiple models underneath."""
         initial_model_state = super()._get_state_dict()
         initial_model_state["state_dict"] = {}  # the model state is stored per model already.
         model_state = {

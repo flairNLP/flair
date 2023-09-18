@@ -183,11 +183,13 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         Sets necessary attributes and finally 'switches' to the new task. Parameters are similar to the constructor
         except for model choice, batch size and negative sampling. This method does not store the resultant model onto
         disk.
-        :param task_name: a string depicting the name of the task
-        :param label_dictionary: dictionary of the labels you want to predict
-        :param label_type: string to identify the label type ('ner', 'sentiment', etc.)
-        :param multi_label: whether this task is a multi-label prediction problem
-        :param force_switch: if True, will overwrite existing task with same name
+
+        Args:
+            task_name: a string depicting the name of the task
+            label_dictionary: dictionary of the labels you want to predict
+            label_type: string to identify the label type ('ner', 'sentiment', etc.)
+            multi_label: whether this task is a multi-label prediction problem
+            force_switch: if True, will overwrite existing task with same name
         """
         if task_name in self._task_specific_attributes and not force_switch:
             log.warning(f"Task `{task_name}` already exists in TARS model. Switching to it.")
@@ -262,9 +264,10 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
     ):
         """Make zero shot predictions from the TARS model.
 
-        :param sentences: input sentence objects to classify
-        :param candidate_label_set: set of candidate labels
-        :param multi_label: indicates whether multi-label or single class prediction. Defaults to True.
+        Args:
+            sentences: input sentence objects to classify
+            candidate_label_set: set of candidate labels
+            multi_label: indicates whether multi-label or single class prediction. Defaults to True.
         """
         # check if candidate_label_set is empty
         if candidate_label_set is None or len(candidate_label_set) == 0:
@@ -331,20 +334,23 @@ class TARSTagger(FewshotClassifier):
         label_dictionary: Optional[Dictionary] = None,
         label_type: Optional[str] = None,
         embeddings: Union[TransformerWordEmbeddings, str] = "bert-base-uncased",
-        num_negative_labels_to_sample: int = 2,
+        num_negative_labels_to_sample: Optional[int] = 2,
         prefix: bool = True,
         **tagger_args,
     ) -> None:
         """Initializes a TarsTagger.
 
-        :param task_name: a string depicting the name of the task
-        :param label_dictionary: dictionary of labels you want to predict
-        :param embeddings: name of the pre-trained transformer model e.g.,
-        'bert-base-uncased' etc
-        :param num_negative_labels_to_sample: number of negative labels to sample for each
-        positive labels against a sentence during training. Defaults to 2 negative
-        labels for each positive label. The model would sample all the negative labels
-        if None is passed. That slows down the training considerably.
+        Args:
+            task_name: a string depicting the name of the task
+            label_dictionary: dictionary of labels you want to predict
+            label_type: label_type: name of the label
+            embeddings: name of the pre-trained transformer model e.g., 'bert-base-uncased'
+            num_negative_labels_to_sample: number of negative labels to sample for each positive labels against a
+                sentence during training. Defaults to 2 negative labels for each positive label. The model would sample
+                all the negative labels if None is passed. That slows down the training considerably.
+            prefix: if True, the label will be concatenated at the start, else on the end.
+            **tagger_args: The arguments propagated to :meth:`FewshotClassifier.__init__`
+
         """
         super().__init__()
 
@@ -664,24 +670,27 @@ class TARSClassifier(FewshotClassifier):
         label_dictionary: Optional[Dictionary] = None,
         label_type: Optional[str] = None,
         embeddings: Union[TransformerDocumentEmbeddings, str] = "bert-base-uncased",
-        num_negative_labels_to_sample: int = 2,
+        num_negative_labels_to_sample: Optional[int] = 2,
         prefix: bool = True,
         **tagger_args,
     ) -> None:
         """Initializes a TarsClassifier.
 
-        :param task_name: a string depicting the name of the task
-        :param label_dictionary: dictionary of labels you want to predict
-        :param embeddings: name of the pre-trained transformer model e.g.,
-        'bert-base-uncased' etc
-        :param num_negative_labels_to_sample: number of negative labels to sample for each
-        positive labels against a sentence during training. Defaults to 2 negative
-        labels for each positive label. The model would sample all the negative labels
-        if None is passed. That slows down the training considerably.
-        :param multi_label: auto-detected by default, but you can set this to True
-        to force multi-label predictionor False to force single-label prediction
-        :param multi_label_threshold: If multi-label you can set the threshold to make predictions
-        :param beta: Parameter for F-beta score for evaluation and training annealing
+        Args:
+            task_name: a string depicting the name of the task.
+            label_dictionary: dictionary of labels you want to predict.
+            label_type: label_type: name of the label
+            embeddings: name of the pre-trained transformer model e.g., 'bert-base-uncased'.
+            num_negative_labels_to_sample: number of negative labels to sample for each positive labels against a
+                sentence during training. Defaults to 2 negative labels for each positive label.
+                The model would sample all the negative labels if None is passed.
+                That slows down the training considerably.
+            multi_label: auto-detected by default, but you can set this to True to force multi-label predictions
+                or False to force single-label predictions.
+            multi_label_threshold: If multi-label you can set the threshold to make predictions.
+            beta: Parameter for F-beta score for evaluation and training annealing.
+            prefix: if True, the label will be concatenated at the start, else on the end.
+            **tagger_args: The arguments propagated to :meth:`FewshotClassifier.__init__`
         """
         super().__init__()
 

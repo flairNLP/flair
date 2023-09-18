@@ -9,9 +9,18 @@ from transformers import set_seed as hf_set_seed
 from .file_utils import set_proxies
 
 cache_root = Path(os.getenv("FLAIR_CACHE_ROOT", Path(Path.home(), ".flair")))
+"""The path to the cache folder Flair is using.
+
+This value defaults to `<Home Directory>/.flair`.
+You can choose the path by setting the `FLAIR_CACHE_ROOT` environment variable.
+"""
 
 device: torch.device
-"""Flair is using a single device for everything. You can set this device by overwriting this variable."""
+"""Flair is using a single device for everything. You can set this device by overwriting this variable.
+
+This value will be automatically set to the first found GPU if available and to CPU otherwise.
+You can choose a specific GPU, by setting the `FLAIR_DEVICE` environment variable to its index.
+"""
 
 
 # global variable: device
@@ -25,6 +34,7 @@ else:
 
 # global variable: version
 __version__ = "0.12.2"
+"""The current version of the flair library installed."""
 
 # global variable: arrow symbol
 _arrow = " → "
@@ -55,9 +65,21 @@ logging.config.dictConfig(
 )
 
 logger = logging.getLogger("flair")
+"""The logger used by Flair.
+
+You can reconfigure it to change the log output to your likings.
+"""
 
 
 def set_seed(seed: int):
+    """Set the seed for all random generators used in training.
+
+    Use this method to guarantee reproducibility of experiments.
+
+    Args:
+        seed: any value you want
+
+    """
     hf_set_seed(seed)
 
 

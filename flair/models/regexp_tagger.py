@@ -10,7 +10,8 @@ from flair.data import Sentence, Span, Token
 class TokenCollection:
     """A utility class for RegexpTagger to hold all tokens for a given Sentence and define some functionality.
 
-    :param sentence: A Sentence object
+    Args:
+        sentence: A Sentence object
     """
 
     sentence: Sentence
@@ -33,8 +34,10 @@ class TokenCollection:
         spanning the tokens included in the interval. If the interval is overlapping with a token span, a
         ValueError is raised
 
-        :param span: Start and end pos of the requested span as tuple
-        :return: A span object spanning the requested token interval
+        Args:
+            span: Start and end pos of the requested span as tuple
+
+        Returns: A span object spanning the requested token interval
         """
         span_start: int = self.__tokens_start_pos.index(span[0])
         span_end: int = self.__tokens_end_pos.index(span[1])
@@ -52,7 +55,8 @@ class RegexpTagger:
 
         If a match violates (in this case overlaps) a token span, an exception is raised.
 
-        :param mapping: A list of tuples or a single tuple representing a mapping as regexp -> label
+        Args:
+            mapping: A list of tuples or a single tuple representing a mapping as regexp -> label
         """
         self._regexp_mapping: Dict[str, typing.Pattern] = {}
         self.register_labels(mapping=mapping)
@@ -64,7 +68,8 @@ class RegexpTagger:
     def register_labels(self, mapping: Union[List[Tuple[str, str]], Tuple[str, str]]):
         """Register a regexp -> label mapping.
 
-        :param mapping: A list of tuples or a single tuple representing a mapping as regexp -> label
+        Args:
+            mapping: A list of tuples or a single tuple representing a mapping as regexp -> label
         """
         mapping = self._listify(mapping)
 
@@ -79,7 +84,8 @@ class RegexpTagger:
     def remove_labels(self, labels: Union[List[str], str]):
         """Remove a registered regexp -> label mapping given by label.
 
-        :param labels: A list of labels or a single label as strings.
+        Args:
+            labels: A list of labels or a single label as strings.
         """
         labels = self._listify(labels)
 

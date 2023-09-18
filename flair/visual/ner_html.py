@@ -56,12 +56,15 @@ def render_ner_html(
 ) -> str:
     """Create the html code to visualize some sentences.
 
-    :param sentences: single sentence or list of sentences to convert to HTML
-    :param title: title of the HTML page
-    :param colors: dict where keys are tags and values are color HTML codes
-    :param default_color: color to use if colors parameter is missing a tag
-    :param wrap_page: if True method returns result of processing sentences wrapped by &lt;html&gt; and &lt;body&gt; tags, otherwise - without these tags  # noqa: E501
-    :return: HTML as a string
+    Args:
+        sentences: single sentence or list of sentences to convert to HTML
+        title: title of the HTML page
+        colors: dict where keys are tags and values are color HTML codes
+        default_color: color to use if colors parameter is missing a tag
+        wrap_page: if True method returns result of processing sentences wrapped by &lt;html&gt; and &lt;body&gt; tags, otherwise - without these tags
+        label_name: the label name to specify which labels of the sentence are visualized.
+
+    Returns: HTML as a string
     """
     if isinstance(sentences, Sentence):
         sentences = [sentences]

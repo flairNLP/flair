@@ -40,22 +40,28 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         that predicts the lemma of the given token one letter at a time.
         Note that one can use data in which only those words are annotated that differ from their lemma or data
         in which all words are annotated with a (maybe equal) lemma.
-        :param embeddings: Embedding used to encode sentence
-        :param rnn_input_size: Input size of the RNN('s). Each letter of a token is represented by a hot-one-vector
-            over the given character dictionary. This vector is transformed to a input_size vector with a linear layer.
-        :param rnn_hidden_size: size of the hidden state of the RNN('s).
-        :param rnn_layers: Number of stacked RNN cells
-        :param beam_size: Number of hypothesis used when decoding the output of the RNN. Only used in prediction.
-        :param char_dict: Dictionary of characters the model is able to process. The dictionary must contain <unk> for
-            the handling of unknown characters. If None, a standard dictionary will be loaded. One can either hand
-            over a path to a dictionary or the dictionary itself.
-        :param label_type: Name of the gold labels to use.
-        :param max_sequence_length_dependent_on_input: If set to True, the maximum length of a decoded sequence in
-            the prediction depends on the sentences you want to lemmatize. To be precise the maximum length is
-            computed as the length of the longest token in the sentences plus one.
-        :param max_sequence_length: If set to True and max_sequence_length_dependend_on_input is False a fixed
-            maximum length for the decoding will be used for all sentences.
-        :param use_attention: whether to use attention. Only sensible if encoding via RNN
+
+        Args:
+            encode_characters: If True, use a character embedding to additionally encode tokens per character.
+            start_symbol_for_encoding: If True, use a start symbol for encoding characters.
+            end_symbol_for_encoding: If True, use an end symbol for encoding characters.
+            bidirectional_encoding: If True, the character encoding is bidirectional.
+            embeddings: Embedding used to encode sentence
+            rnn_input_size: Input size of the RNN('s). Each letter of a token is represented by a hot-one-vector over
+                the given character dictionary. This vector is transformed to a input_size vector with a linear layer.
+            rnn_hidden_size: size of the hidden state of the RNN('s).
+            rnn_layers: Number of stacked RNN cells
+            beam_size: Number of hypothesis used when decoding the output of the RNN. Only used in prediction.
+            char_dict: Dictionary of characters the model is able to process. The dictionary must contain <unk> for
+                the handling of unknown characters. If None, a standard dictionary will be loaded. One can either hand
+                over a path to a dictionary or the dictionary itself.
+            label_type: Name of the gold labels to use.
+            max_sequence_length_dependent_on_input: If set to True, the maximum length of a decoded sequence in
+                the prediction depends on the sentences you want to lemmatize. To be precise the maximum length is
+                computed as the length of the longest token in the sentences plus one.
+            max_sequence_length: If set to True and max_sequence_length_dependend_on_input is False a fixed
+                maximum length for the decoding will be used for all sentences.
+            use_attention: whether to use attention. Only sensible if encoding via RNN
         """
         super().__init__()
 
@@ -161,13 +167,17 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
     ):
         """For a given list of strings this function creates index vectors that represent the characters of the strings.
 
-        Each string is represented by sequence_length (maximum string length + entries for special symbold) many
+        Each string is represented by sequence_length (maximum string length + entries for special symbol) many
         indices representing characters in self.char_dict.
         One can manually set the vector length with the parameter seq_length, though the vector length is always
         at least maximum string length in the list.
-        :param end_symbol: add self.end_index at the end of each representation
-        :param start_symbol: add self.start_index in front of of each representation
-        :param padding_in_front: whether to fill up with self.dummy_index in front or in back of strings
+
+        Args:
+            seq_length: the maximum sequence length to use, if None the maximum is taken..
+            tokens: the texts of the toekens to encode
+            end_symbol: add self.end_index at the end of each representation
+            start_symbol: add self.start_index in front of each representation
+            padding_in_front: whether to fill up with self.dummy_index in front or in back of strings
         """
         # add additional columns for special symbols if necessary
         c = int(end_symbol) + int(start_symbol)
@@ -403,15 +413,14 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
     ):
         """Predict lemmas of words for a given (list of) sentence(s).
 
-        :param sentences: sentences to predict
-        :param label_name: label name used for predicted lemmas
-        :param mini_batch_size: number of tokens that are send through the RNN simultaneously, assuming batching_in_rnn
-            is set to True
-        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
-            you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
-        :param return_loss: whether or not to compute and return loss. Setting it to True only makes sense if labels
-            are provided
-        :param verbose: If True, lemmatized sentences will be printed in the console.
+        Args:
+            sentences: sentences to predict
+            label_name: label name used for predicted lemmas
+            mini_batch_size: number of tokens that are send through the RNN simultaneously, assuming batching_in_rnn is set to True
+            embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+            return_loss: whether to compute and return loss. Setting it to True only makes sense if labels are provided
+            verbose: If True, lemmatized sentences will be printed in the console.
+            return_probabilities_for_all_classes: unused parameter.
         """
         if isinstance(sentences, Sentence):
             sentences = [sentences]

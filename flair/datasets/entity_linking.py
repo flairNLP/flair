@@ -797,10 +797,11 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
         see https://arxiv.org/abs/2101.01228v2
 
         The first time you call this constructor it will automatically download the dataset.
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -940,12 +941,12 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
     def _text_to_cols(self, sentence: Sentence, links: list, outfile):
         """Convert a tokenized sentence into column format.
 
-        :param sentence: Flair Sentence object containing a tokenized post title or comment thread
-        :param links: array containing information about the starting and ending position of an entity mention, as well
-        as its corresponding wiki tag
-        :param outfile: file, to which the output is written
+        Args:
+            sentence: Flair Sentence object containing a tokenized post title or comment thread
+            links: array containing information about the starting and ending position of an entity mention, as well as its corresponding wiki tag
+            outfile: file, to which the output is written
         """
-        for i in range(0, len(sentence)):
+        for i in range(len(sentence)):
             # If there are annotated entity mentions for given post title or a comment thread
             if links:
                 # Keep track which is the correct corresponding entity link, in cases where there is >1 link in a sentence
@@ -1002,10 +1003,10 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
     def _fill_annot_array(self, annot_array: list, key: str, post_flag: bool) -> list:
         """Fills the array containing information about the entity mention annotations.
 
-        :param annot_array: array to be filled
-        :param key: reddit id, on which the post title/comment thread is matched with its corresponding annotation
-        :param post_flag: flag indicating whether the annotations are collected for the post titles (=True)
-        or comment threads (=False)
+        Args:
+            annot_array: array to be filled
+            key: reddit id, on which the post title/comment thread is matched with its corresponding annotation
+            post_flag: flag indicating whether the annotations are collected for the post titles or comment threads
         """
         while True:
             # Check if further annotations belong to the current post title or comment thread as well
@@ -1024,8 +1025,8 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
     def _fill_curr_comment(self, fix_flag: bool):
         """Extends the string containing the current comment thread, which is passed to _text_to_cols method, when the comments are parsed.
 
-        :param fix_flag: flag indicating whether the method is called when the incorrectly imported rows are parsed (=True)
-        or regular rows (=False)
+        Args:
+            fix_flag: flag indicating whether the method is called when the incorrectly imported rows are parsed or regular rows
         """
         next_row = None
         while True:
@@ -1151,19 +1152,18 @@ def from_ufsac_to_tsv(
                     txt_out.write("\n")
 
 
-def determine_tsv_file(filename: str, data_folder: Path, cut_multisense: bool = True):
+def determine_tsv_file(filename: str, data_folder: Path, cut_multisense: bool = True) -> str:
     """Checks if the converted .tsv file already exists and if not, creates it.
 
-    Returns name of the file.
-    ----------
-    string : str
-        String that contains the name of the file.
-    data_folder : str
-        String that contains the name of the folder in which the CoNLL file should reside.
-    cut_multisense : bool, optional
-        Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
-        If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
-        as one new sense. The default is True.
+    Args:
+        filename: The name of the file.
+        data_folder: The name of the folder in which the CoNLL file should reside.
+        cut_multisense: Determines whether the wn30_key tag should be cut if it contains multiple possible senses.
+            If True only the first listed sense will be used. Otherwise, the whole list of senses will be detected
+            as one new sense. The default is True.
+
+    Returns:
+        the name of the file.
     """
     if cut_multisense is True and filename not in [
         "semeval2007task17",
@@ -1211,27 +1211,18 @@ class WSD_UFSAC(MultiCorpus):
         If the constructor is called for the first time the data is automatically downloaded and transformed from xml to a tab separated column format.
         Since only the WordNet 3.0 version for senses is consistently available for all provided datasets we will only consider this version.
         Also we ignore the id annotation used in datasets that were originally created for evaluation tasks
-        :param filenames: Here you can pass a single datasetname or a list of ddatasetnames. The available names are:
-            'masc', 'omsti', 'raganato_ALL', 'raganato_semeval2007', 'raganato_semeval2013', 'raganato_semeval2015', 'raganato_senseval2', 'raganato_senseval3',
-            'semcor', 'semeval2007task17', 'semeval2007task7', 'semeval2013task12', 'semeval2015task13', 'senseval2', 'senseval2_lexical_sample_test',
-            'senseval2_lexical_sample_train', 'senseval3task1', 'senseval3task6_test', 'senseval3task6_train', 'trainomatic', 'wngt'.
-            So you can pass for example filenames = ['masc', 'omsti', 'wngt']. Default two mid-sized datasets 'masc' and 'semcor' are loaded.
-        :param base_path: You can override this to point to a specific folder but typically this should not be necessary.
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        :param cut_multisense: Boolean that determines whether or not the wn30_key tag should be cut if it contains
-                               multiple possible senses. If True only the first listed sense will be used and the
-                               suffix '_cut' will be added to the name of the CoNLL file. Otherwise the whole list of
-                               senses will be detected as one new sense. The default is True.
-        :param columns: Columns to consider when loading the dataset. You can add 1: "lemma" or 2: "pos" to the default dict {0: "text", 3: "sense"}
-            if you want to use additional pos and/or lemma for the words.
-        :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
-        :param sample_missing_splits_in_multicorpus: Whether to sample missing splits when loading the multicorpus (this is redundant if
-                                                                                                                    sample_missing_splits_in_each_corpus is True)
-        :param sample_missing_splits_in_each_corpus: Whether to sample missing splits when loading each single corpus given in filenames.
-        :param use_raganato_ALL_as_test_data: If True, the raganato_ALL dataset (Raganato et al. "Word Sense Disambiguation: A unified evaluation framework and empirical compariso")
-            will be used as test data. Note that the sample_missing_splits parameters are set to 'only_dev' in this case if set to True.
-        :param name: Name of your (costum) corpus
+
+        Args:
+            filenames: Here you can pass a single datasetname or a list of datasetnames. The available names are: 'masc', 'omsti', 'raganato_ALL', 'raganato_semeval2007', 'raganato_semeval2013', 'raganato_semeval2015', 'raganato_senseval2', 'raganato_senseval3', 'semcor', 'semeval2007task17', 'semeval2007task7', 'semeval2013task12', 'semeval2015task13', 'senseval2', 'senseval2_lexical_sample_test', 'senseval2_lexical_sample_train', 'senseval3task1', 'senseval3task6_test', 'senseval3task6_train', 'trainomatic', 'wngt',
+            base_path: You can override this to point to a specific folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+            cut_multisense: Boolean that determines whether the wn30_key tag should be cut if it contains multiple possible senses. If True only the first listed sense will be used and the suffix '_cut' will be added to the name of the CoNLL file. Otherwise the whole list of senses will be detected as one new sense. The default is True.
+            columns: Columns to consider when loading the dataset. You can add 1: "lemma" or 2: "pos" to the default dict {0: "text", 3: "sense"} if you want to use additional pos and/or lemma for the words.
+            banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
+            sample_missing_splits_in_multicorpus: Whether to sample missing splits when loading the multicorpus (this is redundant if sample_missing_splits_in_each_corpus is True)
+            sample_missing_splits_in_each_corpus: Whether to sample missing splits when loading each single corpus given in filenames.
+            use_raganato_ALL_as_test_data: If True, the raganato_ALL dataset (Raganato et al. "Word Sense Disambiguation: A unified evaluation framework and empirical compariso") will be used as test data. Note that the sample_missing_splits parameters are set to 'only_dev' in this case if set to True.
+            name: Name of your corpus
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 

@@ -64,10 +64,10 @@ class WordEmbeddingsStore:
     def __init__(self, embedding: WordEmbeddings, backend="sqlite", verbose=True) -> None:
         """Instantiates the WordEmbeddingsStore.
 
-        :param embedding: Flair WordEmbeddings instance.
-        :param backend: cache database backend name e.g ``'sqlite'``, ``'lmdb'``.
-                        Default value is ``'sqlite'``.
-        :param verbose: If `True` print information on standard output
+        Args:
+            embedding: The WordEmbeddings to store.
+            backend: cache database backend name e.g ``'sqlite'``, ``'lmdb'``. Default value is ``'sqlite'``.
+            verbose: If `True` print information on standard output
         """
         self.items = ""
 

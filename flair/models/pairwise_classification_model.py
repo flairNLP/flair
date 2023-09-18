@@ -26,13 +26,18 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
     ) -> None:
         """Initializes a TextPairClassifier.
 
-        :param embeddings: embeddings used to embed each data point
-        :param label_dictionary: dictionary of labels you want to predict
-        :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
-        or False to force single-label prediction
-        :param multi_label_threshold: If multi-label you can set the threshold to make predictions
-        :param loss_weights: Dictionary of weights for labels for the loss function
-        (if any label's weight is unspecified it will default to 1.0)
+        Args:
+            label_type: label_type: name of the label
+            embed_separately: if True, the sentence embeddings will be concatenated,
+              if False both sentences will be combined and newly embedded.
+            embeddings: embeddings used to embed each data point
+            label_dictionary: dictionary of labels you want to predict
+            multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
+               or False to force single-label prediction
+            multi_label_threshold: If multi-label you can set the threshold to make predictions
+            loss_weights: Dictionary of weights for labels for the loss function.
+              If any label's weight is unspecified it will default to 1.0
+            **classifierargs: The arguments propagated to :meth:`flair.nn.DefaultClassifier.__init__`
         """
         super().__init__(
             **classifierargs,

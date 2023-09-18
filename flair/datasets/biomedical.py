@@ -22,7 +22,7 @@ from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from zipfile import BadZipFile, LargeZipFile
 
 import ftfy
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
@@ -331,8 +331,8 @@ class CoNLLWriter:
     ) -> None:
         """Initialize CoNLLWriter.
 
-        :param sentence_splitter: Implementation of :class:`SentenceSplitter` which
-        segments the text into sentences and tokens
+        Args:
+            sentence_splitter: Sentence splitter which segments the text into sentences and tokens.
         """
         self.sentence_splitter = sentence_splitter
 
@@ -408,15 +408,12 @@ class HunerDataset(ColumnCorpus, ABC):
     """Base class for HUNER datasets.
 
     Every subclass has to implement the following methods:
-      - `to_internal', which reads the complete data set (incl. train, dev, test) and returns the corpus
-        as InternalBioNerDataset
-      - `split_url', which returns the base url (i.e. without '.train', '.dev', '.test') to the HUNER split files
+      - "to_internal", which reads the complete data set (incl. train, dev, test) and returns the corpus as InternalBioNerDataset
+      - "split_url", which returns the base url (i.e. without '.train', '.dev', '.test') to the HUNER split files
 
     For further information see:
-      - Weber et al.: 'HUNER: improving biomedical NER with pretraining'
-        https://academic.oup.com/bioinformatics/article-abstract/36/1/295/5523847?redirectedFrom=fulltext
-      - HUNER github repository:
-        https://github.com/hu-ner/huner
+      - Weber et al.: 'HUNER: improving biomedical NER with pretraining' https://academic.oup.com/bioinformatics/article-abstract/36/1/295/5523847?redirectedFrom=fulltext
+      - HUNER github repository: https://github.com/hu-ner/huner
     """
 
     @abstractmethod

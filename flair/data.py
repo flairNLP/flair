@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, NamedTuple, Optional, Union, cast
 
 import torch
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 from torch.utils.data import Dataset, IterableDataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
@@ -69,8 +69,10 @@ class Dictionary:
     def add_item(self, item: str) -> int:
         """Add string - if already in dictionary returns its ID. if not in dictionary, it will get a new ID.
 
-        :param item: a string for which to assign an id.
-        :return: ID of string
+        Args:
+            item: a string for which to assign an id.
+
+        Returns: ID of string
         """
         bytes_item = item.encode("utf-8")
         if bytes_item not in self.item2idx:
@@ -81,8 +83,10 @@ class Dictionary:
     def get_idx_for_item(self, item: str) -> int:
         """Returns the ID of the string, otherwise 0.
 
-        :param item: string for which ID is requested
-        :return: ID of string, otherwise 0
+        Args:
+            item: string for which ID is requested
+
+        Returns: ID of string, otherwise 0
         """
         item_encoded = item.encode("utf-8")
         if item_encoded in self.item2idx:
@@ -99,8 +103,10 @@ class Dictionary:
     def get_idx_for_items(self, items: List[str]) -> List[int]:
         """Returns the IDs for each item of the list of string, otherwise 0 if not found.
 
-        :param items: List of string for which IDs are requested
-        :return: List of ID of strings
+        Args:
+            items: List of string for which IDs are requested
+
+        Returns: List of ID of strings
         """
         if not hasattr(self, "item2idx_not_encoded"):
             d = {key.decode("UTF-8"): value for key, value in self.item2idx.items()}
@@ -706,15 +712,17 @@ class Sentence(DataPoint):
     ) -> None:
         """Class to hold all metadata related to a text.
 
-        Metadata can be tokens, predictions, language code, ...
-        :param text: original string (sentence), or a list of string tokens (words)
-        :param use_tokenizer: a custom tokenizer (default is :class:`SpaceTokenizer`)
-            more advanced options are :class:`SegTokTokenizer` to use segtok or :class:`SpacyTokenizer`
-            to use Spacy library if available). Check the implementations of abstract class Tokenizer or
-            implement your own subclass (if you need it). If instead of providing a Tokenizer, this parameter
-            is just set to True (deprecated), :class:`SegtokTokenizer` will be used.
-        :param language_code: Language of the sentence
-        :param start_position: Start char offset of the sentence in the superordinate document
+        Metadata can be tokens, labels, predictions, language code, etc.
+
+        Args:
+            text: original string (sentence), or a pre tokenized list of tokens.
+            use_tokenizer: Specify a custom tokenizer to split the text into tokens. The Default is
+                :class:`flair.tokenization.SegTokTokenizer`. If `use_tokenizer` is set to False,
+                :class:`flair.tokenization.SpaceTokenizer` will be used instead. The tokenizer will be ignored,
+                if `text` refers to pretokenized tokens.
+            language_code: Language of the sentence. If not provided, [langdetect](https://pypi.org/project/langdetect/)
+                will be called when the language_code is accessed for the first time.
+            start_position: Start char offset of the sentence in the superordinate document.
         """
         super().__init__()
 
@@ -1354,11 +1362,14 @@ class Corpus(typing.Generic[T_co]):
 
         By defining `max_tokens` you can set the maximum number of tokens that should be contained in the dictionary.
         If there are more than `max_tokens` tokens in the corpus, the most frequent tokens are added first.
-        If `min_freq` is set the a value greater than 1 only tokens occurring more than `min_freq` times are considered
+        If `min_freq` is set to a value greater than 1 only tokens occurring more than `min_freq` times are considered
         to be added to the dictionary.
-        :param max_tokens: the maximum number of tokens that should be added to the dictionary (-1 = take all tokens)
-        :param min_freq: a token needs to occur at least `min_freq` times to be added to the dictionary (-1 = there is no limitation)
-        :return: dictionary of tokens
+
+        Args:
+            max_tokens: the maximum number of tokens that should be added to the dictionary (-1 = take all tokens)
+            min_freq: a token needs to occur at least `min_freq` times to be added to the dictionary (-1 = there is no limitation)
+
+        Returns: dictionary of tokens
         """
         tokens = self._get_most_common_tokens(max_tokens, min_freq)
 
@@ -1563,12 +1574,13 @@ class Corpus(typing.Generic[T_co]):
     ):
         """Generates uniform label noise distribution in the chosen dataset split.
 
-        :label_type: the type of labels for which the noise should be simulated.
-        :labels: an array with unique labels of said type (retrievable from label dictionary).
-        :noise_share: the desired share of noise in the train split.
-        :split: in which dataset split the noise is to be simulated.
-        :noise_transition_matrix: provides pre-defined probabilities for label flipping based on the
-        initial label value (relevant for class-dependent label noise simulation).
+        Args:
+            label_type: the type of labels for which the noise should be simulated.
+            labels: an array with unique labels of said type (retrievable from label dictionary).
+            noise_share: the desired share of noise in the train split.
+            split: in which dataset split the noise is to be simulated.
+            noise_transition_matrix: provides pre-defined probabilities for label flipping based on the initial
+                label value (relevant for class-dependent label noise simulation).
         """
         import numpy as np
 
@@ -1664,7 +1676,14 @@ class Corpus(typing.Generic[T_co]):
 
     @deprecated(version="0.8", reason="Use 'make_label_dictionary' instead.")
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
-        # Make the tag dictionary
+        """Create a tag dictionary of a given label type.
+
+        Args:
+            tag_type: the label type to gather the tag labels
+
+        Returns: A Dictionary containing the labeled tags, including "O" and "<START>" and "<STOP>"
+
+        """
         tag_dictionary: Dictionary = Dictionary(add_unk=False)
         tag_dictionary.add_item("O")
         for sentence in _iter_dataset(self.get_all_sentences()):
@@ -1729,7 +1748,6 @@ class ConcatFlairDataset(Dataset):
     This class is useful to assemble different existing datasets.
 
     Args:
-    ----
         datasets (sequence): List of datasets to be concatenated
     """
 

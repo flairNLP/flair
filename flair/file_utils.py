@@ -30,11 +30,12 @@ url_proxies: Optional[typing.Dict[str, str]] = None
 
 
 def set_proxies(proxies: typing.Dict[str, str]) -> None:
-    """Allows for data downloaded from urls to be forwarded to a proxy.
+    r"""Allows for data downloaded from urls to be forwarded to a proxy.
 
     see https://requests.readthedocs.io/en/latest/user/advanced/#proxies
-    :param proxies: A dictionary of proxies according to the requests documentation.
-    :return: None
+
+    Args:
+        proxies: A dictionary of proxies according to the requests documentation.
     """
     global url_proxies
     url_proxies = proxies
@@ -44,8 +45,6 @@ def load_big_file(f: str):
     """Workaround for loading a big pickle file.
 
     Files over 2GB cause pickle errors on certain Mac and Windows distributions.
-    :param f:
-    :return:
     """
     with open(f, "rb") as f_in:
         # mmap seems to be much more memory efficient
@@ -147,10 +146,11 @@ def unzip_file(file: Union[str, Path], unzip_to: Union[str, Path]):
 def unpack_file(file: Path, unpack_to: Path, mode: Optional[str] = None, keep: bool = True):
     """Unpacks an archive file to the given location.
 
-    :param file Archive file to unpack
-    :param unpack_to Destination where to store the output
-    :param mode Type of the archive (zip, tar, gz, targz, rar)
-    :param keep Indicates whether to keep the archive after extraction or delete it
+    Args:
+        file: Archive file to unpack
+        unpack_to: Destination where to store the output
+        mode: Type of the archive (zip, tar, gz, targz, rar)
+        keep: Indicates whether to keep the archive after extraction or delete it
     """
     if mode == "zip" or (mode is None and str(file).endswith("zip")):
         from zipfile import ZipFile

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Generic, List, Optional, Union
 
 import torch.utils.data.dataloader
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 
 from flair.data import DT, FlairDataset, Sentence, Tokenizer
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
@@ -44,7 +44,8 @@ class FlairDatapointDataset(FlairDataset, Generic[DT]):
     def __init__(self, datapoints: Union[DT, List[DT]]) -> None:
         """Instantiate FlairDatapointDataset.
 
-        :param sentences: DT or List of DT that make up FlairDatapointDataset
+        Args:
+            datapoints: DT or List of DT that make up FlairDatapointDataset
         """
         # cast to list if necessary
         if not isinstance(datapoints, list):
@@ -77,11 +78,11 @@ class StringDataset(FlairDataset):
     ) -> None:
         """Instantiate StringDataset.
 
-        :param texts: a string or List of string that make up StringDataset
-        :param use_tokenizer: Custom tokenizer to use (default is SpaceTokenizer,
-        more advanced options are SegTokTokenizer to use segtok or SpacyTokenizer to use Spacy library models
-        if available). Check the code of subclasses of Tokenizer to implement your own (if you need it).
-        If instead of providing a function, this parameter is just set to True, SegTokTokenizer will be used.
+        Args:
+            texts: a string or List of string that make up StringDataset
+            use_tokenizer:
+                Custom tokenizer to use. If instead of providing a function, this parameter is just set to True,
+                :class:`flair.tokenization.SegTokTokenizer` will be used.
         """
         # cast to list if necessary
         if isinstance(texts, str):
@@ -130,19 +131,22 @@ class MongoDataset(FlairDataset):
         'Plats': 'Abrahamsby'
         }
 
-        :param query: Query, e.g. {'Län': 'Stockholms län'}
-        :param host: Host, e.g. 'localhost',
-        :param port: Port, e.g. 27017
-        :param database: Database, e.g. 'rosenberg',
-        :param collection: Collection, e.g. 'book',
-        :param text_field: Text field, e.g. 'Beskrivning',
-        :param categories_field: List of category fields, e.g ['Län', 'Härad', 'Tingslag', 'Församling', 'Plats'],
-        :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
-        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
-        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
-        :param tokenizer: Custom tokenizer to use (default SegtokTokenizer)
-        :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
-        :return: list of sentences
+        Args:
+            query: Query, e.g. {'Län': 'Stockholms län'}
+            host: Host, e.g. 'localhost',
+            port: Port, e.g. 27017
+            database: Database, e.g. 'rosenberg',
+            collection: Collection, e.g. 'book',
+            text_field: Text field, e.g. 'Beskrivning',
+            categories_field: List of category fields, e.g ['Län', 'Härad', 'Tingslag', 'Församling', 'Plats'],
+            max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
+            max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
+            max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+            tokenizer: Custom tokenizer to use (default SegtokTokenizer)
+            in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
+            tag_type: The tag type to assign labels to.
+
+        Returns: list of sentences
         """
         # first, check if pymongo is installed
         try:

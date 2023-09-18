@@ -76,11 +76,12 @@ class MetricRecord:
     ) -> None:
         """Create a metric record.
 
-        :param name: Name of the metric.
-        :param typ: Type of metric.
-        :param value: Value of the metric (can be anything: scalar, tensor,
-            image, etc.).
-        :param walltime: Time of recording this metric.
+        Args:
+            name: Name of the metric.
+            typ: Type of metric.
+            value: Value of the metric (can be anything: scalar, tensor, image, etc.).
+            global_step: The time_step of the log. This should be incremented the next time this metric is logged again. E.g. if you log every epoch, set the global_step to the current epoch.
+            walltime: Time of recording this metric.
         """
         self.name: MetricName = MetricName(name)
         self.typ: RecordType = typ

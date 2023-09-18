@@ -94,12 +94,16 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
     ) -> None:
         """Initializes an EntityLinker.
 
-        :param embeddings: embeddings used to embed the words/sentences
-        :param label_dictionary: dictionary that gives ids to all classes. Should contain <unk>
-        :param pooling_operation: either 'average', 'first', 'last' or 'first&last'. Specifies the way of how text representations of entity mentions (with more than one word) are handled.
-        E.g. 'average' means that as text representation we take the average of the embeddings of the words in the mention. 'first&last' concatenates
-        the embedding of the first and the embedding of the last word.
-        :param label_type: name of the label you use.
+        Args:
+            embeddings: embeddings used to embed the tokens of the sentences.
+            label_dictionary: dictionary that gives ids to all classes. Should contain <unk>.
+            pooling_operation: either `average`, `first`, `last` or `first_last`. Specifies the way of how text
+                representations of entity mentions (with more than one token) are handled. E.g. `average` means that as
+                text representation we take the average of the embeddings of the token in the mention.
+                `first_last` concatenates the embedding of the first and the embedding of the last token.
+            label_type: name of the label you use.
+            candidates: If provided, use a :class:`CandidateGenerator` for prediction candidates.
+            **classifierargs: The arguments propagated to :meth:`flair.nn.DefaultClassifier.__init__`
         """
         super().__init__(
             embeddings=embeddings,

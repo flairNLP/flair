@@ -38,7 +38,8 @@ class Pluggable:
     def __init__(self, *, plugins: Sequence[PluginArgument] = []) -> None:
         """Initialize a `Pluggable`.
 
-        :param plugins: Plugins which should be attached to this `Pluggable`.
+        Args:
+            plugins: Plugins which should be attached to this `Pluggable`.
         """
         self._hook_handles: Dict[EventIdenifier, Dict[HookHandleId, HookHandle]] = defaultdict(dict)
 
@@ -77,8 +78,9 @@ class Pluggable:
     def register_hook(self, func: Callable, *events: EventIdenifier):
         """Register a hook.
 
-        :param func: Function to be called when the event is emitted.
-        :param *events: List of events to call this function on.
+        Args:
+            func: Function to be called when the event is emitted.
+            *events: List of events to call this function on.
         """
         self.validate_event(*events)
 
@@ -123,10 +125,11 @@ class HookHandle:
     ) -> None:
         """Intitialize `HookHandle`.
 
-        :param _id: Id, the callback is stored as in the `Pluggable`.
-        :param *events: List of events, the callback is registered for.
-        :param func: The callback function.
-        :param pluggable: The `Pluggable` where the callback is registered.
+        Args:
+            _id: Id, the callback is stored as in the `Pluggable`.
+            events: List of events, the callback is registered for.
+            func: The callback function.
+            pluggable: The `Pluggable` where the callback is registered.
         """
         pluggable.validate_event(*events)
 
@@ -194,7 +197,7 @@ class BasePlugin:
             try:
                 func = getattr(self, name)
 
-                # get attribute hook events (mayr aise an AttributeError)
+                # get attribute hook events (may raise an AttributeError)
                 events = func._plugin_hook_events
 
                 # register function as a hook
