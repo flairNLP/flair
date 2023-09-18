@@ -1125,7 +1125,7 @@ class ONTONOTES(MultiFileColumnCorpus):
             speakers.append(speaker if speaker != "-" else None)
 
         named_entities = span_labels[0]
-        srl_frames = [(predicate, labels) for predicate, labels in zip(verbal_predicates, span_labels[1:])]
+        srl_frames = list(zip(verbal_predicates, span_labels[1:]))
 
         # this would not be reached if parse_pieces contained None, hence the cast
         parse_tree = "".join(cast(List[str], parse_pieces)) if all(parse_pieces) else None
