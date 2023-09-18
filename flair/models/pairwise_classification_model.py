@@ -37,7 +37,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             multi_label_threshold: If multi-label you can set the threshold to make predictions
             loss_weights: Dictionary of weights for labels for the loss function.
               If any label's weight is unspecified it will default to 1.0
-            **classifierargs: The arguments propagated to :met:`flair.nn.DefaultClassifier.__init__`
+            **classifierargs: The arguments propagated to :meth:`flair.nn.DefaultClassifier.__init__`
         """
         super().__init__(
             **classifierargs,

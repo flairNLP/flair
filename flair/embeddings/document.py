@@ -44,7 +44,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
             layer_mean: If True, uses a scalar mix of layers as embedding
             fine_tune: If True, allows transformers to be fine-tuned during training
             is_token_embedding: If True, the embedding can be used as TokenEmbedding too.
-            **kwargs: Arguments propagated to :met:`flair.embeddings.transformer.TransformerEmbeddings.__init__`
+            **kwargs: Arguments propagated to :meth:`flair.embeddings.transformer.TransformerEmbeddings.__init__`
         """
         TransformerEmbeddings.__init__(
             self,

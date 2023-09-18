@@ -30,7 +30,7 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
             label_dictionary: dictionary of labels or BIO/BIOES tags you want to predict
             label_type: string identifier for tag type
             span_encoding: the format to encode spans as tags, either "BIO" or "BIOES"
-            **classifierargs: The arguments propagated to :met:`flair.nn.DefaultClassifier.__init__`
+            **classifierargs: The arguments propagated to :meth:`flair.nn.DefaultClassifier.__init__`
         """
         # if the classifier predicts BIO/BIOES span labels, the internal label dictionary must be computed
         if label_dictionary.span_labels:

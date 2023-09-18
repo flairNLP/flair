@@ -103,7 +103,7 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
                 `first_last` concatenates the embedding of the first and the embedding of the last token.
             label_type: name of the label you use.
             candidates: If provided, use a :class:`CandidateGenerator` for prediction candidates.
-            **classifierargs: The arguments propagated to :met:`flair.nn.DefaultClassifier.__init__`
+            **classifierargs: The arguments propagated to :meth:`flair.nn.DefaultClassifier.__init__`
         """
         super().__init__(
             embeddings=embeddings,

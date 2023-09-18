@@ -349,7 +349,7 @@ class TARSTagger(FewshotClassifier):
                 sentence during training. Defaults to 2 negative labels for each positive label. The model would sample
                 all the negative labels if None is passed. That slows down the training considerably.
             prefix: if True, the label will be concatenated at the start, else on the end.
-            **tagger_args: The arguments propagated to :met:`FewshotClassifier.__init__`
+            **tagger_args: The arguments propagated to :meth:`FewshotClassifier.__init__`
 
         """
         super().__init__()
@@ -690,7 +690,7 @@ class TARSClassifier(FewshotClassifier):
             multi_label_threshold: If multi-label you can set the threshold to make predictions.
             beta: Parameter for F-beta score for evaluation and training annealing.
             prefix: if True, the label will be concatenated at the start, else on the end.
-            **tagger_args: The arguments propagated to :met:`FewshotClassifier.__init__`
+            **tagger_args: The arguments propagated to :meth:`FewshotClassifier.__init__`
         """
         super().__init__()
 

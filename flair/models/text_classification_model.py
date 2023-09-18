@@ -39,7 +39,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
             beta: Parameter for F-beta score for evaluation and training annealing
             loss_weights: Dictionary of weights for labels for the loss function. If any label's weight is
                 unspecified it will default to 1.0
-            **classifierargs: The arguments propagated to :met:`flair.nn.DefaultClassifier.__init__`
+            **classifierargs: The arguments propagated to :meth:`flair.nn.DefaultClassifier.__init__`
         """
         super().__init__(
             **classifierargs,

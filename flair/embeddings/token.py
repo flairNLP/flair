@@ -45,7 +45,7 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
             model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for options)
             is_document_embedding: If True, the embedding can be used as DocumentEmbedding too.
             allow_long_sentences: If True, too long sentences will be patched and strided and afterwards combined.
-            **kwargs: Arguments propagated to :met:`flair.embeddings.transformer.TransformerEmbeddings.__init__`
+            **kwargs: Arguments propagated to :meth:`flair.embeddings.transformer.TransformerEmbeddings.__init__`
         """
         TransformerEmbeddings.__init__(
             self,
