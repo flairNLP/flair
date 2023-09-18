@@ -6,21 +6,14 @@ import string
 import subprocess
 import tempfile
 import time
-import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Type, Union, cast
+from typing import Dict, List, Optional, Tuple, Type, Union, cast
 
-import joblib
 import numpy as np
-import scipy
 import torch
-from huggingface_hub import hf_hub_download
-from scipy.sparse import csr_matrix
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 
 import flair
@@ -28,22 +21,13 @@ from flair.data import Concept, Label, Sentence, Span
 from flair.datasets import (
     CTD_CHEMICALS_DICTIONARY,
     CTD_DISEASES_DICTIONARY,
-    HunerEntityLinkingDictionary,
     NCBI_GENE_HUMAN_DICTIONARY,
     NCBI_TAXONOMY_DICTIONARY,
+    HunerEntityLinkingDictionary,
     KnowledgebaseLinkingDictionary,
 )
-from flair.embeddings import TransformerDocumentEmbeddings, DocumentTFIDFEmbeddings, DocumentEmbeddings
+from flair.embeddings import DocumentEmbeddings, DocumentTFIDFEmbeddings, TransformerDocumentEmbeddings
 from flair.file_utils import cached_path
-
-FAISS_VERSION = "1.7.4"
-
-try:
-    import faiss
-except ImportError as error:
-    raise ImportError(
-        f"You need to install faiss to run the biomedical entity linking: `pip install faiss-cpu=={FAISS_VERSION}`"
-    ) from error
 
 logger = logging.getLogger("flair")
 
@@ -673,7 +657,6 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         Returns:
             List containing a list of entity linking candidates per entity mention from the input
         """
-
         mention_embs = self.emb_search(entity_mentions)
         all_scores = mention_embs @ self._precomputed_embeddings.T
         selected_indices = np.argsort(all_scores, axis=1)[:, :top_k]

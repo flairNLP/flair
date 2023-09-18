@@ -1,6 +1,6 @@
 import csv
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterable, Iterator, List, Optional, Union
 
 import flair
 from flair.data import Concept

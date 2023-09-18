@@ -839,7 +839,6 @@ class Sentence(DataPoint):
         # log a warning if the dataset is empty
         if text == "":
             log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
-            breakpoint()
 
     @property
     def unlabeled_identifier(self):
