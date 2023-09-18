@@ -323,6 +323,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         fine_tune: bool,
         truncate: bool,
         use_lang_emb: bool,
+        cls_pooling: str,
         is_document_embedding: bool = False,
         is_token_embedding: bool = False,
         force_device: Optional[torch.device] = None,
@@ -349,9 +350,11 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         self.force_max_length = force_max_length
         self.feature_extractor = feature_extractor
         self.use_context_separator = use_context_separator
+        self.cls_pooling = cls_pooling
 
         tokenizer_params = list(inspect.signature(self.tokenizer.__call__).parameters.keys())
         self.tokenizer_needs_ocr_boxes = "boxes" in tokenizer_params
+        self.initial_cls_token = self._has_initial_cls_token()
 
         # The layoutlm tokenizer doesn't handle ocr themselves
         self.needs_manual_ocr = isinstance(self.tokenizer, (LayoutLMTokenizer, LayoutLMTokenizerFast))
@@ -363,6 +366,14 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         if not self.token_embedding and not self.document_embedding:
             raise ValueError("either 'is_token_embedding' or 'is_document_embedding' needs to be set.")
+
+    def _has_initial_cls_token(self) -> bool:
+        # most models have CLS token as last token (GPT-1, GPT-2, TransfoXL, XLNet, XLM), but BERT is initial
+        if self.tokenizer_needs_ocr_boxes:
+            # cannot run `.encode` if ocr boxes are required, assume
+            return True
+        tokens = self.tokenizer.encode("a")
+        return tokens[0] == self.tokenizer.cls_token_id
 
     def to_args(self):
         args = {
@@ -382,6 +393,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             "force_max_length": self.force_max_length,
             "feature_extractor": self.feature_extractor,
             "use_context_separator": self.use_context_separator,
+            "cls_pooling": self.cls_pooling,
         }
         if hasattr(self, "needs_manual_ocr"):
             args["needs_manual_ocr"] = self.needs_manual_ocr
@@ -396,6 +408,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
     def from_params(cls, params):
         tokenizer = cls._tokenizer_from_bytes(params.pop("tokenizer_data"))
         feature_extractor = cls._feature_extractor_from_bytes(params.pop("feature_extractor_data", None))
+        params.setdefault("cls_pooling", "cls")
         embedding = cls.create_from_state(tokenizer=tokenizer, feature_extractor=feature_extractor, **params)
         return embedding
 
@@ -702,11 +715,12 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
 @register_embeddings
 class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
-    def __init__(self, onnx_model: str, providers: List = [], **kwargs) -> None:
+    def __init__(self, onnx_model: str, providers: List = [], session_options: Optional[Dict] = None, **kwargs) -> None:
         # onnx prepares numpy arrays, no mather if it runs on gpu or cpu, the input is on cpu first.
         super().__init__(**kwargs, force_device=torch.device("cpu"))
         self.onnx_model = onnx_model
         self.providers = providers
+        self.session_options = session_options
         self.create_session()
         self.eval()
 
@@ -714,6 +728,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         params = super().to_params()
         params["providers"] = self.providers
         params["onnx_model"] = self.onnx_model
+        params["session_options"] = self.session_options
         return params
 
     @classmethod
@@ -732,7 +747,14 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
             )
             raise
         if os.path.isfile(self.onnx_model):
-            self.session = onnxruntime.InferenceSession(self.onnx_model, providers=self.providers)
+            session_options = onnxruntime.SessionOptions()
+            if self.session_options is not None:
+                for k, v in self.session_options.items():
+                    setattr(session_options, k, v)
+
+            self.session = onnxruntime.InferenceSession(
+                self.onnx_model, providers=self.providers, sess_options=session_options
+            )
         else:
             log.warning(
                 f"Could not find file '{self.onnx_model}' used in {self.__class__.name}({self.name})."
@@ -811,6 +833,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         example_sentences: List[Sentence],
         opset_version: int = 14,
         providers: Optional[List] = None,
+        session_options: Optional[dict] = None,
     ):
         path = str(path)
         example_tensors = embedding.prepare_tensors(example_sentences)
@@ -851,7 +874,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
             dynamic_axes=dynamic_axes,
             opset_version=opset_version,
         )
-        return cls(onnx_model=path, providers=providers, **embedding.to_args())
+        return cls(onnx_model=path, providers=providers, session_options=session_options, **embedding.to_args())
 
 
 @register_embeddings
@@ -1120,14 +1143,6 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         super()._load_from_state_dict(
             state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
         )
-
-    def _has_initial_cls_token(self) -> bool:
-        # most models have CLS token as last token (GPT-1, GPT-2, TransfoXL, XLNet, XLM), but BERT is initial
-        if self.tokenizer_needs_ocr_boxes:
-            # cannot run `.encode` if ocr boxes are required, assume
-            return True
-        tokens = self.tokenizer.encode("a")
-        return tokens[0] == self.tokenizer.cls_token_id
 
     def _calculate_embedding_length(self, model) -> int:
         length = len(self.layer_indexes) * model.config.hidden_size if not self.layer_mean else model.config.hidden_size
