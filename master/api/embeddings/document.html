@@ -1,0 +1,1138 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>flair.embeddings.document &#8212; flair 0.12.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09" />
+  <script src="../../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=927b94d3fcb96560df09"></script>
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=1c405622"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/embeddings/document';</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="flair.embeddings.image" href="image.html" />
+    <link rel="prev" title="flair.embeddings.base" href="base.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">flair 0.12.2 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__kbd-shortcut">Search</span>
+    <span><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       latest (dev) 
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="document.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    
+    [x]
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__kbd-shortcut">Search</span>
+    <span><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       latest (dev) 
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="document.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    
+    [x]
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../flair.html">flair</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.data.html">flair.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.datasets.html">flair.datasets</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../flair.embeddings.html">flair.embeddings</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="base.html">flair.embeddings.base</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">flair.embeddings.document</a></li>
+<li class="toctree-l3"><a class="reference internal" href="image.html">flair.embeddings.image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="legacy.html">flair.embeddings.legacy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="token.html">flair.embeddings.token</a></li>
+<li class="toctree-l3"><a class="reference internal" href="transformer.html">flair.embeddings.transformer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.models.html">flair.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.nn.html">flair.nn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.splitter.html">flair.splitter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.tokenization.html">flair.tokenization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.trainers.html">flair.trainers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flair.trainers.plugins.html">flair.trainers.plugins</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+</ul>
+</div>
+        <div class="sidebar-primary-item">
+<div id="searchbox"></div></div>
+        <div class="sidebar-primary-item">
+<h3>Versions</h3>
+<ul>
+  <li><a href="document.html">
+    
+    latest (master)
+    
+  </a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API Docs</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../flair.embeddings.html" class="nav-link">flair.embeddings</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">flair.embeddings.document</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="module-flair.embeddings.document">
+<span id="flair-embeddings-document"></span><h1>flair.embeddings.document<a class="headerlink" href="#module-flair.embeddings.document" title="Permalink to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.document.TransformerDocumentEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.document.</span></span><span class="sig-name descname"><span class="pre">TransformerDocumentEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bert-base-uncased'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'-1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_token_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L27-L63"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.TransformerDocumentEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a>, <a class="reference internal" href="transformer.html#flair.embeddings.transformer.TransformerEmbeddings" title="flair.embeddings.transformer.TransformerEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerEmbeddings</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.TransformerDocumentEmbeddings.onnx_cls">
+<span class="sig-name descname"><span class="pre">onnx_cls</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/transformer.py#L967-L972"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.TransformerDocumentEmbeddings.onnx_cls" title="Permalink to this definition">#</a></dt>
+<dd><p>alias of <a class="reference internal" href="transformer.html#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings" title="flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.TransformerDocumentEmbeddings.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bert-base-uncased'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'-1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_token_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L30-L57"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.TransformerDocumentEmbeddings.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Bidirectional transformer embeddings of words from various transformer architectures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of transformer model (see <a class="reference external" href="https://huggingface.co/transformers/pretrained_models.html">https://huggingface.co/transformers/pretrained_models.html</a> for options)</p></li>
+<li><p><strong>layers</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – string indicating which layers to take for embedding (-1 is topmost layer)</p></li>
+<li><p><strong>cls_pooling</strong> – Pooling strategy for combining token level embeddings. options are ‘cls’, ‘max’, ‘mean’.</p></li>
+<li><p><strong>layer_mean</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, uses a scalar mix of layers as embedding</p></li>
+<li><p><strong>fine_tune</strong> – If True, allows transformers to be fine-tuned during training</p></li>
+<li><p><strong>is_token_embedding</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, the embedding can be used as TokenEmbedding too.</p></li>
+<li><p><strong>**kwargs</strong> – Arguments propagated to <code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.embeddings.transformer.TransformerEmbeddings.__init__()</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.TransformerDocumentEmbeddings.create_from_state">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_from_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L59-L63"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.TransformerDocumentEmbeddings.create_from_state" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.TransformerDocumentEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TransformerDocumentEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.document.TransformerDocumentEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.TransformerDocumentEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.document.TransformerDocumentEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.TransformerDocumentEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.document.TransformerDocumentEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentPoolEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.document.</span></span><span class="sig-name descname"><span class="pre">DocumentPoolEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L67-L165"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentPoolEmbeddings.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L68-L111"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>The constructor takes a list of embeddings to be combined.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>embeddings</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]]) – a list of token embeddings</p></li>
+<li><p><strong>fine_tune_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – if set to “linear” a trainable layer is added, if set to “nonlinear”, a nonlinearity is added as well. Set this to make the pooling trainable.</p></li>
+<li><p><strong>pooling</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – a string which can any value from [‘mean’, ‘max’, ‘min’]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentPoolEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentPoolEmbeddings.embedding_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the length of the embedding vector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentPoolEmbeddings.embed">
+<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L117-L147"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings.embed" title="Permalink to this definition">#</a></dt>
+<dd><p>Add embeddings to every sentence in the given list of sentences.</p>
+<p>If embeddings are already added, updates only if embeddings are non-static.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentPoolEmbeddings.extra_repr">
+<span class="sig-name descname"><span class="pre">extra_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L152-L153"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings.extra_repr" title="Permalink to this definition">#</a></dt>
+<dd><p>Set the extra representation of the module</p>
+<p>To print customized extra information, you should re-implement
+this method in your own modules. Both single-line and multi-line
+strings are acceptable.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentPoolEmbeddings.from_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L155-L158"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentPoolEmbeddings.to_params">
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L160-L165"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentPoolEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'DocumentPoolEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentPoolEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentTFIDFEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.document.</span></span><span class="sig-name descname"><span class="pre">DocumentTFIDFEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vectorizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">vectorizer_params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L169-L228"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentTFIDFEmbeddings.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vectorizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">vectorizer_params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L170-L200"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>The constructor for DocumentTFIDFEmbeddings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_dataset</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="../flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]) – the train dataset which will be used to construct a vectorizer</p></li>
+<li><p><strong>vectorizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TfidfVectorizer</span></code>]) – a precalculated vectorizer. If provided, requires the train_dataset to be an empty list.</p></li>
+<li><p><strong>vectorizer_params</strong> – parameters given to Scikit-learn’s TfidfVectorizer constructor</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentTFIDFEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentTFIDFEmbeddings.embedding_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the length of the embedding vector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentTFIDFEmbeddings.embed">
+<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L206-L216"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.embed" title="Permalink to this definition">#</a></dt>
+<dd><p>Add embeddings to every sentence in the given list of sentences.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentTFIDFEmbeddings.from_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L221-L223"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.DocumentTFIDFEmbeddings" title="flair.embeddings.document.DocumentTFIDFEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentTFIDFEmbeddings.to_params">
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L225-L228"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentTFIDFEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'DocumentTFIDFEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentTFIDFEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentRNNEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.document.</span></span><span class="sig-name descname"><span class="pre">DocumentRNNEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnn_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject_words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject_words_dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bidirectional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locked_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnn_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GRU'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L232-L482"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentRNNEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentRNNEmbeddings.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnn_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject_words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject_words_dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bidirectional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locked_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnn_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GRU'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L233-L314"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentRNNEmbeddings.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Instantiates an RNN that works upon some token embeddings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>embeddings</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]) – a list of token embeddings</p></li>
+<li><p><strong>hidden_size</strong> – the number of hidden states in the rnn</p></li>
+<li><p><strong>rnn_layers</strong> – the number of layers for the rnn</p></li>
+<li><p><strong>reproject_words</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the rnn or not</p></li>
+<li><p><strong>reproject_words_dimension</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.</p></li>
+<li><p><strong>bidirectional</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – boolean value, indicating whether to use a bidirectional rnn or not</p></li>
+<li><p><strong>dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the dropout value to be used</p></li>
+<li><p><strong>word_dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the word dropout value to be used, if 0.0 word dropout is not used</p></li>
+<li><p><strong>locked_dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the locked dropout value to be used, if 0.0 locked dropout is not used</p></li>
+<li><p><strong>rnn_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – ‘GRU’ or ‘LSTM’</p></li>
+<li><p><strong>fine_tune</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – if True, allow to finetune the embeddings.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentRNNEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentRNNEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentRNNEmbeddings.embedding_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentRNNEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the length of the embedding vector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentRNNEmbeddings._add_embeddings_internal">
+<span class="sig-name descname"><span class="pre">_add_embeddings_internal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L320-L397"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentRNNEmbeddings._add_embeddings_internal" title="Permalink to this definition">#</a></dt>
+<dd><p>Add embeddings to all sentences in the given list of sentences.</p>
+<p>If embeddings are already added, update only if embeddings are non-static.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentRNNEmbeddings.to_params">
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L420-L436"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentRNNEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentRNNEmbeddings.from_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L438-L454"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentRNNEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentRNNEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'DocumentRNNEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentRNNEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentRNNEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentRNNEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentLMEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.document.</span></span><span class="sig-name descname"><span class="pre">DocumentLMEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flair_embeddings</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L486-L534"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentLMEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentLMEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentLMEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentLMEmbeddings.embedding_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentLMEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the length of the embedding vector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentLMEmbeddings.get_names">
+<span class="sig-name descname"><span class="pre">get_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L523-L527"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentLMEmbeddings.get_names" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns a list of embedding names.</p>
+<p>In most cases, it is just a list with one item, namely the name of
+this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
+Then, the list contains the names of all embeddings in the stack.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentLMEmbeddings.to_params">
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L529-L530"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentLMEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentLMEmbeddings.from_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L532-L534"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentLMEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.DocumentLMEmbeddings" title="flair.embeddings.document.DocumentLMEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentLMEmbeddings</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentLMEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'DocumentLMEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentLMEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentLMEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentLMEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.document.SentenceTransformerDocumentEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.document.</span></span><span class="sig-name descname"><span class="pre">SentenceTransformerDocumentEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bert-base-nli-mean-tokens'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L538-L602"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.SentenceTransformerDocumentEmbeddings.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bert-base-nli-mean-tokens'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L539-L568"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Instantiates a document embedding using the SentenceTransformer Embeddings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – string name of models from SentencesTransformer Class</p></li>
+<li><p><strong>batch_size</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – int number of sentences to processed in one batch</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.SentenceTransformerDocumentEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.document.SentenceTransformerDocumentEmbeddings.embedding_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the length of the embedding vector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.SentenceTransformerDocumentEmbeddings.from_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L594-L596"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings" title="flair.embeddings.document.SentenceTransformerDocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.SentenceTransformerDocumentEmbeddings.to_params">
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L598-L602"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.SentenceTransformerDocumentEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SentenceTransformerDocumentEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.SentenceTransformerDocumentEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentCNNEmbeddings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.document.</span></span><span class="sig-name descname"><span class="pre">DocumentCNNEmbeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">((100,</span> <span class="pre">3),</span> <span class="pre">(100,</span> <span class="pre">4),</span> <span class="pre">(100,</span> <span class="pre">5))</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject_words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject_words_dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locked_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L606-L775"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentCNNEmbeddings.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">((100,</span> <span class="pre">3),</span> <span class="pre">(100,</span> <span class="pre">4),</span> <span class="pre">(100,</span> <span class="pre">5))</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject_words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject_words_dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locked_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L607-L671"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Instantiates a CNN that works upon some token embeddings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>embeddings</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]) – a list of token embeddings</p></li>
+<li><p><strong>kernels</strong> – list of (number of kernels, kernel size)</p></li>
+<li><p><strong>reproject_words</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the rnn or not</p></li>
+<li><p><strong>reproject_words_dimension</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.</p></li>
+<li><p><strong>dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the dropout value to be used</p></li>
+<li><p><strong>word_dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the word dropout value to be used, if 0.0 word dropout is not used</p></li>
+<li><p><strong>locked_dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the locked dropout value to be used, if 0.0 locked dropout is not used</p></li>
+<li><p><strong>fine_tune</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – if True, allow to finetune the embeddings.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentCNNEmbeddings.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings.name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentCNNEmbeddings.embeddings_name">
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'DocumentCNNEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentCNNEmbeddings.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentCNNEmbeddings.embedding_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the length of the embedding vector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentCNNEmbeddings._add_embeddings_internal">
+<span class="sig-name descname"><span class="pre">_add_embeddings_internal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L677-L754"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings._add_embeddings_internal" title="Permalink to this definition">#</a></dt>
+<dd><p>Add embeddings to all sentences in the given list of sentences.</p>
+<p>If embeddings are already added, update only if embeddings are non-static.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentCNNEmbeddings.from_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L760-L763"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.DocumentCNNEmbeddings" title="flair.embeddings.document.DocumentCNNEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.embeddings.document.DocumentCNNEmbeddings.to_params">
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L765-L775"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="base.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">flair.embeddings.base</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="image.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">flair.embeddings.image</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.TransformerDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.TransformerDocumentEmbeddings.onnx_cls"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.onnx_cls</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.TransformerDocumentEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.TransformerDocumentEmbeddings.create_from_state"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.create_from_state()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.TransformerDocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.TransformerDocumentEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.TransformerDocumentEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings.training</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentPoolEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentPoolEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentPoolEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentPoolEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.embedding_length</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentPoolEmbeddings.embed"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.embed()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentPoolEmbeddings.extra_repr"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.extra_repr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentPoolEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.from_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentPoolEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.to_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentPoolEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentPoolEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings.training</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentTFIDFEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.embedding_length</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.embed"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.embed()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.from_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.to_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings.training</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentRNNEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentRNNEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentRNNEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentRNNEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.embedding_length</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentRNNEmbeddings._add_embeddings_internal"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings._add_embeddings_internal()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentRNNEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.to_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentRNNEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.from_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentRNNEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentRNNEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings.training</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentLMEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentLMEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentLMEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.embedding_length</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentLMEmbeddings.get_names"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.get_names()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentLMEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.to_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentLMEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.from_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentLMEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentLMEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings.training</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.embedding_length</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.from_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.to_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings.training</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentCNNEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentCNNEmbeddings.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentCNNEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentCNNEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.embeddings_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentCNNEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.training</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentCNNEmbeddings.embedding_length"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.embedding_length</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentCNNEmbeddings._add_embeddings_internal"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings._add_embeddings_internal()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentCNNEmbeddings.from_params"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.from_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.document.DocumentCNNEmbeddings.to_params"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings.to_params()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/api/embeddings/document.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1118 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>flair.trainers.plugins &#8212; flair 0.12.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../_static/github_style.css?v=1093691d" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09" />
+  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=927b94d3fcb96560df09"></script>
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=1c405622"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/flair.trainers.plugins';</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Contributing" href="../contributing/index.html" />
+    <link rel="prev" title="flair.trainers" href="flair.trainers.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">flair 0.12.2 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__kbd-shortcut">Search</span>
+    <span><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       latest (dev) 
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="flair.trainers.plugins.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    
+    [x]
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__kbd-shortcut">Search</span>
+    <span><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       latest (dev) 
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="flair.trainers.plugins.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    
+    [x]
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="flair.html">flair</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.data.html">flair.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.datasets.html">flair.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.embeddings.html">flair.embeddings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.models.html">flair.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.nn.html">flair.nn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.splitter.html">flair.splitter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.tokenization.html">flair.tokenization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.trainers.html">flair.trainers</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">flair.trainers.plugins</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.AmpPlugin"><code class="docutils literal notranslate"><span class="pre">AmpPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.AnnealingPlugin"><code class="docutils literal notranslate"><span class="pre">AnnealingPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.CheckpointPlugin"><code class="docutils literal notranslate"><span class="pre">CheckpointPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.LinearSchedulerPlugin"><code class="docutils literal notranslate"><span class="pre">LinearSchedulerPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.WeightExtractorPlugin"><code class="docutils literal notranslate"><span class="pre">WeightExtractorPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.LogFilePlugin"><code class="docutils literal notranslate"><span class="pre">LogFilePlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.LossFilePlugin"><code class="docutils literal notranslate"><span class="pre">LossFilePlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.MetricHistoryPlugin"><code class="docutils literal notranslate"><span class="pre">MetricHistoryPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.TensorboardLogger"><code class="docutils literal notranslate"><span class="pre">TensorboardLogger</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.BasePlugin"><code class="docutils literal notranslate"><span class="pre">BasePlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.Pluggable"><code class="docutils literal notranslate"><span class="pre">Pluggable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin"><code class="docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.TrainingInterrupt"><code class="docutils literal notranslate"><span class="pre">TrainingInterrupt</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.MetricName"><code class="docutils literal notranslate"><span class="pre">MetricName</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.MetricRecord"><code class="docutils literal notranslate"><span class="pre">MetricRecord</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+</ul>
+</div>
+        <div class="sidebar-primary-item">
+<div id="searchbox"></div></div>
+        <div class="sidebar-primary-item">
+<h3>Versions</h3>
+<ul>
+  <li><a href="flair.trainers.plugins.html">
+    
+    latest (master)
+    
+  </a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API Docs</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">flair.trainers.plugins</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="module-flair.trainers.plugins">
+<span id="flair-trainers-plugins"></span><h1>flair.trainers.plugins<a class="headerlink" href="#module-flair.trainers.plugins" title="Permalink to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.AmpPlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">AmpPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opt_level</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/amp.py#L4-L52"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AmpPlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
+<p>Simple plugin for AMP.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.AmpPlugin.detach">
+<span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/amp.py#L25-L31"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AmpPlugin.detach" title="Permalink to this definition">#</a></dt>
+<dd><p>Detach a plugin from the <cite>Pluggable</cite> it is attached to.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.AmpPlugin.backward">
+<span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/amp.py#L33-L38"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AmpPlugin.backward" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.AmpPlugin.after_setup">
+<span class="sig-name descname"><span class="pre">after_setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/amp.py#L40-L52"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AmpPlugin.after_setup" title="Permalink to this definition">#</a></dt>
+<dd><p>Wraps with AMP.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.AnnealingPlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">AnnealingPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anneal_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_extra_patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anneal_with_restarts</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/anneal_on_plateau.py#L11-L108"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AnnealingPlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
+<p>Plugin for annealing logic in Flair.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.AnnealingPlugin.store_learning_rate">
+<span class="sig-name descname"><span class="pre">store_learning_rate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/anneal_on_plateau.py#L38-L45"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AnnealingPlugin.store_learning_rate" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.AnnealingPlugin.after_setup">
+<span class="sig-name descname"><span class="pre">after_setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_with_dev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/anneal_on_plateau.py#L47-L68"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AnnealingPlugin.after_setup" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.AnnealingPlugin.after_evaluation">
+<span class="sig-name descname"><span class="pre">after_evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_model_is_best</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_scores</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/anneal_on_plateau.py#L70-L100"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.AnnealingPlugin.after_evaluation" title="Permalink to this definition">#</a></dt>
+<dd><p>Scheduler step of AnnealOnPlateau.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.CheckpointPlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">CheckpointPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_model_each_k_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_optimizer_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/checkpoints.py#L8-L29"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.CheckpointPlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.CheckpointPlugin.after_training_epoch">
+<span class="sig-name descname"><span class="pre">after_training_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/checkpoints.py#L20-L29"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.CheckpointPlugin.after_training_epoch" title="Permalink to this definition">#</a></dt>
+<dd><p>Saves the model each k epochs.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.LinearSchedulerPlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">LinearSchedulerPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warmup_fraction</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/linear_scheduler.py#L9-L62"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
+<p>Plugin for LinearSchedulerWithWarmup.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.LinearSchedulerPlugin.store_learning_rate">
+<span class="sig-name descname"><span class="pre">store_learning_rate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/linear_scheduler.py#L17-L24"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin.store_learning_rate" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.LinearSchedulerPlugin.after_setup">
+<span class="sig-name descname"><span class="pre">after_setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini_batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/linear_scheduler.py#L26-L44"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin.after_setup" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize different schedulers, including anneal target for AnnealOnPlateau, batch_growth_annealing, loading schedulers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.LinearSchedulerPlugin.before_training_epoch">
+<span class="sig-name descname"><span class="pre">before_training_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/linear_scheduler.py#L46-L50"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin.before_training_epoch" title="Permalink to this definition">#</a></dt>
+<dd><p>Load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.LinearSchedulerPlugin.after_training_batch">
+<span class="sig-name descname"><span class="pre">after_training_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer_was_run</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/linear_scheduler.py#L52-L59"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LinearSchedulerPlugin.after_training_batch" title="Permalink to this definition">#</a></dt>
+<dd><p>Do the scheduler step if one-cycle or linear decay.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.WeightExtractorPlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">WeightExtractorPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/weight_extractor.py#L5-L19"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.WeightExtractorPlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
+<p>Simple Plugin for weight extraction.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.WeightExtractorPlugin.after_training_batch">
+<span class="sig-name descname"><span class="pre">after_training_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_no</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_number_of_batches</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/weight_extractor.py#L12-L19"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.WeightExtractorPlugin.after_training_batch" title="Permalink to this definition">#</a></dt>
+<dd><p>Extracts weights.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.LogFilePlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">LogFilePlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/log_file.py#L10-L21"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LogFilePlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
+<p>Plugin for the training.log file.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.LogFilePlugin.close_file_handler">
+<span class="sig-name descname"><span class="pre">close_file_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/log_file.py#L18-L21"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LogFilePlugin.close_file_handler" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.LossFilePlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">LossFilePlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics_to_collect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/loss_file.py#L9-L108"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
+<p>Plugin that manages the loss.tsv file output.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.LossFilePlugin.before_training_epoch">
+<span class="sig-name descname"><span class="pre">before_training_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/loss_file.py#L61-L64"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin.before_training_epoch" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the current epoch for loss file logging.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.LossFilePlugin.metric_recorded">
+<span class="sig-name descname"><span class="pre">metric_recorded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/loss_file.py#L66-L80"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin.metric_recorded" title="Permalink to this definition">#</a></dt>
+<dd><p>Add the metric of a record to the current row.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.LossFilePlugin.after_evaluation">
+<span class="sig-name descname"><span class="pre">after_evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/loss_file.py#L82-L108"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.LossFilePlugin.after_evaluation" title="Permalink to this definition">#</a></dt>
+<dd><p>This prints all relevant metrics.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricHistoryPlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">MetricHistoryPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics_to_collect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{('dev',</span> <span class="pre">'loss'):</span> <span class="pre">'dev_loss_history',</span> <span class="pre">('dev',</span> <span class="pre">'score'):</span> <span class="pre">'dev_score_history',</span> <span class="pre">('train',</span> <span class="pre">'loss'):</span> <span class="pre">'train_loss_history'}</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/metric_history.py#L16-L34"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricHistoryPlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricHistoryPlugin.metric_recorded">
+<span class="sig-name descname"><span class="pre">metric_recorded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/metric_history.py#L25-L29"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricHistoryPlugin.metric_recorded" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricHistoryPlugin.after_training">
+<span class="sig-name descname"><span class="pre">after_training</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/metric_history.py#L31-L34"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricHistoryPlugin.after_training" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns metric history.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.TensorboardLogger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">TensorboardLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/tensorboard.py#L10-L58"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
+<p>Plugin that takes care of tensorboard logging.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.TensorboardLogger.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/tensorboard.py#L13-L41"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initializes the TensorboardLogger.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>log_dir</strong> – Directory into which tensorboard log files will be written</p></li>
+<li><p><strong>comment</strong> – The comment to specify Comment log_dir suffix appended to the default
+<code class="docutils literal notranslate"><span class="pre">log_dir</span></code>. If <code class="docutils literal notranslate"><span class="pre">log_dir</span></code> is assigned, this argument has no effect.</p></li>
+<li><p><strong>tracked_metrics</strong> – List of tuples that specify which metrics (in addition to the main_score) shall be plotted in tensorboard, could be [(“macro avg”, ‘f1-score’), (“macro avg”, ‘precision’)] for example</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.TensorboardLogger.metric_recorded">
+<span class="sig-name descname"><span class="pre">metric_recorded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/tensorboard.py#L43-L52"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger.metric_recorded" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.TensorboardLogger._training_finally">
+<span class="sig-name descname"><span class="pre">_training_finally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/tensorboard.py#L54-L58"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger._training_finally" title="Permalink to this definition">#</a></dt>
+<dd><p>Closes the writer.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">BasePlugin</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L178-L260"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for all plugins.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L181-L184"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize the base plugin.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.attach_to">
+<span class="sig-name descname"><span class="pre">attach_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pluggable</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L186-L208"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.attach_to" title="Permalink to this definition">#</a></dt>
+<dd><p>Attach this plugin to a <cite>Pluggable</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.detach">
+<span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L210-L218"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.detach" title="Permalink to this definition">#</a></dt>
+<dd><p>Detach a plugin from the <cite>Pluggable</cite> it is attached to.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.mark_func_as_hook">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mark_func_as_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">events</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L220-L226"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.mark_func_as_hook" title="Permalink to this definition">#</a></dt>
+<dd><p>Mark method as a hook triggered by the <cite>Pluggable</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.hook">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">other_args</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L228-L253"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.hook" title="Permalink to this definition">#</a></dt>
+<dd><p>Convience function for <cite>BasePlugin.mark_func_as_hook</cite>).</p>
+<p>Enables using the <cite>&#64;BasePlugin.hook</cite> syntax.</p>
+<p>Can also be used as:
+<cite>&#64;BasePlugin.hook(“some_event”, “another_event”)</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.pluggable">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pluggable</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#flair.trainers.plugins.Pluggable" title="flair.trainers.plugins.base.Pluggable"><span class="pre">Pluggable</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.pluggable" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">Pluggable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L33-L117"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Dispatches events which attached plugins can react to.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.valid_events">
+<span class="sig-name descname"><span class="pre">valid_events</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#flair.trainers.plugins.Pluggable.valid_events" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L38-L60"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize a <cite>Pluggable</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>plugins</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#flair.trainers.plugins.BasePlugin" title="flair.trainers.plugins.base.BasePlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasePlugin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<a class="reference internal" href="#flair.trainers.plugins.BasePlugin" title="flair.trainers.plugins.base.BasePlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasePlugin</span></code></a>]]]) – Plugins which should be attached to this <cite>Pluggable</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.plugins">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">plugins</span></span><a class="headerlink" href="#flair.trainers.plugins.Pluggable.plugins" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.append_plugin">
+<span class="sig-name descname"><span class="pre">append_plugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plugin</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L66-L67"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.append_plugin" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.validate_event">
+<span class="sig-name descname"><span class="pre">validate_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">events</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L69-L76"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.validate_event" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.register_hook">
+<span class="sig-name descname"><span class="pre">register_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">events</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L78-L93"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.register_hook" title="Permalink to this definition">#</a></dt>
+<dd><p>Register a hook.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>) – Function to be called when the event is emitted.</p></li>
+<li><p><strong>*events</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – List of events to call this function on.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.dispatch">
+<span class="sig-name descname"><span class="pre">dispatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L95-L112"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.dispatch" title="Permalink to this definition">#</a></dt>
+<dd><p>Call all functions hooked to a certain event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.remove_hook">
+<span class="sig-name descname"><span class="pre">remove_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handle</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L114-L117"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.remove_hook" title="Permalink to this definition">#</a></dt>
+<dd><p>Remove a hook handle from this instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.TrainerPlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">TrainerPlugin</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L263-L274"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TrainerPlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.BasePlugin" title="flair.trainers.plugins.base.BasePlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasePlugin</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.trainers.plugins.TrainerPlugin.trainer">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trainer</span></span><a class="headerlink" href="#flair.trainers.plugins.TrainerPlugin.trainer" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.trainers.plugins.TrainerPlugin.model">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#flair.trainers.plugins.TrainerPlugin.model" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.trainers.plugins.TrainerPlugin.corpus">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">corpus</span></span><a class="headerlink" href="#flair.trainers.plugins.TrainerPlugin.corpus" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="flair.trainers.plugins.TrainingInterrupt">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">TrainingInterrupt</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/base.py#L29-L30"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TrainingInterrupt" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Allows plugins to interrupt the training loop.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricName">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">MetricName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/metric_records.py#L9-L61"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricName" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">MetricRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typ</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">walltime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/metric_records.py#L65-L132"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricRecord" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents a recorded metric value.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typ</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">walltime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/metric_records.py#L68-L90"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Create a metric record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Name of the metric.</p></li>
+<li><p><strong>typ</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">RecordType</span></code>) – Type of metric.</p></li>
+<li><p><strong>value</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – Value of the metric (can be anything: scalar, tensor, image, etc.).</p></li>
+<li><p><strong>global_step</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The time_step of the log. This should be incremented the next time this metric is logged again. E.g. if you log every epoch, set the global_step to the current epoch.</p></li>
+<li><p><strong>walltime</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – Time of recording this metric.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.joined_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">joined_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.joined_name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.scalar">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scalar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_step</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">walltime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/metric_records.py#L96-L98"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.scalar" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.scalar_list">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scalar_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_step</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">walltime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/metric_records.py#L100-L102"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.scalar_list" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.string">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_step</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">walltime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/metric_records.py#L104-L106"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.string" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.histogram">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_step</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">walltime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/metric_records.py#L108-L110"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.histogram" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.is_type">
+<span class="sig-name descname"><span class="pre">is_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typ</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/metric_records.py#L112-L113"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.is_type" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.is_scalar">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_scalar</span></span><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.is_scalar" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.is_scalar_list">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_scalar_list</span></span><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.is_scalar_list" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.is_string">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_string</span></span><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.is_string" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.is_histogram">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_histogram</span></span><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.is_histogram" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="flair.trainers.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">flair.trainers</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../contributing/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Contributing</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.AmpPlugin"><code class="docutils literal notranslate"><span class="pre">AmpPlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.AmpPlugin.detach"><code class="docutils literal notranslate"><span class="pre">AmpPlugin.detach()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.AmpPlugin.backward"><code class="docutils literal notranslate"><span class="pre">AmpPlugin.backward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.AmpPlugin.after_setup"><code class="docutils literal notranslate"><span class="pre">AmpPlugin.after_setup()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.AnnealingPlugin"><code class="docutils literal notranslate"><span class="pre">AnnealingPlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.AnnealingPlugin.store_learning_rate"><code class="docutils literal notranslate"><span class="pre">AnnealingPlugin.store_learning_rate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.AnnealingPlugin.after_setup"><code class="docutils literal notranslate"><span class="pre">AnnealingPlugin.after_setup()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.AnnealingPlugin.after_evaluation"><code class="docutils literal notranslate"><span class="pre">AnnealingPlugin.after_evaluation()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.CheckpointPlugin"><code class="docutils literal notranslate"><span class="pre">CheckpointPlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.CheckpointPlugin.after_training_epoch"><code class="docutils literal notranslate"><span class="pre">CheckpointPlugin.after_training_epoch()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LinearSchedulerPlugin"><code class="docutils literal notranslate"><span class="pre">LinearSchedulerPlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LinearSchedulerPlugin.store_learning_rate"><code class="docutils literal notranslate"><span class="pre">LinearSchedulerPlugin.store_learning_rate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LinearSchedulerPlugin.after_setup"><code class="docutils literal notranslate"><span class="pre">LinearSchedulerPlugin.after_setup()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LinearSchedulerPlugin.before_training_epoch"><code class="docutils literal notranslate"><span class="pre">LinearSchedulerPlugin.before_training_epoch()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LinearSchedulerPlugin.after_training_batch"><code class="docutils literal notranslate"><span class="pre">LinearSchedulerPlugin.after_training_batch()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.WeightExtractorPlugin"><code class="docutils literal notranslate"><span class="pre">WeightExtractorPlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.WeightExtractorPlugin.after_training_batch"><code class="docutils literal notranslate"><span class="pre">WeightExtractorPlugin.after_training_batch()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LogFilePlugin"><code class="docutils literal notranslate"><span class="pre">LogFilePlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LogFilePlugin.close_file_handler"><code class="docutils literal notranslate"><span class="pre">LogFilePlugin.close_file_handler()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LossFilePlugin"><code class="docutils literal notranslate"><span class="pre">LossFilePlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LossFilePlugin.before_training_epoch"><code class="docutils literal notranslate"><span class="pre">LossFilePlugin.before_training_epoch()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LossFilePlugin.metric_recorded"><code class="docutils literal notranslate"><span class="pre">LossFilePlugin.metric_recorded()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LossFilePlugin.after_evaluation"><code class="docutils literal notranslate"><span class="pre">LossFilePlugin.after_evaluation()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricHistoryPlugin"><code class="docutils literal notranslate"><span class="pre">MetricHistoryPlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricHistoryPlugin.metric_recorded"><code class="docutils literal notranslate"><span class="pre">MetricHistoryPlugin.metric_recorded()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricHistoryPlugin.after_training"><code class="docutils literal notranslate"><span class="pre">MetricHistoryPlugin.after_training()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.TensorboardLogger"><code class="docutils literal notranslate"><span class="pre">TensorboardLogger</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.TensorboardLogger.__init__"><code class="docutils literal notranslate"><span class="pre">TensorboardLogger.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.TensorboardLogger.metric_recorded"><code class="docutils literal notranslate"><span class="pre">TensorboardLogger.metric_recorded()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.TensorboardLogger._training_finally"><code class="docutils literal notranslate"><span class="pre">TensorboardLogger._training_finally()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.BasePlugin"><code class="docutils literal notranslate"><span class="pre">BasePlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.BasePlugin.__init__"><code class="docutils literal notranslate"><span class="pre">BasePlugin.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.BasePlugin.attach_to"><code class="docutils literal notranslate"><span class="pre">BasePlugin.attach_to()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.BasePlugin.detach"><code class="docutils literal notranslate"><span class="pre">BasePlugin.detach()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.BasePlugin.mark_func_as_hook"><code class="docutils literal notranslate"><span class="pre">BasePlugin.mark_func_as_hook()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.BasePlugin.hook"><code class="docutils literal notranslate"><span class="pre">BasePlugin.hook()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.BasePlugin.pluggable"><code class="docutils literal notranslate"><span class="pre">BasePlugin.pluggable</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.Pluggable"><code class="docutils literal notranslate"><span class="pre">Pluggable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.Pluggable.valid_events"><code class="docutils literal notranslate"><span class="pre">Pluggable.valid_events</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.Pluggable.__init__"><code class="docutils literal notranslate"><span class="pre">Pluggable.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.Pluggable.plugins"><code class="docutils literal notranslate"><span class="pre">Pluggable.plugins</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.Pluggable.append_plugin"><code class="docutils literal notranslate"><span class="pre">Pluggable.append_plugin()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.Pluggable.validate_event"><code class="docutils literal notranslate"><span class="pre">Pluggable.validate_event()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.Pluggable.register_hook"><code class="docutils literal notranslate"><span class="pre">Pluggable.register_hook()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.Pluggable.dispatch"><code class="docutils literal notranslate"><span class="pre">Pluggable.dispatch()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.Pluggable.remove_hook"><code class="docutils literal notranslate"><span class="pre">Pluggable.remove_hook()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.TrainerPlugin"><code class="docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.TrainerPlugin.trainer"><code class="docutils literal notranslate"><span class="pre">TrainerPlugin.trainer</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.TrainerPlugin.model"><code class="docutils literal notranslate"><span class="pre">TrainerPlugin.model</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.TrainerPlugin.corpus"><code class="docutils literal notranslate"><span class="pre">TrainerPlugin.corpus</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.TrainingInterrupt"><code class="docutils literal notranslate"><span class="pre">TrainingInterrupt</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricName"><code class="docutils literal notranslate"><span class="pre">MetricName</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord"><code class="docutils literal notranslate"><span class="pre">MetricRecord</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.__init__"><code class="docutils literal notranslate"><span class="pre">MetricRecord.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.joined_name"><code class="docutils literal notranslate"><span class="pre">MetricRecord.joined_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.scalar"><code class="docutils literal notranslate"><span class="pre">MetricRecord.scalar()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.scalar_list"><code class="docutils literal notranslate"><span class="pre">MetricRecord.scalar_list()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.string"><code class="docutils literal notranslate"><span class="pre">MetricRecord.string()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.histogram"><code class="docutils literal notranslate"><span class="pre">MetricRecord.histogram()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.is_type"><code class="docutils literal notranslate"><span class="pre">MetricRecord.is_type()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.is_scalar"><code class="docutils literal notranslate"><span class="pre">MetricRecord.is_scalar</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.is_scalar_list"><code class="docutils literal notranslate"><span class="pre">MetricRecord.is_scalar_list</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.is_string"><code class="docutils literal notranslate"><span class="pre">MetricRecord.is_string</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.is_histogram"><code class="docutils literal notranslate"><span class="pre">MetricRecord.is_histogram</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="../_sources/api/flair.trainers.plugins.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
