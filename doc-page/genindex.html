@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 
 
@@ -18,33 +17,31 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/github_style.css" />
-    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="_static/github_style.css?v=1093691d" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=927b94d3fcb96560df09"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/design-tabs.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=1c405622"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
-    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -57,6 +54,15 @@
   
   
   <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
   
   <input type="checkbox"
           class="sidebar-toggle"
@@ -97,7 +103,8 @@
     <span class="fa-solid fa-bars"></span>
   </label>
   
-  <div class="navbar-header-items__start">
+  
+  <div class="col-lg-3 navbar-header-items__start">
     
       <div class="navbar-item">
   
@@ -113,7 +120,6 @@
 </a></div>
     
   </div>
-  
   
   <div class="col-lg-9 navbar-header-items">
     
@@ -158,23 +164,25 @@
       
         <div class="navbar-item navbar-persistent--container">
           
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__kbd-shortcut">Search</span>
+    <span><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
         </div>
       
       
         <div class="navbar-item">
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
   </button>
 `);
 </script></div>
@@ -213,8 +221,8 @@ document.write(`
           
           
           
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
         </li>
         <li class="nav-item">
           
@@ -225,8 +233,8 @@ document.write(`
           
           
           
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">PyPI</span></a>
         </li>
 </ul></div>
       
@@ -236,13 +244,15 @@ document.write(`
   
   
     <div class="navbar-persistent--mobile">
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__kbd-shortcut">Search</span>
+    <span><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
     </div>
   
 
@@ -304,10 +314,10 @@ document.write(`
           <div class="navbar-item">
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
   </button>
 `);
 </script></div>
@@ -346,8 +356,8 @@ document.write(`
           
           
           
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
         </li>
         <li class="nav-item">
           
@@ -358,8 +368,8 @@ document.write(`
           
           
           
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">PyPI</span></a>
         </li>
 </ul></div>
         
@@ -441,7 +451,6 @@ document.write(`
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
- | <a href="#X"><strong>X</strong></a>
  | <a href="#Y"><strong>Y</strong></a>
  | <a href="#Z"><strong>Z</strong></a>
  
@@ -634,6 +643,8 @@ document.write(`
 </li>
         <li><a href="api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.JsonlDataset.__init__">(flair.datasets.sequence_labeling.JsonlDataset method)</a>
 </li>
+        <li><a href="api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.MASAKHA_POS.__init__">(flair.datasets.sequence_labeling.MASAKHA_POS method)</a>
+</li>
         <li><a href="api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.MultiFileColumnCorpus.__init__">(flair.datasets.sequence_labeling.MultiFileColumnCorpus method)</a>
 </li>
         <li><a href="api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.MultiFileJsonlCorpus.__init__">(flair.datasets.sequence_labeling.MultiFileJsonlCorpus method)</a>
@@ -758,29 +769,11 @@ document.write(`
 </li>
         <li><a href="api/embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings.__init__">(flair.embeddings.document.TransformerDocumentEmbeddings method)</a>
 </li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.__init__">(flair.embeddings.legacy.BertEmbeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings.__init__">(flair.embeddings.legacy.CamembertEmbeddings method)</a>
-</li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings.__init__">(flair.embeddings.legacy.CharLMEmbeddings method)</a>
 </li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings.__init__">(flair.embeddings.legacy.DocumentLSTMEmbeddings method)</a>
 </li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings.__init__">(flair.embeddings.legacy.DocumentMeanEmbeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.__init__">(flair.embeddings.legacy.ELMoTransformerEmbeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings.__init__">(flair.embeddings.legacy.OpenAIGPT2Embeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.__init__">(flair.embeddings.legacy.OpenAIGPTEmbeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings.__init__">(flair.embeddings.legacy.RoBERTaEmbeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.__init__">(flair.embeddings.legacy.XLMEmbeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings.__init__">(flair.embeddings.legacy.XLMRobertaEmbeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.__init__">(flair.embeddings.legacy.XLNetEmbeddings method)</a>
 </li>
         <li><a href="api/embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.__init__">(flair.embeddings.token.BytePairEmbeddings method)</a>
 </li>
@@ -802,8 +795,6 @@ document.write(`
 </li>
         <li><a href="api/flair.models.html#flair.models.ClusteringModel.__init__">(flair.models.ClusteringModel method)</a>
 </li>
-        <li><a href="api/flair.models.html#flair.models.EntityLinker.__init__">(flair.models.EntityLinker method)</a>
-</li>
         <li><a href="api/flair.models.html#flair.models.Lemmatizer.__init__">(flair.models.Lemmatizer method)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.MultitaskModel.__init__">(flair.models.MultitaskModel method)</a>
@@ -815,6 +806,8 @@ document.write(`
         <li><a href="api/flair.models.html#flair.models.RelationExtractor.__init__">(flair.models.RelationExtractor method)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.SequenceTagger.__init__">(flair.models.SequenceTagger method)</a>
+</li>
+        <li><a href="api/flair.models.html#flair.models.SpanClassifier.__init__">(flair.models.SpanClassifier method)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.TARSClassifier.__init__">(flair.models.TARSClassifier method)</a>
 </li>
@@ -848,8 +841,6 @@ document.write(`
 </li>
         <li><a href="api/embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings._add_embeddings_internal">(flair.embeddings.document.DocumentRNNEmbeddings method)</a>
 </li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings._add_embeddings_internal">(flair.embeddings.legacy.BertEmbeddings method)</a>
-</li>
       </ul></li>
       <li><a href="api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.NER_SWEDISH._add_IOB2_tags">_add_IOB2_tags() (flair.datasets.sequence_labeling.NER_SWEDISH method)</a>
 </li>
@@ -860,10 +851,6 @@ document.write(`
       <li><a href="api/flair.models.html#flair.models.SequenceTagger._all_scores_for_token">_all_scores_for_token() (flair.models.SequenceTagger method)</a>
 </li>
       <li><a href="api/flair.trainers.html#flair.trainers.ModelTrainer._backward">_backward() (flair.trainers.ModelTrainer method)</a>
-</li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy._build_token_subwords_mapping">_build_token_subwords_mapping() (in module flair.embeddings.legacy)</a>
-</li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy._build_token_subwords_mapping_gpt2">_build_token_subwords_mapping_gpt2() (in module flair.embeddings.legacy)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.FewshotClassifier._compute_label_similarity_for_current_epoch">_compute_label_similarity_for_current_epoch() (flair.models.FewshotClassifier method)</a>
 </li>
@@ -876,8 +863,6 @@ document.write(`
       <li><a href="api/flair.models.html#flair.models.RelationClassifier._encode_sentence_for_training">_encode_sentence_for_training() (flair.models.RelationClassifier method)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.RelationClassifier._entity_pair_permutations">_entity_pair_permutations() (flair.models.RelationClassifier method)</a>
-</li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy._extract_embeddings">_extract_embeddings() (in module flair.embeddings.legacy)</a>
 </li>
       <li><a href="api/datasets/entity_linking.html#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_annot_array">_fill_annot_array() (flair.datasets.entity_linking.NEL_ENGLISH_REDDIT method)</a>
 </li>
@@ -907,8 +892,6 @@ document.write(`
         <li><a href="api/flair.nn.html#flair.nn.Model._get_state_dict">(flair.nn.Model method)</a>
 </li>
       </ul></li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy._get_transformer_sentence_embeddings">_get_transformer_sentence_embeddings() (in module flair.embeddings.legacy)</a>
-</li>
       <li><a href="api/flair.models.html#flair.models.SequenceTagger._init_initial_hidden_state">_init_initial_hidden_state() (flair.models.SequenceTagger method)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.SequenceTagger._init_loss_weights">_init_loss_weights() (flair.models.SequenceTagger method)</a>
@@ -1021,10 +1004,6 @@ document.write(`
         <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.LossFilePlugin.before_training_epoch">(flair.trainers.plugins.LossFilePlugin method)</a>
 </li>
       </ul></li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings">BertEmbeddings (class in flair.embeddings.legacy)</a>
-</li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.BertInputFeatures">BertEmbeddings.BertInputFeatures (class in flair.embeddings.legacy)</a>
-</li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.BIGBIO_NER_CORPUS">BIGBIO_NER_CORPUS (class in flair.datasets.biomedical)</a>
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.BIGBIO_NER_CORPUS.bin_search_passage">bin_search_passage() (flair.datasets.biomedical.BIGBIO_NER_CORPUS method)</a>
@@ -1061,7 +1040,7 @@ document.write(`
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.BIOSEMANTICS">BIOSEMANTICS (class in flair.datasets.biomedical)</a>
 </li>
-      <li><a href="api/flair.data.html#flair.data.BoundingBox.bottom">bottom (flair.data.BoundingBox property)</a>
+      <li><a href="api/flair.data.html#flair.data.BoundingBox.bottom">bottom (flair.data.BoundingBox attribute)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.BoundingBox">BoundingBox (class in flair.data)</a>
 </li>
@@ -1146,8 +1125,6 @@ document.write(`
       <li><a href="api/flair.html#flair.cache_root">cache_root (in module flair)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.LanguageModel.calculate_perplexity">calculate_perplexity() (flair.models.LanguageModel method)</a>
-</li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings">CamembertEmbeddings (class in flair.embeddings.legacy)</a>
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.CDR">CDR (class in flair.datasets.biomedical)</a>
 </li>
@@ -1429,15 +1406,13 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings">ELMoEmbeddings (class in flair.embeddings.legacy)</a>
 </li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings">ELMoTransformerEmbeddings (class in flair.embeddings.legacy)</a>
+      <li><a href="api/flair.models.html#flair.models.SpanClassifier.emb_first">emb_first() (flair.models.SpanClassifier method)</a>
 </li>
-      <li><a href="api/flair.models.html#flair.models.EntityLinker.emb_first">emb_first() (flair.models.EntityLinker method)</a>
+      <li><a href="api/flair.models.html#flair.models.SpanClassifier.emb_firstAndLast">emb_firstAndLast() (flair.models.SpanClassifier method)</a>
 </li>
-      <li><a href="api/flair.models.html#flair.models.EntityLinker.emb_firstAndLast">emb_firstAndLast() (flair.models.EntityLinker method)</a>
+      <li><a href="api/flair.models.html#flair.models.SpanClassifier.emb_last">emb_last() (flair.models.SpanClassifier method)</a>
 </li>
-      <li><a href="api/flair.models.html#flair.models.EntityLinker.emb_last">emb_last() (flair.models.EntityLinker method)</a>
-</li>
-      <li><a href="api/flair.models.html#flair.models.EntityLinker.emb_mean">emb_mean() (flair.models.EntityLinker method)</a>
+      <li><a href="api/flair.models.html#flair.models.SpanClassifier.emb_mean">emb_mean() (flair.models.SpanClassifier method)</a>
 </li>
       <li><a href="api/embeddings/base.html#flair.embeddings.base.Embeddings.embed">embed() (flair.embeddings.base.Embeddings method)</a>
 
@@ -1492,10 +1467,6 @@ document.write(`
 </li>
         <li><a href="api/embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings.embedding_length">(flair.embeddings.image.PrecomputedImageEmbeddings property)</a>
 </li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.embedding_length">(flair.embeddings.legacy.BertEmbeddings property)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings.embedding_length">(flair.embeddings.legacy.CamembertEmbeddings property)</a>
-</li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings.embedding_length">(flair.embeddings.legacy.CharLMEmbeddings property)</a>
 </li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings.embedding_length">(flair.embeddings.legacy.DocumentLSTMEmbeddings property)</a>
@@ -1503,20 +1474,6 @@ document.write(`
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings.embedding_length">(flair.embeddings.legacy.DocumentMeanEmbeddings property)</a>
 </li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.embedding_length">(flair.embeddings.legacy.ELMoEmbeddings property)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.embedding_length">(flair.embeddings.legacy.ELMoTransformerEmbeddings property)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings.embedding_length">(flair.embeddings.legacy.OpenAIGPT2Embeddings property)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.embedding_length">(flair.embeddings.legacy.OpenAIGPTEmbeddings property)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings.embedding_length">(flair.embeddings.legacy.RoBERTaEmbeddings property)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.embedding_length">(flair.embeddings.legacy.XLMEmbeddings property)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings.embedding_length">(flair.embeddings.legacy.XLMRobertaEmbeddings property)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.embedding_length">(flair.embeddings.legacy.XLNetEmbeddings property)</a>
 </li>
         <li><a href="api/embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.embedding_length">(flair.embeddings.token.BytePairEmbeddings property)</a>
 </li>
@@ -1592,10 +1549,6 @@ document.write(`
 </li>
         <li><a href="api/embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings.embeddings_name">(flair.embeddings.image.PrecomputedImageEmbeddings attribute)</a>
 </li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.embeddings_name">(flair.embeddings.legacy.BertEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings.embeddings_name">(flair.embeddings.legacy.CamembertEmbeddings attribute)</a>
-</li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings.embeddings_name">(flair.embeddings.legacy.CharLMEmbeddings attribute)</a>
 </li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings.embeddings_name">(flair.embeddings.legacy.DocumentLSTMEmbeddings attribute)</a>
@@ -1603,20 +1556,6 @@ document.write(`
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings.embeddings_name">(flair.embeddings.legacy.DocumentMeanEmbeddings attribute)</a>
 </li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.embeddings_name">(flair.embeddings.legacy.ELMoEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.embeddings_name">(flair.embeddings.legacy.ELMoTransformerEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings.embeddings_name">(flair.embeddings.legacy.OpenAIGPT2Embeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.embeddings_name">(flair.embeddings.legacy.OpenAIGPTEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings.embeddings_name">(flair.embeddings.legacy.RoBERTaEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.embeddings_name">(flair.embeddings.legacy.XLMEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings.embeddings_name">(flair.embeddings.legacy.XLMRobertaEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.embeddings_name">(flair.embeddings.legacy.XLNetEmbeddings attribute)</a>
 </li>
         <li><a href="api/embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.embeddings_name">(flair.embeddings.token.BytePairEmbeddings attribute)</a>
 </li>
@@ -1683,11 +1622,9 @@ document.write(`
       </ul></li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.Entity">Entity (class in flair.datasets.biomedical)</a>
 </li>
-      <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.DpEntry.entity_count">entity_count (flair.datasets.biomedical.DpEntry property)</a>
+      <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.DpEntry.entity_count">entity_count (flair.datasets.biomedical.DpEntry attribute)</a>
 </li>
-      <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.DpEntry.entity_lengths_sum">entity_lengths_sum (flair.datasets.biomedical.DpEntry property)</a>
-</li>
-      <li><a href="api/flair.models.html#flair.models.EntityLinker">EntityLinker (class in flair.models)</a>
+      <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.DpEntry.entity_lengths_sum">entity_lengths_sum (flair.datasets.biomedical.DpEntry attribute)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.ClusteringModel.evaluate">evaluate() (flair.models.ClusteringModel method)</a>
 
@@ -1715,14 +1652,6 @@ document.write(`
 
       <ul>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.extra_repr">(flair.embeddings.legacy.ELMoEmbeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.extra_repr">(flair.embeddings.legacy.ELMoTransformerEmbeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.extra_repr">(flair.embeddings.legacy.OpenAIGPTEmbeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.extra_repr">(flair.embeddings.legacy.XLMEmbeddings method)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.extra_repr">(flair.embeddings.legacy.XLNetEmbeddings method)</a>
 </li>
         <li><a href="api/embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.extra_repr">(flair.embeddings.token.BytePairEmbeddings method)</a>
 </li>
@@ -2613,11 +2542,9 @@ document.write(`
 </li>
       <li><a href="api/flair.models.html#flair.models.TARSClassifier.LABEL_NO_MATCH">LABEL_NO_MATCH (flair.models.TARSClassifier attribute)</a>
 </li>
-      <li><a href="api/flair.models.html#flair.models.EntityLinker.label_type">label_type (flair.models.EntityLinker property)</a>
+      <li><a href="api/flair.models.html#flair.models.FewshotClassifier.label_type">label_type (flair.models.FewshotClassifier property)</a>
 
       <ul>
-        <li><a href="api/flair.models.html#flair.models.FewshotClassifier.label_type">(flair.models.FewshotClassifier property)</a>
-</li>
         <li><a href="api/flair.models.html#flair.models.Lemmatizer.label_type">(flair.models.Lemmatizer property)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.MultitaskModel.label_type">(flair.models.MultitaskModel property)</a>
@@ -2627,6 +2554,8 @@ document.write(`
         <li><a href="api/flair.models.html#flair.models.RelationExtractor.label_type">(flair.models.RelationExtractor property)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.SequenceTagger.label_type">(flair.models.SequenceTagger property)</a>
+</li>
+        <li><a href="api/flair.models.html#flair.models.SpanClassifier.label_type">(flair.models.SpanClassifier property)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.TextClassifier.label_type">(flair.models.TextClassifier property)</a>
 </li>
@@ -2651,11 +2580,11 @@ document.write(`
 </li>
       <li><a href="api/flair.trainers.html#flair.trainers.LanguageModelTrainer">LanguageModelTrainer (class in flair.trainers)</a>
 </li>
-      <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.DpEntry.last_entity">last_entity (flair.datasets.biomedical.DpEntry property)</a>
+      <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.DpEntry.last_entity">last_entity (flair.datasets.biomedical.DpEntry attribute)</a>
 </li>
       <li><a href="api/embeddings/token.html#flair.embeddings.token.NILCEmbeddings.layer_norm">layer_norm (flair.embeddings.token.NILCEmbeddings attribute)</a>
 </li>
-      <li><a href="api/flair.data.html#flair.data.BoundingBox.left">left (flair.data.BoundingBox property)</a>
+      <li><a href="api/flair.data.html#flair.data.BoundingBox.left">left (flair.data.BoundingBox attribute)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.Sentence.left_context">left_context() (flair.data.Sentence method)</a>
 </li>
@@ -2674,8 +2603,6 @@ document.write(`
       <ul>
         <li><a href="api/flair.models.html#flair.models.ClusteringModel.load">(flair.models.ClusteringModel static method)</a>
 </li>
-        <li><a href="api/flair.models.html#flair.models.EntityLinker.load">(flair.models.EntityLinker class method)</a>
-</li>
         <li><a href="api/flair.models.html#flair.models.FewshotClassifier.load">(flair.models.FewshotClassifier class method)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.MultitaskModel.load">(flair.models.MultitaskModel class method)</a>
@@ -2685,6 +2612,8 @@ document.write(`
         <li><a href="api/flair.models.html#flair.models.RelationExtractor.load">(flair.models.RelationExtractor class method)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.SequenceTagger.load">(flair.models.SequenceTagger class method)</a>
+</li>
+        <li><a href="api/flair.models.html#flair.models.SpanClassifier.load">(flair.models.SpanClassifier class method)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.TARSClassifier.load">(flair.models.TARSClassifier class method)</a>
 </li>
@@ -2740,6 +2669,8 @@ document.write(`
       <li><a href="api/flair.data.html#flair.data.Corpus.make_vocab_dictionary">make_vocab_dictionary() (flair.data.Corpus method)</a>
 </li>
       <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.BasePlugin.mark_func_as_hook">mark_func_as_hook() (flair.trainers.plugins.BasePlugin class method)</a>
+</li>
+      <li><a href="api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.MASAKHA_POS">MASAKHA_POS (class in flair.datasets.sequence_labeling)</a>
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.merge_datasets">merge_datasets() (in module flair.datasets.biomedical)</a>
 </li>
@@ -2871,10 +2802,6 @@ document.write(`
 </li>
         <li><a href="api/embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings.name">(flair.embeddings.image.PrecomputedImageEmbeddings attribute)</a>
 </li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.name">(flair.embeddings.legacy.BertEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings.name">(flair.embeddings.legacy.CamembertEmbeddings attribute)</a>
-</li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings.name">(flair.embeddings.legacy.CharLMEmbeddings attribute)</a>
 </li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings.name">(flair.embeddings.legacy.DocumentLSTMEmbeddings attribute)</a>
@@ -2882,20 +2809,6 @@ document.write(`
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings.name">(flair.embeddings.legacy.DocumentMeanEmbeddings attribute)</a>
 </li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.name">(flair.embeddings.legacy.ELMoEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.name">(flair.embeddings.legacy.ELMoTransformerEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings.name">(flair.embeddings.legacy.OpenAIGPT2Embeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.name">(flair.embeddings.legacy.OpenAIGPTEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings.name">(flair.embeddings.legacy.RoBERTaEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.name">(flair.embeddings.legacy.XLMEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings.name">(flair.embeddings.legacy.XLMRobertaEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.name">(flair.embeddings.legacy.XLNetEmbeddings attribute)</a>
 </li>
         <li><a href="api/embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.name">(flair.embeddings.token.BytePairEmbeddings attribute)</a>
 </li>
@@ -2958,12 +2871,12 @@ document.write(`
         <li><a href="api/flair.tokenization.html#flair.tokenization.TokenizerWrapper.name">(flair.tokenization.TokenizerWrapper property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.NCBI_DISEASE">NCBI_DISEASE (class in flair.datasets.biomedical)</a>
 </li>
       <li><a href="api/datasets/entity_linking.html#flair.datasets.entity_linking.NEL_ENGLISH_AIDA">NEL_ENGLISH_AIDA (class in flair.datasets.entity_linking)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/datasets/entity_linking.html#flair.datasets.entity_linking.NEL_ENGLISH_AQUAINT">NEL_ENGLISH_AQUAINT (class in flair.datasets.entity_linking)</a>
 </li>
       <li><a href="api/datasets/entity_linking.html#flair.datasets.entity_linking.NEL_ENGLISH_IITB">NEL_ENGLISH_IITB (class in flair.datasets.entity_linking)</a>
@@ -3090,10 +3003,6 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.ONTONOTES">ONTONOTES (class in flair.datasets.sequence_labeling)</a>
 </li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings">OpenAIGPT2Embeddings (class in flair.embeddings.legacy)</a>
-</li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings">OpenAIGPTEmbeddings (class in flair.embeddings.legacy)</a>
-</li>
       <li><a href="api/embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings.optimize_model">optimize_model() (flair.embeddings.transformer.TransformerOnnxEmbeddings method)</a>
 </li>
       <li><a href="api/datasets/text_text.html#flair.datasets.text_text.OpusParallelCorpus">OpusParallelCorpus (class in flair.datasets.text_text)</a>
@@ -3194,7 +3103,7 @@ document.write(`
 </li>
       <li><a href="api/embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings">PooledFlairEmbeddings (class in flair.embeddings.token)</a>
 </li>
-      <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.DpEntry.position_end">position_end (flair.datasets.biomedical.DpEntry property)</a>
+      <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.DpEntry.position_end">position_end (flair.datasets.biomedical.DpEntry attribute)</a>
 </li>
       <li><a href="api/embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings">PrecomputedImageEmbeddings (class in flair.embeddings.image)</a>
 </li>
@@ -3314,13 +3223,11 @@ document.write(`
 </li>
       <li><a href="api/embeddings/token.html#flair.embeddings.token.WordEmbeddings.resolve_precomputed_path">resolve_precomputed_path() (flair.embeddings.token.WordEmbeddings method)</a>
 </li>
-      <li><a href="api/flair.data.html#flair.data.BoundingBox.right">right (flair.data.BoundingBox property)</a>
+      <li><a href="api/flair.data.html#flair.data.BoundingBox.right">right (flair.data.BoundingBox attribute)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.Sentence.right_context">right_context() (flair.data.Sentence method)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.SequenceTagger.RNN">RNN() (flair.models.SequenceTagger static method)</a>
-</li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings">RoBERTaEmbeddings (class in flair.embeddings.legacy)</a>
 </li>
       <li><a href="api/datasets/text_text.html#flair.datasets.text_text.rte_jsonl_to_tsv">rte_jsonl_to_tsv() (in module flair.datasets.text_text)</a>
 </li>
@@ -3437,6 +3344,8 @@ document.write(`
       <li><a href="api/flair.tokenization.html#flair.tokenization.SpacyTokenizer">SpacyTokenizer (class in flair.tokenization)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.Span">Span (class in flair.data)</a>
+</li>
+      <li><a href="api/flair.models.html#flair.models.SpanClassifier">SpanClassifier (class in flair.models)</a>
 </li>
       <li><a href="api/flair.splitter.html#flair.splitter.NoSentenceSplitter.split">split() (flair.splitter.NoSentenceSplitter method)</a>
 
@@ -3661,7 +3570,13 @@ document.write(`
       <li><a href="api/flair.data.html#flair.data.Label.to_dict">to_dict() (flair.data.Label method)</a>
 
       <ul>
+        <li><a href="api/flair.data.html#flair.data.Relation.to_dict">(flair.data.Relation method)</a>
+</li>
         <li><a href="api/flair.data.html#flair.data.Sentence.to_dict">(flair.data.Sentence method)</a>
+</li>
+        <li><a href="api/flair.data.html#flair.data.Span.to_dict">(flair.data.Span method)</a>
+</li>
+        <li><a href="api/flair.data.html#flair.data.Token.to_dict">(flair.data.Token method)</a>
 </li>
       </ul></li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.HUNER_CELL_LINE_CELL_FINDER.to_internal">to_internal() (flair.datasets.biomedical.HUNER_CELL_LINE_CELL_FINDER method)</a>
@@ -3804,6 +3719,8 @@ document.write(`
       </ul></li>
       <li><a href="api/flair.data.html#flair.data.Sentence.to_plain_string">to_plain_string() (flair.data.Sentence method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.data.html#flair.data.Sentence.to_tagged_string">to_tagged_string() (flair.data.Sentence method)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.Sentence.to_tokenized_string">to_tokenized_string() (flair.data.Sentence method)</a>
@@ -3830,8 +3747,6 @@ document.write(`
         <li><a href="api/flair.tokenization.html#flair.tokenization.TokenizerWrapper.tokenize">(flair.tokenization.TokenizerWrapper method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.tokenization.html#flair.tokenization.Tokenizer">Tokenizer (class in flair.tokenization)</a>
 </li>
       <li><a href="api/embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings.tokenizer">tokenizer (flair.embeddings.transformer.TransformerJitEmbeddings attribute)</a>
@@ -3852,7 +3767,7 @@ document.write(`
       </ul></li>
       <li><a href="api/flair.tokenization.html#flair.tokenization.TokenizerWrapper">TokenizerWrapper (class in flair.tokenization)</a>
 </li>
-      <li><a href="api/flair.data.html#flair.data.BoundingBox.top">top (flair.data.BoundingBox property)</a>
+      <li><a href="api/flair.data.html#flair.data.BoundingBox.top">top (flair.data.BoundingBox attribute)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.Corpus.train">train (flair.data.Corpus property)</a>
 </li>
@@ -3909,10 +3824,6 @@ document.write(`
 </li>
         <li><a href="api/embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings.training">(flair.embeddings.image.PrecomputedImageEmbeddings attribute)</a>
 </li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.BertEmbeddings.training">(flair.embeddings.legacy.BertEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.CamembertEmbeddings.training">(flair.embeddings.legacy.CamembertEmbeddings attribute)</a>
-</li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings.training">(flair.embeddings.legacy.CharLMEmbeddings attribute)</a>
 </li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings.training">(flair.embeddings.legacy.DocumentLSTMEmbeddings attribute)</a>
@@ -3920,20 +3831,6 @@ document.write(`
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings.training">(flair.embeddings.legacy.DocumentMeanEmbeddings attribute)</a>
 </li>
         <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings.training">(flair.embeddings.legacy.ELMoEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.ELMoTransformerEmbeddings.training">(flair.embeddings.legacy.ELMoTransformerEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPT2Embeddings.training">(flair.embeddings.legacy.OpenAIGPT2Embeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.OpenAIGPTEmbeddings.training">(flair.embeddings.legacy.OpenAIGPTEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.RoBERTaEmbeddings.training">(flair.embeddings.legacy.RoBERTaEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings.training">(flair.embeddings.legacy.XLMEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings.training">(flair.embeddings.legacy.XLMRobertaEmbeddings attribute)</a>
-</li>
-        <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings.training">(flair.embeddings.legacy.XLNetEmbeddings attribute)</a>
 </li>
         <li><a href="api/embeddings/token.html#flair.embeddings.token.BytePairEmbeddings.training">(flair.embeddings.token.BytePairEmbeddings attribute)</a>
 </li>
@@ -4275,20 +4172,6 @@ document.write(`
   </ul></td>
 </tr></table>
 
-<h2 id="X">X</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMEmbeddings">XLMEmbeddings (class in flair.embeddings.legacy)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLMRobertaEmbeddings">XLMRobertaEmbeddings (class in flair.embeddings.legacy)</a>
-</li>
-      <li><a href="api/embeddings/legacy.html#flair.embeddings.legacy.XLNetEmbeddings">XLNetEmbeddings (class in flair.embeddings.legacy)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="Y">Y</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -4315,16 +4198,12 @@ document.write(`
               
               
               
-                <footer class="bd-footer-article">
-                  
-<div class="footer-article-items footer-article__inner">
-  
-    <div class="footer-article-item"><!-- Previous / next buttons -->
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
 <div class="prev-next-area">
-</div></div>
-  
 </div>
-
                 </footer>
               
             </div>
@@ -4342,8 +4221,8 @@ document.write(`
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+  <script src="_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -4361,7 +4240,7 @@ document.write(`
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
     <br/>
   </p>
 </div>
@@ -4369,10 +4248,11 @@ document.write(`
     </div>
   
   
+  
     <div class="footer-items__end">
       
         <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.0.
 </p></div>
       
     </div>

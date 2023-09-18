@@ -4,7 +4,7 @@
  *
  * Sphinx stylesheet -- basic theme.
  *
- * :copyright: Copyright 2007-2022 by the Sphinx team, see AUTHORS.
+ * :copyright: Copyright 2007-2023 by the Sphinx team, see AUTHORS.
  * :license: BSD, see LICENSE for details.
  *
  */
@@ -324,6 +324,7 @@ aside.sidebar {
 p.sidebar-title {
     font-weight: bold;
 }
+
 nav.contents,
 aside.topic,
 div.admonition, div.topic, blockquote {
@@ -331,6 +332,7 @@ div.admonition, div.topic, blockquote {
 }
 
 /* -- topics ---------------------------------------------------------------- */
+
 nav.contents,
 aside.topic,
 div.topic {
@@ -606,6 +608,7 @@ ol.simple p,
 ul.simple p {
     margin-bottom: 0;
 }
+
 aside.footnote > span,
 div.citation > span {
     float: left;
@@ -665,6 +668,16 @@ dd {
     margin-top: 3px;
     margin-bottom: 10px;
     margin-left: 30px;
+}
+
+.sig dd {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.sig dl {
+    margin-top: 0px;
+    margin-bottom: 0px;
 }
 
 dl > dd:last-child,
@@ -733,6 +746,14 @@ dl.glossary dt {
 abbr, acronym {
     border-bottom: dotted 1px;
     cursor: help;
+}
+
+.translated {
+    background-color: rgba(207, 255, 207, 0.2)
+}
+
+.untranslated {
+    background-color: rgba(255, 207, 207, 0.2)
 }
 
 /* -- code displays --------------------------------------------------------- */

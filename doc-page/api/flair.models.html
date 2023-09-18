@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 
 
@@ -7,7 +6,7 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>flair.models &#8212; flair 0.12.2 documentation</title>
   
@@ -19,33 +18,31 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=927b94d3fcb96560df09" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/github_style.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../_static/github_style.css?v=1093691d" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09" />
+  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=927b94d3fcb96560df09"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/design-tabs.js"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=1c405622"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/flair.models';</script>
-    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="flair.nn" href="flair.nn.html" />
@@ -60,6 +57,15 @@
   
   
   <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
   
   <input type="checkbox"
           class="sidebar-toggle"
@@ -100,7 +106,8 @@
     <span class="fa-solid fa-bars"></span>
   </label>
   
-  <div class="navbar-header-items__start">
+  
+  <div class="col-lg-3 navbar-header-items__start">
     
       <div class="navbar-item">
   
@@ -116,7 +123,6 @@
 </a></div>
     
   </div>
-  
   
   <div class="col-lg-9 navbar-header-items">
     
@@ -161,23 +167,25 @@
       
         <div class="navbar-item navbar-persistent--container">
           
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__kbd-shortcut">Search</span>
+    <span><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
         </div>
       
       
         <div class="navbar-item">
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
   </button>
 `);
 </script></div>
@@ -216,8 +224,8 @@ document.write(`
           
           
           
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
         </li>
         <li class="nav-item">
           
@@ -228,8 +236,8 @@ document.write(`
           
           
           
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">PyPI</span></a>
         </li>
 </ul></div>
       
@@ -239,18 +247,20 @@ document.write(`
   
   
     <div class="navbar-persistent--mobile">
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__kbd-shortcut">Search</span>
+    <span><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
     </div>
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
       <span class="fa-solid fa-outdent"></span>
     </label>
   
@@ -311,10 +321,10 @@ document.write(`
           <div class="navbar-item">
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
   </button>
 `);
 </script></div>
@@ -353,8 +363,8 @@ document.write(`
           
           
           
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
         </li>
         <li class="nav-item">
           
@@ -365,8 +375,8 @@ document.write(`
           
           
           
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">PyPI</span></a>
         </li>
 </ul></div>
         
@@ -385,7 +395,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="flair.datasets.html">flair.datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flair.embeddings.html">flair.embeddings</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">flair.models</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#flair.models.EntityLinker"><code class="docutils literal notranslate"><span class="pre">EntityLinker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.models.SpanClassifier"><code class="docutils literal notranslate"><span class="pre">SpanClassifier</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.models.LanguageModel"><code class="docutils literal notranslate"><span class="pre">LanguageModel</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.models.Lemmatizer"><code class="docutils literal notranslate"><span class="pre">Lemmatizer</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.models.TextPairClassifier"><code class="docutils literal notranslate"><span class="pre">TextPairClassifier</span></code></a></li>
@@ -453,8 +463,8 @@ document.write(`
 
 
 
-<nav aria-label="Breadcrumbs">
-  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="../index.html" class="nav-link" aria-label="Home">
@@ -486,16 +496,16 @@ document.write(`
   <section id="module-flair.models">
 <span id="flair-models"></span><h1>flair.models<a class="headerlink" href="#module-flair.models" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="flair.models.EntityLinker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.models.</span></span><span class="sig-name descname"><span class="pre">EntityLinker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_operation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first_last'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">classifierargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L78-L232"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.EntityLinker" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.models.SpanClassifier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.models.</span></span><span class="sig-name descname"><span class="pre">SpanClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_operation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first_last'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">classifierargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L78-L232"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SpanClassifier" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.nn.html#flair.nn.DefaultClassifier" title="flair.nn.model.DefaultClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultClassifier</span></code></a>[<a class="reference internal" href="flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>, <a class="reference internal" href="flair.data.html#flair.data.Span" title="flair.data.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">Span</span></code></a>]</p>
 <p>Entity Linking Model.</p>
 <p>The model expects text/sentences with annotated entity mentions and predicts entities to these mentions.
 To this end a word embedding is used to embed the sentences and the embedding of the entity mention goes through a linear layer to get the actual class label.
 The model is able to predict ‘&lt;unk&gt;’ for entity mentions that the model can not confidently match to any of the known labels.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.EntityLinker.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_operation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first_last'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">classifierargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L86-L134"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.EntityLinker.__init__" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.models.SpanClassifier.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_operation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first_last'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">classifierargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L86-L134"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SpanClassifier.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Initializes an EntityLinker.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -508,48 +518,48 @@ text representation we take the average of the embeddings of the token in the me
 <cite>first_last</cite> concatenates the embedding of the first and the embedding of the last token.</p></li>
 <li><p><strong>label_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of the label you use.</p></li>
 <li><p><strong>candidates</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">CandidateGenerator</span></code>]) – If provided, use a <code class="xref py py-class docutils literal notranslate"><span class="pre">CandidateGenerator</span></code> for prediction candidates.</p></li>
-<li><p><strong>**classifierargs</strong> – The arguments propagated to <a href="#id1"><span class="problematic" id="id2">:met:`flair.nn.DefaultClassifier.__init__`</span></a></p></li>
+<li><p><strong>**classifierargs</strong> – The arguments propagated to <code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.nn.DefaultClassifier.__init__()</span></code></p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.EntityLinker.emb_first">
-<span class="sig-name descname"><span class="pre">emb_first</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L136-L137"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.EntityLinker.emb_first" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.models.SpanClassifier.emb_first">
+<span class="sig-name descname"><span class="pre">emb_first</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L136-L137"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SpanClassifier.emb_first" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.EntityLinker.emb_last">
-<span class="sig-name descname"><span class="pre">emb_last</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L139-L140"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.EntityLinker.emb_last" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.models.SpanClassifier.emb_last">
+<span class="sig-name descname"><span class="pre">emb_last</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L139-L140"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SpanClassifier.emb_last" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.EntityLinker.emb_firstAndLast">
-<span class="sig-name descname"><span class="pre">emb_firstAndLast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L142-L145"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.EntityLinker.emb_firstAndLast" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.models.SpanClassifier.emb_firstAndLast">
+<span class="sig-name descname"><span class="pre">emb_firstAndLast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L142-L145"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SpanClassifier.emb_firstAndLast" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.EntityLinker.emb_mean">
-<span class="sig-name descname"><span class="pre">emb_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L147-L148"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.EntityLinker.emb_mean" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.models.SpanClassifier.emb_mean">
+<span class="sig-name descname"><span class="pre">emb_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L147-L148"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SpanClassifier.emb_mean" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="flair.models.EntityLinker.label_type">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label_type</span></span><a class="headerlink" href="#flair.models.EntityLinker.label_type" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.models.SpanClassifier.label_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label_type</span></span><a class="headerlink" href="#flair.models.SpanClassifier.label_type" title="Permalink to this definition">#</a></dt>
 <dd><p>Each model predicts labels of a certain type.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.EntityLinker.load">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L228-L232"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.EntityLinker.load" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.models.SpanClassifier.load">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/doc-page/flair/models/entity_linker_model.py#L228-L232"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SpanClassifier.load" title="Permalink to this definition">#</a></dt>
 <dd><p>Loads the model from the given file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>model_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]) – the model file or the already loaded state dict</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#flair.models.EntityLinker" title="flair.models.entity_linker_model.EntityLinker"><code class="xref py py-class docutils literal notranslate"><span class="pre">EntityLinker</span></code></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#flair.models.SpanClassifier" title="flair.models.entity_linker_model.SpanClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanClassifier</span></code></a></p>
 </dd>
 </dl>
 <p>Returns: the loaded text classifier model</p>
@@ -852,7 +862,7 @@ or False to force single-label prediction</p></li>
 <li><p><strong>multi_label_threshold</strong> – If multi-label you can set the threshold to make predictions</p></li>
 <li><p><strong>loss_weights</strong> – Dictionary of weights for labels for the loss function.
 If any label’s weight is unspecified it will default to 1.0</p></li>
-<li><p><strong>**classifierargs</strong> – The arguments propagated to <a href="#id3"><span class="problematic" id="id4">:met:`flair.nn.DefaultClassifier.__init__`</span></a></p></li>
+<li><p><strong>**classifierargs</strong> – The arguments propagated to <code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.nn.DefaultClassifier.__init__()</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -1286,7 +1296,7 @@ The (relation) labels are directly added to the sentences.</p>
 <li><p><strong>pooling_operation</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – either “first” or “first_last” how the embeddings of the entities
 should be used to create relation embeddings</p></li>
 <li><p><strong>train_on_gold_pairs_only</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – if True, relations with “O” (no relation) label will be ignored in training.</p></li>
-<li><p><strong>**classifierargs</strong> – The arguments propagated to <a href="#id5"><span class="problematic" id="id6">:met:`flair.nn.DefaultClassifier.__init__`</span></a></p></li>
+<li><p><strong>**classifierargs</strong> – The arguments propagated to <code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.nn.DefaultClassifier.__init__()</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -1622,7 +1632,7 @@ in such a way that all pads are going to be removed.</p>
 <li><p><strong>label_dictionary</strong> (<a class="reference internal" href="flair.data.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a>) – dictionary of labels or BIO/BIOES tags you want to predict</p></li>
 <li><p><strong>label_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – string identifier for tag type</p></li>
 <li><p><strong>span_encoding</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the format to encode spans as tags, either “BIO” or “BIOES”</p></li>
-<li><p><strong>**classifierargs</strong> – The arguments propagated to <a href="#id7"><span class="problematic" id="id8">:met:`flair.nn.DefaultClassifier.__init__`</span></a></p></li>
+<li><p><strong>**classifierargs</strong> – The arguments propagated to <code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.nn.DefaultClassifier.__init__()</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -1840,7 +1850,7 @@ or False to force single-label predictions.</p></li>
 <li><p><strong>multi_label_threshold</strong> – If multi-label you can set the threshold to make predictions.</p></li>
 <li><p><strong>beta</strong> – Parameter for F-beta score for evaluation and training annealing.</p></li>
 <li><p><strong>prefix</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – if True, the label will be concatenated at the start, else on the end.</p></li>
-<li><p><strong>**tagger_args</strong> – The arguments propagated to <a href="#id9"><span class="problematic" id="id10">:met:`FewshotClassifier.__init__`</span></a></p></li>
+<li><p><strong>**tagger_args</strong> – The arguments propagated to <code class="xref py py-meth docutils literal notranslate"><span class="pre">FewshotClassifier.__init__()</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -1923,7 +1933,7 @@ is inflated by the model internally before pushing it through the transformer st
 sentence during training. Defaults to 2 negative labels for each positive label. The model would sample
 all the negative labels if None is passed. That slows down the training considerably.</p></li>
 <li><p><strong>prefix</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – if True, the label will be concatenated at the start, else on the end.</p></li>
-<li><p><strong>**tagger_args</strong> – The arguments propagated to <a href="#id11"><span class="problematic" id="id12">:met:`FewshotClassifier.__init__`</span></a></p></li>
+<li><p><strong>**tagger_args</strong> – The arguments propagated to <code class="xref py py-meth docutils literal notranslate"><span class="pre">FewshotClassifier.__init__()</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -2002,7 +2012,7 @@ or False to force single-label predictions.</p></li>
 <li><p><strong>beta</strong> – Parameter for F-beta score for evaluation and training annealing</p></li>
 <li><p><strong>loss_weights</strong> – Dictionary of weights for labels for the loss function. If any label’s weight is
 unspecified it will default to 1.0</p></li>
-<li><p><strong>**classifierargs</strong> – The arguments propagated to <a href="#id13"><span class="problematic" id="id14">:met:`flair.nn.DefaultClassifier.__init__`</span></a></p></li>
+<li><p><strong>**classifierargs</strong> – The arguments propagated to <code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.nn.DefaultClassifier.__init__()</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -2397,11 +2407,10 @@ assignment for this batch is randomly chosen.</p>
               
               
               
-                <footer class="bd-footer-article">
-                  
-<div class="footer-article-items footer-article__inner">
-  
-    <div class="footer-article-item"><!-- Previous / next buttons -->
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
        href="embeddings/transformer.html"
@@ -2421,10 +2430,7 @@ assignment for this batch is randomly chosen.</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
-</div></div>
-  
 </div>
-
                 </footer>
               
             </div>
@@ -2439,14 +2445,14 @@ assignment for this batch is randomly chosen.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.EntityLinker"><code class="docutils literal notranslate"><span class="pre">EntityLinker</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.EntityLinker.__init__"><code class="docutils literal notranslate"><span class="pre">EntityLinker.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.EntityLinker.emb_first"><code class="docutils literal notranslate"><span class="pre">EntityLinker.emb_first()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.EntityLinker.emb_last"><code class="docutils literal notranslate"><span class="pre">EntityLinker.emb_last()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.EntityLinker.emb_firstAndLast"><code class="docutils literal notranslate"><span class="pre">EntityLinker.emb_firstAndLast()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.EntityLinker.emb_mean"><code class="docutils literal notranslate"><span class="pre">EntityLinker.emb_mean()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.EntityLinker.label_type"><code class="docutils literal notranslate"><span class="pre">EntityLinker.label_type</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.EntityLinker.load"><code class="docutils literal notranslate"><span class="pre">EntityLinker.load()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.SpanClassifier"><code class="docutils literal notranslate"><span class="pre">SpanClassifier</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.SpanClassifier.__init__"><code class="docutils literal notranslate"><span class="pre">SpanClassifier.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.SpanClassifier.emb_first"><code class="docutils literal notranslate"><span class="pre">SpanClassifier.emb_first()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.SpanClassifier.emb_last"><code class="docutils literal notranslate"><span class="pre">SpanClassifier.emb_last()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.SpanClassifier.emb_firstAndLast"><code class="docutils literal notranslate"><span class="pre">SpanClassifier.emb_firstAndLast()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.SpanClassifier.emb_mean"><code class="docutils literal notranslate"><span class="pre">SpanClassifier.emb_mean()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.SpanClassifier.label_type"><code class="docutils literal notranslate"><span class="pre">SpanClassifier.label_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.SpanClassifier.load"><code class="docutils literal notranslate"><span class="pre">SpanClassifier.load()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.LanguageModel"><code class="docutils literal notranslate"><span class="pre">LanguageModel</span></code></a><ul class="nav section-nav flex-column">
@@ -2654,8 +2660,8 @@ assignment for this batch is randomly chosen.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=927b94d3fcb96560df09"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=927b94d3fcb96560df09"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -2673,7 +2679,7 @@ assignment for this batch is randomly chosen.</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
     <br/>
   </p>
 </div>
@@ -2681,10 +2687,11 @@ assignment for this batch is randomly chosen.</p>
     </div>
   
   
+  
     <div class="footer-items__end">
       
         <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.0.
 </p></div>
       
     </div>
